@@ -62,7 +62,53 @@ def workflow_retirements(files: dict[Path, bytes], record: Path) -> list[Path]:
     return retired
 
 
-def sync_comfyui(apply: bool = False) -> list[Path]:  # noqa: C901
+def _sync_workflow_files(files: dict[Path, bytes], apply: bool) -> list[Path]:
+    changed = []
+    for target, content in files.items():
+        if target.is_file() and target.read_bytes() == content:
+            continue
+        changed.append(target)
+        print(f"{'WRITE' if apply else 'WOULD WRITE'} {target}")
+        if not apply:
+            continue
+        if target.exists():
+            archive_path(target, project_cfg.COMFYUI_ROCM_DIR)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+    return changed
+
+
+def _retire_workflows(retired: list[Path], apply: bool) -> list[Path]:
+    changed = []
+    for target in retired:
+        changed.append(target)
+        print(f"{'RETIRE' if apply else 'WOULD RETIRE'} {target}")
+        if apply:
+            archive_path(target, project_cfg.COMFYUI_ROCM_DIR)
+    return changed
+
+
+def _write_manifest(record: Path, files: dict[Path, bytes]) -> None:
+    workflow_root = (project_cfg.COMFYUI_ROCM_DIR / "user/default/workflows").resolve()
+    content = (
+        json.dumps(
+            {
+                "installation": project_cfg.COMFYUI_ROCM_DIR.resolve().as_posix(),
+                "workflows": sorted(path.name for path in files if path.parent == workflow_root),
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    if record.is_file() and record.read_text(encoding="utf-8") == content:
+        return
+    record.parent.mkdir(parents=True, exist_ok=True)
+    temporary = record.with_suffix(".tmp")
+    temporary.write_text(content, encoding="utf-8")
+    temporary.replace(record)
+
+
+def sync_comfyui(apply: bool = False) -> list[Path]:
     if not project_cfg.COMFYUI_ROCM_DIR.is_dir():
         raise FileNotFoundError(f"ComfyUI installation missing: {project_cfg.COMFYUI_ROCM_DIR}")
     files = {path.resolve(): content for path, content in comfyui_files().items()}
@@ -70,39 +116,9 @@ def sync_comfyui(apply: bool = False) -> list[Path]:  # noqa: C901
         path.relative_to(project_cfg.COMFYUI_ROCM_DIR.resolve())
     record = project_cfg.STATE_DIR / "comfyui/workflow-sync.json"
     retired = workflow_retirements(files, record)
-    changed = []
-    for target, content in files.items():
-        if target.is_file() and target.read_bytes() == content:
-            continue
-        changed.append(target)
-        print(f"{'WRITE' if apply else 'WOULD WRITE'} {target}")
-        if apply:
-            if target.exists():
-                archive_path(target, project_cfg.COMFYUI_ROCM_DIR)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(content)
-    for target in retired:
-        changed.append(target)
-        print(f"{'RETIRE' if apply else 'WOULD RETIRE'} {target}")
-        if apply:
-            archive_path(target, project_cfg.COMFYUI_ROCM_DIR)
+    changed = [*_sync_workflow_files(files, apply), *_retire_workflows(retired, apply)]
     if apply:
-        workflow_root = (project_cfg.COMFYUI_ROCM_DIR / "user/default/workflows").resolve()
-        content = (
-            json.dumps(
-                {
-                    "installation": project_cfg.COMFYUI_ROCM_DIR.resolve().as_posix(),
-                    "workflows": sorted(path.name for path in files if path.parent == workflow_root),
-                },
-                indent=2,
-            )
-            + "\n"
-        )
-        if not record.is_file() or record.read_text(encoding="utf-8") != content:
-            record.parent.mkdir(parents=True, exist_ok=True)
-            temporary = record.with_suffix(".tmp")
-            temporary.write_text(content, encoding="utf-8")
-            temporary.replace(record)
+        _write_manifest(record, files)
     print(
         f"[OK] ComfyUI: {len(changed)} changed file(s). Existing replacements go to {(project_cfg.BASE_DIR / 'trash')}."
     )

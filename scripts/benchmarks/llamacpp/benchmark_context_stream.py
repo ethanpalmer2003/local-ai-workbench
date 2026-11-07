@@ -63,13 +63,8 @@ def token_windows(events: list[dict[str, Any]], width: int) -> list[dict[str, An
     return windows
 
 
-def stream_request(  # noqa: C901
-    base: str, prompt: list[int], args: argparse.Namespace, trace: Path, deadline: float
-) -> dict[str, Any]:
-    remaining = deadline - time.perf_counter()
-    if remaining <= 0:
-        raise TimeoutError("Benchmark time budget exhausted before request")
-    payload = {
+def _request_payload(prompt: list[int], args: argparse.Namespace) -> dict[str, Any]:
+    return {
         "prompt": prompt,
         "n_predict": args.tokens,
         "temperature": 0,
@@ -82,37 +77,54 @@ def stream_request(  # noqa: C901
         "return_progress": True,
         "sse_ping_interval": 1,
     }
-    request = urllib.request.Request(
-        base + "/completion", data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"}
-    )
-    started = time.perf_counter()
+
+
+def _consume_stream(
+    response: Any, output: Any, args: argparse.Namespace, deadline: float, started: float
+) -> tuple[int, list[dict[str, Any]], list[str], dict[str, Any] | None]:
     count, events, content = 0, [], []
     final = None
+    for raw in response:
+        elapsed = time.perf_counter() - started
+        if time.perf_counter() > deadline or elapsed > args.request_timeout:
+            raise TimeoutError("Benchmark or request time budget exhausted during request")
+        if not raw.startswith(b"data:"):
+            continue
+        data = raw[5:].strip()
+        if data == b"[DONE]":
+            break
+        item = json.loads(data)
+        output.write(json.dumps({"seconds": elapsed, "response": item}) + "\n")
+        if item.get("error"):
+            raise RuntimeError(str(item["error"]))
+        if item.get("stop"):
+            final = item
+            continue
+        tokens = item.get("tokens") or []
+        if tokens:
+            count += len(tokens)
+            events.append({"tokens": count, "seconds": elapsed})
+        content.append(item.get("content", ""))
+    return count, events, content, final
+
+
+def stream_request(
+    base: str, prompt: list[int], args: argparse.Namespace, trace: Path, deadline: float
+) -> dict[str, Any]:
+    remaining = deadline - time.perf_counter()
+    if remaining <= 0:
+        raise TimeoutError("Benchmark time budget exhausted before request")
+    request = urllib.request.Request(
+        base + "/completion",
+        data=json.dumps(_request_payload(prompt, args)).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    started = time.perf_counter()
     with (
         trace.open("w", encoding="utf-8") as output,
         urllib.request.urlopen(request, timeout=min(args.request_timeout, remaining)) as response,
     ):
-        for raw in response:
-            elapsed = time.perf_counter() - started
-            if time.perf_counter() > deadline or elapsed > args.request_timeout:
-                raise TimeoutError("Benchmark or request time budget exhausted during request")
-            if not raw.startswith(b"data:"):
-                continue
-            data = raw[5:].strip()
-            if data == b"[DONE]":
-                break
-            item = json.loads(data)
-            output.write(json.dumps({"seconds": elapsed, "response": item}) + "\n")
-            if item.get("error"):
-                raise RuntimeError(str(item["error"]))
-            if item.get("stop"):
-                final = item
-                continue
-            tokens = item.get("tokens") or []
-            if tokens:
-                count += len(tokens)
-                events.append({"tokens": count, "seconds": elapsed})
-            content.append(item.get("content", ""))
+        count, events, content, final = _consume_stream(response, output, args, deadline, started)
     if final is None:
         raise RuntimeError("Stream ended without final completion timings")
     expected = int(final["timings"]["predicted_n"])

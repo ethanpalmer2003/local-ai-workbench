@@ -128,8 +128,16 @@ def validate_candidate(paths: RunPaths) -> None:
     verify_candidate_evidence(paths)
 
 
-def verify_candidate_evidence(paths: RunPaths) -> dict[str, Any]:  # noqa: C901
-    evidence = json.loads((paths.artifacts / "correctness.json").read_text(encoding="utf-8"))
+def _verify_tensor_row(old: dict[str, Any], new: dict[str, Any]) -> None:
+    if new.get("status") == "missing" or not new.get("finite", True):
+        raise RuntimeError(f"Missing/nonfinite tensor: {new}")
+    if new["tensor"] == "logits" and (
+        new["reference_top"] != new["actual_top"] or new["max_abs"] > old["max_abs"] + 0.05
+    ):
+        raise RuntimeError(f"Logit regression: {new}")
+
+
+def _verify_tensor_chunks(evidence: list[dict[str, Any]]) -> None:
     for chunk in (None, 3):
         record = next(record for record in evidence if "chunk" in record and record["chunk"] == chunk)
         previous = probe.compare(
@@ -139,26 +147,35 @@ def verify_candidate_evidence(paths: RunPaths) -> dict[str, Any]:  # noqa: C901
         if len(rows) != len(previous) or len(rows) < 3:
             raise RuntimeError(f"Incomplete tensor comparison: chunk={chunk}")
         for old, new in zip(previous, rows, strict=True):
-            if new.get("status") == "missing" or not new.get("finite", True):
-                raise RuntimeError(f"Missing/nonfinite tensor: {new}")
-            if new["tensor"] == "logits" and (
-                new["reference_top"] != new["actual_top"] or new["max_abs"] > old["max_abs"] + 0.05
-            ):
-                raise RuntimeError(f"Logit regression: {new}")
+            _verify_tensor_row(old, new)
+
+
+def _verify_smoke(evidence: list[dict[str, Any]], paths: RunPaths) -> None:
     golden = json.loads((REFERENCE / "artifacts/correctness-no-publish.json").read_text(encoding="utf-8"))[-1]
     smoke = evidence[-1]
     if smoke["code_tokens"] != golden["code_tokens"] or smoke["code"] != golden["code"] or smoke["chat"] != "OK":
         raise RuntimeError("Code tokens/text or chat differs from the retained reference")
     if "6/6 tests passed" not in (paths.logs / "affected-ops.log").read_text(encoding="utf-8"):
         raise RuntimeError("Operator results are incomplete")
+
+
+def _verify_binaries(hashes: dict[str, str], paths: RunPaths, result: dict[str, Any]) -> None:
+    for name, expected in hashes.items():
+        with (paths.temp / "bin" / name).open("rb") as stream:
+            actual = hashlib.file_digest(stream, "sha256").hexdigest()
+        if actual != expected or result["hashes"].get(name) != expected:
+            raise RuntimeError(f"Validated candidate binary changed: {name}")
+
+
+def verify_candidate_evidence(paths: RunPaths) -> dict[str, Any]:
+    evidence = json.loads((paths.artifacts / "correctness.json").read_text(encoding="utf-8"))
+    _verify_tensor_chunks(evidence)
+    _verify_smoke(evidence, paths)
     run, result = load_performance(paths.logs / "performance.log")
     baseline = json.loads(PERFORMANCE_REFERENCE.read_text(encoding="utf-8"))
     speeds = verify_generation(result, baseline)
     hashes = json.loads((paths.artifacts / "candidate-binaries.json").read_text(encoding="utf-8"))
-    for name, expected in hashes.items():
-        with (paths.temp / "bin" / name).open("rb") as stream:
-            if hashlib.file_digest(stream, "sha256").hexdigest() != expected or result["hashes"].get(name) != expected:
-                raise RuntimeError(f"Validated candidate binary changed: {name}")
+    _verify_binaries(hashes, paths, result)
     if launch_util.llama_server_running() or any(launch_util.backend_running(port) for port in (9950, 9951)):
         raise RuntimeError("Probe server cleanup is incomplete")
     checks = {

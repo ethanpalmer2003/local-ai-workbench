@@ -397,6 +397,8 @@ def complexity_debt(root: Path) -> int:
         key=lambda row: (-row[0], row[1]),
     )
     lines = [*DEBT_PREAMBLE, *(f"| {score} | `{path}` {name} |" for score, path, name in rows)]
+    if not rows:
+        lines.append("| None | - |")
     lines.extend(("", f"Remaining: {len(rows)}."))
     DEBT_DOC.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     return len(rows)
