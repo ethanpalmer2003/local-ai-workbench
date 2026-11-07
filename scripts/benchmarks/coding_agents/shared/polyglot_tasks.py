@@ -1,7 +1,7 @@
 """Load upstream exercises and unchanged tests for the existing client runner."""
 
-from scripts.config import project_config as project_cfg
 from scripts.benchmarks.coding_agents.shared.framework_tasks import CodingTask
+from scripts.config import project_config as project_cfg
 
 
 def load_tasks() -> tuple[CodingTask, ...]:

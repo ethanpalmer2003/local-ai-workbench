@@ -15,18 +15,18 @@ from threading import Condition, Event, Lock, Thread
 from typing import Any
 from urllib.parse import urlsplit
 
-from scripts.config.shared import image_on_demand as demand_cfg
 from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audio_cfg
+from scripts.config.shared import image_on_demand as demand_cfg
 from scripts.launchers import launch_util
-from scripts.launchers.sdcpp import server as sdcpp
-from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp, audiocpp_proxy
 from scripts.launchers.audiocpp.tts_proxy import run_tts_json_proxy
-from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.koboldcpp import kobold_lite
 from scripts.launchers.proxy_util import run_json_proxy
+from scripts.launchers.runtime.backend_readiness import ready_url
+from scripts.launchers.sdcpp import proxy as sdcpp_proxy
+from scripts.launchers.sdcpp import server as sdcpp
 
 IMAGE_REQUESTS = frozenset(
     {

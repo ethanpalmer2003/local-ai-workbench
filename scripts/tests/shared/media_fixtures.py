@@ -1,7 +1,7 @@
 """Independent PCM fixtures; deliberately do not use production audio encoders."""
 
-import io
 import base64
+import io
 import struct
 import wave
 

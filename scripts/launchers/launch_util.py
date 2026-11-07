@@ -23,9 +23,9 @@ from urllib.error import HTTPError, URLError
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.runtime.gpu_memory import get_gpu_memory_snapshot, report_vram_usage_async
-from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 
 # ============================================================
 # - Windows Job Object: kill-on-close backstop for SPLIT_DEPENDENT/MERGE launches -

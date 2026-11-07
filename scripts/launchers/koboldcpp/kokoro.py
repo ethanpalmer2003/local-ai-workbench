@@ -3,9 +3,9 @@
 import json
 
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.shared.media.text_processing import clean_speech_payload
 from scripts.launchers.audiocpp.kokoro import audio_command as audio_command
 from scripts.launchers.audiocpp.kokoro import audio_environment as audio_environment
+from scripts.launchers.shared.media.text_processing import clean_speech_payload
 
 
 def selected() -> bool:

@@ -5,8 +5,8 @@ import json
 import unittest
 from contextlib import redirect_stdout
 
-from scripts.config.models import model_languages
 from scripts.config import models
+from scripts.config.models import model_languages
 
 
 class ModelLanguages(unittest.TestCase):

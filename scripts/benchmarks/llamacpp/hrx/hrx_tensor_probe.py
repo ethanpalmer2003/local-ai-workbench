@@ -10,9 +10,9 @@ import time
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared.paths import BenchmarkPaths, Outcome, RunPaths
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
-from scripts.benchmarks.shared.paths import BenchmarkPaths, Outcome, RunPaths
 
 HRX_ROOT = project_cfg.FRAMEWORKS_DIR / "llamacpp/additions/hrx"
 LLAMA_SOURCE = HRX_ROOT / "llama.cpp"

@@ -1,11 +1,10 @@
 """Shared benchmark startup reuses user services and cleans up only owned workers."""
 
-from scripts.tests.shared.process_fixtures import running_process
-
 import unittest
 from unittest.mock import Mock, call, patch
 
 from scripts.tests.shared import backends
+from scripts.tests.shared.process_fixtures import running_process
 
 
 class BackendSessions(unittest.TestCase):
@@ -24,8 +23,8 @@ class BackendSessions(unittest.TestCase):
         stop.assert_not_called()
 
     def test_shared_image_readiness_uses_models_route(self):
-        from scripts.launchers.runtime import backend_readiness
         from scripts.launchers import launch_util, launcher_config
+        from scripts.launchers.runtime import backend_readiness
 
         expected = f"http://127.0.0.1:{launcher_config.SDCPP_SERVICE.port}/v1/models"
         self.assertEqual(backend_readiness.ready_url("sdcpp", launcher_config.SDCPP_SERVICE.port), expected)

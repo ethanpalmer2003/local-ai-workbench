@@ -1,30 +1,31 @@
 """Opt-in saved-PCM practice gateway smoke; no microphone hardware or browser access."""
 
-import json
 import argparse
-from contextlib import nullcontext
+import json
 import threading
 import time
 import urllib.request
+from contextlib import nullcontext
 from dataclasses import replace
-from unittest.mock import patch
-from typing import Any
-
 from pathlib import Path
-from scripts.launchers import launch_util, launcher_config as cfg
-from scripts.launchers.asr import server, selector
+from typing import Any
+from unittest.mock import patch
+
+from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
+from scripts.launchers import launch_util
+from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr import selector, server
 from scripts.launchers.audiocpp import asr
-from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.launchers.llamacpp.language_practice import chat_command, start_tts
-from scripts.launchers.shared.services import native
+from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
+from scripts.launchers.shared.services import native
 from scripts.launchers.shared.services.process import http_ready, stop_owned
 from scripts.tests.cases.asr.shared.corpus import default_corpus
-from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
+from scripts.tests.shared.native_suites import refuse_existing_sessions
 from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.resources import monitor_process
-from scripts.tests.shared.native_suites import refuse_existing_sessions
 
 
 def post(base, path, body, binary=False):

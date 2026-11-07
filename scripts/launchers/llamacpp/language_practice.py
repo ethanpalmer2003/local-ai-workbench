@@ -6,9 +6,9 @@ from typing import Any
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.llamacpp import gemma_audio
-from scripts.launchers.shared.services import native
-from scripts.launchers.llamacpp import chat_models
 from scripts.launchers.asr.shared import practice_models
+from scripts.launchers.llamacpp import chat_models
+from scripts.launchers.shared.services import native
 
 
 def chat_command(model_id: str | None = None) -> list[str]:

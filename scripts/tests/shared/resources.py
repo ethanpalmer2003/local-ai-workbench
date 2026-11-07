@@ -5,14 +5,15 @@ import time
 from contextlib import contextmanager
 from typing import Any
 
-from scripts.tests.shared import benchmark_config as benchmark_cfg
 from scripts.launchers import launch_util
+from scripts.tests.shared import benchmark_config as benchmark_cfg
 
 
 @contextmanager
 def monitor_process(process, gpu_log, *, seconds=240, phase=lambda: "resident", worker_module=None):
     """Reuse CPU/RSS and GPU samplers for one owned process; absent counters stay unknown."""
     import threading
+
     from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
     from scripts.launchers.shared.services.process import owned_module_worker
 

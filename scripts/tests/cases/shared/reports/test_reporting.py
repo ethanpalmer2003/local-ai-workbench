@@ -4,8 +4,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import PropertyMock, patch
 
-from scripts.tests.shared.paths import CasePaths, Outcome, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
+from scripts.tests.shared.paths import CasePaths, Outcome, RunPaths
 from scripts.tests.shared.timing import timed
 
 

@@ -7,9 +7,10 @@ import os
 import time
 from typing import Any
 
-from scripts.config import project_config as cfg, models
-from scripts.launchers.shared.native_abi.cabi import structures
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle, summarize_requests
+from scripts.config import models
+from scripts.config import project_config as cfg
+from scripts.launchers.shared.native_abi.cabi import structures
 from scripts.tests.cases.asr.shared.metrics import unicode_errors
 
 

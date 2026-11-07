@@ -5,7 +5,6 @@ from typing import Any
 from scripts.config import models
 from scripts.config.models import model_languages
 from scripts.launchers.asr import selector
-from scripts.launchers.audiocpp import kokoro
 from scripts.launchers.asr.shared import practice_models
 
 

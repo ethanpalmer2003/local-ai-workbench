@@ -6,12 +6,12 @@ from pathlib import Path
 from threading import Thread
 
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.sdcpp import server as sdcpp
-from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.launch_util import backend_ready, prepare_service_port, print_settings, trigger_preload
 from scripts.launchers.proxy_restart import OwnedBackendLifecycle, ProxyRestartController, reload_proxy_configuration
 from scripts.launchers.proxy_util import run_json_proxy
+from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.runtime.browser import open_browser
+from scripts.launchers.sdcpp import server as sdcpp
 
 TRANSFORM_PATHS = frozenset({"/v1/images/generations"})
 

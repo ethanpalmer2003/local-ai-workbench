@@ -9,11 +9,11 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.llamacpp.hrx import hrx_tensor_probe as probe
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks.update_config import hrx_tools
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
-from scripts.benchmarks.llamacpp.hrx import hrx_tensor_probe as probe
 from scripts.tests.shared.paths import RunPaths
 
 # - Retained CPU/native golden captures for the fixed Swift model/prompt used by these probes.

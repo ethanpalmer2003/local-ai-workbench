@@ -12,13 +12,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from http.client import HTTPResponse
 from io import BytesIO
-from pathlib import Path
 from threading import Lock
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
-from scripts.launchers import launcher_config as cfg
 from scripts.config import project_config as project_cfg
+from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp_catalog
 from scripts.launchers.proxy_restart import ProxyRestartController
 from scripts.launchers.proxy_util import (

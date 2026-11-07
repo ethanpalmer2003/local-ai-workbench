@@ -3,18 +3,18 @@
 import argparse
 import json
 import shutil
-import time
 import struct
 import subprocess
+import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from scripts.config import project_config as project_cfg, models as model_cfg
+from scripts.config import models as model_cfg
+from scripts.config import project_config as project_cfg
 from scripts.config.models import model_languages
-from scripts.download.models import model_sync, metadata_formats, metadata_sources, metadata_summary
-from scripts.download.models import metadata_evidence
+from scripts.download.models import metadata_evidence, metadata_formats, metadata_sources, metadata_summary, model_sync
 
 VERSION = 1
 
@@ -48,7 +48,7 @@ def discover(groups=None, paths=()):
 
 def inspect_record(row, previous, *, refresh=False, full_arrays=False, tensor_index=False, native=False):
     path = Path(row["path"])
-    record = {**row, "checked_at": datetime.now(timezone.utc).isoformat()}
+    record = {**row, "checked_at": datetime.now(UTC).isoformat()}
     record.update(measured_metadata=previous.get('measured_metadata', []), previous_paths=previous.get('previous_paths', []))
     if not path.is_file():
         return {**record, "status": "missing", "local": {}, "sidecars": [], "hub": previous.get("hub", [])}
@@ -85,7 +85,7 @@ def enrich_hub(records, cache):
         key, source = item
         try:
             result = metadata_sources.hub_metadata(source)
-            result.update(status="ok", checked_at=datetime.now(timezone.utc).isoformat())
+            result.update(status="ok", checked_at=datetime.now(UTC).isoformat())
         except Exception as error:
             result = {"status": "error", "repo": source.repo_id, "requested_revision": source.revision, "error": str(error)}
         return "@".join(key), result
@@ -165,7 +165,7 @@ def main(argv=None):
     metadata_evidence.published(rows)
     saved.update(rows)
     evidence_errors = metadata_evidence.measurements(saved, args.measurements or [project_cfg.TESTS_DIR / 'output']) if args.measurements is not None else []
-    inventory: dict[str, Any] = {"schema_version": VERSION, "updated_at": datetime.now(timezone.utc).isoformat(),
+    inventory: dict[str, Any] = {"schema_version": VERSION, "updated_at": datetime.now(UTC).isoformat(),
         "scope": "Registered and discovered installed model files; optional missing checkpoints remain explicit.",
         "run": {"groups": args.group, "models": args.model, "hub": args.hub, "native": args.native,
                 "selected_count": len(rows), "ok": sum(r["status"] == "ok" for r in rows.values()),

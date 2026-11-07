@@ -4,17 +4,17 @@
   repeat this block verbatim; keeping it here is the single owner.
 """
 
+import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
-import subprocess
 
+from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import wait_ready
+from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
-from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import wait_ready
-from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT
 
 
 def require_free_session(message: str = "Stop the existing llama-server before running the comparison") -> None:

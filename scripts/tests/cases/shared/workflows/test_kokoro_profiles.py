@@ -1,8 +1,8 @@
 """Speech engine routing and CPU profile contracts without native model launches."""
 
 import json
-from dataclasses import replace
 import unittest
+from dataclasses import replace
 from email.message import Message
 from pathlib import Path
 from unittest.mock import patch

@@ -4,10 +4,11 @@ import subprocess
 import time
 import urllib.request
 from collections.abc import Callable
-from typing import Any
 from types import SimpleNamespace
+from typing import Any
 
 from scripts.launchers import launch_util
+
 # Reuse these primitives; reuse/isolation policy belongs to the calling adapter.
 
 

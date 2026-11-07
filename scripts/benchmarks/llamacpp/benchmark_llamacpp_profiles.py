@@ -30,16 +30,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
 
-from scripts.launchers import launch_util
-from scripts.launchers import launcher_config as cfg
-from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
-from scripts.benchmarks.shared.vram import snapshot_dict
-from scripts.launchers.llamacpp.llamacpp import LlamaConfig
-from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT, report_run
 from scripts.benchmarks.shared.timing import timed
+from scripts.benchmarks.shared.vram import snapshot_dict
+from scripts.launchers import launch_util
+from scripts.launchers import launcher_config as cfg
+from scripts.launchers.llamacpp.llamacpp import LlamaConfig
+from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
+from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
 
 # - Two short, fixed prompts covering the two workloads these profiles
 #   actually get used for (general chat/reasoning vs. coding)
@@ -97,7 +97,8 @@ def post_json(url: str, payload: Mapping[str, object], timeout: float) -> dict[s
 
 
 def wait_ready(base_url: str, process: subprocess.Popen[bytes], timeout: float) -> None:
-    from scripts.launchers.shared.services.process import wait_ready as wait_process, http_ready
+    from scripts.launchers.shared.services.process import http_ready
+    from scripts.launchers.shared.services.process import wait_ready as wait_process
 
     wait_process(
         process,

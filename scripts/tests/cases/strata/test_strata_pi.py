@@ -1,7 +1,5 @@
 """Strata/Pi API selection, credential handling and backend ownership without inference."""
 
-from scripts.tests.shared.process_fixtures import running_process
-
 import io
 import json
 import unittest
@@ -14,6 +12,7 @@ from urllib.error import HTTPError
 from scripts.launchers import launch_util
 from scripts.launchers.strata import strata_pi
 from scripts.tests.shared.paths import CasePaths
+from scripts.tests.shared.process_fixtures import running_process
 
 
 def connection(port: int = 18501) -> strata_pi.StrataConnection:

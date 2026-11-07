@@ -3,13 +3,12 @@
 import json
 import struct
 import unittest
-from typing import Any
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 from scripts.config.models.gguf_metadata import inspect_metadata, read_metadata
-from scripts.download.models import analyze_model, metadata_formats, metadata_summary
-from scripts.download.models import metadata_evidence
+from scripts.download.models import analyze_model, metadata_evidence, metadata_formats, metadata_summary
 from scripts.tests.shared.paths import CasePaths
 
 

@@ -4,7 +4,6 @@ import argparse
 import os
 import socket
 import subprocess
-import sys
 from collections.abc import Mapping
 from dataclasses import fields, is_dataclass
 from pathlib import Path

@@ -5,9 +5,9 @@ import ctypes
 import os
 import subprocess
 import sys
+import unittest
 from pathlib import Path
 from threading import Thread
-import unittest
 from unittest.mock import patch
 
 from scripts.config import project_config as project_cfg

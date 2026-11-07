@@ -8,11 +8,10 @@ from dataclasses import replace
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from scripts.launchers import launcher_config as cfg
 from scripts.benchmarks.coding_agents.shared import benchmark_agents as benchmark
-from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
-from scripts.benchmarks.coding_agents.shared.benchmark_backends import benchmark_llama_config
+from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint, benchmark_llama_config
 from scripts.benchmarks.coding_agents.shared.framework_tasks import TASKS
+from scripts.launchers import launcher_config as cfg
 from scripts.tests.shared.paths import CasePaths, RunPaths
 
 

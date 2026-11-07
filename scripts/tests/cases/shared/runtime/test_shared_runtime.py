@@ -1,23 +1,22 @@
 """Shared runtime contracts without launching processes or loading model libraries."""
 
-from scripts.tests.shared.process_fixtures import running_process, exited_process, inspected_process
-
 import ctypes
+import unittest
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
-import unittest
 from unittest.mock import Mock, patch
 
-from scripts.launchers.shared.services import native, process
-from scripts.launchers.shared.native_abi.cabi import structures
-from scripts.launchers.shared.transport.multipart import audio_upload
-from scripts.launchers.shared.native_abi.native_library import NativeLibrary
-from scripts.launchers.asr.shared.resident_profiles import build_server_command, profiles
-from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
-from scripts.config import models as model_cfg
-from scripts.tests.shared.paths import CasePaths
 from scripts.benchmarks.shared.resident_http import ResidentHttp
+from scripts.config import models as model_cfg
+from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
+from scripts.launchers.asr.shared.resident_profiles import build_server_command, profiles
+from scripts.launchers.shared.native_abi.cabi import structures
+from scripts.launchers.shared.native_abi.native_library import NativeLibrary
+from scripts.launchers.shared.services import native, process
+from scripts.launchers.shared.transport.multipart import audio_upload
+from scripts.tests.shared.paths import CasePaths
+from scripts.tests.shared.process_fixtures import exited_process, inspected_process, running_process
 
 
 class SharedRuntimeTests(unittest.TestCase):
@@ -43,10 +42,9 @@ class SharedRuntimeTests(unittest.TestCase):
         worker = running_process()
         with (
             patch.object(process.time, "monotonic", side_effect=[0, 0, 2]),
-            patch.object(process.time, "sleep") as sleep,
+            patch.object(process.time, "sleep") as sleep,self.assertRaises(TimeoutError)
         ):
-            with self.assertRaises(TimeoutError):
-                process.wait_ready(worker, lambda: False, 1)
+            process.wait_ready(worker, lambda: False, 1)
         sleep.assert_called_once_with(0.2)
 
     def test_owned_graceful_cleanup_escalates_only_after_timeout(self):
@@ -142,6 +140,7 @@ class SharedRuntimeTests(unittest.TestCase):
 
     def test_shared_audio_conversion_preserves_channel_average_and_duration(self):
         import numpy as np
+
         from scripts.launchers.shared.media.audio import decode_audio, mono_resample, pcm_wav
 
         samples = np.tile(np.array([[0.25, 0.75]], dtype="float32"), (4800, 1))

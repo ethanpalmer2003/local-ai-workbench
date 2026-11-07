@@ -4,7 +4,6 @@ import argparse
 import json
 from pathlib import Path
 
-
 CATALOG_PATH = Path(__file__).with_suffix(".json")
 
 

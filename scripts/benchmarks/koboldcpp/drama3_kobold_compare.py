@@ -11,8 +11,8 @@ from typing import Any
 
 import psutil
 
-from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.asr import audiocpp_drama3_offload as drama3_offload
+from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg

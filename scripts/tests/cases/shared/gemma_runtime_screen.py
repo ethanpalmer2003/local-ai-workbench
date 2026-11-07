@@ -5,11 +5,11 @@ import json
 import urllib.request
 from typing import Any
 
+from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk
+from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.tests.shared.paths import CasePaths
-from scripts.benchmarks.shared.resident_http import ResidentHttp
-from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk
 
 PROMPTS = (
     "I am learning English. Ask me one short question about my day. Reply with just the question.",

@@ -15,11 +15,11 @@ from scripts.tests.cases.coding_agents.shared.framework_clients import Framework
 from scripts.tests.cases.coding_agents.shared.test_benchmark_backends import BenchmarkBackendsTests
 from scripts.tests.cases.coding_agents.shared.test_benchmark_matrix import BenchmarkMatrixTests
 from scripts.tests.cases.coding_agents.shared.test_benchmark_requests import BenchmarkRequestsTests
-from scripts.tests.cases.personal.comfyui.test_comfyui_video import WorkflowTests
 from scripts.tests.cases.koboldcpp.kobold_lite_streaming import StreamingPatch
 from scripts.tests.cases.koboldcpp.test_external_bridge import ExternalBridgeTests
 from scripts.tests.cases.llamacpp.hrx.test_hrx_build import HrxBuildTests
 from scripts.tests.cases.llamacpp.test_ngram import NgramWorkloads
+from scripts.tests.cases.personal.comfyui.test_comfyui_video import WorkflowTests
 from scripts.tests.cases.shared import frameworks_smoke
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.framework_updates import FrameworkUpdates

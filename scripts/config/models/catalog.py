@@ -11,6 +11,7 @@ from typing import Any
 
 from scripts.config import inputs
 from scripts.config import project_config as project_cfg
+
 from .types import ModelDownload
 
 CATEGORIES = ("llms", "asr", "tts", "images")

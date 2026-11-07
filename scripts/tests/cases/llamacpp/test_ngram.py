@@ -1,4 +1,3 @@
-from scripts.tests.shared.process_fixtures import running_process
 import ast
 import json
 import sys
@@ -8,10 +7,10 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from scripts.benchmarks.llamacpp import benchmark_ngram as benchmark
-from scripts.benchmarks.llamacpp import benchmark_speedbench
-from scripts.benchmarks.llamacpp import trial
-from scripts.tests.shared.paths import CasePaths, RunPaths
+from scripts.benchmarks.llamacpp import benchmark_speedbench, trial
 from scripts.benchmarks.shared.reporting import context_category
+from scripts.tests.shared.paths import CasePaths, RunPaths
+from scripts.tests.shared.process_fixtures import running_process
 
 
 class NgramWorkloads(unittest.TestCase):

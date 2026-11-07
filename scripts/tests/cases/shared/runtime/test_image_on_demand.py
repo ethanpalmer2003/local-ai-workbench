@@ -1,7 +1,5 @@
 """Residency ordering, native passthrough and owned lifecycle; no GPU inference."""
 
-from scripts.tests.shared.process_fixtures import exited_process, running_process
-
 import threading
 import unittest
 import urllib.error
@@ -10,13 +8,13 @@ from email.message import Message
 from http.server import BaseHTTPRequestHandler
 from unittest.mock import Mock, patch
 
-from scripts.launchers.runtime import image_on_demand as demand
 from scripts.launchers import proxy_util
-from scripts.launchers.sdcpp import server as sdcpp
-from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.audiocpp import tts_proxy
-from scripts.tests.shared.http_server import request
-from scripts.tests.shared.http_server import server
+from scripts.launchers.runtime import image_on_demand as demand
+from scripts.launchers.sdcpp import proxy as sdcpp_proxy
+from scripts.launchers.sdcpp import server as sdcpp
+from scripts.tests.shared.http_server import request, server
+from scripts.tests.shared.process_fixtures import exited_process, running_process
 
 
 class ResidencyTests(unittest.TestCase):

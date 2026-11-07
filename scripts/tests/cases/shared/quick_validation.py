@@ -6,11 +6,11 @@ import subprocess
 import sys
 import time
 
+from scripts.benchmarks.shared.reporting import RunReport
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.tests.shared.paths import CasePaths
-from scripts.benchmarks.shared.reporting import RunReport
 from scripts.tests.shared.progress import ProgressBar
 
 PROBES = {

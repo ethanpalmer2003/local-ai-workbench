@@ -1,7 +1,7 @@
 """Read scalar/string GGUF metadata without loading model tensors; arrays are skipped."""
 
-import struct
 import math
+import struct
 from collections import Counter
 from pathlib import Path
 from typing import Any, BinaryIO

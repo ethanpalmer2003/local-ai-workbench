@@ -2,7 +2,12 @@
 
 import unittest
 
-from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle, BenchmarkContractError, summarize_requests, summarize_report
+from scripts.benchmarks.shared.benchmark import (
+    BenchmarkContractError,
+    BenchmarkLifecycle,
+    summarize_report,
+    summarize_requests,
+)
 
 
 class BenchmarkLifecycleTests(unittest.TestCase):
@@ -61,16 +66,14 @@ class BenchmarkLifecycleTests(unittest.TestCase):
         with self.lifecycle() as timer:
             timer.prepare(lambda: None)
             timer.warmup(lambda: None)
-            with self.assertRaises(BenchmarkContractError):
-                with timer.request():
-                    self.identity = "new-process"
+            with self.assertRaises(BenchmarkContractError), timer.request():
+                self.identity = "new-process"
         self.assertEqual(timer.requests[0]["status"], "failed")
         self.assertEqual(summarize_requests(timer.requests)["samples"], 0)
 
     def test_failed_setup_still_cleans_up(self):
-        with self.assertRaisesRegex(ValueError, "load failed"):
-            with self.lifecycle() as timer:
-                timer.prepare(lambda: None, lambda: (_ for _ in ()).throw(ValueError("load failed")))
+        with self.assertRaisesRegex(ValueError, "load failed"), self.lifecycle() as timer:
+            timer.prepare(lambda: None, lambda: (_ for _ in ()).throw(ValueError("load failed")))
         self.assertTrue(self.cleaned)
 
     def test_first_output_marks_use_request_clock(self):

@@ -2,12 +2,12 @@ import argparse
 import sys
 from pathlib import Path
 
-from scripts.config import project_config as project_cfg
 from scripts.config import paths
+from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.runtime import shared_gpu
 from scripts.launchers.launch_util import build_cli_args, launch_process, print_ready, wait_for_exit
 from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
+from scripts.launchers.runtime import shared_gpu
 
 
 def launch(

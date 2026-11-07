@@ -5,8 +5,8 @@ import os
 import subprocess
 from pathlib import Path
 
-from scripts.launchers import launcher_config as cfg
 from scripts.config import models as model_cfg
+from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 
 

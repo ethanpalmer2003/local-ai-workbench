@@ -9,11 +9,11 @@ from urllib.parse import parse_qs, urlsplit
 
 from scripts.config import models as model_cfg
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.asr.shared import requests
 from scripts.launchers.asr.parakeetcpp.streaming import Model, clean_transcript
+from scripts.launchers.asr.shared import requests
+from scripts.launchers.proxy_util import ExclusiveThreadingHTTPServer, read_request_body, send_bytes
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.launchers.shared.transport.http_input import chunks
-from scripts.launchers.proxy_util import ExclusiveThreadingHTTPServer, send_bytes, read_request_body
 
 
 def serve(port: int):

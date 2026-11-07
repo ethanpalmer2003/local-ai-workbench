@@ -5,8 +5,8 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor, get_gpu_memory_snapshot
 from scripts.benchmarks.shared.paths import RunPaths
+from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor, get_gpu_memory_snapshot
 
 MEMORY_SOURCE = "Windows dedicated-memory counters; per-process allocations and whole-adapter usage are distinct"
 

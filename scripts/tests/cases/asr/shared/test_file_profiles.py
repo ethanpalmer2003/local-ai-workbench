@@ -1,20 +1,17 @@
 """Model-free contracts for the additional ASR file adapters."""
 
-import unittest
 import subprocess
-from unittest.mock import patch
+import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers.asr.shared.file_cli import build_command, required_files
-from scripts.tests.cases.asr.shared.file_diagnostic import extract_text
-from scripts.tests.cases.asr.shared.file_diagnostic import sample
-from scripts.tests.cases.asr.shared.metrics import unicode_errors
-from scripts.tests.cases.asr.shared.metrics import pooled_scores
-from scripts.tests.shared.paths import CasePaths
-from scripts.tests.shared.paths import RunPaths
+from scripts.tests.cases.asr.shared.file_diagnostic import extract_text, sample
+from scripts.tests.cases.asr.shared.metrics import pooled_scores, unicode_errors
+from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.process_fixtures import running_process
 
 
@@ -30,6 +27,7 @@ class FileProfiles(unittest.TestCase):
 
     def test_ming_resident_path_normalizes_transcript_after_warmup(self):
         import time
+
         from scripts.benchmarks.asr.asr_resident_compare import run_engine
         from scripts.benchmarks.shared.resident_http import ResidentHttp
 

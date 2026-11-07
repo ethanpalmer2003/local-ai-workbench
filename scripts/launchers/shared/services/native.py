@@ -9,7 +9,7 @@ from typing import Any
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.shared.services.process import wait_ready, stop_owned
+from scripts.launchers.shared.services.process import stop_owned, wait_ready
 
 
 def matches(command: list[str]) -> bool:

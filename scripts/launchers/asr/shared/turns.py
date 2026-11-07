@@ -3,8 +3,8 @@
 import queue
 import time
 from pathlib import Path
-from urllib.parse import urlencode
 from typing import Any
+from urllib.parse import urlencode
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared.vad import Silero

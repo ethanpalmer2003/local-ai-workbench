@@ -1,8 +1,8 @@
 """Canned HTTP responses for requests/urllib callers; never perform network I/O."""
 
 import json
-from email.message import Message
 from collections.abc import Mapping, Sequence
+from email.message import Message
 from typing import Any
 from unittest.mock import MagicMock
 

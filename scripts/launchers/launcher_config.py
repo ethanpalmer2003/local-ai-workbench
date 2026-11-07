@@ -3,8 +3,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
-from scripts.config import models as model_cfg
 from scripts.config import inputs
+from scripts.config import models as model_cfg
 from scripts.config import paths as config_paths
 from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audio_cfg

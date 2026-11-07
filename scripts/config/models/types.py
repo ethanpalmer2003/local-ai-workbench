@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+
 from scripts.config import project_config as project_cfg
 
 

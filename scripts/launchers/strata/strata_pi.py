@@ -15,8 +15,8 @@ from urllib.error import HTTPError, URLError
 from scripts.config import paths
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.llamacpp.llamacpp_coding import prepare_pi_env
+from scripts.launchers.runtime.backend_readiness import ready_url
 
 LOG_DIR = project_cfg.component("strata").logs_dir
 
