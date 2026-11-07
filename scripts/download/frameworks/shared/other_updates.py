@@ -106,9 +106,10 @@ TOOLS = [
         channel="nightly",
     ),
     ToolSpec("lemonade_server", "", ReleaseType.MANUAL, in_use=False),
-    # - Model servers are parked until one is installed and exercised: their upstream ships
-    #   its own launcher, so a version check would only restate the vendor's updater.
-    #   LocalAI publishes no Windows binary; Text generation WebUI ships portable zips.
+    # - Model servers stay parked until one is installed and exercised: each ships its own
+    #   launcher, so a version check would only restate the vendor's updater. LocalAI 4.12.1
+    #   publishes no Windows binary (linux, darwin, AppImage, dmg and source only); Text
+    #   generation WebUI publishes portable zips (cpu, vulkan, rocm, cuda) but is not installed.
     ToolSpec("localai", "", ReleaseType.MANUAL, repo="mudler/LocalAI", in_use=False),
     ToolSpec("text-generation-webui", "", ReleaseType.MANUAL, repo="oobabooga/text-generation-webui", in_use=False),
     ToolSpec(
