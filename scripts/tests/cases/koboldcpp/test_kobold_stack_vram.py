@@ -1,5 +1,6 @@
 """Probe worker arguments and existing-service safety; no model launch."""
 
+import base64
 import json
 import sys
 import unittest
@@ -10,6 +11,7 @@ from scripts.benchmarks.koboldcpp import kobold_stack_vram as probe
 from scripts.launchers.koboldcpp import kobold
 from scripts.launchers.runtime import shared_gpu
 from scripts.launchers.sdcpp import server as sdcpp
+from scripts.tests.shared.media_fixtures import PNG
 from scripts.tests.shared.paths import CasePaths
 
 
@@ -36,6 +38,19 @@ class StackProbeTests(unittest.TestCase):
             self.assertEqual(request.call_args.args[1]["max_tokens"], 128)
             result = json.loads((paths.artifacts / "test-text-result.json").read_text())
             self.assertEqual(result["response"]["usage"]["completion_tokens"], 40)
+
+    def test_audio_and_image_kinds_report_no_reply_text(self):
+        image = {"data": [{"b64_json": base64.b64encode(PNG).decode("ascii")}]}
+        with CasePaths(__file__).temporary_directory() as folder:
+            paths = probe.RunPaths(Path(folder))
+            paths.create()
+            with patch.object(probe, "speech_request", return_value={"pcm": b"\x01\x00" * 1600}):
+                self.assertIsNone(probe.generate("audio", paths, "audio"))
+            with (
+                patch.object(probe, "request", return_value=(200, json.dumps(image).encode(), "application/json")),
+                patch.dict(probe.cfg.SDCPP_REQUEST_DEFAULTS, {"width": 1, "height": 1}),
+            ):
+                self.assertIsNone(probe.generate("image", paths, "image"))
 
     def test_shared_image_flags_do_not_affect_standalone(self):
         with patch.object(sdcpp, "launch_process") as launch:
