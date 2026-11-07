@@ -6,7 +6,8 @@ What runs today. Use it to compare against other projects' stacks.
 
 | Command | Covers |
 | --- | --- |
-| `python -m scripts.review` | structure/docs, model references, front-end wiring, types, inventory/complexity, formatting |
+| `python -m scripts.review` | structure/docs, model references, front-end wiring, types, inventory/complexity, formatting, spelling, dependency advisories |
+| `... --prune` | installed packages outside the import graph, with the uninstall command |
 | `scripts/review/check_repo.bat` | the same, from a normal terminal |
 | `scripts/review/format_py.bat` | applies `ruff format` |
 | `python -m scripts.tests.run` | regression suite through pytest, timings and reports |
@@ -15,7 +16,6 @@ What runs today. Use it to compare against other projects' stacks.
 | `python -m scripts.review.public_audit [--history]` | publish gate |
 | `python -m scripts.benchmarks.audit_timing` | benchmark timing-contract inventory (printed, not gated) |
 | `python -m coverage run -m scripts.tests.run` | line coverage, then `coverage report` |
-| `python -m pip_audit -r scripts/requirements.txt` | dependency advisories (network) |
 
 ## Owners
 
@@ -31,7 +31,8 @@ What runs today. Use it to compare against other projects' stacks.
 | `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
 | `public_audit.py` | secrets, credentials, home/machine paths, private words/inputs, large files, ignored-but-tracked |
 | `audit_timing.py` | which benchmark runners use the shared timing contract |
-| `coverage.py`, `pip-audit` | coverage; dependency advisories under `review --audit` (network) |
+| `dependencies.py` | installed packages the import graph never reaches; `--prune` prints the removal command |
+| `coverage.py`, `pip-audit` | coverage; advisories run inside the gate (network, unreachable feed is a warning) |
 
 Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown and batch files are covered by `structure_docs.py`, HTML/JS by `frontend_wiring.py`; codespell reads tracked Python and Markdown.
 

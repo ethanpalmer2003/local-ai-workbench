@@ -1,10 +1,11 @@
 """Run the repository structure, type and size/complexity reviews."""
 
 import argparse
+import json
 import subprocess
 
 from scripts.config import project_config as project_cfg
-from scripts.review import frontend_wiring, inventory_code, model_references, structure_docs
+from scripts.review import dependencies, frontend_wiring, inventory_code, model_references, structure_docs
 
 SPELL_EXCLUDED = (
     "data/",
@@ -40,12 +41,24 @@ def spelling_check() -> int:
     return status
 
 
-def security_audit() -> int:
-    """Dependency advisories for the installed environment; network-bound, so opt in with --audit."""
+def security_audit() -> tuple[int, str]:
+    """Advisory count for the installed environment; an unreachable feed is a warning, not a defect."""
     checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/pip-audit.exe"
-    return subprocess.run(
-        [str(checker), "--local", "--progress-spinner", "off"], cwd=project_cfg.BASE_DIR, check=False
-    ).returncode
+    result = subprocess.run(
+        [str(checker), "--local", "--progress-spinner", "off", "--format", "json"],
+        cwd=project_cfg.BASE_DIR,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    try:
+        report = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return 0, "[WARN] Advisory feed unreachable; nothing was checked"
+    findings = sum(len(dep.get("vulns") or []) for dep in report.get("dependencies", []))
+    if not findings:
+        return 0, "[OK] No known advisories"
+    return 1, f"[FAIL] {findings} known advisor{'y' if findings == 1 else 'ies'} in the installed environment"
 
 
 def format_check() -> int:
@@ -61,8 +74,10 @@ def format_check() -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-format-check", action="store_true", help="skip the ruff format comparison")
-    parser.add_argument("--audit", action="store_true", help="also check installed dependencies for advisories")
+    parser.add_argument("--prune", action="store_true", help="list installed packages outside the import graph")
     args = parser.parse_args(argv)
+    if args.prune:
+        return dependencies.main()
 
     print("=== STRUCTURE AND DOCUMENTATION ===", flush=True)
     structure_status = structure_docs.main()
@@ -100,12 +115,9 @@ def main(argv: list[str] | None = None) -> int:
     spelling_status = spelling_check()
     print("[OK] Spelling clean" if not spelling_status else "[FAIL] Spelling findings above")
 
-    audit_status = 0
-    if args.audit:
-        print("\n=== DEPENDENCY ADVISORIES ===", flush=True)
-        audit_status = security_audit()
-        print("[WARN] Advisories reported above; third-party advisories are triaged, not gated")
-    _ = audit_status
+    print("\n=== DEPENDENCY ADVISORIES ===", flush=True)
+    audit_status, audit_note = security_audit()
+    print(audit_note)
     return int(
         bool(
             structure_status
@@ -115,6 +127,7 @@ def main(argv: list[str] | None = None) -> int:
             or inventory_status
             or formatting_status
             or spelling_status
+            or audit_status
         )
     )
 
