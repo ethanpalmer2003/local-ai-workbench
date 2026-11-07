@@ -17,6 +17,7 @@ from scripts.tests.cases.coding_agents.shared.test_benchmark_matrix import Bench
 from scripts.tests.cases.coding_agents.shared.test_benchmark_requests import BenchmarkRequestsTests
 from scripts.tests.cases.personal.comfyui.test_comfyui_video import WorkflowTests
 from scripts.tests.cases.koboldcpp.kobold_lite_streaming import StreamingPatch
+from scripts.tests.cases.koboldcpp.test_external_bridge import ExternalBridgeTests
 from scripts.tests.cases.llamacpp.hrx.test_hrx_build import HrxBuildTests
 from scripts.tests.cases.llamacpp.test_ngram import NgramWorkloads
 from scripts.tests.cases.shared import frameworks_smoke
@@ -103,6 +104,7 @@ if __name__ == "__main__":
                     ResidencyTests,
                     SharedContracts,
                     StreamingPatch,
+                    ExternalBridgeTests,
                     TransportBenchmark,
                     BackendSessions,
                 )
