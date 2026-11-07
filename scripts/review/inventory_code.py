@@ -300,6 +300,18 @@ def _suppression_section(suppressions: list[str]) -> list[str]:
     return [*lines, *(f"- {item}" for item in suppressions)] if suppressions else [*lines, "None."]
 
 
+def _dependency_section(counts: dict[str, int]) -> list[str]:
+    if not counts:
+        return []
+    return [
+        "",
+        "## Dependencies",
+        "",
+        f"{counts['pinned']} pinned; {counts['installed']} installed; "
+        f"{counts['unused']} outside the import graph; {counts['drift']} drift entries.",
+    ]
+
+
 def report(
     results: list[FunctionSize],
     files: int,
@@ -308,6 +320,7 @@ def report(
     artifacts: Path,
     duplicates: list[list[Fingerprint]],
     suppressions: list[str],
+    dependencies: dict[str, int] | None = None,
 ) -> int:
     sparse_folders = [
         item
@@ -331,6 +344,7 @@ def report(
         "small_folder_candidates": small_folders,
         "source_file_lines": source_files,
         "inline_suppressions": suppressions,
+        "dependencies": dependencies or {},
     }
     lines = [
         "# Repository code review",
@@ -363,6 +377,7 @@ def report(
     lines.extend(f"| {item.path}:{item.line} | {item.name} | {item.code_lines} | {item.depth} |" for item in violations)
     lines.extend(_duplicate_section(duplicates))
     lines.extend(_suppression_section(suppressions))
+    lines.extend(_dependency_section(dependencies or {}))
     (artifacts / "review.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     (artifacts / "review.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"{len(folders)} folders, {len(source_files)} Python/Markdown files; {len(violations)} complexity violations")
@@ -459,7 +474,7 @@ def suppression_issues(root: Path) -> list[str]:
     return issues
 
 
-def main() -> int:
+def main(dependencies: dict[str, int] | None = None) -> int:
     if "--complexity-debt" in sys.argv[1:]:
         print(f"Complexity debt rows: {complexity_debt(project_cfg.BASE_DIR)} -> {DEBT_DOC.name}")
         return 0
@@ -479,7 +494,16 @@ def main() -> int:
     suppressions = suppression_issues(root)
     artifacts = project_cfg.component("shared").generated_dir / "code_review" / str(time.time_ns())
     artifacts.mkdir(parents=True, exist_ok=False)
-    status = report(results, len(files), folders, source_files, artifacts, duplicate_groups(fingerprints), suppressions)
+    status = report(
+        results,
+        len(files),
+        folders,
+        source_files,
+        artifacts,
+        duplicate_groups(fingerprints),
+        suppressions,
+        dependencies,
+    )
     return int(bool(suppressions) or status)
 
 

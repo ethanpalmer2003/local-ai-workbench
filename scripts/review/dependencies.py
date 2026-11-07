@@ -117,11 +117,53 @@ def unused_packages() -> list[tuple[str, str]]:
     return sorted(((display[name], known[name]) for name in set(known) - reachable), key=lambda row: row[0].casefold())
 
 
+def pinned() -> dict[str, tuple[str, str]]:
+    """Normalized name -> (as written, version) for every explicit requirement pin."""
+    path = project_cfg.SCRIPTS_DIR / "requirements.txt"
+    pins: dict[str, tuple[str, str]] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        entry = line.split("#", 1)[0].strip()
+        if "==" not in entry:
+            continue
+        name, version = entry.split("==", 1)
+        pins[_normalized(name)] = (name.strip(), version.strip())
+    return pins
+
+
+def drift_issues() -> list[str]:
+    """requirements.txt and the venv must describe the same set at the same versions."""
+    pins = pinned()
+    known = installed()
+    issues = [
+        f"Pinned but not installed: {name}=={version}" for key, (name, version) in pins.items() if key not in known
+    ]
+    issues.extend(f"Installed but not pinned: {name} {version}" for name, version in known.items() if name not in pins)
+    issues.extend(
+        f"Version differs: {pins[key][0]} pinned {pins[key][1]}, installed {known[key]}"
+        for key in pins
+        if key in known and known[key] != pins[key][1]
+    )
+    return sorted(issues)
+
+
+def summary() -> dict[str, int]:
+    return {
+        "pinned": len(pinned()),
+        "installed": len(installed()),
+        "unused": len(unused_packages()),
+        "drift": len(drift_issues()),
+    }
+
+
 def main() -> int:
     unused = unused_packages()
+    drift = drift_issues()
     print(f"{len(unused)} installed package(s) are outside the import graph")
     for name, version in unused:
         print(f"  {name} {version}")
     if unused:
         print("\nRemove with:\n  uv pip uninstall " + " ".join(name for name, _ in unused))
-    return 0
+    print(f"\n{len(drift)} requirement/venv drift entry(s)")
+    for issue in drift:
+        print(f"  {issue}")
+    return int(bool(drift))
