@@ -1146,7 +1146,53 @@ def print_plan(plans, top_n):
         print(f"\nTotal with --transcribe: at least {total_sel} clips (more if new transcripts rank lower)")
 
 
-def validate_character(char):  # noqa: C901
+def _source_files(workspace, excluded) -> list[Path] | None:
+    """Every eligible audio file for one character, or None when the folder has none."""
+    directory = workspace.directory
+    has_audio = directory.is_dir() and any(
+        f.is_file() and workspace.generated not in f.parents and f.suffix.lower() in (".ogg", ".wav", ".mp3")
+        for f in directory.rglob("*")
+    )
+    if not has_audio:
+        return None
+    try:
+        return [f for f in get_files(roots(directory), excluded) if workspace.generated not in f.parents]
+    except ValueError:
+        return None
+
+
+def _duplicate_detail(files, directory) -> list[tuple[str, list[str]]]:
+    by_id = {}
+    for f in files:
+        by_id.setdefault(audio_id(f), []).append(str(f.relative_to(directory)))
+    return [(k, v) for k, v in by_id.items() if len(v) > 1]
+
+
+def _transcript_map(raw, files) -> dict[str, str]:
+    """Cached transcripts win over the sidecar text; both are keyed by normalized audio id."""
+    mapping = {}
+    for k, v in raw.items():
+        key = norm_key(k)
+        text = clean_text(v)
+        if text or key not in mapping:
+            mapping[key] = text
+    for k, v in get_text(files).items():
+        if not mapping.get(k, "").strip():
+            mapping[k] = v
+    return mapping
+
+
+def _validation_status(row) -> str:
+    if row["orphans"] or row["dup_ids"]:
+        return "ISSUES"
+    if row["files"] and row["with_text"] == 0:
+        return "NO TRANSCRIPTS"
+    if row["legacy_keys"] or row["underscores"]:
+        return "NEEDS CLEANUP"  # auto-fixed the next time the character is run
+    return "OK"
+
+
+def validate_character(char):
     """Read-only health check for one character: never downloads, transcribes or writes anything.
     Returns a dict describing key-matching / transcript problems.
     """
@@ -1168,17 +1214,8 @@ def validate_character(char):  # noqa: C901
         "usable": 0,
     }
 
-    has_audio = directory.is_dir() and any(
-        f.is_file() and workspace.generated not in f.parents and f.suffix.lower() in (".ogg", ".wav", ".mp3")
-        for f in directory.rglob("*")
-    )
-    if not has_audio:
-        row["status"] = "NO SOURCES"
-        return row
-
-    try:
-        files = [f for f in get_files(roots(directory), excluded) if workspace.generated not in f.parents]
-    except ValueError:
+    files = _source_files(workspace, excluded)
+    if files is None:
         row["status"] = "NO SOURCES"
         return row
 
@@ -1187,10 +1224,7 @@ def validate_character(char):  # noqa: C901
     row["files"] = len(id_set)
     row["dup_ids"] = len(ids) - len(id_set)
     if row["dup_ids"]:
-        by_id = {}
-        for f in files:
-            by_id.setdefault(audio_id(f), []).append(str(f.relative_to(directory)))
-        row["dup_detail"] = [(k, v) for k, v in by_id.items() if len(v) > 1]
+        row["dup_detail"] = _duplicate_detail(files, directory)
 
     raw = load_json(workspace.cache)
     if not isinstance(raw, dict):
@@ -1198,27 +1232,12 @@ def validate_character(char):  # noqa: C901
     row["legacy_keys"] = sum(norm_key(k) != str(k).lower() for k in raw)
     row["underscores"] = sum("_" in str(v) for v in raw.values())
 
-    mapping = {}
-    for k, v in raw.items():
-        key = norm_key(k)
-        text = clean_text(v)
-        if text or key not in mapping:
-            mapping[key] = text
-    for k, v in get_text(files).items():
-        if not mapping.get(k, "").strip():
-            mapping[k] = v
-
+    mapping = _transcript_map(raw, files)
     row["orphans"] = sorted(k for k, v in mapping.items() if v.strip() and k not in id_set and k not in excluded)
     row["with_text"] = sum(bool(mapping.get(i, "").strip()) for i in id_set)
     row["missing"] = row["files"] - row["with_text"]
     row["usable"] = sum(is_speech(mapping.get(i, "")) for i in id_set)
-
-    if row["orphans"] or row["dup_ids"]:
-        row["status"] = "ISSUES"
-    elif row["files"] and row["with_text"] == 0:
-        row["status"] = "NO TRANSCRIPTS"
-    elif row["legacy_keys"] or row["underscores"]:
-        row["status"] = "NEEDS CLEANUP"  # auto-fixed the next time the character is run
+    row["status"] = _validation_status(row)
     return row
 
 
@@ -1317,105 +1336,108 @@ def argument_parser() -> argparse.ArgumentParser:
     return p
 
 
-def main():  # noqa: C901
-    p = argument_parser()
-    a = p.parse_args()
+def _planned(a, targets) -> list[Any]:
+    plans = []
+    for v in a.characters:
+        char = str(v)
+        config = CHARACTER_CONFIGS[char]
+        count = config.count if a.count is None else a.count
+        plans.append(
+            plan_character(
+                char,
+                config.selection or a.selection,
+                config.fallback or a.fallback,
+                count,
+                a.ids,
+                targets,
+                a.transcribe_top,
+            )
+        )
+    return plans
 
-    if a.all:
-        a.characters = list(CHARACTER_CONFIGS)
 
+def _read_only_actions(a) -> bool:
+    """Run --cleanup/--validate/--dry-run; True when nothing else should run."""
     if a.drop_orphans:
         a.cleanup = True  # --drop-orphans on its own used to be silently ignored
-
     if a.cleanup:
         print_cleanup([cleanup_character(str(v), a.drop_orphans) for v in a.characters])
     if a.validate:
         print_validation([validate_character(str(v)) for v in a.characters])
     if a.transcribe_top:
         a.transcribe = True
-
     if a.dry_run:
-        targets = duration_targets_for_args(a)
-        plans = []
-        for v in a.characters:
-            char = str(v)
-            config = CHARACTER_CONFIGS[char]
-            count = config.count if a.count is None else a.count
-            plans.append(
-                plan_character(
-                    char,
-                    config.selection or a.selection,
-                    config.fallback or a.fallback,
-                    count,
-                    a.ids,
-                    targets,
-                    a.transcribe_top,
-                )
-            )
-        print_plan(plans, a.transcribe_top)
+        print_plan(_planned(a, duration_targets_for_args(a)), a.transcribe_top)
+    return a.cleanup or a.validate or a.dry_run
 
-    if a.cleanup or a.validate or a.dry_run:
-        return
 
-    duration_targets = duration_targets_for_args(a)
+def _prepare_variant(a, name: str, config, duration_target) -> PreparationResult:
+    workspace = CharacterWorkspace(DATA, name, config.category)
+    count = config.count if a.count is None else a.count
+    variant = workspace.wav_suffix(duration_target, count)
+    print(f"\n=== {name} ({variant}) ===")
 
+    out_path = workspace.wav_path(duration_target, count)
+    if out_path.is_file() and not a.force:
+        print(f"Skipping - already exists: {out_path}")
+        print("(use --force to recreate)")
+        return PreparationResult(
+            character=f"{name} ({variant})",
+            status="SKIPPED (exists)",
+            selected=0,
+            method="-",
+            transcribed=0,
+            missing=[],
+            length=None,
+        )
+
+    try:
+        result = prepare(
+            name,
+            config.selection or a.selection,
+            config.fallback or a.fallback,
+            a.count,
+            a.ids,
+            a.transcribe,
+            duration_target,
+            a.transcribe_top,
+        )
+        result.character = f"{name} ({variant})"
+        return result
+    except Exception:
+        traceback.print_exc()
+        return PreparationResult(
+            character=f"{name} ({variant})",
+            status="FAILED",
+            selected=0,
+            method="-",
+            transcribed=0,
+            missing=[],
+            length=None,
+        )
+
+
+def _prepare_all(a, duration_targets) -> list[PreparationResult]:
     results = []
-
     for value in a.characters:
         name = str(value)
         config = CHARACTER_CONFIGS[name]
-        workspace = CharacterWorkspace(DATA, name, config.category)
-        count = config.count if a.count is None else a.count
-
         for duration_target in duration_targets:
-            variant = workspace.wav_suffix(duration_target, count)
-            print(f"\n=== {name} ({variant}) ===")
+            results.append(_prepare_variant(a, name, config, duration_target))
+    return results
 
-            out_path = workspace.wav_path(duration_target, count)
-            if out_path.is_file() and not a.force:
-                print(f"Skipping - already exists: {out_path}")
-                print("(use --force to recreate)")
-                results.append(
-                    PreparationResult(
-                        character=f"{name} ({variant})",
-                        status="SKIPPED (exists)",
-                        selected=0,
-                        method="-",
-                        transcribed=0,
-                        missing=[],
-                        length=None,
-                    )
-                )
-                continue
 
-            try:
-                result = prepare(
-                    name,
-                    config.selection or a.selection,
-                    config.fallback or a.fallback,
-                    a.count,
-                    a.ids,
-                    a.transcribe,
-                    duration_target,
-                    a.transcribe_top,
-                )
-                result.character = f"{name} ({variant})"
-                results.append(result)
-            except Exception:
-                traceback.print_exc()
-                results.append(
-                    PreparationResult(
-                        character=f"{name} ({variant})",
-                        status="FAILED",
-                        selected=0,
-                        method="-",
-                        transcribed=0,
-                        missing=[],
-                        length=None,
-                    )
-                )
+def main():
+    p = argument_parser()
+    a = p.parse_args()
 
-    print_summary(results)
+    if a.all:
+        a.characters = list(CHARACTER_CONFIGS)
+
+    if _read_only_actions(a):
+        return
+
+    print_summary(_prepare_all(a, duration_targets_for_args(a)))
 
 
 if __name__ == "__main__":

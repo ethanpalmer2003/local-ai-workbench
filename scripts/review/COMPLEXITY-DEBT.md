@@ -5,12 +5,7 @@ Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rath
 
 | Complexity | Function |
 | ---: | --- |
-| 14 | `scripts/launchers/llamacpp/llamacpp_dsh.py:220` `main` |
-| 14 | `scripts/review/model_references.py:16` `inspect` |
-| 14 | `scripts/tests/cases/asr/shared/language_practice_whisper.py:38` `main` |
 | 13 | `scripts/benchmarks/personal/comfyui/comfyui_video.py:668` `_resolve_arguments` |
-| 13 | `scripts/download/input/get_tts_voices.py:1149` `validate_character` |
-| 13 | `scripts/download/input/get_tts_voices.py:1320` `main` |
 | 13 | `scripts/download/models/metadata_evidence.py:18` `measurements` |
 | 13 | `scripts/launchers/koboldcpp/kobold.py:38` `server_command` |
 | 12 | `scripts/benchmarks/asr/asr_resident_compare.py:94` `run_engine` |
@@ -39,4 +34,4 @@ Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rath
 | 11 | `scripts/tests/cases/llamacpp/hrx/hrx_update_validation.py:131` `verify_candidate_evidence` |
 | 11 | `scripts/tools/rewrite_imports.py:88` `rewrite_file` |
 
-Remaining: 33.
+Remaining: 28.

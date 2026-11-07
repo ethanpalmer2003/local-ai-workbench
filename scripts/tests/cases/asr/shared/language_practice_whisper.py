@@ -25,7 +25,7 @@ from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.tests.cases.asr.shared.corpus import prepare_corpus
 from scripts.tests.cases.asr.shared.metrics import word_errors
 from scripts.tests.cases.asr.shared.requests import multipart
-from scripts.tests.shared.paths import CasePaths
+from scripts.tests.shared.paths import CasePaths, RunPaths
 
 
 def request(url: str, payload: bytes | None = None, content_type: str = "application/json") -> Any:
@@ -35,13 +35,9 @@ def request(url: str, payload: bytes | None = None, content_type: str = "applica
         return json.load(response)
 
 
-def main() -> None:  # noqa: C901
+def _require_free_sessions() -> None:
     import psutil
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--transcription-engine", choices=("whisper-vulkan", "qwen3-asr"), default="whisper-vulkan")
-    args = parser.parse_args()
-    context = dict(require_native_execution("Language-practice ASR integration"))
     if launch_util.llama_server_running():
         raise RuntimeError("Existing llama.cpp session retained; isolated integration check needs free runtimes")
     names = {
@@ -56,6 +52,93 @@ def main() -> None:  # noqa: C901
     occupied = [port for port in (18885, 18886, 18887) if launch_util.port_listening(port)]
     if active or occupied:
         raise RuntimeError(f"Existing native sessions/occupied test ports; nothing was stopped: {active}, {occupied}")
+
+
+def _start_services(
+    commands: dict[str, list[str]], run: RunPaths, env: dict[str, str], stack: contextlib.ExitStack, deadline: float
+) -> list[subprocess.Popen[Any]]:
+    processes: list[subprocess.Popen[Any]] = []
+    for name, command in commands.items():
+        log = stack.enter_context((run.logs / f"{name}.log").open("wb"))
+        process = subprocess.Popen(command, cwd=project_cfg.BASE_DIR, env=env, stdout=log, stderr=subprocess.STDOUT)
+        processes.append(process)
+        launch_util.assign_process_to_job(process.pid)
+        health = (
+            transcription.backend(cfg.KOBOLDCPP_SERVICE.transcription_engine).url() + "/health"
+            if name == "asr"
+            else "http://127.0.0.1:18885/api/extra/version"
+        )
+        while not launch_util.backend_ready(health):
+            if process.poll() is not None or time.monotonic() >= deadline:
+                raise RuntimeError(f"{name} failed to start within the smoke budget; inspect {run.logs}")
+            time.sleep(0.2)
+    return processes
+
+
+def _await_lite(lite: str, deadline: float) -> None:
+    while not launch_util.backend_ready(lite + "/health"):
+        if time.monotonic() >= deadline:
+            raise TimeoutError("Lite proxy startup exceeded smoke budget")
+        time.sleep(0.1)
+
+
+def _transcribe(lite: str, clips: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    transcripts: list[dict[str, Any]] = []
+    for index, clip in enumerate(clips[:2]):
+        audio = Path(clip["file"]).read_bytes()
+        if index == 0:
+            body = json.dumps({"audio_data": base64.b64encode(audio).decode(), "langcode": "en"}).encode()
+            path, content_type = "/api/extra/transcribe", "application/json"
+        else:
+            body, content_type = multipart(audio)
+            path = "/v1/audio/transcriptions"
+        result = request(lite + path, body, content_type)
+        accuracy = word_errors(clip["reference"], result["text"])
+        assert result["text"].strip() and accuracy["wer"] < 0.1
+        transcripts.append({"path": path, "text": result["text"], **accuracy})
+        print(f"[OK] {path}: {result['text']}", flush=True)
+    return transcripts
+
+
+def _chat(lite: str, transcripts: list[dict[str, Any]]) -> Any:
+    return request(
+        lite + "/v1/chat/completions",
+        json.dumps(
+            {
+                "model": "gemma",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Practise English with me. Give one short friendly reply to: "
+                        + str(transcripts[0]["text"]),
+                    }
+                ],
+                "max_tokens": 48,
+                "temperature": 0,
+            }
+        ).encode(),
+    )
+
+
+def _stop_services(
+    servers: list[ThreadingHTTPServer], thread: threading.Thread | None, processes: list[subprocess.Popen[Any]]
+) -> None:
+    for server in servers:
+        server.shutdown()
+    if thread:
+        thread.join(timeout=5)
+    for process in reversed(processes):
+        if process.poll() is None:
+            launch_util.kill_process_tree(process.pid)
+        process.wait(timeout=15)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--transcription-engine", choices=("whisper-vulkan", "qwen3-asr"), default="whisper-vulkan")
+    args = parser.parse_args()
+    context = dict(require_native_execution("Language-practice ASR integration"))
+    _require_free_sessions()
     cfg.KOBOLDCPP_SERVICE.model = "llamacpp/gemma-4-E4B-it-Q4_0"
     cfg.KOBOLDCPP_SERVICE.transcription_engine = cfg.AsrStartupEngine(args.transcription_engine)
     cfg.KOBOLDCPP_SERVICE.streaming_ui_host, cfg.KOBOLDCPP_SERVICE.streaming_ui_port = "127.0.0.1", 18886
@@ -78,74 +161,27 @@ def main() -> None:  # noqa: C901
     env = {**os.environ, "TEMP": str(cfg.LAUNCH.temp_dir), "TMP": str(cfg.LAUNCH.temp_dir)}
     processes: list[subprocess.Popen[Any]] = []
     servers: list[ThreadingHTTPServer] = []
-    thread = None
+    thread: threading.Thread | None = None
     deadline = time.monotonic() + 180
     with report_run(run, "asr/shared/language_practice_whisper", "audio", settings=settings) as report:
         clips = prepare_corpus(run, None)
         with contextlib.ExitStack() as stack:
             try:
-                for name, command in commands.items():
-                    log = stack.enter_context((run.logs / f"{name}.log").open("wb"))
-                    process = subprocess.Popen(
-                        command, cwd=project_cfg.BASE_DIR, env=env, stdout=log, stderr=subprocess.STDOUT
-                    )
-                    processes.append(process)
-                    launch_util.assign_process_to_job(process.pid)
-                    health = (
-                        transcription.backend(cfg.KOBOLDCPP_SERVICE.transcription_engine).url() + "/health"
-                        if name == "asr"
-                        else "http://127.0.0.1:18885/api/extra/version"
-                    )
-                    while not launch_util.backend_ready(health):
-                        if process.poll() is not None or time.monotonic() >= deadline:
-                            raise RuntimeError(f"{name} failed to start within the smoke budget; inspect {run.logs}")
-                        time.sleep(0.2)
+                processes.extend(_start_services(commands, run, env, stack, deadline))
                 thread = threading.Thread(
                     target=kobold_lite.run_proxy, kwargs={"on_server": servers.append}, daemon=True
                 )
                 thread.start()
                 lite = "http://127.0.0.1:18886"
-                while not launch_util.backend_ready(lite + "/health"):
-                    if time.monotonic() >= deadline:
-                        raise TimeoutError("Lite proxy startup exceeded smoke budget")
-                    time.sleep(0.1)
+                _await_lite(lite, deadline)
                 native_caps = request("http://127.0.0.1:18885/api/extra/version")
                 proxy_caps = request(lite + "/api/extra/version")
                 assert native_caps["transcribe"] is False and proxy_caps["transcribe"] is True
                 with urllib.request.urlopen(lite, timeout=30) as response:
                     html = response.read().decode()
                 assert "kobold_streaming.js" in html
-                transcripts = []
-                for index, clip in enumerate(clips[:2]):
-                    audio = Path(clip["file"]).read_bytes()
-                    if index == 0:
-                        body = json.dumps({"audio_data": base64.b64encode(audio).decode(), "langcode": "en"}).encode()
-                        path, content_type = "/api/extra/transcribe", "application/json"
-                    else:
-                        body, content_type = multipart(audio)
-                        path = "/v1/audio/transcriptions"
-                    result = request(lite + path, body, content_type)
-                    accuracy = word_errors(clip["reference"], result["text"])
-                    assert result["text"].strip() and accuracy["wer"] < 0.1
-                    transcripts.append({"path": path, "text": result["text"], **accuracy})
-                    print(f"[OK] {path}: {result['text']}", flush=True)
-                reply = request(
-                    lite + "/v1/chat/completions",
-                    json.dumps(
-                        {
-                            "model": "gemma",
-                            "messages": [
-                                {
-                                    "role": "user",
-                                    "content": "Practise English with me. Give one short friendly reply to: "
-                                    + transcripts[0]["text"],
-                                }
-                            ],
-                            "max_tokens": 48,
-                            "temperature": 0,
-                        }
-                    ).encode(),
-                )
+                transcripts = _transcribe(lite, clips)
+                reply = _chat(lite, transcripts)
                 assert reply["choices"][0]["message"]["content"].strip()
                 assert (
                     qwen_asr.matching_server()
@@ -162,14 +198,7 @@ def main() -> None:  # noqa: C901
                     }
                 )
             finally:
-                for server in servers:
-                    server.shutdown()
-                if thread:
-                    thread.join(timeout=5)
-                for process in reversed(processes):
-                    if process.poll() is None:
-                        launch_util.kill_process_tree(process.pid)
-                    process.wait(timeout=15)
+                _stop_services(servers, thread, processes)
         report.results.append(
             {"cleanup_ports_clear": all(not launch_util.port_listening(port) for port in (18885, 18886, 18887))}
         )

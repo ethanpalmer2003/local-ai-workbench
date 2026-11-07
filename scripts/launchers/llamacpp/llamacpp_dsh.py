@@ -217,13 +217,15 @@ def update_patch(args: argparse.Namespace, patch_path: Path) -> int:
     return 0
 
 
-def main() -> int:  # noqa: C901
+def _configure_streams() -> None:
     # - a model id is external text and the Windows console default (cp1252)
     #   would crash on any non-ASCII one
     for stream in (sys.stdout, sys.stderr):
         if isinstance(stream, io.TextIOWrapper):
             stream.reconfigure(encoding="utf-8", errors="replace")
 
+
+def _arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Prepare llama-server for a manually opened DeepSeek Harness.")
     parser.add_argument("--port", type=int, default=cfg.LLAMACPP_SERVICE.port)
     parser.add_argument("--profile", default=cfg.DEEPSEEK_CLIENT.profile)
@@ -235,7 +237,49 @@ def main() -> int:  # noqa: C901
     parser.add_argument("--dry-run", action="store_true", help="print what would happen, write nothing")
     parser.add_argument("--no-open", action="store_true", help=argparse.SUPPRESS)
     llamacpp.add_config_args(parser)
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def _start_proxy(args: argparse.Namespace) -> int | None:
+    # - the proxy belongs on this port: starting it loads nothing, and it
+    #   answers /v1/models from its own configuration
+    if args.dry_run:
+        print(f"[dsh] would start the llama.cpp proxy on 127.0.0.1:{args.port} (model loads on first request)")
+        return None
+    print(f"[dsh] no server on 127.0.0.1:{args.port} - starting the llama.cpp proxy")
+    llamacpp_proxy.start(args, port=args.port)
+    if not wait_for_backend(args.port, PROXY_READY_TIMEOUT_S):
+        print(f"[FAIL] proxy did not answer 127.0.0.1:{args.port} in {PROXY_READY_TIMEOUT_S}s", file=sys.stderr)
+        return 1
+    return None
+
+
+def _launch_profile(args: argparse.Namespace) -> int | None:
+    conf = llamacpp.config_from_args(args, port=args.port)
+    if args.dry_run:
+        print(f"[dsh] would launch profile '{conf.name}':")
+        print("      " + " ".join(f'"{a}"' for a in conf.build_cmd(llamacpp.DRY_RUN_LOG_FILE)))
+        return None
+    print(f"[dsh] no server on 127.0.0.1:{args.port} - launching profile '{conf.name}'")
+    llamacpp.launch(conf=conf)
+    return None
+
+
+def _start_server(args: argparse.Namespace) -> int | None:
+    """Attach to a running server, start the proxy, or launch the profile."""
+    if backend_running(args.port):
+        print(f"[dsh] llama-server already up on 127.0.0.1:{args.port} - attaching")
+        if llamacpp.config_given(args):
+            print("[dsh] server-config flags ignored while attaching; stop the server to relaunch it", file=sys.stderr)
+        return None
+    if cfg.LLAMACPP_SERVICE.mode == cfg.ServiceMode.PROXY:
+        return _start_proxy(args)
+    return _launch_profile(args)
+
+
+def main() -> int:
+    _configure_streams()
+    args = _arguments()
 
     if not args.dry_run:
         prepare_dsh_env(args.profile)
@@ -243,37 +287,13 @@ def main() -> int:  # noqa: C901
     patch_path: Path | None = None
     if args.update_patch:
         patch_path = Path(args.patch) if args.patch is not None else cfg.DEEPSEEK_CLIENT.patch_path(args.profile)
-
         if not patch_path.is_file():
             print(f"[FAIL] profile patch not found: {patch_path}", file=sys.stderr)
             return 1
 
-    attached = backend_running(args.port)
-    proxy_mode = cfg.LLAMACPP_SERVICE.mode == cfg.ServiceMode.PROXY
-
-    if attached:
-        print(f"[dsh] llama-server already up on 127.0.0.1:{args.port} - attaching")
-        if llamacpp.config_given(args):
-            print("[dsh] server-config flags ignored while attaching; stop the server to relaunch it", file=sys.stderr)
-    elif proxy_mode:
-        # - the proxy belongs on this port: starting it loads nothing, and it
-        #   answers /v1/models from its own configuration
-        if args.dry_run:
-            print(f"[dsh] would start the llama.cpp proxy on 127.0.0.1:{args.port} (model loads on first request)")
-        else:
-            print(f"[dsh] no server on 127.0.0.1:{args.port} - starting the llama.cpp proxy")
-            llamacpp_proxy.start(args, port=args.port)
-            if not wait_for_backend(args.port, PROXY_READY_TIMEOUT_S):
-                print(f"[FAIL] proxy did not answer 127.0.0.1:{args.port} in {PROXY_READY_TIMEOUT_S}s", file=sys.stderr)
-                return 1
-    else:
-        conf = llamacpp.config_from_args(args, port=args.port)
-        if args.dry_run:
-            print(f"[dsh] would launch profile '{conf.name}':")
-            print("      " + " ".join(f'"{a}"' for a in conf.build_cmd(llamacpp.DRY_RUN_LOG_FILE)))
-        else:
-            print(f"[dsh] no server on 127.0.0.1:{args.port} - launching profile '{conf.name}'")
-            llamacpp.launch(conf=conf)
+    status = _start_server(args)
+    if status is not None:
+        return status
 
     if patch_path is not None and update_patch(args, patch_path) != 0:
         return 1
