@@ -141,7 +141,47 @@ class SwapProbe:
             for job in jobs:
                 job.result()
 
-    def run(self, cycles: int) -> None:  # noqa: C901
+    def _swap_cycles(self, cycles: int, kobold_pid: int) -> None:
+        for cycle in range(1, cycles + 1):
+            self.stop_backend("audio", f"cycle-{cycle}-audio-stop")
+            self.start_backend("image", f"cycle-{cycle}-image-start")
+            for image in (1, 2):
+                label = f"cycle-{cycle}-image-{image}"
+                self.record(label, lambda: generate("image", self.paths, label))
+            self.stop_backend("image", f"cycle-{cycle}-image-stop")
+            self.start_backend("audio", f"cycle-{cycle}-audio-start")
+            self.speech(f"cycle-{cycle}-audio-first")
+            self.speech(f"cycle-{cycle}-audio-warm")
+            if launch_util.listening_process_ids(backends.ports("kobold")[0]) != [kobold_pid]:
+                raise RuntimeError("Kobold PID changed during the swap")
+
+    def _cleanup(self) -> None:
+        self.stop.set()
+        for process in reversed(self.owned):
+            if process.poll() is None:
+                launch_util.kill_process_tree(process.pid)
+                process.wait(timeout=10)
+        for watcher in self.watchers:
+            watcher.join(timeout=3)
+        self.report["resources"] = {name: summarize_resources(rows) for name, rows in self.samples.items()}
+        (self.paths.logs / "resources.json").write_text(json.dumps(self.samples, indent=2) + "\n")
+        (self.paths.artifacts / "vram.json").write_text(json.dumps(self.memory.summary(), indent=2) + "\n")
+        deadline = time.monotonic() + 5
+        while any(backends.listening(port) for name in ("kobold", "audio", "image") for port in backends.ports(name)):
+            if time.monotonic() >= deadline:
+                break
+            time.sleep(0.1)
+        self.report["remaining_ports"] = {
+            name: [port for port in backends.ports(name) if backends.listening(port)]
+            for name in ("kobold", "audio", "image")
+        }
+        self.save()
+        print(
+            json.dumps({key: self.report.get(key) for key in ("status", "error", "guards", "remaining_ports")}),
+            flush=True,
+        )
+
+    def run(self, cycles: int) -> None:
         try:
             Thread(target=self.guard, daemon=True).start()
             with self.memory:
@@ -153,18 +193,7 @@ class SwapProbe:
                 self.speech("audio-initial-first")
                 self.speech("audio-initial-warm")
                 self.parallel_conversation("conversation-before")
-                for cycle in range(1, cycles + 1):
-                    self.stop_backend("audio", f"cycle-{cycle}-audio-stop")
-                    self.start_backend("image", f"cycle-{cycle}-image-start")
-                    for image in (1, 2):
-                        label = f"cycle-{cycle}-image-{image}"
-                        self.record(label, lambda: generate("image", self.paths, label))
-                    self.stop_backend("image", f"cycle-{cycle}-image-stop")
-                    self.start_backend("audio", f"cycle-{cycle}-audio-start")
-                    self.speech(f"cycle-{cycle}-audio-first")
-                    self.speech(f"cycle-{cycle}-audio-warm")
-                    if launch_util.listening_process_ids(backends.ports("kobold")[0]) != [kobold_pid]:
-                        raise RuntimeError("Kobold PID changed during the swap")
+                self._swap_cycles(cycles, kobold_pid)
                 self.parallel_conversation("conversation-after")
                 if self.report.get("guard_abort") or any(
                     row.get("abort") for rows in self.samples.values() for row in rows
@@ -175,32 +204,7 @@ class SwapProbe:
             self.report.update(status="failed", error=str(error))
             raise
         finally:
-            self.stop.set()
-            for process in reversed(self.owned):
-                if process.poll() is None:
-                    launch_util.kill_process_tree(process.pid)
-                    process.wait(timeout=10)
-            for watcher in self.watchers:
-                watcher.join(timeout=3)
-            self.report["resources"] = {name: summarize_resources(rows) for name, rows in self.samples.items()}
-            (self.paths.logs / "resources.json").write_text(json.dumps(self.samples, indent=2) + "\n")
-            (self.paths.artifacts / "vram.json").write_text(json.dumps(self.memory.summary(), indent=2) + "\n")
-            deadline = time.monotonic() + 5
-            while any(
-                backends.listening(port) for name in ("kobold", "audio", "image") for port in backends.ports(name)
-            ):
-                if time.monotonic() >= deadline:
-                    break
-                time.sleep(0.1)
-            self.report["remaining_ports"] = {
-                name: [port for port in backends.ports(name) if backends.listening(port)]
-                for name in ("kobold", "audio", "image")
-            }
-            self.save()
-            print(
-                json.dumps({key: self.report.get(key) for key in ("status", "error", "guards", "remaining_ports")}),
-                flush=True,
-            )
+            self._cleanup()
 
 
 def main() -> None:

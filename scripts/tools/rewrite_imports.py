@@ -85,16 +85,9 @@ def _rewrite_import(node: ast.Import | ast.ImportFrom, moves: dict[str, str]) ->
     return "\n".join(_from_statement(module, aliases) for module, aliases in groups.items())
 
 
-def rewrite_file(path: Path, moves: dict[str, str], *, dry_run: bool) -> bool:  # noqa: C901
-    with path.open("r", encoding="utf-8", newline="") as stream:
-        source = stream.read()
-    try:
-        tree = ast.parse(source, filename=str(path))
-    except SyntaxError as error:
-        print(f"[WARN] Skipped unparsable Python: {path}: {error}")
-        return False
-
+def _import_edits(source: str, tree: ast.Module, path: Path, moves: dict[str, str]) -> list[tuple[int, int, list[str]]]:
     lines = source.splitlines(keepends=True)
+    newline = "\r\n" if "\r\n" in source else "\n"
     edits = []
     for node in ast.walk(tree):
         if not isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -108,17 +101,32 @@ def rewrite_file(path: Path, moves: dict[str, str], *, dry_run: bool) -> bool:  
         if "#" in old_text:
             print(f"[WARN] Import comment needs manual review: {path}:{node.lineno}")
             continue
-        indent = lines[node.lineno - 1][: len(lines[node.lineno - 1]) - len(lines[node.lineno - 1].lstrip())]
-        newline = "\r\n" if "\r\n" in source else "\n"
+        current = lines[node.lineno - 1]
+        indent = current[: len(current) - len(current.lstrip())]
         replacement = [indent + item + newline for item in new_text.splitlines()]
-        edits.append((node.lineno - 1, node.end_lineno, replacement))
+        edits.append((node.lineno - 1, node.end_lineno or node.lineno, replacement))
+    return edits
 
-    for start, end, replacement in sorted(edits, reverse=True):
-        lines[start:end] = replacement
-    updated = "".join(lines)
 
+def _apply_moves(updated: str, moves: dict[str, str]) -> str:
     for old in sorted(moves, key=len, reverse=True):
         updated = re.sub(rf"(?<![\w.]){re.escape(old)}(?=\.|\b)", moves[old], updated)
+    return updated
+
+
+def rewrite_file(path: Path, moves: dict[str, str], *, dry_run: bool) -> bool:
+    with path.open("r", encoding="utf-8", newline="") as stream:
+        source = stream.read()
+    try:
+        tree = ast.parse(source, filename=str(path))
+    except SyntaxError as error:
+        print(f"[WARN] Skipped unparsable Python: {path}: {error}")
+        return False
+
+    lines = source.splitlines(keepends=True)
+    for start, end, replacement in sorted(_import_edits(source, tree, path, moves), reverse=True):
+        lines[start:end] = replacement
+    updated = _apply_moves("".join(lines), moves)
 
     if updated == source:
         return False

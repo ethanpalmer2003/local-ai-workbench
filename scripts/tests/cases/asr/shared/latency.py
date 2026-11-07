@@ -25,6 +25,21 @@ from scripts.tests.cases.asr.shared.corpus import prepare_corpus
 from scripts.tests.shared.paths import CasePaths
 
 
+def _asr_transcript(event: dict[str, Any], timing: Any, transcript: str) -> str:
+    """Track the newest transcript; failures abort the replay."""
+    kind = event.get("type", "")
+    if kind == "error" or kind.endswith(".failed"):
+        raise RuntimeError(str(event))
+    text = event.get("delta") or event.get("text") or event.get("transcript") or ""
+    if text.strip() and timing:
+        timing.mark("first_text")
+    if kind.endswith(".completed") or kind == "transcript.text.done":
+        if text.strip() and timing:
+            timing.mark("final_text")
+        return text
+    return transcript
+
+
 class Client:
     def __init__(self, run):
         self.run, self.process = run, None
@@ -55,7 +70,7 @@ class Client:
         if self.messages.get(timeout=10).get("kind") != "ready":
             raise RuntimeError("Transport did not become ready")
 
-    def replay(self, command, timing=None):  # noqa: C901
+    def replay(self, command, timing=None):
         assert self.process is not None and self.process.stdin is not None
         self.process.stdin.write(json.dumps(command) + "\n")
         self.process.stdin.flush()
@@ -71,19 +86,8 @@ class Client:
             events.append(item)
             if item["kind"] in ("audio_start", "audio_end") and timing:
                 timing.mark(item["kind"])
-            if item["kind"] != "asr_event":
-                continue
-            event = item["item"]
-            kind = event.get("type", "")
-            if kind == "error" or kind.endswith(".failed"):
-                raise RuntimeError(str(event))
-            text = event.get("delta") or event.get("text") or event.get("transcript") or ""
-            if text.strip() and timing:
-                timing.mark("first_text")
-            if kind.endswith(".completed") or kind == "transcript.text.done":
-                transcript = text
-                if text.strip() and timing:
-                    timing.mark("final_text")
+            if item["kind"] == "asr_event":
+                transcript = _asr_transcript(item["item"], timing, transcript)
 
     def stop(self):
         if self.process:

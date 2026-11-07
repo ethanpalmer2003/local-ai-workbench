@@ -449,7 +449,27 @@ def _parse_memory_mb(value: object) -> float | None:
     return amount * multiplier if multiplier is not None else None
 
 
-def _get_process_vram(pid: int) -> float | None:  # noqa: C901
+def _find_vram(value: object) -> float | None:
+    """Depth-first search for the first VRAM figure in amd-smi JSON."""
+    if isinstance(value, dict):
+        normalized = {str(key).lower(): child for key, child in value.items()}
+        memory = normalized.get("memory_usage", normalized)
+        if isinstance(memory, dict):
+            memory = {str(key).lower(): child for key, child in memory.items()}
+            memory = memory.get("vram_mem", memory.get("vram", memory.get("vram_memory")))
+        if (parsed := _parse_memory_mb(memory)) is not None:
+            return parsed
+        for child in value.values():
+            if (parsed := _find_vram(child)) is not None:
+                return parsed
+    elif isinstance(value, list):
+        for child in value:
+            if (parsed := _find_vram(child)) is not None:
+                return parsed
+    return None
+
+
+def _get_process_vram(pid: int) -> float | None:
     try:
         result = subprocess.run(
             ["amd-smi", "process", "--pid", str(pid), "--general", "--json"],
@@ -461,26 +481,7 @@ def _get_process_vram(pid: int) -> float | None:  # noqa: C901
         data = json.loads(result.stdout)
     except (OSError, ValueError, subprocess.SubprocessError):
         return None
-
-    def find_vram(value: object) -> float | None:
-        if isinstance(value, dict):
-            normalized = {str(key).lower(): child for key, child in value.items()}
-            memory = normalized.get("memory_usage", normalized)
-            if isinstance(memory, dict):
-                memory = {str(key).lower(): child for key, child in memory.items()}
-                memory = memory.get("vram_mem", memory.get("vram", memory.get("vram_memory")))
-            if (parsed := _parse_memory_mb(memory)) is not None:
-                return parsed
-            for child in value.values():
-                if (parsed := find_vram(child)) is not None:
-                    return parsed
-        elif isinstance(value, list):
-            for child in value:
-                if (parsed := find_vram(child)) is not None:
-                    return parsed
-        return None
-
-    return find_vram(data)
+    return _find_vram(data)
 
 
 def get_gpu_memory_snapshot(pid: int | None = None) -> GpuMemorySnapshot | None:

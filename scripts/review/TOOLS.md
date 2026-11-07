@@ -35,7 +35,7 @@ What runs today. Use it to compare against other projects' stacks.
 
 Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown is covered by `structure_docs.py`, HTML/JS by `frontend_wiring.py`.
 
-Lint gates at McCabe 10. Functions above it carry `# noqa: C901` and are listed, largest first, in `COMPLEXITY-DEBT.md`; delete each annotation as it is split. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
+Lint gates at McCabe 10. Anything above it must carry `# noqa: C901` and appear in `COMPLEXITY-DEBT.md`; the table is currently empty, so the gate is fully enforced. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
 
 ## Deliberately absent
 

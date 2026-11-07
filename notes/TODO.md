@@ -12,7 +12,7 @@
 ## Code quality
 
 - [ ] `kobold_stack_vram.generate` returns the *input* prompt text for the audio and image kinds, not a result. Only the text caller consumes it; decide whether the other kinds should return `""`.
-- [ ] Not gated: `codespell` stays a manual pre-commit stage. McCabe grandfathering is tracked in [COMPLEXITY-DEBT.md](../scripts/review/COMPLEXITY-DEBT.md); delete each `# noqa: C901` as its function is split.
+- [ ] Not gated: `codespell` stays a manual pre-commit stage.
 
 ## Deferred
 
