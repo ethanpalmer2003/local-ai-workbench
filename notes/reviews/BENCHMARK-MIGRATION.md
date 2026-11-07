@@ -8,6 +8,6 @@ not establish a universal leaderboard.
 
 The [coverage ledger](../../scripts/tests/cases/asr/shared/coverage.py) exposes
 unsupported, manual and pending ASR adapters. Live pacing, first partials and
-multilingual/noisy quality remain incomplete. `python -m scripts.benchmarks.audit`
+multilingual/noisy quality remain incomplete. `python -m scripts.benchmarks.audit_timing`
 exposes timed-source scopes. [TODO](../TODO.md) owns pending work;
 [test status](../../scripts/tests/notes/STATUS.md) owns run evidence.

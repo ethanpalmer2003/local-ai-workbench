@@ -4,7 +4,7 @@ import argparse
 import subprocess
 
 from scripts.config import project_config as project_cfg
-from scripts.review import frontend, inventory, model_drift, structure
+from scripts.review import frontend_wiring, inventory_code, model_references, structure_docs
 
 
 def format_check() -> int:
@@ -23,13 +23,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     print("=== STRUCTURE AND DOCUMENTATION ===", flush=True)
-    structure_status = structure.main()
+    structure_status = structure_docs.main()
 
     print("\n=== MODEL REFERENCE DRIFT ===", flush=True)
-    model_status = model_drift.main()
+    model_status = model_references.main()
 
     print("\n=== FRONT-END WIRING ===", flush=True)
-    frontend_status = frontend.main()
+    frontend_status = frontend_wiring.main()
 
     print("\n=== TYPE CHECK ===", flush=True)
     checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/basedpyright.exe"
@@ -42,14 +42,16 @@ def main(argv: list[str] | None = None) -> int:
         type_status = 1
 
     print("\n=== REPOSITORY INVENTORY AND PYTHON COMPLEXITY ===", flush=True)
-    inventory_status = inventory.main()
+    inventory_status = inventory_code.main()
 
     formatting_status = 0
     if not args.no_format_check:
         print("\n=== PYTHON FORMATTING ===", flush=True)
         formatting_status = format_check()
         print(
-            "[OK] Formatting matches" if not formatting_status else "[WARN] Formatting differs; run review/format.bat"
+            "[OK] Formatting matches"
+            if not formatting_status
+            else "[WARN] Formatting differs; run review/format_py.bat"
         )
     return int(
         bool(

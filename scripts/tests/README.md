@@ -10,7 +10,7 @@
 
 | Purpose | Entry / guide |
 | --- | --- |
-| Structure/docs + types + repository review | `C:/AI/scripts/review/check.bat` or `python -m scripts.review` |
+| Structure/docs + types + repository review | `C:/AI/scripts/review/check_repo.bat` or `python -m scripts.review` |
 | Model-free suite (no VRAM) | `C:/AI/bat/tests/test_model_free.bat` |
 | Live launcher/proxy wiring (VRAM) | `C:/AI/bat/tests/test_live_launchers.bat`: `sdcpp`, `audiocpp`, `llamacpp` (Pi + LittleCoder), `kobold` (+ combined-proxy readiness), `dsh-headless`, `practice` gateway |
 | Live backend probes (VRAM) | `C:/AI/bat/tests/test_live_backends.bat`: `parakeet`, `whisper`, `practice-whisper`, `practice-qwen`, `gemma`, `kokoro`, `images`, `ming3-tts`; `--only NAME...` narrows |

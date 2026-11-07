@@ -50,8 +50,8 @@ Live entries free their ports instead of refusing.
 
 ## Review
 
-- Formatting wrapper: [scripts/review/format.bat](../scripts/review/format.bat).
-- Repository review: [scripts/review/check.bat](../scripts/review/check.bat).
+- Formatting wrapper: [scripts/review/format_py.bat](../scripts/review/format_py.bat).
+- Repository review: [scripts/review/check_repo.bat](../scripts/review/check_repo.bat).
 
 ## Benchmarks
 

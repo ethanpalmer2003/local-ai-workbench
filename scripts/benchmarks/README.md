@@ -46,5 +46,5 @@ inference fields remain null. It never qualifies as resident speed.
 `workflow_timing` similarly records pipeline totals when runtime offloading/loading
 cannot be isolated; ComfyUI uses this scope rather than claiming resident inference.
 
-Run `python -m scripts.benchmarks.audit` to review timed sources. Model-free correctness and functional smoke tests stay in `scripts/tests`; they do not belong to performance rankings.
+Run `python -m scripts.benchmarks.audit_timing` to review timed sources. Model-free correctness and functional smoke tests stay in `scripts/tests`; they do not belong to performance rankings.
 Historical evidence is immutable. Cold CLI probes remain useful compatibility checks, but cannot establish resident speed rankings.
