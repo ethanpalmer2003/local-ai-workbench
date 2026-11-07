@@ -17,11 +17,7 @@ def required_files(profile: FileAsrProfile) -> tuple[Path, ...]:
     return (profile.executable, *(model_cfg.path(label) for label in profile.models))
 
 
-def build_command(  # noqa: C901
-    key: str, audio: Path | None, mode: str | None = None, language: str = "auto", output: Path | None = None
-) -> list[str]:
-    profile = ASR_FILE_PROFILES[key]
-    selected = mode or profile.default_mode
+def _validate_selection(key: str, profile: FileAsrProfile, selected: str, language: str, audio: Path | None) -> None:
     if selected not in profile.modes:
         raise ValueError(f"{key} supports these configured modes: {', '.join(profile.modes)}")
     if profile.languages and language.lower() not in profile.languages:
@@ -30,20 +26,37 @@ def build_command(  # noqa: C901
         raise ValueError("--input is required for file transcription")
     if selected == "live" and audio is not None:
         raise ValueError("--input and --mode live cannot be combined")
-    arguments = [str((profile.mode_executables or {}).get(selected, profile.executable))]
+
+
+def _engine_arguments(profile: FileAsrProfile, selected: str, audio: Path | None, language: str) -> list[str]:
+    executable = str((profile.mode_executables or {}).get(selected, profile.executable))
+    arguments = [executable]
     for value in profile.arguments:
         if selected == "live" and value == "{input}":
             continue
         arguments.append(value.format(input=str(audio) if audio else "", language=language))
-    arguments += list(profile.modes[selected])
-    if output is not None:
-        if key == "nemo-speechcpp":
-            arguments += ["--output", str(output)]
-        elif key.startswith("audiocpp-"):
-            arguments += ["--text-out", str(output)]
-        elif key == "crispasr":
-            arguments += ["--output-txt", "--output-file", str(output.with_suffix(""))]
-    return arguments
+    return arguments + list(profile.modes[selected])
+
+
+def _output_arguments(key: str, output: Path | None) -> list[str]:
+    if output is None:
+        return []
+    if key == "nemo-speechcpp":
+        return ["--output", str(output)]
+    if key.startswith("audiocpp-"):
+        return ["--text-out", str(output)]
+    if key == "crispasr":
+        return ["--output-txt", "--output-file", str(output.with_suffix(""))]
+    return []
+
+
+def build_command(
+    key: str, audio: Path | None, mode: str | None = None, language: str = "auto", output: Path | None = None
+) -> list[str]:
+    profile = ASR_FILE_PROFILES[key]
+    selected = mode or profile.default_mode
+    _validate_selection(key, profile, selected, language, audio)
+    return [*_engine_arguments(profile, selected, audio, language), *_output_arguments(key, output)]
 
 
 def environment(profile: FileAsrProfile, mode: str | None = None) -> dict[str, str]:
@@ -58,7 +71,7 @@ def environment(profile: FileAsrProfile, mode: str | None = None) -> dict[str, s
     return env
 
 
-def main() -> int:  # noqa: C901
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", choices=tuple(ASR_FILE_PROFILES))
     parser.add_argument("--input", type=Path)
@@ -67,20 +80,45 @@ def main() -> int:  # noqa: C901
     parser.add_argument("--output", type=Path, help="Transcript file for NeMo, AudioCpp or CrispASR")
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--print-command", action="store_true")
+    return parser
+
+
+def _list_engines() -> None:
+    for key, profile in ASR_FILE_PROFILES.items():
+        missing = [str(path) for path in required_files(profile) if not path.is_file()]
+        print(
+            json.dumps(
+                {
+                    "engine": key,
+                    "modes": list(profile.modes),
+                    "missing": missing,
+                    "streaming_kind": profile.streaming_kind,
+                }
+            )
+        )
+
+
+def _require_files(parser: argparse.ArgumentParser, command: list[str], profile: FileAsrProfile, args) -> None:
+    for path in (Path(command[0]), *required_files(profile), *((args.input,) if args.input else ())):
+        if not path.is_file():
+            parser.error(f"Missing file: {path}")
+
+
+def _prepare_output(parser: argparse.ArgumentParser, args) -> None:
+    if not args.output:
+        return
+    if args.engine not in ("nemo-speechcpp", "crispasr") and not args.engine.startswith("audiocpp-"):
+        parser.error("--output is not configured for this engine; redirect stdout instead")
+    if args.output.exists():
+        parser.error(f"Output already exists: {args.output}")
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+
+
+def main() -> int:
+    parser = _parser()
     args = parser.parse_args()
     if args.list:
-        for key, profile in ASR_FILE_PROFILES.items():
-            missing = [str(path) for path in required_files(profile) if not path.is_file()]
-            print(
-                json.dumps(
-                    {
-                        "engine": key,
-                        "modes": list(profile.modes),
-                        "missing": missing,
-                        "streaming_kind": profile.streaming_kind,
-                    }
-                )
-            )
+        _list_engines()
         return 0
     if not args.engine:
         parser.error("select --engine or --list")
@@ -93,15 +131,8 @@ def main() -> int:  # noqa: C901
         print(json.dumps(command))
         return 0
     require_native_execution(args.engine + " ASR")
-    for path in (Path(command[0]), *required_files(profile), *((args.input,) if args.input else ())):
-        if not path.is_file():
-            parser.error(f"Missing file: {path}")
-    if args.output:
-        if args.engine not in ("nemo-speechcpp", "crispasr") and not args.engine.startswith("audiocpp-"):
-            parser.error("--output is not configured for this engine; redirect stdout instead")
-        if args.output.exists():
-            parser.error(f"Output already exists: {args.output}")
-        args.output.parent.mkdir(parents=True, exist_ok=True)
+    _require_files(parser, command, profile, args)
+    _prepare_output(parser, args)
     print(f"ASR: {args.engine}; mode: {args.mode or profile.default_mode}", file=sys.stderr)
     return subprocess.run(
         command, env=environment(profile, args.mode), cwd=project_cfg.BASE_DIR, check=False
