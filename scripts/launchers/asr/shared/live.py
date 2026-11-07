@@ -55,52 +55,68 @@ class Sessions:
             self._drop()
         self.reaper.join(timeout=6)
 
-    def request(self, path: str, body: bytes) -> dict[str, Any]:  # noqa: C901
+    def _nemo_transport(self, streaming: bool, language: str) -> Any:
+        if not (streaming and self.engine == cfg.AsrStartupEngine.NEMO):
+            return None
+        return WebSocketBridge(
+            selector.backend(self.engine).url().replace("http://", "ws://") + "/v1/audio/transcriptions/realtime",
+            language,
+            project_cfg.component("asr/nemo-speechcpp").logs_dir / f"websocket-{time.time_ns()}.log",
+        )
+
+    def _start_session(self, body: bytes) -> dict[str, Any]:
+        if self.turns:
+            raise ValueError("Already listening; stop the other microphone session first")
+        language = json.loads(body).get("language", "auto")
+        from scripts.launchers.asr.shared.languages import capabilities
+
+        allowed = capabilities(self.engine)["asr"]["ready_languages"]
+        if language != "auto" and language not in allowed:
+            raise ValueError("Choose a language supported by the selected ASR model")
+        folder = project_cfg.component("audiocpp").logs_dir
+        folder.mkdir(parents=True, exist_ok=True)
+        streaming = speech_delivery.asr_plan(self.engine.value)["mode"] == "streaming"
+        factory = (
+            None
+            if streaming and self.engine in (cfg.AsrStartupEngine.AUDIOCPP, cfg.AsrStartupEngine.PARAKEET_STREAM)
+            else lambda: SegmentStream(selector.backend(self.engine), language)
+        )
+        transport = self._nemo_transport(streaming, language)
+        if transport is not None:
+            factory = transport.stream
+        turns = Turns(
+            selector.backend(self.engine).url(),
+            folder / f"silero-{time.time_ns()}.log",
+            language=language,
+            stream_factory=factory,
+            transport=transport,
+        )
+        try:
+            turns.start()
+        except Exception:
+            turns.close()
+            raise
+        self.turns, self.token = turns, uuid.uuid4().hex
+        self.touched = time.monotonic()
+        return {"session": self.token, "sample_rate": 16000, "frame_samples": 512}
+
+    def _push(self, turns: Any, body: bytes) -> dict[str, Any]:
+        try:
+            events = []
+            for offset in range(0, len(body), 1024):
+                events.extend(turns.push(body[offset : offset + 1024]))
+            events.extend(turns.poll())
+            return {"events": events}
+        except Exception:
+            self._drop()
+            raise
+
+    def request(self, path: str, body: bytes) -> dict[str, Any]:
         with self.lock:
             if self.closed.is_set():
                 raise ValueError("Practice gateway is closing")
             if path == "/asr/live/start":
-                if self.turns:
-                    raise ValueError("Already listening; stop the other microphone session first")
-                language = json.loads(body).get("language", "auto")
-                from scripts.launchers.asr.shared.languages import capabilities
-
-                allowed = capabilities(self.engine)["asr"]["ready_languages"]
-                if language != "auto" and language not in allowed:
-                    raise ValueError("Choose a language supported by the selected ASR model")
-                folder = project_cfg.component("audiocpp").logs_dir
-                folder.mkdir(parents=True, exist_ok=True)
-                streaming = speech_delivery.asr_plan(self.engine.value)["mode"] == "streaming"
-                factory = (
-                    None
-                    if streaming
-                    and self.engine in (cfg.AsrStartupEngine.AUDIOCPP, cfg.AsrStartupEngine.PARAKEET_STREAM)
-                    else lambda: SegmentStream(selector.backend(self.engine), language)
-                )
-                transport = None
-                if streaming and self.engine == cfg.AsrStartupEngine.NEMO:
-                    transport = WebSocketBridge(
-                        selector.backend(self.engine).url().replace("http://", "ws://")
-                        + "/v1/audio/transcriptions/realtime",
-                        language,
-                        project_cfg.component("asr/nemo-speechcpp").logs_dir / f"websocket-{time.time_ns()}.log",
-                    )
-                    factory = transport.stream
-                turns = Turns(
-                    selector.backend(self.engine).url(),
-                    folder / f"silero-{time.time_ns()}.log",
-                    language=language,
-                    stream_factory=factory,
-                    transport=transport,
-                )
-                try:
-                    turns.start()
-                except Exception:
-                    turns.close()
-                    raise
-                self.turns, self.token = turns, uuid.uuid4().hex
-                self.touched = time.monotonic()
-                return {"session": self.token, "sample_rate": 16000, "frame_samples": 512}
+                return self._start_session(body)
             if not self.turns or path not in (f"/asr/live/{self.token}/audio", f"/asr/live/{self.token}/stop"):
                 raise ValueError("Microphone session expired or was stopped")
             self.touched = time.monotonic()
@@ -109,15 +125,7 @@ class Sessions:
                 return {"events": []}
             if len(body) % 1024:
                 raise ValueError("Audio must contain complete 512-sample PCM16 frames")
-            try:
-                events = []
-                for offset in range(0, len(body), 1024):
-                    events.extend(self.turns.push(body[offset : offset + 1024]))
-                events.extend(self.turns.poll())
-                return {"events": events}
-            except Exception:
-                self._drop()
-                raise
+            return self._push(self.turns, body)
 
     def route(self, handler, method: str, path: str, engine: cfg.AsrStartupEngine) -> bool:
         if not path.startswith("/asr/live/"):
