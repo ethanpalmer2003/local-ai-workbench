@@ -1,4 +1,8 @@
 @echo off
 setlocal
-"C:\AI\scripts\.venv\Scripts\ruff.exe" format --config "C:\AI\pyproject.toml" "C:\AI\scripts" %*
-exit /b %ERRORLEVEL%
+title Python Format
+pushd C:\AI
+"scripts\.venv\Scripts\ruff.exe" format --config "C:\AI\pyproject.toml" . %*
+set "FORMAT_EXIT=%ERRORLEVEL%"
+popd
+exit /b %FORMAT_EXIT%

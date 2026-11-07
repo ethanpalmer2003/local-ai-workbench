@@ -8,7 +8,7 @@ What runs today, in one place. Use it to compare against other projects' stacks;
 | --- | --- |
 | `python -m scripts.review` | structure, model drift, front-end wiring, types, inventory/complexity, formatting |
 | `scripts/review/check.bat` | the same, from a normal terminal |
-| `scripts/review/format.bat` | applies `ruff format` to `scripts/` |
+| `scripts/review/format.bat` | applies `ruff format` to the repository |
 | `python -m scripts.tests.run` | regression suite, per-test timings, persisted reports |
 | `python -m scripts.review.public_audit [--history]` | publish gate |
 
@@ -25,6 +25,8 @@ What runs today, in one place. Use it to compare against other projects' stacks;
 | `inventory.py` | inventory, file/function size, complexity depth, duplicate bodies | complexity gates; tables advisory |
 | `public_audit.py` | secrets, credentials, home/machine paths, private words, private inputs, large files, ignored-but-tracked | `--history` scans every commit |
 | `unittest` runner | behaviour regressions | 501 tests, ~15 s, per-test timings and `report.md` |
+
+Scope for both ruff modes: repository root, `*.py`/`*.pyi` only; `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and generated `ids.py` excluded. Other file types are covered by `structure.py` (Markdown) and `frontend.py` (HTML/JS).
 
 ## Deliberately absent
 
