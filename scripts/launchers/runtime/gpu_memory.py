@@ -519,12 +519,12 @@ def report_vram_usage(
 ) -> GpuMemoryReport | None:
     if before is None:
         print(f"[{tag}] VRAM unavailable: no GPU memory snapshot was available at launch")
-        return
+        return None
 
     result = _poll_vram_until_stable(before, pid)
     if result is None:
         print(f"[{tag}] VRAM unavailable: GPU memory could not be read after loading")
-        return
+        return None
     current, is_stable = result
     status = "stable" if is_stable else "timeout"
     delta_gb = (current.used_mb - before.used_mb) / 1024
