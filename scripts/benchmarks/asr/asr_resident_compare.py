@@ -2,6 +2,7 @@
 
 import argparse
 import base64
+import functools
 import hashlib
 import importlib
 import json
@@ -91,31 +92,51 @@ def _collect_samples(timer, infer, clips, repetitions, result) -> None:
             )
 
 
-def run_engine(name, command, model, clips, samples, run, port, deadline, resources=False):  # noqa: C901
-    digest = _file_sha256(model)
-    if name.startswith("audiocpp-"):
-        config = run.temp / f"{name}.json"
-        config.write_text(json.dumps(audio_config(name)), encoding="utf-8")
-        command = [part.replace("{config}", str(config)) for part in command]
+def _infer(server, endpoint, payloads, index, deadline, name):
+    """One timed request inside the whole-run budget."""
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise TimeoutError("Whole-run budget exhausted")
+    server.timeout = min(60, remaining)
+    body, content_type = payloads[index]
+    try:
+        value = server.post(endpoint, body, content_type)
+    except urllib.error.HTTPError as error:
+        detail = error.read(8192).decode("utf-8", errors="replace")
+        raise RuntimeError(f"HTTP {error.code}: {detail}") from error
+    if name in ("llamacpp-gemma-audio", "llamacpp-granite-5-2b"):
+        choice = value["choices"][0]
+        if choice.get("finish_reason") == "length":
+            raise ValueError("Gemma output truncated")
+        value = {"text": choice["message"]["content"]}
+    elif name == "llamacpp-qwen-1.7b":
+        from scripts.launchers.asr.llamacpp.qwen3_asr import clean_transcript as clean_qwen_transcript
+
+        value["text"] = clean_qwen_transcript(value.get("text", ""))
+    if not isinstance(value.get("text"), str) or not value["text"].strip():
+        raise ValueError("ASR returned no transcript")
+    return clean_transcript(name, value["text"])
+
+
+def _engine_command(name, command, run):
+    if not name.startswith("audiocpp-"):
+        return command
+    config = run.temp / f"{name}.json"
+    config.write_text(json.dumps(audio_config(name)), encoding="utf-8")
+    return [part.replace("{config}", str(config)) for part in command]
+
+
+def _run_engine(name, command, model, clips, samples, run, port, deadline, resources, result) -> None:
+    command = _engine_command(name, command, run)
+    result["command"] = command
     server = ResidentHttp(
         command,
         port,
         run.logs / f"{name}.log",
-        model_identity=digest,
+        model_identity=result["model_sha256"],
         env=environment(ASR_FILE_PROFILES[name]) if name in ASR_FILE_PROFILES else None,
         readiness="/api/extra/version" if name == "koboldcpp-whisper" else "/health",
     )
-    result: dict[str, Any] = {
-        "engine": name,
-        "command": command,
-        "model": str(model),
-        "model_sha256": digest,
-        "status": "running",
-        "samples": [],
-    }
-    if "--mmproj" in command:
-        projector = Path(command[command.index("--mmproj") + 1])
-        result["projector"] = {"file": str(projector), "sha256": _file_sha256(projector)}
     try:
         with server.lifecycle as timer, ExitStack() as monitors:
             server.timeout = min(60, max(0.1, deadline - time.monotonic()))
@@ -131,31 +152,7 @@ def run_engine(name, command, model, clips, samples, run, port, deadline, resour
                     )
                 )
             endpoint, payloads = _request_payloads(name, clips)
-
-            def infer(index):
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise TimeoutError("Whole-run budget exhausted")
-                server.timeout = min(60, remaining)
-                body, content_type = payloads[index]
-                try:
-                    value = server.post(endpoint, body, content_type)
-                except urllib.error.HTTPError as error:
-                    detail = error.read(8192).decode("utf-8", errors="replace")
-                    raise RuntimeError(f"HTTP {error.code}: {detail}") from error
-                if name in ("llamacpp-gemma-audio", "llamacpp-granite-5-2b"):
-                    choice = value["choices"][0]
-                    if choice.get("finish_reason") == "length":
-                        raise ValueError("Gemma output truncated")
-                    value = {"text": choice["message"]["content"]}
-                elif name == "llamacpp-qwen-1.7b":
-                    from scripts.launchers.asr.llamacpp.qwen3_asr import clean_transcript as clean_qwen_transcript
-
-                    value["text"] = clean_qwen_transcript(value.get("text", ""))
-                if not isinstance(value.get("text"), str) or not value["text"].strip():
-                    raise ValueError("ASR returned no transcript")
-                return clean_transcript(name, value["text"])
-
+            infer = functools.partial(_infer, server, endpoint, payloads, deadline=deadline, name=name)
             timer.warmup(lambda: infer(0), includes_model_load=True)
             phase[0] = "resident_request"
             _collect_samples(timer, infer, clips, samples, result)
@@ -164,10 +161,26 @@ def run_engine(name, command, model, clips, samples, run, port, deadline, resour
         result.update(status="failed", error=str(error))
     result["benchmark"] = server.lifecycle.record()
     result["summary"] = summarize_requests(result["samples"])
+
+
+def run_engine(name, command, model, clips, samples, run, port, deadline, resources=False):
+    digest = _file_sha256(model)
+    result: dict[str, Any] = {
+        "engine": name,
+        "command": command,
+        "model": str(model),
+        "model_sha256": digest,
+        "status": "running",
+        "samples": [],
+    }
+    if "--mmproj" in command:
+        projector = Path(command[command.index("--mmproj") + 1])
+        result["projector"] = {"file": str(projector), "sha256": _file_sha256(projector)}
+    _run_engine(name, command, model, clips, samples, run, port, deadline, resources, result)
     return result
 
 
-def main():  # noqa: C901
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", action="store_true", help="Opt in to native inference")
     parser.add_argument("--engines", nargs="+", help="Default: every configured resident adapter")
@@ -181,18 +194,41 @@ def main():  # noqa: C901
     parser.add_argument("--corpus", type=Path)
     parser.add_argument("--port", type=int, default=18941)
     parser.add_argument("--budget", type=int, choices=range(1, 241), default=180)
-    args = parser.parse_args()
-    available = profiles(args.port)
+    return parser
+
+
+def _selected_engines(parser, args, available) -> list[str]:
     if args.group:
         group = json.loads((project_cfg.CONFIG_DIR / "asr/leaderboard_group.json").read_text(encoding="utf-8"))
         args.engines = [member["engine"] for member in group["members"]]
-    args.engines = args.engines or list(available)
-    for name in args.engines:
+    engines = args.engines or list(available)
+    for name in engines:
         if name not in available:
             parser.error(f"No resident adapter for {name}; see coverage ledger")
+    return engines
+
+
+def _engine_result(name, command, model, clips, args, run, deadline) -> dict[str, Any]:
+    try:
+        if time.monotonic() >= deadline:
+            raise TimeoutError("Whole-run budget exhausted; engine not omitted")
+        if name == "sherpa-onnx":
+            return importlib.import_module("scripts.tests.cases.asr.sherpa-onnx.resident").run_engine(
+                clips, args.samples, deadline
+            )
+        return run_engine(name, command, model, clips, args.samples, run, args.port, deadline, args.resources)
+    except Exception as error:
+        return {"engine": name, "status": "failed", "error": str(error), "summary": summarize_requests([])}
+
+
+def main():
+    parser = _parser()
+    args = parser.parse_args()
+    available = profiles(args.port)
+    engines = _selected_engines(parser, args, available)
     if not args.run:
         print(json.dumps({key: value[0] for key, value in available.items()}, indent=2))
-        return
+        return 0
     context = dict(require_native_execution("Resident ASR benchmark"))
     run = BenchmarkPaths(__file__).new_run()
     clips = prepare_corpus(run, args.corpus)[: args.clips]
@@ -212,19 +248,9 @@ def main():  # noqa: C901
 
     report["coverage"] = coverage()
     deadline = time.monotonic() + args.budget
-    for name in args.engines:
+    for name in engines:
         command, model = available[name]
-        try:
-            if time.monotonic() >= deadline:
-                raise TimeoutError("Whole-run budget exhausted; engine not omitted")
-            if name == "sherpa-onnx":
-                result = importlib.import_module("scripts.tests.cases.asr.sherpa-onnx.resident").run_engine(
-                    clips, args.samples, deadline
-                )
-            else:
-                result = run_engine(name, command, model, clips, args.samples, run, args.port, deadline, args.resources)
-        except Exception as error:
-            result = {"engine": name, "status": "failed", "error": str(error), "summary": summarize_requests([])}
+        result = _engine_result(name, command, model, clips, args, run, deadline)
         report["results"].append(result)
         (run.artifacts / "report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
         print(
