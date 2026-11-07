@@ -5,9 +5,6 @@ Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rath
 
 | Complexity | Function |
 | ---: | --- |
-| 13 | `scripts/benchmarks/personal/comfyui/comfyui_video.py:668` `_resolve_arguments` |
-| 13 | `scripts/download/models/metadata_evidence.py:18` `measurements` |
-| 13 | `scripts/launchers/koboldcpp/kobold.py:38` `server_command` |
 | 12 | `scripts/benchmarks/asr/asr_resident_compare.py:94` `run_engine` |
 | 12 | `scripts/benchmarks/asr/audiocpp_drama3_offload.py:255` `serve` |
 | 12 | `scripts/benchmarks/asr/audiocpp_drama3_offload.py:44` `weight_estimates` |
@@ -18,7 +15,6 @@ Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rath
 | 12 | `scripts/review/structure_docs.py:177` `owner_issues` |
 | 11 | `scripts/benchmarks/asr/asr_resident_compare.py:170` `main` |
 | 11 | `scripts/benchmarks/llamacpp/benchmark_context_stream.py:66` `stream_request` |
-| 11 | `scripts/benchmarks/personal/comfyui/comfyui_video.py:199` `_consume_events` |
 | 11 | `scripts/config/sync_configs.py:65` `sync_comfyui` |
 | 11 | `scripts/download/models/analyze_model.py:98` `enrich_hub` |
 | 11 | `scripts/download/models/hub_transfer.py:11` `download_ranges` |
@@ -34,4 +30,4 @@ Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rath
 | 11 | `scripts/tests/cases/llamacpp/hrx/hrx_update_validation.py:131` `verify_candidate_evidence` |
 | 11 | `scripts/tools/rewrite_imports.py:88` `rewrite_file` |
 
-Remaining: 28.
+Remaining: 24.
