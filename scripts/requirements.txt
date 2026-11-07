@@ -14,11 +14,13 @@ certifi==2026.10.18
 cffi==2.1.1
 cfgv==3.5.0
 charset-normalizer==3.5.2
+click==8.5.1
 codespell==2.4.3
 colorama==0.4.6
 coverage==7.17.2
 cyclonedx-python-lib==11.12.0
 defusedxml==0.7.1
+deptry==0.25.1
 distlib==0.4.3
 et-xmlfile==2.0.0
 filelock==4.2.1
@@ -63,6 +65,7 @@ python-dotenv==1.2.3
 pyyaml==6.0.3
 regex==2026.9.29
 requests==2.34.2
+requirements-parser==0.13.1
 rich==13.9.4
 ruff==0.16.9
 scipy==1.18.1

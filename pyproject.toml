@@ -52,3 +52,11 @@ max-complexity = 10
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = false
+
+[tool.deptry]
+requirements_files = ["scripts/requirements.txt"]
+known_first_party = ["scripts"]
+# - the requirements file is a full freeze, so "not imported" is expected for transitive pins;
+#   DEP001 still catches an import that no pin covers
+ignore = ["DEP002"]
+per_rule_ignores = { DEP001 = ["folder_paths", "piper"] }
