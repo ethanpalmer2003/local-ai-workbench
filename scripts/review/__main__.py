@@ -13,7 +13,6 @@ SPELL_EXCLUDED = (
     "scripts/state/",
     "scripts/tests/output/",
     "scripts/benchmarks/output/",
-    "scripts/tests/old/",
 )
 
 
@@ -41,6 +40,14 @@ def spelling_check() -> int:
     return status
 
 
+def security_audit() -> int:
+    """Dependency advisories for the installed environment; network-bound, so opt in with --audit."""
+    checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/pip-audit.exe"
+    return subprocess.run(
+        [str(checker), "--local", "--progress-spinner", "off"], cwd=project_cfg.BASE_DIR, check=False
+    ).returncode
+
+
 def format_check() -> int:
     """Formatting is optional: the codebase keeps hand-wrapped lines ruff format would join."""
     checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/ruff.exe"
@@ -54,6 +61,7 @@ def format_check() -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-format-check", action="store_true", help="skip the ruff format comparison")
+    parser.add_argument("--audit", action="store_true", help="also check installed dependencies for advisories")
     args = parser.parse_args(argv)
 
     print("=== STRUCTURE AND DOCUMENTATION ===", flush=True)
@@ -91,6 +99,13 @@ def main(argv: list[str] | None = None) -> int:
     print("\n=== SPELLING ===", flush=True)
     spelling_status = spelling_check()
     print("[OK] Spelling clean" if not spelling_status else "[FAIL] Spelling findings above")
+
+    audit_status = 0
+    if args.audit:
+        print("\n=== DEPENDENCY ADVISORIES ===", flush=True)
+        audit_status = security_audit()
+        print("[WARN] Advisories reported above; third-party advisories are triaged, not gated")
+    _ = audit_status
     return int(
         bool(
             structure_status

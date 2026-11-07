@@ -30,7 +30,7 @@ Remove `--check-only` to install/update. See the [updater guide](../../download/
 
 AudioCpp is the selected TTS framework; Piper/Sherpa are retained alternatives
 for benchmark comparison only. The interactive CLI wrapper was retired to
-[scripts/tests/old/tts_cli.py](../../tests/old/tts_cli.py). Sherpa retains its vendor
+`C:/AI/trash/scripts-tests-old/tts_cli.py`. Sherpa retains its vendor
 `bin/` and `lib/` layout; the downloaded package includes ASR executables too.
 One installation serves both capabilities.
 
