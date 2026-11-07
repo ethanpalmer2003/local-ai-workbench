@@ -1,0 +1,12 @@
+{
+  "repository": "AMD-Ecosystem/llama.cpp",
+  "branch": "hrx-graph-develop-v2",
+  "base": "d9e2dc4920b9365cb6f2ff64cba5d516397b2773",
+  "requires": "Existing local Windows/codebook correctness patches in the saved source snapshot; this is an additional independent patch.",
+  "patch": "iq2-iq3-s-unfused-normal-output.patch",
+  "patch_sha256": "b7991933bf006548db77316c42e27c1061045208f15eaf11c76ce798bd07f76b",
+  "candidate_sha256": "c8681e9ec591cdbd72641a9fa7af77af6acdc8c01e2406f0869e8416f21a3772",
+  "status": "Validated for the documented model/GPU; applied to native llama.cpp and installed with full previous-runtime rollback copy.",
+  "validation": "C:/AI/scripts/tests/output/probes/hrx_performance/verified/20261010-iq2-iq3-routing/artifacts/report.md",
+  "runtime_provenance": "Incremental rebuild using prior verified corpus/compiler/runtime, not a full latest-upstream build."
+}

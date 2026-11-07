@@ -1,0 +1,32 @@
+--- a/ggml/src/ggml-hrx/dispatch_registration/common/dispatch-mul-mat.cpp
++++ b/ggml/src/ggml-hrx/dispatch_registration/common/dispatch-mul-mat.cpp
+@@ -1113,7 +1113,8 @@
+     if (!root.matched()) {
+         root = common_match_mul_mat_any_format(context.graph, context.root_node, root_kernel, true);
+     }
+-    if (!root.matched() || !context.graph.has_index()) {
++    if (!root.matched() || !context.graph.has_index() ||
++        (root.token_count == 1 && (root.weight_format == CommonMulMatWeightFormat::IQ3_S || root.weight_format == CommonMulMatWeightFormat::IQ2_S))) {
+         return match;
+     }
+ 
+--- a/ggml/src/ggml-hrx/dispatch_registration/common/dispatch-gated-mul-mat.cpp
++++ b/ggml/src/ggml-hrx/dispatch_registration/common/dispatch-gated-mul-mat.cpp
+@@ -208,7 +208,7 @@
+     if (!root.matched()) {
+         root = common_match_mul_mat_any_format(context.graph, context.root_node, kMulMatF32F32WmmaKernel, true);
+     }
+-    if (!root.matched() || common_mul_mat_requires_codebook(root.weight_format) || !context.graph.has_index()) {
++    if (!root.matched() || (common_mul_mat_requires_codebook(root.weight_format) || (root.token_count == 1 && (root.weight_format == CommonMulMatWeightFormat::IQ3_S || root.weight_format == CommonMulMatWeightFormat::IQ2_S))) || !context.graph.has_index()) {
+         return match;
+     }
+ 
+@@ -256,7 +256,7 @@
+     if (!peer.matched()) {
+         peer = common_match_mul_mat_any_format(context.graph, peer_node, kMulMatF32F32WmmaKernel, true);
+     }
+-    if (!peer.matched() || common_mul_mat_requires_codebook(peer.weight_format) || peer.input->id != root.input->id || peer.input_size != root.input_size ||
++    if (!peer.matched() || (common_mul_mat_requires_codebook(peer.weight_format) || (peer.token_count == 1 && (peer.weight_format == CommonMulMatWeightFormat::IQ3_S || peer.weight_format == CommonMulMatWeightFormat::IQ2_S))) || peer.input->id != root.input->id || peer.input_size != root.input_size ||
+         peer.output_size != root.output_size || peer.token_count != root.token_count ||
+         !common_same_shape(*root.output, *peer.output)) {
+         return {};

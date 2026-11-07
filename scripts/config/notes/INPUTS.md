@@ -1,0 +1,18 @@
+# Local inputs
+
+Personal audio and prompt inputs live outside the repository. Code stays here; the files it consumes live in the overlay.
+
+- Location: `data/input/` by default, or the path in `AI_INPUT_DIR`. Loader: [inputs.py](../inputs.py).
+- Layout: `voice_sources.json` (voice ids, chosen default, download sources), `audio/<id>/` (clips and generated selections), `kobold/` (character cards and saved scenarios), `prompts/` (tone instructions), `commandcode/` (personal Command Code settings and taste profiles).
+- Absent overlay: voice cloning reports nothing available, the voice pipeline has no entries, and launchers still start. No code change is needed to take the inputs out or put them back.
+- Voice pipeline: `python -m scripts.download.input.get_tts_voices --characters <id> ...` reads its sources from the manifest; nothing is hard-coded per character.
+- `models.private.json` holds extra model catalog entries (character LoRAs, private checkpoints) and merges into the catalog when present. The tracked `catalog.json` and generated `ids.py` never carry them.
+- `python -m scripts.config.sync --only commandcode --apply` copies `commandcode/` back into the ignored `.commandcode/` the tool reads. It is preview-only without `--apply`.
+- `defaults.json` is where personal selection happens: `chat.llm`, `chat.tts.model`, `chat.tts.voice`, `chat.tts.instruction`, `image.prompt`, `image.loras`, and the `video.*` pair: `video.prompt`/`video.negative` replace the workflow text, `video.prompt_append`/`video.negative_append` add to it. Chat keys belong to the chat stack that is always started; `image.*` only affects the optional image proxy. A missing key, wrong type or malformed file keeps the repository default; `//` comments are allowed.
+- Flags exist for one-off runs and automation (`--model`, `--with-image`, `--config`); they override one launch and never become the configuration. Service policy, ports and paths stay code-owned in both cases.
+- Never add these files to git. `data/` is ignored, so the overlay can live directly in the working tree.
+
+## Voice ids
+
+- Ids are the manifest keys; the default is its `default` field, else the first id.
+- `AUDIOCPP_PROXY_CLONE_VOICES` and `DEFAULT_AUDIOCPP_PROXY_VOICE` read the overlay once at import, so restart a launcher after changing it.

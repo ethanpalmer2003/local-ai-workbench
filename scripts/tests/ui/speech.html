@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speech tests - TTS and ASR</title>
+<script>
+  // Shared document and chat controller; the route selects presentation before first paint.
+  document.documentElement.dataset.view = /^\/practice\/?$/.test(location.pathname) ? 'practice' : 'test';
+  document.documentElement.dataset.embedded = new URLSearchParams(location.search).get('embed') === 'settings' ? 'true' : 'false';
+</script>
+<style>
+  :root { color-scheme:dark; --bg:#11151c; --panel:#1b2330; --bubble:#17202b; --fg:#e9edf4; --dim:#a9b6c7; --line:#364354; --focus:#86b7ff; }
+  * { box-sizing:border-box; }
+  [hidden] { display:none!important; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .workspace { width:min(1120px,100%); margin:auto; padding:24px; }
+  .workspace header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-bottom:18px; border-bottom:1px solid var(--line); margin-bottom:22px; }
+  h1 { margin:0 0 6px; font-size:26px; } h2,.section-title { margin:22px 0 12px; font-size:18px; }
+  a { color:var(--focus); }
+  .toolbar,.actions,.composer-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  /* Shared controls: views only decide which controls are visible. */
+  #workspace-options { display:flex; flex-wrap:wrap; align-items:end; gap:10px; }
+  #workspace-options>:is(header,h2,p,section,details) { flex-basis:100%; }
+  #workspace-options label { flex:0 1 auto; min-width:0; max-width:100%; }
+  #model-settings { display:flex; flex-direction:column; gap:12px; width:100%; }
+  .pipeline fieldset { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:0; padding:12px 14px 14px; border:1px solid var(--line); border-radius:10px; background:var(--panel); }
+  .pipeline legend { display:flex; align-items:center; gap:10px; width:100%; padding:0 6px; font-size:15px; font-weight:600; }
+  .pipeline legend .residency { font-size:13px; font-weight:400; }
+  #workspace-options>.toolbar { flex:0 1 auto; }
+  fieldset,details { min-width:0; padding:16px; border:1px solid var(--line); border-radius:10px; }
+  legend { padding:0 6px; font-weight:600; } .pipeline legend { font-size:15px; }
+  .pipeline .technical { min-height:20px; overflow-wrap:anywhere; }
+  .residency { display:inline-flex; align-items:center; gap:7px; }
+  .residency[data-state=loading] { color:#ffd166; font-weight:600; }
+  .residency[data-state=loading]::before { content:""; width:11px; height:11px; flex:none; border:2px solid #806d3a; border-top-color:#ffd166; border-radius:50%; animation:residency-spin .8s linear infinite; }
+  .residency[data-state=loaded],.residency[data-state="shared resident"],.residency[data-state=external] { color:#72d6a0; }
+  .residency[data-state=failed] { color:#ff8585; }
+  #status[data-state=loading] { display:flex; align-items:center; gap:8px; color:#ffd166; font-weight:600; }
+  #status[data-state=loading]::before { content:""; width:11px; height:11px; flex:none; border:2px solid #806d3a; border-top-color:#ffd166; border-radius:50%; animation:residency-spin .8s linear infinite; }
+  @keyframes residency-spin { to { transform:rotate(360deg); } }
+  @media(prefers-reduced-motion:reduce) { :is(.residency,#status)[data-state=loading]::before { animation:none; } }
+  label { display:flex; flex-direction:column; gap:6px; font-size:13px; }
+  button.toggle { min-height:36px; padding:6px 10px; font-size:13px; }
+  button.toggle[aria-pressed=true] { background:#214d40; border-color:#62b793; }
+  button.toggle::after { content:"Off"; margin-left:8px; font-size:12px; opacity:.8; }
+  button.toggle[aria-pressed=true]::after { content:"On"; }
+  input,select,textarea,button { font:inherit; color:var(--fg); }
+  input,select,.framework-display { width:fit-content; min-width:0; max-width:100%; min-height:40px; padding:8px 10px; background:var(--bg); border:1px solid var(--line); border-radius:7px; }
+  input:read-only { color:var(--dim); background:var(--panel); border-color:#303b49; cursor:default; }
+  select { min-height:36px; padding:6px 9px; text-overflow:ellipsis; }
+  :is(#asr-framework,#language) { width:11rem; }
+  #load-active-models,#unload-all { min-height:36px; padding:6px 12px; }
+  #workspace-options :is(select,button,.framework-display) { height:38px; min-height:38px; padding:7px 10px; font-size:13px; line-height:22px; }
+  #workspace-options .toggle { min-width:10rem; }
+  .framework-display { color:var(--dim); width:11rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pipeline select { min-width:0; text-overflow:ellipsis; }
+  input::placeholder,textarea::placeholder { color:var(--dim); opacity:.65; }
+  button { min-height:40px; padding:8px 14px; border:1px solid var(--line); border-radius:7px; background:transparent; cursor:pointer; }
+  button:hover:not(:disabled) { border-color:var(--focus); }
+  button:disabled { opacity:.45; cursor:default; }
+  :is(button,input,textarea,select,summary,a):focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+  #speak,#comparison-run { background:#265f9e; border-color:#4383c8; } #stop,#comparison-stop { border-color:#92545f; }
+  #record[aria-pressed=true] { background:#214d40; border-color:#62b793; }
+  .upload-button { display:inline-flex; align-items:center; height:38px; min-height:38px; padding:7px 12px; border:1px solid var(--line); border-radius:7px; cursor:pointer; }
+  .upload-button:hover { border-color:var(--focus); }
+  .upload-input { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); clip-path:inset(50%); white-space:nowrap; }
+  .upload-input:focus-visible + .upload-button { outline:2px solid var(--focus); outline-offset:2px; }
+  .upload-input:disabled + .upload-button { opacity:.45; cursor:default; pointer-events:none; }
+  #interim-transcript,#status { margin:10px 0; } #status { min-height:24px; }
+  form { display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; width:100%; margin:14px 0; }
+  #form { flex-direction:column; align-items:stretch; gap:10px; margin:14px 0; }
+  .composer-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  .conversation-actions { gap:8px; }
+  .conversation-actions button { height:38px; min-height:38px; padding:7px 10px; }
+  .composer-actions { margin-left:auto; }
+  .composer-shell { display:flex; flex-direction:column; gap:8px; padding:10px; background:var(--bg); border:1px solid var(--line); border-radius:10px; }
+  .composer-shell:has(#box:focus-visible) { border-color:var(--focus); }
+  .comparison-composer:has(#comparison-text:focus-visible) { border-color:var(--focus); }
+  #box:focus { outline:none; }
+  #box { flex:none; width:100%; min-height:76px; margin:0; padding:4px; border:0; border-radius:0; }
+  #comparison-text { flex:none; width:100%; min-height:76px; margin:0; padding:4px; border:0; border-radius:0; background:transparent; }
+  .composer-actions { justify-content:flex-end; }
+  .composer-actions button { height:38px; min-height:38px; padding:7px 12px; }
+  .composer-actions .icon-button { display:inline-flex; align-items:center; justify-content:center; width:38px; padding:8px; }
+  .icon-button svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  #practice-audio { margin:0 0 14px; }
+  #conversation-history h2 { margin:18px 0 10px; }
+
+  textarea { flex:0 1 auto; align-self:flex-start; width:fit-content; max-width:100%; min-width:0; min-height:96px; max-height:40vh; resize:vertical; padding:12px; background:var(--bg); border:1px solid var(--line); border-radius:10px; }
+  #history { min-height:90px; padding:18px; margin:0 0 14px; border:1px solid var(--line); border-radius:10px; background:var(--bubble); white-space:pre-wrap; line-height:1.7; }
+  .hint,.meta,.status { color:var(--dim); font-size:13px; } .status { margin-top:6px; }
+  ul.hint { padding-left:20px; margin:8px 0; } ul.hint li { margin:3px 0; }
+  details { margin:16px 0; } summary { cursor:pointer; font-weight:600; } details[open]>summary { margin-bottom:12px; }
+  #settings,#comparison,#measurements { width:100%; background:var(--panel); }
+  .settings-groups { display:flex; flex-direction:column; gap:10px; }
+  .settings-groups details { margin:0; } .controls { display:flex; flex-wrap:wrap; align-items:end; gap:12px; }
+  .controls>label { flex:0 1 auto; min-width:0; }
+  .language-controls { display:flex; align-items:end; flex-wrap:wrap; gap:12px; }
+  .language-controls .hint { flex:1 1 240px; margin:0; }
+  #streaming-settings { margin:0; padding:0; border:0; } fieldset:disabled .controls { opacity:.5; }
+  #measurements { margin-top:20px; overflow-x:auto; }
+  #measurements table { width:100%; border-collapse:collapse; text-align:left; }
+  #measurements :is(td,th) { padding:8px; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+  #measurements tbody tr[data-state=failed] { color:#ff8585; background:rgba(255,133,133,.08); }
+  #measurements tbody tr[data-state=failed] td:last-child { font-weight:600; }
+  #measurements tbody tr[data-state=cancelled] { color:var(--dim); }
+  .comparison-choices,.comparison-results { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:12px; }
+  .comparison-choices select { min-height:150px; } .comparison-card { padding:16px; border:1px solid var(--line); border-radius:10px; background:var(--bubble); min-width:0; }
+  #comparison-status[data-state=loading] { color:#ffd166; }
+  #comparison-status[data-state=success] { color:#72d6a0; }
+  #comparison-status[data-state=error] { color:#ff8585; }
+  .comparison-prompt { display:block; margin:12px 0 6px; font-size:13px; }
+  .comparison-card h3 { margin:0 0 8px; font-size:15px; overflow-wrap:anywhere; }
+  #log { width:100%; margin:16px 0; } #empty { color:var(--dim); } .msg { margin-bottom:16px; }
+  .text { display:inline-block; max-width:100%; padding:10px 14px; border-radius:10px; background:var(--bubble); white-space:pre-wrap; overflow-wrap:anywhere; }
+  audio { display:block; width:100%; margin-top:10px; } pre { font-size:12px; white-space:pre-wrap; overflow-wrap:anywhere; }
+  html[data-embedded=true] .workspace header { display:none; }
+  html[data-embedded=true] .workspace { padding:16px; }
+  html[data-view=practice] .test-only,html[data-view=practice] #practice-audio { display:none!important; }
+  html[data-view=test]:not([data-gateway=practice]) .practice-only { display:none!important; }
+  .direct-tts-only { display:none!important; }
+  html[data-view=test][data-gateway=audiocpp] .direct-tts-only { display:flex!important; }
+  html[data-view=practice] .workspace { min-height:100dvh; display:flex; flex-direction:column; }
+  html[data-view=practice] #workspace-options { order:-1; }
+  html[data-view=practice] .technical { display:none!important; }
+  html[data-view=practice] .residency:not([data-state=loading]) { display:none!important; }
+  html[data-view=practice] #conversation-history { order:0; flex:1; }
+  html[data-view=practice] #history { border:0; background:transparent; padding:0; }
+  html[data-view=practice] #status { order:1; margin:0; }
+  html[data-view=practice] #form { order:2; margin-bottom:0; }
+  @media(max-width:620px) { .workspace { padding:16px; } }
+</style>
+</head>
+<body>
+<section class="workspace">
+  <div id="workspace-options">
+  <header><div><h1 id="workspace-title">Speech workspace</h1></div>
+    <div class="toolbar test-only"><button type="button" id="restart-workspace">Restart workspace</button><span id="restart-workspace-status" class="hint" role="status" aria-live="polite"></span></div>
+  </header>
+  <h2 class="section-title test-only">Models</h2>
+  <div id="model-settings" class="pipeline">
+    <fieldset id="asr-choice"><legend>ASR <span id="residency-asr" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading ASR...</span></legend><button type="button" class="toggle test-only" id="enable-asr" aria-pressed="true">Recognize speech</button>
+      <label class="model-option">Model<select id="asr-model" disabled></select></label>
+      <label class="model-option">Runtime<select id="asr-framework" disabled></select></label><label class="model-option test-only">Delivery<select id="delivery-asr" disabled><option value="auto">Auto</option></select></label></fieldset>
+    <fieldset id="llm-choice"><legend>LLM <span id="residency-llm" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading LLM...</span></legend><button type="button" class="toggle test-only" id="enable-llm" aria-pressed="true">Generate a reply</button>
+      <label class="model-option">Model<select id="llm-model" disabled></select></label>
+      <label class="model-option test-only">Runtime<div id="llm-runtime" class="framework-display">llama.cpp</div></label>
+<label class="model-option test-only">Delivery<select id="delivery-llm" disabled><option value="auto">Auto</option></select></label></fieldset>
+    <fieldset id="tts-choice"><legend>TTS <span id="residency-tts" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading TTS...</span></legend><button type="button" class="toggle test-only" id="enable-tts" aria-pressed="true">Speak output</button>
+      <label class="model-option">Model<select id="tts-model" disabled></select></label>
+      <label class="model-option test-only">Runtime<div class="framework-display">AudioCpp</div></label><label class="model-option practice-only">Conversation delivery<select id="delivery-tts" disabled><option value="auto">Auto</option></select></label>
+      <label>Voice<select id="voice"></select></label>
+      <label>Speech start<select id="speech-start"><option value="sentence">As sentences arrive</option><option value="full_reply">After the full reply</option></select></label>
+      <label>Instruction<input id="instr" type="text"></label>
+      <label>Guidance scale<input id="gs" type="number" inputmode="decimal" min="0" step="0.05" placeholder="Proxy default"></label>
+      <label class="test-only direct-tts-only">Direct TTS delivery<select id="mode"><option value="" selected>Launcher default</option><option value="stream">Stream while generating</option><option value="buffered">Complete WAV after generation</option></select></label>
+      </fieldset>
+  </div>
+  <p id="lifecycle-note" class="hint test-only"></p>
+  <div class="toolbar model-option"><button type="button" class="test-only" id="load-active-models" disabled>Load all active</button><button type="button" class="test-only" id="unload-all" disabled>Unload all</button><span id="model-status" class="hint">Loading model choices...</span></div>
+  <details id="language-settings">
+    <summary>Language and prompt</summary>
+    <div class="language-controls">
+      <button type="button" class="toggle" id="assistant-practice-toggle" aria-pressed="true" aria-describedby="assistant-mode-help">Language practice prompt</button>
+      <p id="assistant-mode-help" class="hint">Adds language and correction guidance.</p>
+      <label>Speech language<select id="language" disabled></select></label>
+      <label>Language level<select id="learning-level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></label>
+      <button type="button" class="toggle" id="correct-language" aria-pressed="true">Brief corrections</button>
+      <button type="button" class="toggle" id="auto-send" aria-pressed="true">Send recognized turns automatically</button>
+    </div>
+    <details><summary>Supported languages</summary><p id="asr-languages"></p><p id="tts-languages"></p><p id="language-notes"></p></details>
+  </details>
+  <p id="interim-transcript" class="hint" aria-live="polite"></p>
+  </div>
+  <p id="status" role="status" aria-live="polite"></p>
+  <section id="conversation-history" aria-label="Conversation"><h2 id="conversation-title" class="test-only">Conversation</h2><div id="history" role="log" aria-live="polite"></div></section>
+  <audio id="practice-audio" controls hidden></audio>
+  <form id="form">
+    <div class="composer-shell">
+      <textarea id="box" rows="2" aria-label="Message or text to speak" placeholder="Message or text to speak" autofocus></textarea>
+      <div class="composer-footer">
+    <div class="toolbar conversation-actions"><button id="clear" type="button">Clear</button><button id="save-conversation" type="button">Save</button></div>
+      <div class="composer-actions" role="group" aria-label="Message actions">
+        <input type="file" id="upload" class="upload-input test-only" accept="audio/wav,.wav" aria-labelledby="upload-label">
+        <label id="upload-label" class="upload-button test-only" for="upload">Upload WAV</label>
+        <input type="file" id="upload-turns" class="upload-input test-only" accept="audio/wav,.wav" aria-labelledby="upload-turns-label">
+        <label id="upload-turns-label" class="upload-button test-only" for="upload-turns" title="Replay the WAV through live automatic turns">Replay WAV (turns)</label>
+        <button type="button" id="stop" class="icon-button" aria-label="Cancel" title="Cancel"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
+        <button id="record" class="icon-button" type="button" aria-label="Start listening" title="Start listening" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg></button>
+        <button id="speak" class="icon-button" type="submit" aria-label="Send" title="Send" disabled><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 10 7-7 7 7M12 3v18"/></svg></button>
+      </div>
+      </div>
+    </div>
+  </form>
+  <div class="test-only">
+  <details id="measurements"><summary>Measurements</summary><p class="hint">Server times split startup, model loading and requests. Browser times include network; ASR includes capture/VAD.</p>
+    <p id="lifecycle-log" class="hint technical"></p>
+    <table><thead><tr><th>Stage</th><th>Model</th><th>Wall time</th><th>Result</th></tr></thead><tbody id="measurement-rows"></tbody></table>
+    <button id="clear-metrics" type="button">Clear measurements</button>
+  </details>
+  <details id="settings" open>
+    <summary>Advanced TTS settings</summary>
+
+    <p id="defaults-status" class="hint">Loading defaults...</p>
+    <div class="settings-groups">
+    <details><summary>Generation</summary>
+      <div class="controls">
+        <label>Seed<input id="seed" type="text" inputmode="numeric"></label>
+        <label>Temperature<input id="temperature" type="number" min="0" step="0.05" placeholder="Model default"></label>
+        <label>Max frames [1+]<input id="max_tokens" type="number" min="1" placeholder="Model default"></label>
+      </div>
+      <div class="controls">
+        <label>Depth temp<input id="depth_temperature" type="number" min="0" step="0.05" placeholder="Model default"></label>
+        <label>Top K<input id="top_k" type="number" placeholder="Model default"></label>
+        <label>Top P<input id="top_p" type="number" min="0" max="1" step="0.05" placeholder="Model default"></label>
+        <label>Chunk size [1+]<input id="text_chunk_size" type="number" min="1" placeholder="Model default"></label>
+        <label>Text chunk mode<select id="text_chunk_mode"><option value="">Server default</option><option>default</option><option>tag_aware</option><option>japanese</option><option>endline</option></select></label>
+      </div>
+      <label>Additional options (JSON)<textarea id="extra" rows="3" placeholder='{"instruction":"Speak clearly."}'>{}</textarea></label>
+    </details>
+    <details><summary>Streaming and playback</summary>
+    <fieldset id="streaming-settings" aria-label="Streaming only">
+      <label>Stream transport <select id="transport"><option value="">Launcher default</option><option value="sse">Server-sent audio events (SSE)</option><option value="audio">Raw HTTP audio bytes</option></select></label>
+      <p class="hint">Delivery sets timing; transport sets stream format.</p>
+      <div class="controls">
+        <label>Startup / rebuffer (ms)<input id="buffer" type="number" min="0" step="50"></label>
+      </div>
+      <p class="hint" id="playback-note" hidden></p>
+      <div class="controls">
+        <label>Chunk policy<select id="policy"><option value="">Server default</option><option value="grow">Grow</option><option value="fixed">Fixed</option></select></label>
+        <label>Frames per event<input id="frames" type="number" min="1" placeholder="Server default"></label>
+        <label>Lookahead frames<input id="lookahead" type="number" min="0" placeholder="Server default"></label>
+      </div>
+      <p class="hint">Audio format: model-controlled.</p>
+        <label>PCM sample rate (Hz, read-only)<input id="rate" type="number" readonly aria-readonly="true"></label>
+      <p class="actions"><button type="button" id="smooth">Conservative streaming</button> <button type="button" id="fast">Low latency streaming</button></p>
+    </fieldset>
+    </details>
+    <details id="restart-section"><summary>Session settings and restart</summary>
+      <p class="hint">Check changes. Restart reloads the backend and proxy.</p>
+      <p class="actions"><button id="restart-check" type="button">Check recommendation</button><button id="restart-apply" type="button" disabled>Restart backend and proxy</button></p>
+      <p id="restart-status" class="hint" aria-live="polite">Changes not checked.</p>
+    </details>
+    <details><summary>Defaults and diagnostics</summary>
+    <p class="actions"><button type="button" id="defaults">Refresh defaults</button> <button type="button" id="discover">Inspect server options</button></p>
+    <details><summary>Default sources</summary><ul class="hint"><li>Blank fields inherit defaults</li><li>Packaged defaults use GGUF metadata</li><li>Refresh clears overrides</li><li>Config edits may require restart</li></ul><pre id="default-values">Not loaded.</pre></details>
+    <details><summary>Server capabilities</summary><pre id="capabilities">Inspect for supported options. Values vary by model.</pre></details>
+    </details>
+    </div>
+  </details>
+  <details id="comparison">
+    <summary>Compare voices and models</summary>
+    <p class="actions"><button id="comparison-load" type="button">Load configured choices</button></p>
+    <label class="comparison-prompt" for="comparison-text">Text to compare</label>
+    <div class="composer-shell comparison-composer">
+      <textarea id="comparison-text" rows="2" aria-label="Text to compare" placeholder="Enter comparison text"></textarea>
+      <div class="composer-footer">
+        <div class="toolbar conversation-actions"><button id="comparison-clear" type="button">Clear WAVs</button></div>
+        <div class="composer-actions" role="group" aria-label="Comparison actions">
+          <button type="button" id="comparison-stop" class="icon-button" aria-label="Cancel comparison" title="Cancel comparison"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
+          <button id="comparison-run" class="icon-button" type="button" aria-label="Generate comparison WAVs" title="Generate comparison WAVs" disabled><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 10 7-7 7 7M12 3v18"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="comparison-choices">
+      <div><label>Characters / voices<select id="comparison-voices" multiple disabled aria-describedby="comparison-select-help"><option>Loading...</option></select></label>
+        <p class="actions"><button id="comparison-all-voices" type="button">All available voices</button></p></div>
+      <div><label>Clone-capable models<select id="comparison-models" multiple disabled aria-describedby="comparison-select-help"><option>Loading...</option></select></label>
+        <p class="actions"><button id="comparison-all-models" type="button">All installed clone models</button></p></div>
+    </div>
+    <p id="comparison-select-help" class="hint">Missing files disabled · Server-supported models only · No downloads or restarts</p>
+    <p id="comparison-status" class="hint" data-state="loading" aria-busy="true" aria-live="polite">Loading choices...</p>
+  </details>
+  <main id="log" aria-live="polite">
+    <p id="empty"></p>
+  </main>
+
+
+
+  </div>
+</section>
+<script src="../../../launchers/shared/browser/pcm_audio.js"></script>
+<script src="../../../launchers/shared/browser/speech_tools.js"></script>
+<script src="../../../launchers/shared/browser/speech_client.js"></script>
+<script>
+  // Served by the proxy, or opened directly as a file using the normal proxy port.
+  const PROXY_URL = /^https?:$/.test(globalThis.location?.protocol || '')
+    ? new URL('/v1/audio/speech', globalThis.location.origin).href : "http://127.0.0.1:8888/v1/audio/speech";
+
+  const log = document.getElementById("log");
+  const box = document.getElementById("box");
+  const empty = document.getElementById("empty");
+
+  let defaultsLoaded = false;
+  let activeDefaults;
+  let context;
+  let player;
+  let generation = 0;
+  let pending = Promise.resolve();
+  const controllers = new Set();
+
+  const recordings = new Set();
+
+  function settings() {
+    const value = id => document.getElementById(id).value.trim();
+    const selectedModel = value('tts-model');
+    const streaming = streamingEnabled();
+    const options = JSON.parse(value("extra") || "{}");
+    if (!options || Array.isArray(options) || typeof options !== "object") throw new Error("Additional options must be a JSON object");
+    for (const key of ["temperature", "depth_temperature", "top_k", "top_p", "max_tokens", "text_chunk_size"])
+      if (value(key)) options[key] = Number(value(key));
+    if (value("seed")) options.seed = value("seed");
+    if (streaming && value("policy")) options.stream_chunk_policy = value("policy");
+    if (streaming && value("frames")) options.stream_frames_per_event = Number(value("frames"));
+    if (streaming && value("lookahead")) options.stream_lookahead_margin = Number(value("lookahead"));
+    if (value("text_chunk_mode")) options.text_chunk_mode = value("text_chunk_mode");
+    if (value("instr") && activeDefaults?.instruction_option !== null)
+      options[activeDefaults?.instruction_option || "instruction"] = value("instr");
+    if (value("gs")) options.guidance_scale = Number(value("gs"));
+    const payload = {stream: streaming, response_format: streaming ? "pcm" : "wav", options};
+    if (streaming) payload.stream_format = value("transport") || activeDefaults?.streaming.transport || "audio";
+    if (selectedModel) payload.model = selectedModel;
+    if (value("voice")) payload.voice = value("voice");
+    return {payload, bufferSeconds: Math.max(0, Number(value("buffer") || activeDefaults?.streaming.playback_buffer_ms)) / 1000,
+      rate: Number(activeDefaults?.streaming.pcm_sample_rate)};
+  }
+
+  function addRecording(status, blob) {
+    const url = URL.createObjectURL(blob);
+    recordings.add(url);
+    const latest = document.getElementById('practice-audio');
+    if (latest) { latest.src = url; latest.hidden = false; }
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.src = url;
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "audiocpp-test.wav";
+    link.textContent = "Save WAV";
+    status.parentElement.append(audio, link);
+  }
+
+  function playback() {
+    player ??= new PcmAudio.Player(context);
+    return player;
+  }
+
+  async function playStream(response, status, started, epoch, config, signal) {
+    const result = await playback().consume(response, {...config, started, signal, capture: true,
+      onProgress(stats) {
+        status.textContent = `Streaming · first data ${stats.first.toFixed(2)}s · ${stats.chunks} chunks · ${stats.duration.toFixed(1)}s audio · ${stats.underruns} playback underruns · buffer ${config.bufferSeconds}s`;
+      }});
+    if (epoch !== generation) return;
+    status.textContent += " · generation complete";
+    if (result.underruns) status.textContent += ` · late by ${result.lateSeconds.toFixed(2)}s total (plus rebuffer delays)`;
+    addRecording(status, new Blob([result.recording], {type: result.recordingType}));
+    const details = document.createElement("details");
+    const summary = document.createElement("summary"); summary.textContent = "Chunk timing";
+    const pre = document.createElement("pre"); pre.textContent = JSON.stringify(result.arrivals, null, 2);
+    details.append(summary, pre); status.parentElement.append(details);
+  }
+
+  function addMessage(text) {
+    if (empty) empty.remove();
+    const wrap = document.createElement("div");
+    wrap.className = "msg";
+    const bubble = document.createElement("div");
+    bubble.className = "text";
+    bubble.textContent = text;
+    const status = document.createElement("div");
+    status.className = "status";
+    status.textContent = "sending...";
+    wrap.append(bubble, status);
+    log.append(wrap);
+    log.scrollTop = log.scrollHeight;
+    return status;
+  }
+
+  async function send(text, config, epoch, propagate = false, signal) {
+    const measurementModel = config.measurementModel || config.payload.model || activeDefaults?.model_identity || activeDefaults?.model || 'Not recorded';
+    const status = addMessage(text);
+    const requestDetails = document.createElement("details");
+    const requestSummary = document.createElement("summary"); requestSummary.textContent = "Request settings";
+    const requestPre = document.createElement("pre"); requestPre.textContent = JSON.stringify(config, null, 2);
+    requestDetails.append(requestSummary, requestPre); status.parentElement.append(requestDetails);
+    const started = performance.now();
+    const controller = new AbortController();
+    controllers.add(controller);
+    const cancel = () => controller.abort();
+    signal?.addEventListener('abort', cancel, {once: true});
+    if (signal?.aborted) controller.abort();
+    try {
+      const payload = {input: text, ...config.payload};
+      const res = await fetch(PROXY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      const took = ((performance.now() - started) / 1000).toFixed(1);
+
+      if (res.status === 204) {
+        status.textContent = `204 · no audio after cleanup · ${took}s`;
+        return;
+      }
+      if (!res.ok) {
+        const detail = (await res.text()).slice(0, 200);
+        status.textContent = `${res.status} · ${detail || "request failed"}`;
+        if (propagate) throw new Error(status.textContent);
+        return;
+      }
+
+      if (config.payload.stream) {
+        if (epoch !== generation) { await res.body?.cancel(); return; }
+        await playStream(res, status, started, epoch, config, controller.signal);
+        globalThis.SpeechWorkspace?.record("TTS response", performance.now() - started, "stream complete", measurementModel);
+        return;
+      }
+
+      const blob = await res.blob();
+      if (epoch !== generation) return;
+      globalThis.SpeechWorkspace?.record("TTS response", performance.now() - started, "complete WAV", measurementModel);
+      const buffer = await context.decodeAudioData(await blob.arrayBuffer());
+      if (epoch !== generation) return;
+      addRecording(status, blob);
+      playback().playBuffer(buffer);
+      status.textContent = `Complete WAV · ${buffer.duration.toFixed(1)}s audio · received in ${((performance.now() - started) / 1000).toFixed(2)}s`;
+    } catch (err) {
+      status.textContent = err.name === "AbortError" ? "Stopped" : `Error: ${err.message}`;
+      if (propagate) throw err;
+    } finally {
+      signal?.removeEventListener('abort', cancel);
+      controllers.delete(controller);
+    }
+  }
+
+  function submit() {
+    if (globalThis.SpeechWorkspace) { void SpeechWorkspace.run(); return; }
+    if (!defaultsLoaded) { document.getElementById("defaults-status").textContent = "Proxy required · refresh defaults before generating"; return; }
+    const text = box.value.trim();
+    if (!text) return;
+    if (!document.getElementById("form").reportValidity() || ![...document.querySelectorAll("#settings input")].every(input => input.reportValidity())) return;
+    let config;
+    try { config = settings(); } catch (error) { addMessage(text).textContent = error.message; return; }
+    context ??= new AudioContext();
+    const ready = context.resume();
+    const epoch = generation;
+    pending = pending.then(async () => { await ready; if (epoch === generation) await send(text, config, epoch); })
+      .catch(error => { addMessage(text).textContent = error.message; });
+  }
+  document.getElementById("form").addEventListener("submit", e => { e.preventDefault(); submit(); });
+  box.addEventListener("keydown", e => {
+    if (e.key !== "Enter" || e.shiftKey || e.isComposing) return;
+    e.preventDefault(); submit();
+  });
+
+  function stopPlayback() {
+    generation++;
+    controllers.forEach(controller => controller.abort());
+    player?.stop();
+    document.querySelectorAll("audio").forEach(audio => audio.pause());
+    box.focus();
+  }
+  document.getElementById("stop").addEventListener("click", () => {
+    if (globalThis.SpeechWorkspace) SpeechWorkspace.cancel();
+    else stopPlayback();
+  });
+  function streamingEnabled() {
+    if (activeDefaults?.streaming_supported === false) return false;
+    const mode = document.getElementById('mode').value;
+    return mode ? mode === 'stream' : activeDefaults?.streaming_enabled === true;
+  }
+  function updateResponseMode() {
+    document.getElementById("streaming-settings").disabled = !streamingEnabled();
+  }
+  document.getElementById("mode").addEventListener("change", updateResponseMode);
+  updateResponseMode();
+  function preset(policy, lookahead, buffer) {
+    document.getElementById("mode").value = "stream";
+    document.getElementById("policy").value = policy;
+    document.getElementById("frames").value = "";
+    document.getElementById("lookahead").value = lookahead;
+    document.getElementById("buffer").value = buffer;
+    updateResponseMode();
+  }
+  document.getElementById("smooth").onclick = () => preset("", "", "500");
+  document.getElementById("fast").onclick = () => preset("", "", "50");
+  const generationFields = {instr: 'instruction', gs: 'guidance_scale', seed: 'seed',
+    temperature: 'temperature', depth_temperature: 'depth_temperature', top_k: 'top_k',
+    top_p: 'top_p', max_tokens: 'max_tokens', text_chunk_size: 'text_chunk_size', text_chunk_mode: 'text_chunk_mode',
+    frames: 'stream_frames_per_event', lookahead: 'stream_lookahead_margin', policy: 'stream_chunk_policy'};
+  async function loadAudioCppDefaults(config, model) {
+    config.audio_cpp_request_defaults = {};
+    try {
+      const path = config.practice_gateway ? '/proxy/speech-models?include_params=true' : '/v1/models?include_params=true';
+      const response = await fetch(new URL(path, PROXY_URL), {cache: 'no-store'});
+      await SpeechTools.checked(response);
+      const catalog = await response.json();
+      const entries = Array.isArray(catalog.data) ? catalog.data : Array.isArray(catalog.models) ? catalog.models : [];
+      const params = entries.find(entry => entry.id === model)?.params || [];
+      config.audio_cpp_request_defaults = Object.fromEntries(
+        params.filter(param => param.name && param.default !== undefined).map(param => [param.name, param.default]));
+    } catch (error) {
+      console.warn('[audio-defaults] AudioCpp model defaults unavailable; using GGUF metadata fallback:', error);
+    }
+  }
+  function showDefaultSources(config) {
+    const packaged = config.packaged_defaults?.request || {};
+    const audioCpp = config.audio_cpp_request_defaults || {};
+    const modelPreset = config.model_preset_defaults || {};
+    for (const [id, originalKey] of Object.entries(generationFields)) {
+      const key = id === 'instr' ? config.instruction_option || 'instruction' : originalKey;
+      const proxy = config.proxy_defaults || {};
+      const configured = config.streaming?.[key];
+      const server = config.server_request_defaults || {};
+      const value = proxy[key] ?? configured ?? server[key] ?? modelPreset[key] ?? audioCpp[key] ?? packaged[key];
+      const source = proxy[key] !== undefined ? 'Proxy' : config.streaming_sources?.[key] ??
+        (configured != null ? 'Launcher' : server[key] !== undefined ? 'Server config' : modelPreset[key] !== undefined ? 'Model preset' : audioCpp[key] !== undefined ? 'AudioCpp default' : 'GGUF fallback');
+      const hint = value === undefined ? 'Inherited; default not advertised' : `${source}: ${value === '' ? '(empty)' : value}`;
+      const control = document.getElementById(id);
+      control.placeholder = value === undefined ? 'Server default' : value === '' ? '(empty)' : String(value);
+      control.title = hint;
+      if (control.tagName === 'SELECT') control.options[0].textContent = control.placeholder + ' (default)';
+    }
+    for (const [id, value] of [['rate', config.streaming?.pcm_sample_rate], ['voice', config.voice]]) {
+      const control = document.getElementById(id);
+      control.placeholder = value == null ? 'Not advertised' : String(value);
+      control.title = `Launcher: ${value ?? 'not advertised'}`;
+    }
+    const buffer = document.getElementById('buffer');
+    const bufferValue = config.streaming?.playback_buffer_ms;
+    buffer.placeholder = bufferValue == null ? 'Not advertised' : String(bufferValue);
+    buffer.title = `${config.playback_buffer_source || 'Launcher'}: ${bufferValue ?? 'not advertised'}`;
+    const playbackNote = document.getElementById('playback-note');
+    playbackNote.textContent = config.playback_note || '';
+    playbackNote.hidden = !config.playback_note;
+    const transport = document.getElementById('transport');
+    if (transport.tagName === 'SELECT') transport.options[0].textContent = `${config.streaming?.transport === 'sse' ? 'SSE audio events' : 'Raw audio bytes'} (default)`;
+    const mode = document.getElementById('mode');
+    if (mode.tagName === 'SELECT')
+      for (const option of mode.options) option.disabled = option.value === 'stream' && config.streaming_supported === false;
+    for (const id of ['smooth', 'fast']) document.getElementById(id).disabled = config.streaming_supported === false;
+    document.getElementById('instr').disabled = config.instruction_option === null;
+    if (mode.tagName === 'SELECT') mode.options[0].textContent = config.streaming_enabled ? 'Stream while generating (default)' : 'Complete WAV (default)';
+    document.getElementById('default-values').textContent = JSON.stringify(config, null, 2);
+    document.getElementById('rate').value = config.streaming?.pcm_sample_rate ?? '';
+  }
+  function fillVoices(config) {
+    const select = document.getElementById('voice');
+    const selectedModel = config.selected_model || document.getElementById('tts-model').value || config.model || '';
+    const model = (config.models || []).find(item => item.id === selectedModel);
+    const mode = config.voice_mode || (model?.clone === false ? 'none'
+      : /kokoro/i.test(selectedModel) ? 'builtin' : config.voices?.length ? 'clone' : 'none');
+    const defaultVoice = config.default_voice || config.voice || '';
+    const available = (mode === 'clone' || (mode === 'builtin' && config.voice_mode))
+      ? (config.voices || []).filter(item => item.available) : [];
+    const defaultLabel = mode === 'clone' ? `Default${defaultVoice ? ` (${defaultVoice})` : ''}`
+      : mode === 'builtin' ? `Model default${defaultVoice ? ` (${defaultVoice})` : ''}` : 'Model default';
+    select.replaceChildren(new Option(defaultLabel, ''),
+      ...available.map(item => new Option(item.id, item.id)));
+    select.value = '';
+    select.disabled = mode === 'none' || !available.length;
+    select.title = mode === 'none' ? 'This model has no selectable voices' : defaultLabel;
+  }
+  async function loadDefaults() {
+    const status = document.getElementById("defaults-status");
+    const button = document.getElementById('defaults'); button.disabled = true;
+    try {
+      const response = await fetch(new URL("/proxy/config", PROXY_URL), {cache: 'no-store'});
+      await SpeechTools.checked(response);
+      const config = await response.json();
+      document.documentElement.dataset.gateway = config.practice_gateway ? 'practice' : 'audiocpp';
+      await loadAudioCppDefaults(config, document.getElementById('tts-model').value || config.model);
+      activeDefaults = config;
+      document.getElementById('restart-section').hidden = !!config.practice_gateway;
+      document.getElementById('comparison').hidden = !!config.practice_gateway;
+      const choices = document.getElementById('tts-model');
+      for (const id of ['buffer', 'rate', 'voice', 'transport', ...Object.keys(generationFields)]) {
+        document.getElementById(id).value = '';
+      }
+      document.getElementById('extra').value = '{}';
+      if (!config.practice_gateway) {
+        choices.replaceChildren(...(config.models || [{id: config.model, installed: true}]).map(model => {
+          const option = document.createElement('option'); option.value = model.id;
+          option.textContent = model.id; option.disabled = !model.installed; return option;
+        }));
+        choices.value = config.model; choices.disabled = false;
+        choices.onchange = loadModelDefaults;
+        document.getElementById('model-status').textContent = 'ASR/chat unavailable on TTS endpoint.';
+      }
+      document.getElementById('mode').value = '';
+      document.getElementById('mode').disabled = !!config.practice_gateway;
+      updateResponseMode();
+      fillVoices(config);
+      showDefaultSources(config);
+      defaultsLoaded = true;
+      document.getElementById('speak').disabled = false;
+      status.textContent = "Defaults loaded · overrides reset";
+    } catch (error) {
+      status.textContent = `Defaults unavailable: ${error.message} · ${defaultsLoaded ? 'using previous' : 'generation disabled'}`;
+    } finally { button.disabled = false; }
+  }
+  document.getElementById('defaults').onclick = loadDefaults;
+  window.addEventListener('DOMContentLoaded', loadDefaults);
+  async function loadModelDefaults() {
+    const status = document.getElementById('defaults-status');
+    defaultsLoaded = false;
+    document.getElementById('speak').disabled = true;
+    try {
+      const url = new URL('/proxy/config', PROXY_URL);
+      const selected = document.getElementById('tts-model').value.trim();
+      url.searchParams.set('model', selected);
+      const response = await fetch(url, {cache: 'no-store'});
+      await SpeechTools.checked(response);
+      const config = await response.json();
+      const currentSelection = () => document.getElementById('tts-model').value.trim();
+      if (currentSelection() !== selected) return;
+      document.documentElement.dataset.gateway = config.practice_gateway ? 'practice' : 'audiocpp';
+      await loadAudioCppDefaults(config, selected);
+      if (currentSelection() !== selected) return;
+      activeDefaults = config;
+      document.getElementById('restart-section').hidden = !!config.practice_gateway;
+      document.getElementById('comparison').hidden = !!config.practice_gateway;
+      for (const id of ['buffer', 'rate', 'voice', 'transport', 'mode', ...Object.keys(generationFields)]) {
+        document.getElementById(id).value = '';
+      }
+      document.getElementById('extra').value = '{}';
+      document.getElementById('mode').disabled = !!config.practice_gateway;
+      updateResponseMode();
+      fillVoices(config);
+      showDefaultSources(config);
+      defaultsLoaded = true;
+      document.getElementById('speak').disabled = false;
+      status.textContent = 'Model defaults loaded · overrides reset';
+    } catch (error) { status.textContent = `Model defaults unavailable: ${error.message}`; }
+  }
+  async function readRestartStatus() {
+    const response = await fetch(new URL('/proxy/restart', PROXY_URL), {cache: 'no-store'});
+    await SpeechTools.checked(response);
+    const state = await response.json();
+    document.getElementById('restart-apply').disabled = state.status === 'restarting' || !state.available_targets.includes('both');
+    document.getElementById('restart-status').textContent = state.status === 'failed' ? `Restart failed: ${state.error}` :
+      state.status === 'restarting' ? 'Restarting backend and proxy...' : state.recommended_target ?
+      `Configuration changed · recommended: ${state.recommended_target}` :
+      'No watched changes · manual restart available';
+    return state;
+  }
+  async function checkRestart() {
+    try { await readRestartStatus(); }
+    catch (error) { document.getElementById('restart-status').textContent = `Restart management unavailable: ${error.message}`; document.getElementById('restart-apply').disabled = true; }
+  }
+  document.getElementById('restart-section').addEventListener('toggle', event => { if (event.target.open) checkRestart(); });
+  document.getElementById('restart-check').onclick = checkRestart;
+  document.getElementById('restart-apply').onclick = async () => {
+    const button = document.getElementById('restart-apply'); button.disabled = true;
+    const selected = value('tts-model');
+    try {
+      document.getElementById('stop').click();
+      const response = await fetch(new URL('/proxy/restart', PROXY_URL), {method: 'POST',
+        headers: {'Content-Type': 'application/json'}, body: JSON.stringify({target: 'both'})});
+      await SpeechTools.checked(response);
+      for (let attempt = 0; attempt < 150; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        let state;
+        try { state = await readRestartStatus(); } catch (error) { if (attempt < 149) continue; throw error; }
+        if (state.status === 'failed') throw new Error(state.error);
+        if (state.status === 'completed') {
+          await loadDefaults();
+          if ([...document.getElementById('tts-model').options].some(option => option.value === selected && !option.disabled)) {
+            document.getElementById('tts-model').value = selected; await loadModelDefaults();
+          }
+          document.getElementById('restart-status').textContent = 'Restart complete · defaults refreshed';
+          return;
+        }
+      }
+      throw new Error('Restart status timed out; inspect the launcher console.');
+    } catch (error) { document.getElementById('restart-status').textContent = `Restart failed: ${error.message}`; }
+    finally { button.disabled = false; }
+  };
+  document.getElementById("discover").onclick = async () => {
+    const output = document.getElementById("capabilities");
+    try {
+      const response = await fetch(new URL(`${activeDefaults.practice_gateway ? "/proxy/speech-models" : "/v1/models"}?include_params=true&include_session_options=true`, PROXY_URL));
+      if (!response.ok) throw new Error(await response.text());
+      const models = await response.json(); output.textContent = JSON.stringify(models, null, 2);
+      output.parentElement.open = true;
+    } catch (error) { output.textContent = error.message; output.parentElement.open = true; }
+  };
+  globalThis.SpeechDiagnostics = {
+    refresh: loadDefaults,
+    stop: stopPlayback,
+    requestSettings() { return {payload: settings().payload}; },
+    prepare() { context ??= new AudioContext(); return context.resume(); },
+    async speak(text, profile, signal) {
+      if (!defaultsLoaded) throw new Error('TTS defaults unavailable. Refresh defaults first.');
+      const config = settings();
+      config.measurementModel = activeDefaults?.model_identity || globalThis.SpeechWorkspace?.modelFor('tts');
+      config.payload.voice ||= profile.voice;
+      config.payload.options.language ||= profile.locale === 'auto' ? undefined : profile.locale;
+      context ??= new AudioContext(); await context.resume();
+      const epoch = generation;
+      await send(text, config, epoch, true, signal);
+      while (!signal?.aborted && epoch === generation && player?.sources.size) await new Promise(resolve => setTimeout(resolve, 80));
+      signal?.throwIfAborted();
+    }
+  };
+  window.addEventListener("beforeunload", () => recordings.forEach(url => URL.revokeObjectURL(url)));
+</script>
+<script src="/tests/ui/audiocpp_comparison.js"></script>
+<script src="/practice.js"></script>
+<script src="/launchers/shared/browser/workspace_lifecycle.js"></script>
+</body>
+</html>
+
+
+

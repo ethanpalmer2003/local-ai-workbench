@@ -1,0 +1,12 @@
+{
+  "name": "ASR leaderboard high-ranking",
+  "selection": "Local weights, at most 5B parameters, strong published quality and established adoption; recent official releases from established families qualify before download counts grow.",
+  "quality_scope": "English leaderboard shortlist; native GGUF quality parity unverified.",
+  "members": [
+    {"model": "Qwen/Qwen3-ASR-1.7B-hf", "engine": "llamacpp-qwen-1.7b", "model_id": "asr/llamacpp/qwen3-asr-1.7b-q8_0"},
+    {"model": "CohereLabs/cohere-transcribe-03-2026", "engine": "audiocpp-cohere", "model_id": "asr/audiocpp/cohere-transcribe-03-2026-q8_0"},
+    {"model": "Qwen/Qwen3-ASR-0.6B-hf", "engine": "speechcpp", "model_id": "asr/speechcpp/qwen3-asr-0.6b-q8_0"},
+    {"model": "nvidia/parakeet-tdt-0.6b-v3", "engine": "parakeetcpp-v3", "model_id": "asr/parakeetcpp/parakeet-tdt-0.6b-v3-q8_0"},
+    {"model": "ibm-granite/granite-speech-5.0-2b", "engine": "llamacpp-granite-5-2b", "model_id": "asr/llamacpp/granite-speech-5.0-2b-q8_0", "adoption_exception": "Recent official IBM release; established Granite Speech family."}
+  ]
+}

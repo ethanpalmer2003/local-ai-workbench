@@ -1,0 +1,32 @@
+[tool.pyright]
+# - the repository root is the parent of the scripts package (imports are scripts.*)
+include = ["scripts"]
+extraPaths = ["."]
+reportImplicitRelativeImport = "none"
+# - the venv these launchers run in; unset, basedpyright targets a newer Python
+#   and reports removed stdlib modules as unresolvable
+pythonVersion = "3.13"
+venvPath = "scripts"
+venv = ".venv"
+exclude = ["scripts/tests/old", "scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "frameworks", "trash"]
+[tool.ruff]
+cache-dir = "scripts/state/cache/ruff"
+line-length = 120
+target-version = "py313"
+include = ["*.py", "*.pyi"]
+extend-exclude = ["scripts/tests/old", "scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "frameworks", "trash"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+# - collapse short calls/signatures even when they already have a trailing comma
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "UP", "C4", "SIM", "I"]
+# - StrEnum changes str(member); retain existing enum string representations
+ignore = ["UP042"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false

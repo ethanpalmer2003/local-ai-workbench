@@ -1,0 +1,11 @@
+{
+  "repository": "AMD-Ecosystem/llama.cpp",
+  "branch": "hrx-graph-develop-v2",
+  "base": "d9e2dc4920b9365cb6f2ff64cba5d516397b2773",
+  "patch": "iq2-iq3-s-decode-unfused.patch",
+  "status": "REJECTED: chunked-prefill correctness regression; experimental evidence only, do not apply or install.",
+  "scope": "Single-token IQ2_S/IQ3_S matmul postops and SwiGLU matching; retain standalone kernels and existing correctness guards.",
+  "validation": "C:\\AI\\scripts\\tests\\output\\probes\\hrx_performance\\inconclusive\\20261010-fusion-routing\\artifacts\\report.md",
+  "runtime_provenance": "Incremental backend rebuild against the previous verified kernel corpus/compiler/runtime. Source pull is not a full rebuilt latest-upstream runtime.",
+  "tested_target": "Windows RX 7800 XT gfx1101, Swift Qwen3.8 27B, 8K/f16 KV, no speculation."
+}

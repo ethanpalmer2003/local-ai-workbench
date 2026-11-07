@@ -1,0 +1,6 @@
+# Large installations, runtime data, and recoverable retired files stay local.
+/data/
+/frameworks/
+/trash/
+/scripts/benchmarks/output/
+/.commandcode/

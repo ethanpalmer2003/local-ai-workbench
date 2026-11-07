@@ -1,0 +1,21 @@
+--- a/tests/test-hrx-ops.cpp
++++ b/tests/test-hrx-ops.cpp
+@@ -684,7 +684,8 @@
+     const size_t      f32_bytes = ggml_row_size(GGML_TYPE_F32, elements);
+ 
+     auto make_activation = [&](ggml::hrx::ValueId id, ggml::hrx::ValueStorageId storage, ggml::hrx::ValueId root,
+-                               ggml::hrx::ValueId alias, int64_t element_count = elements) {
++                               ggml::hrx::ValueId alias, int64_t element_count = -1) {
++        if (element_count < 0) element_count = elements;
+         ggml::hrx::Value value = make_test_value(id, storage, root, alias, 0, f32_bytes, GGML_TYPE_F32, element_count);
+         if (element_count == elements) {
+             value.ne = { row_size, row_count, 1, 1 };
+@@ -4121,7 +4122,7 @@
+     REQUIRE(fused_ctx != nullptr);
+     REQUIRE(split_ctx != nullptr);
+ 
+-    auto build_graph = [](ggml_context * ctx) {
++    auto build_graph = [=](ggml_context * ctx) {
+         ggml_tensor * embedding = ggml_new_tensor_2d(ctx, GGML_TYPE_Q4_K, input_size, vocabulary_count);
+         ggml_tensor * tokens    = ggml_new_tensor_1d(ctx, GGML_TYPE_I32, token_count);
+         ggml_tensor * norm      = ggml_new_tensor_1d(ctx, GGML_TYPE_F32, input_size);

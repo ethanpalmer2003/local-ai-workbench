@@ -1,0 +1,6 @@
+engine,model,status,resident_median_ms,sampled_process_vram_mib,gpu_samples,sampled_resident_rss_mib,resident_cpu_percent_machine_median,weight_and_projector_file_gib,startup_and_model_load_seconds,model_load_and_first_inference_seconds
+llamacpp-qwen-1.7b,C:\AI\data\huggingface\models\asr\llamacpp\qwen3_asr\Qwen3-ASR-1.7B-Q8_0.gguf,completed,192.3,3748.8359375,1,1943.49,4.929166666666667,2.348,3.9886715000029653,0.20060690000536852
+audiocpp-cohere,C:\AI\data\huggingface\models\asr\audiocpp\cohere-transcribe-03-2026-q8_0.gguf,completed,116.44,2397.6015625,1,2458.15,53.36666666666667,2.271,,2.180360099999234
+speechcpp,C:\AI\data\huggingface\models\asr\speechcpp\Qwen3-ASR-0.6B-Q8_0.gguf,completed,117.18,1186.87890625,1,141.15,3.5833333333333335,0.784,1.4448529000001145,0.09469429999444401
+parakeetcpp-v3,C:\AI\data\huggingface\models\asr\parakeetcpp\tdt-0.6b-v3-q8_0.gguf,completed,102.17,1096.06640625,1,118.93,4.3999999999999995,0.876,0.8218544999981532,0.11574040000414243
+llamacpp-granite-5-2b,C:\AI\data\huggingface\models\asr\llamacpp\granite-speech-5.0-2b-Q8_0.gguf,completed,170.79,3703.8359375,1,1824.47,4.570833333333333,2.902,4.489939300001424,0.22919860000547487

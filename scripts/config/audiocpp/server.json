@@ -1,0 +1,70 @@
+{
+  "host": "127.0.0.1",
+  "backend": "vulkan",
+  "device": 0,
+  "lazy_load": true,
+  "models": [
+    {
+      "id": "asr/audiocpp/higgs-audio-v3-stt-q8_0",
+      "family": "higgs_audio_stt",
+      "path": "{AI_ROOT}/data/huggingface/models/asr/audiocpp/higgs-audio-v3-stt-q8_0.gguf",
+      "task": "asr",
+      "mode": "offline"
+    },
+    {
+      "id": "audiocpp/breeze-tts-2-q4_0",
+      "family": "breeze_tts",
+      "path": "{AI_ROOT}/data/huggingface/models/audiocpp/breeze-tts-2-q4_0.gguf",
+      "task": "clon",
+      "mode": "streaming"
+    },
+    {
+      "id": "audiocpp/breeze-tts-2-q4_0-design",
+      "family": "breeze_tts",
+      "path": "{AI_ROOT}/data/huggingface/models/audiocpp/breeze-tts-2-q4_0.gguf",
+      "task": "tts",
+      "mode": "streaming"
+    },
+    {
+      "id": "audiocpp/ming3-tts-0.5b-q8_0",
+      "family": "ming3_tts",
+      "path": "{AI_ROOT}/data/huggingface/models/audiocpp/ming-3.0-tts-0.5b-q8_0.gguf",
+      "task": "clon",
+      "mode": "streaming",
+      "default_request_options": {
+        "language": "en",
+        "template_name": "ip",
+        "voice_id": "US_James",
+        "seed": 1895
+      }
+    },
+    {
+      "id": "audiocpp/ming3-audio-tiny-q4_k",
+      "family": "ming3_audio",
+      "path": "{AI_ROOT}/data/huggingface/models/audiocpp/ming-3.0-audio-tiny-q4_k.gguf",
+      "task": "clon",
+      "mode": "offline",
+      "session_options": {
+        "ming3_audio.disk_experts": false,
+        "ming3_audio.pin_experts": false,
+        "ming3_audio.expert_cache_size": 8,
+        "ming3_audio.disk_expert_read_threads": 4
+      },
+      "default_request_options": {"language": "en", "voice_id": "US_James", "seed": 42}
+    },
+    {
+      "id": "audiocpp/fish-drama3-q2",
+      "family": "fish_drama3",
+      "path": "{AI_ROOT}/data/huggingface/models/audiocpp/drama-3-backbone-8bit-experts-Q2_K.gguf",
+      "task": "tts",
+      "mode": "streaming",
+      "session_options": {
+        "fish_drama3.cpu_expert_layers": 40,
+        "fish_drama3.context_length": 2048
+      },
+      "default_request_options": {
+        "max_tokens": 500
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+# folders only, never per-file entries
+__pycache__/
+.venv/
+.env
+
+# runtime output: logs, benchmarks, generated audio, caches
+trash/
+.ruff_cache/
+state/
+tests/output/
+
+# downloaded benchmark source and archived local test material
+tests/old/

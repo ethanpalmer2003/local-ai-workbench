@@ -1,0 +1,1959 @@
+{
+  "name": "Resident ASR comparison",
+  "execution_context": {
+    "platform": "win32",
+    "process_id": 1432,
+    "windows_token": {
+      "app_container": false,
+      "administrator_elevated": false
+    },
+    "policy_note": "Token flags do not describe all filesystem or network restrictions; consult the active tool policy."
+  },
+  "clips": [
+    {
+      "id": "internal-0",
+      "source": "C:\\AI\\scripts\\tests\\output\\shared\\kobold_embedded_compare\\unreviewed\\1793231643344683600\\internal\\artifacts\\sample-0.wav",
+      "file": "C:\\AI\\scripts\\tests\\output\\asr\\shared\\resident_compare\\unreviewed\\1793254500105109300\\artifacts\\clip-0.wav",
+      "reference": "Hello. Tell me about your day, and I will help you practise a natural conversation.",
+      "language": "en",
+      "duration_seconds": 5.3,
+      "sha256": "a98c4b3222299e25ddcdc67ec83103d51907aca875cb32666e2837a6e8abf715"
+    },
+    {
+      "id": "internal-1",
+      "source": "C:\\AI\\scripts\\tests\\output\\shared\\kobold_embedded_compare\\unreviewed\\1793231643344683600\\internal\\artifacts\\sample-1.wav",
+      "file": "C:\\AI\\scripts\\tests\\output\\asr\\shared\\resident_compare\\unreviewed\\1793254500105109300\\artifacts\\clip-1.wav",
+      "reference": "Imagine that we are meeting at a small cafe. Please order a drink, ask about the menu, and tell me where you would like to sit. After you finish, I will suggest one useful correction.",
+      "language": "en",
+      "duration_seconds": 11.5,
+      "sha256": "193586f47eba465adccf6d4a49effa221390fb1778afe1f0b9fad87947b0cd82"
+    }
+  ],
+  "results": [
+    {
+      "engine": "llamacpp-qwen-1.7b",
+      "command": [
+        "C:\\AI\\frameworks\\llamacpp\\vulkan\\llama-server.exe",
+        "-m",
+        "C:\\AI\\data\\huggingface\\models\\asr\\llamacpp\\qwen3_asr\\Qwen3-ASR-1.7B-Q8_0.gguf",
+        "--mmproj",
+        "C:\\AI\\data\\huggingface\\models\\asr\\llamacpp\\qwen3_asr\\mmproj-Qwen3-ASR-1.7B-Q8_0.gguf",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18941",
+        "--alias",
+        "qwen3-asr",
+        "--device",
+        "Vulkan0",
+        "-ngl",
+        "999",
+        "-fa",
+        "on",
+        "-c",
+        "8192",
+        "-np",
+        "1",
+        "-t",
+        "4",
+        "-n",
+        "512",
+        "--jinja"
+      ],
+      "model": "C:\\AI\\data\\huggingface\\models\\asr\\llamacpp\\qwen3_asr\\Qwen3-ASR-1.7B-Q8_0.gguf",
+      "model_sha256": "58e22d0532d4eacaf034cfac17a6fed159f37c41390c710186783be439d1fc57",
+      "status": "completed",
+      "samples": [
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.1100293999988935,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello. Tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 0,
+          "rtf": 0.020760264150734623,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.3106716999973287,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small caf\u00e9. Please order a drink, ask about the menu, and tell me where you would like to sit. After you finish, I will suggest one useful correction.",
+          "repetition": 0,
+          "rtf": 0.027014930434550322,
+          "wer": 0.02857142857142857,
+          "cer": 0.006993006993006993,
+          "reference_words": 35,
+          "reference_characters": 143
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.13397640000039246,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello. Tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 1,
+          "rtf": 0.0252785660378099,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.25245979999453994,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small caf\u00e9. Please order a drink, ask about the menu, and tell me where you would like to sit. After you finish, I will suggest one useful correction.",
+          "repetition": 1,
+          "rtf": 0.021953026086481732,
+          "wer": 0.02857142857142857,
+          "cer": 0.006993006993006993,
+          "reference_words": 35,
+          "reference_characters": 143
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.11964330000046175,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello. Tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 2,
+          "rtf": 0.022574207547256933,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.2506144999933895,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small caf\u00e9. Please order a drink, ask about the menu, and tell me where you would like to sit. After you finish, I will suggest one useful correction.",
+          "repetition": 2,
+          "rtf": 0.021792565216816474,
+          "wer": 0.02857142857142857,
+          "cer": 0.006993006993006993,
+          "reference_words": 35,
+          "reference_characters": 143
+        }
+      ],
+      "projector": {
+        "file": "C:\\AI\\data\\huggingface\\models\\asr\\llamacpp\\qwen3_asr\\mmproj-Qwen3-ASR-1.7B-Q8_0.gguf",
+        "sha256": "46c1d533af3f354ceb37ce855dbceff7da7fa7cf1e6a523df3b13440bd164c0d"
+      },
+      "resources": {
+        "pid": 22840,
+        "launcher_pid": 22840,
+        "cpu_ram": {
+          "guards": {
+            "minimum_free_ram_gib": [
+              1.0
+            ],
+            "whole_run_deadline_enforced": true
+          },
+          "whole_run": {
+            "system_cpu_percent": {
+              "median": 38.55,
+              "maximum": 45.9
+            },
+            "process_cpu_percent_machine": {
+              "median": 4.929166666666667,
+              "maximum": 5.558333333333334
+            },
+            "process_rss_bytes": {
+              "median": 2026651648,
+              "maximum": 2037895168
+            },
+            "system_disk_read_bytes_per_second": {
+              "median": 15907.620841706901,
+              "maximum": 31815.241683413802
+            },
+            "system_disk_write_bytes_per_second": {
+              "median": 306221.70120285783,
+              "maximum": 612443.4024057157
+            },
+            "process_cpu_seconds_delta": 0.609375,
+            "process_io_read_bytes_delta": 0,
+            "process_io_write_bytes_delta": 5523,
+            "system_disk_read_bytes_delta": 16384,
+            "system_disk_write_bytes_delta": 315392
+          },
+          "phases": {
+            "warmup": {
+              "system_cpu_percent": {
+                "median": null,
+                "maximum": null
+              },
+              "process_cpu_percent_machine": {
+                "median": null,
+                "maximum": null
+              },
+              "process_rss_bytes": {
+                "median": 1996353536,
+                "maximum": 1996353536
+              },
+              "system_disk_read_bytes_per_second": {
+                "median": null,
+                "maximum": null
+              },
+              "system_disk_write_bytes_per_second": {
+                "median": null,
+                "maximum": null
+              },
+              "process_cpu_seconds_delta": null,
+              "process_io_read_bytes_delta": null,
+              "process_io_write_bytes_delta": null,
+              "system_disk_read_bytes_delta": null,
+              "system_disk_write_bytes_delta": null
+            },
+            "resident_request": {
+              "system_cpu_percent": {
+                "median": 38.55,
+                "maximum": 45.9
+              },
+              "process_cpu_percent_machine": {
+                "median": 4.929166666666667,
+                "maximum": 5.558333333333334
+              },
+              "process_rss_bytes": {
+                "median": 2032273408.0,
+                "maximum": 2037895168
+              },
+              "system_disk_read_bytes_per_second": {
+                "median": 15907.620841706901,
+                "maximum": 31815.241683413802
+              },
+              "system_disk_write_bytes_per_second": {
+                "median": 306221.70120285783,
+                "maximum": 612443.4024057157
+              },
+              "process_cpu_seconds_delta": 0.265625,
+              "process_io_read_bytes_delta": 0,
+              "process_io_write_bytes_delta": 3460,
+              "system_disk_read_bytes_delta": 0,
+              "system_disk_write_bytes_delta": 0
+            }
+          },
+          "limits": [
+            "CPU process percent normalized to total logical CPUs; one-core scale also retained in trace.",
+            "Process data is server PID only. System CPU/disk includes other applications.",
+            "Process I/O counters are not physical SSD bytes; cached/mapped/network I/O can differ.",
+            "System disk counters aggregate disks; no SSD-specific busy time, queue depth or wear measured.",
+            "OS/shader/file caches not reset; null means unavailable. Samples about 0.5 seconds apart."
+          ]
+        },
+        "gpu": {
+          "status": "sampled",
+          "units": "MiB (existing *_mb field names)",
+          "poll_pause_s": 2,
+          "source": "platform snapshot",
+          "max_query_s": 1.8556716999955825,
+          "peak_kind": "sampled lower bound; query time is additional to the poll pause",
+          "samples": 1,
+          "available_samples": 1,
+          "peak_total_used_mb": 5995.015625,
+          "peak_process_used_mb": 3748.8359375,
+          "minimum_available_mb": null,
+          "usage_distribution": {
+            "minimum_used_mb": 5995.015625,
+            "median_used_mb": 5995.015625,
+            "near_peak_threshold_mb": 5695.26484375,
+            "near_peak_fraction": 0.95,
+            "near_peak_windows": [
+              {
+                "first_sample_seconds": 1.8566025000036461,
+                "last_sample_seconds": 1.8566025000036461,
+                "sample_count": 1
+              }
+            ],
+            "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+          },
+          "process_usage_distribution": {
+            "minimum_used_mb": 3748.8359375,
+            "median_used_mb": 3748.8359375,
+            "near_peak_threshold_mb": 3561.3941406249996,
+            "near_peak_fraction": 0.95,
+            "near_peak_windows": [
+              {
+                "first_sample_seconds": 1.8566025000036461,
+                "last_sample_seconds": 1.8566025000036461,
+                "sample_count": 1
+              }
+            ],
+            "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+          },
+          "stage_peaks": {
+            "submission": {
+              "total_used_mb": 5995.015625,
+              "process_used_mb": 3748.8359375,
+              "usage_distribution": {
+                "minimum_used_mb": 5995.015625,
+                "median_used_mb": 5995.015625,
+                "near_peak_threshold_mb": 5695.26484375,
+                "near_peak_fraction": 0.95,
+                "near_peak_windows": [
+                  {
+                    "first_sample_seconds": 1.8566025000036461,
+                    "last_sample_seconds": 1.8566025000036461,
+                    "sample_count": 1
+                  }
+                ],
+                "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+              }
+            }
+          }
+        }
+      },
+      "benchmark": {
+        "schema": "benchmark-lifecycle-v1",
+        "state": "closed",
+        "resident": true,
+        "identity": "22840:58e22d0532d4eacaf034cfac17a6fed159f37c41390c710186783be439d1fc57",
+        "startup_seconds": null,
+        "model_load_seconds": null,
+        "startup_and_model_load_seconds": 3.9886715000029653,
+        "session_acquisition_seconds": null,
+        "model_load_and_first_inference_seconds": 0.20060690000536852,
+        "warmup_seconds": 0,
+        "phases": [
+          {
+            "phase": "startup_and_model_load",
+            "seconds": 3.9886715000029653,
+            "status": "completed"
+          },
+          {
+            "phase": "model_load_and_first_inference",
+            "seconds": 0.20060690000536852,
+            "status": "completed"
+          },
+          {
+            "phase": "cleanup",
+            "seconds": 0.26726069999858737,
+            "status": "completed"
+          }
+        ],
+        "requests": [
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.1100293999988935,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.3106716999973287,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.13397640000039246,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.25245979999453994,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.11964330000046175,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.2506144999933895,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          }
+        ],
+        "errors": []
+      },
+      "summary": {
+        "timing_scope": "resident_request",
+        "samples": 6,
+        "excluded_rows": 0,
+        "p50_seconds": 0.19229544999689097,
+        "p95_seconds": null,
+        "p95_minimum_samples": 20
+      }
+    },
+    {
+      "engine": "audiocpp-cohere",
+      "command": [
+        "C:\\AI\\frameworks\\audiocpp\\vulkan\\audiocpp_server.exe",
+        "--config",
+        "C:\\AI\\scripts\\tests\\output\\asr\\shared\\resident_compare\\unreviewed\\1793254500105109300\\temp\\audiocpp-cohere.json",
+        "--port",
+        "18941"
+      ],
+      "model": "C:\\AI\\data\\huggingface\\models\\asr\\audiocpp\\cohere-transcribe-03-2026-q8_0.gguf",
+      "model_sha256": "b892857b820f0f937500ebd0bc4dc73f57e69a7ca548b63132e688b316193813",
+      "status": "completed",
+      "samples": [
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.09945690000313334,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 0,
+          "rtf": 0.018765452830779877,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.15619050000532297,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small cafe. Please order a drink, ask about the menu, and tell me where you would like to sit. After you finish, I will suggest one useful correction.",
+          "repetition": 0,
+          "rtf": 0.01358178260915852,
+          "wer": 0.0,
+          "cer": 0.0,
+          "reference_words": 35,
+          "reference_characters": 143
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.08111680000001797,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 1,
+          "rtf": 0.015305056603776977,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.13341999999829568,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small cafe. Please order a drink, ask about the menu, and tell me where you would like to sit. After you finish, I will suggest one useful correction.",
+          "repetition": 1,
+          "rtf": 0.011601739130286582,
+          "wer": 0.0,
+          "cer": 0.0,
+          "reference_words": 35,
+          "reference_characters": 143
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.07895170000119833,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 2,
+          "rtf": 0.014896547170037421,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.13580399999773363,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small cafe. Please order a drink, ask about the menu, and tell me where you would like to sit. After you finish, I will suggest one useful correction.",
+          "repetition": 2,
+          "rtf": 0.011809043478063793,
+          "wer": 0.0,
+          "cer": 0.0,
+          "reference_words": 35,
+          "reference_characters": 143
+        }
+      ],
+      "resources": {
+        "pid": 11848,
+        "launcher_pid": 11848,
+        "cpu_ram": {
+          "guards": {
+            "minimum_free_ram_gib": [
+              1.0
+            ],
+            "whole_run_deadline_enforced": true
+          },
+          "whole_run": {
+            "system_cpu_percent": {
+              "median": 33.6,
+              "maximum": 77.1
+            },
+            "process_cpu_percent_machine": {
+              "median": 8.366666666666667,
+              "maximum": 53.36666666666667
+            },
+            "process_rss_bytes": {
+              "median": 1145819136.0,
+              "maximum": 2577559552
+            },
+            "system_disk_read_bytes_per_second": {
+              "median": 1636774.682725735,
+              "maximum": 11991491.649380976
+            },
+            "system_disk_write_bytes_per_second": {
+              "median": 962580.9699478219,
+              "maximum": 3150791.26424704
+            },
+            "process_cpu_seconds_delta": 5.859375,
+            "process_io_read_bytes_delta": 16434465,
+            "process_io_write_bytes_delta": 381,
+            "system_disk_read_bytes_delta": 11437568,
+            "system_disk_write_bytes_delta": 3448832
+          },
+          "phases": {
+            "warmup": {
+              "system_cpu_percent": {
+                "median": 30.65,
+                "maximum": 41.9
+              },
+              "process_cpu_percent_machine": {
+                "median": 8.220833333333335,
+                "maximum": 18.466666666666665
+              },
+              "process_rss_bytes": {
+                "median": 862408704,
+                "maximum": 2527817728
+              },
+              "system_disk_read_bytes_per_second": {
+                "median": 1073585.957894985,
+                "maximum": 8026593.310866455
+              },
+              "system_disk_write_bytes_per_second": {
+                "median": 1094954.1740965638,
+                "maximum": 3150791.26424704
+              },
+              "process_cpu_seconds_delta": 2.5625,
+              "process_io_read_bytes_delta": 16434465,
+              "process_io_write_bytes_delta": 381,
+              "system_disk_read_bytes_delta": 5263360,
+              "system_disk_write_bytes_delta": 2953216
+            },
+            "resident_request": {
+              "system_cpu_percent": {
+                "median": 77.1,
+                "maximum": 77.1
+              },
+              "process_cpu_percent_machine": {
+                "median": 53.36666666666667,
+                "maximum": 53.36666666666667
+              },
+              "process_rss_bytes": {
+                "median": 2577559552,
+                "maximum": 2577559552
+              },
+              "system_disk_read_bytes_per_second": {
+                "median": 11991491.649380976,
+                "maximum": 11991491.649380976
+              },
+              "system_disk_write_bytes_per_second": {
+                "median": 962580.9699478219,
+                "maximum": 962580.9699478219
+              },
+              "process_cpu_seconds_delta": null,
+              "process_io_read_bytes_delta": null,
+              "process_io_write_bytes_delta": null,
+              "system_disk_read_bytes_delta": null,
+              "system_disk_write_bytes_delta": null
+            }
+          },
+          "limits": [
+            "CPU process percent normalized to total logical CPUs; one-core scale also retained in trace.",
+            "Process data is server PID only. System CPU/disk includes other applications.",
+            "Process I/O counters are not physical SSD bytes; cached/mapped/network I/O can differ.",
+            "System disk counters aggregate disks; no SSD-specific busy time, queue depth or wear measured.",
+            "OS/shader/file caches not reset; null means unavailable. Samples about 0.5 seconds apart."
+          ]
+        },
+        "gpu": {
+          "status": "sampled",
+          "units": "MiB (existing *_mb field names)",
+          "poll_pause_s": 2,
+          "source": "platform snapshot",
+          "max_query_s": 1.8607134999983828,
+          "peak_kind": "sampled lower bound; query time is additional to the poll pause",
+          "samples": 1,
+          "available_samples": 1,
+          "peak_total_used_mb": 4650.78125,
+          "peak_process_used_mb": 2397.6015625,
+          "minimum_available_mb": null,
+          "usage_distribution": {
+            "minimum_used_mb": 4650.78125,
+            "median_used_mb": 4650.78125,
+            "near_peak_threshold_mb": 4418.2421875,
+            "near_peak_fraction": 0.95,
+            "near_peak_windows": [
+              {
+                "first_sample_seconds": 1.8620793999943999,
+                "last_sample_seconds": 1.8620793999943999,
+                "sample_count": 1
+              }
+            ],
+            "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+          },
+          "process_usage_distribution": {
+            "minimum_used_mb": 2397.6015625,
+            "median_used_mb": 2397.6015625,
+            "near_peak_threshold_mb": 2277.721484375,
+            "near_peak_fraction": 0.95,
+            "near_peak_windows": [
+              {
+                "first_sample_seconds": 1.8620793999943999,
+                "last_sample_seconds": 1.8620793999943999,
+                "sample_count": 1
+              }
+            ],
+            "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+          },
+          "stage_peaks": {
+            "submission": {
+              "total_used_mb": 4650.78125,
+              "process_used_mb": 2397.6015625,
+              "usage_distribution": {
+                "minimum_used_mb": 4650.78125,
+                "median_used_mb": 4650.78125,
+                "near_peak_threshold_mb": 4418.2421875,
+                "near_peak_fraction": 0.95,
+                "near_peak_windows": [
+                  {
+                    "first_sample_seconds": 1.8620793999943999,
+                    "last_sample_seconds": 1.8620793999943999,
+                    "sample_count": 1
+                  }
+                ],
+                "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+              }
+            }
+          }
+        }
+      },
+      "benchmark": {
+        "schema": "benchmark-lifecycle-v1",
+        "state": "closed",
+        "resident": true,
+        "identity": "11848:b892857b820f0f937500ebd0bc4dc73f57e69a7ca548b63132e688b316193813",
+        "startup_seconds": 0.8294370000003255,
+        "model_load_seconds": null,
+        "startup_and_model_load_seconds": null,
+        "session_acquisition_seconds": null,
+        "model_load_and_first_inference_seconds": 2.180360099999234,
+        "warmup_seconds": 0,
+        "phases": [
+          {
+            "phase": "startup",
+            "seconds": 0.8294370000003255,
+            "status": "completed"
+          },
+          {
+            "phase": "model_load_and_first_inference",
+            "seconds": 2.180360099999234,
+            "status": "completed"
+          },
+          {
+            "phase": "cleanup",
+            "seconds": 0.31782460000249557,
+            "status": "completed"
+          }
+        ],
+        "requests": [
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.09945690000313334,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.15619050000532297,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.08111680000001797,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.13341999999829568,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.07895170000119833,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.13580399999773363,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          }
+        ],
+        "errors": []
+      },
+      "summary": {
+        "timing_scope": "resident_request",
+        "samples": 6,
+        "excluded_rows": 0,
+        "p50_seconds": 0.11643845000071451,
+        "p95_seconds": null,
+        "p95_minimum_samples": 20
+      }
+    },
+    {
+      "engine": "speechcpp",
+      "command": [
+        "C:\\AI\\frameworks\\asr\\speechcpp\\vulkan\\speech.exe",
+        "serve",
+        "C:\\AI\\data\\huggingface\\models\\asr\\speechcpp\\Qwen3-ASR-0.6B-Q8_0.gguf",
+        "--device",
+        "gpu",
+        "--threads",
+        "4",
+        "--port",
+        "18941"
+      ],
+      "model": "C:\\AI\\data\\huggingface\\models\\asr\\speechcpp\\Qwen3-ASR-0.6B-Q8_0.gguf",
+      "model_sha256": "416e10c15b4a3d9002bd337d18fc450233fdf68502b6e10d1379d2789838afd0",
+      "status": "completed",
+      "samples": [
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.08996399999887217,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 0,
+          "rtf": 0.01697433962242871,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.16278069999680156,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small caf. Please order a drink, ask about the menu, and tell me where you would like to sit after you finish. I will suggest one useful correction.",
+          "repetition": 0,
+          "rtf": 0.014154843477982744,
+          "wer": 0.02857142857142857,
+          "cer": 0.006993006993006993,
+          "reference_words": 35,
+          "reference_characters": 143
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.06617689999984577,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 1,
+          "rtf": 0.012486207547140712,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.14581350000662496,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small caf. Please order a drink, ask about the menu, and tell me where you would like to sit after you finish. I will suggest one useful correction.",
+          "repetition": 1,
+          "rtf": 0.012679434783184779,
+          "wer": 0.02857142857142857,
+          "cer": 0.006993006993006993,
+          "reference_words": 35,
+          "reference_characters": 143
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.08818869999959134,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 2,
+          "rtf": 0.01663937735841346,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.14439719999791123,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small caf. Please order a drink, ask about the menu, and tell me where you would like to sit after you finish. I will suggest one useful correction.",
+          "repetition": 2,
+          "rtf": 0.012556278260687934,
+          "wer": 0.02857142857142857,
+          "cer": 0.006993006993006993,
+          "reference_words": 35,
+          "reference_characters": 143
+        }
+      ],
+      "resources": {
+        "pid": 28560,
+        "launcher_pid": 28560,
+        "cpu_ram": {
+          "guards": {
+            "minimum_free_ram_gib": [
+              1.0
+            ],
+            "whole_run_deadline_enforced": true
+          },
+          "whole_run": {
+            "system_cpu_percent": {
+              "median": 33.9,
+              "maximum": 33.9
+            },
+            "process_cpu_percent_machine": {
+              "median": 3.5833333333333335,
+              "maximum": 3.5833333333333335
+            },
+            "process_rss_bytes": {
+              "median": 141717504.0,
+              "maximum": 148008960
+            },
+            "system_disk_read_bytes_per_second": {
+              "median": 170362.8025986621,
+              "maximum": 170362.8025986621
+            },
+            "system_disk_write_bytes_per_second": {
+              "median": 1040321.9661646112,
+              "maximum": 1040321.9661646112
+            },
+            "process_cpu_seconds_delta": 0.21875,
+            "process_io_read_bytes_delta": 0,
+            "process_io_write_bytes_delta": 502,
+            "system_disk_read_bytes_delta": 86528,
+            "system_disk_write_bytes_delta": 528384
+          },
+          "phases": {
+            "warmup": {
+              "system_cpu_percent": {
+                "median": null,
+                "maximum": null
+              },
+              "process_cpu_percent_machine": {
+                "median": null,
+                "maximum": null
+              },
+              "process_rss_bytes": {
+                "median": 135426048,
+                "maximum": 135426048
+              },
+              "system_disk_read_bytes_per_second": {
+                "median": null,
+                "maximum": null
+              },
+              "system_disk_write_bytes_per_second": {
+                "median": null,
+                "maximum": null
+              },
+              "process_cpu_seconds_delta": null,
+              "process_io_read_bytes_delta": null,
+              "process_io_write_bytes_delta": null,
+              "system_disk_read_bytes_delta": null,
+              "system_disk_write_bytes_delta": null
+            },
+            "resident_request": {
+              "system_cpu_percent": {
+                "median": 33.9,
+                "maximum": 33.9
+              },
+              "process_cpu_percent_machine": {
+                "median": 3.5833333333333335,
+                "maximum": 3.5833333333333335
+              },
+              "process_rss_bytes": {
+                "median": 148008960,
+                "maximum": 148008960
+              },
+              "system_disk_read_bytes_per_second": {
+                "median": 170362.8025986621,
+                "maximum": 170362.8025986621
+              },
+              "system_disk_write_bytes_per_second": {
+                "median": 1040321.9661646112,
+                "maximum": 1040321.9661646112
+              },
+              "process_cpu_seconds_delta": null,
+              "process_io_read_bytes_delta": null,
+              "process_io_write_bytes_delta": null,
+              "system_disk_read_bytes_delta": null,
+              "system_disk_write_bytes_delta": null
+            }
+          },
+          "limits": [
+            "CPU process percent normalized to total logical CPUs; one-core scale also retained in trace.",
+            "Process data is server PID only. System CPU/disk includes other applications.",
+            "Process I/O counters are not physical SSD bytes; cached/mapped/network I/O can differ.",
+            "System disk counters aggregate disks; no SSD-specific busy time, queue depth or wear measured.",
+            "OS/shader/file caches not reset; null means unavailable. Samples about 0.5 seconds apart."
+          ]
+        },
+        "gpu": {
+          "status": "sampled",
+          "units": "MiB (existing *_mb field names)",
+          "poll_pause_s": 2,
+          "source": "platform snapshot",
+          "max_query_s": 1.8109035000015865,
+          "peak_kind": "sampled lower bound; query time is additional to the poll pause",
+          "samples": 1,
+          "available_samples": 1,
+          "peak_total_used_mb": 3474.80859375,
+          "peak_process_used_mb": 1186.87890625,
+          "minimum_available_mb": null,
+          "usage_distribution": {
+            "minimum_used_mb": 3474.80859375,
+            "median_used_mb": 3474.80859375,
+            "near_peak_threshold_mb": 3301.0681640625,
+            "near_peak_fraction": 0.95,
+            "near_peak_windows": [
+              {
+                "first_sample_seconds": 1.8120469999994384,
+                "last_sample_seconds": 1.8120469999994384,
+                "sample_count": 1
+              }
+            ],
+            "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+          },
+          "process_usage_distribution": {
+            "minimum_used_mb": 1186.87890625,
+            "median_used_mb": 1186.87890625,
+            "near_peak_threshold_mb": 1127.5349609375,
+            "near_peak_fraction": 0.95,
+            "near_peak_windows": [
+              {
+                "first_sample_seconds": 1.8120469999994384,
+                "last_sample_seconds": 1.8120469999994384,
+                "sample_count": 1
+              }
+            ],
+            "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+          },
+          "stage_peaks": {
+            "submission": {
+              "total_used_mb": 3474.80859375,
+              "process_used_mb": 1186.87890625,
+              "usage_distribution": {
+                "minimum_used_mb": 3474.80859375,
+                "median_used_mb": 3474.80859375,
+                "near_peak_threshold_mb": 3301.0681640625,
+                "near_peak_fraction": 0.95,
+                "near_peak_windows": [
+                  {
+                    "first_sample_seconds": 1.8120469999994384,
+                    "last_sample_seconds": 1.8120469999994384,
+                    "sample_count": 1
+                  }
+                ],
+                "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+              }
+            }
+          }
+        }
+      },
+      "benchmark": {
+        "schema": "benchmark-lifecycle-v1",
+        "state": "closed",
+        "resident": true,
+        "identity": "28560:416e10c15b4a3d9002bd337d18fc450233fdf68502b6e10d1379d2789838afd0",
+        "startup_seconds": null,
+        "model_load_seconds": null,
+        "startup_and_model_load_seconds": 1.4448529000001145,
+        "session_acquisition_seconds": null,
+        "model_load_and_first_inference_seconds": 0.09469429999444401,
+        "warmup_seconds": 0,
+        "phases": [
+          {
+            "phase": "startup_and_model_load",
+            "seconds": 1.4448529000001145,
+            "status": "completed"
+          },
+          {
+            "phase": "model_load_and_first_inference",
+            "seconds": 0.09469429999444401,
+            "status": "completed"
+          },
+          {
+            "phase": "cleanup",
+            "seconds": 0.1938577000037185,
+            "status": "completed"
+          }
+        ],
+        "requests": [
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.08996399999887217,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.16278069999680156,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.06617689999984577,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.14581350000662496,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.08818869999959134,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.14439719999791123,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          }
+        ],
+        "errors": []
+      },
+      "summary": {
+        "timing_scope": "resident_request",
+        "samples": 6,
+        "excluded_rows": 0,
+        "p50_seconds": 0.1171805999983917,
+        "p95_seconds": null,
+        "p95_minimum_samples": 20
+      }
+    },
+    {
+      "engine": "parakeetcpp-v3",
+      "command": [
+        "C:\\AI\\frameworks\\asr\\parakeetcpp\\vulkan\\parakeet-server.exe",
+        "--model",
+        "C:\\AI\\data\\huggingface\\models\\asr\\parakeetcpp\\tdt-0.6b-v3-q8_0.gguf",
+        "--port",
+        "18941",
+        "--threads",
+        "4"
+      ],
+      "model": "C:\\AI\\data\\huggingface\\models\\asr\\parakeetcpp\\tdt-0.6b-v3-q8_0.gguf",
+      "model_sha256": "4d69a4a6683f4f2d952bad794c1357ca6eb628027695b4699c5a9ad4cd07d757",
+      "status": "completed",
+      "samples": [
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.09153209999931278,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 0,
+          "rtf": 0.01727020754704015,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.13880449999851407,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small calf. Please order a drink, ask about the menu, and tell me where you would like to sit after you finish. I will suggest one useful correction.",
+          "repetition": 0,
+          "rtf": 0.01206995652160992,
+          "wer": 0.02857142857142857,
+          "cer": 0.013986013986013986,
+          "reference_words": 35,
+          "reference_characters": 143
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.07984000000578817,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 1,
+          "rtf": 0.015064150944488335,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.1128138000058243,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small calf. Please order a drink, ask about the menu, and tell me where you would like to sit after you finish. I will suggest one useful correction.",
+          "repetition": 1,
+          "rtf": 0.009809895652680374,
+          "wer": 0.02857142857142857,
+          "cer": 0.013986013986013986,
+          "reference_words": 35,
+          "reference_characters": 143
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.08260370000061812,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 2,
+          "rtf": 0.015585603773701532,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.12235990000044694,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small calf. Please order a drink, ask about the menu, and tell me where you would like to sit after you finish. I will suggest one useful correction.",
+          "repetition": 2,
+          "rtf": 0.010639991304386691,
+          "wer": 0.02857142857142857,
+          "cer": 0.013986013986013986,
+          "reference_words": 35,
+          "reference_characters": 143
+        }
+      ],
+      "resources": {
+        "pid": 25608,
+        "launcher_pid": 25608,
+        "cpu_ram": {
+          "guards": {
+            "minimum_free_ram_gib": [
+              1.0
+            ],
+            "whole_run_deadline_enforced": true
+          },
+          "whole_run": {
+            "system_cpu_percent": {
+              "median": 37.6,
+              "maximum": 37.6
+            },
+            "process_cpu_percent_machine": {
+              "median": 4.3999999999999995,
+              "maximum": 4.3999999999999995
+            },
+            "process_rss_bytes": {
+              "median": 95627264.0,
+              "maximum": 124706816
+            },
+            "system_disk_read_bytes_per_second": {
+              "median": 17035138.997425556,
+              "maximum": 17035138.997425556
+            },
+            "system_disk_write_bytes_per_second": {
+              "median": 399747.0510021442,
+              "maximum": 399747.0510021442
+            },
+            "process_cpu_seconds_delta": 0.265625,
+            "process_io_read_bytes_delta": 0,
+            "process_io_write_bytes_delta": 0,
+            "system_disk_read_bytes_delta": 8552960,
+            "system_disk_write_bytes_delta": 200704
+          },
+          "phases": {
+            "warmup": {
+              "system_cpu_percent": {
+                "median": null,
+                "maximum": null
+              },
+              "process_cpu_percent_machine": {
+                "median": null,
+                "maximum": null
+              },
+              "process_rss_bytes": {
+                "median": 66547712,
+                "maximum": 66547712
+              },
+              "system_disk_read_bytes_per_second": {
+                "median": null,
+                "maximum": null
+              },
+              "system_disk_write_bytes_per_second": {
+                "median": null,
+                "maximum": null
+              },
+              "process_cpu_seconds_delta": null,
+              "process_io_read_bytes_delta": null,
+              "process_io_write_bytes_delta": null,
+              "system_disk_read_bytes_delta": null,
+              "system_disk_write_bytes_delta": null
+            },
+            "resident_request": {
+              "system_cpu_percent": {
+                "median": 37.6,
+                "maximum": 37.6
+              },
+              "process_cpu_percent_machine": {
+                "median": 4.3999999999999995,
+                "maximum": 4.3999999999999995
+              },
+              "process_rss_bytes": {
+                "median": 124706816,
+                "maximum": 124706816
+              },
+              "system_disk_read_bytes_per_second": {
+                "median": 17035138.997425556,
+                "maximum": 17035138.997425556
+              },
+              "system_disk_write_bytes_per_second": {
+                "median": 399747.0510021442,
+                "maximum": 399747.0510021442
+              },
+              "process_cpu_seconds_delta": null,
+              "process_io_read_bytes_delta": null,
+              "process_io_write_bytes_delta": null,
+              "system_disk_read_bytes_delta": null,
+              "system_disk_write_bytes_delta": null
+            }
+          },
+          "limits": [
+            "CPU process percent normalized to total logical CPUs; one-core scale also retained in trace.",
+            "Process data is server PID only. System CPU/disk includes other applications.",
+            "Process I/O counters are not physical SSD bytes; cached/mapped/network I/O can differ.",
+            "System disk counters aggregate disks; no SSD-specific busy time, queue depth or wear measured.",
+            "OS/shader/file caches not reset; null means unavailable. Samples about 0.5 seconds apart."
+          ]
+        },
+        "gpu": {
+          "status": "sampled",
+          "units": "MiB (existing *_mb field names)",
+          "poll_pause_s": 2,
+          "source": "platform snapshot",
+          "max_query_s": 1.828903999994509,
+          "peak_kind": "sampled lower bound; query time is additional to the poll pause",
+          "samples": 1,
+          "available_samples": 1,
+          "peak_total_used_mb": 3320.49609375,
+          "peak_process_used_mb": 1096.06640625,
+          "minimum_available_mb": null,
+          "usage_distribution": {
+            "minimum_used_mb": 3320.49609375,
+            "median_used_mb": 3320.49609375,
+            "near_peak_threshold_mb": 3154.4712890624996,
+            "near_peak_fraction": 0.95,
+            "near_peak_windows": [
+              {
+                "first_sample_seconds": 1.8302734000026248,
+                "last_sample_seconds": 1.8302734000026248,
+                "sample_count": 1
+              }
+            ],
+            "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+          },
+          "process_usage_distribution": {
+            "minimum_used_mb": 1096.06640625,
+            "median_used_mb": 1096.06640625,
+            "near_peak_threshold_mb": 1041.2630859375,
+            "near_peak_fraction": 0.95,
+            "near_peak_windows": [
+              {
+                "first_sample_seconds": 1.8302734000026248,
+                "last_sample_seconds": 1.8302734000026248,
+                "sample_count": 1
+              }
+            ],
+            "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+          },
+          "stage_peaks": {
+            "submission": {
+              "total_used_mb": 3320.49609375,
+              "process_used_mb": 1096.06640625,
+              "usage_distribution": {
+                "minimum_used_mb": 3320.49609375,
+                "median_used_mb": 3320.49609375,
+                "near_peak_threshold_mb": 3154.4712890624996,
+                "near_peak_fraction": 0.95,
+                "near_peak_windows": [
+                  {
+                    "first_sample_seconds": 1.8302734000026248,
+                    "last_sample_seconds": 1.8302734000026248,
+                    "sample_count": 1
+                  }
+                ],
+                "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+              }
+            }
+          }
+        }
+      },
+      "benchmark": {
+        "schema": "benchmark-lifecycle-v1",
+        "state": "closed",
+        "resident": true,
+        "identity": "25608:4d69a4a6683f4f2d952bad794c1357ca6eb628027695b4699c5a9ad4cd07d757",
+        "startup_seconds": null,
+        "model_load_seconds": null,
+        "startup_and_model_load_seconds": 0.8218544999981532,
+        "session_acquisition_seconds": null,
+        "model_load_and_first_inference_seconds": 0.11574040000414243,
+        "warmup_seconds": 0,
+        "phases": [
+          {
+            "phase": "startup_and_model_load",
+            "seconds": 0.8218544999981532,
+            "status": "completed"
+          },
+          {
+            "phase": "model_load_and_first_inference",
+            "seconds": 0.11574040000414243,
+            "status": "completed"
+          },
+          {
+            "phase": "cleanup",
+            "seconds": 0.11229630000161706,
+            "status": "completed"
+          }
+        ],
+        "requests": [
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.09153209999931278,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.13880449999851407,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.07984000000578817,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.1128138000058243,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.08260370000061812,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.12235990000044694,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          }
+        ],
+        "errors": []
+      },
+      "summary": {
+        "timing_scope": "resident_request",
+        "samples": 6,
+        "excluded_rows": 0,
+        "p50_seconds": 0.10217295000256854,
+        "p95_seconds": null,
+        "p95_minimum_samples": 20
+      }
+    },
+    {
+      "engine": "llamacpp-granite-5-2b",
+      "command": [
+        "C:\\AI\\frameworks\\llamacpp\\vulkan\\llama-server.exe",
+        "-m",
+        "C:\\AI\\data\\huggingface\\models\\asr\\llamacpp\\granite-speech-5.0-2b-Q8_0.gguf",
+        "--mmproj",
+        "C:\\AI\\data\\huggingface\\models\\asr\\llamacpp\\granite-speech-5.0-2b-mmproj-f16.gguf",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18941",
+        "--alias",
+        "granite-asr",
+        "--device",
+        "Vulkan0",
+        "-ngl",
+        "999",
+        "-fa",
+        "on",
+        "-c",
+        "8192",
+        "-np",
+        "1",
+        "-t",
+        "4",
+        "-n",
+        "512",
+        "--jinja"
+      ],
+      "model": "C:\\AI\\data\\huggingface\\models\\asr\\llamacpp\\granite-speech-5.0-2b-Q8_0.gguf",
+      "model_sha256": "4972786fa455b71ee1f020e8ae1b147ca6cd2b1e5b0818048011d7f1da242790",
+      "status": "completed",
+      "samples": [
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.09675960000458872,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 0,
+          "rtf": 0.018256528302752588,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.3580398999984027,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small cafe. Please order a drink, ask about the menu, and tell me where you would like to sit. After you finish, I will suggest one useful correction.",
+          "repetition": 0,
+          "rtf": 0.031133904347687192,
+          "wer": 0.0,
+          "cer": 0.0,
+          "reference_words": 35,
+          "reference_characters": 143
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.11255109999910928,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 1,
+          "rtf": 0.021236056603605526,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.2385084999987157,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small cafe. Please order a drink, ask about the menu, and tell me where you would like to sit. After you finish, I will suggest one useful correction.",
+          "repetition": 1,
+          "rtf": 0.020739869565105713,
+          "wer": 0.0,
+          "cer": 0.0,
+          "reference_words": 35,
+          "reference_characters": 143
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.1114134000017657,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-0",
+          "text": "Hello, tell me about your day, and I will help you practice a natural conversation.",
+          "repetition": 2,
+          "rtf": 0.021021396226748246,
+          "wer": 0.06666666666666667,
+          "cer": 0.015151515151515152,
+          "reference_words": 15,
+          "reference_characters": 66
+        },
+        {
+          "timing_scope": "resident_request",
+          "request_seconds": 0.22903100000257837,
+          "status": "completed",
+          "marks_seconds": {},
+          "error": null,
+          "clip": "internal-1",
+          "text": "Imagine that we are meeting at a small cafe. Please order a drink, ask about the menu, and tell me where you would like to sit. After you finish, I will suggest one useful correction.",
+          "repetition": 2,
+          "rtf": 0.01991573913065899,
+          "wer": 0.0,
+          "cer": 0.0,
+          "reference_words": 35,
+          "reference_characters": 143
+        }
+      ],
+      "projector": {
+        "file": "C:\\AI\\data\\huggingface\\models\\asr\\llamacpp\\granite-speech-5.0-2b-mmproj-f16.gguf",
+        "sha256": "c0d108e1a3cf345b22c411245fc2762319f1c6b6e56bb15bdffe748c9342ca7d"
+      },
+      "resources": {
+        "pid": 16444,
+        "launcher_pid": 16444,
+        "cpu_ram": {
+          "guards": {
+            "minimum_free_ram_gib": [
+              1.0
+            ],
+            "whole_run_deadline_enforced": true
+          },
+          "whole_run": {
+            "system_cpu_percent": {
+              "median": 43.3,
+              "maximum": 53.4
+            },
+            "process_cpu_percent_machine": {
+              "median": 4.570833333333333,
+              "maximum": 5.583333333333333
+            },
+            "process_rss_bytes": {
+              "median": 1912922112,
+              "maximum": 1913098240
+            },
+            "system_disk_read_bytes_per_second": {
+              "median": 7999.696886412561,
+              "maximum": 15999.393772825122
+            },
+            "system_disk_write_bytes_per_second": {
+              "median": 427974.80357087636,
+              "maximum": 839968.1730733189
+            },
+            "process_cpu_seconds_delta": 0.5625,
+            "process_io_read_bytes_delta": 0,
+            "process_io_write_bytes_delta": 4534,
+            "system_disk_read_bytes_delta": 8192,
+            "system_disk_write_bytes_delta": 438272
+          },
+          "phases": {
+            "warmup": {
+              "system_cpu_percent": {
+                "median": null,
+                "maximum": null
+              },
+              "process_cpu_percent_machine": {
+                "median": null,
+                "maximum": null
+              },
+              "process_rss_bytes": {
+                "median": 1881690112,
+                "maximum": 1881690112
+              },
+              "system_disk_read_bytes_per_second": {
+                "median": null,
+                "maximum": null
+              },
+              "system_disk_write_bytes_per_second": {
+                "median": null,
+                "maximum": null
+              },
+              "process_cpu_seconds_delta": null,
+              "process_io_read_bytes_delta": null,
+              "process_io_write_bytes_delta": null,
+              "system_disk_read_bytes_delta": null,
+              "system_disk_write_bytes_delta": null
+            },
+            "resident_request": {
+              "system_cpu_percent": {
+                "median": 43.3,
+                "maximum": 53.4
+              },
+              "process_cpu_percent_machine": {
+                "median": 4.570833333333333,
+                "maximum": 5.583333333333333
+              },
+              "process_rss_bytes": {
+                "median": 1913010176.0,
+                "maximum": 1913098240
+              },
+              "system_disk_read_bytes_per_second": {
+                "median": 7999.696886412561,
+                "maximum": 15999.393772825122
+              },
+              "system_disk_write_bytes_per_second": {
+                "median": 427974.80357087636,
+                "maximum": 839968.1730733189
+              },
+              "process_cpu_seconds_delta": 0.21875,
+              "process_io_read_bytes_delta": 0,
+              "process_io_write_bytes_delta": 2291,
+              "system_disk_read_bytes_delta": 8192,
+              "system_disk_write_bytes_delta": 430080
+            }
+          },
+          "limits": [
+            "CPU process percent normalized to total logical CPUs; one-core scale also retained in trace.",
+            "Process data is server PID only. System CPU/disk includes other applications.",
+            "Process I/O counters are not physical SSD bytes; cached/mapped/network I/O can differ.",
+            "System disk counters aggregate disks; no SSD-specific busy time, queue depth or wear measured.",
+            "OS/shader/file caches not reset; null means unavailable. Samples about 0.5 seconds apart."
+          ]
+        },
+        "gpu": {
+          "status": "sampled",
+          "units": "MiB (existing *_mb field names)",
+          "poll_pause_s": 2,
+          "source": "platform snapshot",
+          "max_query_s": 1.8653132999970694,
+          "peak_kind": "sampled lower bound; query time is additional to the poll pause",
+          "samples": 1,
+          "available_samples": 1,
+          "peak_total_used_mb": 5957.515625,
+          "peak_process_used_mb": 3703.8359375,
+          "minimum_available_mb": null,
+          "usage_distribution": {
+            "minimum_used_mb": 5957.515625,
+            "median_used_mb": 5957.515625,
+            "near_peak_threshold_mb": 5659.63984375,
+            "near_peak_fraction": 0.95,
+            "near_peak_windows": [
+              {
+                "first_sample_seconds": 1.8665869999967981,
+                "last_sample_seconds": 1.8665869999967981,
+                "sample_count": 1
+              }
+            ],
+            "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+          },
+          "process_usage_distribution": {
+            "minimum_used_mb": 3703.8359375,
+            "median_used_mb": 3703.8359375,
+            "near_peak_threshold_mb": 3518.6441406249996,
+            "near_peak_fraction": 0.95,
+            "near_peak_windows": [
+              {
+                "first_sample_seconds": 1.8665869999967981,
+                "last_sample_seconds": 1.8665869999967981,
+                "sample_count": 1
+              }
+            ],
+            "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+          },
+          "stage_peaks": {
+            "submission": {
+              "total_used_mb": 5957.515625,
+              "process_used_mb": 3703.8359375,
+              "usage_distribution": {
+                "minimum_used_mb": 5957.515625,
+                "median_used_mb": 5957.515625,
+                "near_peak_threshold_mb": 5659.63984375,
+                "near_peak_fraction": 0.95,
+                "near_peak_windows": [
+                  {
+                    "first_sample_seconds": 1.8665869999967981,
+                    "last_sample_seconds": 1.8665869999967981,
+                    "sample_count": 1
+                  }
+                ],
+                "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause."
+              }
+            }
+          }
+        }
+      },
+      "benchmark": {
+        "schema": "benchmark-lifecycle-v1",
+        "state": "closed",
+        "resident": true,
+        "identity": "16444:4972786fa455b71ee1f020e8ae1b147ca6cd2b1e5b0818048011d7f1da242790",
+        "startup_seconds": null,
+        "model_load_seconds": null,
+        "startup_and_model_load_seconds": 4.489939300001424,
+        "session_acquisition_seconds": null,
+        "model_load_and_first_inference_seconds": 0.22919860000547487,
+        "warmup_seconds": 0,
+        "phases": [
+          {
+            "phase": "startup_and_model_load",
+            "seconds": 4.489939300001424,
+            "status": "completed"
+          },
+          {
+            "phase": "model_load_and_first_inference",
+            "seconds": 0.22919860000547487,
+            "status": "completed"
+          },
+          {
+            "phase": "cleanup",
+            "seconds": 0.35681299999851035,
+            "status": "completed"
+          }
+        ],
+        "requests": [
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.09675960000458872,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.3580398999984027,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.11255109999910928,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.2385084999987157,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.1114134000017657,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          },
+          {
+            "timing_scope": "resident_request",
+            "request_seconds": 0.22903100000257837,
+            "status": "completed",
+            "marks_seconds": {},
+            "error": null
+          }
+        ],
+        "errors": []
+      },
+      "summary": {
+        "timing_scope": "resident_request",
+        "samples": 6,
+        "excluded_rows": 0,
+        "p50_seconds": 0.17079105000084382,
+        "p95_seconds": null,
+        "p95_minimum_samples": 20
+      }
+    }
+  ],
+  "group": "leaderboard-high-ranking",
+  "language_override": "en",
+  "measurement_scope": "Isolated ASR; saved Kokoro clips; no parallel LLM/TTS inference. Resources sampled after readiness; startup memory not measured.",
+  "coverage": [
+    {
+      "engine": "nemo-speechcpp",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "Nemotron; offline HTTP validated, live latency pending"
+    },
+    {
+      "engine": "speechcpp",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "Qwen 0.6B; offline HTTP validated, VAD/Realtime pending"
+    },
+    {
+      "engine": "funasr",
+      "runner": "file_diagnostic",
+      "status": "cold-only",
+      "detail": "SenseVoice; installed CLI has no configured resident adapter"
+    },
+    {
+      "engine": "crispasr",
+      "runner": "file_diagnostic",
+      "status": "adapter-pending",
+      "detail": "Whisper; resident server adapter pending"
+    },
+    {
+      "engine": "sherpa-onnx",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "English Zipformer C API; recorded input, not paced"
+    },
+    {
+      "engine": "audiocpp-vulkan",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "Nemotron; persistent ASR HTTP"
+    },
+    {
+      "engine": "audiocpp-rocm",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "Nemotron; persistent ASR HTTP"
+    },
+    {
+      "engine": "parakeetcpp-cpu",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "110M English; VAD/streaming models pending"
+    },
+    {
+      "engine": "parakeetcpp-vulkan",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "110M English; verify backend log for device use"
+    },
+    {
+      "engine": "whispercpp-vulkan-fa",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "Large-v3-turbo Q5; flash attention"
+    },
+    {
+      "engine": "koboldcpp-whisper",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "Embedded Whisper with same model"
+    },
+    {
+      "engine": "whispercpp-legacy-vulkan",
+      "runner": "whisper_embedded_compare",
+      "status": "disabled",
+      "detail": "Retained community build, not a default test"
+    },
+    {
+      "engine": "llamacpp-qwen-1.7b",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "Qwen main model plus audio projector"
+    },
+    {
+      "engine": "llamacpp-gemma-audio",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "Gemma E4B audio prompting"
+    },
+    {
+      "engine": "koboldcpp-gemma-audio",
+      "runner": "gemma_audio_compare",
+      "status": "migrated-not-rerun",
+      "detail": "Gemma E4B audio prompting"
+    },
+    {
+      "engine": "audiocpp-ming-audio-tiny",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "Offline ASR; expert offload; language prefix normalized; English clip validated"
+    },
+    {
+      "engine": "handy",
+      "runner": "none",
+      "status": "manual",
+      "detail": "GUI dictation, not a comparable HTTP/CLI backend"
+    },
+    {
+      "engine": "parakeetcpp-v3",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "0.6B v3 Q8; Vulkan offline HTTP and Silero file VAD pass"
+    },
+    {
+      "engine": "parakeetcpp-nemotron-streaming",
+      "runner": "resident_compare",
+      "status": "resident-validated",
+      "detail": "Vulkan offline HTTP passes; CPU file streaming passes; installed Vulkan streaming crashes"
+    }
+  ]
+}

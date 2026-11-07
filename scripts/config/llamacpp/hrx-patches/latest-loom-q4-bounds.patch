@@ -1,0 +1,92 @@
+--- a/ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/motifs/matmul/vector_activation.loom
++++ b/ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/motifs/matmul/vector_activation.loom
+@@ -611,7 +611,8 @@
+   func.return
+ }
+ 
+-func.def inline @ggml_q4_prefetch_native_words(%weight: buffer, %row_group_block: index, %block: index, %row_lane: index, %payload_field: index, %payload_word: index) -> (vector<4xi32>, vector<2xi32>) {
++func.def inline @ggml_q4_prefetch_native_words(%weight: buffer, %row_group_block: index, %block: index, %row_lane: index, %payload_field: index, %payload_word0: index) -> (vector<4xi32>, vector<2xi32>) {
++  %payload_word = index.assume %payload_word0 [range(%payload_word0, 0, 2), multiple_of(%payload_word0, 2)] : index
+   %zero = index.constant 0 : index
+   %record_bytes = index.constant 9216 : offset
+   %row_field_bytes = index.constant 16 : offset
+@@ -791,7 +792,9 @@
+   %row_group_block = index.mul %row_group, %blocks : index
+   %row_offset = index.scale %row_lane, %row_field_bytes : index, offset -> offset
+   %payload_field = index.div %word_index, %c4 : index
+-  %payload_word = index.rem %word_index, %c4 : index
++  // word_index is pair * 8 + packet * 2, so the two-word load starts at 0 or 2.
++  %payload_word0 = index.rem %word_index, %c4 : index
++  %payload_word = index.assume %payload_word0 [range(%payload_word0, 0, 2), multiple_of(%payload_word0, 2)] : index
+   %input_na, %gate_na = buffer.assume.noalias %input, %weight : buffer, buffer
+   %slab_blocks = index.constant 8 : index
+   %full_stage_bytes = index.constant 11520 : offset
+--- a/ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/motifs/mul_mat_f32_f32_wmma_core.loom
++++ b/ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/motifs/mul_mat_f32_f32_wmma_core.loom
+@@ -756,7 +756,8 @@
+   func.return
+ }
+ 
+-func.def inline @ggml_q4_prefetch_native_words(%weight: buffer, %row_group_block: index, %block: index, %row_lane: index, %payload_field: index, %payload_word: index) -> (vector<4xi32>, vector<2xi32>) {
++func.def inline @ggml_q4_prefetch_native_words(%weight: buffer, %row_group_block: index, %block: index, %row_lane: index, %payload_field: index, %payload_word0: index) -> (vector<4xi32>, vector<2xi32>) {
++  %payload_word = index.assume %payload_word0 [range(%payload_word0, 0, 2), multiple_of(%payload_word0, 2)] : index
+   %zero = index.constant 0 : index
+   %record_bytes = index.constant 9216 : offset
+   %row_field_bytes = index.constant 16 : offset
+@@ -936,7 +937,9 @@
+   %row_group_block = index.mul %row_group, %blocks : index
+   %row_offset = index.scale %row_lane, %row_field_bytes : index, offset -> offset
+   %payload_field = index.div %word_index, %c4 : index
+-  %payload_word = index.rem %word_index, %c4 : index
++  // word_index is pair * 8 + packet * 2, so the two-word load starts at 0 or 2.
++  %payload_word0 = index.rem %word_index, %c4 : index
++  %payload_word = index.assume %payload_word0 [range(%payload_word0, 0, 2), multiple_of(%payload_word0, 2)] : index
+   %input_na, %gate_na = buffer.assume.noalias %input, %weight : buffer, buffer
+   %slab_blocks = index.constant 8 : index
+   %full_stage_bytes = index.constant 11520 : offset
+--- a/ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/motifs/matmul/skinny_input_f32_dequant_accumulate_f32.loom
++++ b/ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/motifs/matmul/skinny_input_f32_dequant_accumulate_f32.loom
+@@ -562,7 +562,8 @@
+   func.return
+ }
+ 
+-func.def inline @ggml_q4_prefetch_native_words(%weight: buffer, %row_group_block: index, %block: index, %row_lane: index, %payload_field: index, %payload_word: index) -> (vector<4xi32>, vector<2xi32>) {
++func.def inline @ggml_q4_prefetch_native_words(%weight: buffer, %row_group_block: index, %block: index, %row_lane: index, %payload_field: index, %payload_word0: index) -> (vector<4xi32>, vector<2xi32>) {
++  %payload_word = index.assume %payload_word0 [range(%payload_word0, 0, 2), multiple_of(%payload_word0, 2)] : index
+   %zero = index.constant 0 : index
+   %record_bytes = index.constant 9216 : offset
+   %row_field_bytes = index.constant 16 : offset
+@@ -742,7 +743,9 @@
+   %row_group_block = index.mul %row_group, %blocks : index
+   %row_offset = index.scale %row_lane, %row_field_bytes : index, offset -> offset
+   %payload_field = index.div %word_index, %c4 : index
+-  %payload_word = index.rem %word_index, %c4 : index
++  // word_index is pair * 8 + packet * 2, so the two-word load starts at 0 or 2.
++  %payload_word0 = index.rem %word_index, %c4 : index
++  %payload_word = index.assume %payload_word0 [range(%payload_word0, 0, 2), multiple_of(%payload_word0, 2)] : index
+   %input_na, %gate_na = buffer.assume.noalias %input, %weight : buffer, buffer
+   %slab_blocks = index.constant 8 : index
+   %full_stage_bytes = index.constant 11520 : offset
+--- a/ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/ops/mul_mat_swiglu_f32_f32_wmma.loom
++++ b/ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/ops/mul_mat_swiglu_f32_f32_wmma.loom
+@@ -833,7 +833,8 @@
+   func.return %a0, %a1, %d0, %d1, %s0, %s1 : vector<2xi32>, vector<2xi32>, f32, f32, f32, f32
+ }
+ 
+-func.def inline @ggml_q4_paired_prefetch_words(%gate: buffer, %up: buffer, %group_block: index, %row_offset: offset, %row_lane: index, %payload_field: index, %payload_word: index) -> (vector<4xi32>, vector<4xi32>, vector<2xi32>, vector<2xi32>) {
++func.def inline @ggml_q4_paired_prefetch_words(%gate: buffer, %up: buffer, %group_block: index, %row_offset: offset, %row_lane: index, %payload_field: index, %payload_word0: index) -> (vector<4xi32>, vector<4xi32>, vector<2xi32>, vector<2xi32>) {
++  %payload_word = index.assume %payload_word0 [range(%payload_word0, 0, 2), multiple_of(%payload_word0, 2)] : index
+   %c0 = index.constant 0 : index
+   %record_bytes = index.constant 9216 : offset
+   %payload_add = index.constant 1024 : offset
+@@ -1071,7 +1072,9 @@
+   %row_group_block = index.add %row_group_start, %partition_origin : index
+   %row_offset = index.scale %row_lane, %row_field_bytes : index, offset -> offset
+   %payload_field = index.div %word_index, %c4 : index
+-  %payload_word = index.rem %word_index, %c4 : index
++  // word_index is pair * 8 + packet * 2, so the two-word load starts at 0 or 2.
++  %payload_word0 = index.rem %word_index, %c4 : index
++  %payload_word = index.assume %payload_word0 [range(%payload_word0, 0, 2), multiple_of(%payload_word0, 2)] : index
+   %input_na, %gate_na, %up_na, %output_na = buffer.assume.noalias %input, %gate, %up, %output : buffer, buffer, buffer, buffer
+   // One immutable Q8 activation record stream is shared by all row cohorts.
+   %activation_rows = index.mul %capacity, %q8_groups : index

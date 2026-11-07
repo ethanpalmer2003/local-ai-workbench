@@ -1,0 +1,46 @@
+﻿Rank,Model,Average WER ⬇️,Coverage,🇩🇪 German,🇫🇷 French,🇮🇹 Italian,🇪🇸 Spanish,🇵🇹 Portuguese,🇮🇳 Hindi,🇳🇱 Dutch
+1,elevenlabs/scribe_v2,3.56,7/7,2.24,3.29,2.49,2.32,2.9,8.45,3.26
+2,microsoft/azure-speech-06-2026,3.73,7/7,1.9,3.27,2.51,2.25,3.1,9.64,3.46
+3,microsoft/azure-speech-07-2026,4.14,7/7,1.92,3.14,2.42,2.3,2.86,13.32,3.01
+4,openai/gpt-transcribe,4.36,7/7,2.84,4.82,3.48,2.74,3.74,8.59,4.32
+5,assemblyai/universal-3-5-pro,4.48,7/7,2.43,3.92,3.23,2.52,3.44,12.45,3.38
+6,nvidia/Nemotron-3.5-Transcribe-30B-A4B,4.69,7/7,2.79,3.96,3.69,2.82,4.08,9.6,5.88
+7,soniox/stt-async-v5,5.09,7/7,3.64,6.21,4.2,3.37,4.01,8.96,5.23
+8,sprag/symphony,5.1,7/7,2.72,3.92,3.69,2.91,4.42,11.62,6.39
+9,meta/muse-voice-transcribe,5.45,7/7,4.32,6.81,4.98,3.64,4.9,7.16,6.37
+10,speechmatics/enhanced,6.11,7/7,2.78,4.89,5.43,2.74,4.97,16.64,5.31
+11,mistralai/Voxtral-Small-24B-2507,6.39,7/7,2.9,4.11,3.75,2.91,4.36,22.26,4.44
+12,Qwen/Qwen3-ASR-1.7B-hf,6.56,7/7,3.97,5.68,5.44,3.8,6.31,12.74,7.95
+13,facebook/omniASR-LLM-7B-v2,7.0,7/7,4.39,5.25,3.61,3.38,5.18,14.83,12.34
+14,facebook/omniASR-LLM-3B-v2,7.3,7/7,5.56,6.92,4.98,4.0,7.08,15.48,7.06
+15,modulate/multilingual,7.55,7/7,3.44,4.14,3.16,2.98,4.9,29.62,4.61
+16,facebook/omniASR-LLM-1B-v2,7.58,7/7,6.26,7.0,4.83,4.29,7.28,15.36,8.04
+17,mistralai/Voxtral-Mini-3B-2507,8.06,7/7,4.46,5.96,5.12,4.16,5.08,25.26,6.39
+18,openai/whisper-large-v3,8.18,7/7,4.0,6.24,4.45,3.35,4.94,29.86,4.42
+19,facebook/omniASR-CTC-7B-v2,8.43,7/7,5.95,7.57,4.67,4.43,6.5,22.56,7.32
+20,facebook/omniASR-CTC-3B-v2,8.98,7/7,6.17,8.12,5.07,4.53,6.52,24.86,7.59
+21,mistralai/Voxtral-Mini-4B-Realtime-2602,9.36,7/7,6.34,7.78,6.41,4.18,6.22,25.38,9.19
+22,google/gemma-4-E4B-it,9.61,7/7,7.62,10.31,8.68,6.28,8.68,14.31,11.39
+23,nvidia/nemotron-3.5-asr-streaming-0.6b,9.91,7/7,8.96,9.4,8.66,5.43,8.25,14.18,14.5
+24,Qwen/Qwen3-ASR-0.6B-hf,10.37,7/7,6.69,8.76,9.09,5.82,10.12,18.57,13.57
+25,openai/whisper-large-v3-turbo,10.57,7/7,6.12,6.73,5.43,3.85,4.62,41.55,5.7
+26,facebook/omniASR-CTC-1B-v2,10.71,7/7,8.42,10.29,6.41,5.6,8.98,25.4,9.84
+27,facebook/omniASR-LLM-300M-v2,11.75,7/7,9.04,10.02,6.91,5.82,9.51,18.28,22.7
+28,microsoft/VibeVoice-ASR-HF,15.9,7/7,14.2,14.04,12.28,6.68,7.79,39.94,16.39
+29,facebook/omniASR-CTC-300M-v2,18.13,7/7,16.48,18.59,11.51,9.95,14.39,37.58,18.38
+,reson8/resonant-1,,6/7,2.78,4.11,2.96,2.66,3.5,,4.24
+,reson8/resonant-1-flash,,6/7,2.78,4.11,2.96,2.66,3.5,,4.24
+,TheStageAI/thewhisper-large-v3-turbo,,6/7,3.04,4.41,3.34,2.86,3.85,,4.17
+,CohereLabs/cohere-transcribe-03-2026,,6/7,3.1,4.02,2.97,2.81,5.99,,4.17
+,nvidia/canary-1b-v2,,6/7,4.06,4.79,4.75,3.23,6.26,,6.73
+,nvidia/parakeet-tdt-0.6b-v3 (fast-gpu-asr),,6/7,4.02,5.31,4.61,3.61,6.22,,7.45
+,nvidia/parakeet-tdt-0.6b-v3,,6/7,4.12,5.38,4.66,3.71,6.08,,7.53
+,assemblyai/universal-3-pro,,6/7,2.59,3.82,4.1,2.49,3.86,20.96,
+,OpenMOSS-Team/MOSS-Transcribe-Diarize,,6/7,8.02,10.66,8.47,5.5,7.28,,14.53
+,HojoAI/Hojo-ASR-Multi-V1,,5/7,3.92,3.57,3.3,3.06,3.83,,
+,microsoft/Phi-4-multimodal-instruct,,5/7,4.12,5.04,4.29,3.79,5.16,,
+,ibm-granite/granite-speech-4.1-2b-nar,,4/7,4.32,5.4,,3.63,6.49,,
+,sophea/asr-k1 (preview),,1/7,2.54,,,,,,
+,ai4bharat/indic-conformer-600m-multilingual,,1/7,,,,,,8.78,
+,ARTPARK-IISc/SraVaani-1.0,,1/7,,,,,,11.38,
+,bharatgenai/Shrutam-2,,1/7,,,,,,18.92,

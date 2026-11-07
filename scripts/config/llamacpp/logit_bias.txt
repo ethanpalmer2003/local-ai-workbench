@@ -1,0 +1,42 @@
+  --logit-bias 466-2 --logit-bias 694-2 --logit-bias 1362-2 \
+  --logit-bias 1412-2 --logit-bias 1921-2 --logit-bias 1990-2 \
+  --logit-bias 2086-2 --logit-bias 2361-2 --logit-bias 2441-2 \
+  --logit-bias 2493-2 --logit-bias 2892-2 --logit-bias 3222-2 \
+  --logit-bias 3315-2 --logit-bias 3384-2 --logit-bias 3404-2 \
+  --logit-bias 3482-2 --logit-bias 3655-2 --logit-bias 4213-2 \
+  --logit-bias 4370-2 --logit-bias 4598-2 --logit-bias 4611-2 \
+  --logit-bias 4808-2 --logit-bias 5752-2 --logit-bias 6970-2 \
+  --logit-bias 7014-2 --logit-bias 7643-2 --logit-bias 8106-2 \
+  --logit-bias 10179-2 --logit-bias 10451-2 --logit-bias 11746-2 \
+  --logit-bias 13264-2 --logit-bias 13428-2 --logit-bias 14673-2 \
+  --logit-bias 15029-2 --logit-bias 16036-2 --logit-bias 21143-2 \
+  --logit-bias 21979-2 --logit-bias 33955-2 --logit-bias 35999-2 \
+  --logit-bias 36563-2 --logit-bias 37201-2 --logit-bias 37781-2 \
+  --logit-bias 41484-2 --logit-bias 62586-2 --logit-bias 66073-2 \
+  --logit-bias 73071-2 --logit-bias 84485-2 --logit-bias 85152-2 \
+  --logit-bias 95500-2
+
+these correspond to the paper's overthinking markers:
+[
+
+" perhaps", " maybe", " wait", " Wait", " actually",
+
+" hold", " Hmm", " hmm", " Alternatively", " alternatively",
+
+" However", " however", " instead", " Instead", " But",
+
+" but", " though", " although", " yet", " rather",
+
+" unless", " otherwise", " nonetheless", " nevertheless", " regardless",
+
+" still", " anyway", " Or", " or", " either",
+
+" whether", " uncertain", " unsure", " possibly", " might",
+
+" could", " another", " different", " reconsider", " rethink",
+
+" backtrack", " retry", " revisit", " doubt", " confused",
+
+" wrong", " mistake", " error", " incorrect"
+
+]

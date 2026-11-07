@@ -1,0 +1,57 @@
+{
+  "status": "Validated and installed",
+  "report": "C:\\AI\\scripts\\tests\\output\\probes\\hrx_updates\\verified\\20261010-latest-stack\\artifacts\\report.md",
+  "sources": [
+    {
+      "repository": "llama.cpp",
+      "branch": "hrx-graph-develop-v2",
+      "head": "d9e2dc4920b9365cb6f2ff64cba5d516397b2773",
+      "upstream": "d9e2dc4920b9365cb6f2ff64cba5d516397b2773",
+      "upstream_integrated": true,
+      "status": "M ggml/src/ggml-hrx/CMakeLists.txt\n M ggml/src/ggml-hrx/dispatch/dispatch-scheduler.cpp\n M ggml/src/ggml-hrx/dispatch_registration/common/dispatch-gated-mul-mat.cpp\n M ggml/src/ggml-hrx/dispatch_registration/common/dispatch-mul-mat-weight-format.h\n M ggml/src/ggml-hrx/dispatch_registration/common/dispatch-mul-mat.cpp\n M ggml/src/ggml-hrx/dispatch_registration/dispatch-registry.cpp\n M ggml/src/ggml-hrx/ggml-hrx.cpp\n M ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/motifs/matmul/skinny_input_f32_dequant_accumulate_f32.loom\n M ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/motifs/matmul/vector_activation.loom\n M ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/motifs/mul_mat_f32_f32_wmma_core.loom\n M ggml/src/ggml-hrx/kernel-corpus/kernels/loom-libs/ops/mul_mat_swiglu_f32_f32_wmma.loom\n M ggml/src/ggml-hrx/runtime/host-memory.cpp\n M ggml/src/ggml-impl.h\n M tests/CMakeLists.txt\n M tests/test-backend-ops.cpp\n M tests/test-hrx-ops.cpp",
+      "local_commits": "",
+      "patch_sha256": "4da5fba21e13fe75b480f8dfe934d0596a0497819ee109ac56041fdb2d2f623d"
+    },
+    {
+      "repository": "hrx-system",
+      "branch": "codex/hrx-windows",
+      "head": "0c6dc41f69c60bbcb86120316ad1053f03e87fd2",
+      "upstream": "7ca1492e639c548e32edcd08942a001af34c14e2",
+      "upstream_integrated": true,
+      "status": "",
+      "local_commits": "0c6dc41f69c60bbcb86120316ad1053f03e87fd2 Merge remote-tracking branch 'origin/main' into codex/hrx-windows\n992073f5cbf504716ca80bd9c6c2240523347f0b Preserve MSVC portability and gfx1101 HRX discovery fixes",
+      "patch_sha256": "0ae0b0f477a0cbe186627a59c7d7b41ffa990335ff4ca87bf4e11c86b4f3e6eb"
+    },
+    {
+      "repository": "rocm-systems",
+      "branch": "codex/hrx-windows",
+      "head": "e0d87ca55d46f256800ea47b7ac8169688b2290c",
+      "upstream": "71a246ac15a1c010d0c80de568c05eb206687f46",
+      "upstream_integrated": true,
+      "status": "",
+      "local_commits": "e0d87ca55d46f256800ea47b7ac8169688b2290c Wait for the submitted fence in non-atomic PM4 completion\n47490f1d6232ba47d27eae6623c6bb65786a2a3e Merge remote-tracking branch 'origin/develop' into codex/hrx-windows\nc3ccb897170b9d59a25027910f7c0864fed699fe Preserve Windows discrete GPU node selection fixes",
+      "patch_sha256": "e142f7f288bb8a2109ea16b68a5c058ccdbbad3941595f25ecd24c3aebcb25ff"
+    }
+  ],
+  "compatibility_patches": {
+    "latest-loom-q4-bounds.patch": "b2aa6b09bdbb2ae4b125b21c97a98e28aa144698f728451132c062e6cf09a663",
+    "msvc-test-lambdas.patch": "dab5413c8c0a241d4be6236c0a3b99e6a40d1af5616437fc38b0672f72d1470e"
+  },
+  "runtime_sha256": {
+    "ggml-base.dll": "fe7f72ef8826a9226b4af23474f040e6100be8275b00cb4f2028913a829f5959",
+    "ggml-cpu.dll": "0434ecdae5ca7b6cc4585dad8b85da88e32b58adc47cec582a7eafef3c79698a",
+    "ggml-hrx.dll": "9ac92d60e1df42357fcaed80af3642cf90e168d328b17983855acf4ae70f59b6",
+    "ggml.dll": "66d88d71a27842aa57188e2911ef9418fbe72f6db51f745fd3ec8e055e2bb16e",
+    "hrx-tensor-probe.exe": "632faaac583634f6cc86d9b7d7808367d825e1e29806b66cb311ce7765d48c6e",
+    "hrx.dll": "2d764b8e408d025bfafae3d3b269e8a012764fd478df8095e759e114924aa3d7",
+    "hsa-runtime64.dll": "1d388055d3339a109148f0f0904058bbd0e00d97483cec293bc9b1e0c101584d",
+    "llama-cli-impl.dll": "1c75e36b59fb549647b354ba180d750ea26bbf2111439e94f81cb321db7211e2",
+    "llama-common.dll": "392e973190322b287b2ac8abbe5b153fd30fe09748a871d3932297cb6d76a816",
+    "llama-server-impl.dll": "1dc33ff3d08200ec7ec2879dba6ddf76d08ef2ea3ee4894fc1d864115800cf07",
+    "llama-server.exe": "fe3a55973c7e5690fb9c73e6e0ca1a6ffa9e396f3ea67e40028bfd4eb18cf907",
+    "llama.dll": "e22e9ed87b5b307a0911bb3c15b891a78ac0c018ac0d9551da7448527a480b5a",
+    "loomc.dll": "4487b3041e785d17e064d114afc9788594a217f8f73bc936968ba5dd6b9904b8",
+    "mtmd.dll": "630e10cd5d708b384bad7f6ceeabe2a600bf67489018320f96595f83c66e77e7"
+  },
+  "scope": "Additional compiler bounds and MSVC test portability fixes on top of the preserved Windows/codebook/routing patches."
+}
