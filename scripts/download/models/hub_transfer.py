@@ -3,7 +3,7 @@
 import hashlib
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from scripts.config import project_config as project_cfg
 from scripts.download.models.hub_sources import HubFile
@@ -24,9 +24,10 @@ class _RangeFetcher:
 
         end = min(self.metadata.size, start + self.chunk_size) - 1
         # Requests strips Authorization on cross-host redirects to signed storage URLs.
-        with get_session().get(
-            self.url, headers={**self.headers, "Range": f"bytes={start}-{end}"}, timeout=(15, 60)
-        ) as response:
+        response = get_session().get(
+            self.url, headers={**self.headers, "Range": f"bytes={start}-{end}"}, timeout=cast(Any, (15, 60))
+        )
+        try:
             response.raise_for_status()
             expected = f"bytes {start}-{end}/{self.metadata.size}"
             if response.status_code != 206 or response.headers.get("Content-Range") != expected:
@@ -35,6 +36,8 @@ class _RangeFetcher:
             if len(data) != end - start + 1:
                 raise ValueError("Incomplete range; partial file preserved")
             return data
+        finally:
+            response.close()
 
 
 def _partial_target(destination: Path, partial: Path | None, size: int) -> tuple[Path, int]:
