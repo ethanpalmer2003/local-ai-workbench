@@ -340,7 +340,7 @@ def prune_stale_temp(max_age_hours: float = 24) -> int:
     return removed
 
 
-def launch_process(
+def launch_process(  # noqa: C901
     cmd: list[str],
     title: str,
     cwd: str | None = None,

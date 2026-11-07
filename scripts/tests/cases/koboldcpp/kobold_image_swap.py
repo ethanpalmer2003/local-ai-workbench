@@ -141,7 +141,7 @@ class SwapProbe:
             for job in jobs:
                 job.result()
 
-    def run(self, cycles: int) -> None:
+    def run(self, cycles: int) -> None:  # noqa: C901
         try:
             Thread(target=self.guard, daemon=True).start()
             with self.memory:

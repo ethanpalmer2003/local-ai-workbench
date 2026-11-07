@@ -86,7 +86,7 @@ def voice_patterns(words: tuple[str, ...]) -> str:
     return "|".join(rf"(?<![A-Za-z0-9]){re.escape(word)}(?![A-Za-z0-9])" for word in words)
 
 
-def scan_text(path: str, text: str, words: tuple[str, ...]) -> list[Finding]:
+def scan_text(path: str, text: str, words: tuple[str, ...]) -> list[Finding]:  # noqa: C901
     findings: list[Finding] = []
     suffix = Path(path).suffix.lower()
     is_doc = suffix in DOC_SUFFIXES

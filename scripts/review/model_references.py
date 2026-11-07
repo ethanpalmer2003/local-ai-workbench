@@ -13,7 +13,7 @@ def normalized(path: str | Path) -> str:
     return str(Path(path).resolve()).casefold()
 
 
-def inspect() -> list[str]:
+def inspect() -> list[str]:  # noqa: C901
     issues: list[str] = []
     labels = [model.label for model in models.MODELS]
     duplicates = sorted(label for label, count in Counter(labels).items() if count > 1)

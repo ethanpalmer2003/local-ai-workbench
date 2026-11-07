@@ -35,7 +35,7 @@ def request(url: str, payload: bytes | None = None, content_type: str = "applica
         return json.load(response)
 
 
-def main() -> None:
+def main() -> None:  # noqa: C901
     import psutil
 
     parser = argparse.ArgumentParser(description=__doc__)

@@ -196,7 +196,7 @@ async def _submit_prompt(session: Any, base: str, graph: dict[str, Any], client:
     return submitted["prompt_id"]
 
 
-async def _consume_events(
+async def _consume_events(  # noqa: C901
     ws: Any,
     log: Any,
     bar: Any,
@@ -665,7 +665,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _resolve_arguments(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+def _resolve_arguments(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:  # noqa: C901
     if args.launch_case and (args.validate_findings or args.compare_workflows or args.tile_sweep):
         parser.error("launch-case cannot be combined with launcher/workflow/tile comparisons")
     if args.workflow is None:

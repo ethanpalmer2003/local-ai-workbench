@@ -61,7 +61,7 @@ def maintained_files() -> list[Path]:
     return files
 
 
-def configuration_issues() -> list[str]:
+def configuration_issues() -> list[str]:  # noqa: C901
     issues = []
     for key, paths in project_cfg.COMPONENTS.items():
         if key != paths.key or not re.fullmatch(r"[a-z0-9_-]+(?:/[a-z0-9_-]+)*", key):
@@ -144,7 +144,7 @@ def batch_issues(path: Path, text: str) -> list[str]:
     return issues
 
 
-def owner_issues(path: Path) -> list[str]:
+def owner_issues(path: Path) -> list[str]:  # noqa: C901
     # - updater, shutdown and coding-agent entry points may live at the bat root
     if path.parent == project_cfg.BAT_DIR and path.suffix == ".bat":
         root_batches = {
@@ -243,7 +243,7 @@ def markdown_issues(path: Path, text: str) -> list[str]:
     return issues
 
 
-def naming_issues() -> list[str]:
+def naming_issues() -> list[str]:  # noqa: C901
     """Folder names across the workspace: lowercase snake_case, meaningful, and never duplicated by placement."""
     issues: list[str] = []
     area_roots = (project_cfg.TEST_CASES_DIR, project_cfg.SCRIPTS_DIR / "benchmarks")

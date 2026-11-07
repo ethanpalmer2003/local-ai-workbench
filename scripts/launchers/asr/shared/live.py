@@ -55,7 +55,7 @@ class Sessions:
             self._drop()
         self.reaper.join(timeout=6)
 
-    def request(self, path: str, body: bytes) -> dict[str, Any]:
+    def request(self, path: str, body: bytes) -> dict[str, Any]:  # noqa: C901
         with self.lock:
             if self.closed.is_set():
                 raise ValueError("Practice gateway is closing")

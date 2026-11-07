@@ -217,7 +217,7 @@ def update_patch(args: argparse.Namespace, patch_path: Path) -> int:
     return 0
 
 
-def main() -> int:
+def main() -> int:  # noqa: C901
     # - a model id is external text and the Windows console default (cp1252)
     #   would crash on any non-ASCII one
     for stream in (sys.stdout, sys.stderr):

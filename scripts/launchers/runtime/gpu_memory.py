@@ -323,7 +323,7 @@ def _get_windows_memory(pid: int | None) -> GpuMemorySnapshot | None:
     return parse_windows_memory(samples, target_pids, process_names)
 
 
-def parse_windows_memory(
+def parse_windows_memory(  # noqa: C901
     samples: object, target_pids: set[int], process_names: dict[int, tuple[str, str]]
 ) -> GpuMemorySnapshot | None:
     if isinstance(samples, dict):
@@ -426,7 +426,7 @@ def _parse_memory_mb(value: object) -> float | None:
     return amount * multiplier if multiplier is not None else None
 
 
-def _get_process_vram(pid: int) -> float | None:
+def _get_process_vram(pid: int) -> float | None:  # noqa: C901
     try:
         result = subprocess.run(
             ["amd-smi", "process", "--pid", str(pid), "--general", "--json"],

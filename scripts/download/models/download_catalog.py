@@ -45,7 +45,7 @@ def download_model(model: ModelDownload, range_download: bool = False, resume_fi
         downloaded.replace(model.path)
 
 
-def main(argv: list[str] | None = None) -> None:
+def main(argv: list[str] | None = None) -> None:  # noqa: C901
     parser = argparse.ArgumentParser(description="List model sources or explicitly download selected catalog entries.")
     parser.add_argument("--list", action="store_true", help="List only (also the default)")
     selection = parser.add_mutually_exclusive_group()

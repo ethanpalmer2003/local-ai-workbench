@@ -17,7 +17,7 @@ def required_files(profile: FileAsrProfile) -> tuple[Path, ...]:
     return (profile.executable, *(model_cfg.path(label) for label in profile.models))
 
 
-def build_command(
+def build_command(  # noqa: C901
     key: str, audio: Path | None, mode: str | None = None, language: str = "auto", output: Path | None = None
 ) -> list[str]:
     profile = ASR_FILE_PROFILES[key]
@@ -58,7 +58,7 @@ def environment(profile: FileAsrProfile, mode: str | None = None) -> dict[str, s
     return env
 
 
-def main() -> int:
+def main() -> int:  # noqa: C901
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", choices=tuple(ASR_FILE_PROFILES))
     parser.add_argument("--input", type=Path)

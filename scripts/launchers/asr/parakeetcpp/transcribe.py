@@ -10,7 +10,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 
 
-def main() -> int:
+def main() -> int:  # noqa: C901
     settings = cfg.PARAKEETCPP_ASR
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", required=True, type=Path, help="Input WAV file")

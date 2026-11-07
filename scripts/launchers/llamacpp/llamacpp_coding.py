@@ -12,7 +12,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import coding_clients, llamacpp, llamacpp_proxy
 
 
-def prepare_pi_env(
+def prepare_pi_env(  # noqa: C901
     client: cfg.SharedStartupRequestCodingClientSettings | None = None, seed_dir: Path | None = None
 ) -> dict[str, str]:
     client = cfg.PI_CLIENT if client is None else client

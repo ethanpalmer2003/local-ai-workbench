@@ -8,7 +8,7 @@ from scripts.config import project_config as project_cfg
 from scripts.download.models.hub_sources import HubFile
 
 
-def download_ranges(source: HubFile, destination: Path, partial: Path | None = None) -> None:
+def download_ranges(source: HubFile, destination: Path, partial: Path | None = None) -> None:  # noqa: C901
     from huggingface_hub import get_hf_file_metadata, hf_hub_url
     from huggingface_hub.utils import build_hf_headers, get_session
 

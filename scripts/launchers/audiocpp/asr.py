@@ -63,7 +63,7 @@ def start(port: int | None = None):
     )
 
 
-def transcribe(body: bytes, content_type: str, headers: dict[str, str] | None = None) -> tuple[bytes, str]:
+def transcribe(body: bytes, content_type: str, headers: dict[str, str] | None = None) -> tuple[bytes, str]:  # noqa: C901
     request = requests.parse(body, content_type)
     if request.suppress_non_speech:
         raise ValueError("Non-speech token suppression is a Whisper-specific option")

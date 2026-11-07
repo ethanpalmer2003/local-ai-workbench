@@ -298,7 +298,7 @@ def worker_main(framework: str, ini_set: list[str] | None = None) -> int:
 
 
 @contextlib.contextmanager
-def running_framework(
+def running_framework(  # noqa: C901
     framework: str, output: RunPaths | None = None, ini_overrides: dict[str, str] | None = None
 ) -> Generator[Path]:
     if sys.platform != "win32":

@@ -35,7 +35,7 @@ def model_overrides(usage_profile: str = "standalone") -> dict[str, Any]:
     return options
 
 
-def server_command(usage_profile: str = "standalone", no_model: bool = False) -> list[str]:
+def server_command(usage_profile: str = "standalone", no_model: bool = False) -> list[str]:  # noqa: C901
     base = json.loads(cfg.KOBOLDCPP_SERVICE.config.read_text(encoding="utf-8"))
     if cfg.KOBOLDCPP_SERVICE.streaming_ui and base.get("launch"):
         raise ValueError("Set launch to false in the native Kobold config when using the streaming UI.")

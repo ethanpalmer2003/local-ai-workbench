@@ -36,7 +36,7 @@ ignore = ["UP042", "S603", "S606", "S607", "S310"]
 
 [tool.ruff.lint.mccabe]
 # - gate at a level the launchers already meet; tighten separately
-max-complexity = 15
+max-complexity = 10
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = false

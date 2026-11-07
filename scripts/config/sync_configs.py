@@ -62,7 +62,7 @@ def workflow_retirements(files: dict[Path, bytes], record: Path) -> list[Path]:
     return retired
 
 
-def sync_comfyui(apply: bool = False) -> list[Path]:
+def sync_comfyui(apply: bool = False) -> list[Path]:  # noqa: C901
     if not project_cfg.COMFYUI_ROCM_DIR.is_dir():
         raise FileNotFoundError(f"ComfyUI installation missing: {project_cfg.COMFYUI_ROCM_DIR}")
     files = {path.resolve(): content for path, content in comfyui_files().items()}
