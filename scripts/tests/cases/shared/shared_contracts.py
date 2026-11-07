@@ -85,7 +85,7 @@ class SharedContracts(unittest.TestCase):
 
     def test_import_does_not_create_download_directory(self):
         with patch("pathlib.Path.mkdir") as mkdir:
-            importlib.import_module("scripts.download.models.download")
+            importlib.import_module("scripts.download.models.download_catalog")
             mkdir.assert_not_called()
 
     def test_sdk_receives_file_revision(self):

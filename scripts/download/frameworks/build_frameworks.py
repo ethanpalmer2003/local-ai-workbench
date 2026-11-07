@@ -4,7 +4,7 @@ import argparse
 import subprocess
 
 from scripts.config import project_config as project_cfg
-from scripts.download.frameworks import update_config as update_cfg
+from scripts.download.frameworks import framework_catalog as update_cfg
 from scripts.download.frameworks.update_types import ToolSpec
 
 

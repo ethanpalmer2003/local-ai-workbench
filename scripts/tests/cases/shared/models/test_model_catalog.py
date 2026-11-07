@@ -6,8 +6,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from scripts.download.models import download
-from scripts.download.models.sources import parse_url
+from scripts.download.models import download_catalog as download
+from scripts.download.models.hub_sources import parse_url
 from scripts.tests.shared.http_fixtures import http_response
 from scripts.tests.shared.paths import CasePaths
 

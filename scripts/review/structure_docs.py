@@ -9,7 +9,7 @@ from urllib.parse import unquote
 from scripts.config import models as model_cfg
 from scripts.config import paths as config_paths
 from scripts.config import project_config as project_cfg
-from scripts.download.frameworks import update_config
+from scripts.download.frameworks import framework_catalog as update_config
 from scripts.launchers import launcher_config as cfg
 
 GUIDE_WORDS = 500

@@ -4,7 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
-from scripts.config import inputs, paths
+from scripts.config import overlay_inputs as inputs
+from scripts.config import paths
 from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server
 from scripts.config.coding_agents.pi import packages

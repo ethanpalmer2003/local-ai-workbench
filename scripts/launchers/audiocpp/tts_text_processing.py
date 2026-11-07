@@ -10,7 +10,7 @@ import re
 from dataclasses import dataclass, field
 from enum import Enum
 
-from scripts.config import inputs
+from scripts.config import overlay_inputs as inputs
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.shared.media import text_processing
 

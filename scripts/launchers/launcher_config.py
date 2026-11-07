@@ -3,8 +3,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
-from scripts.config import inputs
 from scripts.config import models as model_cfg
+from scripts.config import overlay_inputs as inputs
 from scripts.config import paths as config_paths
 from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audio_cfg
@@ -616,7 +616,7 @@ class AudiocppModel(str, Enum):
 BREEZE_MODELS = frozenset({AudiocppModel.BREEZE_TTS.value, AudiocppModel.BREEZE_DESIGN.value})
 
 
-# - Voice ids come from the local input overlay (`scripts/config/inputs.py`); the repo ships none.
+# - Voice ids come from the local input overlay (`scripts/config/overlay_inputs.py`); the repo ships none.
 #   A VoiceId keeps the old `.value` call sites working now that the enum is gone.
 class VoiceId(str):
     @property

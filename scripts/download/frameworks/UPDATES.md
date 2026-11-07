@@ -6,7 +6,7 @@ C:/AI/bat/update_frameworks.bat --category speech --check-only
 C:/AI/bat/update_frameworks.bat --only asr
 ```
 
-- Entry: [update_frameworks.py](update_frameworks.py); [update_config.py](update_config.py) composes catalogs and handlers. Shared download, verification and replacement logic lives in [update_shared.py](update_shared.py); [update_types.py](update_types.py) owns catalog types.
+- Entry: [update_frameworks.py](update_frameworks.py); [framework_catalog.py](framework_catalog.py) composes catalogs and handlers. Shared download, verification and replacement logic lives in [update_shared.py](update_shared.py); [update_types.py](update_types.py) owns catalog types.
 - Categories: `llamacpp` -> [llamacpp/updates.py](llamacpp/updates.py); `speech` (TTS/AudioCpp) -> [audiocpp/updates.py](audiocpp/updates.py) and [tts/updates.py](tts/updates.py); `other` -> [shared/other_updates.py](shared/other_updates.py). ASR entries live in [asr/updates.py](asr/updates.py). Keep component handlers in their folder; root modules compose catalogs and shared machinery. Component keys resolve install paths through `framework_install_dir()`.
 - Check selected active entries first, print categories/status, then apply. `--category` and `--only KEY` combine; `--only` includes children. Disabled entries remain skipped. Omit `--check-only` to install/update.
 - Output nests category, then update kind, then status. Kinds, ordered in [update_types.py](update_types.py): git fast-forward, github release, npm package, app installer, vendor script, git snapshot, pip wheel, local build, manual. A component spanning two kinds is expanded, not repeated. A current entry shows its version only, with no status suffix.

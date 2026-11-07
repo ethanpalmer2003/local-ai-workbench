@@ -13,7 +13,7 @@ from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.config.audiocpp import server as audio_cfg
-from scripts.download.models import download
+from scripts.download.models import download_catalog as download
 from scripts.launchers import launcher_config as cfg
 
 MODEL_SUFFIXES = {".gguf", ".safetensors", ".ckpt", ".pt", ".pth", ".onnx", ".bin"}

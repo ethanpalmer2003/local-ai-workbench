@@ -15,7 +15,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Any, Literal
 
-from scripts.config import inputs
+from scripts.config import overlay_inputs as inputs
 from scripts.file_util import archive_path
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.llamacpp import qwen3_asr

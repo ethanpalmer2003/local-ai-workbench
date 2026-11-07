@@ -13,7 +13,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks.llamacpp.hrx import prepare as prepare_hrx
-from scripts.download.frameworks.update_config import hrx_tools
+from scripts.download.frameworks.framework_catalog import hrx_tools
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.tests.shared.paths import RunPaths

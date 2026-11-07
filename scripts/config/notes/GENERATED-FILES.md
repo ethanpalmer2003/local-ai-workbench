@@ -16,7 +16,7 @@
 - Tracked native configs write {AI_ROOT} instead of a machine path; [paths.py](../paths.py) resolves it on read and copies the result to generated/shared/configs/ for programs that need real paths.
 - Recreate derived configs on launch; edit the owner source, never generated output.
 - Native AudioCpp JSON owns model modes/session defaults. Python owns service selection, proxy/playback defaults and explicit shared overrides.
-- ComfyUI sync changes owned files only; removed managed workflows are retired, missing source aborts. Preview/apply: `python -m scripts.config.sync`.
+- ComfyUI sync changes owned files only; removed managed workflows are retired, missing source aborts. Preview/apply: `python -m scripts.config.sync_configs`.
 - Strata native app data and its compatibility junctions remain app-managed; [locations](../strata/README.md).
 - Generated configs may contain local credentials; keep them outside Git and shared reports.
 - Preserve saved historical configs/logs. Future paths derive from the canonical component map.

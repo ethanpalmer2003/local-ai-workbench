@@ -25,7 +25,7 @@ import json
 import re
 import subprocess
 
-from scripts.config import inputs
+from scripts.config import overlay_inputs as inputs
 from scripts.download.input.audio_workflow import MAX_MERGED_DUR, SILENCE_MIN_DUR, SILENCE_NOISE_DB, source_paths
 
 

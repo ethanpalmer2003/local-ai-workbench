@@ -11,7 +11,7 @@ import argparse
 import re
 import subprocess
 
-from scripts.config import inputs
+from scripts.config import overlay_inputs as inputs
 from scripts.download.input.audio_workflow import MIN_DUR_VALUES, NOISE_DB_VALUES, source_paths
 
 
