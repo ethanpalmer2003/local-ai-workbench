@@ -1197,11 +1197,12 @@ def validate_character(char):
     Returns a dict describing key-matching / transcript problems.
     """
     config = CHARACTER_CONFIGS[char]
-    workspace = CharacterWorkspace(DATA, char.value, config.category)
+    name = str(getattr(char, "value", char))
+    workspace = CharacterWorkspace(DATA, name, config.category)
     directory = workspace.directory
     excluded = set(config.exclude)
     row: dict[str, Any] = {
-        "character": char.value,
+        "character": name,
         "status": "OK",
         "files": 0,
         "with_text": 0,
