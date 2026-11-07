@@ -8,10 +8,12 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp_catalog, audiocpp_proxy, tts_proxy
 from scripts.tests.cases.audiocpp import audiocpp_backend_compare as compare
+from scripts.tests.shared.model_checks import requires_model_check
 from scripts.tests.shared.paths import CasePaths
 
 
 class TtsProfiles(unittest.TestCase):
+    @requires_model_check
     def test_ming_is_installed_for_the_page(self):
         model = cfg.AudiocppModel.MING3_TTS.value
         rows = [row for row in audiocpp_catalog.configured_models() if row["id"] == model]
@@ -19,6 +21,7 @@ class TtsProfiles(unittest.TestCase):
             self.skipTest("Ming TTS weights are not installed in this checkout")
         self.assertTrue(rows)
 
+    @requires_model_check
     def test_ming_preserves_its_request(self):
         model = cfg.AudiocppModel.MING3_TTS.value
         defaults = audiocpp_catalog.runtime_defaults(cfg.AUDIOCPP_SERVICE, model)
@@ -75,6 +78,7 @@ class TtsProfiles(unittest.TestCase):
         self.assertEqual((heavy.family, heavy.seed), ("ming3_audio", 42))
         self.assertEqual(heavy.options, {"language": "en", "voice_id": "US_James"})
 
+    @requires_model_check
     def test_heavier_ming_is_offline_and_rejects_explicit_streaming(self):
         model = cfg.AudiocppModel.MING3_AUDIO.value
         defaults = audiocpp_catalog.runtime_defaults(cfg.AUDIOCPP_SERVICE, model)

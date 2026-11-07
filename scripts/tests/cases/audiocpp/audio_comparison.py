@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp_catalog, audiocpp_proxy
+from scripts.tests.shared.model_checks import requires_model_check
 from scripts.tests.shared.paths import CasePaths
 
 
@@ -32,6 +33,7 @@ class AudioComparison(unittest.TestCase):
             self.assertIs(value["stream"], True)
             self.assertEqual(value["response_format"], "pcm")
 
+    @requires_model_check
     def test_live_defaults_read_model_metadata_and_refresh_after_file_changes(self):
         def write_model(path: Path, temperature: float):
             spec = json.dumps({"options": {"request": [{"name": "temperature", "default": temperature}]}}).encode()

@@ -64,7 +64,3 @@ class CasePaths:
         folder.mkdir(parents=True)
         return removed_on_exit(folder)
 
-
-def assets_present() -> bool:
-    """Downloaded frameworks and weights; a fresh clone has neither."""
-    return project_cfg.FRAMEWORKS_DIR.is_dir() and project_cfg.HF_MODELS_DIR.is_dir()
