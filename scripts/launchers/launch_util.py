@@ -376,15 +376,12 @@ def _powershell_launch_cmd(cmd: list[str], title: str, log_file: str | None) -> 
     return ["powershell.exe", "-NoProfile", "-NoExit", "-Command", ps_command]
 
 
-def _merge_streams(
-    stack: contextlib.ExitStack, mode: ConsoleTerminalLaunchMode, log_file: str | None
-) -> tuple[Any, Any]:
-    """MERGE runs headless; a log_file is captured directly instead of by a shell."""
+def _merge_streams(mode: ConsoleTerminalLaunchMode, capture: Any) -> tuple[Any, Any]:
+    """MERGE runs headless; an opened log_file replaces the inherited console."""
     if mode != ConsoleTerminalLaunchMode.MERGE:
         return None, None
-    if not log_file:
+    if capture is None:
         return sys.stdout, sys.stderr
-    capture = stack.enter_context(open(log_file, "w", encoding="utf-8"))  # noqa: SIM115 - ExitStack owns it
     return capture, capture
 
 
@@ -434,7 +431,10 @@ def launch_process(
     child_env = _child_environment(env)
 
     with contextlib.ExitStack() as stack:
-        output, error_output = _merge_streams(stack, resolved, log_file)
+        capture = None
+        if resolved == ConsoleTerminalLaunchMode.MERGE and log_file:
+            capture = stack.enter_context(open(log_file, "w", encoding="utf-8"))
+        output, error_output = _merge_streams(resolved, capture)
         proc = subprocess.Popen(
             launch_cmd,
             cwd=cwd,

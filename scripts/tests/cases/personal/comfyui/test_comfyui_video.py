@@ -222,7 +222,7 @@ class WorkflowTests(unittest.TestCase):
                 for name, value in fields.items()
                 if name.startswith("values.")
             }
-            return eval(  # noqa: S307
+            return eval(
                 fields["expression"], {"__builtins__": {}, "max": max, "round": round, "sqrt": math.sqrt}, values
             )
 
