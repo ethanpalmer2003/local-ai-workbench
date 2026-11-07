@@ -8,12 +8,8 @@ Regenerate with the command in the tests/tooling notes rather than editing by ha
 | 22 | `scripts/tests/cases/asr/shared/practice_smoke.py:41` `exercise` |
 | 22 | `scripts/benchmarks/coding_agents/shared/benchmark_requests.py:232` `handler` |
 | 19 | `scripts/tools/model_admin.py:268` `command_replace` |
-| 17 | `scripts/launchers/koboldcpp/kobold_lite.py:256` `run_proxy` |
 | 16 | `scripts/tests/cases/audiocpp/audiocpp_streaming.py:140` `run_comparison` |
 | 16 | `scripts/tests/cases/audiocpp/audiocpp_backend_compare.py:306` `main` |
-| 16 | `scripts/launchers/proxy_util.py:374` `run_json_proxy` |
-| 16 | `scripts/launchers/koboldcpp/kobold_lite.py:270` `_forward` |
-| 16 | `scripts/launchers/asr/parakeetcpp/streaming_server.py:19` `serve` |
 | 15 | `scripts/tests/cases/shared/live_frameworks.py:301` `running_framework` |
 | 15 | `scripts/review/structure_docs.py:64` `configuration_issues` |
 | 15 | `scripts/launchers/runtime/gpu_memory.py:326` `parse_windows_memory` |
@@ -24,7 +20,6 @@ Regenerate with the command in the tests/tooling notes rather than editing by ha
 | 14 | `scripts/config/comfyui/workflow_overrides.py:191` `apply` |
 | 14 | `scripts/benchmarks/koboldcpp/kobold_stack_vram.py:249` `run` |
 | 13 | `scripts/launchers/koboldcpp/kobold.py:38` `server_command` |
-| 13 | `scripts/launchers/asr/parakeetcpp/streaming_server.py:32` `do_POST` |
 | 13 | `scripts/download/models/metadata_evidence.py:18` `measurements` |
 | 13 | `scripts/download/input/get_tts_voices.py:1320` `main` |
 | 13 | `scripts/download/input/get_tts_voices.py:1149` `validate_character` |
@@ -59,4 +54,4 @@ Regenerate with the command in the tests/tooling notes rather than editing by ha
 | 11 | `scripts/benchmarks/llamacpp/benchmark_context_stream.py:66` `stream_request` |
 | 11 | `scripts/benchmarks/asr/asr_resident_compare.py:170` `main` |
 
-Remaining: 53.
+Remaining: 48.

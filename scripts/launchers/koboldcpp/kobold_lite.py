@@ -6,6 +6,7 @@ import json
 import urllib.error
 import urllib.request
 from pathlib import Path
+from typing import Any, ClassVar
 from urllib.parse import urlsplit
 
 from scripts.launchers import launcher_config as cfg
@@ -253,97 +254,128 @@ def main() -> None:
     )
 
 
-def run_proxy(  # noqa: C901
+class _KoboldLiteHandler(ProxyHandlerMixin):
+    protocol_version = "HTTP/1.1"
+    # - set by run_proxy on the per-run subclass
+    upstream: ClassVar[str] = ""
+    assets: ClassVar[dict[str, Path]] = {}
+    variant: ClassVar[str] = "local"
+    external: ClassVar[tuple[str, str] | None] = None
+    sessions: ClassVar[Any] = None
+
+    @property
+    def engine(self) -> cfg.AsrStartupEngine:
+        return cfg.KOBOLDCPP_SERVICE.transcription_engine
+
+    def _forward(self, method: str) -> None:
+        path = urlsplit(self.path).path
+        if self.sessions.route(self, method, path, self.engine):
+            return
+        if method == "GET" and http_api.static_get(self, path, self.engine, "KoboldCpp"):
+            return
+        if self._local_get(method, path):
+            return
+        self._relay(method, path)
+
+    def _local_get(self, method: str, path: str) -> bool:
+        """Serve the UI, its assets and Lite's own capabilities without touching Kobold."""
+        if method != "GET":
+            return False
+        if path == "/health":
+            send_bytes(self, 200, b'{"status":"ok","service":"kobold-lite-streaming"}', "application/json")
+            return True
+        if path in self.assets:
+            send_bytes(self, 200, self.assets[path].read_bytes(), "text/javascript")
+            return True
+        if path == "/api/extra/version" and transcription.external(self.engine):
+            self._forward_version()
+            return True
+        if path == "/":
+            self._serve_page()
+            return True
+        return False
+
+    def _forward_version(self) -> None:
+        request = urllib.request.Request(self.upstream + self.path, headers=build_forward_headers(self.headers, b""))
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                capabilities = json.load(response)
+            capabilities["transcribe"] = transcription.backend(self.engine).ready()
+            send_bytes(self, 200, json.dumps(capabilities).encode(), "application/json")
+        except urllib.error.URLError as error:
+            forward_upstream_error(self, "kobold-lite", error)
+
+    def _serve_page(self) -> None:
+        try:
+            with urllib.request.urlopen(self.upstream + self.path, timeout=10) as response:
+                html = response.read().decode("utf-8")
+            send_bytes(self, 200, patch_lite(html, self.variant, self.external).encode(), "text/html; charset=utf-8")
+        except (urllib.error.URLError, ConnectionRefusedError, TimeoutError) as error:
+            if not backend_unavailable(error):
+                raise
+            send_bytes(self, 503, b"KoboldCpp is not ready yet", "text/plain; charset=utf-8")
+
+    def _relay(self, method: str, path: str) -> None:
+        body = read_request_body(self)
+        if method == "POST" and self.external is not None and path in external_bridge.GENERATE_PATHS:
+            # - the embedded page posts here even with an OpenAI provider configured
+            external_bridge.respond(self, self.external[0], path, body)
+            return
+        target = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}" if path == "/v1/audio/speech" else self.upstream
+        if (
+            method == "POST"
+            and path in ("/api/extra/transcribe", "/v1/audio/transcriptions")
+            and transcription.external(self.engine)
+        ):
+            http_api.transcribe(self, body, self.engine)
+            return
+        if path == "/v1/audio/speech":
+            prepared = self._speech_target(target, body)
+            if prepared is None:
+                return
+            target, body = prepared
+        relay_stream(self, method, target + self.path, build_forward_headers(self.headers, body), body, "kobold-lite")
+
+    def _speech_target(self, target: str, body: bytes) -> tuple[str, bytes] | None:
+        """Resolve the speech backend and re-encode its request; None means an error was sent."""
+        if self.engine == cfg.AsrStartupEngine.AUDIOCPP:
+            from scripts.launchers.audiocpp import asr
+
+            target = asr.url()
+        elif kokoro.selected():
+            target = self.upstream if kokoro.internal() else f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}"
+        else:
+            return target, body
+        try:
+            return target, kokoro.speech_body(body)
+        except (ValueError, TypeError) as error:
+            send_json_error(self, 400, str(error), "invalid_request_error")
+            return None
+
+
+def run_proxy(
     variant: str = "local",
     request_scope: RequestScope | None = None,
     on_server=None,
     external: tuple[str, str] | None = None,
 ) -> None:
     upstream = f"http://127.0.0.1:{cfg.KOBOLDCPP_KCPPS_ARGS['port']}"
-    assets = {"/" + asset.name: asset for asset in streaming_assets(variant)}
-
     sessions = live.Sessions(cfg.KOBOLDCPP_SERVICE.transcription_engine)
-
-    class Handler(ProxyHandlerMixin):
-        protocol_version = "HTTP/1.1"
-
-        def _forward(self, method: str) -> None:  # noqa: C901
-            path = urlsplit(self.path).path
-            if sessions.route(self, method, path, cfg.KOBOLDCPP_SERVICE.transcription_engine):
-                return
-            if method == "GET" and http_api.static_get(
-                self, path, cfg.KOBOLDCPP_SERVICE.transcription_engine, "KoboldCpp"
-            ):
-                return
-            if method == "GET" and path == "/health":
-                send_bytes(self, 200, b'{"status":"ok","service":"kobold-lite-streaming"}', "application/json")
-            elif method == "GET" and path in assets:
-                send_bytes(self, 200, assets[path].read_bytes(), "text/javascript")
-            elif (
-                method == "GET"
-                and path == "/api/extra/version"
-                and transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine)
-            ):
-                request = urllib.request.Request(upstream + self.path, headers=build_forward_headers(self.headers, b""))
-                try:
-                    with urllib.request.urlopen(request, timeout=10) as response:
-                        capabilities = json.load(response)
-                    capabilities["transcribe"] = transcription.backend(
-                        cfg.KOBOLDCPP_SERVICE.transcription_engine
-                    ).ready()
-                    send_bytes(self, 200, json.dumps(capabilities).encode(), "application/json")
-                except urllib.error.URLError as error:
-                    forward_upstream_error(self, "kobold-lite", error)
-            elif method == "GET" and path == "/":
-                try:
-                    with urllib.request.urlopen(upstream + self.path, timeout=10) as response:
-                        html = response.read().decode("utf-8")
-                    send_bytes(self, 200, patch_lite(html, variant, external).encode(), "text/html; charset=utf-8")
-                except (urllib.error.URLError, ConnectionRefusedError, TimeoutError) as error:
-                    if not backend_unavailable(error):
-                        raise
-                    send_bytes(self, 503, b"KoboldCpp is not ready yet", "text/plain; charset=utf-8")
-            else:
-                body = read_request_body(self)
-                if method == "POST" and external is not None and path in external_bridge.GENERATE_PATHS:
-                    # - the embedded page posts here even with an OpenAI provider configured
-                    external_bridge.respond(self, external[0], path, body)
-                    return
-                target = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}" if path == "/v1/audio/speech" else upstream
-                if (
-                    method == "POST"
-                    and path in ("/api/extra/transcribe", "/v1/audio/transcriptions")
-                    and transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine)
-                ):
-                    http_api.transcribe(self, body, cfg.KOBOLDCPP_SERVICE.transcription_engine)
-                    return
-                if (
-                    path == "/v1/audio/speech"
-                    and cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP
-                ):
-                    from scripts.launchers.audiocpp import asr
-
-                    target = asr.url()
-                    try:
-                        body = kokoro.speech_body(body)
-                    except (ValueError, TypeError) as error:
-                        send_json_error(self, 400, str(error), "invalid_request_error")
-                        return
-                elif path == "/v1/audio/speech" and kokoro.selected():
-                    target = upstream if kokoro.internal() else f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}"
-                    try:
-                        body = kokoro.speech_body(body)
-                    except (ValueError, TypeError) as error:
-                        send_json_error(self, 400, str(error), "invalid_request_error")
-                        return
-                relay_stream(
-                    self, method, target + self.path, build_forward_headers(self.headers, body), body, "kobold-lite"
-                )
-
-    Handler.request_scope = request_scope
+    handler = type(
+        "Handler",
+        (_KoboldLiteHandler,),
+        {
+            "upstream": upstream,
+            "assets": {"/" + asset.name: asset for asset in streaming_assets(variant)},
+            "variant": variant,
+            "external": external,
+            "sessions": sessions,
+            "request_scope": request_scope,
+        },
+    )
     try:
         serve_proxy(
-            Handler,
+            handler,
             cfg.KOBOLDCPP_SERVICE.streaming_ui_host,
             cfg.KOBOLDCPP_SERVICE.streaming_ui_port,
             upstream,

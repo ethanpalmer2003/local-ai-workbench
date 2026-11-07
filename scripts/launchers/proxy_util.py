@@ -20,7 +20,7 @@ from contextlib import AbstractContextManager, ExitStack
 from email.message import Message
 from http.client import HTTPResponse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import ClassVar
+from typing import Any, ClassVar
 from urllib.parse import urlsplit
 
 from scripts.launchers import launcher_config as cfg
@@ -371,7 +371,97 @@ def serve_proxy(
         controller.listener_requested = False
 
 
-def run_json_proxy(  # noqa: C901
+class _JsonProxyHandler(ProxyHandlerMixin):
+    """Relay JSON bodies, optionally transforming the request and observing the response."""
+
+    # - set by run_json_proxy on the per-run subclass
+    upstream_url: ClassVar[str] = ""
+    transform: ClassVar[Any] = None
+    tag: ClassVar[str] = "proxy"
+    on_response: ClassVar[Any] = None
+    transform_paths: ClassVar[frozenset[str] | None] = None
+    request_scope: ClassVar[Any] = None
+    restart_controller: ClassVar[Any] = None
+
+    def _forward(self, method: str) -> None:
+        prepared = self._prepare(method)
+        if prepared is None:
+            return
+        body, raw_request = prepared
+        self._relay(method, body, raw_request)
+
+    def _applies(self) -> bool:
+        return self.transform_paths is None or urlsplit(self.path).path in self.transform_paths
+
+    def _prepare(self, method: str) -> tuple[bytes, dict[str, object] | None] | None:
+        """Read and optionally transform the request; None means a response was already sent."""
+        body = read_request_body(self)
+        if not (self._applies() and body and (self.transform or self.on_response) and "json" in self._content_type()):
+            return body, None
+        try:
+            raw_request = json.loads(body)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            send_json_error(self, 400, "invalid JSON", "invalid_request")
+            return None
+        if not isinstance(raw_request, dict):
+            return body, None
+        if not self.transform:
+            return body, raw_request
+        try:
+            # - transform gets a copy: it may mutate in place, while
+            #   on_response needs the request as the client sent it
+            payload = self.transform(dict(raw_request))
+            encoded = None if payload is None else json.dumps(payload).encode("utf-8")
+        except Exception:
+            traceback.print_exc()
+            send_json_error(self, 500, "proxy error", "proxy_error")
+            return None
+        if encoded is None:
+            send_bytes(self, 204, b"")
+            return None
+        return encoded, raw_request
+
+    def _content_type(self) -> str:
+        return self.headers.get("Content-Type", "").lower()
+
+    def _relay(self, method: str, body: bytes, raw_request: dict[str, object] | None) -> None:
+        req = urllib.request.Request(
+            self.upstream_url + self.path,
+            data=body if body else None,
+            method=method,
+            headers=build_forward_headers(self.headers, body),
+        )
+        try:
+            with urllib.request.urlopen(req) as resp:
+                resp_body = resp.read()
+                if self.on_response and raw_request is not None:
+                    self._notify_response(resp_body, raw_request)
+                self.send_response(resp.status)
+                relay_response_headers(self, resp.getheaders(), len(resp_body))
+                self.end_headers()
+                self.wfile.write(resp_body)
+        except urllib.error.URLError as e:
+            forward_upstream_error(self, self.tag, e)
+            if self.request_scope is not None and method == "POST":
+                raise
+
+    def _notify_response(self, body: bytes, raw_request: dict[str, object]) -> None:
+        try:
+            response_payload = json.loads(body)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return
+        if not isinstance(response_payload, dict) or self.on_response is None:
+            return
+        try:
+            self.on_response(response_payload, raw_request)
+        except Exception:
+            traceback.print_exc()
+
+    def log_message(self, format: str, *args: object) -> None:
+        print(f"[{self.tag}] {format % args}")
+
+
+def run_json_proxy(
     service: cfg.GenericStartupServiceSettings,
     upstream_url: str,
     transform: Callable[[dict[str, object]], dict[str, object] | None] | None = None,
@@ -391,79 +481,22 @@ def run_json_proxy(  # noqa: C901
       it (pre-transform)
     - Hook errors are logged, never break the relay
     """
-
-    class ProxyHandler(ProxyHandlerMixin):
-        def _forward(self, method: str):
-            body = read_request_body(self)
-            raw_request: dict[str, object] | None = None
-
-            applies = transform_paths is None or urlsplit(self.path).path in transform_paths
-            if (
-                applies
-                and body
-                and (transform or on_response)
-                and "json" in self.headers.get("Content-Type", "").lower()
-            ):
-                try:
-                    raw_request = json.loads(body)
-                except (json.JSONDecodeError, UnicodeDecodeError):
-                    send_json_error(self, 400, "invalid JSON", "invalid_request")
-                    return
-                if not isinstance(raw_request, dict):
-                    raw_request = None
-                elif transform:
-                    try:
-                        # - transform gets a copy: it may mutate in place, while
-                        #   on_response needs the request as the client sent it
-                        payload = transform(dict(raw_request))
-                        body = None if payload is None else json.dumps(payload).encode("utf-8")
-                    except Exception:
-                        traceback.print_exc()
-                        send_json_error(self, 500, "proxy error", "proxy_error")
-                        return
-                    if body is None:
-                        send_bytes(self, 204, b"")
-                        return
-
-            req = urllib.request.Request(
-                upstream_url + self.path,
-                data=body if body else None,
-                method=method,
-                headers=build_forward_headers(self.headers, body),
-            )
-            try:
-                with urllib.request.urlopen(req) as resp:
-                    resp_body = resp.read()
-                    if on_response and raw_request is not None:
-                        self._notify_response(resp_body, raw_request)
-                    self.send_response(resp.status)
-                    relay_response_headers(self, resp.getheaders(), len(resp_body))
-                    self.end_headers()
-                    self.wfile.write(resp_body)
-            except urllib.error.URLError as e:
-                forward_upstream_error(self, tag, e)
-                if request_scope is not None and method == "POST":
-                    raise
-
-        def _notify_response(self, body: bytes, raw_request: dict[str, object]) -> None:
-            try:
-                response_payload = json.loads(body)
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                return
-            if not isinstance(response_payload, dict) or on_response is None:
-                return
-            try:
-                on_response(response_payload, raw_request)
-            except Exception:
-                traceback.print_exc()
-
-        def log_message(self, format, *args):
-            print(f"[{tag}] {format % args}")
-
+    attributes: dict[str, object] = {
+        "upstream_url": upstream_url,
+        "tag": tag,
+        "on_response": on_response,
+        "transform_paths": transform_paths,
+        "request_scope": request_scope,
+        "restart_controller": restart_controller,
+    }
+    # - plain function attributes would bind as methods and receive self
+    if transform is not None:
+        attributes["transform"] = staticmethod(transform)
+    if on_response is not None:
+        attributes["on_response"] = staticmethod(on_response)
+    handler = type("ProxyHandler", (_JsonProxyHandler,), attributes)
     print(f"[{tag}] service: {service}")
-    ProxyHandler.restart_controller = restart_controller
-    ProxyHandler.request_scope = request_scope
-    serve_proxy(ProxyHandler, service.listen_ip, service.port, upstream_url, tag, on_server)
+    serve_proxy(handler, service.listen_ip, service.port, upstream_url, tag, on_server)
 
 
 def handle_restart(handler: BaseHTTPRequestHandler, method: str, controller: ProxyRestartController | None) -> bool:
