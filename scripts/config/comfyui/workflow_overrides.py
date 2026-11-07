@@ -13,39 +13,63 @@ DEFAULT_NEGATIVE = (
 )
 
 
-def text_nodes(nodes: list[dict[str, Any]], links: dict[int, list[Any]]) -> Iterator[tuple[str, str]]:  # noqa: C901
+def _text_source(
+    by_id: dict[str, dict[str, Any]], links: dict[int, list[Any]], kind: str, link_id: int | None
+) -> str | None:
+    """Follow one conditioning link to the TextEncode node that owns it."""
+    link = links.get(link_id) if link_id is not None else None
+    if not link:
+        return None
+    origin = by_id.get(str(link[1]))
+    if origin is None:
+        return None
+    if str(origin["type"]).endswith("TextEncode"):
+        return str(origin["id"])
+    for field in origin.get("inputs") or []:
+        if field.get("name") == kind:
+            return _text_source(by_id, links, kind, field.get("link"))
+    return None
+
+
+def text_nodes(nodes: list[dict[str, Any]], links: dict[int, list[Any]]) -> Iterator[tuple[str, str]]:
     """Yield (positive|negative, node id) by following each conditioning input to its text encoder.
 
     Guiders point at a conditioning node that splits positive/negative itself, so the same
     kind name is followed recursively before falling back to an upstream search.
     """
-
     by_id = {str(node["id"]): node for node in nodes}
-
-    def resolve(kind: str, link_id: int | None) -> str | None:
-        link = links.get(link_id) if link_id is not None else None
-        if not link:
-            return None
-        origin = by_id.get(str(link[1]))
-        if origin is None:
-            return None
-        if str(origin["type"]).endswith("TextEncode"):
-            return str(origin["id"])
-        for field in origin.get("inputs") or []:
-            if field.get("name") == kind:
-                return resolve(kind, field.get("link"))
-        return None
-
     seen: set[tuple[str, str]] = set()
     for node in nodes:
         for field in node.get("inputs") or []:
             kind = str(field.get("name"))
             if kind not in ("positive", "negative"):
                 continue
-            key = resolve(kind, field.get("link"))
+            key = _text_source(by_id, links, kind, field.get("link"))
             if key and (kind, key) not in seen:
                 seen.add((kind, key))
                 yield kind, key
+
+
+CONTROL_NAMES = (
+    "seconds",
+    "fps",
+    "resolution",
+    "mode",
+    "spatial_tile",
+    "spatial_overlap",
+    "temporal_tile",
+    "temporal_overlap",
+)
+
+
+def _apply_control(graph: dict[str, Any], controls: dict[str, int], name: str, value: Any) -> None:
+    if name not in controls:
+        raise ValueError(f"Workflow has no {name} control; use the supplied simplified workflow")
+    control = graph[str(controls[name])]
+    if control["class_type"] == "ComfyMathExpression":
+        control["inputs"] = {"expression": "a", "values.a": value}
+    else:
+        control["inputs"]["value"] = value
 
 
 def _written(current: str, replace_text: str | None, append_text: str | None) -> str | None:
@@ -188,27 +212,7 @@ class LTXWorkflowOverrides:
             else "ltx-2.5-video-vae-bf16.safetensors"
         )
 
-    def apply(self, graph: dict[str, Any], controls: dict[str, int]) -> None:  # noqa: C901
-        for name in (
-            "seconds",
-            "fps",
-            "resolution",
-            "mode",
-            "spatial_tile",
-            "spatial_overlap",
-            "temporal_tile",
-            "temporal_overlap",
-        ):
-            value = getattr(self, name)
-            if value is None:
-                continue
-            if name not in controls:
-                raise ValueError(f"Workflow has no {name} control; use the supplied simplified workflow")
-            control = graph[str(controls[name])]
-            if control["class_type"] == "ComfyMathExpression":
-                control["inputs"] = {"expression": "a", "values.a": value}
-            else:
-                control["inputs"]["value"] = value
+    def _apply_loaders(self, graph: dict[str, Any]) -> None:
         for node in graph.values():
             if node["class_type"].startswith("UnetLoaderGGUF") and self.model is not None:
                 node["inputs"]["unet_name"] = self.model
@@ -216,12 +220,23 @@ class LTXWorkflowOverrides:
                 node["inputs"]["clip_name"] = self.encoder
             elif node["class_type"] == "SaveVideo" and self.prefix is not None:
                 node["inputs"]["filename_prefix"] = self.prefix
-        if self.dynamic_vram is False:
+
+    @staticmethod
+    def _apply_dynamic_vram(graph: dict[str, Any], dynamic_vram: bool | None) -> None:
+        if dynamic_vram is False:
             adapt_loaders(graph, ["--disable-dynamic-vram"])
-        elif self.dynamic_vram is True:
+        elif dynamic_vram is True:
             for node in graph.values():
                 if node["class_type"] == "UnetLoaderGGUF":
                     node["class_type"] = "UnetLoaderGGUFDynamicVRAM"
+
+    def apply(self, graph: dict[str, Any], controls: dict[str, int]) -> None:
+        for name in CONTROL_NAMES:
+            value = getattr(self, name)
+            if value is not None:
+                _apply_control(graph, controls, name, value)
+        self._apply_loaders(graph)
+        self._apply_dynamic_vram(graph, self.dynamic_vram)
         set_video_decode(graph, self.vae_decode)
         if self.video_vae_filename is not None:
             graph["4"]["inputs"]["vae_name"] = self.video_vae_filename
@@ -272,8 +287,18 @@ class LTXWorkflowOverrides:
         return resolved
 
 
-def workflow(saved: dict[str, Any], overrides: LTXWorkflowOverrides) -> dict[str, Any]:  # noqa: C901
-    links = {link[0]: link for link in saved["links"]}
+def _node_inputs(node: dict[str, Any], links: dict[int, list[Any]], widgets: dict[str, Any]) -> dict[str, Any]:
+    inputs: dict[str, Any] = {}
+    for field in node.get("inputs", []):
+        if field.get("link") is not None:
+            link = links[field["link"]]
+            inputs[field["name"]] = [str(link[1]), link[2]]
+        elif field.get("widget"):
+            inputs[field["name"]] = widgets[field["widget"]["name"]]
+    return inputs
+
+
+def _graph_from_saved(saved: dict[str, Any], links: dict[int, list[Any]]) -> dict[str, Any]:
     graph: dict[str, Any] = {}
     for node in saved["nodes"]:
         if node.get("mode", 0) != 0:
@@ -281,27 +306,32 @@ def workflow(saved: dict[str, Any], overrides: LTXWorkflowOverrides) -> dict[str
         widgets = node.get("widgets_values_named", {})
         if node.get("widgets_values") and not widgets:
             raise ValueError(f"Node {node['id']} lacks named widgets; save it with the current frontend first")
-        inputs = {}
-        for field in node.get("inputs", []):
-            if field.get("link") is not None:
-                link = links[field["link"]]
-                inputs[field["name"]] = [str(link[1]), link[2]]
-            elif field.get("widget"):
-                inputs[field["name"]] = widgets[field["widget"]["name"]]
-        graph[str(node["id"])] = {"class_type": node["type"], "inputs": inputs}
-    reachable = set()
+        graph[str(node["id"])] = {"class_type": node["type"], "inputs": _node_inputs(node, links, widgets)}
+    return graph
 
-    def visit(key: str) -> None:
-        if key in reachable:
-            return
-        reachable.add(key)
-        for value in graph[key]["inputs"].values():
-            if isinstance(value, list) and len(value) == 2 and isinstance(value[0], str):
-                visit(value[0])
 
+def _visit_inputs(graph: dict[str, Any], key: str, reachable: set[str]) -> None:
+    if key in reachable:
+        return
+    reachable.add(key)
+    for value in graph[key]["inputs"].values():
+        if isinstance(value, list) and len(value) == 2 and isinstance(value[0], str):
+            _visit_inputs(graph, value[0], reachable)
+
+
+def _reachable(graph: dict[str, Any]) -> set[str]:
+    """Only what a SaveVideo node can reach survives conversion."""
+    reachable: set[str] = set()
     for key, node in graph.items():
         if node["class_type"] == "SaveVideo":
-            visit(key)
+            _visit_inputs(graph, key, reachable)
+    return reachable
+
+
+def workflow(saved: dict[str, Any], overrides: LTXWorkflowOverrides) -> dict[str, Any]:
+    links = {link[0]: link for link in saved["links"]}
+    graph = _graph_from_saved(saved, links)
+    reachable = _reachable(graph)
     graph = {key: node for key, node in graph.items() if key in reachable}
     overrides.apply(graph, saved.get("extra", {}).get("benchmark_controls", {}))
     return graph

@@ -5,14 +5,10 @@ Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rath
 
 | Complexity | Function |
 | ---: | --- |
-| 14 | `scripts/benchmarks/koboldcpp/kobold_stack_vram.py:249` `run` |
-| 14 | `scripts/config/comfyui/workflow_overrides.py:191` `apply` |
 | 14 | `scripts/launchers/llamacpp/llamacpp_dsh.py:220` `main` |
 | 14 | `scripts/review/model_references.py:16` `inspect` |
 | 14 | `scripts/tests/cases/asr/shared/language_practice_whisper.py:38` `main` |
-| 13 | `scripts/benchmarks/koboldcpp/kobold_stack_vram.py:45` `generate` |
 | 13 | `scripts/benchmarks/personal/comfyui/comfyui_video.py:668` `_resolve_arguments` |
-| 13 | `scripts/config/comfyui/workflow_overrides.py:275` `workflow` |
 | 13 | `scripts/download/input/get_tts_voices.py:1149` `validate_character` |
 | 13 | `scripts/download/input/get_tts_voices.py:1320` `main` |
 | 13 | `scripts/download/models/metadata_evidence.py:18` `measurements` |
@@ -28,7 +24,6 @@ Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rath
 | 11 | `scripts/benchmarks/asr/asr_resident_compare.py:170` `main` |
 | 11 | `scripts/benchmarks/llamacpp/benchmark_context_stream.py:66` `stream_request` |
 | 11 | `scripts/benchmarks/personal/comfyui/comfyui_video.py:199` `_consume_events` |
-| 11 | `scripts/config/comfyui/workflow_overrides.py:16` `text_nodes` |
 | 11 | `scripts/config/sync_configs.py:65` `sync_comfyui` |
 | 11 | `scripts/download/models/analyze_model.py:98` `enrich_hub` |
 | 11 | `scripts/download/models/hub_transfer.py:11` `download_ranges` |
@@ -44,4 +39,4 @@ Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rath
 | 11 | `scripts/tests/cases/llamacpp/hrx/hrx_update_validation.py:131` `verify_candidate_evidence` |
 | 11 | `scripts/tools/rewrite_imports.py:88` `rewrite_file` |
 
-Remaining: 38.
+Remaining: 33.
