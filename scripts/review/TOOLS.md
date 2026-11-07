@@ -32,7 +32,7 @@ What runs today. Use it to compare against other projects' stacks.
 | `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
 | `public_audit.py` | secrets, credentials, home/machine paths, private words/inputs, large files, ignored-but-tracked |
 | `audit_timing.py` | which benchmark runners use the shared timing contract |
-| `dependencies.py` | installed packages the import graph never reaches; `--prune` prints the removal command |
+| `dependencies.py` | installed packages the import graph never reaches; `--prune [--remove]`; `uv lock --check` |
 | `coverage.py`, `pip-audit` | coverage; advisories run inside the gate (network, unreachable feed is a warning) |
 
 Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown and batch files are covered by `structure_docs.py`, HTML/JS by `frontend_wiring.py`; codespell reads tracked Python and Markdown.
