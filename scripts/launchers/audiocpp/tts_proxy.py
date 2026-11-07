@@ -195,7 +195,7 @@ def _wav_duration(data: bytes) -> float:
         return audio.getnframes() / audio.getframerate()
 
 
-def run_tts_json_proxy(
+def run_tts_json_proxy(  # noqa: C901
     service: cfg.GenericStartupServiceSettings,
     upstream_url: str,
     transform: Callable[[Payload], Payload | None] | None = None,

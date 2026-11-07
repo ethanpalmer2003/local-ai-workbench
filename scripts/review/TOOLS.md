@@ -1,43 +1,47 @@
 # Code validation tooling
 
-What runs today, in one place. Use it to compare against other projects' stacks; nothing here is a wish list.
+What runs today. Use it to compare against other projects' stacks.
 
 ## Entry points
 
 | Command | Covers |
 | --- | --- |
-| `python -m scripts.review` | structure/docs, model references, front-end wiring, types, code inventory/complexity, formatting |
+| `python -m scripts.review` | structure/docs, model references, front-end wiring, types, inventory/complexity, formatting |
 | `scripts/review/check_repo.bat` | the same, from a normal terminal |
-| `scripts/review/format_py.bat` | applies `ruff format` to the repository |
-| `python -m scripts.tests.run` | regression suite, per-test timings, persisted reports |
-| `python -m scripts.tests.run` with `AI_MODEL_CHECKS=1` | adds asset/model checks kept out of regressions |
+| `scripts/review/format_py.bat` | applies `ruff format` |
+| `python -m scripts.tests.run` | regression suite through pytest, timings and reports |
+| ... with `AI_MODEL_CHECKS=1` | adds asset/model checks kept out of regressions |
+| `pre-commit run --all-files` | ruff lint and format; codespell is manual |
 | `python -m scripts.review.public_audit [--history]` | publish gate |
 | `python -m scripts.benchmarks.audit_timing` | benchmark timing-contract audit |
+| `python -m coverage run -m scripts.tests.run` | line coverage, then `coverage report` |
+| `python -m pip_audit -r scripts/requirements.txt` | dependency advisories (network) |
 
-## Tools and their owners
+## Owners
 
-| Tool | Owns | Notes |
-| --- | --- | --- |
-| ruff (lint) | `pyproject.toml` `[tool.ruff.lint]` | `E4 E7 E9 F UP C4 SIM I`, line length 120, target py313 |
-| ruff (format) | `pyproject.toml` `[tool.ruff.format]` | enforced by the review gate; generated `ids.py` excluded |
-| basedpyright | type errors | `--level error` only; no strict mode |
-| `structure_docs.py` | docs budgets, links, component keys, naming, folder rules | maintained files only |
-| `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths | - |
-| `frontend_wiring.py` | asset paths, DOM ids, injected settings contracts | static, never executes pages |
-| `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies | complexity gates; tables advisory |
-| `public_audit.py` | secrets, credentials, home/machine paths, private words, private inputs, large files, ignored-but-tracked | `--history` scans every commit |
-| `benchmarks/audit_timing.py` | every benchmark runner uses the shared timing contract or is classified | - |
-| `unittest` runner | behaviour regressions | 501 tests, ~16 s, per-test timings and `report.md` |
+| Tool | Owns |
+| --- | --- |
+| ruff lint | `[tool.ruff.lint]`: `E4 E7 E9 F UP C4 SIM I S C90`, line length 120, py313 |
+| ruff format | `[tool.ruff.format]`; generated `ids.py` excluded |
+| basedpyright | type errors, `--level error`, no strict mode |
+| pytest | regression execution, timings, failure details |
+| `structure_docs.py` | doc budgets, links, component keys, naming, folder rules |
+| `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
+| `frontend_wiring.py` | asset paths, DOM ids, injected settings contracts |
+| `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies |
+| `public_audit.py` | secrets, credentials, home/machine paths, private words/inputs, large files, ignored-but-tracked |
+| `audit_timing.py` | every benchmark runner uses the shared timing contract |
+| `coverage.py`, `pip-audit`, `codespell` | coverage, dependency advisories, spelling (manual hook) |
 
-Scope for both ruff modes: repository root, `*.py`/`*.pyi` only; `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and generated `ids.py` excluded. Other file types are covered by `structure_docs.py` (Markdown) and `frontend_wiring.py` (HTML/JS).
+Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown is covered by `structure_docs.py`, HTML/JS by `frontend_wiring.py`.
+
+Lint gates at McCabe 20; the five dispatchers above it carry `# noqa: C901`. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
 
 ## Deliberately absent
 
-- Coverage measurement, mutation testing.
-- Dead-code and duplicate-code detectors (`vulture`, `jscpd`) - `inventory_code.py` covers only function bodies.
-- Security scanning (`bandit`, `semgrep`) and dependency auditing (`pip-audit`, lockfile checks).
-- `pre-commit` hooks; the gate is a command, not a hook.
-- Markdown linting; `structure_docs.py` enforces only links, budgets and naming.
-- Import-boundary enforcement (`import-linter`); layering is convention, not checked.
-- JS/TS tooling: no ESLint, no TypeScript check for the pages.
-- Spell/grammar checking.
+- Mutation testing.
+- Dead-code and duplicate-code detectors - `inventory_code.py` covers function bodies only.
+- Standalone `bandit`/`semgrep`; ruff `S` covers the common cases.
+- Markdown linting; `structure_docs.py` enforces links, budgets and naming.
+- Import-boundary linting; layering is convention.
+- JS/TS tooling and a CI server; everything runs locally.

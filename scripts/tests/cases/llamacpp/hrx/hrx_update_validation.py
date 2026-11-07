@@ -32,7 +32,7 @@ def build_operator_probe(paths: RunPaths) -> Path:
     patched.write_text(source[:start] + replacement + source[end:], encoding="utf-8")
     directory = probe.HRX_ROOT / "build/llamacpp/tests"
     ns = {"m": "http://schemas.microsoft.com/developer/msbuild/2003"}
-    tree = ET.parse(directory / "test-backend-ops.vcxproj")
+    tree = ET.parse(directory / "test-backend-ops.vcxproj")  # noqa: S314
     group = next(g for g in tree.findall("m:ItemDefinitionGroup", ns) if "'Release|x64'" in g.get("Condition", ""))
 
     def fields(query: str) -> list[str]:

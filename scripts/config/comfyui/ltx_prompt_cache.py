@@ -24,7 +24,8 @@ def cache_file(text: str, prompt: dict[str, Any], unique_id: str) -> Path:
     inputs = loader["inputs"]
     model = Path(folder_paths.get_full_path_or_raise("clip", inputs["clip_name"]))
     stat = model.stat()
-    assert folder_paths.__file__ is not None
+    if folder_paths.__file__ is None:
+        raise RuntimeError("ComfyUI folder_paths has no file location")
     comfy_root = Path(folder_paths.__file__).parent
     version_file = comfy_root / ".last_update_hash"
     version = version_file.read_text(encoding="utf-8").strip() if version_file.exists() else "unknown"

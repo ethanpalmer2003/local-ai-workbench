@@ -38,7 +38,7 @@ def post(base, path, body, binary=False):
         return data if path == "/v1/audio/speech" else json.loads(data)
 
 
-def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):
+def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):  # noqa: C901
     chat_port, proxy_port = 19194, 19195
     process, gateway, thread = None, None, None
     token = None
