@@ -838,3 +838,27 @@ SDCPP_PROXY_PROMPT = SdcppProxyRequestPromptSettings()
 # ============================================================
 
 
+
+
+# ============================================================
+# LEMONADE SERVER SETTINGS
+# ============================================================
+
+
+@dataclass(frozen=True)
+class LemonadeStartupServiceSettings:
+    """Lemonade's own server: one API in front of its llama.cpp, kokoro and sd.cpp backends."""
+
+    framework_dir: Path = project_cfg.component("lemonade_server").framework_dir
+    port: int = 13305
+    # - Lemonade keeps its settings in the user profile, not in this repository; a run
+    #   points extra_models_dir at our weights and restores the file afterwards.
+    config: Path = Path.home() / ".config/lemonade/config.json"
+    startup_timeout_s: float = 90.0
+
+    @property
+    def exe(self) -> Path:
+        return self.framework_dir / "bin/LemonadeServer.exe"
+
+
+LEMONADE_SERVICE = LemonadeStartupServiceSettings()
