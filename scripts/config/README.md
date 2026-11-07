@@ -8,7 +8,7 @@
 | llama.cpp profiles / native INI | [profiles](../launchers/llamacpp/llamacpp_profiles.py), [llamacpp/](llamacpp/) |
 | Pi packages/extensions/environment | [coding_agents/pi/](coding_agents/pi/README.md) |
 | AudioCpp native model/session options | [audiocpp/server.json](audiocpp/server.json) |
-| Framework update coverage | [update_config.py](../download/frameworks/update_config.py) |
+| Framework update coverage | [framework_catalog.py](../download/frameworks/framework_catalog.py) |
 | ComfyUI paths/workflows/node | [comfyui/](comfyui/README.md) |
 
 - One editable owner per setting. Native config is read directly when supported; Python selects catalog IDs and runtime overrides.
@@ -16,9 +16,9 @@
 - Source edits require restarting affected consumers; preserve existing sessions until authorized to restart.
 
 ```powershell
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync --only comfyui --apply
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync --only commandcode --apply
+C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync_configs
+C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync_configs --only comfyui --apply
+C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync_configs --only commandcode --apply
 ```
 
 - Preview is read-only. Apply manages owned ComfyUI copies, preserving replaced files in trash; it does not install packages or restart servers.

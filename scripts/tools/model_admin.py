@@ -366,7 +366,7 @@ def command_add(args: argparse.Namespace) -> int:
     catalog.write_ids(catalog.load_catalog())
     print(f"[OK] Added {args.label} to {catalog.CATALOG_PATH}")
     if args.download:
-        from scripts.download.models import download
+        from scripts.download.models import download_catalog as download
 
         download.download_model(catalog.get(args.label))
     return run_model_sync()

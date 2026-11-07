@@ -11,10 +11,11 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from scripts.config import project_config as project_cfg
-from scripts.download.frameworks import build_all, update_types
-from scripts.download.frameworks import update_config as cfg
+from scripts.download.frameworks import build_frameworks as build_all
+from scripts.download.frameworks import framework_catalog as cfg
 from scripts.download.frameworks import update_frameworks as entry
 from scripts.download.frameworks import update_shared as updater
+from scripts.download.frameworks import update_types
 from scripts.download.frameworks.asr import whispercpp
 from scripts.download.frameworks.shared import other_updates
 from scripts.download.frameworks.strata import updates as strata_updates

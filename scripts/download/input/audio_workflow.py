@@ -1,13 +1,13 @@
 """Shared paths and tuning values for the custom voice-recording workflow.
 
-- Paths derive from the input overlay ([inputs.py](../../config/inputs.py)); no per-character constants live here
+- Paths derive from the input overlay ([overlay_inputs.py](../../config/overlay_inputs.py)); no per-character constants live here
 - Silence/tuning values are consumed by split_from_csv.py and tune_silence.py
 """
 
 from dataclasses import dataclass
 from pathlib import Path
 
-from scripts.config import inputs
+from scripts.config import overlay_inputs as inputs
 
 SILENCE_NOISE_DB = -35.0
 SILENCE_MIN_DUR = 0.35

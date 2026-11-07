@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.config import inputs
+from scripts.config import overlay_inputs as inputs
 from scripts.tests.shared.paths import CasePaths
 
 

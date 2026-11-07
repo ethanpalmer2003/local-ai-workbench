@@ -14,7 +14,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from scripts.config import inputs
+from scripts.config import overlay_inputs as inputs
 from scripts.config import project_config as project_cfg
 
 TEXT_SUFFIXES = {

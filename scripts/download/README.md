@@ -1,6 +1,6 @@
 # Downloads and model audit
 
-- Models: [catalog](../config/models/__init__.py), [metadata analyzer](models/METADATA.md). Frameworks: [catalog](frameworks/update_config.py), [update guide](frameworks/UPDATES.md).
+- Models: [catalog](../config/models/__init__.py), [metadata analyzer](models/METADATA.md). Frameworks: [catalog](frameworks/framework_catalog.py), [update guide](frameworks/UPDATES.md).
 - Canonical component/path owner: `project_config.COMPONENTS`; model destinations derive through `model_destination()`.
 
 ```powershell

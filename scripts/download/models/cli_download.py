@@ -6,8 +6,8 @@ import sys
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.download.models.sources import HubFile as HubFile
-from scripts.download.models.sources import parse_url as parse_url
+from scripts.download.models.hub_sources import HubFile as HubFile
+from scripts.download.models.hub_sources import parse_url as parse_url
 
 
 def download_snapshot(
@@ -59,7 +59,7 @@ def download_file(
 
 def main():
     if any(arg in sys.argv[1:] for arg in ("--list", "--model", "--active", "--inactive", "--group", "--download")):
-        from scripts.download.models import download
+        from scripts.download.models import download_catalog as download
 
         download.main(sys.argv[1:])
         return

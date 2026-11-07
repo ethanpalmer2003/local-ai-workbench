@@ -8,7 +8,7 @@ from typing import Any
 from urllib.parse import quote
 
 from scripts.config import project_config as project_cfg
-from scripts.download.models.sources import parse_url
+from scripts.download.models.hub_sources import parse_url
 from scripts.launchers.runtime.execution_context import require_native_execution
 
 LIMIT = 8 * 1024 * 1024

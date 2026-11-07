@@ -18,7 +18,7 @@
 | ComfyUI | [guide](config/comfyui/README.md) |
 | Framework updates | [category guide](download/frameworks/UPDATES.md): `llamacpp`, `asr`, `speech`, `other` |
 | Model downloads/audit | [guide](download/README.md) |
-| Config sync | `python -m scripts.config.sync`, [ownership](config/README.md) |
+| Config sync | `python -m scripts.config.sync_configs`, [ownership](config/README.md) |
 | Code review | [review guide](review/README.md) |
 | Tests | [test guide](tests/README.md) |
 | Benchmarks | [runners and measurement rules](benchmarks/README.md) |

@@ -6,7 +6,7 @@ from pathlib import Path
 from scripts.config import project_config as project_cfg
 from scripts.config.models import MODELS as MODELS
 from scripts.config.models import ModelDownload as ModelDownload
-from scripts.download.models.sources import parse_url
+from scripts.download.models.hub_sources import parse_url
 
 
 def download_model(model: ModelDownload, range_download: bool = False, resume_file: Path | None = None) -> None:

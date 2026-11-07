@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.download.models.sources import HubFile
+from scripts.download.models.hub_sources import HubFile
 
 
 def download_ranges(source: HubFile, destination: Path, partial: Path | None = None) -> None:

@@ -5,7 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.config import models, sync
+from scripts.config import models
+from scripts.config import sync_configs as sync
 from scripts.config.audiocpp import server
 from scripts.tests.shared.paths import CasePaths
 
