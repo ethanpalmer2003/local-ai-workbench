@@ -13,7 +13,8 @@ def input_dir() -> Path:
 
 
 def voices_dir() -> Path:
-    return input_dir() / "audio"
+    """Downloaded clip libraries; assets like model weights, not authored overlay config."""
+    return Path(os.environ.get("AI_VOICES_DIR") or project_cfg.VOICES_DIR)
 
 
 def kobold_dir() -> Path:

@@ -24,6 +24,7 @@ BAT_DIR = BASE_DIR / "bat"
 ENV_FILE = SCRIPTS_DIR / ".env"
 
 INPUT_DIR = DATA_DIR / "input"
+VOICES_DIR = DATA_DIR / "voices"
 OUTPUT_DIR = Path(os.environ.get("AI_OUTPUT_DIR") or DATA_DIR / "output")
 TESTS_DIR = SCRIPTS_DIR / "tests"
 CONFIG_DIR = SCRIPTS_DIR / "config"

@@ -643,7 +643,7 @@ AUDIOCPP_SERVER_ARGS: dict[str, str] = {"config": str(audio_cfg.CONFIG_PATH)}
 AUDIOCPP_PROXY_ACCEPTED_MODELS = tuple(model.value for model in AudiocppModel)
 AUDIOCPP_PROXY_CLONE_VOICES: tuple[str, ...] = inputs.voice_ids()
 
-AUDIOCPP_INPUT_DIR = project_cfg.INPUT_DIR / "audio"  # voice samples for AUDIOCPP
+AUDIOCPP_INPUT_DIR = project_cfg.VOICES_DIR  # voice samples for AUDIOCPP
 
 # --- proxy only: model presets ---
 

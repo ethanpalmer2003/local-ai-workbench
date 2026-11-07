@@ -22,7 +22,10 @@ class InputOverlayTests(unittest.TestCase):
 
     def test_without_the_overlay_every_lookup_is_empty_rather_than_an_error(self):
         with CasePaths(__file__).temporary_directory() as folder:
-            with patch.dict(inputs.os.environ, {"AI_INPUT_DIR": str(Path(folder) / "absent")}):
+            with (
+                patch.dict(inputs.os.environ, {"AI_INPUT_DIR": str(Path(folder) / "absent")}),
+                patch.dict(inputs.os.environ, {"AI_VOICES_DIR": str(Path(folder) / "absent-voices")}),
+            ):
                 self.assertEqual(inputs.voice_ids(), ())
                 self.assertEqual(inputs.default_voice(), "")
                 self.assertEqual(inputs.character_cards(), {})
