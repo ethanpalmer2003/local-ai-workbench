@@ -48,6 +48,8 @@ class ModelAdminTests(unittest.TestCase):
 
     def test_remove_refuses_a_referenced_model_without_moving_it(self):
         model = model_admin.model_for(self.swift)
+        if not model.path.is_file():
+            self.skipTest("this model's weights are not installed in this checkout")
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
             self.assertEqual(model_admin.command_remove(model, apply=False), 1)

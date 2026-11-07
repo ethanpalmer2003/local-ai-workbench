@@ -75,6 +75,8 @@ class FrameworkClients(unittest.TestCase):
 
     @fixture_processes()
     def test_verifier_rejects_broken_fixture_and_accepts_real_fix(self):
+        if not cfg.VENV_PYTHON.is_file():
+            self.skipTest("this checkout has no virtual environment")
         solutions = {
             "text_utils.py": "def normalize_spaces(text):\n    return ' '.join(text.split())\n",
             "duration.py": (
