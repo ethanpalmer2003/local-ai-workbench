@@ -28,8 +28,10 @@ dev = ["basedpyright", "codespell", "coverage", "deptry", "pip-audit", "pre-comm
 [tool.uv]
 # - this repository is a tree of scripts, not an installable package
 package = false
-# - the launchers run on CPU torch; the default PyPI wheel would pull CUDA builds
-default-groups = ["dev"]
+# - a plain `uv sync` installs runtime deps only; `uv sync --group dev` adds the checks
+default-groups = []
+# - the interpreter lives in scripts/.venv, so uv must not create ./.venv:
+#   set UV_PROJECT_ENVIRONMENT=C:/AI/scripts/.venv before any uv sync/lock command
 
 [tool.uv.sources]
 torch = { index = "pytorch-cpu" }
