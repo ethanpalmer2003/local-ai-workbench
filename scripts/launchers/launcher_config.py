@@ -549,7 +549,7 @@ class KoboldcppStartupServiceSettings:
     transcription_engine: AsrStartupEngine = KOBOLD_CHAT.asr_engine or AsrStartupEngine.EMBEDDED
     streaming_ui: bool = True
     streaming_ui_port: int = 5001
-    streaming_ui_host: str = "0.0.0.0"  # noqa: S104
+    streaming_ui_host: str = "0.0.0.0"
     streaming_ui_path: str = ""
 
 
@@ -641,7 +641,7 @@ class AudiocppStartupRequestServiceSettings(GenericStartupServiceSettings):
 AUDIOCPP_SERVICE = AudiocppStartupRequestServiceSettings(
     mode=ServiceMode.PROXY,
     enabled=True,
-    listen_ip="0.0.0.0",  # noqa: S104
+    listen_ip="0.0.0.0",
     port=8888,
     internal_port=8889,
     model=KOBOLD_CHAT.tts_model,
@@ -740,7 +740,7 @@ class SdcppStartupRequestServiceSettings(GenericStartupServiceSettings):
 SDCPP_SERVICE = SdcppStartupRequestServiceSettings(
     mode=ServiceMode.PROXY,
     enabled=False,
-    listen_ip="0.0.0.0",  # noqa: S104
+    listen_ip="0.0.0.0",
     port=1234,
     internal_port=1235,
     model="nova3d-q4",

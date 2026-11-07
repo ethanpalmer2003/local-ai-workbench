@@ -10,7 +10,7 @@ from scripts.tests.shared.http_server import request, server
 
 
 class _Llama(BaseHTTPRequestHandler):
-    def do_POST(self) -> None:  # noqa: N802 - http.server naming
+    def do_POST(self) -> None:
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         assert self.path == "/v1/completions", self.path
         if body.get("stream"):

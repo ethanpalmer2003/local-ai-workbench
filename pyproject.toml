@@ -31,14 +31,20 @@ select = ["E4", "E7", "E9", "F", "UP", "C4", "SIM", "I", "S", "C90", "PT", "RET"
 ignore = ["UP042", "S603", "S606", "S607", "S310"]
 
 [tool.ruff.lint.per-file-ignores]
+# - every suppression lives here; code carries no inline `# noqa`
 # - asserts are the assertion mechanism in tests
 # - PT009/PT027/PT018 want bare `assert`; the suite is unittest.TestCase by design
 # - N802/N803: unittest hooks (`stopTest`) and test doubles keep the upstream names
-"scripts/tests/**" = ["S101", "PT009", "PT027", "PT018", "N802", "N803"]
+# - S106/S307: fixed test credentials and a deliberate `eval` of the project's own graph
+"scripts/tests/**" = ["S101", "PT009", "PT027", "PT018", "N802", "N803", "S106", "S307"]
 # - ComfyUI calls INPUT_TYPES / IS_CHANGED by name, so they cannot be snake_case
 "scripts/config/comfyui/ltx_prompt_cache.py" = ["N802"]
 # - ctypes structures mirror the Win32 job-object names verbatim
 "scripts/launchers/launch_util.py" = ["N801"]
+# - the Kobold UI binds all interfaces by design; that is the documented default
+"scripts/launchers/launcher_config.py" = ["S104"]
+# - parses a local, project-owned vcxproj; no untrusted XML is read
+"scripts/tests/cases/llamacpp/hrx/hrx_update_validation.py" = ["S314"]
 
 [tool.ruff.lint.mccabe]
 # - gate at a level the launchers already meet; tighten separately
