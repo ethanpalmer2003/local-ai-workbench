@@ -12,6 +12,7 @@
 - Routine reads, Git status/diff/log, static checks and task-owned runs under five minutes are allowed.
 - Get approval for package changes, pushes, deletion, persistent services and runs expected over five minutes. Prior approval covers the agreed task and routine retries.
 - Respect explicit test deferrals. Never infer permission for live tests from a TODO or saved result.
+- Fix a defect in code you are already touching, then and there. Record a larger unrelated fix as a TODO entry.
 - Before native/GPU work, servers, process discovery or diagnostics, state execution context. When it affects results, check the actual token with `C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.runtime.execution_context`; record it with benchmark evidence.
 - AppContainer and administrator elevation are separate. Each invocation uses its current tool policy; previous outside-sandbox approval does not change later defaults.
 - Before manual llama-server startup, check `launch_util.llama_server_running()`; do not stop an unrelated session. Port policy: [shared launcher helpers](scripts/launchers/shared/README.md).
