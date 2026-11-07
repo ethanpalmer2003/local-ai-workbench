@@ -61,6 +61,16 @@ def security_audit() -> tuple[int, str]:
     return 1, f"[FAIL] {findings} known advisor{'y' if findings == 1 else 'ies'} in the installed environment"
 
 
+def declaration_check() -> int:
+    """deptry: every import is covered by a pin, and no declared pin is unreachable."""
+    checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/deptry.exe"
+    return subprocess.run(
+        [str(checker), "scripts", "--requirements-files", "scripts/requirements.txt"],
+        cwd=project_cfg.BASE_DIR,
+        check=False,
+    ).returncode
+
+
 def format_check() -> int:
     """Formatting is optional: the codebase keeps hand-wrapped lines ruff format would join."""
     checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/ruff.exe"
@@ -75,9 +85,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-format-check", action="store_true", help="skip the ruff format comparison")
     parser.add_argument("--prune", action="store_true", help="list installed packages outside the import graph")
+    parser.add_argument("--remove", action="store_true", help="with --prune: uninstall those packages")
     args = parser.parse_args(argv)
     if args.prune:
-        return dependencies.main()
+        return dependencies.main(remove=args.remove)
 
     print("=== STRUCTURE AND DOCUMENTATION ===", flush=True)
     structure_status = structure_docs.main()
@@ -123,6 +134,8 @@ def main(argv: list[str] | None = None) -> int:
     print("\n=== DEPENDENCY HYGIENE ===", flush=True)
     drift = dependencies.drift_issues()
     print(f"{counts['pinned']} pinned, {counts['installed']} installed, {counts['unused']} unused")
+    declaration_status = declaration_check()
+    print("[OK] Imports match the pins" if not declaration_status else "[FAIL] deptry reported issues")
     for issue in drift[:10]:
         print(f"[FAIL] {issue}")
     print("[OK] Requirements match the venv" if not drift else f"[FAIL] {len(drift)} drift entries")
@@ -137,6 +150,7 @@ def main(argv: list[str] | None = None) -> int:
             or spelling_status
             or audit_status
             or drift
+            or declaration_status
         )
     )
 

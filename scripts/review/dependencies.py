@@ -2,6 +2,9 @@
 
 import ast
 import re
+import shutil
+import subprocess
+import sys
 from importlib.metadata import distributions, packages_distributions
 from pathlib import Path
 from typing import Any
@@ -19,6 +22,7 @@ TOOL_ROOTS = {
     "basedpyright",
     "codespell",
     "pip-audit",
+    "deptry",
     "coverage",
     "pre-commit",
     "virtualenv",
@@ -155,14 +159,29 @@ def summary() -> dict[str, int]:
     }
 
 
-def main() -> int:
+def uninstall(names: list[str]) -> int:
+    """Remove the packages with uv; the project venv is the only thing touched."""
+    uv = shutil.which("uv")
+    if uv is None:
+        print("[FAIL] uv is not on PATH; run the printed uninstall command yourself")
+        return 1
+    return subprocess.run(
+        [uv, "pip", "uninstall", "--python", sys.executable, *names], cwd=project_cfg.BASE_DIR, check=False
+    ).returncode
+
+
+def main(remove: bool = False) -> int:
     unused = unused_packages()
     drift = drift_issues()
     print(f"{len(unused)} installed package(s) are outside the import graph")
     for name, version in unused:
         print(f"  {name} {version}")
-    if unused:
+    if unused and not remove:
         print("\nRemove with:\n  uv pip uninstall " + " ".join(name for name, _ in unused))
+    if unused and remove:
+        status = uninstall([name for name, _ in unused])
+        print(f"[{'OK' if status == 0 else 'FAIL'}] uninstall exited {status}")
+        drift = drift_issues()
     print(f"\n{len(drift)} requirement/venv drift entry(s)")
     for issue in drift:
         print(f"  {issue}")
