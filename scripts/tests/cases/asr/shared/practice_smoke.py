@@ -38,17 +38,7 @@ def post(base, path, body, binary=False):
         return data if path == "/v1/audio/speech" else json.loads(data)
 
 
-def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):  # noqa: C901
-    chat_port, proxy_port = 19194, 19195
-    process, gateway, thread = None, None, None
-    token = None
-    base = f"http://127.0.0.1:{proxy_port}"
-    errors = []
-
-    def on_server(value):
-        nonlocal gateway
-        gateway = value
-
+def _gateway_thread(runtime, engine, proxy_port, chat_port, on_server, errors) -> threading.Thread:
     def run_gateway():
         try:
             if runtime == "llamacpp":
@@ -67,6 +57,101 @@ def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):  # noq
         except Exception as error:
             errors.append(str(error))
 
+    thread = threading.Thread(target=run_gateway, daemon=True)
+    thread.start()
+    return thread
+
+
+def _start_chat(runtime, chat_port):
+    if runtime == "llamacpp":
+        launch_util.llama_server_running()  # Required existing-session discovery; never stop it.
+        command = chat_command()
+        files = (cfg.GEMMA_AUDIO_ASR.exe, cfg.GEMMA_AUDIO_ASR.model)
+    else:
+        command = kobold.server_command("shared")
+        files = (cfg.KOBOLDCPP_SERVICE.exe, cfg.GEMMA_AUDIO_ASR.model)
+    command[command.index("--port") + 1] = str(chat_port)
+    return native.start_server(
+        command,
+        files,
+        chat_port,
+        f"Practice {runtime} smoke",
+        lambda: http_ready(
+            f"http://127.0.0.1:{chat_port}" + ("/health" if runtime == "llamacpp" else "/api/extra/version")
+        ),
+        lambda: native.matches(command),
+        component_key=runtime,
+    )
+
+
+def _await_gateway(base, errors):
+    deadline = time.monotonic() + 10
+    while not http_ready(base + "/health"):
+        if errors or time.monotonic() > deadline:
+            raise RuntimeError(str(errors) or "Practice gateway did not start")
+        time.sleep(0.05)
+
+
+def _stream_pcm(base, token, pcm):
+    events = []
+    started = time.perf_counter()
+    for offset in range(0, len(pcm), 4096):
+        block = pcm[offset : offset + 4096]
+        time.sleep(max(0, (offset + len(block)) / 32000 - (time.perf_counter() - started)))
+        events.extend(post(base, f"/asr/live/{token}/audio", block, True)["events"])
+    for _ in range(100):
+        if any(event.get("type") == "transcript.text.done" for event in events):
+            break
+        events.extend(post(base, f"/asr/live/{token}/audio", b"", True)["events"])
+        time.sleep(0.03)
+    return events
+
+
+def _chat_reply(base, prompt):
+    reply = post(
+        base,
+        "/v1/chat/completions",
+        {
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 192,
+            "stream": False,
+            "reasoning_effort": "none",
+            "chat_template_kwargs": {"enable_thinking": False},
+        },
+    )
+    text = reply["choices"][0]["message"]["content"]
+    if not text or not text.strip():
+        raise RuntimeError(f"Gemma returned no spoken content: {reply}")
+    return text
+
+
+def _speech(base, text):
+    audio = post(
+        base, "/v1/audio/speech", {"input": text, "voice": "af_heart", "response_format": "wav", "stream": False}
+    )
+    if audio[:4] != b"RIFF":
+        raise RuntimeError("Empty chat reply or invalid Kokoro WAV")
+    return audio
+
+
+def _final_transcript(events):
+    finals = [event for event in events if event.get("type") == "transcript.text.done"]
+    if len(finals) != 1 or not finals[0].get("text"):
+        raise RuntimeError(f"Expected one complete automatic transcript: {events}")
+    return finals[0]
+
+
+def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):
+    chat_port, proxy_port = 19194, 19195
+    process, gateway, thread = None, None, None
+    token = None
+    base = f"http://127.0.0.1:{proxy_port}"
+    errors = []
+
+    def on_server(value):
+        nonlocal gateway
+        gateway = value
+
     def cleanup():
         if gateway:
             gateway.shutdown()
@@ -79,32 +164,9 @@ def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):  # noq
         nonlocal process, thread
         if launch_util.port_listening(proxy_port):
             raise RuntimeError("Smoke gateway port occupied; no session stopped")
-        if runtime == "llamacpp":
-            launch_util.llama_server_running()  # Required existing-session discovery; never stop it.
-            command = chat_command()
-            files = (cfg.GEMMA_AUDIO_ASR.exe, cfg.GEMMA_AUDIO_ASR.model)
-        else:
-            command = kobold.server_command("shared")
-            files = (cfg.KOBOLDCPP_SERVICE.exe, cfg.GEMMA_AUDIO_ASR.model)
-        command[command.index("--port") + 1] = str(chat_port)
-        process = native.start_server(
-            command,
-            files,
-            chat_port,
-            f"Practice {runtime} smoke",
-            lambda: http_ready(
-                f"http://127.0.0.1:{chat_port}" + ("/health" if runtime == "llamacpp" else "/api/extra/version")
-            ),
-            lambda: native.matches(command),
-            component_key=runtime,
-        )
-        thread = threading.Thread(target=run_gateway, daemon=True)
-        thread.start()
-        deadline = time.monotonic() + 10
-        while not http_ready(base + "/health"):
-            if errors or time.monotonic() > deadline:
-                raise RuntimeError(str(errors) or "Practice gateway did not start")
-            time.sleep(0.05)
+        process = _start_chat(runtime, chat_port)
+        thread = _gateway_thread(runtime, engine, proxy_port, chat_port, on_server, errors)
+        _await_gateway(base, errors)
 
     timer = BenchmarkLifecycle(lambda: str(process.pid) if process else "reused-matching-server", cleanup)
 
@@ -121,47 +183,15 @@ def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):  # noq
             timer.warmup(lambda: http_ready(base + "/health"))
             vad_timer.prepare(start_vad, combined=True)
             vad_timer.warmup(lambda: post(base, f"/asr/live/{token}/audio", bytes(1024), True))
-            events = []
             with timer.request() as timing:
                 started = time.perf_counter()
-                for offset in range(0, len(pcm), 4096):
-                    block = pcm[offset : offset + 4096]
-                    time.sleep(max(0, (offset + len(block)) / 32000 - (time.perf_counter() - started)))
-                    events.extend(post(base, f"/asr/live/{token}/audio", block, True)["events"])
-                for _ in range(100):
-                    if any(event.get("type") == "transcript.text.done" for event in events):
-                        break
-                    events.extend(post(base, f"/asr/live/{token}/audio", b"", True)["events"])
-                    time.sleep(0.03)
-                finals = [event for event in events if event.get("type") == "transcript.text.done"]
-                if len(finals) != 1 or not finals[0].get("text"):
-                    raise RuntimeError(f"Expected one complete automatic transcript: {events}")
-                reply = post(
-                    base,
-                    "/v1/chat/completions",
-                    {
-                        "messages": [
-                            {"role": "user", "content": finals[0]["text"] + " Reply in one short English sentence."}
-                        ],
-                        "max_tokens": 192,
-                        "stream": False,
-                        "reasoning_effort": "none",
-                        "chat_template_kwargs": {"enable_thinking": False},
-                    },
-                )
-                text = reply["choices"][0]["message"]["content"]
-                if not text or not text.strip():
-                    raise RuntimeError(f"Gemma returned no spoken content: {reply}")
-                audio = post(
-                    base,
-                    "/v1/audio/speech",
-                    {"input": text, "voice": "af_heart", "response_format": "wav", "stream": False},
-                )
-                if not text or audio[:4] != b"RIFF":
-                    raise RuntimeError("Empty chat reply or invalid Kokoro WAV")
+                events = _stream_pcm(base, token, pcm)
+                final = _final_transcript(events)
+                text = _chat_reply(base, final["text"] + " Reply in one short English sentence.")
+                audio = _speech(base, text)
             report.update(
                 status="completed",
-                transcript=finals[0]["text"],
+                transcript=final["text"],
                 reply=text,
                 wav_bytes=len(audio),
                 timing=timing.record(),
@@ -174,10 +204,8 @@ def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):  # noq
                     ),
                     None,
                 ),
-                final_event=finals[0],
-                final_after_vad_end_seconds=finals[0]["observed_at"]
-                - started
-                - (finals[0]["speech_end_sample"] - 512) / 16000,
+                final_event=final,
+                final_after_vad_end_seconds=final["observed_at"] - started - (final["speech_end_sample"] - 512) / 16000,
             )
     except Exception as error:
         report.update(status="failed", error=str(error))

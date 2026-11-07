@@ -5,9 +5,7 @@ Regenerate with the command in the tests/tooling notes rather than editing by ha
 
 | Complexity | Function |
 | ---: | --- |
-| 22 | `scripts/tests/cases/asr/shared/practice_smoke.py:41` `exercise` |
 | 22 | `scripts/benchmarks/coding_agents/shared/benchmark_requests.py:232` `handler` |
-| 19 | `scripts/tools/model_admin.py:268` `command_replace` |
 | 16 | `scripts/tests/cases/audiocpp/audiocpp_streaming.py:140` `run_comparison` |
 | 16 | `scripts/tests/cases/audiocpp/audiocpp_backend_compare.py:306` `main` |
 | 15 | `scripts/tests/cases/shared/live_frameworks.py:301` `running_framework` |
@@ -54,4 +52,4 @@ Regenerate with the command in the tests/tooling notes rather than editing by ha
 | 11 | `scripts/benchmarks/llamacpp/benchmark_context_stream.py:66` `stream_request` |
 | 11 | `scripts/benchmarks/asr/asr_resident_compare.py:170` `main` |
 
-Remaining: 48.
+Remaining: 46.
