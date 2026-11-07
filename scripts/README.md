@@ -27,7 +27,7 @@
 
 ## Storage
 
-- `frameworks/<component>/`: third-party installations; `data/huggingface/models/<component>/`: weights.
+- `frameworks/<component>/`: third-party installations, grouped under `model_servers/` when the component wraps other engines; `data/huggingface/models/<component>/`: weights.
 - `scripts/{config,launchers}/<component>/`: owned configuration/code; see [folder rules](../.agents/FOLDERS.md) for shared and role-wide placement.
 - `scripts/tests/{cases,ui}/<component>/`: test sources/assets. New results mirror cases under `tests/output/`; historical output stays in place.
 - `scripts/benchmarks/<area>/`: performance runners and shared measurement support. New results go under `benchmarks/output/`; historical test output stays in place.

@@ -34,8 +34,7 @@ def pi_tools() -> tuple[ToolSpec, ...]:
 def benchmark_tools() -> tuple[ToolSpec, ...]:
     return (
         ToolSpec(
-            "benchmarks/aider-polyglot", "", ReleaseType.SOURCE, repo="Aider-AI/polyglot-benchmark",
-            group="benchmarks",
+            "benchmarks/aider-polyglot", "", ReleaseType.SOURCE, repo="Aider-AI/polyglot-benchmark", group="benchmarks"
         ),
         ToolSpec("benchmarks/club-rdna16", "", ReleaseType.SNAPSHOT, repo="5p00kyy/club-rdna16", group="benchmarks"),
         ToolSpec(
@@ -107,6 +106,11 @@ TOOLS = [
         channel="nightly",
     ),
     ToolSpec("lemonade_server", "", ReleaseType.MANUAL, in_use=False),
+    # - Model servers are parked until one is installed and exercised: their upstream ships
+    #   its own launcher, so a version check would only restate the vendor's updater.
+    #   LocalAI publishes no Windows binary; Text generation WebUI ships portable zips.
+    ToolSpec("localai", "", ReleaseType.MANUAL, repo="mudler/LocalAI", in_use=False),
+    ToolSpec("text-generation-webui", "", ReleaseType.MANUAL, repo="oobabooga/text-generation-webui", in_use=False),
     ToolSpec(
         name=project_cfg.SDCPP_ROCM_DIR.relative_to(project_cfg.FRAMEWORKS_DIR).as_posix(),
         repo="leejet/stable-diffusion.cpp",
@@ -194,7 +198,9 @@ def checkout_drift(folder: Path, managed: set[str]) -> list[tuple[str, str, str,
         local = subprocess.run([*command, "rev-parse", "HEAD"], capture_output=True, text=True, check=False)
         if not branch or not local.stdout.strip():
             continue
-        latest = shared.github.get_json(f"{shared.github.API}/repos/{remote.group(1)}/{remote.group(2)}/commits/{branch}")
+        latest = shared.github.get_json(
+            f"{shared.github.API}/repos/{remote.group(1)}/{remote.group(2)}/commits/{branch}"
+        )
         if local.stdout.strip() != latest["sha"]:
             drift.append((checkout.name, local.stdout.strip()[:7], latest["sha"][:7], checkout.name in managed))
     return drift
@@ -225,7 +231,9 @@ def process_bat(
         folder = dest_dir / tool.tracked_checkouts
         drift = checkout_drift(folder, {name for name, _url in vendor}) if tool.tracked_checkouts else []
         for name, local_sha, remote_sha, via_vendor in drift:
-            print(f"  behind: {name} {local_sha} -> {remote_sha} ({'vendor updater' if via_vendor else 'updater pull'})")
+            print(
+                f"  behind: {name} {local_sha} -> {remote_sha} ({'vendor updater' if via_vendor else 'updater pull'})"
+            )
         core_stale = local.stdout.strip() != latest
         vendor_stale = [entry for entry in drift if entry[3]]
         if not core_stale and not drift:
