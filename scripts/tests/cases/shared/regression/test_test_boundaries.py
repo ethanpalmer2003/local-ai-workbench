@@ -202,6 +202,31 @@ class TestBoundaries(unittest.TestCase):
         self.assertNotIn("audiocpp", quick_validation.PROBES)
         self.assertIn("ming3-tts", quick_validation.PROBES)
 
+    def test_every_test_case_class_is_registered(self):
+        """A module missing from run.py is dead coverage; the suite selects classes by name."""
+        tree = ast.parse((project_cfg.TESTS_DIR / "run.py").read_text(encoding="utf-8-sig"))
+        registered = {
+            element.id
+            for call in ast.walk(tree)
+            if isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute) and call.func.attr == "main"
+            for keyword in call.keywords
+            if keyword.arg == "extra_groups"
+            for element in ast.walk(keyword.value)
+            if isinstance(element, ast.Name)
+        }
+        missing = []
+        for path in sorted(project_cfg.TEST_CASES_DIR.rglob("test_*.py")):
+            if {"retired", "output"} & set(path.parts):
+                continue
+            for node in ast.parse(path.read_text(encoding="utf-8-sig")).body:
+                if not isinstance(node, ast.ClassDef) or not any(
+                    "TestCase" in ast.unparse(base) for base in node.bases
+                ):
+                    continue
+                if node.name not in registered:
+                    missing.append(f"{path.relative_to(project_cfg.TEST_CASES_DIR).as_posix()}:{node.name}")
+        self.assertEqual(missing, [], "register the class in scripts/tests/run.py extra_groups")
+
     def test_regressions_do_not_reintroduce_unconfigured_pid_mocks(self):
         offenders = []
         for path in project_cfg.TEST_CASES_DIR.rglob("*.py"):

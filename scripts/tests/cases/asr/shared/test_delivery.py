@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 from scripts.config.shared import speech_delivery
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import delivery, live, practice_models
+from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.paths import CasePaths
 
 
@@ -78,6 +79,7 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(error.call_args.args[1], 400)
         save.assert_not_called()
 
+    @fixture_processes()
     def test_browser_delivery_negotiation(self):
         result = subprocess.run(
             [cfg.PI_CLIENT.node_cmd, str(Path(__file__).with_name("delivery.cjs"))],
