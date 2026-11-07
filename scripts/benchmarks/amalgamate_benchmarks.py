@@ -24,8 +24,8 @@ from datetime import datetime
 from pathlib import Path
 
 from scripts.benchmarks.shared.paths import BenchmarkPaths
-from scripts.config import project_config as project_cfg
 from scripts.benchmarks.shared.timing import timed
+from scripts.config import project_config as project_cfg
 
 SOURCE_DIRS = (
     BenchmarkPaths(str(project_cfg.SCRIPTS_DIR / "benchmarks/llamacpp/benchmark_llamacpp_profiles.py")).output,

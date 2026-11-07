@@ -5,9 +5,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from scripts.launchers.runtime.gpu_memory import GpuMemorySnapshot
 from scripts.benchmarks.shared import vram
-from scripts.tests.shared.paths import RunPaths, CasePaths
+from scripts.launchers.runtime.gpu_memory import GpuMemorySnapshot
+from scripts.tests.shared.paths import CasePaths, RunPaths
 
 
 class BenchmarkVramTests(unittest.TestCase):

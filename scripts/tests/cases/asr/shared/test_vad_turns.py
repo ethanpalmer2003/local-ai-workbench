@@ -1,15 +1,15 @@
 """Model-free turn ownership, pre-roll, VAD option scope and duplex HTTP contracts."""
 
-from http.server import BaseHTTPRequestHandler
-from pathlib import Path
 import queue
 import threading
-from types import SimpleNamespace
 import unittest
+from http.server import BaseHTTPRequestHandler
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from scripts.launchers.audiocpp.asr_turns import Turns
 from scripts.launchers.asr.shared.vad import command, parse_event
+from scripts.launchers.audiocpp.asr_turns import Turns
 from scripts.launchers.shared.transport.streaming_http import StreamingPost
 from scripts.tests.shared.http_server import server
 

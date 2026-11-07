@@ -1,7 +1,5 @@
 """Strata screening guards, streamed accounting and fixed-answer grading without inference."""
 
-from scripts.tests.shared.process_fixtures import running_process
-
 import io
 import json
 import time
@@ -10,9 +8,10 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from scripts.launchers.strata.strata_pi import StrataConnection
 from scripts.benchmarks.coding_agents import strata_profiles as screen
+from scripts.launchers.strata.strata_pi import StrataConnection
 from scripts.tests.shared.paths import CasePaths
+from scripts.tests.shared.process_fixtures import running_process
 
 
 class StrataProfileTests(unittest.TestCase):

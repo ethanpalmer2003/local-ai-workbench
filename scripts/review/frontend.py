@@ -144,10 +144,7 @@ def _html_target_resolves(path: Path, target: str) -> bool:
     rest = target
     while rest.startswith("../"):
         rest = rest[3:]
-    for root in (project_cfg.BASE_DIR, project_cfg.SCRIPTS_DIR):
-        if (root / rest).is_file():
-            return True
-    return False
+    return any((root / rest).is_file() for root in (project_cfg.BASE_DIR, project_cfg.SCRIPTS_DIR))
 
 
 def _html_asset_issues(path: Path, text: str) -> list[str]:

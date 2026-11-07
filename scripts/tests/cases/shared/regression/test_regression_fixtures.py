@@ -7,9 +7,9 @@ import wave
 from subprocess import TimeoutExpired
 from unittest.mock import patch
 
-from scripts.tests.shared.process_fixtures import running_process, exited_process
 from scripts.tests.shared.http_fixtures import http_response, json_response
 from scripts.tests.shared.media_fixtures import pcm_wav
+from scripts.tests.shared.process_fixtures import exited_process, running_process
 
 
 class RegressionFixtures(unittest.TestCase):
@@ -37,11 +37,10 @@ class RegressionFixtures(unittest.TestCase):
 
     def test_http_context_closes_and_never_swallows_failures(self):
         response = http_response(b"\x00binary", headers={"Content-Range": "bytes 0-6/7"})
-        with self.assertRaisesRegex(ValueError, "fixture failure"):
-            with response as opened:
-                self.assertEqual(opened.read(), b"\x00binary")
-                self.assertEqual(opened.headers.get("content-range"), "bytes 0-6/7")
-                raise ValueError("fixture failure")
+        with self.assertRaisesRegex(ValueError, "fixture failure"), response as opened:
+            self.assertEqual(opened.read(), b"\x00binary")
+            self.assertEqual(opened.headers.get("content-range"), "bytes 0-6/7")
+            raise ValueError("fixture failure")
         response.close.assert_called_once()
         self.assertEqual(json_response({"text": "caf\u00e9"}).json(), {"text": "caf\u00e9"})
 

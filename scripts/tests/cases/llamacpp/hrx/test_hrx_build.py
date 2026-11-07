@@ -1,19 +1,18 @@
 """Build-step subprocess failures and cancellation must not leave owned processes running."""
 
-from scripts.tests.shared.process_fixtures import exited_process
-
 import hashlib
 import json
 import sys
 import unittest
-from scripts.tests.shared.model_free import fixture_processes
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from scripts.download.frameworks.llamacpp.hrx import build as build_hrx
 from scripts.tests.cases.llamacpp.hrx import hrx_update_validation
+from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.paths import CasePaths, RunPaths
+from scripts.tests.shared.process_fixtures import exited_process
 
 
 class HrxBuildTests(unittest.TestCase):

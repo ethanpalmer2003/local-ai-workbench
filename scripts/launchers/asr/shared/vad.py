@@ -8,7 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from scripts.config import project_config as project_cfg
-from scripts.launchers import launcher_config as cfg, launch_util
+from scripts.launchers import launch_util
+from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.services.process import stop_owned
 

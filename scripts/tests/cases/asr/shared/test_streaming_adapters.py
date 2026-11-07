@@ -2,9 +2,9 @@
 
 import ctypes
 import io
+import unittest
 from pathlib import Path
 from types import SimpleNamespace
-import unittest
 from unittest.mock import Mock, patch
 
 from scripts.launchers.asr.parakeetcpp.streaming import Model, clean_transcript

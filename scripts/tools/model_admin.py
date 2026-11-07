@@ -17,7 +17,6 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg

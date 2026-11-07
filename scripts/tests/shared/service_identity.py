@@ -25,6 +25,7 @@ def endpoint_identity(port: int, model: str) -> str:
 
 def audio_identity() -> str:
     import psutil
+
     from scripts.launchers import launcher_config as cfg
 
     identities = []

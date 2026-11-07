@@ -1,7 +1,5 @@
 """Canonical model registry API; consumers import this package, not category catalogs."""
 
-from pathlib import Path
-
 from .catalog import CATALOG_PATH as CATALOG_PATH
 from .catalog import IDS_PATH as IDS_PATH
 from .catalog import MODELS as MODELS

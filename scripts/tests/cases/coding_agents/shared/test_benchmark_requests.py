@@ -6,13 +6,14 @@ import unittest
 from http.server import BaseHTTPRequestHandler
 
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
+from scripts.benchmarks.coding_agents.shared.benchmark_requests import (
+    BenchmarkRelay,
+    observe_chunk,
+    request_settings,
+    summarize_requests,
+)
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
-from scripts.benchmarks.coding_agents.shared.benchmark_requests import BenchmarkRelay
-from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk
-from scripts.benchmarks.coding_agents.shared.benchmark_requests import request_settings
-from scripts.benchmarks.coding_agents.shared.benchmark_requests import summarize_requests
-from scripts.tests.shared.http_server import request
-from scripts.tests.shared.http_server import server
+from scripts.tests.shared.http_server import request, server
 
 SETTINGS = {"temperature": 0, "thinking": "low", "reasoning_budget": 2048, "seed": 42}
 USAGE = {

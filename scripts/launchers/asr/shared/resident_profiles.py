@@ -1,8 +1,9 @@
 """ASR resident command catalog shared by launchers and benchmark consumers."""
 
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Any
+
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
@@ -100,7 +101,7 @@ def profiles(port: int) -> dict[str, tuple[list[str], Path]]:
         )
     for key, engine in (("whispercpp-vulkan-fa", "vulkan-fa"), ("koboldcpp-whisper", "internal")):
         result[key] = (whisper_command(engine, port), whisper_model())
-    from scripts.launchers.asr.llamacpp import qwen3_asr, gemma_audio
+    from scripts.launchers.asr.llamacpp import gemma_audio, qwen3_asr
 
     for key, backend, settings in (
         ("llamacpp-qwen-1.7b", qwen3_asr, cfg.QWEN3_ASR),

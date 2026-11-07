@@ -1,6 +1,7 @@
 """Configured llama.cpp audio-chat ASR; reuse Gemma transport and native lifecycle."""
 
-from scripts.launchers import launcher_config as cfg, launch_util
+from scripts.launchers import launch_util
+from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.llamacpp import gemma_audio
 from scripts.launchers.shared.services import native
 

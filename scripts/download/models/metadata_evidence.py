@@ -1,7 +1,6 @@
 """Attach published quality and existing measured evidence without running benchmarks."""
 
 import json
-from pathlib import Path
 from typing import Any
 
 from scripts.config import project_config as project_cfg

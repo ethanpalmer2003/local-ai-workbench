@@ -12,8 +12,7 @@ from scripts.config import paths
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector as transcription
-from scripts.launchers.koboldcpp import external_llm
-from scripts.launchers.koboldcpp import kokoro
+from scripts.launchers.koboldcpp import external_llm, kokoro
 from scripts.launchers.launch_util import backend_ready, backend_running, launch_module, launch_process, port_listening
 from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 from scripts.launchers.runtime import shared_gpu

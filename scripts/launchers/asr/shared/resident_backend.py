@@ -1,10 +1,11 @@
 """Resident file-transcription lifecycle from canonical ASR profiles."""
 
-import os
 import json
+import os
 from pathlib import Path
 
-from scripts.config import models as model_cfg, project_config as project_cfg
+from scripts.config import models as model_cfg
+from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import requests

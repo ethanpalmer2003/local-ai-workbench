@@ -14,7 +14,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
-from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle, BenchmarkContractError
+from scripts.benchmarks.shared.benchmark import BenchmarkContractError, BenchmarkLifecycle
 
 
 def request_settings(body: dict[str, Any], endpoint: BenchmarkEndpoint, settings: dict[str, Any]) -> dict[str, Any]:

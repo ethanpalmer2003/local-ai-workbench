@@ -131,7 +131,7 @@ def inspect(path: Path, *, full_arrays=False, tensor_index=False) -> dict[str, A
         with path.open("rb") as source:
             source.seek(4)
             values = struct.unpack("<11i", source.read(44))
-        keys = "vocabulary audio_context audio_width audio_heads audio_layers text_context text_width text_heads text_layers mel_bins file_type".split()
+        keys = ["vocabulary", "audio_context", "audio_width", "audio_heads", "audio_layers", "text_context", "text_width", "text_heads", "text_layers", "mel_bins", "file_type"]
         return {"format": "ggml", "metadata": dict(zip(keys, values)), "limits": ["Legacy GGML header; no inferred language list."]}
     return {"format": path.suffix.lower().lstrip("."), "metadata": {},
             "limits": ["Opaque/unrecognized format; pickle and model code are never executed. Use trusted sidecars/source metadata."]}

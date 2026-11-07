@@ -1,16 +1,16 @@
 """The same safety contracts run against every reusable ASR server adapter."""
 
-from pathlib import Path
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
-from scripts.launchers.asr.whispercpp import server as whisper
-from scripts.launchers.asr.llamacpp import qwen3_asr, gemma_audio
+from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr.llamacpp import gemma_audio, qwen3_asr
 from scripts.launchers.asr.shared.resident_profiles import profiles
+from scripts.launchers.asr.whispercpp import server as whisper
 from scripts.tests.shared.backend_fixtures import startup_fixture
 from scripts.tests.shared.paths import CasePaths
-from scripts.benchmarks.shared.resident_http import ResidentHttp
 
 # Extend this matrix for reusable servers; keep isolated/in-process policies separate.
 ADAPTERS = ((whisper, "WHISPERCPP_ASR"), (qwen3_asr, "QWEN3_ASR"), (gemma_audio, "GEMMA_AUDIO_ASR"))

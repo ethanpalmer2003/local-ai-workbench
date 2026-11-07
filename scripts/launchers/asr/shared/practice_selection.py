@@ -1,8 +1,8 @@
 """Validated speech-setup switching; the launcher owns process changes after gateway shutdown."""
 
 import threading
-from typing import Any
 from contextlib import contextmanager
+from typing import Any
 
 from scripts.launchers.asr.shared import practice_asr, practice_models
 from scripts.launchers.llamacpp import chat_models

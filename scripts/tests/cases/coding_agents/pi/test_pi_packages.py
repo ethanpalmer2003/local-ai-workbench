@@ -8,8 +8,8 @@ from typing import Any
 from unittest.mock import patch
 
 from scripts.config.coding_agents.pi import packages
-from scripts.download.frameworks.coding_agents.pi import packages as manager
 from scripts.download.frameworks import update_config
+from scripts.download.frameworks.coding_agents.pi import packages as manager
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import llamacpp, llamacpp_coding
 from scripts.tests.shared.paths import CasePaths

@@ -12,17 +12,16 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from scripts.tests.shared import benchmark_config as benchmark_cfg
+from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk, summarize_requests
+from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
+from scripts.benchmarks.shared.reporting import report_run
+from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.strata import strata_pi
-from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk
-from scripts.benchmarks.coding_agents.shared.benchmark_requests import summarize_requests
+from scripts.tests.shared import benchmark_config as benchmark_cfg
 from scripts.tests.shared.backends import listening
-from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
-from scripts.benchmarks.shared.reporting import report_run
-from scripts.benchmarks.shared.vram import BenchmarkVram
 
 PREFIX = "\n".join(
     f"def example_{i}(values):\n    return [value + {i} for value in values if value % 7 == {i % 7}]\n"

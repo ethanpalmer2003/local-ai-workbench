@@ -9,18 +9,18 @@ from dataclasses import asdict
 from threading import Event, Thread
 from typing import Any
 
-from scripts.tests.shared import benchmark_config as benchmark_cfg
+from scripts.benchmarks.koboldcpp.kobold_stack_vram import generate
 from scripts.config.shared import image_on_demand as demand_cfg
-from scripts.launchers.runtime import image_on_demand as demand
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.koboldcpp import kobold
+from scripts.launchers.runtime import image_on_demand as demand
 from scripts.launchers.runtime import shared_gpu
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
-from scripts.launchers.koboldcpp import kobold
 from scripts.tests.cases.koboldcpp.kobold_image_swap import SPEECH
-from scripts.benchmarks.koboldcpp.kobold_stack_vram import generate
-from scripts.tests.shared.http_server import request
 from scripts.tests.shared import backends
+from scripts.tests.shared import benchmark_config as benchmark_cfg
+from scripts.tests.shared.http_server import request
 from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.resources import summarize_resources, watch_resources
 

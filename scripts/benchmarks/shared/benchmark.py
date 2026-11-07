@@ -1,18 +1,18 @@
 """Domain-neutral benchmark lifecycle: setup and warmup never enter request timing."""
 
+import math
+import statistics
+import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-import statistics
-import math
-import time
 from typing import Any, TypeVar
 
 T = TypeVar("T")
 # One timing owner for every domain; adapters must not estimate/subtract hidden loading costs.
 
 
-def measure_cold_process(operation: Callable[[], T]) -> tuple[T, dict[str, Any]]:
+def measure_cold_process[T](operation: Callable[[], T]) -> tuple[T, dict[str, Any]]:
     """A whole-process diagnostic has no observable startup/load/inference split."""
     started = time.perf_counter()
     value = operation()

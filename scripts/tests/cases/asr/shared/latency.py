@@ -1,7 +1,7 @@
 """Brief paced ASR screen: incremental text and explicit/automatic end-of-turn delay."""
 
-import base64
 import argparse
+import base64
 import hashlib
 import json
 import queue
@@ -9,19 +9,20 @@ import subprocess
 import threading
 from typing import Any, TextIO
 
-from scripts.config import project_config as project_cfg
+from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
+from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.config import models as model_cfg
-from scripts.launchers import launcher_config as cfg, launch_util
-from scripts.launchers.asr.shared.file_cli import environment
+from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
-from scripts.launchers.asr.shared.resident_profiles import profiles, audio_config
+from scripts.launchers import launch_util
+from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr.shared.file_cli import environment
+from scripts.launchers.asr.shared.resident_profiles import audio_config, profiles
+from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.launchers.shared.services.process import stop_owned
-from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.tests.cases.asr.shared.corpus import prepare_corpus
-from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.tests.shared.paths import CasePaths
-from scripts.benchmarks.shared.resident_http import ResidentHttp
 
 
 class Client:

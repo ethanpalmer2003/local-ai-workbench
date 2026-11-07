@@ -9,13 +9,13 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from typing import Any
 
+from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.tests.shared.paths import RunPaths
-from scripts.benchmarks.shared.vram import BenchmarkVram
 
 NATIVE_BACKENDS = {"kobold": "koboldcpp", "image": "sdcpp", "audio": "audiocpp"}
 
@@ -47,9 +47,9 @@ def require_free(backend: str) -> None:
 
 
 def worker(backend: str, usage_profile: str = "standalone", llm: str = "kobold") -> None:
-    from scripts.launchers.sdcpp import proxy as sdcpp_proxy
     from scripts.launchers.audiocpp import audiocpp_proxy
     from scripts.launchers.koboldcpp import kobold
+    from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 
     require_free(backend)
     cfg.LAUNCH.console_terminal_mode = cfg.ConsoleTerminalLaunchMode.MERGE

@@ -3,10 +3,10 @@
 import json
 import unittest
 
-from scripts.launchers.shared.media import text_processing
+from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import tts_text_processing
 from scripts.launchers.koboldcpp import kokoro
-from scripts.launchers import launcher_config as cfg
+from scripts.launchers.shared.media import text_processing
 
 
 class TextProcessingTests(unittest.TestCase):

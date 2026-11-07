@@ -8,8 +8,8 @@ from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from scripts.benchmarks.shared.paths import RunPaths
 from scripts.benchmarks.shared.benchmark import summarize_report
+from scripts.benchmarks.shared.paths import RunPaths
 
 BENCHMARK_REASONING_EFFORT = "low"
 

@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any
 
 from scripts.config import project_config as project_cfg
-from scripts.launchers import launcher_config as cfg
 from scripts.config.models.gguf_metadata import inspect_metadata
+from scripts.launchers import launcher_config as cfg
 
 
 def available_voices(model_path: Path | None = None) -> list[dict[str, Any]]:

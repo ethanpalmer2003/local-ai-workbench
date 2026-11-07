@@ -1,11 +1,12 @@
 """Owned chunked POST with incremental SSE reads; no model or turn policy."""
 
+import contextlib
 import http.client
 import json
 import queue
 import threading
-from urllib.parse import urlsplit
 from typing import Any
+from urllib.parse import urlsplit
 
 
 class StreamingPost:
@@ -70,10 +71,8 @@ class StreamingPost:
         if self.connection.sock:
             import socket
 
-            try:
+            with contextlib.suppress(OSError):
                 self.connection.sock.shutdown(socket.SHUT_RDWR)
-            except OSError:
-                pass
         self.connection.close()
         if self.reader:
             self.reader.join(timeout=1)

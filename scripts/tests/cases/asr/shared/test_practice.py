@@ -2,20 +2,20 @@
 
 import io
 import json
-import subprocess
 import queue
+import subprocess
 import threading
-from pathlib import Path
-from email.message import Message
-from types import SimpleNamespace
 import unittest
+from email.message import Message
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector, server
 from scripts.launchers.asr.shared import live
-from scripts.launchers.asr.shared.segment_stream import SegmentStream
 from scripts.launchers.asr.shared.requests import parse
+from scripts.launchers.asr.shared.segment_stream import SegmentStream
 from scripts.launchers.audiocpp import asr
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.tests.shared.model_free import fixture_processes
@@ -24,8 +24,8 @@ from scripts.tests.shared.process_fixtures import running_process
 
 class PracticeTests(unittest.TestCase):
     def test_chat_model_commands_use_allowlisted_model_and_refuse_browser_paths(self):
-        from scripts.launchers.llamacpp import chat_models, language_practice
         from scripts.config import models
+        from scripts.launchers.llamacpp import chat_models, language_practice
         candidate = next(row for row in models.MODELS if row.group == 'llamacpp' and row.path != cfg.GEMMA_AUDIO_ASR.model and 'mmproj' not in row.path.name)
         command = language_practice.chat_command(candidate.label)
         self.assertEqual(command[command.index('-m') + 1], str(candidate.path))
@@ -34,8 +34,8 @@ class PracticeTests(unittest.TestCase):
             chat_models.path('C:/arbitrary.gguf')
 
     def test_llm_selection_is_allowlisted_and_shared_gemma_requires_same_weights(self):
-        from scripts.launchers.asr.shared.practice_selection import Selection
         from scripts.launchers.asr.shared.practice_runtime import PracticeRuntime
+        from scripts.launchers.asr.shared.practice_selection import Selection
         from scripts.launchers.llamacpp import chat_models
         controls = Selection(cfg.AsrStartupEngine.GEMMA_AUDIO, 'tts')
         runtime = PracticeRuntime.__new__(PracticeRuntime)
@@ -48,12 +48,13 @@ class PracticeTests(unittest.TestCase):
                    'llm': [{'id': 'allowed', 'available': True}, {'id': 'missing', 'available': False}]}
         with patch.object(controls, 'catalog', return_value=catalog):
             for key in ('C:/arbitrary.gguf', 'missing'):
-                with self.assertRaises(ValueError): controls.select({'asr': 'asr', 'tts': 'tts', 'llm': key})
+                with self.assertRaises(ValueError):
+                    controls.select({'asr': 'asr', 'tts': 'tts', 'llm': key})
             self.assertEqual(controls.select({'asr': 'asr', 'tts': 'tts', 'llm': 'allowed'})['llm'], 'allowed')
 
     def test_http_entry_runs_lifecycle_before_forwarding_a_cold_request(self):
-        from scripts.launchers.shared.services.service_lifecycle import Service, ServiceLifecycle
         from scripts.launchers.shared.services import service_lifecycle as owner
+        from scripts.launchers.shared.services.service_lifecycle import Service, ServiceLifecycle
         process = running_process(pid=123)
         start = Mock(return_value=process)
         manager = ServiceLifecycle({'chat': Service(start)}, {'llm': 'chat'})
@@ -72,8 +73,8 @@ class PracticeTests(unittest.TestCase):
         self.assertEqual([row['phase'] for row in manager.events], ['startup_ready', 'request'])
 
     def test_on_demand_services_split_timings_and_keep_other_shared_models(self):
-        from scripts.launchers.shared.services.service_lifecycle import Service, ServiceLifecycle
         from scripts.launchers.shared.services import service_lifecycle as owner
+        from scripts.launchers.shared.services.service_lifecycle import Service, ServiceLifecycle
         clock = [0.0]
         process = running_process(pid=123)
         def start():
@@ -107,8 +108,8 @@ class PracticeTests(unittest.TestCase):
         self.assertEqual(phases['model_load']['model'], 'asr-q8.gguf')
 
     def test_reused_services_cannot_be_unloaded_by_workspace(self):
-        from scripts.launchers.shared.services.service_lifecycle import Service, ServiceLifecycle
         from scripts.launchers.shared.services import service_lifecycle as owner
+        from scripts.launchers.shared.services.service_lifecycle import Service, ServiceLifecycle
         service = Service(lambda: None)
         manager = ServiceLifecycle({'chat': service}, {'llm': 'chat'})
         manager.ensure('llm')
@@ -120,14 +121,13 @@ class PracticeTests(unittest.TestCase):
         self.assertEqual(manager.states['llm'], 'external')
 
     def test_active_requests_block_unload_and_failures_remain_visible(self):
-        from scripts.launchers.shared.services.service_lifecycle import Service, ServiceLifecycle
         from scripts.launchers.shared.services import service_lifecycle as owner
+        from scripts.launchers.shared.services.service_lifecycle import Service, ServiceLifecycle
         process = running_process(pid=1)
         manager = ServiceLifecycle({'chat': Service(lambda: process)}, {'llm': 'chat'})
         with patch.object(owner, 'stop_owned'):
-            with manager.use('llm'):
-                with self.assertRaisesRegex(RuntimeError, 'active'):
-                    manager.release('llm')
+            with manager.use('llm'), self.assertRaisesRegex(RuntimeError, 'active'):
+                manager.release('llm')
             manager.close()
         broken = Service(lambda: process, Mock(side_effect=RuntimeError('synthetic model load failure')))
         failed = ServiceLifecycle({'audio': broken}, {'tts': 'audio'})
@@ -148,6 +148,7 @@ class PracticeTests(unittest.TestCase):
 
     def test_practice_and_tests_have_one_html_without_duplicate_controls(self):
         from html.parser import HTMLParser
+
         from scripts.launchers.audiocpp import tts_proxy
         ids = []
         class Controls(HTMLParser):
@@ -192,8 +193,8 @@ class PracticeTests(unittest.TestCase):
         self.assertEqual(result['practice_url'], '/practice')
 
     def test_launcher_starts_only_gateway_without_eager_models(self):
-        from scripts.launchers.asr.shared import workspace as practice
         from scripts.launchers.asr.shared import practice_asr, practice_models
+        from scripts.launchers.asr.shared import workspace as practice
         from scripts.tests.shared.paths import CasePaths
         with CasePaths(__file__).temporary_directory() as folder, patch.object(
             practice.project_cfg, 'component', return_value=SimpleNamespace(state_dir=Path(folder))), patch.object(
@@ -207,9 +208,9 @@ class PracticeTests(unittest.TestCase):
         run.assert_called_once()
 
     def test_cohere_resident_upload_sets_native_model_identifier(self):
+        from scripts.launchers.asr.shared import resident_backend
         from scripts.launchers.asr.shared.resident_backend import ResidentBackend
         from scripts.launchers.shared.transport.multipart import audio_upload
-        from scripts.launchers.asr.shared import resident_backend
         body, kind = audio_upload(b'wave', {'language': 'en'})
         with patch.object(resident_backend.requests, 'post', return_value=(b'{"text":"hello"}', 'application/json')) as post:
             ResidentBackend(cfg.COHERE_ASR).transcribe(body, kind)
@@ -241,8 +242,8 @@ class PracticeTests(unittest.TestCase):
         self.assertTrue(rows['en-us']['available'])
 
     def test_language_options_intersect_selected_asr_with_installed_tts(self):
-        from scripts.launchers.asr.shared import languages
         from scripts.config import models
+        from scripts.launchers.asr.shared import languages
         catalog = {'language_names': {'en': 'English', 'ja': 'Japanese', 'th': 'Thai'}, 'models': [
             {'name': 'Selected ASR', 'model_ids': ['checkpoint'], 'tasks': ['asr'],
              'languages': ['en', 'ja', 'th'], 'notes': '',

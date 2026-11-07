@@ -10,15 +10,15 @@ import time
 from dataclasses import asdict
 from typing import Any
 
-from scripts.config import project_config as project_cfg
-from scripts.launchers.llamacpp.llamacpp import LlamaConfig
-from scripts.benchmarks.llamacpp.benchmark_ngram import CANDIDATES, Candidate
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import post_json
+from scripts.benchmarks.llamacpp.benchmark_ngram import CANDIDATES, Candidate
 from scripts.benchmarks.llamacpp.trial import require_free_session, running_server, speculation_config
-from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
+from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT, report_run
 from scripts.benchmarks.shared.timing import timed
+from scripts.config import project_config as project_cfg
+from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 
 
 def run_candidate(

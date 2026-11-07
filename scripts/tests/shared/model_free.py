@@ -1,12 +1,12 @@
 """Default-suite boundary, not a sandbox: mocks/loopback/codecs remain permitted."""
 
+import os
+import sys
+from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
-import os
 from pathlib import Path
-import sys
 from threading import RLock
-from collections.abc import Iterator
 from typing import Any
 
 from scripts.config import project_config as project_cfg

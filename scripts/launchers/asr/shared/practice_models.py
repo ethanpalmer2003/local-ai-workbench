@@ -5,10 +5,11 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from scripts.config import models, project_config as project_cfg
+from scripts.config import models
+from scripts.config import project_config as project_cfg
+from scripts.config.audiocpp import server as audio_config
 from scripts.config.models import model_languages
 from scripts.config.shared import speech_delivery
-from scripts.config.audiocpp import server as audio_config
 from scripts.launchers import launcher_config as cfg
 
 active_tts_id: str | None = None

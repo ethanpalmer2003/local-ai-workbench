@@ -2,9 +2,9 @@
 
 import threading
 import time
+from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from collections.abc import Callable
 from typing import Any
 
 from scripts.launchers.shared.services.process import stop_owned
@@ -27,7 +27,7 @@ class ServiceLifecycle:
         self.lock = threading.RLock()
         self.events: list[dict[str, Any]] = []
         self.active = 0
-        self.states = {stage: 'unloaded' for stage in groups}
+        self.states = dict.fromkeys(groups, 'unloaded')
 
     def event(self, stage: str, phase: str, started: float, **fields):
         service = self.services[self.groups[stage]]
@@ -98,7 +98,8 @@ class ServiceLifecycle:
                 stop_owned(service.process)
                 service.process = None
                 for other, group in self.groups.items():
-                    if group == self.groups[stage]: self.states[other] = 'unloaded'
+                    if group == self.groups[stage]:
+                        self.states[other] = 'unloaded'
             self.event(stage, 'unload', started)
 
     def snapshot(self):

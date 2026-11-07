@@ -6,7 +6,6 @@ from datetime import datetime
 from pathlib import Path
 
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.runtime import shared_gpu
 from scripts.launchers.launch_util import (
     build_cli_args,
     launch_process,
@@ -16,6 +15,7 @@ from scripts.launchers.launch_util import (
 )
 from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 from scripts.launchers.proxy_util import run_json_proxy
+from scripts.launchers.runtime import shared_gpu
 
 
 def build_dir(build: str | None = None) -> Path:

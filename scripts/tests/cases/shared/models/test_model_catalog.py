@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, patch
 
 from scripts.download.models import download
 from scripts.download.models.sources import parse_url
-from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.http_fixtures import http_response
+from scripts.tests.shared.paths import CasePaths
 
 
 class ModelCatalogTests(unittest.TestCase):
@@ -25,8 +25,9 @@ class ModelCatalogTests(unittest.TestCase):
             chat_models.path("llamacpp/gemma-4-E4B-it-mmproj-q8_0")
 
     def test_audit_and_metadata_keep_registry_coverage(self):
-        from scripts.config import models, project_config as project_cfg
-        from scripts.download.models import model_sync, analyze_model
+        from scripts.config import models
+        from scripts.config import project_config as project_cfg
+        from scripts.download.models import analyze_model, model_sync
 
         self.assertTrue(all(row.path.is_relative_to(model_sync.MODEL_ROOTS[row.group]) for row in models.MODELS))
         self.assertEqual(model_sync.MODEL_ROOTS["strata"], project_cfg.component("strata").models_dir / "models")

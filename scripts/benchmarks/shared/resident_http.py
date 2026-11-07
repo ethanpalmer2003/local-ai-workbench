@@ -2,14 +2,14 @@
 
 import json
 import os
-from pathlib import Path
 import subprocess
 import urllib.request
+from pathlib import Path
 from typing import Any
 
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.launchers import launch_util
-from scripts.launchers.shared.services.process import wait_ready, stop_owned, http_ready
+from scripts.launchers.shared.services.process import http_ready, stop_owned, wait_ready
 
 
 class ResidentHttp:

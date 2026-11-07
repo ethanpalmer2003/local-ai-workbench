@@ -10,11 +10,11 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared.paths import RunPaths
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import llamacpp
 from scripts.launchers.strata import strata_pi
-from scripts.benchmarks.shared.paths import RunPaths
 
 
 @dataclass

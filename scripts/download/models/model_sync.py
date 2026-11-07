@@ -9,8 +9,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from scripts.config import project_config as project_cfg
 from scripts.config import models as model_cfg
+from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.config.audiocpp import server as audio_cfg
 from scripts.download.models import download

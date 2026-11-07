@@ -6,8 +6,7 @@ import html
 import json
 import re
 import urllib.request
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 
 from scripts.config import project_config as project_cfg
 
@@ -41,7 +40,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--max-size', type=float, default=5)
     args = parser.parse_args()
-    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    stamp = datetime.now(UTC).strftime('%Y%m%dT%H%M%S%fZ')
     folder = project_cfg.component('asr/shared').generated_dir / 'leaderboard' / stamp
     folder.mkdir(parents=True, exist_ok=True)
     config = json.loads(fetch('/config'))

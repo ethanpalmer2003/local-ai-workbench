@@ -54,7 +54,8 @@ class PracticeRuntime:
         if path in ('/v1/audio/transcriptions', '/api/extra/transcribe', '/asr/live/start'):
             return 'asr'
         if path == '/v1/audio/speech':
-            if self.no_tts: raise RuntimeError('TTS is disabled by --no-tts')
+            if self.no_tts:
+                raise RuntimeError('TTS is disabled by --no-tts')
             return 'tts'
         if path in ('/v1/chat/completions', '/completion', '/v1/completions'):
             return 'llm'

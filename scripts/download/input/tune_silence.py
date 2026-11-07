@@ -7,8 +7,8 @@ Quickly sweep SILENCE_NOISE_DB / SILENCE_MIN_DUR combos against the mp3.
 - Usage: `python -m scripts.download.input.tune_silence --voice <id>`
 """
 
-import re
 import argparse
+import re
 import subprocess
 
 from scripts.config import inputs

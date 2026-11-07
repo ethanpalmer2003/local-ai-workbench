@@ -1,8 +1,9 @@
 """Reusable adapter setup; assertions and expected policies stay in each test."""
 
-from contextlib import contextmanager, ExitStack
 from collections.abc import Iterator
-from dataclasses import dataclass, replace, fields as dataclass_fields
+from contextlib import ExitStack, contextmanager
+from dataclasses import dataclass, replace
+from dataclasses import fields as dataclass_fields
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch

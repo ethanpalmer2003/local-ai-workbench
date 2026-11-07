@@ -1,10 +1,8 @@
-from scripts.tests.shared.process_fixtures import running_process
 import io
 import json
 import subprocess
 import sys
 import unittest
-from scripts.tests.shared.model_free import fixture_processes
 from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -13,11 +11,13 @@ from scripts.config import project_config as project_cfg
 from scripts.download.frameworks.llamacpp import rdna_build as llamacpp_rdna_build
 from scripts.download.input import get_tts_voices, split_from_csv
 from scripts.file_util import archive_path
-from scripts.launchers.runtime import gpu_memory
 from scripts.launchers import launch_util
 from scripts.launchers.launch_util import assign_process_to_job
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig, LlamaMonitor
+from scripts.launchers.runtime import gpu_memory
+from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.paths import CasePaths
+from scripts.tests.shared.process_fixtures import running_process
 from scripts.tests.shared.timing import timed
 
 
