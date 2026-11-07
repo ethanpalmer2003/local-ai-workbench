@@ -1,0 +1,41 @@
+﻿Rank,Rank Δ,model,Average WER ⬇️,RTFx ⬆️️,License,Size (B),# Languages,Encoder,Decoder,AMI-Cleaned,Earnings22-Cleaned-AA-chunked,Gigaspeech-Cleaned,LS Clean,LS Other,SPGISpeech,URGENT24,Voice Arena Monsoon,Voxpopuli-AA-Cleaned,Private (scripted),Private (conversational)
+1,,Qwen/Qwen3-ASR-1.7B-hf,5.4,819.3,apache-2.0,2.04,52,Custom,Qwen3,8.31,5.84,7.22,1.26,2.94,2.57,9.93,3.5,2.85,2.87,12.14
+2,,ibm-granite/granite-speech-5.0-2b,5.68,544.52,apache-2.0,2.31,6,Conformer,granite-4.0-1b-base,6.96,6.22,8.14,0.99,2.21,3.36,10.22,3.94,3.52,3.16,13.79
+3,,CohereLabs/cohere-transcribe-03-2026,5.77,902.46,apache-2.0,2.0,14,Conformer-based,Transformer,7.02,7.88,7.88,0.97,2.05,2.74,9.5,3.44,5.38,3.2,13.46
+4,,TheStageAI/thewhisper-large-v3-turbo,5.91,1176.77,cc-by-4.0,0.8,28,Whisper,Transformer,7.32,7.18,7.84,1.41,3.2,1.62,10.82,3.72,4.02,3.93,13.98
+5,,bosonai/higgs-audio-v3-stt,5.92,109.95,apache-2.0,2.68,1,Whisper,Qwen3,7.19,7.04,7.45,1.08,2.61,2.07,11.88,3.97,3.73,3.74,14.34
+6,,Edge0/ARK-ASR-3B,5.92,479.11,apache-2.0,3.75,19,Whisper,Qwen2,7.89,8.07,6.94,1.04,2.37,2.46,13.29,3.48,3.55,3.11,12.9
+7,,Edge0/ARK-ASR-0.6B,5.93,660.66,apache-2.0,1.15,19,Whisper,Qwen2,8.61,6.75,7.37,1.48,3.44,2.63,12.49,3.43,2.76,3.68,12.57
+8,,nvidia/canary-qwen-2.5b,5.94,861.56,cc-by-4.0,2.5,1,Conformer-based,Qwen2,7.91,6.41,7.8,1.23,2.63,1.7,13.02,3.6,4.14,3.47,13.41
+9,,ibm-granite/granite-speech-4.1-2b,5.96,544.94,apache-2.0,2.0,6,Conformer-based,Granite,7.06,6.69,8.18,1.03,2.19,3.47,11.25,4.12,4.18,3.16,14.19
+10,,nvidia/parakeet-tdt-0.6b-v2 (fast-gpu-asr),5.98,16942.54,cc-by-4.0,0.6,1,Conformer-based,TDT,9.03,6.84,8.16,1.27,2.62,1.87,11.64,3.72,3.85,3.48,13.33
+11,▲1,nvidia/parakeet-tdt-0.6b-v2,6.02,5987.89,cc-by-4.0,0.6,1,Conformer-based,TDT / RNN-T,9.09,6.76,8.15,1.28,2.73,1.94,11.42,3.89,3.78,3.62,13.58
+12,▼1,ibm-granite/granite-speech-5.0-470m-turboctc-nc,6.02,20831.46,cc-by-nc-sa-4.0,0.47,1,Streaming-style Conformer,CTC,7.31,8.23,8.37,1.45,2.67,1.75,10.22,4.3,4.67,3.81,13.49
+13,,nvidia/parakeet-tdt-0.6b-v3 (fast-gpu-asr),6.08,14125.69,cc-by-4.0,0.6,26,Conformer-based,TDT,9.01,5.81,7.75,1.45,3.08,3.56,11.5,3.96,3.04,4.54,13.17
+14,,ibm-granite/granite-speech-4.1-2b-nar,6.1,2069.53,apache-2.0,2.0,5,Conformer-based,Hybrid CTC-LLM,6.96,6.67,8.61,1.04,2.4,3.23,11.19,4.24,4.25,4.21,14.34
+15,,OpenMOSS-Team/MOSS-Transcribe-Diarize,6.17,377.97,apache-2.0,0.91,50,"Whisper audio encoder, 24 layers","Qwen3, 28 layers",8.33,6.09,7.68,1.66,4.16,1.7,12.74,3.87,3.6,4.68,13.4
+16,,nvidia/parakeet-tdt-0.6b-v3,6.18,6132.34,cc-by-4.0,0.6,26,Conformer-based,TDT / RNN-T,9.42,5.85,7.99,1.52,3.13,3.63,11.52,4.14,3.05,4.27,13.44
+17,,Qwen/Qwen3-ASR-0.6B-hf,6.24,745.08,apache-2.0,0.78,52,Custom,Qwen3,9.33,7.83,7.62,1.7,4.01,2.74,11.57,4.23,2.9,3.92,12.74
+18,,ibm-granite/granite-speech-5.0-470m-turboctc,6.38,21174.26,apache-2.0,0.47,1,Streaming-style Conformer,CTC,7.71,6.75,8.74,1.48,2.71,3.22,11.79,4.75,4.9,4.13,14.03
+19,,ibm-granite/granite-4.0-1b-speech,6.41,664.73,apache-2.0,2.0,6,Conformer-based,Granite,7.38,8.53,8.44,1.11,2.5,3.55,11.99,4.84,4.41,3.56,14.22
+20,,nvidia/nemotron-speech-streaming-en-0.6b,6.6,1111.45,nvidia-open-model-license,0.62,1,FastConformer (cache-aware),RNNT,8.84,9.45,7.9,1.89,4.35,2.69,12.54,4.44,2.4,4.79,13.28
+21,,distil-whisper/distil-large-v3.5,6.76,886.95,mit,0.8,1,Whisper,Transformer,12.09,7.7,8.21,1.94,4.52,2.62,12.42,3.6,2.52,4.34,14.43
+22,,"soundsgoodai/Zipformer-cr-ctc-transducer-XL-290M (fast-gpu-asr, transducer_modified_beam_search)",6.82,21814.05,cc-by-nc-4.0,0.29,1,Zipformer,Transducer,10.23,7.9,8.3,1.31,3.03,1.64,13.67,5.57,4.32,4.32,14.74
+23,,FermionResearch/Phonon-2,6.87,1967.1,cc-by-4.0,0.6,1,FastConformer (low-bit),TDT,9.32,6.96,8.35,1.73,3.92,3.7,14.9,4.91,2.46,5.23,14.14
+24,,openai/whisper-large-v3,7.16,469.79,apache-2.0,2.0,99,Whisper,Transformer,13.63,7.99,8.35,1.56,3.52,2.71,13.73,3.95,4.53,3.61,15.13
+25,,FunAudioLLM/Fun-ASR-Nano-2512-hf,7.24,495.85,apache-2.0,0.83,4,Qwen3-ASR,Custom,10.35,10.87,8.41,1.47,4.07,2.05,13.93,5.32,3.4,4.95,14.83
+26,,mistralai/Voxtral-Mini-3B-2507,7.25,180.05,apache-2.0,5.0,8,Whisper,Ministral 3B,13.57,7.66,8.7,1.48,3.63,2.15,15.66,4.9,2.22,3.73,16.0
+27,,nvidia/canary-1b-v2,7.27,1820.53,cc-by-4.0,1.0,25,Conformer-based,Transformer,13.03,7.28,9.12,1.76,3.07,2.03,14.56,4.97,4.39,4.65,15.16
+28,,openai/whisper-large-v3-turbo,7.64,794.31,mit,0.8,99,Whisper,Transformer,13.88,8.09,8.47,2.13,3.71,2.79,13.69,4.77,7.02,4.05,15.4
+29,,espnet/owsm_ctc_v4_1B,8.08,774.79,cc-by-4.0,1.0,75,Whisper,CTC,11.1,10.31,9.29,2.11,4.38,2.31,16.12,6.66,4.09,6.41,16.1
+30,,Edge0/Audio8-ASR-0.1B,8.29,718.79,apache-2.0,0.32,7,Qwen3-ASR audio encoder,8-layer Qwen-style causal LM,11.0,12.53,8.48,2.71,6.6,3.73,14.97,6.18,4.39,5.85,14.79
+31,,"soundsgoodai/Zipformer-cr-ctc-transducer-XL-290M (fast-gpu-asr, ctc_greedy_search)",8.38,24148.37,cc-by-nc-4.0,0.29,1,Zipformer,CTC,11.63,9.24,9.52,1.71,3.9,2.75,17.67,7.76,4.53,6.99,16.47
+32,,mistralai/Voxtral-Mini-4B-Realtime-2602,8.44,102.57,apache-2.0,4.0,13,Custom,Transformer,13.34,9.31,8.8,1.62,4.94,2.23,17.95,8.86,2.6,5.76,17.45
+33,,futo-org/asr4all-l,8.75,20612.64,futo-model-weights-ethical-use-1.0,0.1,1,FSMN / Synthesizer / MHSA hybrid,CTC + PCEC,9.92,9.17,9.89,2.39,5.95,4.71,18.6,7.42,3.99,7.45,16.8
+34,,abr-ai/niagara-84m-batch.en,9.69,1925.86,applied-brain-research-open-license,0.08,1,State-space model,CTC,12.01,10.83,10.41,3.09,7.6,2.61,20.16,8.82,4.33,8.7,18.08
+35,,nvidia/nemotron-3.5-asr-streaming-0.6b,9.75,1343.21,OpenMDW-1.1,0.64,40,FastConformer (cache-aware),RNNT,13.43,15.3,9.86,2.83,6.79,3.27,20.14,7.3,4.24,7.84,16.3
+36,,futo-org/asr4all-m,9.95,28417.31,futo-model-weights-ethical-use-1.0,0.06,1,FSMN / Synthesizer / MHSA hybrid,CTC + PCEC,11.29,10.52,10.68,2.73,7.3,5.15,21.05,9.01,4.53,8.84,18.39
+37,,abr-ai/niagara-38m-batch.en,11.14,4546.42,applied-brain-research-open-license,0.04,1,State-space model,CTC,13.87,12.94,11.38,3.81,9.28,3.08,22.88,10.41,5.16,10.05,19.65
+38,,futo-org/asr4all-s,12.41,39895.02,futo-model-weights-ethical-use-1.0,0.03,1,FSMN / Synthesizer / MHSA hybrid,CTC + PCEC,13.0,13.52,12.67,3.7,10.05,6.37,24.94,12.92,5.44,11.81,22.08
+39,,abr-ai/niagara-19m-batch.en,12.97,4342.32,applied-brain-research-open-license,0.02,1,State-space model,CTC,16.17,16.1,12.72,4.74,11.02,3.67,25.4,13.15,5.73,11.87,22.1
+40,,abr-ai/niagara-9m-batch.en,16.2,7153.49,applied-brain-research-open-license,0.01,1,State-space model,CTC,20.94,21.46,14.97,6.45,14.53,5.16,29.47,17.11,7.33,15.15,25.62

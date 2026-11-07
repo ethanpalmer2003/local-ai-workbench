@@ -1,0 +1,62 @@
+﻿Rank,Model,Average WER ⬇️,Avg Scripted,Avg Conversational
+1,p99lab/audrey-0.7,7.31,2.78,11.85
+2,microsoft/azure-speech-07-2026,7.42,2.12,12.71
+3,modulate/multilingual,7.43,2.56,12.3
+4,Qwen/Qwen3-ASR-1.7B-hf,7.51,2.87,12.14
+5,zoom/scribe_v2_pro,7.51,2.92,12.1
+6,OtterAI/speech-v3.1,7.54,3.08,12.01
+7,assemblyai/universal-3-5-pro,7.73,2.66,12.8
+8,gladia/solaria-3,7.78,3.12,12.44
+9,reson8/resonant-1,7.79,2.96,12.61
+10,sophea/asr-k1 (preview),8.01,2.86,13.16
+11,Edge0/ARK-ASR-3B,8.01,3.11,12.9
+12,openai/gpt-transcribe,8.07,3.24,12.9
+13,Edge0/ARK-ASR-0.6B,8.12,3.68,12.57
+14,nvidia/Nemotron-3.5-Transcribe-30B-A4B,8.16,3.58,12.73
+15,Qwen/Qwen3-ASR-0.6B-hf,8.33,3.92,12.74
+16,elevenlabs/scribe_v2,8.33,3.0,13.66
+17,CohereLabs/cohere-transcribe-03-2026,8.33,3.2,13.46
+18,sprag/symphony,8.38,3.99,12.78
+19,nvidia/parakeet-tdt-0.6b-v2 (fast-gpu-asr),8.4,3.48,13.33
+20,nvidia/canary-qwen-2.5b,8.44,3.47,13.41
+21,ibm-granite/granite-speech-5.0-2b,8.47,3.16,13.79
+22,smallestai/pulse,8.54,3.58,13.5
+23,nvidia/parakeet-tdt-0.6b-v2,8.6,3.62,13.58
+24,ibm-granite/granite-speech-5.0-470m-turboctc-nc,8.65,3.81,13.49
+25,ibm-granite/granite-speech-4.1-2b,8.68,3.16,14.19
+26,HojoAI/Hojo-ASR-V1,8.7,3.99,13.4
+27,meta/muse-voice-transcribe,8.78,4.52,13.04
+28,nvidia/parakeet-tdt-0.6b-v3 (fast-gpu-asr),8.86,4.54,13.17
+29,nvidia/parakeet-tdt-0.6b-v3,8.86,4.27,13.44
+30,ibm-granite/granite-4.0-1b-speech,8.89,3.56,14.22
+31,TheStageAI/thewhisper-large-v3-turbo,8.96,3.93,13.98
+32,mistralai/Voxtral-Small-24B-2507,8.96,3.22,14.7
+33,OpenMOSS-Team/MOSS-Transcribe-Diarize,9.04,4.68,13.4
+34,bosonai/higgs-audio-v3-stt,9.04,3.74,14.34
+35,nvidia/nemotron-speech-streaming-en-0.6b,9.04,4.79,13.28
+36,ibm-granite/granite-speech-5.0-470m-turboctc,9.08,4.13,14.03
+37,ibm-granite/granite-speech-4.1-2b-nar,9.28,4.21,14.34
+38,openai/whisper-large-v3,9.37,3.61,15.13
+39,distil-whisper/distil-large-v3.5,9.38,4.34,14.43
+40,"soundsgoodai/Zipformer-cr-ctc-transducer-XL-290M (fast-gpu-asr, transducer_modified_beam_search)",9.53,4.32,14.74
+41,FermionResearch/Phonon-2,9.69,5.23,14.14
+42,openai/whisper-large-v3-turbo,9.72,4.05,15.4
+43,mistralai/Voxtral-Mini-3B-2507,9.87,3.73,16.0
+44,FunAudioLLM/Fun-ASR-Nano-2512-hf,9.89,4.95,14.83
+45,nvidia/canary-1b-v2,9.91,4.65,15.16
+46,Edge0/Audio8-ASR-0.1B,10.32,5.85,14.79
+47,espnet/owsm_ctc_v4_1B,11.26,6.41,16.1
+48,mistralai/Voxtral-Mini-4B-Realtime-2602,11.61,5.76,17.45
+49,facebook/omniASR-LLM-7B-v2,11.71,7.56,15.85
+50,"soundsgoodai/Zipformer-cr-ctc-transducer-XL-290M (fast-gpu-asr, ctc_greedy_search)",11.73,6.99,16.47
+51,nvidia/nemotron-3.5-asr-streaming-0.6b,12.07,7.84,16.3
+52,futo-org/asr4all-l,12.12,7.45,16.8
+53,microsoft/VibeVoice-ASR-HF,12.86,11.09,14.62
+54,abr-ai/niagara-84m-batch.en,13.39,8.7,18.08
+55,futo-org/asr4all-m,13.62,8.84,18.39
+56,google/gemma-4-E4B-it,14.03,8.88,19.17
+57,abr-ai/niagara-38m-batch.en,14.85,10.05,19.65
+58,futo-org/asr4all-s,16.95,11.81,22.08
+59,abr-ai/niagara-19m-batch.en,16.98,11.87,22.1
+60,facebook/omniASR-CTC-7B-v2,17.64,14.66,20.62
+61,abr-ai/niagara-9m-batch.en,20.39,15.15,25.62

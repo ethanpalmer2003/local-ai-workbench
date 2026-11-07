@@ -1,0 +1,110 @@
+from scripts.tests.cases.asr.llamacpp.test_gemma_audio import GemmaAudioTests
+from scripts.tests.cases.asr.llamacpp.test_qwen_asr_profiles import QwenAsrProfiles
+from scripts.tests.cases.asr.shared.test_file_profiles import FileProfiles
+from scripts.tests.cases.asr.shared.test_practice import PracticeTests
+from scripts.tests.cases.asr.shared.test_startup_contracts import StartupContracts
+from scripts.tests.cases.asr.shared.test_streaming_adapters import StreamingAdapters
+from scripts.tests.cases.asr.shared.test_vad_turns import VadTurns
+from scripts.tests.cases.asr.shared.test_whisper_compare import WhisperCompareTests
+from scripts.tests.cases.asr.whispercpp.test_whisper_profiles import WhisperProfiles
+from scripts.tests.cases.audiocpp.audio_comparison import AudioComparison
+from scripts.tests.cases.audiocpp.test_audiocpp_transport import TransportBenchmark
+from scripts.tests.cases.audiocpp.test_tts_profiles import TtsProfiles
+from scripts.tests.cases.coding_agents.pi.test_pi_packages import PiPackageTests
+from scripts.tests.cases.coding_agents.shared.framework_clients import FrameworkClients
+from scripts.tests.cases.coding_agents.shared.test_benchmark_backends import BenchmarkBackendsTests
+from scripts.tests.cases.coding_agents.shared.test_benchmark_matrix import BenchmarkMatrixTests
+from scripts.tests.cases.coding_agents.shared.test_benchmark_requests import BenchmarkRequestsTests
+from scripts.tests.cases.personal.comfyui.test_comfyui_video import WorkflowTests
+from scripts.tests.cases.koboldcpp.kobold_lite_streaming import StreamingPatch
+from scripts.tests.cases.llamacpp.hrx.test_hrx_build import HrxBuildTests
+from scripts.tests.cases.llamacpp.test_ngram import NgramWorkloads
+from scripts.tests.cases.shared import frameworks_smoke
+from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
+from scripts.tests.cases.shared.framework_updates import FrameworkUpdates
+from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
+from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
+from scripts.tests.cases.shared.models.test_model_languages import ModelLanguages
+from scripts.tests.cases.shared.models.test_model_sync import ModelSyncTests
+from scripts.tests.cases.shared.regression.test_regression_fixtures import RegressionFixtures
+from scripts.tests.cases.shared.regression.test_test_boundaries import TestBoundaries
+from scripts.tests.cases.shared.reports.test_reporting import Reporting
+from scripts.tests.cases.shared.reports.test_reports import ReportOutputs
+from scripts.tests.cases.shared.runtime.test_backend_sessions import BackendSessions
+from scripts.tests.cases.shared.runtime.test_gpu_memory_monitor import MemoryMonitorTests
+from scripts.tests.cases.shared.runtime.test_image_on_demand import NativePassthroughTests, ResidencyTests
+from scripts.tests.cases.shared.runtime.test_resources import ResourceTests
+from scripts.tests.cases.shared.runtime.test_shared_runtime import SharedRuntimeTests
+from scripts.tests.cases.shared.shared_contracts import SharedContracts
+from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
+from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
+from scripts.tests.cases.shared.test_inputs_overlay import InputOverlayTests
+from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
+from scripts.tests.cases.shared.test_preflight import PreflightTests
+from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
+from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
+from scripts.tests.cases.shared.workflows.test_kokoro_profiles import KokoroProfiles
+from scripts.tests.cases.shared.workflows.test_text_processing import TextProcessingTests
+from scripts.tests.cases.shared.workflows.test_workflow_defaults import WorkflowDefaultsTests
+from scripts.tests.cases.strata.test_strata_pi import StrataPiTests
+from scripts.tests.cases.strata.test_strata_profiles import StrataProfileTests
+from scripts.tests.shared.timing import timed
+
+if __name__ == "__main__":
+    with timed("default regressions"):
+        raise SystemExit(
+            frameworks_smoke.main(
+                extra_groups=(
+                    BenchmarkLifecycleTests,
+                    SharedRuntimeTests,
+                    StartupContracts,
+                    RegressionFixtures,
+                    TestBoundaries,
+                    VadTurns,
+                    PracticeTests,
+                    StreamingAdapters,
+                    ModelLanguages,
+                    ModelAnalysisTests,
+                    TextProcessingTests,
+                    BatLaunchers,
+                    InferenceEngines,
+                    ModelAdminTests,
+                    AudioComparison,
+                    WorkflowTests,
+                    TtsProfiles,
+                    FrameworkClients,
+                    BenchmarkBackendsTests,
+                    BenchmarkMatrixTests,
+                    BenchmarkRequestsTests,
+                    StrataPiTests,
+                    StrataProfileTests,
+                    PiPackageTests,
+                    ConfigSyncTests,
+                    ModelCatalogTests,
+                    InputOverlayTests,
+                    PreflightTests,
+                    PublicAuditTests,
+                    KokoroProfiles,
+                    WorkflowDefaultsTests,
+                    WhisperCompareTests,
+                    FileProfiles,
+                    WhisperProfiles,
+                    QwenAsrProfiles,
+                    GemmaAudioTests,
+                    ModelSyncTests,
+                    FrameworkUpdates,
+                    ReportOutputs,
+                    NgramWorkloads,
+                    Reporting,
+                    ResourceTests,
+                    MemoryMonitorTests,
+                    HrxBuildTests,
+                    NativePassthroughTests,
+                    ResidencyTests,
+                    SharedContracts,
+                    StreamingPatch,
+                    TransportBenchmark,
+                    BackendSessions,
+                )
+            )
+        )

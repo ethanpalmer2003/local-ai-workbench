@@ -1,0 +1,155 @@
+"""Shared runtime contracts without launching processes or loading model libraries."""
+
+from scripts.tests.shared.process_fixtures import running_process, exited_process, inspected_process
+
+import ctypes
+from email import policy
+from email.parser import BytesParser
+from pathlib import Path
+import unittest
+from unittest.mock import Mock, patch
+
+from scripts.launchers.shared.services import native, process
+from scripts.launchers.shared.native_abi.cabi import structures
+from scripts.launchers.shared.transport.multipart import audio_upload
+from scripts.launchers.shared.native_abi.native_library import NativeLibrary
+from scripts.launchers.asr.shared.resident_profiles import build_server_command, profiles
+from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
+from scripts.config import models as model_cfg
+from scripts.tests.shared.paths import CasePaths
+from scripts.benchmarks.shared.resident_http import ResidentHttp
+
+
+class SharedRuntimeTests(unittest.TestCase):
+    def test_python_redirector_resolves_only_its_owned_module_worker(self):
+        child = inspected_process(pid=11, parent=10, command=["python", "-m", "owned.module"])
+        root = inspected_process(pid=10, parent=1, command=["python", "-m", "owned.module"], children=[child])
+        parent = running_process(pid=10)
+        with patch("psutil.Process", return_value=root):
+            worker = process.owned_module_worker(parent, "owned.module")
+            self.assertEqual(worker.pid, 11)
+            self.assertIsNone(worker.poll())
+            with self.assertRaisesRegex(RuntimeError, "Cannot identify"):
+                process.owned_module_worker(parent, "unrelated.module")
+
+    def test_readiness_rejects_dead_process_even_if_probe_is_stale(self):
+        worker = exited_process(exit_code=4)
+        probe = Mock(return_value=True)
+        with self.assertRaisesRegex(RuntimeError, "exited"):
+            process.wait_ready(worker, probe, 1)
+        probe.assert_not_called()
+
+    def test_readiness_deadline_is_bounded_without_real_sleep(self):
+        worker = running_process()
+        with (
+            patch.object(process.time, "monotonic", side_effect=[0, 0, 2]),
+            patch.object(process.time, "sleep") as sleep,
+        ):
+            with self.assertRaises(TimeoutError):
+                process.wait_ready(worker, lambda: False, 1)
+        sleep.assert_called_once_with(0.2)
+
+    def test_owned_graceful_cleanup_escalates_only_after_timeout(self):
+        worker = running_process(pid=12345, wait_timeouts=1)
+        with patch.object(process.launch_util, "kill_process_tree") as kill:
+            process.stop_owned(worker, timeout=1, graceful=True)
+        worker.terminate.assert_called_once()
+        kill.assert_called_once_with(12345)
+
+    def test_healthy_mismatched_service_is_never_stopped_or_replaced(self):
+        with patch.object(native.launch_util, "launch_process") as start, patch.object(native, "stop_owned") as stop:
+            with self.assertRaisesRegex(RuntimeError, "does not match"):
+                native.start_server([], [], 12345, "fixture", lambda: True, lambda: False)
+        start.assert_not_called()
+        stop.assert_not_called()
+
+    def test_resident_startup_failure_cleans_owned_process_and_log(self):
+        worker = running_process(pid=12345)
+        with CasePaths(__file__).temporary_directory() as folder:
+            server = ResidentHttp(["fixture.exe"], 12345, Path(folder) / "server.log", model_identity="fixture")
+            with (
+                patch("scripts.benchmarks.shared.resident_http.launch_util.port_listening", return_value=False),
+                patch("scripts.benchmarks.shared.resident_http.launch_util.assign_process_to_job"),
+                patch("scripts.benchmarks.shared.resident_http.subprocess.Popen", return_value=worker),
+                patch("scripts.benchmarks.shared.resident_http.wait_ready", side_effect=TimeoutError("fixture")),
+                patch("scripts.benchmarks.shared.resident_http.stop_owned") as stop,
+            ):
+                with self.assertRaises(TimeoutError), server.lifecycle as timer:
+                    timer.prepare(server.start, combined=True)
+            stop.assert_called_once_with(worker, timeout=10)
+            self.assertTrue(server.stream is not None and server.stream.closed)
+
+    def test_server_commands_use_catalog_model_and_requested_port(self):
+        for name, profile in ASR_FILE_PROFILES.items():
+            if profile.server_arguments is None:
+                continue
+            command = build_server_command(name, 19123)
+            self.assertEqual(command[0], str(profile.server_executable or profile.executable))
+            if profile.audio_family:
+                from scripts.launchers.asr.shared.resident_profiles import audio_config
+
+                self.assertEqual(audio_config(name)["models"][0]["path"], str(model_cfg.path(profile.models[0])))
+                self.assertIn("{config}", command)
+            else:
+                self.assertIn(str(model_cfg.path(profile.models[0])), command)
+            self.assertEqual(command[command.index("--port") + 1], "19123")
+        with self.assertRaisesRegex(ValueError, "No configured server"):
+            build_server_command("funasr", 19123)
+        for name, (command, _) in profiles(19123).items():
+            if name != "sherpa-onnx":
+                self.assertEqual(command[command.index("--port") + 1], "19123")
+
+    def test_multipart_binary_roundtrip_uses_independent_mime_parser(self):
+        audio = b"\x00\xff\r\nRIFF\x80"
+        body, kind = audio_upload(audio, {"language": "fr", "model": "fixture"})
+        message = BytesParser(policy=policy.default).parsebytes(f"Content-Type: {kind}\r\n\r\n".encode() + body)
+        fields = {
+            part.get_param("name", header="content-disposition"): part.get_payload(decode=True)
+            for part in message.iter_parts()
+        }
+        self.assertEqual(fields, {"file": audio, "language": b"fr", "model": b"fixture"})
+        with self.assertRaises(ValueError):
+            audio_upload(audio, {}, filename='bad"name.wav')
+
+    def test_library_load_failure_closes_dll_search_paths(self):
+        directory = Mock()
+        directory.__enter__ = Mock(return_value=directory)
+        directory.__exit__ = Mock()
+        with (
+            patch("scripts.launchers.shared.native_abi.native_library.os.add_dll_directory", return_value=directory),
+            patch("scripts.launchers.shared.native_abi.native_library.ctypes.CDLL", side_effect=OSError("fixture")),
+        ):
+            with self.assertRaises(OSError):
+                NativeLibrary(Path("fixture.dll"), search_dirs=(Path("fixture"),))
+        directory.__exit__.assert_called_once()
+
+    def test_abi_reader_rejects_unsupported_fields_before_binding(self):
+        with self.assertRaisesRegex(ValueError, "Unsupported installed C ABI"):
+            structures("typedef struct Config { double unknown; } Config;", lambda _: True)
+        types = structures("typedef struct Config { int32_t count; float scale; } Config;", lambda _: True)
+        self.assertEqual(ctypes.sizeof(types["Config"]), 8)
+
+    def test_library_binding_sets_namespace_and_signature_without_loading_a_dll(self):
+        symbol = Mock()
+        dll = Mock()
+        dll.TestCreate = symbol
+        with patch("scripts.launchers.shared.native_abi.native_library.ctypes.CDLL", return_value=dll):
+            library = NativeLibrary(Path("fixture.dll"), prefix="Test")
+            self.assertIs(library.bind("Create", [ctypes.c_int32], ctypes.c_void_p), symbol)
+            self.assertEqual(symbol.argtypes, [ctypes.c_int32])
+            self.assertIs(symbol.restype, ctypes.c_void_p)
+            library.close()
+
+    def test_shared_audio_conversion_preserves_channel_average_and_duration(self):
+        import numpy as np
+        from scripts.launchers.shared.media.audio import decode_audio, mono_resample, pcm_wav
+
+        samples = np.tile(np.array([[0.25, 0.75]], dtype="float32"), (4800, 1))
+        mono = mono_resample(samples, 48000)
+        decoded, rate = decode_audio(pcm_wav(mono))
+        self.assertEqual((rate, decoded.shape), (16000, (1600, 1)))
+        self.assertAlmostEqual(float(decoded[800, 0]), 0.5, places=3)
+
+
+if __name__ == "__main__":
+    unittest.main()

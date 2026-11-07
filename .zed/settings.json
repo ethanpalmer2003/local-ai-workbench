@@ -1,0 +1,10 @@
+{
+  "file_scan_exclusions": [
+    "...",
+    "data",
+    "frameworks",
+    "trash",
+    "scripts/state",
+    "scripts/tests/output"
+  ]
+}

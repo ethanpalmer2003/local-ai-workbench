@@ -1,0 +1,547 @@
+--- a/index.html
++++ b/index.html
+@@ -19303,6 +19303,7 @@
+ 	}
+ 
+ 	function restart_new_game(save = true, keep_memory = false) {
++ window.koboldAudioPlayback?.stop();
+ 		tts_is_playing = false;
+ 		tts_is_processing = false;
+ 		tts_speak_input_queue = [];
+@@ -19784,6 +19785,7 @@
+ 	}
+ 
+ 	function abort_generation() {
++ window.koboldAudioStream?.stop();
+ 		let id_to_cancel = pending_response_id;
+ 
+ 		//flush any streaming text first
+@@ -20687,12 +20689,12 @@
+ 		}
+ 		let ssval = localsettings.tts_mode;
+ 		let streamallowed = (ssval==XTTS_ID || ssval==ALLTALK_ID || ssval==OAI_TTS_ID || ssval==KCPP_TTS_ID);
+-		if(streamallowed && localsettings.tts_stream && !is_test)
++		if(streamallowed && (ssval === OAI_TTS_ID && window.koboldAudioStream?.enabled() ? window.koboldAudioStream.useTextQueue(localsettings.tts_stream) : localsettings.tts_stream) && !is_test)
+ 		{
+ 			//split into chunks by newline
+ 			tts_speak_output_queue = [];
+ 			let text2 = text.replaceAll(". ", ".\n").replaceAll("! ", "!\n").replaceAll("? ", "?\n");
+-			tts_speak_input_queue = text2.split("\n").map(chunk => chunk.trim()).filter(chunk => chunk.length > 0);
++			tts_speak_input_queue = (ssval === OAI_TTS_ID && window.koboldAudioStream?.enabled()) ? window.koboldAudioStream.chunkText(text) : text2.split("\n").map(chunk => chunk.trim()).filter(chunk => chunk.length > 0);
+ 			tts_queue_embed = do_embed_tts;
+ 			tts_queue_download = do_download;
+ 		}
+@@ -20758,6 +20760,7 @@
+ 		let ssrate = localsettings.tts_speed;
+ 		let vcjson = localsettings.kcpp_tts_json;
+ 		let narrateonlydialog = localsettings.narrate_only_dialog;
++ const audioTone = window.koboldAudioStream?.toneInstruction(text) ?? null;
+ 		let pickedwebvoice = localsettings.wb_tts_choice;
+ 
+ 		if(is_test)
+@@ -20840,7 +20843,19 @@
+ 					ttsheaders = get_kobold_header();
+ 				}
+ 
+-				fetch(sub_endpt, {
++if (is_oai_tts && window.koboldAudioStream) {
++                    sub_endpt = window.koboldAudioStream.speechEndpoint(sub_endpt);
++                    if (window.koboldAudioStream.enabled()) {
++                        if (audioTone !== null) {
++                            payload._tone_tag = audioTone;
++                        }
++                        window.koboldAudioStream.speak(sub_endpt, payload, ttsheaders, do_download, do_embed_tts);
++                        return;
++                    }
++                    payload.stream = false;
++                    payload.response_format = 'wav';
++                }
++                				fetch(sub_endpt, {
+ 					method: 'POST',
+ 					headers: ttsheaders,
+ 					body: JSON.stringify(payload),
+@@ -34717,5 +34732,5 @@
+ 		console.log("service workers API not available");
+ 	}
+ 	</script>
+-</body>
++<script>window.koboldAudioSettings={"playback_buffer_ms": 2000, "pcm_sample_rate": 24000, "text_mode": "narration", "text_limit": 400, "transport": "audio", "stream_frames_per_event": null, "stream_lookahead_margin": null, "stream_chunk_policy": null, "streaming_enabled": true, "audioProxyPort": 8888, "tone_tags_enabled": true};</script><script src="pcm_audio.js"></script><script src="kobold_audio.js"></script><script src="kobold_streaming.js"></script></body>
+ </html>
+--- /dev/null
++++ b/pcm_audio.js
+@@ -0,0 +1,200 @@
++/* Shared PCM16 playback. UI and backend-specific request options belong to callers. */
++(() => {
++    const concat = (a, b) => { const bytes = new Uint8Array(a.length + b.length); bytes.set(a); bytes.set(b, a.length); return bytes; };
++    const label = bytes => String.fromCharCode(...bytes);
++    const aborted = () => Object.assign(new Error('Speech stopped'), {name: 'AbortError'});
++
++    function wav(parts, rate, channels = 1) {
++        const length = parts.reduce((sum, part) => sum + part.length, 0);
++        const bytes = new Uint8Array(44 + length);
++        const view = new DataView(bytes.buffer);
++        const text = (at, value) => [...value].forEach((c, i) => view.setUint8(at + i, c.charCodeAt(0)));
++        text(0, 'RIFF'); view.setUint32(4, 36 + length, true); text(8, 'WAVEfmt ');
++        view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, channels, true);
++        view.setUint32(24, rate, true); view.setUint32(28, rate * 2 * channels, true);
++        view.setUint16(32, 2 * channels, true); view.setUint16(34, 16, true);
++        text(36, 'data'); view.setUint32(40, length, true);
++        let at = 44;
++        for (const part of parts) { bytes.set(part, at); at += part.length; }
++        return bytes.buffer;
++    }
++
++    class SseTransport {
++        constructor(sink) { this.sink = sink; this.decoder = new TextDecoder(); this.pending = ''; this.done = false; }
++        event(block) {
++            const data = block.split('\n').filter(line => line.startsWith('data:')).map(line => line.slice(5).trimStart()).join('\n');
++            if (!data) return;
++            if (data === '[DONE]') { this.done = true; return; }
++            const message = JSON.parse(data);
++            if (message.error || message.type === 'error') throw new Error(JSON.stringify(message));
++            if (message.type === 'speech.audio.done') { this.done = true; return; }
++            if (message.type !== 'speech.audio.delta') return;
++            if (this.done) throw new Error('Audio received after completion');
++            this.sink.pcm(Uint8Array.from(atob(message.audio), c => c.charCodeAt(0)));
++        }
++        feed(bytes, done = false) {
++            this.pending = (this.pending + this.decoder.decode(bytes, {stream: !done})).replace(/\r\n/g, '\n');
++            let boundary;
++            while ((boundary = this.pending.indexOf('\n\n')) >= 0) {
++                this.event(this.pending.slice(0, boundary)); this.pending = this.pending.slice(boundary + 2);
++            }
++            if (done && this.pending.trim()) { this.event(this.pending); this.pending = ''; }
++        }
++        finish() {
++            this.feed(undefined, true);
++            if (!this.done) throw new Error('Audio stream ended without completion marker');
++        }
++    }
++
++    class HttpTransport {
++        constructor(sink, expectWav) {
++            this.sink = sink; this.expectWav = expectWav; this.header = new Uint8Array();
++            this.offset = 12; this.format = false; this.remaining = Infinity;
++        }
++        formatChunk(bytes) {
++            const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
++            const tag = view.getUint16(0, true);
++            const channels = view.getUint16(2, true), rate = view.getUint32(4, true);
++            const pcmGuid = [1, 0, 0, 0, 0, 0, 16, 0, 128, 0, 0, 170, 0, 56, 155, 113];
++            const extensiblePcm = tag === 65534 && bytes.length >= 40 && view.getUint16(16, true) >= 22 &&
++                view.getUint16(18, true) === 16 && pcmGuid.every((value, i) => bytes[24 + i] === value);
++            if ((tag !== 1 && !extensiblePcm) || view.getUint16(14, true) !== 16 ||
++                !channels || !rate || view.getUint16(12, true) !== channels * 2) throw new Error('WAV requires 16-bit PCM');
++            this.sink.rate = rate; this.sink.channels = channels; this.format = true;
++        }
++        audio(bytes) {
++            const count = Math.min(bytes.length, this.remaining);
++            this.sink.pcm(bytes.subarray(0, count)); this.remaining -= count;
++        }
++        feed(bytes) {
++            if (this.header === null) { this.audio(bytes); return; }
++            this.header = concat(this.header, bytes);
++            if (this.header.length < 4) return;
++            if (label(this.header.subarray(0, 4)) !== 'RIFF') {
++                if (this.expectWav) throw new Error('Invalid WAV header');
++                const raw = this.header; this.header = null; this.audio(raw); return;
++            }
++            if (this.header.length < 12) return;
++            if (label(this.header.subarray(8, 12)) !== 'WAVE') throw new Error('Invalid WAV stream');
++            const view = new DataView(this.header.buffer);
++            while (this.offset + 8 <= this.header.length) {
++                const at = this.offset, name = label(this.header.subarray(at, at + 4)), size = view.getUint32(at + 4, true);
++                if (name === 'data') {
++                    if (!this.format) throw new Error('WAV data precedes format');
++                    this.remaining = size === 0 || size === 0xffffffff ? Infinity : size;
++                    const raw = this.header.subarray(at + 8); this.header = null; this.audio(raw); return;
++                }
++                if (at + 8 + size > 65536) throw new Error('WAV header exceeds 64 KiB');
++                if (at + 8 + size > this.header.length) return;
++                if (name === 'fmt ') {
++                    if (size < 16) throw new Error('Incomplete WAV format');
++                    this.formatChunk(this.header.subarray(at + 8, at + 8 + size));
++                }
++                this.offset += 8 + size + size % 2;
++                if (this.offset > 65536) throw new Error('WAV header exceeds 64 KiB');
++            }
++        }
++        finish() {
++            if (this.header !== null && this.header.length && !this.expectWav &&
++                label(this.header.subarray(0, 4)) !== 'RIFF') {
++                const raw = this.header; this.header = null; this.audio(raw);
++            }
++            if (this.header !== null) throw new Error('Incomplete audio header');
++            if (Number.isFinite(this.remaining) && this.remaining) throw new Error('Truncated WAV data');
++        }
++    }
++
++    class PcmSink {
++        constructor(player, config) {
++            this.player = player; this.config = config; this.epoch = player.epoch;
++            this.rate = config.rate ?? 24000; this.channels = 1; this.carry = new Uint8Array(); this.parts = [];
++            this.stats = {chunks: 0, duration: 0, underruns: 0, lateSeconds: 0, arrivals: [], first: null};
++        }
++        check() { if (this.epoch !== this.player.epoch || this.config.signal?.aborted) throw aborted(); }
++        pcm(chunk) {
++            this.check();
++            const bytes = concat(this.carry, chunk), usable = bytes.length - bytes.length % (2 * this.channels);
++            this.carry = bytes.slice(usable);
++            if (!usable) return;
++            const pcm = bytes.subarray(0, usable), frames = usable / (2 * this.channels);
++            if (this.config.capture) this.parts.push(pcm);
++            const buffer = this.player.context.createBuffer(this.channels, frames, this.rate);
++            const view = new DataView(pcm.buffer, pcm.byteOffset, pcm.byteLength);
++            for (let ch = 0; ch < this.channels; ch++) {
++                const samples = buffer.getChannelData(ch);
++                for (let i = 0; i < frames; i++) samples[i] = view.getInt16((i * this.channels + ch) * 2, true) / 32768;
++            }
++            this.schedule(buffer);
++        }
++        schedule(buffer) {
++            this.check();
++            const stats = this.stats, now = this.player.context.currentTime;
++            const delay = this.config.bufferSeconds ?? 0.3;
++            if (!stats.chunks) this.player.endTime = Math.max(this.player.endTime, now + delay + 0.02);
++            else if (this.player.endTime < now + 0.01) {
++                stats.underruns++; stats.lateSeconds += Math.max(0, now - this.player.endTime);
++                this.player.endTime = now + delay + 0.02;
++            }
++            const elapsed = (performance.now() - this.config.started) / 1000;
++            stats.arrivals.push({chunk: stats.chunks + 1, arrived_s: elapsed, audio_s: buffer.duration, queued_s: this.player.endTime - now});
++            this.player.playBuffer(buffer, this.player.endTime);
++            stats.chunks++; stats.duration += buffer.duration; stats.first ??= elapsed;
++            this.config.onProgress?.(stats);
++        }
++        finish() {
++            this.check();
++            if (this.carry.length) throw new Error('Incomplete PCM frame');
++            if (!this.stats.chunks) throw new Error('No audio received');
++            return {...this.stats, recording: this.config.capture ? wav(this.parts, this.rate, this.channels) : null, recordingType: 'audio/wav'};
++        }
++    }
++
++    class Player {
++        constructor(context, destination = context.destination, onState = () => {}) {
++            this.context = context; this.destination = destination; this.onState = onState;
++            this.sources = new Set(); this.endTime = 0; this.epoch = 0;
++        }
++        stop() {
++            this.epoch++;
++            for (const source of this.sources) source.stop();
++            this.sources.clear(); this.endTime = 0; this.onState();
++        }
++        playBuffer(buffer, at = Math.max(this.endTime, this.context.currentTime + 0.02)) {
++            const source = this.context.createBufferSource(); source.buffer = buffer; source.connect(this.destination);
++            source.onended = () => { this.sources.delete(source); this.onState(); };
++            this.sources.add(source); source.start(at); this.endTime = at + buffer.duration; this.onState();
++        }
++        async consume(response, config = {}) {
++            const sink = new PcmSink(this, {started: performance.now(), ...config});
++            const type = (response.headers.get('Content-Type') || '').toLowerCase().split(';')[0].trim();
++            if (/^audio\/(mpeg|mp3|ogg|opus|aac|mp4|flac|webm)$/.test(type)) {
++                const bytes = await response.arrayBuffer(); sink.check();
++                const decoded = await this.context.decodeAudioData(bytes.slice(0)); sink.check(); sink.schedule(decoded);
++                return {...sink.stats, recording: config.capture ? bytes : null, recordingType: type};
++            }
++            const sse = type === 'text/event-stream';
++            if (!sse && !['', 'application/octet-stream', 'audio/pcm', 'audio/x-pcm', 'audio/wav', 'audio/x-wav', 'audio/wave'].includes(type))
++                throw new Error(`Unsupported streamed audio Content-Type: ${type}`);
++            const transport = sse ? new SseTransport(sink) : new HttpTransport(sink, type.includes('wav'));
++            const reader = response.body.getReader();
++            const cancel = () => { reader.cancel().catch(() => {}); };
++            config.signal?.addEventListener('abort', cancel, {once: true});
++            try {
++                while (true) {
++                    sink.check(); const {value, done} = await reader.read(); sink.check();
++                    if (value?.length) transport.feed(value);
++                    if (done) break;
++                }
++                transport.finish(); return sink.finish();
++            } finally {
++                config.signal?.removeEventListener('abort', cancel);
++                await reader.cancel().catch(() => {}); reader.releaseLock();
++            }
++        }
++    }
++
++    function request(payload, transport = 'audio') {
++        return {...payload, stream: true, stream_format: transport, response_format: 'pcm'};
++    }
++    globalThis.PcmAudio = {Player, wav, request};
++})();
+--- /dev/null
++++ b/kobold_audio.js
+@@ -0,0 +1,47 @@
++/* Lite lifecycle integration shared by the local panel and the single-toggle patch. */
++(() => {
++    let player;
++    let epoch = 0;
++    const requests = new Set();
++    function updateBusy() {
++        tts_is_processing = requests.size > 0;
++        tts_is_playing = (player?.sources.size ?? 0) > 0;
++        update_submit_button(false);
++    }
++    function stop() {
++        epoch++;
++        requests.forEach(controller => controller.abort()); requests.clear();
++        player?.stop();
++        tts_speak_input_queue = []; tts_speak_output_queue = [];
++        updateBusy();
++    }
++    async function speak(url, payload, headers, download, embed, config = {}) {
++        player ??= new PcmAudio.Player(ttsAudioContext, ttsMasterGain, updateBusy);
++        player.destination = ttsMasterGain;
++        const ticket = epoch, controller = new AbortController();
++        requests.add(controller); updateBusy();
++        const started = performance.now();
++        try {
++            await ttsAudioContext.resume();
++            if (ticket !== epoch) return;
++            const body = PcmAudio.request(payload, config.transport ?? 'audio');
++            // OpenAI's own endpoint does not accept the compatible-server stream flag.
++            if (new URL(url, location.href).hostname === 'api.openai.com') delete body.stream;
++            const response = await fetch(url, {method: 'POST', headers, body: JSON.stringify(body), signal: controller.signal});
++            if (ticket !== epoch) { await response.body?.cancel(); return; }
++            if (!response.ok) throw new Error(`${response.status}: ${await response.text()}`);
++            const result = await player.consume(response, {...config, started, signal: controller.signal, capture: download || embed});
++            if (ticket !== epoch) return;
++            if (download && result.recording) tts_download(result.recording);
++            if (embed && result.recording) tts_embed_audio(result.recording);
++            config.onComplete?.(result);
++        } catch (error) {
++            if (ticket === epoch && error.name !== 'AbortError') {
++                if (config.onError) config.onError(error);
++                else { console.error('[tts-stream]', error); msgbox('TTS Stream Error: ' + error.message); }
++            }
++        } finally { requests.delete(controller); updateBusy(); }
++    }
++    window.addEventListener('beforeunload', stop);
++    window.koboldAudioPlayback = {speak, stop};
++})();
+--- /dev/null
++++ b/kobold_streaming.js
+@@ -0,0 +1,222 @@
++/* Local Kobold Lite OpenAI speech streaming integration. */
++(() => {
++    const settings = window.koboldAudioSettings;
++    const panel = document.createElement('section');
++    panel.id = 'kas-panel';
++    panel.hidden = true;
++    panel.setAttribute('role', 'dialog');
++    panel.setAttribute('aria-label', 'Audio Streaming settings');
++    panel.innerHTML = `<style>
++        #kas-panel {
++            position: fixed; top: 65px; right: 16px; z-index: 99999;
++            display: flex; flex-direction: column; width: 480px;
++            max-width: calc(100vw - 32px); max-height: calc(100vh - 81px);
++            max-height: calc(100dvh - 81px); overflow: hidden;
++            background: #20242c; color: #e5e9f0; color-scheme: dark;
++            border: 1px solid #7d899d; border-radius: 8px;
++            box-shadow: 0 8px 32px #0008; font: 13px/1.5 system-ui;
++        }
++        #kas-panel[hidden] { display: none; }
++        #kas-panel, #kas-panel * { box-sizing: border-box; }
++        #kas-panel .kas-header { position: relative; padding: 16px 96px 12px 16px; border-bottom: 1px solid #424b5c; }
++        #kas-panel h3 { color: #f4f6fa; font-size: 20px; line-height: 1.3; margin: 0; }
++        #kas-panel .kas-subtitle { margin: 4px 0 0; color: #b8c2d1; }
++        #kas-panel #kas-close { position: absolute; top: 12px; right: 12px; min-height: 44px; margin: 0; }
++        #kas-panel .kas-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px; }
++        #kas-panel fieldset { min-width: 0; margin: 0 0 16px; padding: 12px; border: 1px solid #566175; border-radius: 6px; }
++        #kas-panel fieldset:last-child { margin-bottom: 0; }
++        #kas-panel legend { padding: 0 6px; color: #f4f6fa; font-weight: 600; }
++        #kas-panel .kas-field { display: grid; gap: 4px; margin-bottom: 12px; }
++        #kas-panel .kas-field:last-child { margin-bottom: 0; }
++        #kas-panel .kas-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
++        #kas-panel .kas-grid .kas-field { margin-bottom: 0; }
++        #kas-panel p { margin: 0 0 12px; }
++        #kas-panel .kas-help { color: #b8c2d1; font-size: 12px; }
++        #kas-panel .kas-footer { padding: 12px 16px; border-top: 1px solid #424b5c; }
++        #kas-panel #kas-status { margin: 8px 0 0; overflow-wrap: anywhere; }
++        #kas-panel input:not([type="checkbox"]), #kas-panel select, #kas-panel button {
++            background: #303744 !important; color: #f4f6fa !important;
++            border: 1px solid #7d899d; border-radius: 4px; padding: 8px;
++            font: inherit; line-height: 1.4; margin: 0; min-width: 0;
++            max-width: 100%; -webkit-text-fill-color: #f4f6fa;
++        }
++        #kas-panel .kas-field input, #kas-panel select { width: 100%; }
++        #kas-panel option, #kas-panel optgroup { background: #303744; color: #f4f6fa; }
++        #kas-panel input::placeholder { color: #b8c2d1; opacity: 1; -webkit-text-fill-color: #b8c2d1; }
++        #kas-panel input[type="checkbox"] { accent-color: #83b9ff; }
++        #kas-panel button { cursor: pointer; }
++        #kas-panel :disabled { opacity: .5; cursor: not-allowed; }
++        #kas-panel button:hover { background: #414d60 !important; }
++        #kas-panel input:focus-visible, #kas-panel select:focus-visible, #kas-panel button:focus-visible {
++            outline: 2px solid #a5ccff; outline-offset: 2px;
++        }
++        @media (max-width: 600px) {
++            #kas-panel { top: max(12px, env(safe-area-inset-top)); right: 12px; max-width: calc(100vw - 24px);
++                max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
++            #kas-panel .kas-grid { grid-template-columns: 1fr; }
++        }
++    </style>
++        <header class="kas-header">
++            <h3>Audio Streaming</h3><p class="kas-subtitle">Local additions</p>
++            <button id="kas-close" type="button" aria-label="Close Audio Streaming settings">Close</button>
++        </header>
++        <div class="kas-content">
++            <fieldset><legend>Text requests</legend>
++                <p class="kas-help">Original Kobold controls remain in Media. The default follows its Narration streaming checkbox.</p>
++                <label class="kas-field">Request mode <select id="kas-text-mode"><optgroup label="Original Kobold behavior"><option value="narration">Follow Media Narration streaming</option><option value="whole">Narration streaming OFF - whole response</option><option value="narration_on">Narration streaming ON - original chunks</option></optgroup><optgroup label="Local additions"><option value="bounded">Group text up to character limit</option><option value="sentences">Separate sentences (browser segmenter)</option></optgroup></select></label>
++                <label class="kas-field">Character limit <input id="kas-text-limit" type="number" min="80" max="2000"><span class="kas-help">Only used by the local character-group mode.</span></label>
++            </fieldset>
++            <fieldset><legend>Audio playback</legend>
++                <label><input id="kas-enabled" type="checkbox" checked> Stream OpenAI TTS audio</label>
++                <p class="kas-help">Local addition. Turn off to use original Kobold audio playback and Media text controls.</p>
++                <div class="kas-grid">
++                    <label class="kas-field">Playback buffer (ms) <input id="kas-buffer" type="number" min="0" max="10000" step="50" value="${settings.playback_buffer_ms}"></label>
++                    <label class="kas-field">PCM sample rate (Hz) <input id="kas-rate" type="number" min="8000" value="${settings.pcm_sample_rate}"></label>
++                </div>
++            </fieldset>
++            <fieldset><legend>Server streaming options</legend>
++                <p class="kas-help">Only used with streamed audio. Blank uses server defaults; unsupported options produce a visible error.</p>
++                <label class="kas-field">Transport <select id="kas-transport"><option value="">Launcher default</option><option value="sse">SSE audio events</option><option value="audio">Raw HTTP PCM/WAV</option></select></label>
++                <label class="kas-field">Chunk policy <select id="kas-policy"><option value="">Server default</option><option>grow</option><option>fixed</option></select></label>
++                <div class="kas-grid">
++                    <label class="kas-field">Frames per event <input id="kas-frames" type="number" min="1" placeholder="Server default"></label>
++                    <label class="kas-field">Lookahead frames <input id="kas-lookahead" type="number" min="0" placeholder="Server default"></label>
++                </div>
++            </fieldset>
++        </div>
++        <footer class="kas-footer">
++            <button id="kas-stop" type="button">Stop speech</button>
++            <p id="kas-status" aria-live="polite">Ready. Select OpenAI-Compatible API Server in Media.</p>
++        </footer>`;
++    document.body.append(panel);
++    const menuItem = document.createElement('li');
++    menuItem.className = 'nav-item';
++    const menuButton = document.createElement('button');
++    menuButton.type = 'button';
++    menuButton.className = 'nav-link mainnav';
++    menuButton.textContent = 'Audio Streaming';
++    menuButton.onclick = () => { closeTopNav(); panel.hidden = !panel.hidden; };
++    menuItem.append(menuButton);
++    document.querySelector('#topmenu ul').append(menuItem);
++    panel.querySelector('#kas-close').onclick = () => { panel.hidden = true; };
++    const controls = [...panel.querySelectorAll('input,select')];
++    for (const [id, key] of [['kas-enabled', 'streaming_enabled'], ['kas-buffer', 'playback_buffer_ms'],
++        ['kas-rate', 'pcm_sample_rate'], ['kas-text-mode', 'text_mode'], ['kas-text-limit', 'text_limit'],
++        ['kas-policy', 'stream_chunk_policy'], ['kas-frames', 'stream_frames_per_event'],
++        ['kas-lookahead', 'stream_lookahead_margin']]) {
++        const control = panel.querySelector('#' + id);
++        if (control.type === 'checkbox') control.checked = settings[key];
++        else control.value = settings[key] ?? '';
++    }
++    panel.querySelector('#kas-transport').title = `Launcher default: ${settings.transport === 'sse' ? 'SSE' : 'Raw PCM'}`;
++    try {
++        const saved = JSON.parse(localStorage.getItem('kobold-audio-streaming') || '{}');
++        for (const control of controls) if (saved[control.id] !== undefined) {
++            if (control.type === 'checkbox') control.checked = saved[control.id];
++            else control.value = saved[control.id];
++        }
++    } catch (error) { console.warn('[kobold-audio-stream] settings:', error); }
++    function updateControls() {
++        const streaming = panel.querySelector('#kas-enabled').checked;
++        panel.querySelector('#kas-text-mode').disabled = !streaming;
++        panel.querySelector('#kas-text-limit').disabled = !streaming || panel.querySelector('#kas-text-mode').value !== 'bounded';
++        for (const id of ['buffer', 'rate', 'transport', 'policy', 'frames', 'lookahead']) {
++            panel.querySelector('#kas-' + id).disabled = !streaming;
++        }
++    }
++    updateControls();
++    panel.addEventListener('change', () => {
++        updateControls();
++        const saved = Object.fromEntries(controls.map(control => [control.id, control.type === 'checkbox' ? control.checked : control.value]));
++        try { localStorage.setItem('kobold-audio-streaming', JSON.stringify(saved)); }
++        catch (error) { console.warn('[kobold-audio-stream] settings:', error); }
++    });
++    const status = panel.querySelector('#kas-status');
++    const tonePattern = /\[(?:Tone|Mood|Instruction|Voice):\s*([^\]]+)\]/gi;
++    function useTextQueue(originalNarrationStreaming) {
++        const mode = panel.querySelector('#kas-text-mode').value;
++        if (mode === 'whole') return false;
++        return mode === 'narration' ? originalNarrationStreaming : true;
++    }
++    function toneInstruction(text) {
++        if (settings.tone_tags_enabled === false) return null;
++        return [...text.matchAll(tonePattern)][0]?.[1].trim() ?? null;
++    }
++    function chunkText(text) {
++        if (settings.tone_tags_enabled === false) text = text.replace(tonePattern, '');
++        const mode = panel.querySelector('#kas-text-mode').value;
++        if (mode === 'whole') return [text.trim()].filter(Boolean);
++        const blocks = [];
++        let tag = '';
++        let start = 0;
++        for (const match of text.matchAll(tonePattern)) {
++            const content = text.slice(start, match.index).trim();
++            if (content) blocks.push({tag, content});
++            tag = match[0];
++            start = match.index + match[0].length;
++        }
++        const tail = text.slice(start).trim();
++        if (tail) blocks.push({tag, content: tail});
++        const chunks = [];
++        for (const {tag, content} of blocks) {
++            const prefix = tag ? tag + ' ' : '';
++            if (mode === 'narration' || mode === 'narration_on') {
++                const originalChunks = content.replaceAll('. ', '.\n').replaceAll('! ', '!\n').replaceAll('? ', '?\n')
++                    .split('\n').map(chunk => chunk.trim()).filter(Boolean);
++                chunks.push(...originalChunks.map(chunk => prefix + chunk));
++                continue;
++            }
++            const sentences = [...new Intl.Segmenter(undefined, {granularity: 'sentence'}).segment(content)]
++                .map(item => item.segment.trim()).filter(Boolean);
++            if (mode === 'sentences') { chunks.push(...sentences.map(sentence => prefix + sentence)); continue; }
++            const limit = Math.max(80, Number(panel.querySelector('#kas-text-limit').value) || settings.text_limit);
++            let current = '';
++            for (const sentence of sentences) for (const word of sentence.split(/\s+/)) {
++                if (current && prefix.length + current.length + word.length + 1 > limit) {
++                    chunks.push(prefix + current); current = '';
++                }
++                current += (current ? ' ' : '') + word;
++            }
++            if (current) chunks.push(prefix + current);
++        }
++        return chunks;
++    }
++
++    function stop() {
++        window.koboldAudioPlayback.stop();
++        status.textContent = 'Speech stopped';
++    }
++    panel.querySelector('#kas-stop').onclick = stop;
++    panel.querySelector('#kas-enabled').onchange = stop;
++
++    function speechEndpoint(url) {
++        // Route this PC's audio proxy through Lite's origin for remote/mobile clients.
++        const endpoint = new URL(url, location.href);
++        if (['localhost', '127.0.0.1'].includes(endpoint.hostname) &&
++            endpoint.port === String(settings.audioProxyPort) && endpoint.pathname === '/v1/audio/speech') {
++            return new URL('/v1/audio/speech', location.href).href;
++        }
++        return url;
++    }
++
++    async function speak(url, payload, headers, download, embed) {
++        const options = {...payload.options};
++        for (const [id, key] of [['kas-policy', 'stream_chunk_policy'], ['kas-frames', 'stream_frames_per_event'], ['kas-lookahead', 'stream_lookahead_margin']]) {
++            const value = panel.querySelector('#' + id).value.trim();
++            if (value) options[key] = id === 'kas-policy' ? value : Number(value);
++        }
++        status.textContent = 'Generating speech...';
++        const bufferSeconds = Math.max(0, Number(panel.querySelector('#kas-buffer').value)) / 1000;
++        const onProgress = stats => {
++            status.textContent = `First data ${stats.first.toFixed(2)}s | ${stats.chunks} chunks | ${stats.underruns} underruns | buffer ${bufferSeconds}s`;
++        };
++        await window.koboldAudioPlayback.speak(speechEndpoint(url), {...payload, options}, headers, download, embed, {
++            bufferSeconds, rate: Number(panel.querySelector('#kas-rate').value),
++            transport: panel.querySelector('#kas-transport').value || settings.transport || 'audio',
++            onProgress, onComplete: () => { status.textContent += ' | generation complete'; },
++            onError: error => { status.textContent = `Speech error: ${error.message}`; console.error('[kobold-audio-stream]', error); },
++        });
++    }
++    window.koboldAudioStream = {enabled: () => panel.querySelector('#kas-enabled').checked, speak, stop, chunkText, toneInstruction, speechEndpoint, useTextQueue};
++})();
++

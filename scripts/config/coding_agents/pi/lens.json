@@ -1,0 +1,28 @@
+{
+  "contextInjection": {
+    "enabled": false
+  },
+  "ignore": [
+    "data/**",
+    "frameworks/**",
+    "trash/**",
+    "scripts/.venv/**",
+    "scripts/state/**",
+    "scripts/tests/output/**"
+  ],
+  "lsp": {
+    "servers": {
+      "pyright": {
+        "extensions": [
+          ".py",
+          ".pyi"
+        ],
+        "command": [
+          "node",
+          "{AI_ROOT}/scripts/.venv/Lib/site-packages/basedpyright/dist/pyright-langserver.js",
+          "--stdio"
+        ]
+      }
+    }
+  }
+}

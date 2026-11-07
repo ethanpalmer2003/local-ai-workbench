@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "policy": "Published quality is checkpoint/dataset/mode specific. Never transfer scores between model family members or claim quantized-runtime parity. Prefer per-language WER/CER over overall rank.",
+  "results": [
+    {
+      "model_ids": [
+        "audiocpp/nemotron-3.5-q8_0",
+        "asr/nemo-speechcpp/nemotron-3.5-q8_0",
+        "asr/parakeetcpp/nemotron-3.5-streaming-q8_0"
+      ],
+      "publisher_model": "nvidia/nemotron-3.5-asr-streaming-0.6b",
+      "source": "https://huggingface.co/nvidia/nemotron-3.5-asr-streaming-0.6b#performance",
+      "observed_date": "2026-10-28",
+      "verification": "publisher table verified; not independent local measurement",
+      "benchmark": "FLEURS test; selected practice languages; publisher normalization",
+      "metric": "WER percent; lower is better",
+      "streaming_chunk_ms": [
+        80,
+        160,
+        320,
+        560,
+        1120
+      ],
+      "language_input": {
+        "en": [
+          9.43,
+          8.88,
+          8.27,
+          7.99,
+          7.91
+        ],
+        "es": [
+          4.87,
+          4.64,
+          4.39,
+          4.26,
+          4.11
+        ],
+        "fr": [
+          10.97,
+          10.6,
+          9.79,
+          9.45,
+          9.03
+        ]
+      },
+      "auto_detect": {
+        "en": [
+          9.72,
+          9.34,
+          8.84,
+          8.8,
+          8.84
+        ],
+        "es": [
+          5.04,
+          4.82,
+          4.48,
+          4.34,
+          4.13
+        ],
+        "fr": [
+          11.03,
+          10.6,
+          9.84,
+          9.46,
+          9.02
+        ]
+      },
+      "limits": "Not 30B Transcribe leaderboard scores. Native Q8 conversions unverified for parity. Chunk size is algorithmic lookahead, not measured end-to-end latency. Cross-publisher normalization may differ."
+    },
+    {
+      "model_ids": [
+        "asr/llamacpp/qwen3-asr-1.7b-q8_0"
+      ],
+      "publisher_model": "Qwen/Qwen3-ASR-1.7B",
+      "source": "https://huggingface.co/Qwen/Qwen3-ASR-1.7B#evaluation",
+      "observed_date": "2026-10-28",
+      "verification": "publisher table verified; not independent local measurement",
+      "benchmark": "Publisher ASR inference mode comparison",
+      "precision": "bfloat16; vLLM; greedy; no language parameter",
+      "metric": "WER percent; lower is better",
+      "datasets": [
+        "LibriSpeech clean",
+        "LibriSpeech other",
+        "FLEURS English",
+        "FLEURS Chinese"
+      ],
+      "offline": [
+        1.63,
+        3.38,
+        3.35,
+        2.41
+      ],
+      "streaming": [
+        1.95,
+        4.51,
+        4.02,
+        2.84
+      ],
+      "limits": "Not the Open ASR leaderboard aggregate and not measured on our Q8 llama.cpp conversion."
+    },
+    {
+      "model_ids": [
+        "asr/speechcpp/qwen3-asr-0.6b-q8_0"
+      ],
+      "publisher_model": "Qwen/Qwen3-ASR-0.6B",
+      "source": "https://huggingface.co/Qwen/Qwen3-ASR-1.7B#evaluation",
+      "observed_date": "2026-10-28",
+      "verification": "publisher table verified; not independent local measurement",
+      "benchmark": "Publisher ASR inference mode comparison",
+      "precision": "bfloat16; vLLM; greedy; no language parameter",
+      "metric": "WER percent; lower is better",
+      "datasets": [
+        "LibriSpeech clean",
+        "LibriSpeech other",
+        "FLEURS English",
+        "FLEURS Chinese"
+      ],
+      "offline": [
+        2.11,
+        4.55,
+        4.39,
+        2.88
+      ],
+      "streaming": [
+        2.54,
+        6.27,
+        5.38,
+        3.4
+      ],
+      "limits": "Not measured on our Q8 speech.cpp conversion."
+    },
+    {
+      "model_ids": [
+        "asr/audiocpp/higgs-audio-v3-stt-q8_0"
+      ],
+      "publisher_model": "bosonai/higgs-audio-v3-stt",
+      "source": "https://huggingface.co/spaces/hf-audio/open_asr_leaderboard",
+      "observed_date": "2026-10-28",
+      "verification": "user-provided leaderboard snapshot; aggregate not independently reproduced",
+      "benchmark": "Open ASR leaderboard; tab/dataset selection not fully captured",
+      "reported_rank": 18,
+      "reported_average_wer_percent": 5.92,
+      "limits": "Publisher warns leaderboard results predate its June 2026 checkpoint update. GGUF conversion revision/parity unknown.",
+      "checkpoint_warning_source": "https://huggingface.co/bosonai/higgs-audio-v3-stt"
+    },
+    {
+      "model_ids": [],
+      "publisher_model": "nvidia/Nemotron-3.5-Transcribe-30B-A4B",
+      "source": "https://huggingface.co/spaces/hf-audio/open_asr_leaderboard",
+      "observed_date": "2026-10-28",
+      "verification": "user-provided leaderboard snapshot; aggregate not independently reproduced",
+      "reported_rank": 9,
+      "reported_average_wer_percent": 5.33,
+      "limits": "Different from installed nemotron-3.5-asr-streaming-0.6b. No score transfer.",
+      "parameter_source": "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B",
+      "publisher_total_parameters_billion": 34,
+      "publisher_active_parameters_billion": 4.3
+    },
+    {
+      "model_ids": [
+        "asr/llamacpp/qwen3-asr-1.7b-q8_0"
+      ],
+      "publisher_model": "Qwen/Qwen3-ASR-1.7B",
+      "source": "https://huggingface.co/spaces/hf-audio/open_asr_leaderboard",
+      "observed_date": "2026-10-28",
+      "verification": "user-provided leaderboard snapshot; rank not independently reproduced",
+      "reported_rank": 11,
+      "limits": "Rank changes with version, tab and dataset filters; exact runtime/checkpoint parity unknown."
+    },
+    {
+      "model_ids": [
+        "asr/llamacpp/qwen3-asr-1.7b-q8_0"
+      ],
+      "publisher_model": "Qwen/Qwen3-ASR-1.7B-hf",
+      "source": "https://huggingface.co/spaces/hf-audio/open_asr_leaderboard",
+      "observed_date": "2026-10-29",
+      "verification": "Downloaded directly from public Gradio API; exact filters saved",
+      "snapshot": "scripts/tests/notes/asr/leaderboards-2026-10-29/english-local-under-5b.csv",
+      "benchmark": "English default datasets; local models <=5B filter",
+      "rank": 1,
+      "average_wer_percent": 5.4,
+      "publisher_rtfx": 819.3,
+      "publisher_parameters_billion": 2.04,
+      "limits": "RTFx is publisher hardware/runtime throughput, not local AMD speed, VRAM or interactive latency. GGUF accuracy parity unverified."
+    },
+    {
+      "model_ids": [
+        "asr/audiocpp/cohere-transcribe-03-2026-q8_0"
+      ],
+      "publisher_model": "CohereLabs/cohere-transcribe-03-2026",
+      "source": "https://huggingface.co/spaces/hf-audio/open_asr_leaderboard",
+      "observed_date": "2026-10-29",
+      "verification": "Downloaded directly from public Gradio API; exact filters saved",
+      "snapshot": "scripts/tests/notes/asr/leaderboards-2026-10-29/english-local-under-5b.csv",
+      "benchmark": "English default datasets; local models <=5B filter",
+      "rank": 3,
+      "average_wer_percent": 5.77,
+      "publisher_rtfx": 902.46,
+      "publisher_parameters_billion": 2.0,
+      "limits": "RTFx is publisher hardware/runtime throughput, not local AMD speed, VRAM or interactive latency. GGUF accuracy parity unverified."
+    },
+    {
+      "model_ids": [
+        "asr/speechcpp/qwen3-asr-0.6b-q8_0"
+      ],
+      "publisher_model": "Qwen/Qwen3-ASR-0.6B-hf",
+      "source": "https://huggingface.co/spaces/hf-audio/open_asr_leaderboard",
+      "observed_date": "2026-10-29",
+      "verification": "Downloaded directly from public Gradio API; exact filters saved",
+      "snapshot": "scripts/tests/notes/asr/leaderboards-2026-10-29/english-local-under-5b.csv",
+      "benchmark": "English default datasets; local models <=5B filter",
+      "rank": 17,
+      "average_wer_percent": 6.24,
+      "publisher_rtfx": 745.08,
+      "publisher_parameters_billion": 0.78,
+      "limits": "RTFx is publisher hardware/runtime throughput, not local AMD speed, VRAM or interactive latency. GGUF accuracy parity unverified."
+    },
+    {
+      "model_ids": [
+        "asr/parakeetcpp/parakeet-tdt-0.6b-v3-q8_0"
+      ],
+      "publisher_model": "nvidia/parakeet-tdt-0.6b-v3",
+      "source": "https://huggingface.co/spaces/hf-audio/open_asr_leaderboard",
+      "observed_date": "2026-10-29",
+      "verification": "Downloaded directly from public Gradio API; exact filters saved",
+      "snapshot": "scripts/tests/notes/asr/leaderboards-2026-10-29/english-local-under-5b.csv",
+      "benchmark": "English default datasets; local models <=5B filter",
+      "rank": 16,
+      "average_wer_percent": 6.18,
+      "publisher_rtfx": 6132.34,
+      "publisher_parameters_billion": 0.6,
+      "limits": "RTFx is publisher hardware/runtime throughput, not local AMD speed, VRAM or interactive latency. GGUF accuracy parity unverified."
+    },
+    {
+      "model_ids": [
+        "asr/llamacpp/granite-speech-5.0-2b-q8_0"
+      ],
+      "publisher_model": "ibm-granite/granite-speech-5.0-2b",
+      "source": "https://huggingface.co/spaces/hf-audio/open_asr_leaderboard",
+      "observed_date": "2026-10-29",
+      "verification": "Downloaded directly from public Gradio API; exact filters saved",
+      "snapshot": "scripts/tests/notes/asr/leaderboards-2026-10-29/english-local-under-5b.csv",
+      "benchmark": "English default datasets; local models <=5B filter",
+      "rank": 2,
+      "average_wer_percent": 5.68,
+      "publisher_rtfx": 544.52,
+      "publisher_parameters_billion": 2.31,
+      "limits": "RTFx is publisher hardware/runtime throughput, not local AMD speed, VRAM or interactive latency. GGUF accuracy parity unverified."
+    }
+  ]
+}

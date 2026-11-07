@@ -1,0 +1,1277 @@
+{
+  "schema_version": 1,
+  "reviewed": "2026-10-28",
+  "scope": "Registered ASR/TTS checkpoints; conversions grouped. VAD, projectors, tokens and voices are not separate linguistic models. Listed coverage is not accuracy validation.",
+  "language_names": {
+    "en": "english",
+    "zh": "chinese",
+    "de": "german",
+    "es": "spanish",
+    "ru": "russian",
+    "ko": "korean",
+    "fr": "french",
+    "ja": "japanese",
+    "pt": "portuguese",
+    "tr": "turkish",
+    "pl": "polish",
+    "ca": "catalan",
+    "nl": "dutch",
+    "ar": "arabic",
+    "sv": "swedish",
+    "it": "italian",
+    "id": "indonesian",
+    "hi": "hindi",
+    "fi": "finnish",
+    "vi": "vietnamese",
+    "he": "hebrew",
+    "uk": "ukrainian",
+    "el": "greek",
+    "ms": "malay",
+    "cs": "czech",
+    "ro": "romanian",
+    "da": "danish",
+    "hu": "hungarian",
+    "ta": "tamil",
+    "no": "Norwegian",
+    "th": "thai",
+    "ur": "urdu",
+    "hr": "croatian",
+    "bg": "bulgarian",
+    "lt": "lithuanian",
+    "la": "latin",
+    "mi": "maori",
+    "ml": "malayalam",
+    "cy": "welsh",
+    "sk": "slovak",
+    "te": "telugu",
+    "fa": "persian",
+    "lv": "latvian",
+    "bn": "bengali",
+    "sr": "serbian",
+    "az": "azerbaijani",
+    "sl": "slovenian",
+    "kn": "kannada",
+    "et": "estonian",
+    "mk": "macedonian",
+    "br": "breton",
+    "eu": "basque",
+    "is": "icelandic",
+    "hy": "armenian",
+    "ne": "nepali",
+    "mn": "mongolian",
+    "bs": "bosnian",
+    "kk": "kazakh",
+    "sq": "albanian",
+    "sw": "swahili",
+    "gl": "galician",
+    "mr": "marathi",
+    "pa": "punjabi",
+    "si": "sinhala",
+    "km": "khmer",
+    "sn": "shona",
+    "yo": "yoruba",
+    "so": "somali",
+    "af": "afrikaans",
+    "oc": "occitan",
+    "ka": "georgian",
+    "be": "belarusian",
+    "tg": "tajik",
+    "sd": "sindhi",
+    "gu": "gujarati",
+    "am": "amharic",
+    "yi": "yiddish",
+    "lo": "lao",
+    "uz": "uzbek",
+    "fo": "faroese",
+    "ht": "haitian creole",
+    "ps": "pashto",
+    "tk": "turkmen",
+    "nn": "Norwegian Nynorsk",
+    "mt": "maltese",
+    "sa": "sanskrit",
+    "lb": "luxembourgish",
+    "my": "myanmar",
+    "bo": "tibetan",
+    "tl": "tagalog",
+    "mg": "malagasy",
+    "as": "assamese",
+    "tt": "tatar",
+    "haw": "hawaiian",
+    "ln": "lingala",
+    "ha": "hausa",
+    "ba": "bashkir",
+    "jw": "javanese",
+    "su": "sundanese",
+    "yue": "Cantonese",
+    "fil": "Filipino",
+    "nb": "Norwegian Bokmal"
+  },
+  "models": [
+    {
+      "distribution": "nemotron-3.5",
+      "name": "Nemotron 3.5 Streaming 0.6B",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "audiocpp/nemotron-3.5-q8_0",
+        "asr/nemo-speechcpp/nemotron-3.5-q8_0",
+        "asr/parakeetcpp/nemotron-3.5-streaming-q8_0"
+      ],
+      "languages": [
+        "en",
+        "es",
+        "de",
+        "fr",
+        "it",
+        "ar",
+        "ja",
+        "ko",
+        "pt",
+        "ru",
+        "hi",
+        "zh",
+        "vi",
+        "he",
+        "nl",
+        "cs",
+        "da",
+        "pl",
+        "no",
+        "sv",
+        "th",
+        "tr",
+        "bg",
+        "el",
+        "et",
+        "fi",
+        "hr",
+        "hu",
+        "lt",
+        "lv",
+        "ro",
+        "sk",
+        "uk",
+        "mt",
+        "sl"
+      ],
+      "locales": [
+        "ar-AR",
+        "bg-BG",
+        "cs-CZ",
+        "da-DK",
+        "de-DE",
+        "el-GR",
+        "en-GB",
+        "en-US",
+        "es-ES",
+        "es-US",
+        "et-EE",
+        "fi-FI",
+        "fr-CA",
+        "fr-FR",
+        "he-IL",
+        "hi-IN",
+        "hr-HR",
+        "hu-HU",
+        "it-IT",
+        "ja-JP",
+        "ko-KR",
+        "lt-LT",
+        "lv-LV",
+        "mt-MT",
+        "nb-NO",
+        "nl-NL",
+        "nn-NO",
+        "pl-PL",
+        "pt-BR",
+        "pt-PT",
+        "ro-RO",
+        "ru-RU",
+        "sk-SK",
+        "sl-SI",
+        "sv-SE",
+        "th-TH",
+        "tr-TR",
+        "uk-UA",
+        "vi-VN",
+        "zh-CN"
+      ],
+      "dialects": [],
+      "notes": "35 card language labels; 40 locales; 32 locales work out of the box, eight require adaptation.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/nvidia/nemotron-3.5-asr-streaming-0.6b",
+          "revision": "ea30d66debe3740a08b573244286791d423d6b3e"
+        }
+      ],
+      "coverage_tiers": {
+        "transcription_ready": [
+          "en-US",
+          "en-GB",
+          "es-US",
+          "es-ES",
+          "fr-FR",
+          "fr-CA",
+          "it-IT",
+          "pt-BR",
+          "pt-PT",
+          "nl-NL",
+          "de-DE",
+          "tr-TR",
+          "ru-RU",
+          "ar-AR",
+          "hi-IN",
+          "ja-JP",
+          "ko-KR",
+          "vi-VN",
+          "uk-UA"
+        ],
+        "broad_coverage": [
+          "pl-PL",
+          "sv-SE",
+          "cs-CZ",
+          "nb-NO",
+          "da-DK",
+          "bg-BG",
+          "fi-FI",
+          "hr-HR",
+          "sk-SK",
+          "zh-CN",
+          "hu-HU",
+          "ro-RO",
+          "et-EE"
+        ],
+        "adaptation_required": [
+          "el-GR",
+          "lt-LT",
+          "lv-LV",
+          "mt-MT",
+          "sl-SI",
+          "he-IL",
+          "th-TH",
+          "nn-NO"
+        ]
+      }
+    },
+    {
+      "distribution": "whisper-turbo",
+      "name": "Whisper large-v3-turbo-q5_0",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "asr/whispercpp/large-v3-turbo-q5_0"
+      ],
+      "languages": [
+        "af",
+        "am",
+        "ar",
+        "as",
+        "az",
+        "ba",
+        "be",
+        "bg",
+        "bn",
+        "bo",
+        "br",
+        "bs",
+        "ca",
+        "cs",
+        "cy",
+        "da",
+        "de",
+        "el",
+        "en",
+        "es",
+        "et",
+        "eu",
+        "fa",
+        "fi",
+        "fo",
+        "fr",
+        "gl",
+        "gu",
+        "haw",
+        "ha",
+        "he",
+        "hi",
+        "hr",
+        "ht",
+        "hu",
+        "hy",
+        "id",
+        "is",
+        "it",
+        "ja",
+        "jw",
+        "ka",
+        "kk",
+        "km",
+        "kn",
+        "ko",
+        "la",
+        "lb",
+        "ln",
+        "lo",
+        "lt",
+        "lv",
+        "mg",
+        "mi",
+        "mk",
+        "ml",
+        "mn",
+        "mr",
+        "ms",
+        "mt",
+        "my",
+        "ne",
+        "nl",
+        "nn",
+        "no",
+        "oc",
+        "pa",
+        "pl",
+        "ps",
+        "pt",
+        "ro",
+        "ru",
+        "sa",
+        "sd",
+        "si",
+        "sk",
+        "sl",
+        "sn",
+        "so",
+        "sq",
+        "sr",
+        "su",
+        "sv",
+        "sw",
+        "ta",
+        "te",
+        "tg",
+        "th",
+        "tk",
+        "tl",
+        "tr",
+        "tt",
+        "uk",
+        "ur",
+        "uz",
+        "vi",
+        "yi",
+        "yo",
+        "yue",
+        "zh"
+      ],
+      "locales": [],
+      "dialects": [],
+      "notes": "Counts decoder language IDs, not equal accuracy. Turbo has 100 decoder tags including Cantonese; Hub card lists 99.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/openai/whisper-large-v3-turbo",
+          "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9"
+        },
+        {
+          "url": "https://huggingface.co/openai/whisper-large-v3-turbo/resolve/main/generation_config.json",
+          "kind": "generation_config.lang_to_id"
+        }
+      ]
+    },
+    {
+      "distribution": "whisper-small",
+      "name": "Whisper small",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "asr/whispercpp/small"
+      ],
+      "languages": [
+        "af",
+        "am",
+        "ar",
+        "as",
+        "az",
+        "ba",
+        "be",
+        "bg",
+        "bn",
+        "bo",
+        "br",
+        "bs",
+        "ca",
+        "cs",
+        "cy",
+        "da",
+        "de",
+        "el",
+        "en",
+        "es",
+        "et",
+        "eu",
+        "fa",
+        "fi",
+        "fo",
+        "fr",
+        "gl",
+        "gu",
+        "haw",
+        "ha",
+        "he",
+        "hi",
+        "hr",
+        "ht",
+        "hu",
+        "hy",
+        "id",
+        "is",
+        "it",
+        "ja",
+        "jw",
+        "ka",
+        "kk",
+        "km",
+        "kn",
+        "ko",
+        "la",
+        "lb",
+        "ln",
+        "lo",
+        "lt",
+        "lv",
+        "mg",
+        "mi",
+        "mk",
+        "ml",
+        "mn",
+        "mr",
+        "ms",
+        "mt",
+        "my",
+        "ne",
+        "nl",
+        "nn",
+        "no",
+        "oc",
+        "pa",
+        "pl",
+        "ps",
+        "pt",
+        "ro",
+        "ru",
+        "sa",
+        "sd",
+        "si",
+        "sk",
+        "sl",
+        "sn",
+        "so",
+        "sq",
+        "sr",
+        "su",
+        "sv",
+        "sw",
+        "ta",
+        "te",
+        "tg",
+        "th",
+        "tk",
+        "tl",
+        "tr",
+        "tt",
+        "uk",
+        "ur",
+        "uz",
+        "vi",
+        "yi",
+        "yo",
+        "zh"
+      ],
+      "locales": [],
+      "dialects": [],
+      "notes": "Counts decoder language IDs, not equal accuracy. Multilingual checkpoint, not an English-only .en model.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/openai/whisper-small",
+          "revision": "973afd24965f72e36ca33b3055d56a652f456b4d"
+        },
+        {
+          "url": "https://huggingface.co/openai/whisper-small/resolve/main/generation_config.json",
+          "kind": "generation_config.lang_to_id"
+        }
+      ]
+    },
+    {
+      "distribution": "whisper-base",
+      "name": "Whisper base",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "asr/whispercpp/base"
+      ],
+      "languages": [
+        "af",
+        "am",
+        "ar",
+        "as",
+        "az",
+        "ba",
+        "be",
+        "bg",
+        "bn",
+        "bo",
+        "br",
+        "bs",
+        "ca",
+        "cs",
+        "cy",
+        "da",
+        "de",
+        "el",
+        "en",
+        "es",
+        "et",
+        "eu",
+        "fa",
+        "fi",
+        "fo",
+        "fr",
+        "gl",
+        "gu",
+        "haw",
+        "ha",
+        "he",
+        "hi",
+        "hr",
+        "ht",
+        "hu",
+        "hy",
+        "id",
+        "is",
+        "it",
+        "ja",
+        "jw",
+        "ka",
+        "kk",
+        "km",
+        "kn",
+        "ko",
+        "la",
+        "lb",
+        "ln",
+        "lo",
+        "lt",
+        "lv",
+        "mg",
+        "mi",
+        "mk",
+        "ml",
+        "mn",
+        "mr",
+        "ms",
+        "mt",
+        "my",
+        "ne",
+        "nl",
+        "nn",
+        "no",
+        "oc",
+        "pa",
+        "pl",
+        "ps",
+        "pt",
+        "ro",
+        "ru",
+        "sa",
+        "sd",
+        "si",
+        "sk",
+        "sl",
+        "sn",
+        "so",
+        "sq",
+        "sr",
+        "su",
+        "sv",
+        "sw",
+        "ta",
+        "te",
+        "tg",
+        "th",
+        "tk",
+        "tl",
+        "tr",
+        "tt",
+        "uk",
+        "ur",
+        "uz",
+        "vi",
+        "yi",
+        "yo",
+        "zh"
+      ],
+      "locales": [],
+      "dialects": [],
+      "notes": "Counts decoder language IDs, not equal accuracy. Multilingual checkpoint, not an English-only .en model.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/openai/whisper-base",
+          "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb"
+        },
+        {
+          "url": "https://huggingface.co/openai/whisper-base/resolve/main/generation_config.json",
+          "kind": "generation_config.lang_to_id"
+        }
+      ]
+    },
+    {
+      "distribution": "qwen3-asr-0.6b",
+      "name": "Qwen3-ASR 0.6B",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "asr/speechcpp/qwen3-asr-0.6b-q8_0"
+      ],
+      "languages": [
+        "zh",
+        "en",
+        "yue",
+        "ar",
+        "de",
+        "fr",
+        "es",
+        "pt",
+        "id",
+        "it",
+        "ko",
+        "ru",
+        "th",
+        "vi",
+        "ja",
+        "tr",
+        "hi",
+        "ms",
+        "nl",
+        "sv",
+        "da",
+        "fi",
+        "pl",
+        "cs",
+        "fil",
+        "fa",
+        "el",
+        "hu",
+        "mk",
+        "ro"
+      ],
+      "locales": [],
+      "dialects": [
+        "Anhui",
+        "Dongbei",
+        "Fujian",
+        "Gansu",
+        "Guizhou",
+        "Hebei",
+        "Henan",
+        "Hubei",
+        "Hunan",
+        "Jiangxi",
+        "Ningxia",
+        "Shandong",
+        "Shaanxi",
+        "Shanxi",
+        "Sichuan",
+        "Tianjin",
+        "Yunnan",
+        "Zhejiang",
+        "Cantonese (Hong Kong accent)",
+        "Cantonese (Guangdong accent)",
+        "Wu language",
+        "Minnan language"
+      ],
+      "notes": "30 languages plus 22 Chinese dialect entries; not 52 distinct languages.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/Qwen/Qwen3-ASR-0.6B",
+          "revision": "5eb144179a02acc5e5ba31e748d22b0cf3e303b0"
+        }
+      ]
+    },
+    {
+      "distribution": "qwen3-asr-1.7b",
+      "name": "Qwen3-ASR 1.7B",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "asr/llamacpp/qwen3-asr-1.7b-q8_0"
+      ],
+      "languages": [
+        "zh",
+        "en",
+        "yue",
+        "ar",
+        "de",
+        "fr",
+        "es",
+        "pt",
+        "id",
+        "it",
+        "ko",
+        "ru",
+        "th",
+        "vi",
+        "ja",
+        "tr",
+        "hi",
+        "ms",
+        "nl",
+        "sv",
+        "da",
+        "fi",
+        "pl",
+        "cs",
+        "fil",
+        "fa",
+        "el",
+        "hu",
+        "mk",
+        "ro"
+      ],
+      "locales": [],
+      "dialects": [
+        "Anhui",
+        "Dongbei",
+        "Fujian",
+        "Gansu",
+        "Guizhou",
+        "Hebei",
+        "Henan",
+        "Hubei",
+        "Hunan",
+        "Jiangxi",
+        "Ningxia",
+        "Shandong",
+        "Shaanxi",
+        "Shanxi",
+        "Sichuan",
+        "Tianjin",
+        "Yunnan",
+        "Zhejiang",
+        "Cantonese (Hong Kong accent)",
+        "Cantonese (Guangdong accent)",
+        "Wu language",
+        "Minnan language"
+      ],
+      "notes": "30 languages plus 22 Chinese dialect entries; not 52 distinct languages.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/Qwen/Qwen3-ASR-1.7B",
+          "revision": "7278e1e70fe206f11671096ffdd38061171dd6e5"
+        }
+      ]
+    },
+    {
+      "distribution": "parakeet-v3",
+      "name": "Parakeet TDT 0.6B v3",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "asr/parakeetcpp/parakeet-tdt-0.6b-v3-q8_0"
+      ],
+      "languages": [
+        "en",
+        "es",
+        "fr",
+        "de",
+        "bg",
+        "hr",
+        "cs",
+        "da",
+        "nl",
+        "et",
+        "fi",
+        "el",
+        "hu",
+        "it",
+        "lv",
+        "lt",
+        "mt",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv",
+        "ru",
+        "uk"
+      ],
+      "locales": [],
+      "dialects": [],
+      "notes": "Coverage belongs to this checkpoint, not every Parakeet model.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3",
+          "revision": "541d1f99c6b0c3cd0b11a95167540bb8edefd82b"
+        }
+      ]
+    },
+    {
+      "distribution": "parakeet-110m",
+      "name": "Parakeet TDT/CTC 110M",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "asr/parakeetcpp/parakeet-tdt-ctc-110m-q8_0"
+      ],
+      "languages": [
+        "en"
+      ],
+      "locales": [],
+      "dialects": [],
+      "notes": "Coverage belongs to this checkpoint, not every Parakeet model.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/nvidia/parakeet-tdt_ctc-110m",
+          "revision": "431a349f3051ab85c22b9b7a2741b5fe77065665"
+        }
+      ]
+    },
+    {
+      "distribution": "zipformer-en",
+      "name": "Sherpa streaming Zipformer EN",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "asr/sherpa-onnx/zipformer-en/encoder",
+        "asr/sherpa-onnx/zipformer-en/decoder",
+        "asr/sherpa-onnx/zipformer-en/joiner"
+      ],
+      "languages": [
+        "en"
+      ],
+      "locales": [],
+      "dialects": [],
+      "notes": "Installed English checkpoint; other Sherpa languages require other models.",
+      "sources": [
+        {
+          "url": "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/zipformer-transducer-models.html",
+          "revision": null
+        }
+      ]
+    },
+    {
+      "distribution": "sensevoice-small",
+      "name": "SenseVoiceSmall",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "asr/funasr/sensevoice-small-q8"
+      ],
+      "languages": [
+        "zh",
+        "en",
+        "ja",
+        "ko",
+        "yue"
+      ],
+      "locales": [],
+      "dialects": [],
+      "notes": "Mandarin, English, Japanese, Korean, Cantonese; multilingual is not a sixth language.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/FunAudioLLM/SenseVoiceSmall",
+          "revision": "3847d57b6bdf2dd8875cb1508d2af43d80a16bf7"
+        }
+      ]
+    },
+    {
+      "distribution": "gemma-e4b-audio",
+      "name": "Gemma 4 E4B audio",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "llamacpp/gemma-4-E4B-it-Q4_0"
+      ],
+      "languages": null,
+      "locales": [],
+      "dialects": [],
+      "notes": "Full ASR language list/count not verified. General 35+ language support and 140+ pretraining coverage are not an ASR-specific list.",
+      "sources": [
+        {
+          "url": "https://ai.google.dev/gemma/docs/capabilities/audio",
+          "revision": null
+        }
+      ]
+    },
+    {
+      "distribution": "ming3-audio-tiny",
+      "name": "Ming 3.0 Audio Tiny",
+      "tasks": [
+        "asr",
+        "tts"
+      ],
+      "model_ids": [
+        "audiocpp/ming3-audio-tiny-q4_k"
+      ],
+      "languages": [
+        "zh",
+        "en"
+      ],
+      "locales": [],
+      "dialects": [],
+      "notes": "Chinese/English in installed spec and card. Not the separate seven-language Ming TTS checkpoint.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/inclusionAI/Ming-3.0-audio-tiny",
+          "revision": "3c9578f641b6745abf2d1239dc8419726f37c0e2"
+        }
+      ]
+    },
+    {
+      "distribution": "higgs-v3-stt",
+      "name": "Higgs Audio v3 STT",
+      "tasks": [
+        "asr"
+      ],
+      "model_ids": [
+        "asr/audiocpp/higgs-audio-v3-stt-q8_0"
+      ],
+      "languages": [
+        "en"
+      ],
+      "locales": [],
+      "dialects": [],
+      "notes": "English in card/spec; a multilingual Whisper encoder does not imply multilingual output.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/bosonai/higgs-audio-v3-stt",
+          "revision": "2ffd1aa39f5a1266931e405cba12e404a9f994b2"
+        }
+      ]
+    },
+    {
+      "distribution": "kokoro-v1",
+      "name": "Kokoro v1.0 / 82M",
+      "practice_default_language": "fr",
+      "tasks": [
+        "tts"
+      ],
+      "model_ids": [
+        "audiocpp/kokoro-audiocpp-q8_0",
+        "audiocpp/kokoro-audiocpp-multilingual-q8_0",
+        "audiocpp/kokoro-kobold-q4",
+        "audiocpp/kokoro-v1_0",
+        "tts/sherpa-onnx/kokoro-v1.0-int8/model"
+      ],
+      "languages": [
+        "en",
+        "es",
+        "fr",
+        "hi",
+        "it",
+        "ja",
+        "pt",
+        "zh"
+      ],
+      "locales": [
+        "en-us",
+        "en-gb",
+        "es",
+        "fr-fr",
+        "hi",
+        "it",
+        "ja",
+        "pt-br",
+        "zh"
+      ],
+      "dialects": [],
+      "notes": "Eight languages, nine locale settings. Practice derives shared ASR/TTS choices and matching voices from selected models. Match voice/frontend; local pronunciation quality requires validation. Sherpa has only the English lexicon installed; Kobold conversion multilingual support unverified.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/hexgrad/Kokoro-82M",
+          "revision": "f3ff3571791e39611d31c381e3a41a3af07b4987"
+        },
+        {
+          "url": "https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md",
+          "kind": "voices/languages; Hub card en tag is incomplete"
+        }
+      ]
+    },
+    {
+      "distribution": "piper-lessac-medium",
+      "name": "Piper Lessac medium",
+      "tasks": [
+        "tts"
+      ],
+      "model_ids": [
+        "tts/piper/lessac-medium/model"
+      ],
+      "languages": [
+        "en"
+      ],
+      "locales": [
+        "en-US"
+      ],
+      "dialects": [],
+      "notes": "One English US voice; shared by Piper/Sherpa. Other languages require other voices.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/lessac/medium",
+          "revision": null
+        }
+      ]
+    },
+    {
+      "distribution": "piper-lessac-high",
+      "name": "Piper Lessac high",
+      "tasks": [
+        "tts"
+      ],
+      "model_ids": [
+        "tts/piper/lessac-high/model"
+      ],
+      "languages": [
+        "en"
+      ],
+      "locales": [
+        "en-US"
+      ],
+      "dialects": [],
+      "notes": "One English US voice; shared by Piper/Sherpa. Other languages require other voices.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/lessac/high",
+          "revision": null
+        }
+      ]
+    },
+    {
+      "distribution": "breeze-tts-2",
+      "name": "Breeze TTS 2 clone/design",
+      "tasks": [
+        "tts"
+      ],
+      "model_ids": [
+        "audiocpp/breeze-tts-2-q4_0"
+      ],
+      "languages": [
+        "en",
+        "zh"
+      ],
+      "locales": [],
+      "dialects": [],
+      "notes": "Clone/design modes share the same bilingual weights.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/BreezeBlue/Breeze-TTS-2",
+          "revision": "3e28c5151381a722f1d8661b4118c298caa77aa4"
+        }
+      ]
+    },
+    {
+      "distribution": "ming3-tts-0.5b",
+      "name": "Ming 3.0 TTS 0.5B",
+      "tasks": [
+        "tts"
+      ],
+      "model_ids": [
+        "audiocpp/ming3-tts-0.5b-q8_0"
+      ],
+      "languages": [
+        "zh",
+        "en",
+        "de",
+        "es",
+        "fr",
+        "ko",
+        "ja"
+      ],
+      "locales": [],
+      "dialects": [
+        "Sichuanese",
+        "Cantonese"
+      ],
+      "notes": "Seven languages, plus Sichuanese/Cantonese dialect controls; do not add dialects to the seven-language count.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/inclusionAI/Ming-3.0-tts-0.5B",
+          "revision": "7247f4c94a5b2e987404ed28a5cfec41b1a4ca61"
+        }
+      ]
+    },
+    {
+      "distribution": "drama-3",
+      "name": "Fish Audio Drama 3",
+      "tasks": [
+        "tts"
+      ],
+      "model_ids": [
+        "audiocpp/fish-drama3-q2"
+      ],
+      "languages": [
+        "zh",
+        "en",
+        "ja",
+        "ko",
+        "es",
+        "pt",
+        "ar",
+        "ru",
+        "fr",
+        "de",
+        "sv",
+        "it",
+        "tr",
+        "no",
+        "nl",
+        "cy",
+        "eu",
+        "ca",
+        "da",
+        "gl",
+        "ta",
+        "hu",
+        "fi",
+        "pl",
+        "et",
+        "hi",
+        "la",
+        "ur",
+        "th",
+        "vi",
+        "jw",
+        "bn",
+        "yo",
+        "sl",
+        "cs",
+        "sw",
+        "nn",
+        "he",
+        "ms",
+        "uk",
+        "id",
+        "kk",
+        "bg",
+        "lv",
+        "my",
+        "tl",
+        "sk",
+        "ne",
+        "fa",
+        "af",
+        "el",
+        "bo",
+        "hr",
+        "ro",
+        "sn",
+        "mi",
+        "yi",
+        "am",
+        "be",
+        "km",
+        "is",
+        "az",
+        "sd",
+        "br",
+        "sq",
+        "ps",
+        "mn",
+        "ht",
+        "ml",
+        "sr",
+        "sa",
+        "te",
+        "ka",
+        "bs",
+        "pa",
+        "lt",
+        "kn",
+        "si",
+        "hy",
+        "mr",
+        "as",
+        "gu",
+        "fo"
+      ],
+      "locales": [],
+      "dialects": [],
+      "notes": "83 publisher language tags. Installed spec only says auto; auto is not a language. Local quality not verified.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/fishaudio/drama-3",
+          "revision": "b2b5ee998034b2975720906c815e7fb0e9f007bd"
+        }
+      ]
+    },
+    {
+      "locales": [],
+      "dialects": [],
+      "tasks": [
+        "asr"
+      ],
+      "notes": "Native conversion parity not verified; high-ranking ASR comparison group.",
+      "distribution": "cohere-transcribe",
+      "name": "Cohere Transcribe 03-2026",
+      "model_ids": [
+        "asr/audiocpp/cohere-transcribe-03-2026-q8_0"
+      ],
+      "languages": [
+        "en",
+        "fr",
+        "de",
+        "es",
+        "it",
+        "pt",
+        "nl",
+        "pl",
+        "el",
+        "ar",
+        "ja",
+        "zh",
+        "vi",
+        "ko"
+      ],
+      "sources": [
+        {
+          "url": "https://huggingface.co/CohereLabs/cohere-transcribe-03-2026"
+        }
+      ]
+    },
+    {
+      "locales": [],
+      "dialects": [],
+      "tasks": [
+        "asr"
+      ],
+      "notes": "Native conversion parity not verified; high-ranking ASR comparison group.",
+      "distribution": "granite-speech-5-2b",
+      "name": "Granite Speech 5.0 2B",
+      "model_ids": [
+        "asr/llamacpp/granite-speech-5.0-2b-q8_0"
+      ],
+      "languages": [
+        "en",
+        "fr",
+        "de",
+        "es",
+        "pt",
+        "ja"
+      ],
+      "sources": [
+        {
+          "url": "https://huggingface.co/ibm-granite/granite-speech-5.0-2b"
+        }
+      ]
+    }
+  ]
+}

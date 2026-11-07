@@ -1,0 +1,30 @@
+# Speech model languages
+
+For automatic inspection across model types, use the
+[metadata analyzer](../../download/models/METADATA.md). It preserves independent
+header, publisher and runtime claims alongside this reviewed catalog.
+
+Owner: [model_languages.json](../models/model_languages.json). It covers registered ASR/TTS
+checkpoints, grouping shared conversions. Counts describe listed support, not
+tested pronunciation/accuracy. VAD, projectors and voice files are not additional
+linguistic models. `auto` is never counted as a language. The practice UI defaults
+to English; optional `practice_default_language` values override this without
+changing reported coverage.
+
+Query, inspection and native discovery commands: [language inventory](MODEL-LANGUAGES-INVENTORY.md).
+
+## Coverage
+
+Per-checkpoint coverage is data, not prose: `model_languages.json` owns it, and the
+inventory command prints the current table from that file. Keep these review rules
+instead of copying counts into Markdown:
+
+- Publisher cards under-report their own decoder tags; the analyzer keeps header,
+  publisher and runtime claims separate rather than merging them into one number.
+- A general `multilingual` claim on an audio model is not an ASR language list and
+  is not counted as one.
+- Unverified counts stay marked unverified rather than filled in by inference.
+
+Practice exposes only English/Spanish/French Kokoro voices. Sherpa Kokoro has only
+the English lexicon installed; Kobold's conversion is verified only for English.
+Upstream Kokoro coverage does not prove every installed frontend supports it.

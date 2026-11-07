@@ -1,0 +1,5 @@
+  {
+
+  "vulkan_backend":"vulkan",
+  "rocm_backend":"hip"
+}

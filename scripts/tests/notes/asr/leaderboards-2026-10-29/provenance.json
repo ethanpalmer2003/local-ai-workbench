@@ -1,0 +1,40 @@
+{
+  "source": "https://hf-audio-open-asr-leaderboard.hf.space",
+  "retrieved_utc": "20261029T061004729878Z",
+  "filters": {
+    "max_parameters_billion": 5,
+    "proprietary": false
+  },
+  "request": [
+    "latest",
+    null,
+    false,
+    false,
+    [
+      "RTFx \u2b06\ufe0f\ufe0f",
+      "AMI-Cleaned",
+      "Earnings22-Cleaned-AA-chunked",
+      "Gigaspeech-Cleaned",
+      "LS Clean",
+      "LS Other",
+      "SPGISpeech",
+      "URGENT24",
+      "Voice Arena Monsoon",
+      "Voxpopuli-AA-Cleaned",
+      "Private (scripted)",
+      "Private (conversational)",
+      "Size (B)",
+      "# Languages",
+      "License",
+      "Encoder",
+      "Decoder"
+    ],
+    5
+  ],
+  "api": "_main_table_update",
+  "rows": 40,
+  "limits": [
+    "RTFx is publisher throughput on its hardware/batch/runtime; not local AMD latency or VRAM.",
+    "English aggregate is not multilingual quality; exported multilingual tables retain their own coverage."
+  ]
+}

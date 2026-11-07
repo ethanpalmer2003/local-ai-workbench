@@ -1,0 +1,9 @@
+local_ai:
+    base_path: "{AI_ROOT}/data/videogen"
+    text_encoders: "text_encoders"
+    diffusion_models: "unet"
+    clip: "clip"
+    unet: "unet"
+    vae: "vae"
+    loras: "lora"
+    latent_upscale_models: "latent_upscale_models"

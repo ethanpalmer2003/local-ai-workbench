@@ -1,0 +1,36 @@
+# Local AI workspace
+
+- Component paths: [project_config.py](config/project_config.py); runtime settings: [launcher_config.py](launchers/launcher_config.py).
+- Use one component key wherever a component owns files; matching keys do not require empty mirror folders. [folder rules](../.agents/FOLDERS.md).
+- New machine: [onboarding](../notes/ONBOARDING.md). Pending work: [TODO](../notes/TODO.md).
+- Routine batch entry points: [bat/README.md](../bat/README.md).
+
+| Task | Owner guide |
+| --- | --- |
+| Coding with llama.cpp | [guide](launchers/llamacpp/README.md) |
+| Strata with Pi | [guide](launchers/strata/README.md) |
+| Audio / Kokoro | [guide](launchers/audiocpp/README.md) |
+| Sherpa / Piper | [TTS guide](launchers/audiocpp/RETAINED-TTS.md); official Windows CPU frameworks |
+| Kobold + speech/images | [shared GPU](config/notes/SHARED-GPU.md), [swapping](config/notes/IMAGE-ON-DEMAND.md) |
+| Ports / proxies | [proxy principle](launchers/PROXIES.md) |
+| Language practice / ASR | [ASR guide](launchers/asr/README.md), [comparison setup](tests/cases/asr/COMPARISON.md), [checkpoint](../notes/asr/ASR-IMPLEMENTATION.md) |
+| Images | [settings](config/sdcpp/README.md) |
+| ComfyUI | [guide](config/comfyui/README.md) |
+| Framework updates | [category guide](download/frameworks/UPDATES.md): `llamacpp`, `asr`, `speech`, `other` |
+| Model downloads/audit | [guide](download/README.md) |
+| Config sync | `python -m scripts.config.sync`, [ownership](config/README.md) |
+| Code review | [review guide](review/README.md) |
+| Tests | [test guide](tests/README.md) |
+| Benchmarks | [runners and measurement rules](benchmarks/README.md) |
+| Repository tools | [tools](tools/README.md) |
+| Shared runtime code | [process, engine, audio/upload and native binding helpers](launchers/shared/README.md) |
+
+## Storage
+
+- `frameworks/<component>/`: third-party installations; `data/huggingface/models/<component>/`: weights.
+- `scripts/{config,launchers}/<component>/`: owned configuration/code; see [folder rules](../.agents/FOLDERS.md) for shared and role-wide placement.
+- `scripts/tests/{cases,ui}/<component>/`: test sources/assets. New results mirror cases under `tests/output/`; historical output stays in place.
+- `scripts/benchmarks/<area>/`: performance runners and shared measurement support. New results go under `benchmarks/output/`; historical test output stays in place.
+- `scripts/state/<component>/`: app state; `{logs,cache,generated}/<component>/`: future runtime artifacts.
+- `bat/`: routine launchers only (index: [bat/README.md](../bat/README.md)); use the project interpreter from `C:/AI`.
+- Native layouts/shared weights are explicit exceptions in `COMPONENTS`; preserve vendor files, app preferences and evidence.

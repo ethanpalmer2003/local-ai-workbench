@@ -1,0 +1,92 @@
+diff --git a/tools/ui/src/lib/components/app/navigation/SidebarNavigation/WorkspaceSettings.svelte b/tools/ui/src/lib/components/app/navigation/SidebarNavigation/WorkspaceSettings.svelte
+new file mode 100644
+--- /dev/null
++++ b/tools/ui/src/lib/components/app/navigation/SidebarNavigation/WorkspaceSettings.svelte
+@@ -0,0 +1,64 @@
++<script lang="ts">
++	import { SlidersHorizontal } from '@lucide/svelte';
++	import { ActionIcon } from '$lib/components/app';
++	import { Button } from '$lib/components/ui/button';
++	import * as Sheet from '$lib/components/ui/sheet';
++	import { TooltipSide } from '$lib/enums';
++	import { onMount } from 'svelte';
++
++	let { expanded = false }: { expanded?: boolean } = $props();
++	let available = $state(false);
++	let open = $state(false);
++	onMount(() => {
++		available = !!window.WorkspaceSpeech;
++	});
++
++	function setOpen(value: boolean) {
++		open = value;
++		if (value) window.WorkspaceSpeech?.stop();
++		else void window.WorkspaceSpeech?.configure();
++	}
++</script>
++
++{#if available}
++	{#if expanded}
++		<Button
++			class="w-full min-w-9 justify-start gap-2 px-2"
++			variant="ghost"
++			onclick={() => setOpen(true)}
++		>
++			<SlidersHorizontal class="h-4 w-4" />
++			<span>Workspace settings</span>
++		</Button>
++	{:else}
++		<ActionIcon
++			icon={SlidersHorizontal}
++			tooltip="Workspace settings"
++			ariaLabel="Workspace settings"
++			tooltipSide={TooltipSide.RIGHT}
++			class="h-9 w-9 rounded-full"
++			onclick={() => setOpen(true)}
++		/>
++	{/if}
++	<Sheet.Root {open} onOpenChange={setOpen}>
++		<Sheet.Content
++			side="right"
++			class="flex top-4! right-4! bottom-4! h-auto! w-[min(680px,calc(100vw-32px))]! max-w-none! flex-col gap-0 overflow-hidden rounded-xl border p-0 shadow-2xl"
++		>
++			<Sheet.Header class="p-4 pr-12">
++				<Sheet.Title>Workspace settings</Sheet.Title>
++				<Sheet.Description class="sr-only"
++					>Model, language, speech settings and tests</Sheet.Description
++				>
++			</Sheet.Header>
++			{#if open}
++				<iframe
++					src="/test/?embed=settings"
++					title="Workspace settings and tests"
++					allow="microphone"
++					class="min-h-0 w-full flex-1 border-0"
++				></iframe>
++			{/if}
++		</Sheet.Content>
++	</Sheet.Root>
++{/if}
+diff --git a/tools/ui/src/workspace-speech.d.ts b/tools/ui/src/workspace-speech.d.ts
+new file mode 100644
+--- /dev/null
++++ b/tools/ui/src/workspace-speech.d.ts
+@@ -0,0 +1,18 @@
++// Same-origin gateway bridge; absent when using stock llama-server directly.
++interface WorkspaceSpeechState {
++	ready: boolean;
++	recording: boolean;
++	speaking: boolean;
++	status: string;
++}
++interface Window {
++	WorkspaceSpeech?: {
++		bind(
++			onTranscript: (text: string) => Promise<void>,
++			onState: (state: WorkspaceSpeechState) => void
++		): () => void;
++		toggleCapture(): Promise<void>;
++		stop(): void;
++		configure(): Promise<void>;
++	};
++}
