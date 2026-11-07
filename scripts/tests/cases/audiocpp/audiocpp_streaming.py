@@ -9,6 +9,7 @@ import time
 import urllib.error
 import urllib.request
 import wave
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -137,111 +138,167 @@ def main() -> None:
         run_comparison(args, run, memory, time.perf_counter() - setup_started)
 
 
-def run_comparison(args: argparse.Namespace, run: RunPaths, memory: BenchmarkVram, setup_seconds: float) -> None:  # noqa: C901
-    started = time.perf_counter()
-    deadline = started + args.budget_seconds
+STREAM_PROFILES: dict[str, dict[str, object]] = {
+    "installed-default": {},
+    "frames-8": {"stream_frames_per_event": 8},
+    "frames-16": {"stream_frames_per_event": 16},
+    "frames-16-lookahead-0": {"stream_frames_per_event": 16, "stream_lookahead_margin": 0},
+    "lookahead-0": {"stream_lookahead_margin": 0},
+    "lookahead-12": {"stream_lookahead_margin": 12},
+    "upstream-low-latency": {
+        "stream_chunk_policy": "grow",
+        "stream_frames_per_event": 16,
+        "stream_lookahead_margin": 0,
+    },
+    "upstream-conservative": {
+        "stream_chunk_policy": "fixed",
+        "stream_frames_per_event": 16,
+        "stream_lookahead_margin": 12,
+    },
+}
+
+STREAM_TEXTS: dict[str, str] = {
+    "short": "Hello there. This is a streaming speech test. How are you doing today?",
+    "long": "Hello there, I am glad you made it back. We should take a moment to think this through before we move. There is no need to rush into anything. Tell me what you noticed outside, and then we can decide together what to do next.",
+}
+
+
+def _selected(options: dict[str, Any], requested: list[str] | None) -> dict[str, Any]:
+    return {name: options[name] for name in requested} if requested else dict(options)
+
+
+def _fetch_server_models(run: RunPaths) -> None:
     url = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}/v1/models?include_params=true&include_session_options=true"
     with urllib.request.urlopen(url, timeout=10) as response:
         (run.artifacts / "server-models.json").write_bytes(response.read())
+
+
+def _start_lifecycle(
+    args: argparse.Namespace, run: RunPaths, memory: BenchmarkVram, setup_seconds: float
+) -> BenchmarkLifecycle:
     memory.stage = "warmup"
     lifecycle = BenchmarkLifecycle(audio_identity)
     lifecycle.adopt_prepared(setup_seconds, acquisition=True)
-    warmups = []
+    warmups: list[dict[str, Any]] = []
     lifecycle.warmup(
         lambda: warmups.append(
             measure("A short warmup.", {"seed": "0"}, run.artifacts / "warmup.wav", args.request_timeout)
         ),
         includes_model_load=True,
     )
-    warmup = warmups[0]
-    if "error" in warmup:
-        raise RuntimeError(warmup["error"])
-    profiles = {
-        "installed-default": {},
-        "frames-8": {"stream_frames_per_event": 8},
-        "frames-16": {"stream_frames_per_event": 16},
-        "frames-16-lookahead-0": {"stream_frames_per_event": 16, "stream_lookahead_margin": 0},
-        "lookahead-0": {"stream_lookahead_margin": 0},
-        "lookahead-12": {"stream_lookahead_margin": 12},
-        "upstream-low-latency": {
-            "stream_chunk_policy": "grow",
-            "stream_frames_per_event": 16,
-            "stream_lookahead_margin": 0,
-        },
-        "upstream-conservative": {
-            "stream_chunk_policy": "fixed",
-            "stream_frames_per_event": 16,
-            "stream_lookahead_margin": 12,
-        },
-    }
-    texts = {
-        "short": "Hello there. This is a streaming speech test. How are you doing today?",
-        "long": "Hello there, I am glad you made it back. We should take a moment to think this through before we move. There is no need to rush into anything. Tell me what you noticed outside, and then we can decide together what to do next.",
-    }
-    if args.profiles:
-        profiles = {name: profiles[name] for name in args.profiles}
-    if args.texts:
-        texts = {name: texts[name] for name in args.texts}
-    results = []
-    unsupported = set()
-    timed_out = False
-    transport_failed = False
-    # Alternate profile order to reduce warm-cache and temperature bias.
+    if "error" in warmups[0]:
+        raise RuntimeError(warmups[0]["error"])
+    return lifecycle
+
+
+@dataclass(frozen=True)
+class _ProfileCase:
+    name: str
+    text_case: str
+    text: str
+    options: dict[str, object]
+    repeat: int
+
+
+@dataclass(frozen=True)
+class _SweepContext:
+    args: argparse.Namespace
+    run: RunPaths
+    lifecycle: BenchmarkLifecycle
+    memory: BenchmarkVram
+    profiles: dict[str, dict[str, object]]
+    deadline: float
+    unsupported: set[str]
+    results: list[dict[str, Any]]
+
+
+def _measure_profile(context: _SweepContext, case: _ProfileCase) -> dict[str, Any]:
+    wav_path = context.run.artifacts / f"{case.name}-{case.text_case}-{case.repeat}.wav"
+    result: dict[str, Any]
+    try:
+        result, timing = context.lifecycle.measure(
+            lambda: measure(case.text, case.options, wav_path, context.args.request_timeout),
+            accept=lambda value: not value.get("error"),
+        )
+        result.update(timing)
+    except (OSError, urllib.error.URLError, http.client.HTTPException) as error:
+        result = {"error": str(error), "transport_failure": True}
+    result.update(profile=case.name, text_case=case.text_case, repeat=case.repeat, options=case.options)
+    return result
+
+
+def _run_text(context: _SweepContext, text_case: str, text: str, names: list[str], repeat: int) -> tuple[bool, bool]:
+    """Measure one text with every remaining profile; returns (timed_out, transport_failed)."""
+    for name in names:
+        if name in context.unsupported:
+            continue
+        if time.perf_counter() > context.deadline - (context.args.request_timeout + 5):
+            return True, False
+        options: dict[str, object] = {"seed": str(1234 + repeat), **context.profiles[name]}
+        context.memory.stage = f"{name}-{text_case}-{repeat}"
+        result = _measure_profile(context, _ProfileCase(name, text_case, text, options, repeat))
+        context.results.append(result)
+        if result.get("error"):
+            context.unsupported.add(name)
+        (context.run.artifacts / "timings.json").write_text(json.dumps(context.results, indent=2), encoding="utf-8")
+        print(json.dumps({key: value for key, value in result.items() if key not in ("chunks", "buffers")}), flush=True)
+        if result.get("transport_failure"):
+            return False, True
+    return False, False
+
+
+def _sweep(
+    profiles: dict[str, dict[str, object]],
+    texts: dict[str, str],
+    args: argparse.Namespace,
+    run: RunPaths,
+    lifecycle: BenchmarkLifecycle,
+    memory: BenchmarkVram,
+    deadline: float,
+) -> tuple[list[dict[str, Any]], set[str], bool, bool]:
+    results: list[dict[str, Any]] = []
+    unsupported: set[str] = set()
+    context = _SweepContext(args, run, lifecycle, memory, profiles, deadline, unsupported, results)
     for repeat in range(args.repeats):
-        for text_name, text in texts.items():
-            names = list(profiles) if repeat % 2 == 0 else list(reversed(profiles))
-            for name in names:
-                if name in unsupported:
-                    continue
-                if time.perf_counter() > deadline - (args.request_timeout + 5):
-                    timed_out = True
-                    break
-                options: dict[str, object] = {"seed": str(1234 + repeat), **profiles[name]}
-                memory.stage = f"{name}-{text_name}-{repeat}"
-                result: dict[str, Any]
-                try:
-                    result, timing = lifecycle.measure(
-                        lambda: measure(
-                            text, options, run.artifacts / f"{name}-{text_name}-{repeat}.wav", args.request_timeout
-                        ),
-                        accept=lambda value: not value.get("error"),
-                    )
-                    result.update(timing)
-                except (OSError, urllib.error.URLError, http.client.HTTPException) as error:
-                    result = {"error": str(error), "transport_failure": True}
-                result.update(profile=name, text_case=text_name, repeat=repeat, options=options)
-                results.append(result)
-                if result.get("error"):
-                    unsupported.add(name)
-                (run.artifacts / "timings.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
-                print(
-                    json.dumps({key: value for key, value in result.items() if key not in ("chunks", "buffers")}),
-                    flush=True,
-                )
-                if result.get("transport_failure"):
-                    transport_failed = True
-                    break
+        # Alternate profile order to reduce warm-cache and temperature bias.
+        names = list(profiles) if repeat % 2 == 0 else list(reversed(profiles))
+        for text_case, text in texts.items():
+            timed_out, transport_failed = _run_text(context, text_case, text, names, repeat)
             if timed_out or transport_failed:
-                break
-        if timed_out or transport_failed:
-            break
+                return results, unsupported, timed_out, transport_failed
+    return results, unsupported, False, False
+
+
+def _summary(profiles: dict[str, dict[str, object]], results: list[dict[str, Any]]) -> list[dict[str, Any]]:
     summary = []
     for name in profiles:
         good = [result for result in results if result["profile"] == name and not result.get("error")]
-        if good:
-            summary.append(
-                {
-                    "profile": name,
-                    "samples": len(good),
-                    "median_first_data_s": statistics.median(result["first_data"] for result in good),
-                    "max_required_buffer_s": max(result["minimum_buffer_seconds"] for result in good),
-                    "median_rtf": statistics.median(result["rtf"] for result in good),
-                }
-            )
+        if not good:
+            continue
+        summary.append(
+            {
+                "profile": name,
+                "samples": len(good),
+                "median_first_data_s": statistics.median(result["first_data"] for result in good),
+                "max_required_buffer_s": max(result["minimum_buffer_seconds"] for result in good),
+                "median_rtf": statistics.median(result["rtf"] for result in good),
+            }
+        )
+    return summary
+
+
+def run_comparison(args: argparse.Namespace, run: RunPaths, memory: BenchmarkVram, setup_seconds: float) -> None:
+    started = time.perf_counter()
+    deadline = started + args.budget_seconds
+    _fetch_server_models(run)
+    lifecycle = _start_lifecycle(args, run, memory, setup_seconds)
+    profiles = _selected(STREAM_PROFILES, args.profiles)
+    texts = _selected(STREAM_TEXTS, args.texts)
+    results, unsupported, timed_out, transport_failed = _sweep(profiles, texts, args, run, lifecycle, memory, deadline)
     report = {
         "benchmark": lifecycle.record(),
         "setup_boundary": "Backend session acquisition including monitor setup; original load time unavailable for reused services",
-        "summary": summary,
+        "summary": _summary(profiles, results),
         "unsupported_profiles": sorted(unsupported),
         "time_budget_reached": timed_out,
         "transport_failure": transport_failed,

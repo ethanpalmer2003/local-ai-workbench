@@ -61,17 +61,27 @@ def maintained_files() -> list[Path]:
     return files
 
 
-def configuration_issues() -> list[str]:  # noqa: C901
+def _component_key_issues() -> list[str]:
+    return [
+        f"Invalid component key: {key}"
+        for key, paths in project_cfg.COMPONENTS.items()
+        if key != paths.key or not re.fullmatch(r"[a-z0-9_-]+(?:/[a-z0-9_-]+)*", key)
+    ]
+
+
+def _binding_issues() -> list[str]:
     issues = []
-    for key, paths in project_cfg.COMPONENTS.items():
-        if key != paths.key or not re.fullmatch(r"[a-z0-9_-]+(?:/[a-z0-9_-]+)*", key):
-            issues.append(f"Invalid component key: {key}")
     for module in (project_cfg, cfg):
         for name, value in vars(module).items():
             if name.isupper() and name.endswith("_DIR") and not isinstance(value, Path):
                 issues.append(f"{module.__name__}.{name} must be a Path")
             if name in LEGACY_BINDINGS:
                 issues.append(f"Legacy config binding: {module.__name__}.{name}")
+    return issues
+
+
+def _model_owner_issues() -> list[str]:
+    issues = []
     for model in model_cfg.MODELS:
         if model.group not in project_cfg.COMPONENTS:
             issues.append(f"Unknown model owner: {model.group}")
@@ -80,9 +90,19 @@ def configuration_issues() -> list[str]:  # noqa: C901
             issues.append(f"Model label does not match its owner: {model.label}")
         if not model.path.is_relative_to(project_cfg.component(model.group).models_dir):
             issues.append(f"Model destination does not match its owner: {model.label}")
-    for tool in update_config.TOOLS:
-        if not any(tool.name == key or tool.name.startswith(key + "/") for key in project_cfg.COMPONENTS):
-            issues.append(f"Unknown updater owner: {tool.name}")
+    return issues
+
+
+def _updater_owner_issues() -> list[str]:
+    return [
+        f"Unknown updater owner: {tool.name}"
+        for tool in update_config.TOOLS
+        if not any(tool.name == key or tool.name.startswith(key + "/") for key in project_cfg.COMPONENTS)
+    ]
+
+
+def _retired_category_issues() -> list[str]:
+    issues = []
     for key in ("regression", "probes", "harnesses", "models"):
         old = project_cfg.TEST_CASES_DIR / key
         if old.is_dir() and any(
@@ -90,6 +110,16 @@ def configuration_issues() -> list[str]:  # noqa: C901
         ):
             issues.append(f"Retired test category still owns source: {old.relative_to(project_cfg.BASE_DIR)}")
     return issues
+
+
+def configuration_issues() -> list[str]:
+    return [
+        *_component_key_issues(),
+        *_binding_issues(),
+        *_model_owner_issues(),
+        *_updater_owner_issues(),
+        *_retired_category_issues(),
+    ]
 
 
 def physical_root_issues() -> list[str]:

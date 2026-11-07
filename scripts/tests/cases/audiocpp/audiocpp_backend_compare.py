@@ -22,7 +22,7 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
-from scripts.tests.shared.paths import CasePaths, Outcome
+from scripts.tests.shared.paths import CasePaths, Outcome, RunPaths
 from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 TEXT = "Good morning. How are you today?"
@@ -303,7 +303,19 @@ def run_backend(
     }
 
 
-def main() -> int:  # noqa: C901
+DEFAULT_BACKENDS = ("vulkan", "rocm-release")
+LIMITATIONS = (
+    "Offline generation only; one short prompt with the recorded sample count per backend. "
+    "The backends produced different audio durations despite the same seed, so this is a short throughput screen, "
+    "not a quality comparison or a definitive backend ranking. Request elapsed time excludes server startup and "
+    "the warmup request; warmup_s includes model loading and first inference, so it is not a pure model-load timer. "
+    "No instruct option is supplied; profiles record fixed voice options when supported. Breeze uses each build's default voice. "
+    "VRAM peaks are sampled lower bounds. Windows per-process dedicated allocations can exceed adapter physical usage; "
+    "counter polling can affect CPU load."
+)
+
+
+def _arguments() -> tuple[argparse.Namespace, Any]:
     parser = argparse.ArgumentParser(description=__doc__)
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument("--all", action="store_true", help="run every configured build")
@@ -318,24 +330,33 @@ def main() -> int:  # noqa: C901
         context = require_native_execution("AudioCpp")
     except RuntimeError as error:
         parser.error(str(error))
-    print(f"[OK] Execution context: {json.dumps(context)}", flush=True)
+    return args, context
+
+
+def _selected_backends(args: argparse.Namespace) -> list[str]:
     if args.all:
-        selected_backends = list(BUILDS)
-    elif args.backend:
-        selected_backends = [args.backend]
-    else:
-        selected_backends = ["vulkan", "rocm-release"]
-    profile = PROFILES[args.case]
-    if args.loaders_only:
-        return loader_checks(profile, selected_backends)
-    metadata = {name: provenance(name) for name in selected_backends}
+        return list(BUILDS)
+    if args.backend:
+        return [args.backend]
+    return list(DEFAULT_BACKENDS)
+
+
+def _apply_provenance(selected: list[str]) -> dict[str, Any]:
+    metadata = {name: provenance(name) for name in selected}
     for name, info in metadata.items():
         BUILD_RELEASES[name] = info["asset"] or BUILD_RELEASES.get(name, "unknown")
         BUILD_COMMITS[name] = (info["build"] or {}).get("source_sha", "unknown; see asset provenance")
-    started = time.perf_counter()
-    run = CasePaths(__file__).new_run(Outcome.INCONCLUSIVE)
-    run.artifacts.mkdir(parents=True, exist_ok=True)
-    result: dict[str, Any] = {
+    return metadata
+
+
+def _document(
+    args: argparse.Namespace,
+    profile: TtsProfile,
+    context: dict[str, Any],
+    selected: list[str],
+    metadata: dict[str, Any],
+) -> dict[str, Any]:
+    return {
         "name": profile.label + " Vulkan versus ROCm release check",
         "category": "probes",
         "build_releases": BUILD_RELEASES,
@@ -350,7 +371,7 @@ def main() -> int:  # noqa: C901
         "warmups_per_backend": 1,
         "measured_runs_per_backend": args.samples,
         "builds": {name: str(path) for name, path in BUILDS.items()},
-        "selected_backends": selected_backends,
+        "selected_backends": selected,
         "execution_context": context,
         "provenance": metadata,
         "model_sha256": hashlib.sha256(profile.model.read_bytes()).hexdigest(),
@@ -358,47 +379,59 @@ def main() -> int:  # noqa: C901
         "results": {},
         "errors": {},
     }
-    print(f"Run: {run.root}", flush=True)
-    for backend in selected_backends:
-        try:
-            backend_result = run_backend(backend, run.root, profile, args.samples, args.text, args.timeout)
-            samples = backend_result["samples"]
-            result["results"][backend] = {
-                "samples": samples,
-                "server_startup_s": backend_result["server_startup_s"],
-                "warmup_s": backend_result["warmup_s"],
-                "instruction_sent": backend_result["instruction_sent"],
-                "vram": backend_result["vram"],
-                "resources": backend_result["resources"],
-                "median_elapsed_s": statistics.median(item["elapsed_s"] for item in samples),
-                "median_audio_s": statistics.median(item["audio_s"] for item in samples),
-                "median_rtf": statistics.median(item["rtf"] for item in samples),
-            }
-        except Exception as error:
-            result["errors"][backend] = f"{type(error).__name__}: {error}"
-            print(f"{backend}: {result['errors'][backend]}", flush=True)
-            if isinstance(error, TimeoutError) and "did not answer /health" in str(error):
-                result["skipped_backends"] = selected_backends[selected_backends.index(backend) + 1 :]
-                if result["skipped_backends"]:
-                    print("Stopping remaining builds after a server startup health timeout.", flush=True)
-                break
-    complete = len(result["results"]) == len(selected_backends)
-    result["status"] = "complete" if complete else "partial"
-    result["outcome"] = "inconclusive"
-    result["total_seconds"] = round(time.perf_counter() - started, 3)
-    result["reasoning"] = "not applicable"
-    result["limitations"] = (
-        "Offline generation only; one short prompt with the recorded sample count per backend. "
-        "The backends produced different audio durations despite the same seed, so this is a short throughput screen, "
-        "not a quality comparison or a definitive backend ranking. Request elapsed time excludes server startup and "
-        "the warmup request; warmup_s includes model loading and first inference, so it is not a pure model-load timer. "
-        "No instruct option is supplied; profiles record fixed voice options when supported. Breeze uses each build's default voice. "
-        "VRAM peaks are sampled lower bounds. Windows per-process dedicated allocations can exceed adapter physical usage; "
-        "counter polling can affect CPU load."
-    )
-    report = run.artifacts / "summary.json"
-    report.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    sample_columns = (
+
+
+def _backend_summary(backend_result: dict[str, Any]) -> dict[str, Any]:
+    samples = backend_result["samples"]
+    return {
+        "samples": samples,
+        "server_startup_s": backend_result["server_startup_s"],
+        "warmup_s": backend_result["warmup_s"],
+        "instruction_sent": backend_result["instruction_sent"],
+        "vram": backend_result["vram"],
+        "resources": backend_result["resources"],
+        "median_elapsed_s": statistics.median(item["elapsed_s"] for item in samples),
+        "median_audio_s": statistics.median(item["audio_s"] for item in samples),
+        "median_rtf": statistics.median(item["rtf"] for item in samples),
+    }
+
+
+def _collect_backend(
+    result: dict[str, Any],
+    backend: str,
+    selected: list[str],
+    run: RunPaths,
+    profile: TtsProfile,
+    args: argparse.Namespace,
+) -> bool:
+    """Run one build; returns True when the remaining builds should be skipped."""
+    try:
+        result["results"][backend] = _backend_summary(
+            run_backend(backend, run.root, profile, args.samples, args.text, args.timeout)
+        )
+    except Exception as error:
+        message = f"{type(error).__name__}: {error}"
+        result["errors"][backend] = message
+        print(f"{backend}: {message}", flush=True)
+        if not (isinstance(error, TimeoutError) and "did not answer /health" in str(error)):
+            return False
+        result["skipped_backends"] = selected[selected.index(backend) + 1 :]
+        if result["skipped_backends"]:
+            print("Stopping remaining builds after a server startup health timeout.", flush=True)
+        return True
+    return False
+
+
+def _collect_backends(
+    result: dict[str, Any], selected: list[str], run: RunPaths, profile: TtsProfile, args: argparse.Namespace
+) -> None:
+    for backend in selected:
+        if _collect_backend(result, backend, selected, run, profile, args):
+            break
+
+
+def _write_samples_csv(run: RunPaths, result: dict[str, Any]) -> None:
+    sample_columns: tuple[str, ...] = (
         "backend",
         "release",
         "commit",
@@ -441,6 +474,9 @@ def main() -> int:  # noqa: C901
                         **sample,
                     }
                 )
+
+
+def _write_summary_csv(run: RunPaths, result: dict[str, Any]) -> None:
     summary_columns = (
         "backend",
         "release",
@@ -475,17 +511,17 @@ def main() -> int:  # noqa: C901
                     "vram_peak_adapter_mib": summary["vram"]["peak_total_used_mb"],
                 }
             )
-    run.write_report(
-        {
-            "name": result["name"],
-            "category": "probes",
-            "status": "completed" if complete else "incomplete",
-            "outcome": result["outcome"],
-            "total_seconds": result["total_seconds"],
-            "reasoning": result["reasoning"],
-            "limitations": result["limitations"],
-        }
-    )
+
+
+def _write_tables(run: RunPaths, result: dict[str, Any]) -> Path:
+    report = run.artifacts / "summary.json"
+    report.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    _write_samples_csv(run, result)
+    _write_summary_csv(run, result)
+    return report
+
+
+def _comparison_lines(result: dict[str, Any]) -> list[str]:
     lines = [
         "",
         "## Measured comparison",
@@ -517,15 +553,58 @@ def main() -> int:  # noqa: C901
         ]
         lines.append(f"| {backend} | {' | '.join(values)} |")
     lines.extend(["", result["limitations"], ""])
+    return lines
+
+
+def _write_report(run: RunPaths, result: dict[str, Any], complete: bool, report: Path) -> None:
+    run.write_report(
+        {
+            "name": result["name"],
+            "category": "probes",
+            "status": "completed" if complete else "incomplete",
+            "outcome": result["outcome"],
+            "total_seconds": result["total_seconds"],
+            "reasoning": result["reasoning"],
+            "limitations": result["limitations"],
+        }
+    )
     with (run.artifacts / "report.md").open("a", encoding="utf-8") as output:
-        output.write("\n".join(lines))
+        output.write("\n".join(_comparison_lines(result)))
     print(f"Report: {report}", flush=True)
+
+
+def _print_comparison(result: dict[str, Any]) -> None:
     for backend, summary in result["results"].items():
         print(
             f"{backend}: median {summary['median_elapsed_s']:.2f}s, "
             f"audio {summary['median_audio_s']:.2f}s, RTF {summary['median_rtf']:.2f}",
             flush=True,
         )
+
+
+def main() -> int:
+    args, context = _arguments()
+    print(f"[OK] Execution context: {json.dumps(context)}", flush=True)
+    selected = _selected_backends(args)
+    profile = PROFILES[args.case]
+    if args.loaders_only:
+        return loader_checks(profile, selected)
+    metadata = _apply_provenance(selected)
+    started = time.perf_counter()
+    run = CasePaths(__file__).new_run(Outcome.INCONCLUSIVE)
+    run.artifacts.mkdir(parents=True, exist_ok=True)
+    result = _document(args, profile, context, selected, metadata)
+    print(f"Run: {run.root}", flush=True)
+    _collect_backends(result, selected, run, profile, args)
+    complete = len(result["results"]) == len(selected)
+    result["status"] = "complete" if complete else "partial"
+    result["outcome"] = "inconclusive"
+    result["total_seconds"] = round(time.perf_counter() - started, 3)
+    result["reasoning"] = "not applicable"
+    result["limitations"] = LIMITATIONS
+    report = _write_tables(run, result)
+    _write_report(run, result, complete, report)
+    _print_comparison(result)
     return 0 if complete else 1
 
 

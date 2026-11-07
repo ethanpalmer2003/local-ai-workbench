@@ -297,44 +297,98 @@ def worker_main(framework: str, ini_set: list[str] | None = None) -> int:
     return 1
 
 
-@contextlib.contextmanager
-def running_framework(  # noqa: C901
-    framework: str, output: RunPaths | None = None, ini_overrides: dict[str, str] | None = None
-) -> Generator[Path]:
-    if sys.platform != "win32":
-        raise RuntimeError("live start/stop tests require Windows")
-    ports = workflow_ports(framework)
+def _require_free_ports(framework: str, ports: list[int]) -> set[str]:
     old_pids = {pid for _, pid in launch_util._listening_pids({str(port) for port in ports})}
     if old_pids:
         raise RuntimeError(f"Existing {framework} ports are occupied; sessions retained: {sorted(old_pids)}")
     if framework in ("llamacpp", "dsh", "dsh-headless") and launch_util.llama_server_running():
         raise RuntimeError("Existing llama.cpp session retained; isolated workflow check requires free runtimes")
-    output = output or CasePaths(__file__).new_run()
-    log_dir = output.logs
-    log_path = log_dir / f"{framework}_{time.time_ns()}.log"
-    env = os.environ.copy()
+    return old_pids
+
+
+def _worker_env(output: RunPaths) -> dict[str, str]:
+    env = dict(os.environ)
     # - the agent host's PYTHONHOME must not redirect packaged Python backends
     env.pop("PYTHONHOME", None)
     env["PYTHONIOENCODING"] = "utf-8"
     env["PYTHONUNBUFFERED"] = "1"
     env["AI_LOGS_DIR"] = str(output.logs)
     env["AI_OUTPUT_DIR"] = str(output.artifacts)
+    return env
+
+
+def _worker_command(framework: str, ini_overrides: dict[str, str] | None) -> list[str]:
+    overrides = [
+        argument for key, value in (ini_overrides or {}).items() for argument in ("--ini-set", f"{key}={value}")
+    ]
+    return [sys.executable, "-m", "scripts.tests.cases.shared.frameworks_smoke", "--worker", framework, *overrides]
+
+
+def _ready_url(framework: str, ports: list[int]) -> str:
+    if framework == "kobold":
+        return f"http://127.0.0.1:{kobold_port()}/api/v1/model"
+    if framework == "sdcpp":
+        return f"http://127.0.0.1:{ports[0]}/v1/models"
+    return f"http://127.0.0.1:{ports[0]}/health"
+
+
+def _ports_ready(ports: list[int], old_pids: set[str], ready_url: str) -> bool:
+    try:
+        listeners = launch_util._listening_pids({str(port) for port in ports})
+        new_ports = {int(port) for port, pid in listeners if pid not in old_pids}
+        return set(ports).issubset(new_ports) and request(ready_url, timeout=2)[0] == 200
+    except (urllib.error.URLError, TimeoutError, ConnectionError):
+        return False
+
+
+def _await_ready(
+    worker: subprocess.Popen[Any], framework: str, ports: list[int], old_pids: set[str], ready_url: str, log_path: Path
+) -> None:
+    deadline = time.monotonic() + live_timeout
+    while time.monotonic() < deadline:
+        if worker.poll() is not None:
+            raise RuntimeError(f"{framework} launcher exited with {worker.returncode}; see {log_path}")
+        if _ports_ready(ports, old_pids, ready_url):
+            return
+        time.sleep(0.5)
+    raise TimeoutError(f"{framework} did not become ready in {live_timeout}s; see {log_path}")
+
+
+def _stop_worker(worker: subprocess.Popen[Any], framework: str, ports: list[int], log_path: Path) -> None:
+    # - taskkill /T also covers packaged executables that escape job inheritance
+    if worker.poll() is None:
+        launch_util.kill_process_tree(worker.pid)
+    if worker.stdin is not None:
+        worker.stdin.close()
+    try:
+        worker.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        launch_util.kill_process_tree(worker.pid)
+        worker.wait(timeout=10)
+    targets = {str(port) for port in ports}
+    deadline = time.monotonic() + 10
+    while launch_util._listening_pids(targets) and time.monotonic() < deadline:
+        time.sleep(0.25)
+    if launch_util._listening_pids(targets):
+        raise RuntimeError(f"{framework} shutdown left occupied ports {ports}; see {log_path}")
+    print(f"[STOPPED] {framework}: ports released", flush=True)
+
+
+@contextlib.contextmanager
+def running_framework(
+    framework: str, output: RunPaths | None = None, ini_overrides: dict[str, str] | None = None
+) -> Generator[Path]:
+    if sys.platform != "win32":
+        raise RuntimeError("live start/stop tests require Windows")
+    ports = workflow_ports(framework)
+    old_pids = _require_free_ports(framework, ports)
+    output = output or CasePaths(__file__).new_run()
+    log_path = output.logs / f"{framework}_{time.time_ns()}.log"
     with log_path.open("wb") as log:
         worker = subprocess.Popen(
-            [
-                sys.executable,
-                "-m",
-                "scripts.tests.cases.shared.frameworks_smoke",
-                "--worker",
-                framework,
-                *[
-                    argument
-                    for key, value in (ini_overrides or {}).items()
-                    for argument in ("--ini-set", f"{key}={value}")
-                ],
-            ],
+            _worker_command(framework, ini_overrides),
             cwd=project_cfg.BASE_DIR,
-            env=env,
+            env=_worker_env(output),
             stdin=subprocess.DEVNULL,
             stdout=log,
             stderr=subprocess.STDOUT,
@@ -343,45 +397,11 @@ def running_framework(  # noqa: C901
         try:
             launch_util.assign_process_to_job(worker.pid)
             print(f"[START] {framework}: reserved free ports {ports}; log: {log_path}", flush=True)
-            if framework == "kobold":
-                ready_url = f"http://127.0.0.1:{kobold_port()}/api/v1/model"
-            elif framework == "sdcpp":
-                ready_url = f"http://127.0.0.1:{ports[0]}/v1/models"
-            else:
-                ready_url = f"http://127.0.0.1:{ports[0]}/health"
-            deadline = time.monotonic() + live_timeout
-            while time.monotonic() < deadline:
-                if worker.poll() is not None:
-                    raise RuntimeError(f"{framework} launcher exited with {worker.returncode}; see {log_path}")
-                try:
-                    listeners = launch_util._listening_pids({str(port) for port in ports})
-                    new_ports = {int(port) for port, pid in listeners if pid not in old_pids}
-                    if set(ports).issubset(new_ports) and request(ready_url, timeout=2)[0] == 200:
-                        break
-                except (urllib.error.URLError, TimeoutError, ConnectionError):
-                    pass
-                time.sleep(0.5)
-            else:
-                raise TimeoutError(f"{framework} did not become ready in {live_timeout}s; see {log_path}")
+            _await_ready(worker, framework, ports, old_pids, _ready_url(framework, ports), log_path)
             print(f"[READY] {framework}", flush=True)
             yield log_path
         finally:
-            # - taskkill /T also covers packaged executables that escape job inheritance
-            if worker.poll() is None:
-                launch_util.kill_process_tree(worker.pid)
-            if worker.stdin is not None:
-                worker.stdin.close()
-            try:
-                worker.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                launch_util.kill_process_tree(worker.pid)
-                worker.wait(timeout=10)
-            deadline = time.monotonic() + 10
-            while launch_util._listening_pids({str(port) for port in ports}) and time.monotonic() < deadline:
-                time.sleep(0.25)
-            if launch_util._listening_pids({str(port) for port in ports}):
-                raise RuntimeError(f"{framework} shutdown left occupied ports {ports}; see {log_path}")
-            print(f"[STOPPED] {framework}: ports released", flush=True)
+            _stop_worker(worker, framework, ports, log_path)
 
 
 def run_live(frameworks: list[str]) -> bool:
