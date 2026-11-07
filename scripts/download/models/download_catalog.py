@@ -45,7 +45,7 @@ def download_model(model: ModelDownload, range_download: bool = False, resume_fi
         downloaded.replace(model.path)
 
 
-def main(argv: list[str] | None = None) -> None:  # noqa: C901
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="List model sources or explicitly download selected catalog entries.")
     parser.add_argument("--list", action="store_true", help="List only (also the default)")
     selection = parser.add_mutually_exclusive_group()
@@ -63,33 +63,19 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901
     parser.add_argument(
         "--resume-file", type=Path, help="Existing contiguous partial file; requires --range-download and one model"
     )
-    args = parser.parse_args(argv)
-    if args.list and args.download:
-        parser.error("--list and --download cannot be combined")
-    if args.download and not (args.model or args.active):
-        parser.error("Downloads require --model or --active; use --list to inspect first")
-    models = [
-        model
-        for model in MODELS
-        if (not args.model or model.label in args.model)
+    return parser
+
+
+def _matches(model: ModelDownload, args: argparse.Namespace) -> bool:
+    return (
+        (not args.model or model.label in args.model)
         and (not args.active or model.in_use)
         and (not args.inactive or not model.in_use)
         and (not args.group or model.group == args.group or model.group.startswith(args.group + "/"))
-    ]
-    if not models:
-        parser.error("No catalog entries match the selection")
-    if args.download:
-        if args.resume_file and (not args.range_download or len(models) != 1):
-            parser.error("--resume-file requires --range-download and exactly one model")
-        missing = [model.label for model in models if model.url is None]
-        if missing:
-            parser.error(f"Missing source URLs: {', '.join(missing)}")
-        for model in models:
-            if args.range_download:
-                download_model(model, True, args.resume_file)
-            else:
-                download_model(model)
-        return
+    )
+
+
+def _print_models(models: list[ModelDownload]) -> None:
     for model in models:
         print(f"{'IN USE' if model.in_use else 'INACTIVE'}  {model.label}")
         print(f"  Download: {model.url or 'NOT CONFIGURED'}")
@@ -100,5 +86,30 @@ def main(argv: list[str] | None = None) -> None:  # noqa: C901
             print(f"  Note: {model.notes}")
 
 
-if __name__ == "__main__":
-    main()
+def _start_downloads(models: list[ModelDownload], args: argparse.Namespace) -> None:
+    for model in models:
+        if args.range_download:
+            download_model(model, True, args.resume_file)
+        else:
+            download_model(model)
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = _parser()
+    args = parser.parse_args(argv)
+    if args.list and args.download:
+        parser.error("--list and --download cannot be combined")
+    if args.download and not (args.model or args.active):
+        parser.error("Downloads require --model or --active; use --list to inspect first")
+    models = [model for model in MODELS if _matches(model, args)]
+    if not models:
+        parser.error("No catalog entries match the selection")
+    if not args.download:
+        _print_models(models)
+        return
+    if args.resume_file and (not args.range_download or len(models) != 1):
+        parser.error("--resume-file requires --range-download and exactly one model")
+    missing = [model.label for model in models if model.url is None]
+    if missing:
+        parser.error(f"Missing source URLs: {', '.join(missing)}")
+    _start_downloads(models, args)
