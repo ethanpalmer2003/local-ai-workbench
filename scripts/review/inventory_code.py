@@ -5,10 +5,14 @@ import hashlib
 import io
 import json
 import os
+import re
+import subprocess
+import sys
 import time
 import tokenize
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 
 from scripts.config import project_config as project_cfg
 
@@ -16,6 +20,16 @@ MAX_DEPTH = 4
 MAX_CODE_LINES = 100
 MAX_SMALL_FOLDER_ITEMS = 3
 MIN_DUPLICATE_LINES = 15
+DEBT_DOC = project_cfg.SCRIPTS_DIR / "review" / "COMPLEXITY-DEBT.md"
+DEBT_PREAMBLE = (
+    "# McCabe debt",
+    "",
+    "Functions above the gate of 10. Each carries `# noqa: C901`; delete the annotation when the function is split.",
+    "Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rather than editing by hand.",
+    "",
+    "| Complexity | Function |",
+    "| ---: | --- |",
+)
 EXCLUDED = {".git", ".venv", "state", "__pycache__", ".pytest_cache", ".ruff_cache"}
 REVIEW_EXCLUDED = EXCLUDED | {
     "frameworks",
@@ -347,7 +361,51 @@ def report(
     return bool(violations)
 
 
+def _debt_row(item: dict[str, Any], root: Path) -> tuple[int, str, str]:
+    match = re.search(r"`(.+)` is too complex \((\d+) >", str(item.get("message", "")))
+    location = item.get("location") or {}
+    path = Path(str(item.get("filename", ""))).relative_to(root).as_posix()
+    if not match:
+        return 0, f"{path}:{location.get('row', 0)}", "?"
+    return int(match.group(2)), f"{path}:{location.get('row', 0)}", f"`{match.group(1)}`"
+
+
+def complexity_debt(root: Path) -> int:
+    """Rewrite the debt table from ruff's McCabe count with the grandfathering noqa ignored."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "ruff",
+            "check",
+            "--config",
+            "pyproject.toml",
+            "--select",
+            "C90",
+            "--ignore-noqa",
+            "--output-format",
+            "json",
+            ".",
+        ],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    rows = sorted(
+        (_debt_row(item, root) for item in json.loads(result.stdout or "[]") if item.get("code") == "C901"),
+        key=lambda row: (-row[0], row[1]),
+    )
+    lines = [*DEBT_PREAMBLE, *(f"| {score} | `{path}` {name} |" for score, path, name in rows)]
+    lines.extend(("", f"Remaining: {len(rows)}."))
+    DEBT_DOC.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    return len(rows)
+
+
 def main() -> int:
+    if "--complexity-debt" in sys.argv[1:]:
+        print(f"Complexity debt rows: {complexity_debt(project_cfg.BASE_DIR)} -> {DEBT_DOC.name}")
+        return 0
     root = project_cfg.SCRIPTS_DIR
     files = list(maintained_python(root))
     results = [

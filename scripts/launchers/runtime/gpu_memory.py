@@ -323,17 +323,14 @@ def _get_windows_memory(pid: int | None) -> GpuMemorySnapshot | None:
     return parse_windows_memory(samples, target_pids, process_names)
 
 
-def parse_windows_memory(  # noqa: C901
-    samples: object, target_pids: set[int], process_names: dict[int, tuple[str, str]]
-) -> GpuMemorySnapshot | None:
-    if isinstance(samples, dict):
-        samples = [samples]
-    if not isinstance(samples, list):
-        return None
-
+def _collect_samples(samples: object) -> tuple[dict[str, float], list[tuple[str, int, float]]]:
+    """Split Get-Counter JSON into adapter totals (MB) and per-process usage (MB)."""
+    entries = [samples] if isinstance(samples, dict) else samples
     adapter_mb: dict[str, float] = {}
     process_samples: list[tuple[str, int, float]] = []
-    for sample in samples:
+    if not isinstance(entries, list):
+        return adapter_mb, process_samples
+    for sample in entries:
         if not isinstance(sample, dict):
             continue
         path = str(sample.get("Path", "")).lower()
@@ -350,17 +347,32 @@ def parse_windows_memory(  # noqa: C901
             match = re.search(r"pid_(\d+)", path)
             if match:
                 process_samples.append((adapter, int(match.group(1)), value_mb))
+    return adapter_mb, process_samples
 
-    if not adapter_mb:
-        return None
-    target_usage = {
+
+def _attribute_usage(
+    adapter_mb: dict[str, float], process_samples: list[tuple[str, int, float]], target_pids: set[int]
+) -> dict[str, float]:
+    return {
         adapter: sum(
             value for key, process_id, value in process_samples if key == adapter and process_id in target_pids
         )
         for adapter in adapter_mb
     }
+
+
+def _selected_adapter(adapter_mb: dict[str, float], target_usage: dict[str, float]) -> str:
+    """Prefer the adapter our own pids touch; fall back to the busiest one."""
     selection = target_usage if max(target_usage.values(), default=0.0) else adapter_mb
-    selected_adapter = max(selection, key=lambda adapter: selection[adapter])
+    return max(selection, key=lambda adapter: selection[adapter])
+
+
+def _split_process_memory(
+    process_samples: list[tuple[str, int, float]],
+    selected_adapter: str,
+    target_pids: set[int],
+    process_names: dict[int, tuple[str, str]],
+) -> tuple[float | None, float | None, float | None]:
     process_mb: float | None = None
     other_ai_mb: float | None = None
     other_non_ai_mb: float | None = None
@@ -373,13 +385,24 @@ def parse_windows_memory(  # noqa: C901
             other_ai_mb = (other_ai_mb or 0.0) + value_mb
         else:
             other_non_ai_mb = (other_non_ai_mb or 0.0) + value_mb
+    return process_mb, other_ai_mb, other_non_ai_mb
+
+
+def parse_windows_memory(
+    samples: object, target_pids: set[int], process_names: dict[int, tuple[str, str]]
+) -> GpuMemorySnapshot | None:
+    adapter_mb, process_samples = _collect_samples(samples)
+    if not adapter_mb:
+        return None
+    selected = _selected_adapter(adapter_mb, _attribute_usage(adapter_mb, process_samples, target_pids))
+    process_mb, other_ai_mb, other_non_ai_mb = _split_process_memory(
+        process_samples, selected, target_pids, process_names
+    )
 
     # - use the adapter-wide counter for the total: the sum of per-process
     #   counters can exceed physical dedicated-memory usage because Windows
     #   reports some allocations in more than one process/category
-    return GpuMemorySnapshot(
-        adapter_mb[selected_adapter], None, process_mb, other_ai_mb, other_non_ai_mb, selected_adapter
-    )
+    return GpuMemorySnapshot(adapter_mb[selected], None, process_mb, other_ai_mb, other_non_ai_mb, selected)
 
 
 def _get_rocm_memory() -> tuple[float, float | None] | None:

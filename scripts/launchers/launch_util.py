@@ -340,7 +340,68 @@ def prune_stale_temp(max_age_hours: float = 24) -> int:
     return removed
 
 
-def launch_process(  # noqa: C901
+def _launch_mode(mode: ConsoleTerminalLaunchMode | str | None) -> ConsoleTerminalLaunchMode:
+    if mode is None:
+        return cfg.LAUNCH.console_terminal_mode
+    return mode if isinstance(mode, ConsoleTerminalLaunchMode) else ConsoleTerminalLaunchMode(mode)
+
+
+def _clear_requested_ports(kill_ports: int | list[int] | None, title: str) -> None:
+    if not kill_ports:
+        return
+    for port in [kill_ports] if isinstance(kill_ports, int) else kill_ports:
+        prepare_service_port(port, title)
+
+
+def _child_environment(env: Mapping[str, str | None] | None) -> dict[str, str]:
+    """Caller overrides (None unsets) plus a project-local TEMP/TMP/TMPDIR."""
+    child_env = os.environ.copy()
+    for key, value in (env or {}).items():
+        if value is None:
+            child_env.pop(key, None)
+        else:
+            child_env[key] = value
+    for name in ("TEMP", "TMP", "TMPDIR"):
+        child_env[name] = str(cfg.LAUNCH.temp_dir)
+    return child_env
+
+
+def _powershell_launch_cmd(cmd: list[str], title: str, log_file: str | None) -> list[str]:
+    quoted = " ".join("'" + part.replace("'", "''") + "'" for part in cmd)
+    title_literal = "'" + title.replace("'", "''") + "'"
+    ps_command = f"$Host.UI.RawUI.WindowTitle = {title_literal}; & {quoted}"
+    if log_file:
+        log_literal = "'" + log_file.replace("'", "''") + "'"
+        ps_command += f" 2>&1 | Tee-Object -FilePath {log_literal}"
+    return ["powershell.exe", "-NoProfile", "-NoExit", "-Command", ps_command]
+
+
+def _merge_streams(
+    stack: contextlib.ExitStack, mode: ConsoleTerminalLaunchMode, log_file: str | None
+) -> tuple[Any, Any]:
+    """MERGE runs headless; a log_file is captured directly instead of by a shell."""
+    if mode != ConsoleTerminalLaunchMode.MERGE:
+        return None, None
+    if not log_file:
+        return sys.stdout, sys.stderr
+    capture = stack.enter_context(open(log_file, "w", encoding="utf-8"))  # noqa: SIM115 - ExitStack owns it
+    return capture, capture
+
+
+def _bind_job(proc: subprocess.Popen[Any], mode: ConsoleTerminalLaunchMode) -> None:
+    # - SPLIT_INDEPENDENT: no job object - the process outlives this launcher and
+    #   every other terminal by design
+    if mode == ConsoleTerminalLaunchMode.SPLIT_INDEPENDENT:
+        return
+    try:
+        assign_process_to_job(proc.pid)
+    except OSError:
+        kill_process_tree(proc.pid)
+        proc.wait(timeout=10)
+        raise
+
+
+def launch_process(
     cmd: list[str],
     title: str,
     cwd: str | None = None,
@@ -359,51 +420,21 @@ def launch_process(  # noqa: C901
     - the child's TEMP/TMP/TMPDIR point inside the project, so a sandboxed
       shell that denies the system temp directory cannot abort the child
     """
-    if mode is None:
-        mode = cfg.LAUNCH.console_terminal_mode
-    if not isinstance(mode, ConsoleTerminalLaunchMode):
-        mode = ConsoleTerminalLaunchMode(mode)
-
-    cmd = [*cmd, *(extra_args or [])]
-
-    if kill_ports:
-        for port in [kill_ports] if isinstance(kill_ports, int) else kill_ports:
-            prepare_service_port(port, title)
+    resolved = _launch_mode(mode)
+    full_cmd = [*cmd, *(extra_args or [])]
+    _clear_requested_ports(kill_ports, title)
 
     vram_before = get_gpu_memory_snapshot() if report_vram else None
-
-    new_console = sys.platform == "win32" and mode != ConsoleTerminalLaunchMode.MERGE
+    new_console = sys.platform == "win32" and resolved != ConsoleTerminalLaunchMode.MERGE
 
     cfg.LAUNCH.temp_dir.mkdir(parents=True, exist_ok=True)
     prune_stale_temp()
-    child_env = os.environ.copy()
-    if env:
-        for key, value in env.items():
-            if value is None:
-                child_env.pop(key, None)
-            else:
-                child_env[key] = value
-    for name in ("TEMP", "TMP", "TMPDIR"):
-        child_env[name] = str(cfg.LAUNCH.temp_dir)
 
-    if new_console:
-        quoted = " ".join("'" + part.replace("'", "''") + "'" for part in cmd)
-        title_literal = "'" + title.replace("'", "''") + "'"
-        ps_command = f"$Host.UI.RawUI.WindowTitle = {title_literal}; & {quoted}"
-        if log_file:
-            log_literal = "'" + log_file.replace("'", "''") + "'"
-            ps_command += f" 2>&1 | Tee-Object -FilePath {log_literal}"
-        launch_cmd = ["powershell.exe", "-NoProfile", "-NoExit", "-Command", ps_command]
-    else:
-        launch_cmd = cmd
+    launch_cmd = _powershell_launch_cmd(full_cmd, title, log_file) if new_console else full_cmd
+    child_env = _child_environment(env)
 
     with contextlib.ExitStack() as stack:
-        output = sys.stdout if mode == ConsoleTerminalLaunchMode.MERGE else None
-        error_output = sys.stderr if mode == ConsoleTerminalLaunchMode.MERGE else None
-        if log_file and mode == ConsoleTerminalLaunchMode.MERGE:
-            # - capture headless output without a console or an intermediate shell
-            output = stack.enter_context(open(log_file, "w", encoding="utf-8"))
-            error_output = output
+        output, error_output = _merge_streams(stack, resolved, log_file)
         proc = subprocess.Popen(
             launch_cmd,
             cwd=cwd,
@@ -413,16 +444,7 @@ def launch_process(  # noqa: C901
             creationflags=subprocess.CREATE_NEW_CONSOLE if new_console else 0,
         )
 
-    # - SPLIT_INDEPENDENT: no job object - the process outlives this launcher and
-    #   every other terminal by design
-    if mode != ConsoleTerminalLaunchMode.SPLIT_INDEPENDENT:
-        try:
-            assign_process_to_job(proc.pid)
-        except OSError:
-            kill_process_tree(proc.pid)
-            proc.wait(timeout=10)
-            raise
-
+    _bind_job(proc, resolved)
     if report_vram:
         report_vram_usage_async(title, proc.pid, vram_before, log_file=log_file)
     return proc
