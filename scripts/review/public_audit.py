@@ -48,7 +48,8 @@ CREDENTIALS = re.compile(
 )
 HOME_PATHS = re.compile(r"C:[\\/]+Users[\\/]+[A-Za-z0-9_.-]+|/Users/[A-Za-z0-9_.-]+")
 MACHINE_PATHS = re.compile(r"C:[\\/]+AI[\\/]+")
-PRIVATE_WORDS = re.compile(r"character|zzfixture|zzfixture|zzfixture|zzfixture", re.I)
+# - the vocabulary itself is personal, so it lives in the overlay; this file names no term
+PRIVATE_WORDS_SETTING = "review.private_words"
 
 # - prefix -> why the hit is expected; keep this list short and specific
 ALLOWLIST = {
@@ -82,8 +83,14 @@ def voice_terms() -> tuple[str, ...]:
 
 
 def voice_patterns(words: tuple[str, ...]) -> str:
-    """Alphanumeric boundaries, so `example_config` matches but `Summazzfixture` does not."""
+    """Alphanumeric boundaries, so `chapter_config` matches but `Summazzfixture` does not."""
     return "|".join(rf"(?<![A-Za-z0-9]){re.escape(word)}(?![A-Za-z0-9])" for word in words)
+
+
+def private_words() -> tuple[str, ...]:
+    """Vocabulary supplied by the overlay's defaults.json; nothing personal is committed here."""
+    configured = inputs.setting(PRIVATE_WORDS_SETTING, [])
+    return tuple(str(word) for word in configured if str(word).strip())
 
 
 PLACEHOLDER_VALUES = {"noop", "test", "dummy", "changeme", "example", "none"}
@@ -115,7 +122,11 @@ def _path_findings(path: str, text: str) -> list[Finding]:
 
 
 def _word_findings(path: str, text: str, words: tuple[str, ...]) -> list[Finding]:
-    findings = [Finding("private-word", path, match.group(0)) for match in PRIVATE_WORDS.finditer(text)]
+    findings = [
+        Finding("private-word", path, word)
+        for word in private_words()
+        if re.search(voice_patterns((word,)), text, re.I)
+    ]
     findings.extend(
         Finding("private-input", path, word) for word in words if re.search(voice_patterns((word,)), text, re.I)
     )
@@ -155,7 +166,10 @@ def audit(root: Path) -> list[Finding]:
 
 def history_findings(root: Path) -> list[Finding]:
     """Paths that carried an audited pattern in any commit; only a rewrite removes them."""
-    pattern = "|".join([SECRETS.pattern, HOME_PATHS.pattern, PRIVATE_WORDS.pattern, voice_patterns(voice_terms())])
+    vocabulary = [voice_patterns(voice_terms())]
+    if private_words():
+        vocabulary.append(voice_patterns(private_words()))
+    pattern = "|".join([SECRETS.pattern, HOME_PATHS.pattern, *vocabulary])
     revs = subprocess.run(
         ["git", "-C", str(root), "rev-list", "--all"], capture_output=True, text=True, check=True
     ).stdout.split()

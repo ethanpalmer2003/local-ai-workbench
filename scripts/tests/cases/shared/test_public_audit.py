@@ -9,7 +9,8 @@ from scripts.review import public_audit
 class PublicAuditTests(unittest.TestCase):
     def test_secret_home_path_and_private_words_are_reported(self):
         text = "key github_pat_abcdefghijklmnopqrstuvwxyz01 home C:\\Users\\someone\\x note ZZFIXTURE\n"
-        findings = public_audit.scan_text("scripts/config/example.json", text, ())
+        with patch.object(public_audit, "private_words", return_value=("zzfixture",)):
+            findings = public_audit.scan_text("scripts/config/example.json", text, ())
         categories = {finding.category for finding in findings}
         self.assertEqual(categories, {"secrets", "home-path", "private-word"})
 
