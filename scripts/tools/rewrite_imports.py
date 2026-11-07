@@ -85,7 +85,7 @@ def _rewrite_import(node: ast.Import | ast.ImportFrom, moves: dict[str, str]) ->
     return "\n".join(_from_statement(module, aliases) for module, aliases in groups.items())
 
 
-def rewrite_file(path: Path, moves: dict[str, str], *, dry_run: bool) -> bool:
+def rewrite_file(path: Path, moves: dict[str, str], *, dry_run: bool) -> bool:  # noqa: C901
     with path.open("r", encoding="utf-8", newline="") as stream:
         source = stream.read()
     try:

@@ -88,7 +88,7 @@ class Turns:
             self.active = None
         return {**event, "received_samples": self.samples, "observed_at": time.perf_counter()}
 
-    def poll(self):
+    def poll(self):  # noqa: C901
         events = []
         while True:
             try:

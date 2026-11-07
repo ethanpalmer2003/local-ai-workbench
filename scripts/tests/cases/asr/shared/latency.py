@@ -55,7 +55,7 @@ class Client:
         if self.messages.get(timeout=10).get("kind") != "ready":
             raise RuntimeError("Transport did not become ready")
 
-    def replay(self, command, timing=None):
+    def replay(self, command, timing=None):  # noqa: C901
         assert self.process is not None and self.process.stdin is not None
         self.process.stdin.write(json.dumps(command) + "\n")
         self.process.stdin.flush()

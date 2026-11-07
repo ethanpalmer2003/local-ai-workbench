@@ -95,7 +95,7 @@ def inspect_record(row, previous, *, refresh=False, full_arrays=False, tensor_in
     return record
 
 
-def enrich_hub(records, cache):
+def enrich_hub(records, cache):  # noqa: C901
     jobs = {}
     for record in records.values():
         for source in record["registry"]:

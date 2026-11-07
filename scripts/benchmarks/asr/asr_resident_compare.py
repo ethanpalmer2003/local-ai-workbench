@@ -91,7 +91,7 @@ def _collect_samples(timer, infer, clips, repetitions, result) -> None:
             )
 
 
-def run_engine(name, command, model, clips, samples, run, port, deadline, resources=False):
+def run_engine(name, command, model, clips, samples, run, port, deadline, resources=False):  # noqa: C901
     digest = _file_sha256(model)
     if name.startswith("audiocpp-"):
         config = run.temp / f"{name}.json"
@@ -167,7 +167,7 @@ def run_engine(name, command, model, clips, samples, run, port, deadline, resour
     return result
 
 
-def main():
+def main():  # noqa: C901
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", action="store_true", help="Opt in to native inference")
     parser.add_argument("--engines", nargs="+", help="Default: every configured resident adapter")

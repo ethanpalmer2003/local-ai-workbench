@@ -1146,7 +1146,7 @@ def print_plan(plans, top_n):
         print(f"\nTotal with --transcribe: at least {total_sel} clips (more if new transcripts rank lower)")
 
 
-def validate_character(char):
+def validate_character(char):  # noqa: C901
     """Read-only health check for one character: never downloads, transcribes or writes anything.
     Returns a dict describing key-matching / transcript problems.
     """
@@ -1317,7 +1317,7 @@ def argument_parser() -> argparse.ArgumentParser:
     return p
 
 
-def main():
+def main():  # noqa: C901
     p = argument_parser()
     a = p.parse_args()
 

@@ -15,7 +15,7 @@ def published(records):
         row["published_quality"] = [entry for entry in catalog["results"] if set(entry["model_ids"]) & set(row["ids"])]
 
 
-def measurements(records, paths):
+def measurements(records, paths):  # noqa: C901
     """Only explicit checkpoint identities and recorded context; never infer missing memory."""
     files = set()
     errors = []

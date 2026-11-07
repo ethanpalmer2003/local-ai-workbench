@@ -63,7 +63,7 @@ def token_windows(events: list[dict[str, Any]], width: int) -> list[dict[str, An
     return windows
 
 
-def stream_request(
+def stream_request(  # noqa: C901
     base: str, prompt: list[int], args: argparse.Namespace, trace: Path, deadline: float
 ) -> dict[str, Any]:
     remaining = deadline - time.perf_counter()

@@ -128,7 +128,7 @@ def validate_candidate(paths: RunPaths) -> None:
     verify_candidate_evidence(paths)
 
 
-def verify_candidate_evidence(paths: RunPaths) -> dict[str, Any]:
+def verify_candidate_evidence(paths: RunPaths) -> dict[str, Any]:  # noqa: C901
     evidence = json.loads((paths.artifacts / "correctness.json").read_text(encoding="utf-8"))
     for chunk in (None, 3):
         record = next(record for record in evidence if "chunk" in record and record["chunk"] == chunk)

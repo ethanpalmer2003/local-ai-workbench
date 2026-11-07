@@ -13,7 +13,7 @@ DEFAULT_NEGATIVE = (
 )
 
 
-def text_nodes(nodes: list[dict[str, Any]], links: dict[int, list[Any]]) -> Iterator[tuple[str, str]]:
+def text_nodes(nodes: list[dict[str, Any]], links: dict[int, list[Any]]) -> Iterator[tuple[str, str]]:  # noqa: C901
     """Yield (positive|negative, node id) by following each conditioning input to its text encoder.
 
     Guiders point at a conditioning node that splits positive/negative itself, so the same
@@ -178,7 +178,7 @@ class LTXWorkflowOverrides:
             else "ltx-2.5-video-vae-bf16.safetensors"
         )
 
-    def apply(self, graph: dict[str, Any], controls: dict[str, int]) -> None:
+    def apply(self, graph: dict[str, Any], controls: dict[str, int]) -> None:  # noqa: C901
         for name in (
             "seconds",
             "fps",
@@ -262,7 +262,7 @@ class LTXWorkflowOverrides:
         return resolved
 
 
-def workflow(saved: dict[str, Any], overrides: LTXWorkflowOverrides) -> dict[str, Any]:
+def workflow(saved: dict[str, Any], overrides: LTXWorkflowOverrides) -> dict[str, Any]:  # noqa: C901
     links = {link[0]: link for link in saved["links"]}
     graph: dict[str, Any] = {}
     for node in saved["nodes"]:

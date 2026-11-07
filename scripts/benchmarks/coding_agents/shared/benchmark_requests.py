@@ -247,7 +247,7 @@ class BenchmarkRelay:
                 self.end_headers()
                 self.wfile.write(body)
 
-            def do_POST(self) -> None:
+            def do_POST(self) -> None:  # noqa: C901
                 if self.path != "/v1/chat/completions":
                     self.send_error(404, "This benchmark uses OpenAI chat completions")
                     return

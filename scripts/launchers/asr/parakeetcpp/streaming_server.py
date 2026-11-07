@@ -29,7 +29,7 @@ def serve(port: int):  # noqa: C901
                 self, 200 if self.path == "/health" else 404, b'{"backend":"cpu","threads":8}', "application/json"
             )
 
-        def do_POST(self):
+        def do_POST(self):  # noqa: C901
             self.connection.settimeout(20)
             self.close_connection = True
             if not lock.acquire(blocking=False):

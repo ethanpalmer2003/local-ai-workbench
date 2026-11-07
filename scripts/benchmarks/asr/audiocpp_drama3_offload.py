@@ -41,7 +41,7 @@ MODEL_ID = cfg.AudiocppModel.FISH_DRAMA3_Q2.value
 PORT = 18884
 
 
-def weight_estimates() -> dict[str, Any]:
+def weight_estimates() -> dict[str, Any]:  # noqa: C901
     # - Tensor offsets include alignment padding; do not read tensor payloads.
     with MODEL.open("rb") as stream:
         if stream.read(4) != b"GGUF":
@@ -252,7 +252,7 @@ def run_case(
     return result
 
 
-def serve(layers: int, run: RunPaths) -> None:
+def serve(layers: int, run: RunPaths) -> None:  # noqa: C901
     # - Lazy loading keeps unselected catalog models unloaded.
     from scripts.launchers.audiocpp.audiocpp_proxy import _transform
     from scripts.launchers.audiocpp.tts_proxy import run_tts_json_proxy

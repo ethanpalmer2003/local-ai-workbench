@@ -42,7 +42,7 @@ def text_target() -> tuple[int, str]:
     return backends.ports("kobold")[0], cfg.KOBOLDCPP_SERVICE.model
 
 
-def generate(
+def generate(  # noqa: C901
     kind: str,
     paths: RunPaths,
     label: str,
@@ -246,7 +246,7 @@ def preflight() -> None:
     preflight_check.announce(f"{llm_mode} mode")
 
 
-def run() -> None:
+def run() -> None:  # noqa: C901
     context = dict(require_native_execution("Combined Kobold/AudioCpp/sd.cpp benchmark"))
     paths = BenchmarkPaths(__file__).new_run()
     print(f"[OUTPUT] {paths.root}", flush=True)
