@@ -265,14 +265,8 @@ def replacement_pairs(old: model_cfg.ModelDownload, new: model_cfg.ModelDownload
     return sorted((pair for pair in pairs if pair[0] and pair[0] != pair[1]), key=lambda pair: -len(pair[0]))
 
 
-def command_replace(  # noqa: C901
-    old: model_cfg.ModelDownload,
-    new: model_cfg.ModelDownload,
-    apply: bool,
-    include_docs: bool,
-    include_tests: bool = False,
-) -> int:
-    print(f"Replace {old.label} -> {new.label}")
+def _replace_report(old: model_cfg.ModelDownload, new: model_cfg.ModelDownload) -> list[str]:
+    """Print what changes and return Strata references that block an apply."""
     refs, _ = references(old)
     found_mentions = mentions(old)
     strata = [f"{ref.source}: {ref.path}" for ref in refs if ref.source.startswith("Strata:")]
@@ -289,41 +283,41 @@ def command_replace(  # noqa: C901
         print("\n[FAIL] Strata native config still references the old paths:")
         for line in strata:
             print(f"  {line}")
-        if apply:
-            print("Update the native Strata model/mmproj paths manually first; nothing was changed.")
-            return 1
-    files = rewrite_files(include_docs, include_tests)
+    return strata
+
+
+def _replacement_changes(
+    old: model_cfg.ModelDownload, new: model_cfg.ModelDownload, include_docs: bool, include_tests: bool
+) -> list[tuple[Path, str]]:
+    pairs = replacement_pairs(old, new)
     changed: list[tuple[Path, str]] = []
-    for file in files:
+    for file in rewrite_files(include_docs, include_tests):
         text = file.read_text(encoding="utf-8-sig", errors="replace")
         updated = text
-        for source, target in replacement_pairs(old, new):
+        for source, target in pairs:
             updated = updated.replace(source, target)
         if updated != text:
             changed.append((file, updated))
+    return changed
+
+
+def _print_changes(changed: list[tuple[Path, str]]) -> None:
     print("\nFiles to update:")
     for file, _ in changed:
         print(f"  {display_path(file)}")
     if not changed:
         print("  (none)")
-    if not apply:
-        print("\n[Dry run] Re-run with --apply to rewrite files, edit catalog.json and move old weights to trash.")
-        if not include_docs:
-            print("Add --include-docs to update maintained Markdown documentation.")
-        if not include_tests:
-            print("Add --include-tests to update maintained test fixtures/assertions.")
-        return 0
-    if strata:
-        return 1
-    stamp = str(time.time_ns())
-    backup_file(catalog.CATALOG_PATH, stamp)
-    for file, updated in changed:
-        backup_file(file, stamp)
-        file.write_text(updated, encoding="utf-8")
-        print(f"[OK] {display_path(file)}")
-    entries = [entry for entry in catalog.load_entries() if entry.get("label") != old.label]
-    catalog.save_catalog(entries)
-    catalog.write_ids(catalog.load_catalog())
+
+
+def _print_dry_run(include_docs: bool, include_tests: bool) -> None:
+    print("\n[Dry run] Re-run with --apply to rewrite files, edit catalog.json and move old weights to trash.")
+    if not include_docs:
+        print("Add --include-docs to update maintained Markdown documentation.")
+    if not include_tests:
+        print("Add --include-tests to update maintained test fixtures/assertions.")
+
+
+def _retire_old(old: model_cfg.ModelDownload, new: model_cfg.ModelDownload, stamp: str) -> None:
     old_files = installed_files(old)
     if old_files:
         for file in old_files:
@@ -332,6 +326,43 @@ def command_replace(  # noqa: C901
         print(f"[WARN] No installed file for {old.label}; references were changed only.")
     if not new.path.is_file():
         print(f"[WARN] {new.label} is not installed; references now point at a missing file.")
+
+
+def _apply_replacement(
+    old: model_cfg.ModelDownload, new: model_cfg.ModelDownload, changed: list[tuple[Path, str]], stamp: str
+) -> None:
+    backup_file(catalog.CATALOG_PATH, stamp)
+    for file, updated in changed:
+        backup_file(file, stamp)
+        file.write_text(updated, encoding="utf-8")
+        print(f"[OK] {display_path(file)}")
+    entries = [entry for entry in catalog.load_entries() if entry.get("label") != old.label]
+    catalog.save_catalog(entries)
+    catalog.write_ids(catalog.load_catalog())
+    _retire_old(old, new, stamp)
+
+
+def command_replace(
+    old: model_cfg.ModelDownload,
+    new: model_cfg.ModelDownload,
+    apply: bool,
+    include_docs: bool,
+    include_tests: bool = False,
+) -> int:
+    print(f"Replace {old.label} -> {new.label}")
+    strata = _replace_report(old, new)
+    if strata and apply:
+        print("Update the native Strata model/mmproj paths manually first; nothing was changed.")
+        return 1
+    changed = _replacement_changes(old, new, include_docs, include_tests)
+    _print_changes(changed)
+    if not apply:
+        _print_dry_run(include_docs, include_tests)
+        return 0
+    if strata:
+        return 1
+    stamp = str(time.time_ns())
+    _apply_replacement(old, new, changed, stamp)
     print(f"[OK] Removed {old.label}; kept {new.label}")
     return run_model_sync()
 
