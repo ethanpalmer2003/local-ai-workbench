@@ -1098,7 +1098,7 @@ def _pytest_nodeids(groups: tuple[type[unittest.TestCase], ...]) -> list[str]:
     return nodeids
 
 
-def _run_regressions(  # noqa: C901
+def _run_regressions(
     groups: tuple[type[unittest.TestCase], ...],
     output: RunPaths,
     report: RunReport,
