@@ -3,7 +3,8 @@
 Personal audio and prompt inputs live outside the repository. Code stays here; the files it consumes live in the overlay.
 
 - Location: `data/input/` by default, or the path in `AI_INPUT_DIR`. Loader: [inputs.py](../inputs.py).
-- Layout: `voice_sources.json` (voice ids, chosen default, download sources), `audio/<id>/` (clips and generated selections), `kobold/` (character cards and saved scenarios), `prompts/` (tone instructions), `commandcode/` (personal Command Code settings and taste profiles).
+- Layout: `voice_sources.json` (voice ids, chosen default, download sources), `kobold/` (character cards and saved scenarios), `prompts/` (tone instructions), `commandcode/` (personal Command Code settings and taste profiles).
+- Clips are assets, not overlay config: `data/voices/<id>/` by default, or `AI_VOICES_DIR`; like weights they are downloaded, so a backup of the overlay stays small.
 - Absent overlay: voice cloning reports nothing available, the voice pipeline has no entries, and launchers still start. No code change is needed to take the inputs out or put them back.
 - Voice pipeline: `python -m scripts.download.input.get_tts_voices --characters <id> ...` reads its sources from the manifest; nothing is hard-coded per character.
 - `models.private.json` holds extra model catalog entries (character LoRAs, private checkpoints) and merges into the catalog when present. The tracked `catalog.json` and generated `ids.py` never carry them.
