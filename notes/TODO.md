@@ -9,6 +9,12 @@
 - [ ] Measure multilingual/noisy accuracy and real microphone latency; browser model/API routes responded, but capture produced no transcript. No multilingual/noisy reference corpus is configured. All 16 resident profiles have brief synthetic-English checks; decide whether CrispASR/FunASR need resident adapters. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py).
 - [ ] Validate Handy microphone selection, dictation and paste. UI shows Default microphone and Average all channels; no dictation or paste was tested.
 
+## Code quality
+
+- [ ] `get_tts_voices --validate` crashes: `validate_character` reads `char.value` but the caller passes `str(v)` (`AttributeError`). One-line fix; the read-only check itself is complete.
+- [ ] `kobold_stack_vram.generate` returns the *input* prompt text for the audio and image kinds, not a result. Only the text caller consumes it; decide whether the other kinds should return `""`.
+- [ ] Not gated: `codespell` stays a manual pre-commit stage. McCabe grandfathering is tracked in [COMPLEXITY-DEBT.md](../scripts/review/COMPLEXITY-DEBT.md); delete each `# noqa: C901` as its function is split.
+
 ## Deferred
 
 - [ ] Kobold/Drama active-overlap baseline at the selected 40-layer/2048-context setup; measure simultaneous generation, queueing and playback underruns, then review listening, buffering, restart behavior and Lite patch rebase. [Procedure](../scripts/tests/notes/audiocpp/AUDIOCPP-OPTIMIZATIONS.md). Drama tests remain deferred.
