@@ -846,6 +846,8 @@ class FrameworkUpdates(unittest.TestCase):
             {tool.name for tool in cfg.TOOLS if not tool.in_use},
             {
                 "lemonade_server",
+                "localai",
+                "text-generation-webui",
                 "avalon",
                 "tts/sherpa-onnx",
                 "tts/piper",

@@ -159,17 +159,28 @@ COMPONENTS = {
         "coding_agents/nanocoder",
         "coding_agents/shared",
         "shared",
-        "lemonade_server",
+        "localai",
+        "text-generation-webui",
         "benchmarks",
     )
 }
 COMPONENTS.update(
     {
         "llamacpp": ComponentPaths("llamacpp", models_override="huggingface/models/llms"),
-        "koboldcpp": ComponentPaths("koboldcpp", models_override="huggingface/models/llms/character_models"),
+        # - model servers share one root: they all wrap other engines rather than being one themselves
+        "koboldcpp": ComponentPaths(
+            "koboldcpp",
+            framework_override="model_servers/koboldcpp",
+            models_override="huggingface/models/llms/character_models",
+        ),
+        "lemonade_server": ComponentPaths("lemonade_server", framework_override="model_servers/lemonade_server"),
+        "localai": ComponentPaths("localai", framework_override="model_servers/LocalAI"),
+        "text-generation-webui": ComponentPaths(
+            "text-generation-webui", framework_override="model_servers/text-generation-webui"
+        ),
         "asr/handy": ComponentPaths("asr/handy", state_in_framework="app/Data", models_in_state="models"),
         "asr/llamacpp": ComponentPaths("asr/llamacpp", framework_override="llamacpp"),
-        "asr/koboldcpp": ComponentPaths("asr/koboldcpp", framework_override="koboldcpp"),
+        "asr/koboldcpp": ComponentPaths("asr/koboldcpp", framework_override="model_servers/koboldcpp"),
         "asr/audiocpp": ComponentPaths("asr/audiocpp", framework_override="audiocpp"),
         "asr/sherpa-onnx": ComponentPaths("asr/sherpa-onnx", framework_override="tts/sherpa-onnx"),
         "coding_agents/commandcode-desktop": ComponentPaths(

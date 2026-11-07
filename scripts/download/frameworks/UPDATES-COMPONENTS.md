@@ -17,3 +17,4 @@ Per-component install and update specifics; commands, categories and the HRX not
 | DeepSeek Harness | Electron app tracking its nightly feed (`download.deepseek.com/dsh-desk`); compared by the executable's own version and installed silently when the app is closed |
 | Command Code | Electron app from its GitHub release; installed silently when the app is closed |
 | ComfyUI | Delegated updater; owned config sync is separate |
+| Model servers | `frameworks/model_servers/` groups the engines that wrap other engines: KoboldCpp, Lemonade Server, LocalAI and Text generation WebUI. KoboldCpp installs from its GitHub release; the other three are parked until installed, because each ships its own launcher - LocalAI has no Windows binary, Text generation WebUI a portable zip, Lemonade a self-updating app |
