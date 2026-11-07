@@ -7,6 +7,7 @@ setlocal enabledelayedexpansion
 pushd "C:\AI"
 for /f "delims=" %%I in ('scripts\.venv\Scripts\python.exe -c "from scripts.config import project_config as p; print(p.COMFYUI_ROCM_DIR)"') do set "COMFYUI_ROCM_DIR=%%I"
 for /f "delims=" %%I in ('scripts\.venv\Scripts\python.exe -c "from scripts.config import project_config as p; print(p.OUTPUT_DIR)"') do set "COMFYUI_OUTPUT_DIR=%%I"
+for /f "delims=" %%I in ('scripts\.venv\Scripts\python.exe -c "from scripts.config import sync_configs as s; print(s.installed_node())"') do set "COMFYUI_NODE_FILE=%%I"
 scripts\.venv\Scripts\python.exe -m scripts.config.sync_configs --only comfyui --apply
 if errorlevel 1 (
     echo [FAIL] ComfyUI configuration sync failed. Startup stopped.
@@ -49,6 +50,22 @@ set "PATH=%PYTHON_DIR%;%PYTHON_DIR%\Scripts;%PATH%"
 
 if not exist "%PYTHON_DIR%\python.exe" (
     echo [ERROR] python.exe not found at %PYTHON_DIR%\python.exe
+    popd
+    pause
+    exit /b 1
+)
+
+:: ------------------------- installed node contract --------------------------- ::
+if not defined COMFYUI_NODE_FILE (
+    echo [FAIL] Could not resolve the installed ComfyUI node path. Startup stopped.
+    popd
+    pause
+    exit /b 1
+)
+echo %GREEN%[INFO]%RESET% Checking the installed ComfyUI node...
+"%PYTHON_DIR%\python.exe" "C:\AI\scripts\config\comfyui\verify_node.py" "!COMFYUI_NODE_FILE!"
+if errorlevel 1 (
+    echo [FAIL] The installed ComfyUI node does not load under this interpreter. Startup stopped.
     popd
     pause
     exit /b 1
