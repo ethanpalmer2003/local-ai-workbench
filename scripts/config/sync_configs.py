@@ -12,6 +12,16 @@ from scripts.config.coding_agents.pi import packages
 from scripts.config.comfyui import workflow_overrides
 from scripts.file_util import archive_path
 
+NODE_NAME = "ltx-prompt-cache"
+NODE_SOURCE = "ltx_prompt_cache.py"
+# - <installation>/custom_nodes/<node>/__init__.py, loaded by ComfyUI at startup
+NODE_INSTALL = f"custom_nodes/{NODE_NAME}/__init__.py"
+
+
+def installed_node() -> Path:
+    """Installed node copy that the ComfyUI startup check loads."""
+    return project_cfg.COMFYUI_ROCM_DIR / NODE_INSTALL
+
 
 def comfyui_files() -> dict[Path, bytes]:
     source = project_cfg.CONFIG_DIR / "comfyui"
@@ -20,7 +30,7 @@ def comfyui_files() -> dict[Path, bytes]:
         raise FileNotFoundError(f"Tracked workflow folder missing: {source / 'workflows'}")
     files = {
         target / "extra_model_paths.yaml": paths.load_text(source / "extra_model_paths.yaml").encode("utf-8"),
-        target / "custom_nodes/ltx-prompt-cache/__init__.py": (source / "ltx_prompt_cache.py").read_bytes(),
+        installed_node(): (source / NODE_SOURCE).read_bytes(),
     }
     prompt = inputs.setting("video.prompt", "") or None
     negative = inputs.setting("video.negative", "") or None
