@@ -86,30 +86,49 @@ def voice_patterns(words: tuple[str, ...]) -> str:
     return "|".join(rf"(?<![A-Za-z0-9]){re.escape(word)}(?![A-Za-z0-9])" for word in words)
 
 
-def scan_text(path: str, text: str, words: tuple[str, ...]) -> list[Finding]:  # noqa: C901
-    findings: list[Finding] = []
-    suffix = Path(path).suffix.lower()
-    is_doc = suffix in DOC_SUFFIXES
+PLACEHOLDER_VALUES = {"noop", "test", "dummy", "changeme", "example", "none"}
 
-    for match in SECRETS.finditer(text):
-        findings.append(Finding("secrets", path, match.group(0)[:12] + "..."))
+
+def _secret_findings(path: str, text: str) -> list[Finding]:
+    return [Finding("secrets", path, match.group(0)[:12] + "...") for match in SECRETS.finditer(text)]
+
+
+def _credential_findings(path: str, text: str) -> list[Finding]:
+    findings = []
     for match in CREDENTIALS.finditer(text):
         value = match.group(1)
-        if value.startswith("${") or value.lower() in {"noop", "test", "dummy", "changeme", "example", "none"}:
+        if value.startswith("${") or value.lower() in PLACEHOLDER_VALUES:
             continue
         if len(value) >= 6:
             findings.append(Finding("credentials", path, f"{match.group(0).split(':')[0]}: non-empty"))
-    for match in HOME_PATHS.finditer(text):
-        findings.append(Finding("home-path", path, match.group(0)))
-    if not is_doc and path.startswith(CONFIG_PREFIX):
-        for match in MACHINE_PATHS.finditer(text):
-            findings.append(Finding("machine-path", path, f"{match.group(0)} (use {{AI_ROOT}})"))
-    for match in PRIVATE_WORDS.finditer(text):
-        findings.append(Finding("private-word", path, match.group(0)))
-    for word in words:
-        if re.search(rf"(?<![A-Za-z0-9]){re.escape(word)}(?![A-Za-z0-9])", text, re.I):
-            findings.append(Finding("private-input", path, word))
     return findings
+
+
+def _path_findings(path: str, text: str) -> list[Finding]:
+    findings = [Finding("home-path", path, match.group(0)) for match in HOME_PATHS.finditer(text)]
+    if Path(path).suffix.lower() in DOC_SUFFIXES or not path.startswith(CONFIG_PREFIX):
+        return findings
+    findings.extend(
+        Finding("machine-path", path, f"{match.group(0)} (use {{AI_ROOT}})") for match in MACHINE_PATHS.finditer(text)
+    )
+    return findings
+
+
+def _word_findings(path: str, text: str, words: tuple[str, ...]) -> list[Finding]:
+    findings = [Finding("private-word", path, match.group(0)) for match in PRIVATE_WORDS.finditer(text)]
+    findings.extend(
+        Finding("private-input", path, word) for word in words if re.search(voice_patterns((word,)), text, re.I)
+    )
+    return findings
+
+
+def scan_text(path: str, text: str, words: tuple[str, ...]) -> list[Finding]:
+    return [
+        *_secret_findings(path, text),
+        *_credential_findings(path, text),
+        *_path_findings(path, text),
+        *_word_findings(path, text, words),
+    ]
 
 
 def audit(root: Path) -> list[Finding]:

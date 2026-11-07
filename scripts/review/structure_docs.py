@@ -174,45 +174,53 @@ def batch_issues(path: Path, text: str) -> list[str]:
     return issues
 
 
-def owner_issues(path: Path) -> list[str]:  # noqa: C901
-    # - updater, shutdown and coding-agent entry points may live at the bat root
-    if path.parent == project_cfg.BAT_DIR and path.suffix == ".bat":
-        root_batches = {
-            "update_frameworks.bat",
-            "build_frameworks.bat",
-            "cleanup_state.bat",
-            "manage_kill_ai_services.bat",
-            "resume_command_code_session.bat",
-            "launch_llamacpp_pi_agent.bat",
-            "launch_strata_pi_agent.bat",
-        }
-        return [] if path.name in root_batches else [f"Unexpected root batch: {path.name}"]
-    # The cross-component registry is a config API, not a runtime component.
+ROOT_BATCHES = frozenset(
+    {
+        "update_frameworks.bat",
+        "build_frameworks.bat",
+        "cleanup_state.bat",
+        "manage_kill_ai_services.bat",
+        "resume_command_code_session.bat",
+        "launch_llamacpp_pi_agent.bat",
+        "launch_strata_pi_agent.bat",
+    }
+)
+
+OWNER_ROOTS = (
+    project_cfg.CONFIG_DIR,
+    project_cfg.SCRIPTS_DIR / "benchmarks",
+    project_cfg.SCRIPTS_DIR / "launchers",
+    project_cfg.SCRIPTS_DIR / "tools",
+    project_cfg.SCRIPTS_DIR / "review",
+    project_cfg.TEST_CASES_DIR,
+    project_cfg.TESTS_DIR / "ui",
+    project_cfg.SCRIPTS_DIR / "download/frameworks",
+    *(
+        project_cfg.BAT_DIR / role
+        for role in ("launchers", "services", "maintenance", "models", "tests", "benchmarks", "browser")
+    ),
+)
+
+
+def _root_batch_issues(path: Path) -> list[str] | None:
+    """Updater, shutdown and coding-agent entry points may live at the bat root."""
+    if not (path.parent == project_cfg.BAT_DIR and path.suffix == ".bat"):
+        return None
+    return [] if path.name in ROOT_BATCHES else [f"Unexpected root batch: {path.name}"]
+
+
+def _exempt_area(path: Path) -> bool:
+    # - the cross-component registry is a config API, and root config notes are shared policy
     if path.is_relative_to(project_cfg.CONFIG_DIR / "models"):
-        return []
-    # Root configuration notes describe shared policy across components.
+        return True
     if path.is_relative_to(project_cfg.CONFIG_DIR / "notes"):
-        return []
+        return True
     launcher_root = project_cfg.SCRIPTS_DIR / "launchers"
-    if path.is_relative_to(launcher_root):
-        top = path.relative_to(launcher_root).parts[0]
-        if top == "runtime":
-            return []
-    roots = [
-        project_cfg.CONFIG_DIR,
-        project_cfg.SCRIPTS_DIR / "benchmarks",
-        project_cfg.SCRIPTS_DIR / "launchers",
-        project_cfg.SCRIPTS_DIR / "tools",
-        project_cfg.SCRIPTS_DIR / "review",
-        project_cfg.TEST_CASES_DIR,
-        project_cfg.TESTS_DIR / "ui",
-        project_cfg.SCRIPTS_DIR / "download/frameworks",
-        *(
-            project_cfg.BAT_DIR / role
-            for role in ("launchers", "services", "maintenance", "models", "tests", "benchmarks", "browser")
-        ),
-    ]
-    for root in roots:
+    return path.is_relative_to(launcher_root) and path.relative_to(launcher_root).parts[0] == "runtime"
+
+
+def _owner_issue(path: Path) -> list[str]:
+    for root in OWNER_ROOTS:
         if not path.is_relative_to(root):
             continue
         if root == project_cfg.SCRIPTS_DIR / "benchmarks":
@@ -225,12 +233,22 @@ def owner_issues(path: Path) -> list[str]:  # noqa: C901
             # - routine batches may sit directly under an operation folder (flattened layout)
             return []
         owner = "/".join(parts[:-1])
-        if any(
+        registered = any(
             owner == key or owner.startswith(key + "/") or key.startswith(owner + "/") for key in project_cfg.COMPONENTS
-        ):
+        )
+        if registered:
             return []
         return [f"Unregistered component folder: {path.relative_to(project_cfg.BASE_DIR)}"]
     return []
+
+
+def owner_issues(path: Path) -> list[str]:
+    root_batch = _root_batch_issues(path)
+    if root_batch is not None:
+        return root_batch
+    if _exempt_area(path):
+        return []
+    return _owner_issue(path)
 
 
 @cache
@@ -273,53 +291,71 @@ def markdown_issues(path: Path, text: str) -> list[str]:
     return issues
 
 
-def naming_issues() -> list[str]:  # noqa: C901
-    """Folder names across the workspace: lowercase snake_case, meaningful, and never duplicated by placement."""
-    issues: list[str] = []
-    area_roots = (project_cfg.TEST_CASES_DIR, project_cfg.SCRIPTS_DIR / "benchmarks")
-    vague_areas = {"llm", "speech", "tts", "misc", "stuff", "temp", "utils", "data", "models", "tests"}
-    vague_anywhere = {"misc", "stuff", "temp", "tmp", "utils", "other", "new", "old"}
-    skip = EXCLUDED | {"shared"}
-    roots = [
-        project_cfg.TEST_CASES_DIR,
-        project_cfg.SCRIPTS_DIR / "benchmarks",
-        project_cfg.SCRIPTS_DIR / "config",
-        project_cfg.SCRIPTS_DIR / "launchers",
-        project_cfg.SCRIPTS_DIR / "download",
-        project_cfg.SCRIPTS_DIR / "review",
-        project_cfg.SCRIPTS_DIR / "tools",
-        project_cfg.BAT_DIR,
-        project_cfg.BASE_DIR / "notes",
-        project_cfg.BASE_DIR / ".agents",
-    ]
-    for root in roots:
-        if not root.is_dir():
+AREA_ROOTS = (project_cfg.TEST_CASES_DIR, project_cfg.SCRIPTS_DIR / "benchmarks")
+VAGUE_AREAS = {"llm", "speech", "tts", "misc", "stuff", "temp", "utils", "data", "models", "tests"}
+VAGUE_ANYWHERE = {"misc", "stuff", "temp", "tmp", "utils", "other", "new", "old"}
+NAME_SKIP = EXCLUDED | {"shared"}
+NAMING_ROOTS = (
+    project_cfg.TEST_CASES_DIR,
+    project_cfg.SCRIPTS_DIR / "benchmarks",
+    project_cfg.SCRIPTS_DIR / "config",
+    project_cfg.SCRIPTS_DIR / "launchers",
+    project_cfg.SCRIPTS_DIR / "download",
+    project_cfg.SCRIPTS_DIR / "review",
+    project_cfg.SCRIPTS_DIR / "tools",
+    project_cfg.BAT_DIR,
+    project_cfg.BASE_DIR / "notes",
+    project_cfg.BASE_DIR / ".agents",
+)
+
+
+def _folder_name_issues(folder: Path, root: Path, where: str, skills: bool) -> list[str]:
+    issues = []
+    if folder.name in VAGUE_ANYWHERE or (root in AREA_ROOTS and folder.name in VAGUE_AREAS):
+        issues.append(f"Folder name states neither workload nor engine: {where}")
+    # - Agent Skills requires lowercase letters, digits and hyphens
+    pattern = r"[a-z0-9][a-z0-9-]*" if skills else r"[a-z][a-z0-9_]*"
+    if not re.fullmatch(pattern, folder.name):
+        issues.append(f"Folder name breaks the {pattern} convention: {where}")
+    return issues
+
+
+def _root_naming_issues(root: Path) -> list[str]:
+    skills = root.name == "skills" and root.parent.name == ".agents"
+    issues = []
+    for folder in sorted(path for path in root.iterdir() if path.is_dir() and path.name not in NAME_SKIP):
+        if folder.name.startswith("."):
             continue
-        skills = root.name == "skills" and root.parent.name == ".agents"
-        for folder in sorted(path for path in root.iterdir() if path.is_dir() and path.name not in skip):
-            if folder.name.startswith("."):
-                continue
-            where = folder.relative_to(project_cfg.BASE_DIR).as_posix()
-            groups = (
-                [path for path in folder.iterdir() if path.is_dir() and path.name not in skip]
-                if folder.name == "personal"
-                else [folder]
-            )
-            for group in groups:
-                if group.name in vague_anywhere or (root in area_roots and group.name in vague_areas):
-                    issues.append(f"Folder name states neither workload nor engine: {where}")
-                # - Agent Skills requires lowercase letters, digits and hyphens
-                pattern = r"[a-z0-9][a-z0-9-]*" if skills else r"[a-z][a-z0-9_]*"
-                if not re.fullmatch(pattern, group.name):
-                    issues.append(f"Folder name breaks the {pattern} convention: {where}")
-    for root in (project_cfg.TEST_CASES_DIR, project_cfg.SCRIPTS_DIR / "benchmarks"):
+        where = folder.relative_to(project_cfg.BASE_DIR).as_posix()
+        groups = (
+            [path for path in folder.iterdir() if path.is_dir() and path.name not in NAME_SKIP]
+            if folder.name == "personal"
+            else [folder]
+        )
+        for group in groups:
+            issues.extend(_folder_name_issues(group, root, where, skills))
+    return issues
+
+
+def _duplicate_area_issues() -> list[str]:
+    issues = []
+    for root in AREA_ROOTS:
         personal = root / "personal"
         if not personal.is_dir():
             continue
         nested = {path.name for path in personal.iterdir() if path.is_dir()}
-        siblings = {path.name for path in root.iterdir() if path.is_dir() and path.name not in skip | {"personal"}}
-        for duplicate in sorted(nested & siblings):
-            issues.append(f"Area sits both at the root and under personal/: {duplicate}")
+        siblings = {path.name for path in root.iterdir() if path.is_dir() and path.name not in NAME_SKIP | {"personal"}}
+        issues.extend(f"Area sits both at the root and under personal/: {name}" for name in sorted(nested & siblings))
+    return issues
+
+
+def naming_issues() -> list[str]:
+    """Folder names across the workspace: lowercase snake_case, meaningful, and never duplicated by placement."""
+    issues: list[str] = []
+    for root in NAMING_ROOTS:
+        if root.is_dir():
+            issues.extend(_root_naming_issues(root))
+    issues.extend(_duplicate_area_issues())
     return issues
 
 
