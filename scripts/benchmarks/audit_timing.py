@@ -27,7 +27,7 @@ def inventory() -> list[dict[str, str]]:
     root = cfg.SCRIPTS_DIR / "benchmarks"
     rows = []
     for path in sorted(root.rglob("*.py")):
-        if path.name == "audit.py" or path.relative_to(root).parts[0] == "shared":
+        if path.name == "audit_timing.py" or path.relative_to(root).parts[0] == "shared":
             continue
         text = path.read_text(encoding="utf-8")
         if path.name.startswith("test_") or not any(

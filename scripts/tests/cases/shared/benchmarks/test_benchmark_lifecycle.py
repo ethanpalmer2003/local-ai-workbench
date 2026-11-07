@@ -111,7 +111,7 @@ class BenchmarkLifecycleTests(unittest.TestCase):
         self.assertEqual(summarize_requests(rows)["samples"], 0)
 
     def test_new_timed_sources_must_use_shared_contract_or_be_reviewed(self):
-        from scripts.benchmarks.audit import inventory
+        from scripts.benchmarks.audit_timing import inventory
 
         self.assertEqual([row["source"] for row in inventory() if row["scope"] == "UNREVIEWED"], [])
 
