@@ -23,7 +23,7 @@ from scripts.launchers.proxy_util import (
 )
 
 
-def run_proxy(
+def run_proxy(  # noqa: C901
     engine: cfg.AsrStartupEngine,
     host: str,
     port: int,
@@ -58,7 +58,7 @@ def run_proxy(
                 send_json_error(self, 503, str(error), "service_start_error")
 
         # ProxyHandlerMixin owns _dispatch; overriding it bypasses request/lifecycle guards.
-        def _route_request(self, method: str) -> None:
+        def _route_request(self, method: str) -> None:  # noqa: C901
             nonlocal restart_requested
             path = urlsplit(self.path).path
             selected_engine = runtime.controls.engine if runtime else engine

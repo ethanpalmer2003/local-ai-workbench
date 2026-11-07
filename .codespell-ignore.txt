@@ -1,0 +1,15 @@
+audiocpp
+caf
+comfyui
+fo
+gguf
+kobold
+koboldcpp
+llama
+llamacpp
+parakeet
+parakeetcpp
+silero
+spriters
+te
+whispercpp

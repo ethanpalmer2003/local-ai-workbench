@@ -24,9 +24,19 @@ line-ending = "auto"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "UP", "C4", "SIM", "I"]
+select = ["E4", "E7", "E9", "F", "UP", "C4", "SIM", "I", "S", "C90"]
 # - StrEnum changes str(member); retain existing enum string representations
-ignore = ["UP042"]
+# - S603/S606/S607: known local executables are launched by absolute path
+# - S310: curated HTTPS URLs are fetched, not user-supplied ones
+ignore = ["UP042", "S603", "S606", "S607", "S310"]
+
+[tool.ruff.lint.per-file-ignores]
+# - asserts are the assertion mechanism in tests
+"scripts/tests/**" = ["S101"]
+
+[tool.ruff.lint.mccabe]
+# - gate at a level the launchers already meet; tighten separately
+max-complexity = 20
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = false

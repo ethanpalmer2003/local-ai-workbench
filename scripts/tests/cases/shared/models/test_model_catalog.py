@@ -82,7 +82,7 @@ class ModelCatalogTests(unittest.TestCase):
                     parse_url("https://huggingface.co/owner/repo/resolve/revision/model.gguf"), destination, partial
                 )
             self.assertEqual(info.call_args.kwargs["token"], "test-token")
-            headers.assert_called_once_with(token="test-token")
+            headers.assert_called_once_with(token="test-token")  # noqa: S106
             self.assertEqual(session.get.call_args.kwargs["headers"]["Range"], "bytes=2-8")
             self.assertEqual(destination.read_bytes(), payload)
             self.assertFalse(partial.exists())

@@ -39,9 +39,8 @@ from scripts.tests.shared.http_server import request, server
 from scripts.tests.shared.media_fixtures import PNG, wav_fixture
 from scripts.tests.shared.model_checks import requires_model_check
 from scripts.tests.shared.model_free import fixture_processes
-from scripts.tests.shared.paths import CasePaths
+from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.process_fixtures import exited_process, running_process
-from scripts.tests.shared.progress import ProgressTextTestResult
 from scripts.tests.shared.timing import timed
 
 
@@ -977,6 +976,13 @@ class _Tee:
         for stream in self._streams:
             stream.flush()
 
+    def isatty(self) -> bool:
+        return False
+
+    def __getattr__(self, name: str):
+        # - pytest reads stream attributes such as encoding and errors
+        return getattr(self._streams[0], name)
+
 
 def _run_native_suite(suite: str, live_target: str | None, probe_names: list[str]) -> int:
     names: list[str] = list(live_frameworks.LAUNCHER_TARGETS) if live_target in (None, "all") else [live_target]
@@ -1003,8 +1009,16 @@ def _run_native_suite(suite: str, live_target: str | None, probe_names: list[str
             os.environ["AI_TEST_TITLE"] = previous_title
 
 
+DEFAULT_GROUPS: tuple[type[unittest.TestCase], ...] = (
+    DefaultPaths,
+    LaunchCommands,
+    StateAndReadiness,
+    ProxyHTTP,
+    LauncherBehaviors,
+)
+
+
 def main(extra_groups: tuple[type[unittest.TestCase], ...] = ()) -> int:
-    from scripts.tests.shared.model_free import model_free_boundary
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -1039,9 +1053,7 @@ def main(extra_groups: tuple[type[unittest.TestCase], ...] = ()) -> int:
     native_suite = args.suite or ("launchers" if args.live else None)
     if native_suite and not args.with_regressions:
         return _run_native_suite(native_suite, args.live, args.only)
-    suite = unittest.TestSuite()
-    for group in (DefaultPaths, LaunchCommands, StateAndReadiness, ProxyHTTP, LauncherBehaviors, *extra_groups):
-        suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(group))
+    groups = (*DEFAULT_GROUPS, *extra_groups)
     # - guard the tests themselves against accidental process/port side effects
     output = CasePaths(__file__).new_run()
     report = RunReport(
@@ -1054,8 +1066,53 @@ def main(extra_groups: tuple[type[unittest.TestCase], ...] = ()) -> int:
         },
     )
     report.save(output)
-    log_dir = output.logs
-    log_path = log_dir / f"regression_{time.time_ns()}.log"
+    log_path = output.logs / f"regression_{time.time_ns()}.log"
+    return _run_regressions(groups, output, report, log_path, native_suite, args.live, args.only)
+
+
+class _PytestRun:
+    """Collect per-test durations and outcomes the report files already record."""
+
+    def __init__(self) -> None:
+        self.seconds: dict[str, float] = {}
+        self.outcomes: list[tuple[str, str, str]] = []
+
+    def pytest_runtest_logreport(self, report) -> None:
+        self.seconds[report.nodeid] = self.seconds.get(report.nodeid, 0.0) + report.duration
+        if report.skipped:
+            self.outcomes.append(("skipped", report.nodeid, str(report.longrepr)))
+        elif report.failed:
+            status = "failure" if report.when == "call" else "error"
+            self.outcomes.append((status, report.nodeid, report.longreprtext))
+        elif report.when == "call" and report.passed:
+            self.outcomes.append(("passed", report.nodeid, ""))
+
+
+def _pytest_nodeids(groups: tuple[type[unittest.TestCase], ...]) -> list[str]:
+    """Explicit class selection: unregistered modules must never be collected."""
+    nodeids = []
+    for group in groups:
+        module = sys.modules[group.__module__]
+        source = Path(str(module.__file__)).as_posix()
+        nodeids.append(f"{source}::{group.__qualname__}")
+    return nodeids
+
+
+def _run_regressions(  # noqa: C901
+    groups: tuple[type[unittest.TestCase], ...],
+    output: RunPaths,
+    report: RunReport,
+    log_path: Path,
+    native_suite: str | None,
+    live: str | None,
+    only: list[str],
+) -> int:
+    """Run the registered classes through pytest, inside the model-free process guards."""
+    import pytest
+
+    from scripts.tests.shared.model_free import model_free_boundary
+
+    runner = _PytestRun()
     console_out, console_err = sys.stdout, sys.stderr
     with log_path.open("w", encoding="utf-8") as log:
         tee_out, tee_err = _Tee(console_out, log), _Tee(console_err, log)
@@ -1068,34 +1125,33 @@ def main(extra_groups: tuple[type[unittest.TestCase], ...] = ()) -> int:
                 launch_util, "assign_process_to_job", side_effect=AssertionError("unmocked process assignment")
             ),
         ):
-            ProgressTextTestResult.progress_total = suite.countTestCases()
-            ProgressTextTestResult.progress_label = "model-free"
-            result = unittest.TextTestRunner(verbosity=2, resultclass=ProgressTextTestResult).run(suite)
-    timings = getattr(result, "case_seconds", {})
-    (output.artifacts / "timings.json").write_text(json.dumps(timings, indent=2), encoding="utf-8")
-    summary_lines: list[str] = []
-    for status, entries in (("failure", result.failures), ("error", result.errors), ("skipped", result.skipped)):
-        for test, detail in entries:
-            test_id = test.id() if hasattr(test, "id") else str(test)
-            summary_lines.append(f"{status.upper()}: {test_id}\n{detail}\n")
-            report.results.append(
-                {
-                    "test": test_id,
-                    "status": status,
-                    "message": detail.strip().splitlines()[-1] if detail.strip() else "",
-                }
+            code = pytest.main(
+                ["-q", "-s", "--no-header", "--tb=short", "-p", "no:cacheprovider", *_pytest_nodeids(groups)],
+                plugins=[runner],
             )
+    (output.artifacts / "timings.json").write_text(json.dumps(runner.seconds, indent=2), encoding="utf-8")
+    summary_lines: list[str] = []
+    for status, test_id, detail in runner.outcomes:
+        if status == "passed":
+            continue
+        summary_lines.append(f"{status.upper()}: {test_id}\n{detail}\n")
+        report.results.append(
+            {"test": test_id, "status": status, "message": detail.strip().splitlines()[-1] if detail.strip() else ""}
+        )
     (output.artifacts / "unittest.txt").write_text("\n".join(summary_lines), encoding="utf-8")
-    report.status = "completed" if result.wasSuccessful() else "failed"
-    if not result.wasSuccessful():
-        report.error = f"{len(result.failures)} failures, {len(result.errors)} errors"
+    report.status = "completed" if code == 0 else "failed"
+    if code:
+        report.error = f"{sum(1 for status, _, _ in runner.outcomes if status == 'failure')} failures, "
+        report.error += f"{sum(1 for status, _, _ in runner.outcomes if status == 'error')} errors"
     report.save(output)
     print(f"[LOG] regression details: {log_path}")
     print(f"[LOG] failure details: {output.artifacts / 'unittest.txt'}")
-    if not result.wasSuccessful():
+    if code:
         return 1
     if native_suite:
-        return _run_native_suite(native_suite, args.live, args.only)
+        return _run_native_suite(native_suite, live, only)
+    print("[WARN] Model inference not tested. Use bat/tests/test_live_launchers.bat or test_live_backends.bat.")
+    return 0
     print("[WARN] Model inference not tested. Use bat/tests/test_live_launchers.bat or test_live_backends.bat.")
     return 0
 

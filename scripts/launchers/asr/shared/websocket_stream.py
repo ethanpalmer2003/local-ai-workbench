@@ -40,7 +40,8 @@ class WebSocketBridge:
             raise RuntimeError("WebSocket helper did not become ready")
 
     def _read(self):
-        assert self.process and self.process.stdout
+        if not (self.process and self.process.stdout):
+            raise RuntimeError("stream helper is not running")
         try:
             for line in self.process.stdout:
                 if len(line) > 1048576:

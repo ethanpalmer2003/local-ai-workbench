@@ -32,7 +32,8 @@ class StreamingPost:
     def _read(self):
         try:
             source = self.connection.sock
-            assert source is not None
+            if source is None:
+                raise RuntimeError("connection lost its socket before the response")
             # getresponse() may close the writer on Connection: close while upload is active.
             response = http.client.HTTPResponse(source, method="POST")
             response.begin()

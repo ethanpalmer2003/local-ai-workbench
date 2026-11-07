@@ -229,7 +229,7 @@ class BenchmarkRelay:
             time.sleep(0.01)
         raise TimeoutError("A benchmark API request did not stop after cancellation")
 
-    def handler(self) -> type[BaseHTTPRequestHandler]:
+    def handler(self) -> type[BaseHTTPRequestHandler]:  # noqa: C901
         relay = self
 
         class Handler(BaseHTTPRequestHandler):

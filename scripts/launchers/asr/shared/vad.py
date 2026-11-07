@@ -73,7 +73,8 @@ class Silero:
         )
         launch_util.assign_process_to_job(self.process.pid)
         source = self.process.stdout
-        assert source is not None
+        if source is None:
+            raise RuntimeError("speech process has no stdout pipe")
 
         def read():
             for data in source:
