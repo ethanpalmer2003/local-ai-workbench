@@ -196,7 +196,29 @@ async def _submit_prompt(session: Any, base: str, graph: dict[str, Any], client:
     return submitted["prompt_id"]
 
 
-async def _consume_events(  # noqa: C901
+class _StageTracker:
+    """Per-node durations accumulated from ComfyUI `executing` events."""
+
+    def __init__(self) -> None:
+        self.active: str | None = None
+        self.started = 0.0
+        self.stages: dict[str, float] = {}
+
+    def executing(self, data: dict[str, Any], now: float, graph: dict[str, Any], bar: Any, monitor: Any) -> bool:
+        """Charge the previous node, describe the new one, and report whether execution ended."""
+        if self.active is not None:
+            self.stages[self.active] = self.stages.get(self.active, 0) + now - self.started
+        self.active = data["node"]
+        if monitor is not None:
+            monitor.stage = "complete" if self.active is None else graph[str(self.active)]["class_type"]
+        self.started = now
+        if self.active is None:
+            return True
+        bar.set_description(graph[str(self.active)]["class_type"])
+        return False
+
+
+async def _consume_events(
     ws: Any,
     log: Any,
     bar: Any,
@@ -208,9 +230,8 @@ async def _consume_events(  # noqa: C901
 ) -> dict[str, float]:
     import aiohttp
 
-    active_node = None
-    stage_started = started
-    stages: dict[str, float] = {}
+    tracker = _StageTracker()
+    tracker.started = started
     async with asyncio.timeout(timeout):
         while True:
             message = await ws.receive(timeout=timeout)
@@ -227,20 +248,12 @@ async def _consume_events(  # noqa: C901
             log.flush()
             if event["type"] in {"execution_error", "execution_interrupted"}:
                 raise RuntimeError(f"ComfyUI execution failed: {data}")
-            if event["type"] == "executing":
-                if active_node is not None:
-                    stages[active_node] = stages.get(active_node, 0) + now - stage_started
-                active_node = data["node"]
-                if monitor is not None:
-                    monitor.stage = "complete" if active_node is None else graph[str(active_node)]["class_type"]
-                stage_started = now
-                if active_node is None:
-                    break
-                bar.set_description(graph[str(active_node)]["class_type"])
-            if event["type"] == "progress" and str(data.get("node", active_node)) == "18":
+            if event["type"] == "executing" and tracker.executing(data, now, graph, bar, monitor):
+                break
+            if event["type"] == "progress" and str(data.get("node", tracker.active)) == "18":
                 bar.total = data["max"]
                 bar.update(max(0, data["value"] - bar.n))
-    return stages
+    return tracker.stages
 
 
 async def _fetch_history(session: Any, base: str, prompt_id: str) -> dict[str, Any]:
@@ -665,44 +678,57 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _resolve_arguments(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:  # noqa: C901
+WORKLOAD_ARGUMENTS = (
+    "seconds",
+    "fps",
+    "resolution",
+    "mode",
+    "spatial_tile",
+    "spatial_overlap",
+    "temporal_tile",
+    "temporal_overlap",
+)
+
+
+def _resolve_tile_sweep(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    if args.validate_findings or args.compare_workflows:
+        parser.error("tile sweep cannot be combined with launcher/workflow comparisons")
+    if args.video_vae == "conv" or args.vae_decode == "untiled":
+        parser.error("tile sweep uses only the original VAE with tiled decoding")
+    if any(getattr(args, name) is not None for name in WORKLOAD_ARGUMENTS):
+        parser.error("tile sweep defines its own workloads and tiles; omit workload/tile overrides")
+    if args.model not in {"all", "2"} or args.encoder not in {"all", "1"}:
+        parser.error("tile sweep fixes model 2 and encoder 1")
+    args.model, args.encoder, args.preset = "2", "1", "user"
+    args.video_vae, args.vae_decode = "diffusion", "tiled"
+
+
+def _resolve_repeat(args: argparse.Namespace) -> None:
+    if args.repeat is None:
+        args.repeat = 2 if args.validate_findings or args.compare_workflows or args.tile_sweep else 1
+
+
+def _pin_single_model(args: argparse.Namespace) -> None:
+    if not (args.validate_findings or args.compare_workflows):
+        return
+    if args.model == "all":
+        args.model = "2"
+    if args.encoder == "all":
+        args.encoder = "1"
+
+
+def _resolve_arguments(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if args.launch_case and (args.validate_findings or args.compare_workflows or args.tile_sweep):
         parser.error("launch-case cannot be combined with launcher/workflow/tile comparisons")
     if args.workflow is None:
         filename = "video_ltx2_5_i2v_original.json" if args.compare_workflows else "video_ltx2_5_i2v_default.json"
         args.workflow = project_cfg.FRAMEWORKS_DIR / "comfyui/rocm/user/default/workflows" / filename
     if args.tile_sweep:
-        if args.validate_findings or args.compare_workflows:
-            parser.error("tile sweep cannot be combined with launcher/workflow comparisons")
-        if args.video_vae == "conv" or args.vae_decode == "untiled":
-            parser.error("tile sweep uses only the original VAE with tiled decoding")
-        if any(
-            getattr(args, name) is not None
-            for name in (
-                "seconds",
-                "fps",
-                "resolution",
-                "mode",
-                "spatial_tile",
-                "spatial_overlap",
-                "temporal_tile",
-                "temporal_overlap",
-            )
-        ):
-            parser.error("tile sweep defines its own workloads and tiles; omit workload/tile overrides")
-        if args.model not in {"all", "2"} or args.encoder not in {"all", "1"}:
-            parser.error("tile sweep fixes model 2 and encoder 1")
-        args.model, args.encoder, args.preset = "2", "1", "user"
-        args.video_vae, args.vae_decode = "diffusion", "tiled"
+        _resolve_tile_sweep(parser, args)
     if args.validate_findings and args.compare_workflows:
         parser.error("choose --validate-findings or --compare-workflows")
-    if args.repeat is None:
-        args.repeat = 2 if args.validate_findings or args.compare_workflows or args.tile_sweep else 1
-    if args.validate_findings or args.compare_workflows:
-        if args.model == "all":
-            args.model = "2"
-        if args.encoder == "all":
-            args.encoder = "1"
+    _resolve_repeat(args)
+    _pin_single_model(args)
 
 
 def _validate_arguments(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:

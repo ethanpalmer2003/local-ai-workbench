@@ -35,10 +35,14 @@ def model_overrides(usage_profile: str = "standalone") -> dict[str, Any]:
     return options
 
 
-def server_command(usage_profile: str = "standalone", no_model: bool = False) -> list[str]:  # noqa: C901
+def _service_config() -> dict[str, Any]:
     base = json.loads(cfg.KOBOLDCPP_SERVICE.config.read_text(encoding="utf-8"))
     if cfg.KOBOLDCPP_SERVICE.streaming_ui and base.get("launch"):
         raise ValueError("Set launch to false in the native Kobold config when using the streaming UI.")
+    return base
+
+
+def _server_options(usage_profile: str) -> dict[str, Any]:
     options = {**cfg.KOBOLDCPP_KCPPS_ARGS, **model_overrides(usage_profile), **kokoro.model_options()}
     if transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine):
         # - None skips the flag so the config file's empty whispermodel disables the built-in model; "" emits an empty CLI argument the console wrapper drops
@@ -49,19 +53,20 @@ def server_command(usage_profile: str = "standalone", no_model: bool = False) ->
         options["mmproj"] = str(cfg.GEMMA_AUDIO_ASR.mmproj)
     if cfg.KOBOLDCPP_ADMIN_PASSWORD:
         options["adminpassword"] = cfg.KOBOLDCPP_ADMIN_PASSWORD
-    alias_port = options.pop("port_param", options.get("port"))
-    if alias_port != options.get("port"):
-        raise ValueError("Kobold port and port_param overrides must agree")
+    return options
+
+
+def _model_config(options: dict[str, Any], no_model: bool) -> Path:
     if no_model:
         # - the UI runs without weights; llama.cpp serves the model
         options.pop("model", None)
-        config_path = external_llm.no_model_config()
-    else:
-        options["model"] = str(cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model])
-        config_path = cfg.KOBOLDCPP_SERVICE.config
-    command = [str(cfg.KOBOLDCPP_SERVICE.exe), "--config", str(paths.materialize(config_path))]
-    if no_model:
-        command.append("--nomodel")
+        return external_llm.no_model_config()
+    options["model"] = str(cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model])
+    return cfg.KOBOLDCPP_SERVICE.config
+
+
+def _override_arguments(options: dict[str, Any]) -> list[str]:
+    command = []
     for name, value in options.items():
         if value is False:
             raise ValueError(f"Set {name}=false in the native Kobold config; no negative CLI override is available")
@@ -70,6 +75,20 @@ def server_command(usage_profile: str = "standalone", no_model: bool = False) ->
         command.append("--" + name)
         if value is not True:
             command.extend(str(item) for item in (value if isinstance(value, (list, tuple)) else [value]))
+    return command
+
+
+def server_command(usage_profile: str = "standalone", no_model: bool = False) -> list[str]:
+    _ = _service_config()
+    options = _server_options(usage_profile)
+    alias_port = options.pop("port_param", options.get("port"))
+    if alias_port != options.get("port"):
+        raise ValueError("Kobold port and port_param overrides must agree")
+    config_path = _model_config(options, no_model)
+    command = [str(cfg.KOBOLDCPP_SERVICE.exe), "--config", str(paths.materialize(config_path))]
+    if no_model:
+        command.append("--nomodel")
+    command.extend(_override_arguments(options))
     return command
 
 
