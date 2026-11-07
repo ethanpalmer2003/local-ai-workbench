@@ -27,4 +27,4 @@ Static and literal-only; it never executes the pages.
 - DOM ids: ids an inline script reads via `getElementById`/`querySelector('#id')` must be defined in the same HTML; external scripts are not scanned.
 - Settings keys: each row of `SETTINGS_CONTRACTS` pairs a launcher's injected `window.<object>` with its reader scripts and test fixture. Reads the launcher never emits, or (ignoring `||`/`??` fallbacks) the fixture never provides, are reported. Add a row per injected settings object.
 
-Format the scripts tree with `scripts/review/format.bat`. The gate compares formatting too; `--no-format-check` skips it. Tool inventory: [TOOLS.md](TOOLS.md).
+Format the whole repository with `scripts/review/format.bat`. Lint and format share one scope: repository root, Python files only, with `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and generated `ids.py` excluded. The gate compares formatting too; `--no-format-check` skips it. Tool inventory: [TOOLS.md](TOOLS.md).

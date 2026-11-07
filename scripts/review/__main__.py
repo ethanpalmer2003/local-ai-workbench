@@ -11,7 +11,7 @@ def format_check() -> int:
     """Formatting is optional: the codebase keeps hand-wrapped lines ruff format would join."""
     checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/ruff.exe"
     return subprocess.run(
-        [str(checker), "format", "--check", "--config", str(project_cfg.BASE_DIR / "pyproject.toml"), "scripts"],
+        [str(checker), "format", "--check", "--config", str(project_cfg.BASE_DIR / "pyproject.toml"), "."],
         cwd=project_cfg.BASE_DIR,
         check=False,
     ).returncode
