@@ -64,18 +64,35 @@ class Sessions:
                     raise ValueError("Already listening; stop the other microphone session first")
                 language = json.loads(body).get("language", "auto")
                 from scripts.launchers.asr.shared.languages import capabilities
-                allowed = capabilities(self.engine)['asr']['ready_languages']
-                if language != 'auto' and language not in allowed:
-                    raise ValueError('Choose a language supported by the selected ASR model')
+
+                allowed = capabilities(self.engine)["asr"]["ready_languages"]
+                if language != "auto" and language not in allowed:
+                    raise ValueError("Choose a language supported by the selected ASR model")
                 folder = project_cfg.component("audiocpp").logs_dir
                 folder.mkdir(parents=True, exist_ok=True)
-                streaming = speech_delivery.asr_plan(self.engine.value)['mode'] == 'streaming'
-                factory = None if streaming and self.engine in (cfg.AsrStartupEngine.AUDIOCPP, cfg.AsrStartupEngine.PARAKEET_STREAM) else lambda: SegmentStream(selector.backend(self.engine), language)
+                streaming = speech_delivery.asr_plan(self.engine.value)["mode"] == "streaming"
+                factory = (
+                    None
+                    if streaming
+                    and self.engine in (cfg.AsrStartupEngine.AUDIOCPP, cfg.AsrStartupEngine.PARAKEET_STREAM)
+                    else lambda: SegmentStream(selector.backend(self.engine), language)
+                )
                 transport = None
                 if streaming and self.engine == cfg.AsrStartupEngine.NEMO:
-                    transport = WebSocketBridge(selector.backend(self.engine).url().replace("http://", "ws://") + "/v1/audio/transcriptions/realtime", language, project_cfg.component("asr/nemo-speechcpp").logs_dir / f"websocket-{time.time_ns()}.log")
+                    transport = WebSocketBridge(
+                        selector.backend(self.engine).url().replace("http://", "ws://")
+                        + "/v1/audio/transcriptions/realtime",
+                        language,
+                        project_cfg.component("asr/nemo-speechcpp").logs_dir / f"websocket-{time.time_ns()}.log",
+                    )
                     factory = transport.stream
-                turns = Turns(selector.backend(self.engine).url(), folder / f"silero-{time.time_ns()}.log", language=language, stream_factory=factory, transport=transport)
+                turns = Turns(
+                    selector.backend(self.engine).url(),
+                    folder / f"silero-{time.time_ns()}.log",
+                    language=language,
+                    stream_factory=factory,
+                    transport=transport,
+                )
                 try:
                     turns.start()
                 except Exception:
@@ -95,7 +112,7 @@ class Sessions:
             try:
                 events = []
                 for offset in range(0, len(body), 1024):
-                    events.extend(self.turns.push(body[offset:offset + 1024]))
+                    events.extend(self.turns.push(body[offset : offset + 1024]))
                 events.extend(self.turns.poll())
                 return {"events": events}
             except Exception:
@@ -106,7 +123,9 @@ class Sessions:
         if not path.startswith("/asr/live/"):
             return False
         if not supported(engine) or method != "POST":
-            send_json_error(handler, 400, "This recognizer does not have automatic turns; POST is required", "invalid_request_error")
+            send_json_error(
+                handler, 400, "This recognizer does not have automatic turns; POST is required", "invalid_request_error"
+            )
             return True
         # Browsers must use this gateway's origin; never let another website start a native helper.
         origin = handler.headers.get("Origin")
@@ -131,4 +150,4 @@ def capable(engine: cfg.AsrStartupEngine) -> bool:
 
 
 def supported(engine: cfg.AsrStartupEngine) -> bool:
-    return speech_delivery.asr_plan(engine.value)['mode'] != 'whole'
+    return speech_delivery.asr_plan(engine.value)["mode"] != "whole"

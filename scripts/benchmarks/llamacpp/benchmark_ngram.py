@@ -107,7 +107,13 @@ def warmup(lifecycle: BenchmarkLifecycle, base: str, settings: Settings) -> None
     lifecycle.warmup(
         lambda: post_json(
             f"{base}/completion",
-            {"prompt": "Describe a red bicycle.", "n_predict": 32, "temperature": 0, "cache_prompt": False, "ignore_eos": True},
+            {
+                "prompt": "Describe a red bicycle.",
+                "n_predict": 32,
+                "temperature": 0,
+                "cache_prompt": False,
+                "ignore_eos": True,
+            },
             settings.timeout,
         )
     )
@@ -157,9 +163,7 @@ def measure_workload(
         "content": response["content"],
         "log": str(log),
         "cache_prompt": False,
-        "pool_state": "after unrelated warmup"
-        if workload.kind == "generation"
-        else "after warmup and generation",
+        "pool_state": "after unrelated warmup" if workload.kind == "generation" else "after warmup and generation",
         "correct": rewrite_correct(response["content"], workload.expected) if workload.expected else None,
     }
     report["results"].append(result)
@@ -191,7 +195,9 @@ def run_candidate(
             lifecycle.adopt_prepared(time.perf_counter() - setup_started)
             warmup(lifecycle, base, settings)
             for workload in workloads(base, settings, round_index):
-                measure_workload(lifecycle, base, candidate, workload, settings, output, report, log, options, round_index)
+                measure_workload(
+                    lifecycle, base, candidate, workload, settings, output, report, log, options, round_index
+                )
     finally:
         if lifecycle is not None:
             report.setdefault("setups", []).append(

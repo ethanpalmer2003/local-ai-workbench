@@ -361,11 +361,7 @@ class FrameworkUpdates(unittest.TestCase):
         summary = updater.UpdateSummary()
         cli = cfg.ToolSpec("coding_agents/demo", "", cfg.ReleaseType.NPM, category="other")
         app = cfg.ToolSpec(
-            "coding_agents/demo-desktop",
-            "",
-            cfg.ReleaseType.DESKTOP,
-            category="other",
-            group="coding_agents/demo",
+            "coding_agents/demo-desktop", "", cfg.ReleaseType.DESKTOP, category="other", group="coding_agents/demo"
         )
         summary.record(cli, "current")
         summary.record(app, "current")
@@ -432,11 +428,7 @@ class FrameworkUpdates(unittest.TestCase):
                 side_effect=[Mock(stdout="core\n"), Mock(stdout="main\n"), Mock(stdout="node1\n")],
             ),
             patch.object(other_updates.shared.github, "get_json", return_value={"sha": "core"}),
-            patch.object(
-                other_updates,
-                "checkout_drift",
-                return_value=[("Node-A", "node1", "node2", False)],
-            ),
+            patch.object(other_updates, "checkout_drift", return_value=[("Node-A", "node1", "node2", False)]),
             contextlib.redirect_stdout(io.StringIO()) as output,
         ):
             summary = updater.UpdateSummary()
@@ -570,9 +562,7 @@ class FrameworkUpdates(unittest.TestCase):
             replace.assert_not_called()
 
     def test_clean_build_only_source_reports_a_build_and_pulls_only_when_applying(self):
-        tool = cfg.ToolSpec(
-            "avalon", "", cfg.ReleaseType.SOURCE, repo="example/avalon", rebuild_required=True
-        )
+        tool = cfg.ToolSpec("avalon", "", cfg.ReleaseType.SOURCE, repo="example/avalon", rebuild_required=True)
         response = Mock()
         response.json.return_value = {"sha": "upstream"}
         with CasePaths(__file__).temporary_directory() as folder:
@@ -582,12 +572,7 @@ class FrameworkUpdates(unittest.TestCase):
                 patch.object(updater.subprocess, "check_output", return_value="base\n"),
                 patch.object(updater.subprocess, "run") as run,
             ):
-                run.side_effect = [
-                    Mock(stdout="base\n"),
-                    Mock(returncode=1),
-                    Mock(stdout="0\n"),
-                    Mock(stdout=""),
-                ]
+                run.side_effect = [Mock(stdout="base\n"), Mock(returncode=1), Mock(stdout="0\n"), Mock(stdout="")]
                 summary = updater.UpdateSummary()
                 self.assertEqual(updater.process_source(tool, root, True, summary=summary), "base")
                 self.assertEqual(summary.source_build, ["avalon"])
@@ -732,9 +717,7 @@ class FrameworkUpdates(unittest.TestCase):
         with (
             CasePaths(__file__).temporary_directory() as folder,
             patch.object(other_updates.requests, "get", return_value=Mock(text=self.feed_yaml)),
-            patch.object(
-                other_updates, "installed_desktop_version", side_effect=["0.2.1-rc.5", "0.2.2-rc.1"]
-            ),
+            patch.object(other_updates, "installed_desktop_version", side_effect=["0.2.1-rc.5", "0.2.2-rc.1"]),
             patch.object(other_updates, "app_running", return_value=False),
             patch.object(other_updates, "download_feed_installer", return_value=installer),
             patch.object(other_updates.subprocess, "run") as run,
@@ -919,12 +902,7 @@ class FrameworkUpdates(unittest.TestCase):
         tools = cfg.benchmark_tools()
         self.assertEqual(
             {tool.name for tool in tools},
-            {
-                "benchmarks/aider-polyglot",
-                "benchmarks/specspeed",
-                "benchmarks/speed-bench",
-                "benchmarks/club-rdna16",
-            },
+            {"benchmarks/aider-polyglot", "benchmarks/specspeed", "benchmarks/speed-bench", "benchmarks/club-rdna16"},
         )
         self.assertEqual({tool.name for tool in tools if not tool.in_use}, set())
 

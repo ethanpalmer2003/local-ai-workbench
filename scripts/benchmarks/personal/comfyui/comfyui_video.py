@@ -280,9 +280,7 @@ async def generate(
         "seconds": time.monotonic() - started,
         "sampler_seconds": stages.get("18"),
         "video_decode_seconds": sum(
-            stages.get(key, 0)
-            for key, node in graph.items()
-            if node["class_type"] in {"VAEDecode", "VAEDecodeTiled"}
+            stages.get(key, 0) for key, node in graph.items() if node["class_type"] in {"VAEDecode", "VAEDecodeTiled"}
         ),
         "node_seconds": stages,
         "outputs": entry["outputs"],
@@ -433,11 +431,7 @@ def _launch_plan(
         model=model,
         encoder=encoder,
         prefix=label,
-        dynamic_vram=False
-        if "--disable-dynamic-vram" in flags
-        else True
-        if "--enable-dynamic-vram" in flags
-        else None,
+        dynamic_vram=False if "--disable-dynamic-vram" in flags else True if "--enable-dynamic-vram" in flags else None,
     )
     graph = workflow(saved, settings)
     if args.compare_workflows and preset == "default":
@@ -539,9 +533,7 @@ async def _generate_clips(
         write_results(paths, results)
         peak_mb = vram["peak_total_used_mb"]
         memory_note = (
-            f"sampled GPU VRAM peak {peak_mb / 1024:.2f} GiB"
-            if peak_mb is not None
-            else f"VRAM {vram['status']}"
+            f"sampled GPU VRAM peak {peak_mb / 1024:.2f} GiB" if peak_mb is not None else f"VRAM {vram['status']}"
         )
         overall.write(
             f"[RESULT] {result['label']}: {result['seconds']:.2f}s; sampler {result['sampler_seconds']:.2f}s; {memory_note}"
@@ -571,18 +563,7 @@ async def _run_configuration(
     saved = saved_workflows[preset if args.compare_workflows else "selected"]
     source = sources[preset if args.compare_workflows else "selected"]
     command, graph, metadata, overrides = _launch_plan(
-        args,
-        preset,
-        label,
-        model,
-        encoder,
-        case_name,
-        python,
-        paths,
-        case_settings,
-        saved,
-        source,
-        saved_workflows,
+        args, preset, label, model, encoder, case_name, python, paths, case_settings, saved, source, saved_workflows
     )
     if args.dry_run:
         overall.update(args.repeat)

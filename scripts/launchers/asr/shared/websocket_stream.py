@@ -29,8 +29,9 @@ class WebSocketBridge:
         self.log.parent.mkdir(parents=True, exist_ok=True)
         self.stderr = self.log.open("wb")
         worker = Path(__file__).parents[2] / "shared/websocket_worker.mjs"
-        self.process = subprocess.Popen([cfg.PI_CLIENT.node_cmd, str(worker)], stdin=subprocess.PIPE,
-                                        stdout=subprocess.PIPE, stderr=self.stderr)
+        self.process = subprocess.Popen(
+            [cfg.PI_CLIENT.node_cmd, str(worker)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.stderr
+        )
         launch_util.assign_process_to_job(self.process.pid)
         self.reader = threading.Thread(target=self._read, daemon=True)
         self.reader.start()
@@ -103,9 +104,14 @@ class WebSocketStream:
             self.ready.set()
 
     def start(self):
-        self.bridge.send({"op": "open", "id": self.id, "url": self.bridge.url,
-                          "session": {"sample_rate": 16000, "language": self.bridge.language,
-                                      "endpointing_ms": 10000}})
+        self.bridge.send(
+            {
+                "op": "open",
+                "id": self.id,
+                "url": self.bridge.url,
+                "session": {"sample_rate": 16000, "language": self.bridge.language, "endpointing_ms": 10000},
+            }
+        )
         if not self.ready.wait(5) or self.done.is_set():
             raise RuntimeError("NeMo streaming session did not become ready")
 

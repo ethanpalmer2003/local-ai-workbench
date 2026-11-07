@@ -109,7 +109,9 @@ def listener_map() -> dict[int | None, dict[int, set[tuple[str, int]]]]:
         if connection.type not in (socket.SOCK_STREAM, socket.SOCK_DGRAM):
             continue
         protocol = "TCP" if connection.type == socket.SOCK_STREAM else "UDP"
-        result.setdefault(connection.pid, {}).setdefault(connection.laddr.port, set()).add((protocol, connection.laddr.port))
+        result.setdefault(connection.pid, {}).setdefault(connection.laddr.port, set()).add(
+            (protocol, connection.laddr.port)
+        )
     return result
 
 
@@ -126,9 +128,7 @@ def process_identity(pid: int) -> tuple[str, bool | None, dict[str, object]]:
     #   Only interpreter/runtime wrappers are project-owned outside the workspace.
     if Path(executable).name.casefold() not in PROJECT_RUNTIMES:
         return name, False, info
-    related = in_workspace(info.get("cwd")) or any(
-        in_workspace(argument) for argument in (info.get("cmdline") or [])
-    )
+    related = in_workspace(info.get("cwd")) or any(in_workspace(argument) for argument in (info.get("cmdline") or []))
     return name, related, info
 
 
@@ -159,14 +159,18 @@ def main() -> int:
     elevated = token["administrator_elevated"] if token else "unknown"
     print(f"Execution context: AppContainer={app_container}; administrator elevated={elevated}")
     if app_container is True:
-        print("[FAIL] Run from a normal Windows terminal; AppContainer can hide listeners and deny process termination.")
+        print(
+            "[FAIL] Run from a normal Windows terminal; AppContainer can hide listeners and deny process termination."
+        )
         return 2
 
     ports = configured_ports()
     configured = set(ports)
     roots = agent_roots() if args.non_agents else []
     keep_ports = agent_ports() if args.non_agents else set()
-    print(f"Checking {len(ports)} configured service ports and all active TCP/UDP listeners for C:\\AI-owned processes.")
+    print(
+        f"Checking {len(ports)} configured service ports and all active TCP/UDP listeners for C:\\AI-owned processes."
+    )
     if args.non_agents:
         print("Mode          : non-agent services only (coding agents, llama.cpp and Strata are preserved).")
     try:
@@ -218,10 +222,7 @@ def main() -> int:
             else:
                 try:
                     name, related, info = process_identity(pid)
-                    kept = bool(
-                        args.non_agents
-                        and (port in keep_ports or is_agent_process(info, roots))
-                    )
+                    kept = bool(args.non_agents and (port in keep_ports or is_agent_process(info, roots)))
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                     name, related, kept = f"PID {pid}", None, False
             remaining_by_port.setdefault(port, []).append(
@@ -239,7 +240,11 @@ def main() -> int:
                     label = "AGENT STACK (kept)"
                 else:
                     label = (
-                        "STILL LISTENING" if related is True else "UNRELATED PROCESS" if related is False else "OWNER UNKNOWN"
+                        "STILL LISTENING"
+                        if related is True
+                        else "UNRELATED PROCESS"
+                        if related is False
+                        else "OWNER UNKNOWN"
                     )
                 print(f"[WARN] {port} {label}: {name} PID {pid if pid is not None else '?'}")
 
@@ -247,9 +252,7 @@ def main() -> int:
         if port not in remaining_by_port:
             print(f"[OK] {protocol}/{port} listener ended before owner details were available.")
     remaining_related = any(
-        related is True and not kept
-        for values in remaining_by_port.values()
-        for _, _, related, _, kept in values
+        related is True and not kept for values in remaining_by_port.values() for _, _, related, _, kept in values
     )
     return 1 if remaining_related or any(port in configured for _, port in unknown if port in remaining_by_port) else 0
 

@@ -265,7 +265,10 @@ def main(argv: list[str] | None = None) -> None:
         processes.append(("KoboldCpp Server", process))
         if external:
             LOG_DIR.mkdir(parents=True, exist_ok=True)
-            processes.insert(0, ("llama.cpp", external_llm.start(LOG_DIR / f"llamacpp_external_{time.strftime('%Y%m%d-%H%M%S')}.log")))
+            processes.insert(
+                0,
+                ("llama.cpp", external_llm.start(LOG_DIR / f"llamacpp_external_{time.strftime('%Y%m%d-%H%M%S')}.log")),
+            )
         if cfg.KOBOLDCPP_SERVICE.streaming_ui and not backend_running(cfg.KOBOLDCPP_SERVICE.streaming_ui_port):
             proxy_args = [
                 "--speech-engine",

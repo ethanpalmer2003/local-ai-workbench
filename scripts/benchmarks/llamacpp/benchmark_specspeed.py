@@ -20,7 +20,11 @@ def run_candidate(output: RunPaths, probe: Path, conf: LlamaConfig, candidate: C
     options = candidate.options()
     trial = speculation_config(conf, options)
     log = output.logs / f"{candidate.name}-server.log"
-    with running_server(trial, log, title="Specspeed comparison", guard=False, alias="qwen3.8-27b") as (base, command, _):
+    with running_server(trial, log, title="Specspeed comparison", guard=False, alias="qwen3.8-27b") as (
+        base,
+        command,
+        _,
+    ):
         post_json(
             f"{base}/completion",
             {"prompt": "Describe a red bicycle.", "n_predict": 32, "temperature": 0, "cache_prompt": False},
@@ -39,7 +43,9 @@ def run_candidate(output: RunPaths, probe: Path, conf: LlamaConfig, candidate: C
             "PYTHONIOENCODING": "utf-8",
         }
         with (output.logs / f"{candidate.name}-probe.log").open("w", encoding="utf-8") as transcript:
-            subprocess.run([sys.executable, str(probe)], env=env, stdout=transcript, stderr=subprocess.STDOUT, check=True)
+            subprocess.run(
+                [sys.executable, str(probe)], env=env, stdout=transcript, stderr=subprocess.STDOUT, check=True
+            )
         result = json.loads((output.artifacts / f"{candidate.name}.json").read_text(encoding="utf-8"))
         if any("err" in row for row in result["rows"]):
             raise RuntimeError(f"{candidate.name} probe returned request errors")

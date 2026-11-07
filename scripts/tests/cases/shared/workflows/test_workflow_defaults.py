@@ -39,8 +39,9 @@ class WorkflowDefaultsTests(unittest.TestCase):
     def test_derived_defaults_read_the_profile_rather_than_each_other(self):
         with patch.object(cfg, "LANGUAGE_PRACTICE", replace(cfg.LANGUAGE_PRACTICE, llm_model="elsewhere/chat")):
             self.assertEqual(chat_models.default_id(), "elsewhere/chat")
-        with patch.object(cfg, "LANGUAGE_PRACTICE", replace(cfg.LANGUAGE_PRACTICE, tts_model="elsewhere/tts")), patch.object(
-            practice_models, "active_tts_id", None
+        with (
+            patch.object(cfg, "LANGUAGE_PRACTICE", replace(cfg.LANGUAGE_PRACTICE, tts_model="elsewhere/tts")),
+            patch.object(practice_models, "active_tts_id", None),
         ):
             self.assertEqual(practice_models.tts_id(), "elsewhere/tts")
 

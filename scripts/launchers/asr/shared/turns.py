@@ -12,7 +12,17 @@ from scripts.launchers.shared.transport.streaming_http import StreamingPost
 
 
 class Turns:
-    def __init__(self, base_url: str, log: Path, *, model="benchmark-asr", language="en-US", settings=cfg.AUDIOCPP_VAD, stream_factory=None, transport=None):
+    def __init__(
+        self,
+        base_url: str,
+        log: Path,
+        *,
+        model="benchmark-asr",
+        language="en-US",
+        settings=cfg.AUDIOCPP_VAD,
+        stream_factory=None,
+        transport=None,
+    ):
         self.transport = transport
         self.stream_factory = stream_factory
         self.url = (
@@ -126,5 +136,3 @@ class Turns:
             finally:
                 if self.transport:
                     self.transport.close()
-
-

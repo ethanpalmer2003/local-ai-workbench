@@ -489,7 +489,9 @@ def _run_backend_round(
         metadata.append(entry)
         memory.watch_backend(backend, launch_util.listening_process_ids(urlsplit(endpoint.base_url).port or 80))
         memory.stage = "warmup"
-        lifecycle = BenchmarkLifecycle(lambda: endpoint_identity(urlsplit(endpoint.base_url).port or 80, endpoint.model))
+        lifecycle = BenchmarkLifecycle(
+            lambda: endpoint_identity(urlsplit(endpoint.base_url).port or 80, endpoint.model)
+        )
         lifecycle.adopt_prepared(endpoint.metadata["startup_seconds"])
         lifecycle.warmup(lambda: entry.update(warmup=warmup(endpoint)))
         entry["benchmark"] = lifecycle.record()

@@ -26,10 +26,7 @@ def run_trial(
     port: int,
 ) -> None:
     conf = LlamaConfig(
-        profile_name="swift15-hrx",
-        build_name=build,
-        port=port,
-        ini_overrides={"reasoning": "off", "fit": "off"},
+        profile_name="swift15-hrx", build_name=build, port=port, ini_overrides={"reasoning": "off", "fit": "off"}
     )
     conf.profile = replace(
         conf.profile,
@@ -104,9 +101,7 @@ def run_trial(
                 f"[RESULT] {build}/{name}: {row['timings']['predicted_per_second']:.2f} tok/s, {row['seconds']:.2f}s",
                 flush=True,
             )
-            (paths.artifacts / "results.json").write_text(
-                json.dumps(evidence, indent=2) + "\n", encoding="utf-8"
-            )
+            (paths.artifacts / "results.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
     finally:
         stop_server(process)
 
@@ -116,9 +111,7 @@ def summarize_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
     for build in ("rocm-lemonade", "hrx"):
         rows = [r for t in evidence["trials"] if t["build"] == build for r in t["requests"]]
         summary[build] = {
-            "median_decode_tokens_per_second": statistics.median(
-                r["timings"]["predicted_per_second"] for r in rows
-            ),
+            "median_decode_tokens_per_second": statistics.median(r["timings"]["predicted_per_second"] for r in rows),
             "median_request_seconds": statistics.median(r["seconds"] for r in rows),
         }
     return summary

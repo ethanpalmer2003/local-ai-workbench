@@ -21,7 +21,8 @@ def speech_config(port: int):
     config["models"][0]["mode"] = "streaming"
     config.update(lazy_load=False, max_loaded_models=2, idle_unload_ms=0, threads=5, port=port)
     from scripts.launchers.asr.shared.practice_models import tts_spec
-    config['models'].append(tts_spec())
+
+    config["models"].append(tts_spec())
     return config
 
 
@@ -48,11 +49,17 @@ def start(port: int | None = None):
     argv = command(port)
     return native.start_server(
         argv,
-        [project_cfg.AUDIOCPP_SERVER_EXE, cfg.AUDIOCPP_VAD.model,
-         *(Path(m["path"]) for m in speech_config(port)["models"])],
-        port, "Nemotron + Kokoro AudioCpp",
+        [
+            project_cfg.AUDIOCPP_SERVER_EXE,
+            cfg.AUDIOCPP_VAD.model,
+            *(Path(m["path"]) for m in speech_config(port)["models"]),
+        ],
+        port,
+        "Nemotron + Kokoro AudioCpp",
         lambda: http_ready(f"http://127.0.0.1:{port}/health"),
-        lambda: native.matches(argv), env=audio_environment(), component_key="audiocpp",
+        lambda: native.matches(argv),
+        env=audio_environment(),
+        component_key="audiocpp",
     )
 
 
@@ -69,13 +76,20 @@ def transcribe(body: bytes, content_type: str, headers: dict[str, str] | None = 
     if not pcm or len(pcm) > 16000 * 2 * 30:
         raise ValueError("Nemotron uploads must contain 0-30 seconds of audio")
     # The configured model is streaming; file uploads must use its live transport too.
-    query = urlencode({"model": "benchmark-asr", "language": request.language,
-                       "sample_rate": 16000, "channels": 1, "sample_format": "s16le"})
+    query = urlencode(
+        {
+            "model": "benchmark-asr",
+            "language": request.language,
+            "sample_rate": 16000,
+            "channels": 1,
+            "sample_format": "s16le",
+        }
+    )
     stream = StreamingPost(url() + "/v1/audio/transcriptions/live?" + query, timeout=30)
     try:
         stream.start()
         for offset in range(0, len(pcm), 32768):
-            stream.send(pcm[offset:offset + 32768])
+            stream.send(pcm[offset : offset + 32768])
         stream.finish()
         while True:
             try:
@@ -90,6 +104,10 @@ def transcribe(body: bytes, content_type: str, headers: dict[str, str] | None = 
                 text = event.get("text")
                 if not isinstance(text, str):
                     raise RuntimeError("Nemotron returned no text")
-                return (text.encode(), "text/plain") if request.response_format == "text" else (json.dumps({"text": text}).encode(), "application/json")
+                return (
+                    (text.encode(), "text/plain")
+                    if request.response_format == "text"
+                    else (json.dumps({"text": text}).encode(), "application/json")
+                )
     finally:
         stream.close()

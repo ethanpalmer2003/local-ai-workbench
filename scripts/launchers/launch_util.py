@@ -367,7 +367,7 @@ def launch_process(
     cmd = [*cmd, *(extra_args or [])]
 
     if kill_ports:
-        for port in ([kill_ports] if isinstance(kill_ports, int) else kill_ports):
+        for port in [kill_ports] if isinstance(kill_ports, int) else kill_ports:
             prepare_service_port(port, title)
 
     vram_before = get_gpu_memory_snapshot() if report_vram else None

@@ -64,7 +64,11 @@ def run_candidate(
                 f"{result.latency_s:.2f}s, input={result.prompt_tokens}",
                 flush=True,
             )
-    return {"results": rows, "benchmark": lifecycle.record(), "whole_trial_seconds": time.perf_counter() - trial_started}
+    return {
+        "results": rows,
+        "benchmark": lifecycle.record(),
+        "whole_trial_seconds": time.perf_counter() - trial_started,
+    }
 
 
 def build_evidence(
@@ -159,7 +163,9 @@ def main() -> None:
             offset = round_index % len(selected)
             pair = {}
             for candidate in selected[offset:] + selected[:offset]:
-                pair[candidate.name] = run_candidate(conf, output, bench, samples, inputs, candidate, round_index, args.rounds)
+                pair[candidate.name] = run_candidate(
+                    conf, output, bench, samples, inputs, candidate, round_index, args.rounds
+                )
             evidence["rounds"].append(pair)
             (output.artifacts / "results.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
             previous_pair_seconds = time.perf_counter() - pair_started

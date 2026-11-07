@@ -397,13 +397,7 @@ def run_live(frameworks: list[str]) -> bool:
 def run_practice(output: RunPaths) -> tuple[bool, Path]:
     """Language/test stack through the saved-PCM gateway (llama.cpp runtime)."""
     log_path = output.logs / f"practice_{time.time_ns()}.log"
-    command = [
-        sys.executable,
-        "-m",
-        "scripts.tests.cases.asr.shared.practice_smoke",
-        "--runtimes",
-        "llamacpp",
-    ]
+    command = [sys.executable, "-m", "scripts.tests.cases.asr.shared.practice_smoke", "--runtimes", "llamacpp"]
     with log_path.open("wb") as log:
         process = subprocess.Popen(
             command,
@@ -476,12 +470,7 @@ def _run_live(frameworks: list[str], context: dict[str, Any]) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--only",
-        nargs="+",
-        choices=(*LAUNCHER_TARGETS, "all"),
-        default=list(LAUNCHER_TARGETS),
-    )
+    parser.add_argument("--only", nargs="+", choices=(*LAUNCHER_TARGETS, "all"), default=list(LAUNCHER_TARGETS))
     parser.add_argument("--timeout", type=float, default=180)
     args = parser.parse_args()
     global live_timeout

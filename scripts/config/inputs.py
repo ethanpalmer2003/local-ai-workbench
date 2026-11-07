@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+from typing import cast
 
 from scripts.config import project_config as project_cfg
 
@@ -138,5 +139,5 @@ def setting[T](key: str, fallback: T) -> T:
             return fallback
         node = node[part]
     if isinstance(fallback, bool):
-        return node if isinstance(node, bool) else fallback  # type: ignore[return-value]
-    return node if isinstance(node, type(fallback)) else fallback  # type: ignore[return-value]
+        return cast(T, node) if isinstance(node, bool) else fallback
+    return cast(T, node) if isinstance(node, type(fallback)) else fallback

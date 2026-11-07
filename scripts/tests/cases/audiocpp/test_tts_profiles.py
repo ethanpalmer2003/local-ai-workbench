@@ -45,7 +45,13 @@ class TtsProfiles(unittest.TestCase):
         self.assertIn("dur=1s", output.call_args.args[0])
 
     def test_page_assets_are_explicit_and_preserve_file_opening_support(self):
-        for path in ("/test/", "/test/comparison.js", "/launchers/audiocpp/pcm_audio.js", "/launchers/shared/browser/pcm_audio.js", "/launchers/shared/browser/speech_tools.js"):
+        for path in (
+            "/test/",
+            "/test/comparison.js",
+            "/launchers/audiocpp/pcm_audio.js",
+            "/launchers/shared/browser/pcm_audio.js",
+            "/launchers/shared/browser/speech_tools.js",
+        ):
             self.assertIsNotNone(tts_proxy._test_asset(path))
         self.assertIsNone(tts_proxy._test_asset("/test/../../../.env"))
 

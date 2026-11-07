@@ -50,7 +50,10 @@ class AudioComparison(unittest.TestCase):
             root = Path(folder)
             config = root / "server.json"
             model = root / "breeze.gguf"
-            config.write_text(json.dumps({"models": [{"id": cfg.AudiocppModel.BREEZE_TTS.value, "path": "breeze.gguf"}]}), encoding="utf-8")
+            config.write_text(
+                json.dumps({"models": [{"id": cfg.AudiocppModel.BREEZE_TTS.value, "path": "breeze.gguf"}]}),
+                encoding="utf-8",
+            )
             write_model(model, 0.9)
             with patch.dict(cfg.AUDIOCPP_SERVER_ARGS, {"config": str(config)}):
                 service = replace(cfg.AUDIOCPP_SERVICE, model=cfg.AudiocppModel.BREEZE_TTS.value)
@@ -84,7 +87,7 @@ class AudioComparison(unittest.TestCase):
                 encoding="utf-8",
             )
             with (
-            patch.object(cfg, "AUDIOCPP_PROXY_CLONE_VOICES", ("test-voice", "other-voice")),
+                patch.object(cfg, "AUDIOCPP_PROXY_CLONE_VOICES", ("test-voice", "other-voice")),
                 patch.dict(cfg.AUDIOCPP_SERVER_ARGS, {"config": str(config)}),
                 patch.object(
                     audiocpp_catalog,

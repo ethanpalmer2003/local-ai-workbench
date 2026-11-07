@@ -8,13 +8,7 @@ from scripts.tests.shared.timing import TimedTextTestResult
 
 class ProgressBar:
     def __init__(
-        self,
-        total: int,
-        label: str,
-        *,
-        stream: TextIO | None = None,
-        width: int = 20,
-        step: int | None = None,
+        self, total: int, label: str, *, stream: TextIO | None = None, width: int = 20, step: int | None = None
     ) -> None:
         self.total = max(int(total), 1)
         self.label = label
@@ -32,11 +26,7 @@ class ProgressBar:
         filled = int(self.width * self.current / self.total)
         bar = "#" * filled + "-" * (self.width - filled)
         suffix = f" {name}" if name else ""
-        print(
-            f"[PROGRESS] {self.label} [{bar}] {self.current}/{self.total}{suffix}",
-            file=self.stream,
-            flush=True,
-        )
+        print(f"[PROGRESS] {self.label} [{bar}] {self.current}/{self.total}{suffix}", file=self.stream, flush=True)
 
 
 class ProgressTextTestResult(TimedTextTestResult):

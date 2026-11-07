@@ -277,9 +277,7 @@ class LaunchCommands(unittest.TestCase):
             cfg.AsrStartupEngine.PARAKEET_V3,
         )
         for engine in engines:
-            with self.subTest(engine=engine), patch.object(
-                cfg.KOBOLDCPP_SERVICE, "transcription_engine", engine
-            ):
+            with self.subTest(engine=engine), patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", engine):
                 command = kobold.server_command()
                 self.assertNotIn("--whispermodel", command)
                 for index, token in enumerate(command):
@@ -592,7 +590,12 @@ class ProxyHTTP(unittest.TestCase):
         ):
             status, body, _ = request(
                 self.audio_url + "/v1/audio/speech",
-                {"input": "Hello", "model": cfg.AudiocppModel.BREEZE_TTS.value, "voice": "voice-a", "_comparison": True},
+                {
+                    "input": "Hello",
+                    "model": cfg.AudiocppModel.BREEZE_TTS.value,
+                    "voice": "voice-a",
+                    "_comparison": True,
+                },
             )
         self.assertEqual(status, 200)
         self.assertTrue(body.startswith(b"RIFF"))
@@ -873,9 +876,7 @@ class ProxyHTTP(unittest.TestCase):
         for tags in (True, False):
             for default in (True, False):
                 settings = replace(
-                    tts_text_processing.BREEZE_TONES,
-                    tags_enabled=tags,
-                    default_instruction="calm" if default else "",
+                    tts_text_processing.BREEZE_TONES, tags_enabled=tags, default_instruction="calm" if default else ""
                 )
                 with (
                     self.subTest(tags=tags, default=default),
@@ -905,9 +906,7 @@ class ProxyHTTP(unittest.TestCase):
                     self.assertNotIn("_tone_tag", payload)
 
     def test_forwarded_tone_is_ignored_when_tags_disabled(self):
-        settings = replace(
-            tts_text_processing.BREEZE_TONES, tags_enabled=False, default_instruction="calm"
-        )
+        settings = replace(tts_text_processing.BREEZE_TONES, tags_enabled=False, default_instruction="calm")
         with patch.object(tts_text_processing, "BREEZE_TONES", settings):
             tts_text_processing.tone_state.last = "old tone"
             payload: dict[str, object] = {"input": "Hello.", "_tone_tag": "happy"}
@@ -980,9 +979,7 @@ class _Tee:
 
 
 def _run_native_suite(suite: str, live_target: str | None, probe_names: list[str]) -> int:
-    names: list[str] = (
-        list(live_frameworks.LAUNCHER_TARGETS) if live_target in (None, "all") else [live_target]
-    )
+    names: list[str] = list(live_frameworks.LAUNCHER_TARGETS) if live_target in (None, "all") else [live_target]
     title = {"launchers": "Live Launchers", "backends": "Live Backends", "all": "Live All"}[suite]
     previous_title = os.environ.get("AI_TEST_TITLE")
     os.environ["AI_TEST_TITLE"] = title
@@ -1067,7 +1064,9 @@ def main(extra_groups: tuple[type[unittest.TestCase], ...] = ()) -> int:
             contextlib.redirect_stdout(tee_out),
             contextlib.redirect_stderr(tee_err),
             patch.object(launch_util, "kill_processes_on_ports", side_effect=AssertionError("unmocked port kill")),
-            patch.object(launch_util, "assign_process_to_job", side_effect=AssertionError("unmocked process assignment")),
+            patch.object(
+                launch_util, "assign_process_to_job", side_effect=AssertionError("unmocked process assignment")
+            ),
         ):
             ProgressTextTestResult.progress_total = suite.countTestCases()
             ProgressTextTestResult.progress_label = "model-free"
@@ -1080,7 +1079,11 @@ def main(extra_groups: tuple[type[unittest.TestCase], ...] = ()) -> int:
             test_id = test.id() if hasattr(test, "id") else str(test)
             summary_lines.append(f"{status.upper()}: {test_id}\n{detail}\n")
             report.results.append(
-                {"test": test_id, "status": status, "message": detail.strip().splitlines()[-1] if detail.strip() else ""}
+                {
+                    "test": test_id,
+                    "status": status,
+                    "message": detail.strip().splitlines()[-1] if detail.strip() else "",
+                }
             )
     (output.artifacts / "unittest.txt").write_text("\n".join(summary_lines), encoding="utf-8")
     report.status = "completed" if result.wasSuccessful() else "failed"

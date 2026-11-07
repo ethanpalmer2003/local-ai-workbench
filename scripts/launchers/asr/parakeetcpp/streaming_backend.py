@@ -15,10 +15,23 @@ class CpuBackend(ResidentBackend):
         super().__init__(cfg.PARAKEETCPP_STREAM_ASR)
 
     def command(self) -> list[str]:
-        return [sys.executable, "-m", "scripts.launchers.asr.parakeetcpp.streaming_server", "--port", str(self.settings.port)]
+        return [
+            sys.executable,
+            "-m",
+            "scripts.launchers.asr.parakeetcpp.streaming_server",
+            "--port",
+            str(self.settings.port),
+        ]
 
     def start(self):
         command = self.command()
-        return native.start_server(command, [Path(sys.executable), cfg.PARAKEETCPP_STREAM_LIBRARY, self.model()],
-            self.settings.port, "Parakeet CPU Nemotron stream", self.ready, lambda: native.matches(command),
-            env={**os.environ, "PYTHONPATH": str(project_cfg.BASE_DIR), "PARAKEET_DEVICE": "cpu"}, component_key="asr/parakeetcpp")
+        return native.start_server(
+            command,
+            [Path(sys.executable), cfg.PARAKEETCPP_STREAM_LIBRARY, self.model()],
+            self.settings.port,
+            "Parakeet CPU Nemotron stream",
+            self.ready,
+            lambda: native.matches(command),
+            env={**os.environ, "PYTHONPATH": str(project_cfg.BASE_DIR), "PARAKEET_DEVICE": "cpu"},
+            component_key="asr/parakeetcpp",
+        )

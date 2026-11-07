@@ -38,7 +38,9 @@ def inventory():
 
 def assert_resident(value):
     models = {item["id"]: item for item in value.get("data", [])}
-    if set(models) != {"benchmark-asr", cfg.LANGUAGE_PRACTICE.tts_model} or not all(item.get("loaded") is True for item in models.values()):
+    if set(models) != {"benchmark-asr", cfg.LANGUAGE_PRACTICE.tts_model} or not all(
+        item.get("loaded") is True for item in models.values()
+    ):
         raise RuntimeError(f"Both requested models must remain loaded: {value}")
 
 

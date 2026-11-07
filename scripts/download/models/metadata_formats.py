@@ -27,9 +27,12 @@ def safetensors(path: Path, tensor_index=False):
     tensors = {key: value for key, value in header.items() if key != "__metadata__"}
     types = Counter(value["dtype"] for value in tensors.values())
     elements = sum(math.prod(value["shape"]) for value in tensors.values())
-    return {"format": "safetensors", "metadata": header.get("__metadata__", {}),
-            "tensor_summary": {"count": len(tensors), "stored_elements": elements, "dtype_counts": dict(types)},
-            "tensor_index": tensors if tensor_index else None}
+    return {
+        "format": "safetensors",
+        "metadata": header.get("__metadata__", {}),
+        "tensor_summary": {"count": len(tensors), "stored_elements": elements, "dtype_counts": dict(types)},
+        "tensor_index": tensors if tensor_index else None,
+    }
 
 
 def varint(source):
@@ -114,8 +117,11 @@ def onnx(path: Path):
                     metadata["metadata_props"][pair["1"]] = pair.get("2")
             elif number == 8 and wire == 2:
                 metadata["opsets"].append(onnx_pair(source, stop))
-    return {"format": "onnx", "metadata": metadata,
-            "limits": ["Graph payloads/initializers skipped; input/output names retained, not inferred execution shapes."]}
+    return {
+        "format": "onnx",
+        "metadata": metadata,
+        "limits": ["Graph payloads/initializers skipped; input/output names retained, not inferred execution shapes."],
+    }
 
 
 def inspect(path: Path, *, full_arrays=False, tensor_index=False) -> dict[str, Any]:
@@ -131,23 +137,58 @@ def inspect(path: Path, *, full_arrays=False, tensor_index=False) -> dict[str, A
         with path.open("rb") as source:
             source.seek(4)
             values = struct.unpack("<11i", source.read(44))
-        keys = ["vocabulary", "audio_context", "audio_width", "audio_heads", "audio_layers", "text_context", "text_width", "text_heads", "text_layers", "mel_bins", "file_type"]
-        return {"format": "ggml", "metadata": dict(zip(keys, values)), "limits": ["Legacy GGML header; no inferred language list."]}
-    return {"format": path.suffix.lower().lstrip("."), "metadata": {},
-            "limits": ["Opaque/unrecognized format; pickle and model code are never executed. Use trusted sidecars/source metadata."]}
+        keys = [
+            "vocabulary",
+            "audio_context",
+            "audio_width",
+            "audio_heads",
+            "audio_layers",
+            "text_context",
+            "text_width",
+            "text_heads",
+            "text_layers",
+            "mel_bins",
+            "file_type",
+        ]
+        return {
+            "format": "ggml",
+            "metadata": dict(zip(keys, values)),
+            "limits": ["Legacy GGML header; no inferred language list."],
+        }
+    return {
+        "format": path.suffix.lower().lstrip("."),
+        "metadata": {},
+        "limits": [
+            "Opaque/unrecognized format; pickle and model code are never executed. Use trusted sidecars/source metadata."
+        ],
+    }
 
 
 def sidecars(path: Path):
-    names = [path.name + ".json", path.stem + ".json", "config.json", "generation_config.json",
-             "tokenizer_config.json", "processor_config.json", "preprocessor_config.json", "model_index.json"]
+    names = [
+        path.name + ".json",
+        path.stem + ".json",
+        "config.json",
+        "generation_config.json",
+        "tokenizer_config.json",
+        "processor_config.json",
+        "preprocessor_config.json",
+        "model_index.json",
+    ]
     result = []
     for name in dict.fromkeys(names):
         candidate = path.parent / name
         if candidate.is_file():
             try:
                 data = json_file(candidate)
-                result.append({"path": str(candidate), "scope": "file" if name.startswith(path.stem) else "directory",
-                               "mtime_ns": candidate.stat().st_mtime_ns, "metadata": data})
+                result.append(
+                    {
+                        "path": str(candidate),
+                        "scope": "file" if name.startswith(path.stem) else "directory",
+                        "mtime_ns": candidate.stat().st_mtime_ns,
+                        "metadata": data,
+                    }
+                )
             except (OSError, ValueError) as error:
                 result.append({"path": str(candidate), "error": str(error)})
     return result

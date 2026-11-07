@@ -99,15 +99,11 @@ def mentions(model: model_cfg.ModelDownload) -> list[Mention]:
 
 
 def blocker_lines(
-    model: model_cfg.ModelDownload,
-    refs: list[model_sync.ModelReference],
-    found_mentions: list[Mention],
+    model: model_cfg.ModelDownload, refs: list[model_sync.ModelReference], found_mentions: list[Mention]
 ) -> list[str]:
     catalog_dir = catalog.CATALOG_PATH.parent
     blockers = [
-        f"{ref.source}: {ref.path}"
-        for ref in refs
-        if ref.required and not ref.source.startswith("download catalog:")
+        f"{ref.source}: {ref.path}" for ref in refs if ref.required and not ref.source.startswith("download catalog:")
     ]
     blockers += [
         f"{item.path.relative_to(project_cfg.BASE_DIR)}:{item.line}: {item.text}"
@@ -132,8 +128,7 @@ def installed_files(model: model_cfg.ModelDownload) -> list[Path]:
     except ValueError:
         return [target] if target.is_file() else []
     expected = [
-        target.with_name(f"{prefix}-{index:05d}-of-{split.split('.', 1)[0]}.gguf")
-        for index in range(1, count + 1)
+        target.with_name(f"{prefix}-{index:05d}-of-{split.split('.', 1)[0]}.gguf") for index in range(1, count + 1)
     ]
     found = [path for path in expected if path.is_file()]
     if found:
@@ -255,10 +250,7 @@ def rewrite_files(include_docs: bool, include_tests: bool = False) -> list[Path]
     return sorted(
         file
         for file in files
-        if file.is_file()
-        and not _excluded(file)
-        and file.resolve() not in excluded
-        and "strata" not in file.parts
+        if file.is_file() and not _excluded(file) and file.resolve() not in excluded and "strata" not in file.parts
     )
 
 
@@ -285,9 +277,7 @@ def command_replace(
     found_mentions = mentions(old)
     strata = [f"{ref.source}: {ref.path}" for ref in refs if ref.source.startswith("Strata:")]
     strata += [
-        f"{display_path(item.path)}:{item.line}: {item.text}"
-        for item in found_mentions
-        if "strata" in item.path.parts
+        f"{display_path(item.path)}:{item.line}: {item.text}" for item in found_mentions if "strata" in item.path.parts
     ]
     print("\nOld references:")
     for ref in refs:

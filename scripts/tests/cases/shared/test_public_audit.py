@@ -20,7 +20,9 @@ class PublicAuditTests(unittest.TestCase):
         self.assertEqual(doc_hit, [])
 
     def test_private_voice_ids_are_matched_as_whole_words(self):
-        findings = public_audit.scan_text("scripts/config/example.json", "voice alpha, model bravo", ("alpha", "charlie"))
+        findings = public_audit.scan_text(
+            "scripts/config/example.json", "voice alpha, model bravo", ("alpha", "charlie")
+        )
         self.assertEqual([finding.detail for finding in findings], ["alpha"])
 
     def test_credential_fields_and_env_placeholders(self):
@@ -37,8 +39,9 @@ class PublicAuditTests(unittest.TestCase):
         self.assertEqual([finding.detail for finding in findings], ["alpha"])
 
     def test_voice_terms_ignore_short_ids_that_collide_with_words(self):
-        with patch.object(public_audit.inputs, "voice_ids", return_value=("ab", "alpha")), patch.object(
-            public_audit.inputs, "character_cards", return_value={}
+        with (
+            patch.object(public_audit.inputs, "voice_ids", return_value=("ab", "alpha")),
+            patch.object(public_audit.inputs, "character_cards", return_value={}),
         ):
             self.assertEqual(public_audit.voice_terms(), ("alpha",))
 

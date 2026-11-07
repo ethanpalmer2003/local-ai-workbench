@@ -18,9 +18,13 @@ class Selection:
         self.error: str | None = None
 
     def catalog(self) -> dict[str, Any]:
-        return {'asr': practice_asr.asr_models(), 'tts': practice_models.tts_models(),
-                'llm': chat_models.catalog(),
-                'selected': {'asr': self.engine.value, 'tts': self.tts, 'llm': self.llm}, 'error': self.error}
+        return {
+            "asr": practice_asr.asr_models(),
+            "tts": practice_models.tts_models(),
+            "llm": chat_models.catalog(),
+            "selected": {"asr": self.engine.value, "tts": self.tts, "llm": self.llm},
+            "error": self.error,
+        }
 
     @contextmanager
     def request(self):
@@ -34,20 +38,20 @@ class Selection:
 
     def select(self, value):
         if not isinstance(value, dict):
-            raise ValueError('Speech setup must be an object')
+            raise ValueError("Speech setup must be an object")
         with self.lock:
             if self.active > 1 or self.pending:
-                raise RuntimeError('Another request is active; retry after it completes')
+                raise RuntimeError("Another request is active; retry after it completes")
             catalog = self.catalog()
-            for kind in ('asr', 'tts'):
-                row = next((row for row in catalog[kind] if row['id'] == value.get(kind)), None)
-                if row is None or not row['available']:
-                    raise ValueError(f'Unavailable {kind} selection')
-            if 'llm' in value:
-                row = next((row for row in catalog.get('llm', []) if row['id'] == value['llm']), None)
-                if row is None or not row['available']:
-                    raise ValueError('Unavailable llm selection')
-            self.pending = {'asr': value['asr'], 'tts': value['tts']}
-            if 'llm' in value:
-                self.pending['llm'] = value['llm']
+            for kind in ("asr", "tts"):
+                row = next((row for row in catalog[kind] if row["id"] == value.get(kind)), None)
+                if row is None or not row["available"]:
+                    raise ValueError(f"Unavailable {kind} selection")
+            if "llm" in value:
+                row = next((row for row in catalog.get("llm", []) if row["id"] == value["llm"]), None)
+                if row is None or not row["available"]:
+                    raise ValueError("Unavailable llm selection")
+            self.pending = {"asr": value["asr"], "tts": value["tts"]}
+            if "llm" in value:
+                self.pending["llm"] = value["llm"]
             return self.pending

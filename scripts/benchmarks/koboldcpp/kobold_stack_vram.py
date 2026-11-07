@@ -216,9 +216,7 @@ def _finish(
     (paths.artifacts / "vram.json").write_text(json.dumps(monitor.summary(), indent=2), encoding="utf-8")
     paths.write_report(report)
     print(
-        json.dumps(
-            {key: report.get(key) for key in ("status", "error", "guards", "total_seconds", "remaining_ports")}
-        ),
+        json.dumps({key: report.get(key) for key in ("status", "error", "guards", "total_seconds", "remaining_ports")}),
         flush=True,
     )
 
@@ -236,7 +234,11 @@ def preflight() -> None:
     if external and not external_llm.no_model_config().is_file():
         raise FileNotFoundError("Derived no-model config was not written")
     preflight_check.require_free_ports(
-        {"kobold": backends.ports("kobold")[-1], "audio": backends.ports("audio")[0], "image": backends.ports("image")[0]}
+        {
+            "kobold": backends.ports("kobold")[-1],
+            "audio": backends.ports("audio")[0],
+            "image": backends.ports("image")[0],
+        }
     )
     audio_config = audio_cfg.read(inputs["audio config"])
     if not any(model["id"] == cfg.AUDIOCPP_SERVICE.model for model in audio_config["models"]):
@@ -260,7 +262,11 @@ def run() -> None:
         import psutil
 
         backends.start(backend, paths, owned, usage_profile="shared", llm=llm_mode)
-        port = cfg.LLAMACPP_SERVICE.internal_port if backend == "kobold" and llm_mode == "external" else backends.ports(backend)[-1]
+        port = (
+            cfg.LLAMACPP_SERVICE.internal_port
+            if backend == "kobold" and llm_mode == "external"
+            else backends.ports(backend)[-1]
+        )
         deadline = time.monotonic() + 180
         while not launch_util.listening_process_ids(port) and time.monotonic() < deadline:
             # - the external server loads after Kobold's UI port is already answering

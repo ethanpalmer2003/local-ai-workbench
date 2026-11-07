@@ -177,10 +177,10 @@ def _watch_client_disconnect(client, response, stopped: threading.Event, disconn
         except OSError:
             pass
         disconnected.set()
-        http_response = getattr(response, 'fp', None)
-        buffered = getattr(http_response, 'fp', None)
-        raw = getattr(buffered, 'raw', None)
-        upstream_socket = getattr(raw, '_sock', None)
+        http_response = getattr(response, "fp", None)
+        buffered = getattr(http_response, "fp", None)
+        raw = getattr(buffered, "raw", None)
+        upstream_socket = getattr(raw, "_sock", None)
         if upstream_socket is not None:
             with contextlib.suppress(OSError):
                 upstream_socket.shutdown(socket.SHUT_RDWR)
@@ -252,8 +252,9 @@ def relay_stream(
         counter = _SseAudioCounter() if is_sse else None
         stopped = threading.Event()
         disconnected = threading.Event()
-        watcher = threading.Thread(target=_watch_client_disconnect,
-                                   args=(handler.connection, response, stopped, disconnected), daemon=True)
+        watcher = threading.Thread(
+            target=_watch_client_disconnect, args=(handler.connection, response, stopped, disconnected), daemon=True
+        )
         watcher.start()
 
         try:

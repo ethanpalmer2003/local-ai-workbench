@@ -84,7 +84,9 @@ class StartupContracts(unittest.TestCase):
                     continue  # This adapter is in-process, not an HTTP server.
                 with (
                     self.subTest(engine=name),
-                    patch("scripts.benchmarks.shared.resident_http.launch_util.llama_server_running", return_value=False),
+                    patch(
+                        "scripts.benchmarks.shared.resident_http.launch_util.llama_server_running", return_value=False
+                    ),
                     patch("scripts.benchmarks.shared.resident_http.launch_util.port_listening", return_value=True),
                     patch("scripts.benchmarks.shared.resident_http.subprocess.Popen") as launch,
                     patch("scripts.benchmarks.shared.resident_http.stop_owned") as stop,

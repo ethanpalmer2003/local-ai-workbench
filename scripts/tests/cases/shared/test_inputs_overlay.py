@@ -48,7 +48,10 @@ class InputOverlayTests(unittest.TestCase):
             root = Path(folder)
             (root / "defaults.json").write_text(
                 json.dumps(
-                    {"chat": {"tts": {"voice": "chosen", "clone_voice": "not-a-bool"}}, "image": {"loras": "<lora:style:0.6>"}}
+                    {
+                        "chat": {"tts": {"voice": "chosen", "clone_voice": "not-a-bool"}},
+                        "image": {"loras": "<lora:style:0.6>"},
+                    }
                 ),
                 encoding="utf-8",
             )
@@ -67,7 +70,7 @@ class InputOverlayTests(unittest.TestCase):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
             (root / "defaults.json").write_text(
-                '{\n  // a commented example stays out of effect\n'
+                "{\n  // a commented example stays out of effect\n"
                 '  // "chat": {"tts": {"instruction": "unused"}},\n'
                 '  "image": {"loras": "<lora:style:0.6>"},\n'
                 '  "chat": {"llm": "http://example/model"}\n}\n',
@@ -77,7 +80,6 @@ class InputOverlayTests(unittest.TestCase):
                 self.assertEqual(inputs.setting("image.loras", ""), "<lora:style:0.6>")
                 self.assertEqual(inputs.setting("chat.llm", ""), "http://example/model")
                 self.assertEqual(inputs.setting("chat.tts.instruction", "none"), "none")
-
 
     def test_the_tracked_example_manifest_carries_placeholders_only(self):
         example = Path(inputs.__file__).with_name("voice_sources.example.json")

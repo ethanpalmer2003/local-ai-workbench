@@ -42,7 +42,8 @@ class SharedRuntimeTests(unittest.TestCase):
         worker = running_process()
         with (
             patch.object(process.time, "monotonic", side_effect=[0, 0, 2]),
-            patch.object(process.time, "sleep") as sleep,self.assertRaises(TimeoutError)
+            patch.object(process.time, "sleep") as sleep,
+            self.assertRaises(TimeoutError),
         ):
             process.wait_ready(worker, lambda: False, 1)
         sleep.assert_called_once_with(0.2)

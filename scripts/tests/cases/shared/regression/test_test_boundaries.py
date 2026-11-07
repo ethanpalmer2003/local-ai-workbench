@@ -188,9 +188,7 @@ class TestBoundaries(unittest.TestCase):
             patch.object(owner.quick_validation, "run_probes", return_value=True) as probes,
         ):
             self.assertEqual(owner._run_native_suite("launchers", None, ["ming3-tts"]), 0)
-            live.assert_called_once_with(
-                ["sdcpp", "audiocpp", "llamacpp", "kobold", "dsh-headless", "practice"]
-            )
+            live.assert_called_once_with(["sdcpp", "audiocpp", "llamacpp", "kobold", "dsh-headless", "practice"])
             probes.assert_not_called()
             live.reset_mock()
             self.assertEqual(owner._run_native_suite("backends", None, ["ming3-tts"]), 0)

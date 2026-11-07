@@ -41,9 +41,7 @@ class NgramWorkloads(unittest.TestCase):
                 patch.object(trial.launch_util, "port_listening", return_value=False),
                 patch.object(trial.launch_util, "kill_process_tree"),
                 patch.object(
-                    trial.launch_util,
-                    "launch_process",
-                    side_effect=lambda *args, **kwargs: running_process(pid=12345),
+                    trial.launch_util, "launch_process", side_effect=lambda *args, **kwargs: running_process(pid=12345)
                 ),
                 patch.object(benchmark_speedbench, "LlamaConfig", return_value=conf),
                 patch.object(trial, "LlamaConfig", return_value=conf),

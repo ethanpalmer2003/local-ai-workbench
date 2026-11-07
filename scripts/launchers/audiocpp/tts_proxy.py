@@ -51,11 +51,26 @@ def _test_asset(path: str) -> tuple[bytes, str] | None:
         "/test/comparison.js": (comparison, "text/javascript"),
         "/comparison.js": (comparison, "text/javascript"),
         "/tests/ui/audiocpp_comparison.js": (comparison, "text/javascript"),
-        "/launchers/audiocpp/pcm_audio.js": (project_cfg.component("shared").launcher_dir / "browser/pcm_audio.js", "text/javascript"),
-        "/launchers/shared/browser/pcm_audio.js": (project_cfg.component("shared").launcher_dir / "browser/pcm_audio.js", "text/javascript"),
-        "/launchers/shared/browser/workspace_lifecycle.js": (project_cfg.component("shared").launcher_dir / "browser/workspace_lifecycle.js", "text/javascript"),
-        "/launchers/shared/browser/speech_tools.js": (project_cfg.component("shared").launcher_dir / "browser/speech_tools.js", "text/javascript"),
-        "/launchers/shared/browser/speech_client.js": (project_cfg.component("shared").launcher_dir / "browser/speech_client.js", "text/javascript"),
+        "/launchers/audiocpp/pcm_audio.js": (
+            project_cfg.component("shared").launcher_dir / "browser/pcm_audio.js",
+            "text/javascript",
+        ),
+        "/launchers/shared/browser/pcm_audio.js": (
+            project_cfg.component("shared").launcher_dir / "browser/pcm_audio.js",
+            "text/javascript",
+        ),
+        "/launchers/shared/browser/workspace_lifecycle.js": (
+            project_cfg.component("shared").launcher_dir / "browser/workspace_lifecycle.js",
+            "text/javascript",
+        ),
+        "/launchers/shared/browser/speech_tools.js": (
+            project_cfg.component("shared").launcher_dir / "browser/speech_tools.js",
+            "text/javascript",
+        ),
+        "/launchers/shared/browser/speech_client.js": (
+            project_cfg.component("shared").launcher_dir / "browser/speech_client.js",
+            "text/javascript",
+        ),
     }
     asset = assets.get(path)
     return (asset[0].read_bytes(), asset[1]) if asset else None

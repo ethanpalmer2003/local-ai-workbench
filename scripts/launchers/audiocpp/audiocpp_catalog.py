@@ -72,12 +72,15 @@ def server_request_defaults(model: str) -> dict[str, object]:
 
 def configured_voices() -> list[dict[str, object]]:
     return [
-        {"id": voice, "available": resolve_voice_ref(voice) is not None}
-        for voice in cfg.AUDIOCPP_PROXY_CLONE_VOICES
+        {"id": voice, "available": resolve_voice_ref(voice) is not None} for voice in cfg.AUDIOCPP_PROXY_CLONE_VOICES
     ]
 
 
-def runtime_defaults(service: cfg.AudiocppStartupRequestServiceSettings, model: str | None = None, specs: list[dict[str, Any]] | None = None) -> dict[str, object]:
+def runtime_defaults(
+    service: cfg.AudiocppStartupRequestServiceSettings,
+    model: str | None = None,
+    specs: list[dict[str, Any]] | None = None,
+) -> dict[str, object]:
     selected = model or service.model
     source = Path(cfg.AUDIOCPP_SERVER_ARGS["config"])
     selected_specs: list[dict[str, Any]] = audio_cfg.read(source)["models"] if specs is None else specs
@@ -103,10 +106,7 @@ def runtime_defaults(service: cfg.AudiocppStartupRequestServiceSettings, model: 
     if selected in cfg.BREEZE_MODELS:
         tones = tts_text_processing.BREEZE_TONES
         inherited = tts_text_processing.tone_state.last if tones.tags_enabled else None
-        proxy = {
-            "guidance_scale": tones.guidance_scale,
-            "instruction": inherited or tones.default_instruction,
-        }
+        proxy = {"guidance_scale": tones.guidance_scale, "instruction": inherited or tones.default_instruction}
     return {
         "streaming_enabled": (
             (selected == service.model and service.streaming_enabled) or bool(spec and spec.get("mode") == "streaming")
@@ -177,27 +177,28 @@ def configured_models() -> list[dict[str, object]]:
 
 
 def voice_data(model: str, spec: dict[str, Any] | None) -> dict[str, object]:
-    if spec and spec.get('family') == 'kokoro_tts':
+    if spec and spec.get("family") == "kokoro_tts":
         from scripts.launchers.audiocpp.kokoro import available_voices
-        path = Path(spec['path'])
+
+        path = Path(spec["path"])
         voices = available_voices(path) if path.is_file() else []
-        return {'voice_mode': 'builtin', 'voices': voices, 'default_voice': cfg.KOKORO_TTS.voice}
-    clone = next((row['clone'] for row in configured_models() if row['id'] == model), False)
+        return {"voice_mode": "builtin", "voices": voices, "default_voice": cfg.KOKORO_TTS.voice}
+    clone = next((row["clone"] for row in configured_models() if row["id"] == model), False)
     if clone:
-        return {'voice_mode': 'clone', 'voices': configured_voices(),
-                'default_voice': cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value}
-    return {'voice_mode': 'none', 'voices': [], 'default_voice': ''}
+        return {
+            "voice_mode": "clone",
+            "voices": configured_voices(),
+            "default_voice": cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value,
+        }
+    return {"voice_mode": "none", "voices": [], "default_voice": ""}
 
 
 def supports_clone(model: str) -> bool:
-    return any(row['id'] == model and row['clone'] for row in configured_models())
+    return any(row["id"] == model and row["clone"] for row in configured_models())
 
 
 def comparison_catalog() -> dict[str, list[dict[str, object]]]:
-    return {
-        "voices": configured_voices(),
-        "models": configured_models(),
-    }
+    return {"voices": configured_voices(), "models": configured_models()}
 
 
 def validate_comparison(payload: Payload) -> None:

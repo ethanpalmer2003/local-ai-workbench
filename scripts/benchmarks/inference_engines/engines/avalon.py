@@ -129,7 +129,12 @@ class AvalonEngine:
                 backend="avalon",
                 build="avalon",
                 profile="strata-iq2_xs",
-                settings={"ctx_size": "65536", "spec_type": "draft-mtp", "moe_cache": "auto", "cache_ram_mib": CACHE_RAM_MIB},
+                settings={
+                    "ctx_size": "65536",
+                    "spec_type": "draft-mtp",
+                    "moe_cache": "auto",
+                    "cache_ram_mib": CACHE_RAM_MIB,
+                },
             )
         ]
 

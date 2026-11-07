@@ -36,6 +36,7 @@ class SegmentStream:
     def finish(self):
         if not _DECODERS.acquire(blocking=False):
             raise RuntimeError("Previous ASR requests are still completing; retry shortly")
+
         def decode():
             started = time.perf_counter()
             try:
@@ -45,14 +46,21 @@ class SegmentStream:
                     wav.setsampwidth(2)
                     wav.setframerate(16000)
                     wav.writeframes(bytes(self.pcm))
-                body, content_type = audio_upload(output.getvalue(), {"language": self.language, "response_format": "json"})
+                body, content_type = audio_upload(
+                    output.getvalue(), {"language": self.language, "response_format": "json"}
+                )
                 data, _ = self.backend.transcribe(body, content_type)
                 text = json.loads(data).get("text")
                 if not isinstance(text, str) or not text.strip():
                     raise RuntimeError("Recognizer returned no transcription text")
                 if not self.cancelled.is_set():
-                    self.events.put({"type": "transcript.text.done", "text": text.strip(),
-                                     "decode_seconds": time.perf_counter() - started})
+                    self.events.put(
+                        {
+                            "type": "transcript.text.done",
+                            "text": text.strip(),
+                            "decode_seconds": time.perf_counter() - started,
+                        }
+                    )
             except Exception as error:
                 if not self.cancelled.is_set():
                     self.events.put({"type": "error", "error": str(error)})
