@@ -1,5 +1,10 @@
-"""CPU-only tests for lazy prompt caching and invalidation."""
+"""CPU-only tests for lazy prompt caching and invalidation.
 
+The node itself runs inside ComfyUI's interpreter, which owns torch; tests that need
+tensors skip when this venv has no torch, and the cache-key tests always run.
+"""
+
+import importlib.util
 import math
 import unittest
 from types import ModuleType
@@ -7,6 +12,8 @@ from unittest.mock import MagicMock, patch
 
 from scripts.config.comfyui import ltx_prompt_cache
 from scripts.tests.shared.paths import CasePaths
+
+HAS_TORCH = importlib.util.find_spec("torch") is not None
 
 
 class PromptCacheTests(unittest.TestCase):
@@ -31,6 +38,7 @@ class PromptCacheTests(unittest.TestCase):
         self.addCleanup(self.modules.stop)
         self.addCleanup(self.cache.stop)
 
+    @unittest.skipUnless(HAS_TORCH, "torch belongs to the ComfyUI interpreter")
     def test_hit_skips_encoder_and_preserves_conditioning(self) -> None:
         import torch
 
