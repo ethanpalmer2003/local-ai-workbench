@@ -28,14 +28,14 @@ What runs today. Use it to compare against other projects' stacks.
 | `structure_docs.py` | doc budgets, links, component keys, naming, folder rules |
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
 | `frontend_wiring.py` | asset paths, DOM ids, injected settings contracts |
-| `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies |
+| `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
 | `public_audit.py` | secrets, credentials, home/machine paths, private words/inputs, large files, ignored-but-tracked |
 | `audit_timing.py` | every benchmark runner uses the shared timing contract |
 | `coverage.py`, `pip-audit`, `codespell` | coverage, dependency advisories, spelling (manual hook) |
 
 Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown is covered by `structure_docs.py`, HTML/JS by `frontend_wiring.py`.
 
-Lint gates at McCabe 20; the five dispatchers above it carry `# noqa: C901`. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
+Lint gates at McCabe 10. Functions above it carry `# noqa: C901` and are listed, largest first, in `COMPLEXITY-DEBT.md`; delete each annotation as it is split. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
 
 ## Deliberately absent
 
