@@ -101,9 +101,9 @@ class SharedContracts(unittest.TestCase):
         with (
             CasePaths(__file__).temporary_directory() as folder,
             patch("huggingface_hub.hf_hub_download", side_effect=RuntimeError("download failed")),
+            self.assertRaisesRegex(RuntimeError, "download failed"),
         ):
-            with self.assertRaisesRegex(RuntimeError, "download failed"):
-                cli_download.download_file("owner/repo", "model.gguf", local_dir=Path(folder))
+            cli_download.download_file("owner/repo", "model.gguf", local_dir=Path(folder))
 
     def test_snapshot_download_uses_destination(self):
         with (

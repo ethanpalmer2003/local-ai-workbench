@@ -52,9 +52,12 @@ class SpeechUiTests(unittest.TestCase):
 
     def test_missing_build_fails_before_model_start(self):
         runtime = Mock()
-        with CasePaths(__file__).temporary_directory() as folder, patch.object(speech_ui.project_cfg, 'LLAMACPP_SPEECH_UI_DIR', Path(folder)):
-            with self.assertRaisesRegex(RuntimeError, 'Build the native speech UI'):
-                speech_ui.route(SimpleNamespace(path='/?ui=llama', headers={}), 'GET', runtime)
+        with (
+            CasePaths(__file__).temporary_directory() as folder,
+            patch.object(speech_ui.project_cfg, 'LLAMACPP_SPEECH_UI_DIR', Path(folder)),
+            self.assertRaisesRegex(RuntimeError, 'Build the native speech UI'),
+        ):
+            speech_ui.route(SimpleNamespace(path='/?ui=llama', headers={}), 'GET', runtime)
         runtime.load.assert_not_called()
 
     def test_shared_browser_speech_transport(self):

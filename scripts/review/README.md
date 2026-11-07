@@ -27,4 +27,4 @@ Static and literal-only; it never executes the pages.
 - DOM ids: ids an inline script reads via `getElementById`/`querySelector('#id')` must be defined in the same HTML; external scripts are not scanned.
 - Settings keys: each row of `SETTINGS_CONTRACTS` pairs a launcher's injected `window.<object>` with its reader scripts and test fixture. Reads the launcher never emits, or (ignoring `||`/`??` fallbacks) the fixture never provides, are reported. Add a row per injected settings object.
 
-Format the scripts tree with `scripts/review/format.bat`.
+Format the scripts tree with `scripts/review/format.bat`. Formatting is not enforced by default: `python -m scripts.review --format-check` adds ruff's format comparison as an optional sixth check.

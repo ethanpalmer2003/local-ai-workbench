@@ -108,14 +108,14 @@ class FrameworkUpdates(unittest.TestCase):
                 patch.object(updater, "download_asset", return_value=wheel),
                 patch.object(tts_updates.subprocess, "run", side_effect=install),
                 patch.object(updater, "replace_installation") as replace,
+                self.assertRaisesRegex(updater.UpdateError, "dependencies are missing"),
             ):
-                with self.assertRaisesRegex(updater.UpdateError, "dependencies are missing"):
-                    tts_updates.install_wheel(
-                        {"name": "piper.whl", "browser_download_url": "unused"},
-                        root / "installed",
-                        root,
-                        "piper/__main__.py",
-                    )
+                tts_updates.install_wheel(
+                    {"name": "piper.whl", "browser_download_url": "unused"},
+                    root / "installed",
+                    root,
+                    "piper/__main__.py",
+                )
             replace.assert_not_called()
 
     def test_piper_check_only_reads_markers_without_running_python_sources(self):

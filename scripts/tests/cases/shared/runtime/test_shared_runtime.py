@@ -55,9 +55,12 @@ class SharedRuntimeTests(unittest.TestCase):
         kill.assert_called_once_with(12345)
 
     def test_healthy_mismatched_service_is_never_stopped_or_replaced(self):
-        with patch.object(native.launch_util, "launch_process") as start, patch.object(native, "stop_owned") as stop:
-            with self.assertRaisesRegex(RuntimeError, "does not match"):
-                native.start_server([], [], 12345, "fixture", lambda: True, lambda: False)
+        with (
+            patch.object(native.launch_util, "launch_process") as start,
+            patch.object(native, "stop_owned") as stop,
+            self.assertRaisesRegex(RuntimeError, "does not match"),
+        ):
+            native.start_server([], [], 12345, "fixture", lambda: True, lambda: False)
         start.assert_not_called()
         stop.assert_not_called()
 
@@ -71,9 +74,10 @@ class SharedRuntimeTests(unittest.TestCase):
                 patch("scripts.benchmarks.shared.resident_http.subprocess.Popen", return_value=worker),
                 patch("scripts.benchmarks.shared.resident_http.wait_ready", side_effect=TimeoutError("fixture")),
                 patch("scripts.benchmarks.shared.resident_http.stop_owned") as stop,
+                self.assertRaises(TimeoutError),
+                server.lifecycle as timer,
             ):
-                with self.assertRaises(TimeoutError), server.lifecycle as timer:
-                    timer.prepare(server.start, combined=True)
+                timer.prepare(server.start, combined=True)
             stop.assert_called_once_with(worker, timeout=10)
             self.assertTrue(server.stream is not None and server.stream.closed)
 
@@ -116,9 +120,9 @@ class SharedRuntimeTests(unittest.TestCase):
         with (
             patch("scripts.launchers.shared.native_abi.native_library.os.add_dll_directory", return_value=directory),
             patch("scripts.launchers.shared.native_abi.native_library.ctypes.CDLL", side_effect=OSError("fixture")),
+            self.assertRaises(OSError),
         ):
-            with self.assertRaises(OSError):
-                NativeLibrary(Path("fixture.dll"), search_dirs=(Path("fixture"),))
+            NativeLibrary(Path("fixture.dll"), search_dirs=(Path("fixture"),))
         directory.__exit__.assert_called_once()
 
     def test_abi_reader_rejects_unsupported_fields_before_binding(self):

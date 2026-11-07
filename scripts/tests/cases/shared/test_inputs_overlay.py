@@ -21,15 +21,15 @@ class InputOverlayTests(unittest.TestCase):
                 self.assertEqual(inputs.default_voice(), "second")
 
     def test_without_the_overlay_every_lookup_is_empty_rather_than_an_error(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            with (
-                patch.dict(inputs.os.environ, {"AI_INPUT_DIR": str(Path(folder) / "absent")}),
-                patch.dict(inputs.os.environ, {"AI_VOICES_DIR": str(Path(folder) / "absent-voices")}),
-            ):
-                self.assertEqual(inputs.voice_ids(), ())
-                self.assertEqual(inputs.default_voice(), "")
-                self.assertEqual(inputs.character_cards(), {})
-                self.assertIsNone(inputs.tone_prompt())
+        with (
+            CasePaths(__file__).temporary_directory() as folder,
+            patch.dict(inputs.os.environ, {"AI_INPUT_DIR": str(Path(folder) / "absent")}),
+            patch.dict(inputs.os.environ, {"AI_VOICES_DIR": str(Path(folder) / "absent-voices")}),
+        ):
+            self.assertEqual(inputs.voice_ids(), ())
+            self.assertEqual(inputs.default_voice(), "")
+            self.assertEqual(inputs.character_cards(), {})
+            self.assertIsNone(inputs.tone_prompt())
 
     def test_character_cards_and_tone_prompt_come_from_the_overlay(self):
         with CasePaths(__file__).temporary_directory() as folder:
