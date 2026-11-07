@@ -10,7 +10,7 @@ from contextlib import closing, suppress
 from dataclasses import replace
 from http.client import HTTPConnection, HTTPException
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any
+from typing import Any, ClassVar
 from urllib.parse import urlsplit
 
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
@@ -229,115 +229,145 @@ class BenchmarkRelay:
             time.sleep(0.01)
         raise TimeoutError("A benchmark API request did not stop after cancellation")
 
-    def handler(self) -> type[BaseHTTPRequestHandler]:  # noqa: C901
-        relay = self
+    def handler(self) -> type[BaseHTTPRequestHandler]:
+        return type("Handler", (_BenchmarkRelayHandler,), {"relay": self})
 
-        class Handler(BaseHTTPRequestHandler):
-            def log_message(self, format: str, *args: object) -> None:
-                pass
 
-            def do_GET(self) -> None:
-                if self.path.rstrip("/") not in ("/v1/models", "/models"):
-                    self.send_error(404)
-                    return
-                body = json.dumps({"data": [{"id": relay.endpoint.model, "object": "model"}]}).encode()
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
+class _RelayRequest:
+    """Per-request bookkeeping shared by the relay handler stages."""
 
-            def do_POST(self) -> None:  # noqa: C901
-                if self.path != "/v1/chat/completions":
-                    self.send_error(404, "This benchmark uses OpenAI chat completions")
-                    return
-                started = time.perf_counter()
-                record: dict[str, Any] = {"task": relay.task, "finished": False, "first_token_seconds": None}
-                response_started = False
-                request_timer = None
-                request_scope = None
-                request_timing = None
-                with relay.lock:
-                    relay.records.append(record)
-                try:
-                    if relay.lifecycle is not None:
-                        request_timer = relay.lifecycle.fork()
-                        request_scope = request_timer.request()
-                        request_timing = request_scope.__enter__()
-                    body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-                    body = request_settings(body, relay.endpoint, relay.settings)
-                    record["request_settings"] = {
-                        key: body[key]
-                        for key in (
-                            "model",
-                            "temperature",
-                            "max_tokens",
-                            "seed",
-                            "reasoning_effort",
-                            "thinking_budget_tokens",
-                            "reasoning_budget_tokens",
-                            "chat_template_kwargs",
-                        )
-                        if key in body
-                    }
-                    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {relay.endpoint.api_key}"}
-                    url = urlsplit(relay.endpoint.base_url)
-                    with closing(HTTPConnection(url.hostname or "127.0.0.1", url.port, timeout=600)) as connection:
-                        connection.request(
-                            "POST", url.path.rstrip("/") + "/chat/completions", json.dumps(body).encode(), headers
-                        )
-                        if connection.sock is None:
-                            raise ConnectionError("Backend socket is unavailable")
-                        with relay.lock:
-                            relay.active[id(record)] = (record["task"], connection.sock)
-                            cancelled = record["task"] in relay.cancelled
-                        if cancelled:
-                            raise ConnectionAbortedError("Task was cancelled")
-                        response = connection.getresponse()
-                        record["status"] = response.status
-                        self.send_response(response.status)
-                        self.send_header("Content-Type", response.headers.get("Content-Type", "application/json"))
-                        self.end_headers()
-                        response_started = True
-                        if response.status >= 400:
-                            self.wfile.write(response.read())
-                            return
-                        if body.get("stream"):
-                            self.stream_response(response, record, started, request_timing)
-                        else:
-                            content = response.read()
-                            observe_chunk(record, json.loads(content), time.perf_counter() - started)
-                            self.wfile.write(content)
-                    record["finished"] = not body.get("stream") or bool(record.get("stream_done"))
-                except (OSError, HTTPException, BenchmarkContractError) as error:
-                    record["error"] = str(error)
-                    if not response_started:
-                        with suppress(OSError):
-                            self.send_error(502, "Backend request failed")
-                finally:
-                    record["seconds"] = round(time.perf_counter() - started, 6)
-                    if request_scope is not None and request_timing is not None and request_timer is not None:
-                        if not record["finished"] or record.get("error"):
-                            request_timing.reject(str(record.get("error", "Incomplete or failed backend response")))
-                        try:
-                            request_scope.__exit__(None, None, None)
-                        except BenchmarkContractError as error:
-                            record["error"] = str(error)
-                        record["benchmark"] = request_timer.record()
-                    with relay.lock:
-                        relay.active.pop(id(record), None)
+    def __init__(self, record: dict[str, Any], started: float) -> None:
+        self.record = record
+        self.started = started
+        self.timer: Any = None
+        self.scope: Any = None
+        self.timing: Any = None
+        self.response_started = False
 
-            def stream_response(self, response: Any, record: dict[str, Any], started: float, timing=None) -> None:
-                for line in response:
-                    if line.startswith(b"data:"):
-                        data = line[5:].strip()
-                        if data and data != b"[DONE]":
-                            observe_chunk(record, json.loads(data), time.perf_counter() - started)
-                            if timing is not None and record.get("first_token_seconds") is not None:
-                                timing.mark("first_output")
-                        elif data == b"[DONE]":
-                            record["stream_done"] = True
-                    self.wfile.write(line)
-                    self.wfile.flush()
+    def begin_timing(self, lifecycle: BenchmarkLifecycle | None) -> None:
+        if lifecycle is None:
+            return
+        self.timer = lifecycle.fork()
+        self.scope = self.timer.request()
+        self.timing = self.scope.__enter__()
 
-        return Handler
+    def finish_timing(self) -> None:
+        if self.timer is None or self.scope is None or self.timing is None:
+            return
+        if not self.record["finished"] or self.record.get("error"):
+            self.timing.reject(str(self.record.get("error", "Incomplete or failed backend response")))
+        try:
+            self.scope.__exit__(None, None, None)
+        except BenchmarkContractError as error:
+            self.record["error"] = str(error)
+        self.record["benchmark"] = self.timer.record()
+
+
+_REQUEST_SETTING_KEYS = (
+    "model",
+    "temperature",
+    "max_tokens",
+    "seed",
+    "reasoning_effort",
+    "thinking_budget_tokens",
+    "reasoning_budget_tokens",
+    "chat_template_kwargs",
+)
+
+
+class _BenchmarkRelayHandler(BaseHTTPRequestHandler):
+    """One run's relay: forwards chat completions and records what the server reports."""
+
+    relay: ClassVar[Any]
+
+    def log_message(self, format: str, *args: object) -> None:
+        pass
+
+    def do_GET(self) -> None:
+        relay = type(self).relay
+        if self.path.rstrip("/") not in ("/v1/models", "/models"):
+            self.send_error(404)
+            return
+        body = json.dumps({"data": [{"id": relay.endpoint.model, "object": "model"}]}).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self) -> None:
+        relay = type(self).relay
+        if self.path != "/v1/chat/completions":
+            self.send_error(404, "This benchmark uses OpenAI chat completions")
+            return
+        record: dict[str, Any] = {"task": relay.task, "finished": False, "first_token_seconds": None}
+        request = _RelayRequest(record, time.perf_counter())
+        with relay.lock:
+            relay.records.append(record)
+        try:
+            request.begin_timing(relay.lifecycle)
+            self._forward(request, self._prepared_body(record))
+        except (OSError, HTTPException, BenchmarkContractError) as error:
+            record["error"] = str(error)
+            if not request.response_started:
+                with suppress(OSError):  # The client may already have closed the connection.
+                    self.send_error(502, "Backend request failed")
+        finally:
+            record["seconds"] = round(time.perf_counter() - request.started, 6)
+            request.finish_timing()
+            with relay.lock:
+                relay.active.pop(id(record), None)
+
+    def _prepared_body(self, record: dict[str, Any]) -> dict[str, Any]:
+        relay = type(self).relay
+        body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        body = request_settings(body, relay.endpoint, relay.settings)
+        record["request_settings"] = {key: body[key] for key in _REQUEST_SETTING_KEYS if key in body}
+        return body
+
+    def _forward(self, request: _RelayRequest, body: dict[str, Any]) -> None:
+        relay = type(self).relay
+        record = request.record
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {relay.endpoint.api_key}"}
+        url = urlsplit(relay.endpoint.base_url)
+        with closing(HTTPConnection(url.hostname or "127.0.0.1", url.port, timeout=600)) as connection:
+            connection.request("POST", url.path.rstrip("/") + "/chat/completions", json.dumps(body).encode(), headers)
+            if connection.sock is None:
+                raise ConnectionError("Backend socket is unavailable")
+            with relay.lock:
+                relay.active[id(record)] = (record["task"], connection.sock)
+                cancelled = record["task"] in relay.cancelled
+            if cancelled:
+                raise ConnectionAbortedError("Task was cancelled")
+            response = connection.getresponse()
+            record["status"] = response.status
+            self.send_response(response.status)
+            self.send_header("Content-Type", response.headers.get("Content-Type", "application/json"))
+            self.end_headers()
+            request.response_started = True
+            if response.status >= 400:
+                self.wfile.write(response.read())
+                return
+            self._write_payload(response, request, bool(body.get("stream")))
+        record["finished"] = not body.get("stream") or bool(record.get("stream_done"))
+
+    def _write_payload(self, response: Any, request: _RelayRequest, streaming: bool) -> None:
+        if not streaming:
+            content = response.read()
+            observe_chunk(request.record, json.loads(content), time.perf_counter() - request.started)
+            self.wfile.write(content)
+            return
+        self._stream_response(response, request.record, request.started, request.timing)
+
+    def _stream_response(self, response: Any, record: dict[str, Any], started: float, timing: Any = None) -> None:
+        for line in response:
+            if line.startswith(b"data:"):
+                data = line[5:].strip()
+                if data and data != b"[DONE]":
+                    observe_chunk(record, json.loads(data), time.perf_counter() - started)
+                    if timing is not None and record.get("first_token_seconds") is not None:
+                        timing.mark("first_output")
+                elif data == b"[DONE]":
+                    record["stream_done"] = True
+            self.wfile.write(line)
+            self.wfile.flush()
