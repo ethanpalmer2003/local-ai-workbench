@@ -12,7 +12,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import http_api, live, practice_models
 from scripts.launchers.asr import selector as transcription
 from scripts.launchers.audiocpp import audiocpp_catalog, tts_text_processing
-from scripts.launchers.koboldcpp import kokoro
+from scripts.launchers.koboldcpp import external_bridge, kokoro
 from scripts.launchers.launch_util import backend_unavailable
 from scripts.launchers.proxy_util import (
     ProxyHandlerMixin,
@@ -308,6 +308,10 @@ def run_proxy(
                     send_bytes(self, 503, b"KoboldCpp is not ready yet", "text/plain; charset=utf-8")
             else:
                 body = read_request_body(self)
+                if method == "POST" and external is not None and path in external_bridge.GENERATE_PATHS:
+                    # - the embedded page posts here even with an OpenAI provider configured
+                    external_bridge.respond(self, external[0], path, body)
+                    return
                 target = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}" if path == "/v1/audio/speech" else upstream
                 if (
                     method == "POST"
