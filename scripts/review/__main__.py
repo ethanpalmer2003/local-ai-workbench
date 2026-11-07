@@ -62,13 +62,9 @@ def security_audit() -> tuple[int, str]:
 
 
 def declaration_check() -> int:
-    """deptry: every import is covered by a pin, and no declared pin is unreachable."""
+    """deptry: every import is covered by a declared dependency, and no declaration is unused."""
     checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/deptry.exe"
-    return subprocess.run(
-        [str(checker), "scripts", "--requirements-files", "scripts/requirements.txt"],
-        cwd=project_cfg.BASE_DIR,
-        check=False,
-    ).returncode
+    return subprocess.run([str(checker), "scripts"], cwd=project_cfg.BASE_DIR, check=False).returncode
 
 
 def format_check() -> int:

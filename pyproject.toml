@@ -1,3 +1,34 @@
+[project]
+name = "ai-scripts"
+version = "0.1.0"
+description = "Local launchers, benchmarks and checks for the AI stack"
+requires-python = ">=3.13"
+# - direct dependencies only; scripts/requirements.txt is the exact installed freeze
+dependencies = [
+    "aiohttp",
+    "huggingface-hub",
+    "numpy",
+    "openpyxl",
+    "packaging",
+    "pillow",
+    "psutil",
+    "python-dotenv",
+    "pyyaml",
+    "regex",
+    "requests",
+    "scipy",
+    "soundfile",
+    "torch",
+    "tqdm",
+]
+
+[dependency-groups]
+dev = ["basedpyright", "codespell", "coverage", "deptry", "pip-audit", "pre-commit", "pytest", "ruff"]
+
+[tool.uv]
+# - this repository is a tree of scripts, not an installable package
+package = false
+
 [tool.pyright]
 # - the repository root is the parent of the scripts package (imports are scripts.*)
 include = ["scripts"]
@@ -8,13 +39,14 @@ reportImplicitRelativeImport = "none"
 pythonVersion = "3.13"
 venvPath = "scripts"
 venv = ".venv"
-exclude = ["scripts/tests/old", "scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "frameworks", "trash"]
+exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "frameworks", "trash"]
+
 [tool.ruff]
 cache-dir = "scripts/state/cache/ruff"
 line-length = 120
 target-version = "py313"
 include = ["*.py", "*.pyi"]
-extend-exclude = ["scripts/tests/old", "scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "frameworks", "trash", "scripts/config/models/ids.py"]
+extend-exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "frameworks", "trash", "scripts/config/models/ids.py"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -54,9 +86,9 @@ max-complexity = 10
 split-on-trailing-comma = false
 
 [tool.deptry]
-requirements_files = ["scripts/requirements.txt"]
+# - reads [project].dependencies, so a direct dependency nothing imports is now a real finding
 known_first_party = ["scripts"]
-# - the requirements file is a full freeze, so "not imported" is expected for transitive pins;
-#   DEP001 still catches an import that no pin covers
-ignore = ["DEP002"]
-per_rule_ignores = { DEP001 = ["folder_paths", "piper"] }
+exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "frameworks", "trash"]
+# - ComfyUI and Piper are imported inside their own runtimes, never from this venv
+# - the regression harness imports pytest, which belongs in the dev group
+per_rule_ignores = { DEP001 = ["folder_paths", "piper"], DEP004 = ["pytest"] }
