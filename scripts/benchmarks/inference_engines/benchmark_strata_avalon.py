@@ -39,8 +39,7 @@ CONTRACT = "strata_profiles: prefix 100 Python functions, 128 tokens, temperatur
 
 STRATA_PROMPT = re.compile(r"prompt (\d+) tokens = (\d+) reused \+ (\d+) read")
 AVALON_PROMPT = re.compile(
-    r"new prompt, n_ctx_slot = \d+, n_keep = 0, task\.n_tokens =\s*(\d+).*?cached n_tokens =\s*(\d+)",
-    re.DOTALL,
+    r"new prompt, n_ctx_slot = \d+, n_keep = 0, task\.n_tokens =\s*(\d+).*?cached n_tokens =\s*(\d+)", re.DOTALL
 )
 
 
@@ -91,10 +90,13 @@ def prompt(index: int, conversation: bool = False) -> str:
         return PREFIX + "\n" + (body + "\n" if body else "") + last
     return PREFIX + f"\nSample {index}: explain Python lists versus tuples in at least 300 words."
 
+
 SYSTEM = {"role": "system", "content": "Follow the request precisely. Do not use tools."}
+
 
 def plain(text: str) -> list[dict[str, str]]:
     return [SYSTEM, {"role": "user", "content": text}]
+
 
 def conversation_messages(index: int) -> list[dict[str, str]]:
     out = plain(PREFIX + "\n" + TURNS[0])
@@ -102,7 +104,10 @@ def conversation_messages(index: int) -> list[dict[str, str]]:
         out += [{"role": "assistant", "content": REPLY}, {"role": "user", "content": turn}]
     return out
 
-def stream_chat(base_url: str, api_key: str, model: str, messages: list[dict[str, str]], tokens: int, timeout: float) -> dict[str, Any]:
+
+def stream_chat(
+    base_url: str, api_key: str, model: str, messages: list[dict[str, str]], tokens: int, timeout: float
+) -> dict[str, Any]:
     body = {
         "model": model,
         "messages": messages,
@@ -141,7 +146,9 @@ def stream_chat(base_url: str, api_key: str, model: str, messages: list[dict[str
     return record
 
 
-def measure(name: str, output: RunPaths, base_url: str, api_key: str, model: str, args: argparse.Namespace) -> dict[str, Any]:
+def measure(
+    name: str, output: RunPaths, base_url: str, api_key: str, model: str, args: argparse.Namespace
+) -> dict[str, Any]:
     conversation = args.conversation
     warmup_msgs = conversation_messages(0) if conversation else plain(WARMUP)
     warmup = stream_chat(base_url, api_key, model, warmup_msgs, 32, args.request_timeout)
@@ -362,7 +369,9 @@ def avalon_arm(output: RunPaths, args: argparse.Namespace) -> tuple[dict[str, An
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--samples", type=int, default=5)
-    parser.add_argument("--warmup-samples", type=int, default=1, help="Measured-prompt samples to run and discard (cold pages).")
+    parser.add_argument(
+        "--warmup-samples", type=int, default=1, help="Measured-prompt samples to run and discard (cold pages)."
+    )
     parser.add_argument("--draft-n-max", type=int, default=2, help="Avalon MTP draft depth (--spec-draft-n-max).")
     parser.add_argument("--tokens", type=int, default=128)
     parser.add_argument("--startup-timeout", type=float, default=180)
@@ -399,10 +408,7 @@ def main() -> None:
     args = parser.parse_args()
 
     context = require_native_execution("Strata vs Avalon benchmark")
-    selected_ports = {
-        "strata": cfg.STRATA_SERVICE.port,
-        "avalon": cfg.LLAMACPP_SERVICE.port,
-    }
+    selected_ports = {"strata": cfg.STRATA_SERVICE.port, "avalon": cfg.LLAMACPP_SERVICE.port}
     # - A benchmark run owns the host: whatever holds its ports is stopped, not reported.
     for name in args.engines:
         port = selected_ports[name]

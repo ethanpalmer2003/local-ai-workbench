@@ -22,8 +22,9 @@ def monitor_process(process, gpu_log, *, seconds=240, phase=lambda: "resident", 
         process = owned_module_worker(process, worker_module)
 
     stop, samples, result = threading.Event(), [], {}
-    worker = threading.Thread(target=watch_resources,
-        args=(process, stop, samples, time.monotonic() + seconds, phase), daemon=True)
+    worker = threading.Thread(
+        target=watch_resources, args=(process, stop, samples, time.monotonic() + seconds, phase), daemon=True
+    )
     gpu = GpuMemoryMonitor(process.pid, gpu_log)
     try:
         with gpu:
@@ -34,7 +35,9 @@ def monitor_process(process, gpu_log, *, seconds=240, phase=lambda: "resident", 
                 stop.set()
                 worker.join(timeout=5)
     finally:
-        result.update(pid=process.pid, launcher_pid=launcher_pid, cpu_ram=summarize_resources(samples), gpu=gpu.summary())
+        result.update(
+            pid=process.pid, launcher_pid=launcher_pid, cpu_ram=summarize_resources(samples), gpu=gpu.summary()
+        )
 
 
 def watch_resources(process, stop, samples, deadline, phase=lambda: "unknown", clock_origin=None):

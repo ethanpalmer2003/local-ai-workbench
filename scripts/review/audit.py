@@ -135,7 +135,12 @@ def fingerprints_source(source: str, path: str) -> list[Fingerprint]:
         if not isinstance(node, FUNCTIONS):
             continue
         body = list(node.body)
-        if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant) and isinstance(body[0].value.value, str):
+        if (
+            body
+            and isinstance(body[0], ast.Expr)
+            and isinstance(body[0].value, ast.Constant)
+            and isinstance(body[0].value.value, str)
+        ):
             body = body[1:]
         if not body:
             continue
@@ -333,7 +338,9 @@ def report(
     if sparse_folders:
         print(f"[WARN] {len(sparse_folders)} empty or one-item folders; see report.")
     if small_folders:
-        print(f"[INFO] {len(small_folders)} folders have 2 to {MAX_SMALL_FOLDER_ITEMS} items; review candidates in report.")
+        print(
+            f"[INFO] {len(small_folders)} folders have 2 to {MAX_SMALL_FOLDER_ITEMS} items; review candidates in report."
+        )
     if duplicates:
         print(f"[INFO] {len(duplicates)} duplicate function groups (>= {MIN_DUPLICATE_LINES} code lines); see report.")
     print(f"Review report: {artifacts / 'review.md'}")

@@ -15,10 +15,11 @@ from scripts.tests.shared.paths import CasePaths
 
 class KokoroProfiles(unittest.TestCase):
     def test_multilingual_default_retains_compact_package_option(self):
-        self.assertEqual(cfg.KOKORO_TTS.audiocpp_package, 'multilingual')
-        self.assertEqual(cfg.KOKORO_TTS.audiocpp_model.name, 'kokoro-82m-multilingual-q8_0.gguf')
-        self.assertEqual(replace(cfg.KOKORO_TTS, audiocpp_package='small').audiocpp_model.name, 'kokoro-82m-q8_0.gguf')
-        self.assertEqual(kokoro.audio_environment()['AUDIOCPP_MECAB_LIBRARY'], str(cfg.KOKORO_TTS.mecab_library))
+        self.assertEqual(cfg.KOKORO_TTS.audiocpp_package, "multilingual")
+        self.assertEqual(cfg.KOKORO_TTS.audiocpp_model.name, "kokoro-82m-multilingual-q8_0.gguf")
+        self.assertEqual(replace(cfg.KOKORO_TTS, audiocpp_package="small").audiocpp_model.name, "kokoro-82m-q8_0.gguf")
+        self.assertEqual(kokoro.audio_environment()["AUDIOCPP_MECAB_LIBRARY"], str(cfg.KOKORO_TTS.mecab_library))
+
     def test_existing_session_is_not_replaced(self):
         with (
             patch.object(cfg.KOBOLDCPP_SERVICE, "speech_engine", cfg.KoboldcppSpeechStartupEngine.CONFIGURED),
@@ -46,7 +47,9 @@ class KokoroProfiles(unittest.TestCase):
             config = json.loads(Path(command[command.index("--config") + 1]).read_text())
         self.assertEqual(config["backend"], "cpu")
         self.assertEqual(config["threads"], cfg.KOKORO_TTS.threads)
-        self.assertEqual([model["id"] for model in config["models"]], [cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package]])
+        self.assertEqual(
+            [model["id"] for model in config["models"]], [cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package]]
+        )
         self.assertEqual(config["models"][0]["path"], str(cfg.KOKORO_TTS.audiocpp_model))
         self.assertEqual(command[-2:], ["--model", cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package]])
 

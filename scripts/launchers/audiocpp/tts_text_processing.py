@@ -18,7 +18,9 @@ from scripts.launchers.shared.media import text_processing
 @dataclass
 class BreezeToneSettings:
     tags_enabled: bool = True
-    default_enabled: bool = inputs.setting("chat.tts.instruction_enabled", bool(inputs.setting("chat.tts.instruction", "")))
+    default_enabled: bool = inputs.setting(
+        "chat.tts.instruction_enabled", bool(inputs.setting("chat.tts.instruction", ""))
+    )
     default_instruction: str = inputs.setting("chat.tts.instruction", "")
     guidance_scale: float = 1.0
 
@@ -189,8 +191,8 @@ def clean_text(payload: dict[str, object]) -> tuple[str | None, float]:
     cleaned = text
     if payload.get("model") in cfg.BREEZE_MODELS:
         cleaned = filter_breeze_vocal_events(cleaned).replace('"', "")
-    options = payload.get('options')
-    language = options.get('language') if isinstance(options, dict) else None
+    options = payload.get("options")
+    language = options.get("language") if isinstance(options, dict) else None
     cleaned = text_processing.clean_text(cleaned, language=language if isinstance(language, str) else None)
     if not cleaned:
         return None, 0.0

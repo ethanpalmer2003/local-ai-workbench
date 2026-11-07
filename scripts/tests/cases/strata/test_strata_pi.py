@@ -26,7 +26,9 @@ class StrataPiTests(unittest.TestCase):
     def test_config_discovery_handles_redirected_local_appdata(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
-            source = root / "AppData" / "Local" / "Strata" / "install" / f"strata-{strata_pi.cfg.STRATA_SERVICE.model}.json"
+            source = (
+                root / "AppData" / "Local" / "Strata" / "install" / f"strata-{strata_pi.cfg.STRATA_SERVICE.model}.json"
+            )
             source.parent.mkdir(parents=True)
             source.write_text(
                 json.dumps({"model_name": strata_pi.cfg.STRATA_SERVICE.model_name, "port": 8080}), encoding="utf-8"

@@ -19,7 +19,7 @@ def format_check() -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--format-check", action="store_true", help="also fail on ruff format differences")
+    parser.add_argument("--no-format-check", action="store_true", help="skip the ruff format comparison")
     args = parser.parse_args(argv)
 
     print("=== STRUCTURE AND DOCUMENTATION ===", flush=True)
@@ -45,10 +45,12 @@ def main(argv: list[str] | None = None) -> int:
     audit_status = audit.main()
 
     formatting_status = 0
-    if args.format_check:
+    if not args.no_format_check:
         print("\n=== PYTHON FORMATTING ===", flush=True)
         formatting_status = format_check()
-        print("[OK] Formatting matches" if not formatting_status else "[WARN] Formatting differs; run review/format.bat")
+        print(
+            "[OK] Formatting matches" if not formatting_status else "[WARN] Formatting differs; run review/format.bat"
+        )
     return int(
         bool(structure_status or model_status or frontend_status or type_status or audit_status or formatting_status)
     )

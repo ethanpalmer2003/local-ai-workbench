@@ -92,7 +92,9 @@ class WorkflowTests(unittest.TestCase):
     def test_prompt_overrides_replace_only_conditioning_text(self) -> None:
         saved = json.loads((project_cfg.CONFIG_DIR / "comfyui/workflows/video_ltx2_5_i2v_fast480.json").read_text())
         graph = workflow(saved, LTXWorkflowOverrides(prompt="sunset", negative="bad"))
-        texts = {node["inputs"].get("text") for node in graph.values() if str(node["class_type"]).endswith("TextEncode")}
+        texts = {
+            node["inputs"].get("text") for node in graph.values() if str(node["class_type"]).endswith("TextEncode")
+        }
         self.assertEqual(texts, {"sunset", "bad"})
 
     def test_prompt_appends_keep_the_workflow_text(self) -> None:
@@ -101,7 +103,8 @@ class WorkflowTests(unittest.TestCase):
         negatives = [
             node["widgets_values_named"]["text"]
             for node in saved["nodes"]
-            if isinstance(node.get("widgets_values_named"), dict) and "shaky" in str(node["widgets_values_named"].get("text"))
+            if isinstance(node.get("widgets_values_named"), dict)
+            and "shaky" in str(node["widgets_values_named"].get("text"))
         ]
         self.assertEqual(len(negatives), 1)
         self.assertTrue(negatives[0].endswith(", watermark"))
@@ -110,7 +113,9 @@ class WorkflowTests(unittest.TestCase):
     def test_a_shared_text_node_is_only_written_once(self) -> None:
         saved = json.loads((project_cfg.CONFIG_DIR / "comfyui/workflows/video_ltx2_5_i2v_default.json").read_text())
         graph = workflow(saved, LTXWorkflowOverrides(negative="bad"))
-        texts = {node["inputs"].get("text") for node in graph.values() if str(node["class_type"]).endswith("TextEncode")}
+        texts = {
+            node["inputs"].get("text") for node in graph.values() if str(node["class_type"]).endswith("TextEncode")
+        }
         self.assertEqual(len(texts), 1)
         self.assertNotIn("bad", texts)
 

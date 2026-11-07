@@ -116,10 +116,7 @@ class ModelAdminTests(unittest.TestCase):
                 patch.object(
                     model_admin.catalog,
                     "load_entries",
-                    return_value=[
-                        model_admin.catalog.entry_dict(old),
-                        model_admin.catalog.entry_dict(new),
-                    ],
+                    return_value=[model_admin.catalog.entry_dict(old), model_admin.catalog.entry_dict(new)],
                 ),
                 patch.object(model_admin.catalog, "save_catalog") as save,
                 patch.object(model_admin.catalog, "write_ids") as ids,
@@ -127,10 +124,7 @@ class ModelAdminTests(unittest.TestCase):
                 patch.object(model_admin, "run_model_sync", return_value=0),
             ):
                 self.assertEqual(
-                    model_admin.command_replace(
-                        old, new, apply=True, include_docs=False, include_tests=False
-                    ),
-                    0,
+                    model_admin.command_replace(old, new, apply=True, include_docs=False, include_tests=False), 0
                 )
             self.assertIn(new.label, source.read_text(encoding="utf-8"))
         save.assert_called_once_with([model_admin.catalog.entry_dict(new)])

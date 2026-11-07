@@ -34,12 +34,27 @@ def binary(component: str, relative: str) -> Path:
 
 
 ASR_FILE_PROFILES = {
-    'audiocpp-cohere': FileAsrProfile(
-        'asr/audiocpp', binary('audiocpp', 'vulkan/audiocpp_cli.exe'),
-        ('--task', 'asr', '--family', 'cohere_asr', '--model', weight('asr/audiocpp/cohere-transcribe-03-2026-q8_0'), '--audio', '{input}', '--language', '{language}'),
-        ('asr/audiocpp/cohere-transcribe-03-2026-q8_0',), {'offline': ()},
-        server_arguments=('--config', '{config}', '--port', '{port}', '--no-ui'),
-        server_executable=binary('audiocpp', 'vulkan/audiocpp_server.exe'), audio_family='cohere_asr'),
+    "audiocpp-cohere": FileAsrProfile(
+        "asr/audiocpp",
+        binary("audiocpp", "vulkan/audiocpp_cli.exe"),
+        (
+            "--task",
+            "asr",
+            "--family",
+            "cohere_asr",
+            "--model",
+            weight("asr/audiocpp/cohere-transcribe-03-2026-q8_0"),
+            "--audio",
+            "{input}",
+            "--language",
+            "{language}",
+        ),
+        ("asr/audiocpp/cohere-transcribe-03-2026-q8_0",),
+        {"offline": ()},
+        server_arguments=("--config", "{config}", "--port", "{port}", "--no-ui"),
+        server_executable=binary("audiocpp", "vulkan/audiocpp_server.exe"),
+        audio_family="cohere_asr",
+    ),
     "nemo-speechcpp": FileAsrProfile(
         "asr/nemo-speechcpp",
         binary("asr/nemo-speechcpp", "vulkan/bin/nemo-speech.exe"),

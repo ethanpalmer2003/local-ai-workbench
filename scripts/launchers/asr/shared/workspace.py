@@ -26,25 +26,27 @@ def run_session(args, controls, start_chat) -> bool:
         def on_server(_server):
             runtime.persist()
             if not args.no_browser:
-                path = {'llama': '/?ui=llama', 'test': '/test/', 'workspace': '/practice'}[args.ui]
-                if args.ui == 'test' and args.test_mode != 'all':
-                    path += f'?mode={args.test_mode}'
+                path = {"llama": "/?ui=llama", "test": "/test/", "workspace": "/practice"}[args.ui]
+                if args.ui == "test" and args.test_mode != "all":
+                    path += f"?mode={args.test_mode}"
                 url = f"http://localhost:{cfg.LLAMACPP_PRACTICE.port}{path}"
                 try:
                     open_browser(url)
                 except OSError as error:
                     print(f"Could not open the workspace in the default browser: {error}", flush=True)
 
-        return bool(server.run_proxy(
-            controls.engine,
-            cfg.LLAMACPP_PRACTICE.host,
-            cfg.LLAMACPP_PRACTICE.port,
-            runtime.chat_url(),
-            runtime.speech_url(),
-            on_server,
-            controls,
-            runtime,
-        ))
+        return bool(
+            server.run_proxy(
+                controls.engine,
+                cfg.LLAMACPP_PRACTICE.host,
+                cfg.LLAMACPP_PRACTICE.port,
+                runtime.chat_url(),
+                runtime.speech_url(),
+                on_server,
+                controls,
+                runtime,
+            )
+        )
     finally:
         runtime.close()
 
@@ -53,14 +55,21 @@ def main(start_chat) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--transcription-engine",
-        choices=[item.value for item in cfg.AsrStartupEngine if item not in (
-            cfg.AsrStartupEngine.EMBEDDED, cfg.AsrStartupEngine.GEMMA_KOBOLD)],
+        choices=[
+            item.value
+            for item in cfg.AsrStartupEngine
+            if item not in (cfg.AsrStartupEngine.EMBEDDED, cfg.AsrStartupEngine.GEMMA_KOBOLD)
+        ],
     )
     parser.add_argument("--no-tts", action="store_true")
     parser.add_argument("--no-browser", action="store_true")
-    parser.add_argument("--ui", choices=('workspace', 'llama', 'test'), default='workspace')
-    parser.add_argument("--test-mode", choices=('all', 'asr', 'llm'), default='all',
-                        help="Stages enabled on /test/ when --ui test is selected.")
+    parser.add_argument("--ui", choices=("workspace", "llama", "test"), default="workspace")
+    parser.add_argument(
+        "--test-mode",
+        choices=("all", "asr", "llm"),
+        default="all",
+        help="Stages enabled on /test/ when --ui test is selected.",
+    )
     args = parser.parse_args()
     print(f"Starting speech workspace on port {cfg.LLAMACPP_PRACTICE.port}", flush=True)
     reuse = cfg.LAUNCH.existing_service_policy == cfg.ExistingServicePolicy.REUSE
@@ -75,9 +84,9 @@ def main(start_chat) -> None:
             raise RuntimeError("Practice port is occupied by an unhealthy or unrelated service")
         print(f"Reusing practice service on port {cfg.LLAMACPP_PRACTICE.port}")
         if not args.no_browser:
-            path = {'llama': '/?ui=llama', 'test': '/test/', 'workspace': '/practice'}[args.ui]
-            if args.ui == 'test' and args.test_mode != 'all':
-                path += f'?mode={args.test_mode}'
+            path = {"llama": "/?ui=llama", "test": "/test/", "workspace": "/practice"}[args.ui]
+            if args.ui == "test" and args.test_mode != "all":
+                path += f"?mode={args.test_mode}"
             open_browser(f"http://localhost:{cfg.LLAMACPP_PRACTICE.port}{path}")
         return
     launch_util.prepare_service_port(cfg.LLAMACPP_PRACTICE.port, "speech workspace")
@@ -94,8 +103,8 @@ def main(start_chat) -> None:
     except KeyboardInterrupt:
         return
     if restart:
-        original = getattr(sys, 'orig_argv', [sys.executable, sys.argv[0], *sys.argv[1:]])
+        original = getattr(sys, "orig_argv", [sys.executable, sys.argv[0], *sys.argv[1:]])
         command = list(original[1:])
-        if '--no-browser' not in command:
-            command.append('--no-browser')
+        if "--no-browser" not in command:
+            command.append("--no-browser")
         os.execv(sys.executable, [sys.executable, *command])

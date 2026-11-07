@@ -421,12 +421,7 @@ def main() -> int:
     sample_columns = (
         *sample_columns,
         *sorted(
-            {
-                key
-                for summary in result["results"].values()
-                for sample in summary["samples"]
-                for key in sample
-            }
+            {key for summary in result["results"].values() for sample in summary["samples"] for key in sample}
             - set(sample_columns)
         ),
     )

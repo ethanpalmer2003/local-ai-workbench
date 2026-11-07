@@ -108,15 +108,9 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
         default_profile="swift15-hrx",
         unsupported_server_args=("reasoning-effort",),
     ),
-    "rocm-stock": LlamacppStartupBuild(
-        bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rocm/stock", extra_args={}
-    ),
-    "vulkan": LlamacppStartupBuild(
-        bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "vulkan", extra_args={}
-    ),
-    "rocm-lemonade": LlamacppStartupBuild(
-        bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rocm/lemonade", extra_args={}
-    ),
+    "rocm-stock": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rocm/stock", extra_args={}),
+    "vulkan": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "vulkan", extra_args={}),
+    "rocm-lemonade": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rocm/lemonade", extra_args={}),
     "rocm-rdna": LlamacppStartupBuild(  # went from 34 to 41t/s with adaptive mtp over 4k tokens (swift15), has other issues potentially
         bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rdna/build/bin", extra_args={}
     ),
@@ -359,8 +353,8 @@ class AsrStartupEngine(str, Enum):
     QWEN3_ASR = "qwen3-asr"
     GEMMA_AUDIO = "gemma-audio"
     GEMMA_KOBOLD = "gemma-kobold"
-    COHERE = 'audiocpp-cohere'
-    GRANITE = 'granite-audio'
+    COHERE = "audiocpp-cohere"
+    GRANITE = "granite-audio"
 
 
 @dataclass(frozen=True)
@@ -376,23 +370,34 @@ class SpeechWorkflowDefaults:
 
 
 # - Kokoro TTS packages: the selected package is the single source of the practice TTS default.
-KOKORO_TTS_PACKAGES = {'small': 'audiocpp/kokoro-audiocpp-q8_0',
-                       'multilingual': 'audiocpp/kokoro-audiocpp-multilingual-q8_0'}
-DEFAULT_KOKORO_PACKAGE = 'multilingual'
+KOKORO_TTS_PACKAGES = {
+    "small": "audiocpp/kokoro-audiocpp-q8_0",
+    "multilingual": "audiocpp/kokoro-audiocpp-multilingual-q8_0",
+}
+DEFAULT_KOKORO_PACKAGE = "multilingual"
 
 
 # - KOBOLD_CHAT: Rocinante chat, Breeze voice-design TTS through the AudioCpp proxy, no external ASR.
 #   Design needs no reference clip, so the default voice comes from the tone instruction.
 # - A voice id from the overlay's defaults.json enables cloning; without one, Breeze uses its own default.
 _CHAT_TTS_VOICE: str = inputs.setting("chat.tts.voice", inputs.default_voice())
-KOBOLD_CHAT = SpeechWorkflowDefaults(framework="koboldcpp", asr_engine=None, llm_model=inputs.setting("chat.llm", "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS"),
-                                  tts_model=inputs.setting("chat.tts.model", "audiocpp/breeze-tts-2-q4_0"),
-                                  tts_voice=_CHAT_TTS_VOICE, clone_voice=bool(_CHAT_TTS_VOICE))
+KOBOLD_CHAT = SpeechWorkflowDefaults(
+    framework="koboldcpp",
+    asr_engine=None,
+    llm_model=inputs.setting("chat.llm", "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS"),
+    tts_model=inputs.setting("chat.tts.model", "audiocpp/breeze-tts-2-q4_0"),
+    tts_voice=_CHAT_TTS_VOICE,
+    clone_voice=bool(_CHAT_TTS_VOICE),
+)
 # - Language practice: Gemma chat, Kokoro TTS without cloning, AudioCpp ASR.
-LANGUAGE_PRACTICE = SpeechWorkflowDefaults(framework="llamacpp", asr_engine=AsrStartupEngine.AUDIOCPP,
-                                           llm_model="llamacpp/gemma-4-E4B-it-Q4_0",
-                                           tts_model=KOKORO_TTS_PACKAGES[DEFAULT_KOKORO_PACKAGE],
-                                           tts_voice="af_heart", clone_voice=False)
+LANGUAGE_PRACTICE = SpeechWorkflowDefaults(
+    framework="llamacpp",
+    asr_engine=AsrStartupEngine.AUDIOCPP,
+    llm_model="llamacpp/gemma-4-E4B-it-Q4_0",
+    tts_model=KOKORO_TTS_PACKAGES[DEFAULT_KOKORO_PACKAGE],
+    tts_voice="af_heart",
+    clone_voice=False,
+)
 
 
 @dataclass
@@ -412,7 +417,7 @@ class ResidentAsrStartupSettings:
 
 
 SPEECHCPP_ASR = ResidentAsrStartupSettings("speechcpp", 8897)
-COHERE_ASR = ResidentAsrStartupSettings('audiocpp-cohere', 8901)
+COHERE_ASR = ResidentAsrStartupSettings("audiocpp-cohere", 8901)
 NEMO_SPEECHCPP_ASR = ResidentAsrStartupSettings("nemo-speechcpp", 8899)
 PARAKEETCPP_STREAM_ASR = ResidentAsrStartupSettings("parakeetcpp-nemotron-streaming", 8900)
 PARAKEETCPP_STREAM_LIBRARY = project_cfg.component("asr/parakeetcpp").framework_dir / "cpu-stream/parakeet.dll"
@@ -486,8 +491,10 @@ class GemmaAudioAsrStartupRequestSettings:
 
 GEMMA_AUDIO_ASR = GemmaAudioAsrStartupRequestSettings()
 GRANITE_AUDIO_ASR = GemmaAudioAsrStartupRequestSettings(
-    model=model_cfg.path('asr/llamacpp/granite-speech-5.0-2b-q8_0'),
-    mmproj=model_cfg.path('asr/llamacpp/granite-speech-5.0-2b-mmproj-f16'), port=8902)
+    model=model_cfg.path("asr/llamacpp/granite-speech-5.0-2b-q8_0"),
+    mmproj=model_cfg.path("asr/llamacpp/granite-speech-5.0-2b-mmproj-f16"),
+    port=8902,
+)
 
 
 @dataclass
@@ -508,7 +515,7 @@ class SharedKokoroStartupRequestSettings:
     language: str = "en-us"
     threads: int = 5
     espeak_dir: Path = project_cfg.component("audiocpp/additions/espeak-ng").framework_dir / "eSpeak NG"
-    mecab_library: Path = project_cfg.component('audiocpp/additions/mecab').framework_dir / 'libmecab.dll'
+    mecab_library: Path = project_cfg.component("audiocpp/additions/mecab").framework_dir / "libmecab.dll"
 
     @property
     def audiocpp_model(self) -> Path:
@@ -567,19 +574,24 @@ KOBOLDCPP_KCPPS_ARGS = {
 }
 
 # - KoboldCpp chat allowlist, in the canonical registry-label namespace; paths come from the registry.
-KOBOLDCPP_MODELS = {label: model_cfg.path(label) for label in (
-    "llamacpp/gemma-4-E4B-it-Q4_0",
-    "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS",
-    "koboldcpp/TheDrummer_Snowpiercer-15B-v4-IQ4_XS",
-    "koboldcpp/TheDrummer_Cydonia-24B-v4.3-IQ3_XXS",
-    "koboldcpp/TheDrummer_Orion-26B-A4B-v1.1-IQ3_XXS",
-)}
+KOBOLDCPP_MODELS = {
+    label: model_cfg.path(label)
+    for label in (
+        "llamacpp/gemma-4-E4B-it-Q4_0",
+        "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS",
+        "koboldcpp/TheDrummer_Snowpiercer-15B-v4-IQ4_XS",
+        "koboldcpp/TheDrummer_Cydonia-24B-v4.3-IQ3_XXS",
+        "koboldcpp/TheDrummer_Orion-26B-A4B-v1.1-IQ3_XXS",
+    )
+}
 
 
 # 	Vulkan0 (GPU)	Vulkan_Host (CPU)
 # moecpu=1	11590.28 MiB	906.12 MiB
 # moecpu=2	11215.93 MiB	1280.46 MiB
-KOBOLDCPP_MODEL_KCPPS_OVERRIDES = {"koboldcpp/TheDrummer_Orion-26B-A4B-v1.1-IQ3_XXS": {"moecpu": 10, "usevulkan": [0], "gpulayers": 30}}
+KOBOLDCPP_MODEL_KCPPS_OVERRIDES = {
+    "koboldcpp/TheDrummer_Orion-26B-A4B-v1.1-IQ3_XXS": {"moecpu": 10, "usevulkan": [0], "gpulayers": 30}
+}
 
 
 # ============================================================
@@ -666,17 +678,13 @@ class AudiocppProxyRequestModelPreset:
 AUDIOCPP_PROXY_MODEL_PRESETS = {
     AudiocppModel.FISH_DRAMA3_Q2: AudiocppProxyRequestModelPreset(pcm_sample_rate=44100, playback_buffer_ms=4000),
     AudiocppModel.BREEZE_TTS: AudiocppProxyRequestModelPreset(
-        request_options={"text_chunk_mode": "tag_aware"},
-        playback_buffer_ms=2000,
+        request_options={"text_chunk_mode": "tag_aware"}, playback_buffer_ms=2000
     ),
     AudiocppModel.BREEZE_DESIGN: AudiocppProxyRequestModelPreset(
-        request_options={"text_chunk_mode": "tag_aware"},
-        playback_buffer_ms=2000,
+        request_options={"text_chunk_mode": "tag_aware"}, playback_buffer_ms=2000
     ),
     AudiocppModel.MING3_TTS: AudiocppProxyRequestModelPreset(
-        pcm_sample_rate=44100,
-        playback_buffer_ms=1000,
-        instruction_option="instruct",
+        pcm_sample_rate=44100, playback_buffer_ms=1000, instruction_option="instruct"
     ),
     AudiocppModel.MING3_AUDIO: AudiocppProxyRequestModelPreset(
         pcm_sample_rate=44100,

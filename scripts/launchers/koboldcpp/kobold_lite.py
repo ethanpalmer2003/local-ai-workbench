@@ -30,9 +30,10 @@ from scripts.launchers.proxy_util import (
 def audio_delivery_plan():
     """The practice gateway's TTS plan and model id; Lite's own TTS cannot stream, so streaming needs the AudioCpp path."""
     external = not kokoro.internal() and (
-        cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP or kokoro.selected())
+        cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP or kokoro.selected()
+    )
     plan = practice_models.delivery_plan()
-    return plan if external else {**plan, 'mode': 'whole', 'supported': ['whole']}
+    return plan if external else {**plan, "mode": "whole", "supported": ["whole"]}
 
 
 def _patch_local(html: str) -> tuple[str, str]:
@@ -83,7 +84,7 @@ def _patch_local(html: str) -> tuple[str, str]:
     settings = json.dumps(
         {
             **audiocpp_catalog.streaming_defaults(cfg.AUDIOCPP_SERVICE),
-            "streaming_enabled": plan['mode'] == 'streaming',
+            "streaming_enabled": plan["mode"] == "streaming",
             "audioProxyPort": cfg.AUDIOCPP_SERVICE.port,
             "tone_tags_supported": not kokoro.selected()
             and cfg.AUDIOCPP_SERVICE.model in cfg.BREEZE_MODELS
@@ -147,11 +148,7 @@ def streaming_assets(variant: str) -> tuple[Path, ...]:
 
 def external_script(endpoint: str, model: str) -> str:
     """Point Lite's OpenAI-compatible provider at our own llama.cpp server on first load."""
-    values = {
-        "custom_oai_endpoint": endpoint,
-        "custom_oai_key": "noop",
-        "custom_oai_model": model,
-    }
+    values = {"custom_oai_endpoint": endpoint, "custom_oai_key": "noop", "custom_oai_model": model}
     assignments = "".join(
         f"localStorage.setItem('kaihordewebui_{key}',{json.dumps(value)});" for key, value in values.items()
     )
@@ -320,7 +317,10 @@ def run_proxy(
                 ):
                     http_api.transcribe(self, body, cfg.KOBOLDCPP_SERVICE.transcription_engine)
                     return
-                if path == "/v1/audio/speech" and cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP:
+                if (
+                    path == "/v1/audio/speech"
+                    and cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP
+                ):
                     from scripts.launchers.audiocpp import asr
 
                     target = asr.url()

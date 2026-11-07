@@ -25,7 +25,9 @@ def serve(port: int):
         protocol_version = "HTTP/1.1"
 
         def do_GET(self):
-            send_bytes(self, 200 if self.path == "/health" else 404, b'{"backend":"cpu","threads":8}', "application/json")
+            send_bytes(
+                self, 200 if self.path == "/health" else 404, b'{"backend":"cpu","threads":8}', "application/json"
+            )
 
         def do_POST(self):
             self.connection.settimeout(20)
@@ -57,7 +59,7 @@ def serve(port: int):
                     if not pcm or len(pcm) > 16000 * 2 * 32:
                         raise ValueError("ASR audio limit exceeded")
                     stream = model.stream(request.language)
-                    inputs = (pcm[offset:offset + 4096] for offset in range(0, len(pcm), 4096))
+                    inputs = (pcm[offset : offset + 4096] for offset in range(0, len(pcm), 4096))
                 text = ""
                 for frame in inputs:
                     delta = stream.push(frame)
@@ -68,7 +70,12 @@ def serve(port: int):
                 if live:
                     self.event({"type": "transcript.text.done", "text": clean_transcript(text), "raw_text": text})
                 else:
-                    send_bytes(self, 200, json.dumps({"text": clean_transcript(text), "raw_text": text}).encode(), "application/json")
+                    send_bytes(
+                        self,
+                        200,
+                        json.dumps({"text": clean_transcript(text), "raw_text": text}).encode(),
+                        "application/json",
+                    )
             except (ValueError, RuntimeError, OSError) as error:
                 if begun:
                     self.event({"type": "error", "error": str(error)})

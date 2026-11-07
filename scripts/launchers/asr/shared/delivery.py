@@ -15,27 +15,32 @@ def tts_plan():
 
 
 def plans(controls):
-    return {'asr': asr_plan(controls.engine), 'llm': speech_delivery.resolve('llm', controls.llm, ['streaming', 'whole']),
-            'tts': tts_plan(), 'overrides': speech_delivery.overrides()}
+    return {
+        "asr": asr_plan(controls.engine),
+        "llm": speech_delivery.resolve("llm", controls.llm, ["streaming", "whole"]),
+        "tts": tts_plan(),
+        "overrides": speech_delivery.overrides(),
+    }
 
 
 def route(handler, method, path, controls):
-    if path != '/workspace/delivery' or controls is None:
+    if path != "/workspace/delivery" or controls is None:
         return False
     from scripts.launchers.proxy_util import read_request_body, send_bytes, send_json_error
+
     try:
-        if method == 'POST':
+        if method == "POST":
             value = json.loads(read_request_body(handler))
             if not isinstance(value, dict):
-                raise ValueError('Delivery selection must be an object')
-            kind, model = value.get('stage'), value.get('model')
-            rows = controls.catalog().get(kind, []) if kind in ('asr', 'llm', 'tts') else []
-            if not any(row['id'] == model for row in rows):
-                raise ValueError('Choose a registered model for the delivery override')
-            speech_delivery.save(kind, model, value.get('mode'))
-        elif method != 'GET':
-            raise ValueError('Use GET or POST')
-        send_bytes(handler, 200, json.dumps(plans(controls)).encode(), 'application/json')
+                raise ValueError("Delivery selection must be an object")
+            kind, model = value.get("stage"), value.get("model")
+            rows = controls.catalog().get(kind, []) if kind in ("asr", "llm", "tts") else []
+            if not any(row["id"] == model for row in rows):
+                raise ValueError("Choose a registered model for the delivery override")
+            speech_delivery.save(kind, model, value.get("mode"))
+        elif method != "GET":
+            raise ValueError("Use GET or POST")
+        send_bytes(handler, 200, json.dumps(plans(controls)).encode(), "application/json")
     except (ValueError, TypeError) as error:
-        send_json_error(handler, 400, str(error), 'invalid_request_error')
+        send_json_error(handler, 400, str(error), "invalid_request_error")
     return True

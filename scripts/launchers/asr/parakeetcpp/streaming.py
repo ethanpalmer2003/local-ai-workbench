@@ -58,9 +58,12 @@ class Stream:
 
     def push(self, pcm: bytes) -> str:
         import numpy as np
+
         samples = np.frombuffer(pcm, dtype="<i2").astype(np.float32) / 32768
         eou = c.c_int()
-        return self.model.text(self.model.feed(self.context, samples.ctypes.data_as(c.POINTER(c.c_float)), len(samples), c.byref(eou)))
+        return self.model.text(
+            self.model.feed(self.context, samples.ctypes.data_as(c.POINTER(c.c_float)), len(samples), c.byref(eou))
+        )
 
     def finish(self) -> str:
         return self.model.text(self.model.finalize(self.context))

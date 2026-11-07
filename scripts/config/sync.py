@@ -102,7 +102,9 @@ def sync_comfyui(apply: bool = False) -> list[Path]:
             temporary = record.with_suffix(".tmp")
             temporary.write_text(content, encoding="utf-8")
             temporary.replace(record)
-    print(f"[OK] ComfyUI: {len(changed)} changed file(s). Existing replacements go to {(project_cfg.BASE_DIR / "trash")}.")
+    print(
+        f"[OK] ComfyUI: {len(changed)} changed file(s). Existing replacements go to {(project_cfg.BASE_DIR / 'trash')}."
+    )
     return changed
 
 

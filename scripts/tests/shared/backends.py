@@ -80,7 +80,11 @@ def worker(backend: str, usage_profile: str = "standalone", llm: str = "kobold")
 
 
 def start(
-    backend: str, paths: RunPaths, owned: list[subprocess.Popen[Any]], usage_profile: str = "standalone", llm: str = "kobold"
+    backend: str,
+    paths: RunPaths,
+    owned: list[subprocess.Popen[Any]],
+    usage_profile: str = "standalone",
+    llm: str = "kobold",
 ) -> None:
     require_free(backend)
     env = os.environ.copy()

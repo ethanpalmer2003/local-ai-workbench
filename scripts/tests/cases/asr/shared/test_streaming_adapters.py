@@ -28,7 +28,9 @@ class StreamingAdapters(unittest.TestCase):
             stream.finish()
             self.assertEqual(send.call_args.args[0]["op"], "commit")
         stream.receive({"event": {"type": "conversation.item.input_audio_transcription.delta", "delta": "Bon"}})
-        stream.receive({"event": {"type": "conversation.item.input_audio_transcription.completed", "transcript": "Bonjour"}})
+        stream.receive(
+            {"event": {"type": "conversation.item.input_audio_transcription.completed", "transcript": "Bonjour"}}
+        )
         self.assertEqual(stream.events.get_nowait()["delta"], "Bon")
         self.assertEqual(stream.events.get_nowait()["text"], "Bonjour")
         self.assertTrue(stream.done.is_set())
@@ -43,12 +45,20 @@ class StreamingAdapters(unittest.TestCase):
         text = ctypes.create_string_buffer(b"hello")
         pointer = ctypes.addressof(text)
         functions = {key: Mock(return_value=None) for key in ("free", "free_stream", "free_string")}
-        functions.update(load=Mock(return_value=1), last_error=Mock(return_value=b"failure"),
-                         stream_begin_lang=Mock(return_value=2), stream_feed=Mock(return_value=pointer),
-                         stream_finalize=Mock(return_value=pointer), stream_free=functions["free_stream"])
+        functions.update(
+            load=Mock(return_value=1),
+            last_error=Mock(return_value=b"failure"),
+            stream_begin_lang=Mock(return_value=2),
+            stream_feed=Mock(return_value=pointer),
+            stream_finalize=Mock(return_value=pointer),
+            stream_free=functions["free_stream"],
+        )
         library = Mock()
         library.bind.side_effect = lambda name, _args, _result: functions[name]
-        with patch("scripts.launchers.asr.parakeetcpp.streaming.require_native_execution"), patch("scripts.launchers.asr.parakeetcpp.streaming.NativeLibrary", return_value=library):
+        with (
+            patch("scripts.launchers.asr.parakeetcpp.streaming.require_native_execution"),
+            patch("scripts.launchers.asr.parakeetcpp.streaming.NativeLibrary", return_value=library),
+        ):
             model = Model(Path("unused.dll"), Path("unused.gguf"))
             stream = model.stream("fr")
             self.assertEqual(stream.push(bytes(1024)), "hello")
@@ -64,6 +74,7 @@ class StreamingAdapters(unittest.TestCase):
     def test_chunked_pcm_is_bounded_and_rejects_incomplete_samples(self):
         def handler(data):
             return SimpleNamespace(headers={"Transfer-Encoding": "chunked"}, rfile=io.BytesIO(data))
+
         self.assertEqual(list(chunks(handler(b"2\r\nab\r\n0\r\n\r\n"))), [b"ab"])
         for data in (b"1\r\na\r\n", b"2\r\na", b"-1\r\n", b"200000\r\n"):
             with self.subTest(data=data), self.assertRaises(ValueError):

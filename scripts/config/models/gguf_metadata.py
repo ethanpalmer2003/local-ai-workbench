@@ -82,8 +82,13 @@ def _value(f: BinaryIO, kind: int, array_limit: int | None):
     return {"count": count, "element_type": element, "preview": values, "omitted": count - retained}
 
 
-def inspect_metadata(path: Path, *, array_limit: int | None = 128, tensor_index: bool = False,
-                     full_array_keys: frozenset[str] = frozenset()) -> dict[str, Any]:
+def inspect_metadata(
+    path: Path,
+    *,
+    array_limit: int | None = 128,
+    tensor_index: bool = False,
+    full_array_keys: frozenset[str] = frozenset(),
+) -> dict[str, Any]:
     """All header keys and tensor statistics; seek over payloads, never instantiate weights."""
     metadata, tensors, dtypes = {}, [], Counter()
     elements = 0
@@ -108,7 +113,13 @@ def inspect_metadata(path: Path, *, array_limit: int | None = 128, tensor_index:
             dtypes[str(dtype)] += 1
             if tensor_index:
                 tensors.append({"name": name, "shape": shape, "ggml_type": dtype, "offset": offset})
-    return {"format": "gguf", "version": version, "metadata": metadata,
-            "tensor_summary": {"count": tensor_count, "stored_elements": elements, "ggml_type_counts": dict(dtypes)},
-            "tensor_index": tensors if tensor_index else None,
-            "limits": ["Large arrays are previews unless --full-arrays; stored elements are not active/trained parameter counts."]}
+    return {
+        "format": "gguf",
+        "version": version,
+        "metadata": metadata,
+        "tensor_summary": {"count": tensor_count, "stored_elements": elements, "ggml_type_counts": dict(dtypes)},
+        "tensor_index": tensors if tensor_index else None,
+        "limits": [
+            "Large arrays are previews unless --full-arrays; stored elements are not active/trained parameter counts."
+        ],
+    }

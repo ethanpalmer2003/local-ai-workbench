@@ -48,10 +48,7 @@ SETTINGS_CONTRACTS = (
     (
         "scripts/launchers/koboldcpp/kobold_lite.py",
         "koboldAudioSettings",
-        (
-            "scripts/launchers/koboldcpp/kobold_streaming.js",
-            "scripts/launchers/koboldcpp/kobold_audio.js",
-        ),
+        ("scripts/launchers/koboldcpp/kobold_streaming.js", "scripts/launchers/koboldcpp/kobold_audio.js"),
         "scripts/tests/cases/koboldcpp/kobold_streaming.cjs",
     ),
 )

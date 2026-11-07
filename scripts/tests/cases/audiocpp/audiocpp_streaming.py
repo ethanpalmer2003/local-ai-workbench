@@ -227,12 +227,7 @@ def run_comparison(args: argparse.Namespace, run: RunPaths, memory: BenchmarkVra
             break
     summary = []
     for name in profiles:
-        good = [
-            result
-            for result in results
-            if result["profile"] == name
-            and not result.get("error")
-        ]
+        good = [result for result in results if result["profile"] == name and not result.get("error")]
         if good:
             summary.append(
                 {

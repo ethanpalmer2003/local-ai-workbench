@@ -52,26 +52,25 @@ def _request_payloads(name: str, clips: list[dict[str, Any]]) -> tuple[str, list
         payloads = [
             (
                 json.dumps(
-                    {
-                        "audio_data": base64.b64encode(_clip_audio(clip)).decode(),
-                        "langcode": clip.get("language", "en"),
-                    }
+                    {"audio_data": base64.b64encode(_clip_audio(clip)).decode(), "langcode": clip.get("language", "en")}
                 ).encode(),
                 "application/json",
             )
             for clip in clips
         ]
-    if name in ("llamacpp-gemma-audio", 'llamacpp-granite-5-2b'):
+    if name in ("llamacpp-gemma-audio", "llamacpp-granite-5-2b"):
         from scripts.launchers.asr.llamacpp import gemma_audio
         from scripts.launchers.asr.shared.requests import parse
 
         endpoint = "/v1/chat/completions"
         payloads = [(gemma_audio.chat_request(parse(body, kind)), "application/json") for body, kind in payloads]
-        if name == 'llamacpp-granite-5-2b':
+        if name == "llamacpp-granite-5-2b":
             for index, (body, _) in enumerate(payloads):
                 request = json.loads(body)
-                request['messages'][0]['content'][0]['text'] = 'Transcribe the speech with proper punctuation and capitalization.'
-                payloads[index] = (json.dumps(request).encode(), 'application/json')
+                request["messages"][0]["content"][0]["text"] = (
+                    "Transcribe the speech with proper punctuation and capitalization."
+                )
+                payloads[index] = (json.dumps(request).encode(), "application/json")
     return endpoint, payloads
 
 
@@ -121,11 +120,16 @@ def run_engine(name, command, model, clips, samples, run, port, deadline, resour
         with server.lifecycle as timer, ExitStack() as monitors:
             server.timeout = min(60, max(0.1, deadline - time.monotonic()))
             timer.prepare(server.start, combined=not name.startswith("audiocpp-"))
-            phase = ['warmup']
+            phase = ["warmup"]
             if resources and server.process:
-                result['resources'] = monitors.enter_context(monitor_process(
-                    server.process, run.logs / f'{name}-vram.jsonl',
-                    seconds=max(1, deadline - time.monotonic()), phase=lambda: phase[0]))
+                result["resources"] = monitors.enter_context(
+                    monitor_process(
+                        server.process,
+                        run.logs / f"{name}-vram.jsonl",
+                        seconds=max(1, deadline - time.monotonic()),
+                        phase=lambda: phase[0],
+                    )
+                )
             endpoint, payloads = _request_payloads(name, clips)
 
             def infer(index):
@@ -137,9 +141,9 @@ def run_engine(name, command, model, clips, samples, run, port, deadline, resour
                 try:
                     value = server.post(endpoint, body, content_type)
                 except urllib.error.HTTPError as error:
-                    detail = error.read(8192).decode('utf-8', errors='replace')
-                    raise RuntimeError(f'HTTP {error.code}: {detail}') from error
-                if name in ("llamacpp-gemma-audio", 'llamacpp-granite-5-2b'):
+                    detail = error.read(8192).decode("utf-8", errors="replace")
+                    raise RuntimeError(f"HTTP {error.code}: {detail}") from error
+                if name in ("llamacpp-gemma-audio", "llamacpp-granite-5-2b"):
                     choice = value["choices"][0]
                     if choice.get("finish_reason") == "length":
                         raise ValueError("Gemma output truncated")
@@ -153,7 +157,7 @@ def run_engine(name, command, model, clips, samples, run, port, deadline, resour
                 return clean_transcript(name, value["text"])
 
             timer.warmup(lambda: infer(0), includes_model_load=True)
-            phase[0] = 'resident_request'
+            phase[0] = "resident_request"
             _collect_samples(timer, infer, clips, samples, result)
             result["status"] = "completed"
     except Exception as error:
@@ -167,9 +171,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", action="store_true", help="Opt in to native inference")
     parser.add_argument("--engines", nargs="+", help="Default: every configured resident adapter")
-    parser.add_argument('--group', choices=['leaderboard-high-ranking'])
-    parser.add_argument('--resources', action='store_true', help='Sample owned server CPU/RAM/GPU after readiness')
-    parser.add_argument('--language', help='Explicit corpus language for every engine; omit to retain manifest language')
+    parser.add_argument("--group", choices=["leaderboard-high-ranking"])
+    parser.add_argument("--resources", action="store_true", help="Sample owned server CPU/RAM/GPU after readiness")
+    parser.add_argument(
+        "--language", help="Explicit corpus language for every engine; omit to retain manifest language"
+    )
     parser.add_argument("--samples", type=int, choices=range(1, 5), default=2)
     parser.add_argument("--clips", type=int, choices=range(1, 5), default=2)
     parser.add_argument("--corpus", type=Path)
@@ -178,8 +184,8 @@ def main():
     args = parser.parse_args()
     available = profiles(args.port)
     if args.group:
-        group = json.loads((project_cfg.CONFIG_DIR / 'asr/leaderboard_group.json').read_text(encoding='utf-8'))
-        args.engines = [member['engine'] for member in group['members']]
+        group = json.loads((project_cfg.CONFIG_DIR / "asr/leaderboard_group.json").read_text(encoding="utf-8"))
+        args.engines = [member["engine"] for member in group["members"]]
     args.engines = args.engines or list(available)
     for name in args.engines:
         if name not in available:
@@ -192,15 +198,15 @@ def main():
     clips = prepare_corpus(run, args.corpus)[: args.clips]
     if args.language:
         for clip in clips:
-            clip['language'] = args.language
+            clip["language"] = args.language
     report: dict[str, Any] = {
         "name": "Resident ASR comparison",
         "execution_context": context,
         "clips": clips,
         "results": [],
-        'group': args.group,
-        'language_override': args.language,
-        'measurement_scope': 'Isolated ASR; saved Kokoro clips; no parallel LLM/TTS inference. Resources sampled after readiness; startup memory not measured.',
+        "group": args.group,
+        "language_override": args.language,
+        "measurement_scope": "Isolated ASR; saved Kokoro clips; no parallel LLM/TTS inference. Resources sampled after readiness; startup memory not measured.",
     }
     from scripts.tests.cases.asr.shared.coverage import coverage
 

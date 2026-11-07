@@ -25,9 +25,16 @@ def hub_metadata(source):
     from huggingface_hub import HfApi
 
     info = HfApi(token=False).model_info(source.repo_id, revision=source.revision)
-    result: dict[str, Any] = {"repo": source.repo_id, "requested_revision": source.revision, "resolved_revision": info.sha,
-              "card": info.card_data.to_dict() if info.card_data else {}, "pipeline_tag": info.pipeline_tag,
-              "tags": info.tags, "configs": {}, "errors": []}
+    result: dict[str, Any] = {
+        "repo": source.repo_id,
+        "requested_revision": source.revision,
+        "resolved_revision": info.sha,
+        "card": info.card_data.to_dict() if info.card_data else {},
+        "pipeline_tag": info.pipeline_tag,
+        "tags": info.tags,
+        "configs": {},
+        "errors": [],
+    }
     files = {item.rfilename for item in info.siblings or []}
     parent = source.filename.rsplit("/", 1)[0] + "/" if "/" in source.filename else ""
     for name in ("config.json", "generation_config.json", "tokenizer_config.json", "processor_config.json"):
@@ -48,10 +55,18 @@ def hub_metadata(source):
 
 def native_metadata(path, groups):
     if "silero" in path.name.lower() or path.name == "Kokoro_no_espeak_Q4.gguf":
-        return {"status": "not_available", "reason": "No verified inspector for this auxiliary or Kobold-specific format"}
+        return {
+            "status": "not_available",
+            "reason": "No verified inspector for this auxiliary or Kobold-specific format",
+        }
     command = None
     if any(group in ("audiocpp", "asr/audiocpp") for group in groups) and path.suffix == ".gguf":
-        command = [str(project_cfg.AUDIOCPP_SERVER_EXE.with_name("audiocpp_cli.exe")), "--model", str(path), "--inspect"]
+        command = [
+            str(project_cfg.AUDIOCPP_SERVER_EXE.with_name("audiocpp_cli.exe")),
+            "--model",
+            str(path),
+            "--inspect",
+        ]
     for group, relative, args in (
         ("asr/speechcpp", "vulkan/speech.exe", ["info", str(path), "--json"]),
         ("asr/nemo-speechcpp", "vulkan/bin/nemo-speech.exe", ["model", "info", str(path)]),
@@ -69,6 +84,13 @@ def native_metadata(path, groups):
         parsed = json.loads(output)
     except ValueError:
         parsed = dict(line.split("=", 1) for line in output.splitlines() if "=" in line)
-    return {"status": "ok" if result.returncode == 0 else "error", "command": command,
-            "returncode": result.returncode, "metadata": parsed, "stdout": output,
-            "stderr": result.stderr[:32768], "truncated": len(result.stdout) > len(output), "execution_context": context}
+    return {
+        "status": "ok" if result.returncode == 0 else "error",
+        "command": command,
+        "returncode": result.returncode,
+        "metadata": parsed,
+        "stdout": output,
+        "stderr": result.stderr[:32768],
+        "truncated": len(result.stdout) > len(output),
+        "execution_context": context,
+    }

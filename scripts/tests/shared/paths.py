@@ -63,4 +63,3 @@ class CasePaths:
         folder = self.new_run().temp / f"tmp{time.time_ns()}"
         folder.mkdir(parents=True)
         return removed_on_exit(folder)
-

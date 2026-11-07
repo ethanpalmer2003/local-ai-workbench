@@ -29,10 +29,16 @@ def select(catalog, *, task=None, model=None, language=None):
         codes = [*(entry["languages"] or []), *entry["locales"]]
         if query and not any(normalized(code) == query or normalized(code).split("-")[0] == query for code in codes):
             continue
-        row = {**entry, "language_count": None if entry["languages"] is None else len(entry["languages"]),
-               "locale_count": len(entry["locales"]), "dialect_count": len(entry["dialects"])}
+        row = {
+            **entry,
+            "language_count": None if entry["languages"] is None else len(entry["languages"]),
+            "locale_count": len(entry["locales"]),
+            "dialect_count": len(entry["dialects"]),
+        }
         tiers = entry.get("coverage_tiers", {})
-        row["ready_locale_count"] = len(tiers.get("transcription_ready", [])) + len(tiers.get("broad_coverage", [])) if tiers else None
+        row["ready_locale_count"] = (
+            len(tiers.get("transcription_ready", [])) + len(tiers.get("broad_coverage", [])) if tiers else None
+        )
         rows.append(row)
     return rows
 
@@ -41,8 +47,16 @@ def details(row, names):
     def describe(code):
         base = normalized(code).split("-")[0]
         return f"{code} ({names.get(base, base).title()})"
+
     print("\n" + row["name"])
-    print("Languages: " + (", ".join(describe(code) for code in row["languages"]) if row["languages"] is not None else "unverified; no complete ASR list"))
+    print(
+        "Languages: "
+        + (
+            ", ".join(describe(code) for code in row["languages"])
+            if row["languages"] is not None
+            else "unverified; no complete ASR list"
+        )
+    )
     if row["locales"]:
         print("Locales: " + ", ".join(row["locales"]))
     if row["dialects"]:
@@ -65,13 +79,25 @@ def main(argv=None):
     catalog = read_catalog()
     rows = select(catalog, task=args.task, model=args.model, language=args.language)
     if args.json:
-        print(json.dumps({"reviewed": catalog["reviewed"], "scope": catalog["scope"], "models": rows,
-                          "language_names": catalog["language_names"]}, indent=2, ensure_ascii=True))
+        print(
+            json.dumps(
+                {
+                    "reviewed": catalog["reviewed"],
+                    "scope": catalog["scope"],
+                    "models": rows,
+                    "language_names": catalog["language_names"],
+                },
+                indent=2,
+                ensure_ascii=True,
+            )
+        )
     else:
         print("Model | Task | Languages | Locales | Dialects")
         for row in rows:
             count = row["language_count"] if row["language_count"] is not None else "?"
-            print(f"{row['name']} | {','.join(row['tasks'])} | {count} | {row['locale_count']} | {row['dialect_count']}")
+            print(
+                f"{row['name']} | {','.join(row['tasks'])} | {count} | {row['locale_count']} | {row['dialect_count']}"
+            )
         print("\nCounts are listed coverage, not accuracy. auto is not a language. ? = unverified.")
         print("Nemotron: 32/40 locales work out of the box; eight require adaptation.")
         print("Use --details for complete lists, runtime limits and source links.")

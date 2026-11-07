@@ -75,9 +75,7 @@ class BenchmarkBackendsTests(unittest.TestCase):
                 patch.object(backends.strata_pi, "saved_connections", return_value=[source]),
             ):
                 backends.preflight(conf, ["strata", "llamacpp"], None)
-        self.assertEqual(
-            {call.args[0] for call in stop.call_args_list}, {conf.port, cfg.STRATA_SERVICE.port, 18501}
-        )
+        self.assertEqual({call.args[0] for call in stop.call_args_list}, {conf.port, cfg.STRATA_SERVICE.port, 18501})
 
     def test_context_override_reaches_final_llama_command(self):
         conf = benchmark_config()

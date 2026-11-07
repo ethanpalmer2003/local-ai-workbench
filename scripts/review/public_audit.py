@@ -52,7 +52,7 @@ PRIVATE_WORDS = re.compile(r"character|zzfixture|zzfixture|zzfixture|zzfixture",
 
 # - prefix -> why the hit is expected; keep this list short and specific
 ALLOWLIST = {
-    "scripts/config/llamacpp/hrx-patches/": "recorded paths from a completed build run; evidence, not live config",
+    "scripts/config/llamacpp/hrx-patches/": "recorded paths from a completed build run; evidence, not live config"
 }
 
 # - the audit and its fixtures hold every pattern by construction
@@ -136,23 +136,14 @@ def audit(root: Path) -> list[Finding]:
 
 def history_findings(root: Path) -> list[Finding]:
     """Paths that carried an audited pattern in any commit; only a rewrite removes them."""
-    pattern = "|".join(
-        [
-            SECRETS.pattern,
-            HOME_PATHS.pattern,
-            PRIVATE_WORDS.pattern,
-            voice_patterns(voice_terms()),
-        ]
-    )
+    pattern = "|".join([SECRETS.pattern, HOME_PATHS.pattern, PRIVATE_WORDS.pattern, voice_patterns(voice_terms())])
     revs = subprocess.run(
         ["git", "-C", str(root), "rev-list", "--all"], capture_output=True, text=True, check=True
     ).stdout.split()
     if not revs:
         return []
     result = subprocess.run(
-        ["git", "-C", str(root), "grep", "-I", "-l", "-i", "-E", pattern, *revs],
-        capture_output=True,
-        text=True,
+        ["git", "-C", str(root), "grep", "-I", "-l", "-i", "-E", pattern, *revs], capture_output=True, text=True
     )
     seen: dict[str, str] = {}
     for line in result.stdout.splitlines():

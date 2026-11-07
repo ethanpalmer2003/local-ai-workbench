@@ -20,7 +20,7 @@ def owned_module_worker(process, module: str):
     matches = []
     for candidate in (root, *root.children(recursive=True)):
         args = candidate.cmdline()
-        if "-m" in args and args[args.index("-m") + 1:args.index("-m") + 2] == [module]:
+        if "-m" in args and args[args.index("-m") + 1 : args.index("-m") + 2] == [module]:
             matches.append(candidate)
     parents = {candidate.ppid() for candidate in matches}
     leaves = [candidate for candidate in matches if candidate.pid not in parents]

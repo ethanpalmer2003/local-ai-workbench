@@ -30,7 +30,9 @@ from scripts.tests.shared.resources import monitor_process
 
 def post(base, path, body, binary=False):
     data = body if binary else json.dumps(body).encode()
-    request = urllib.request.Request(base + path, data, {"Content-Type": "application/octet-stream" if binary else "application/json"})
+    request = urllib.request.Request(
+        base + path, data, {"Content-Type": "application/octet-stream" if binary else "application/json"}
+    )
     with urllib.request.urlopen(request, timeout=45) as response:
         data = response.read()
         return data if path == "/v1/audio/speech" else json.loads(data)
@@ -50,8 +52,16 @@ def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):
     def run_gateway():
         try:
             if runtime == "llamacpp":
-                server.run_proxy(engine, "127.0.0.1", proxy_port,
-                                 f"http://127.0.0.1:{chat_port}", asr.url() if engine == cfg.AsrStartupEngine.AUDIOCPP else f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}", on_server)
+                server.run_proxy(
+                    engine,
+                    "127.0.0.1",
+                    proxy_port,
+                    f"http://127.0.0.1:{chat_port}",
+                    asr.url()
+                    if engine == cfg.AsrStartupEngine.AUDIOCPP
+                    else f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}",
+                    on_server,
+                )
             else:
                 kobold_lite.run_proxy(on_server=on_server)
         except Exception as error:
@@ -77,22 +87,34 @@ def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):
             command = kobold.server_command("shared")
             files = (cfg.KOBOLDCPP_SERVICE.exe, cfg.GEMMA_AUDIO_ASR.model)
         command[command.index("--port") + 1] = str(chat_port)
-        process = native.start_server(command, files, chat_port, f"Practice {runtime} smoke",
-                                      lambda: http_ready(f"http://127.0.0.1:{chat_port}" + ("/health" if runtime == "llamacpp" else "/api/extra/version")),
-                                      lambda: native.matches(command), component_key=runtime)
+        process = native.start_server(
+            command,
+            files,
+            chat_port,
+            f"Practice {runtime} smoke",
+            lambda: http_ready(
+                f"http://127.0.0.1:{chat_port}" + ("/health" if runtime == "llamacpp" else "/api/extra/version")
+            ),
+            lambda: native.matches(command),
+            component_key=runtime,
+        )
         thread = threading.Thread(target=run_gateway, daemon=True)
         thread.start()
         deadline = time.monotonic() + 10
         while not http_ready(base + "/health"):
             if errors or time.monotonic() > deadline:
                 raise RuntimeError(str(errors) or "Practice gateway did not start")
-            time.sleep(.05)
+            time.sleep(0.05)
 
     timer = BenchmarkLifecycle(lambda: str(process.pid) if process else "reused-matching-server", cleanup)
+
     def start_vad():
         nonlocal token
         token = post(base, "/asr/live/start", {"language": "en"})["session"]
-    vad_timer = BenchmarkLifecycle(lambda: token or "", lambda: post(base, f"/asr/live/{token}/stop", b"", True) if token else None)
+
+    vad_timer = BenchmarkLifecycle(
+        lambda: token or "", lambda: post(base, f"/asr/live/{token}/stop", b"", True) if token else None
+    )
     try:
         with timer, vad_timer:
             timer.prepare(setup, combined=True)
@@ -103,25 +125,60 @@ def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):
             with timer.request() as timing:
                 started = time.perf_counter()
                 for offset in range(0, len(pcm), 4096):
-                    block = pcm[offset:offset + 4096]
+                    block = pcm[offset : offset + 4096]
                     time.sleep(max(0, (offset + len(block)) / 32000 - (time.perf_counter() - started)))
                     events.extend(post(base, f"/asr/live/{token}/audio", block, True)["events"])
                 for _ in range(100):
                     if any(event.get("type") == "transcript.text.done" for event in events):
                         break
                     events.extend(post(base, f"/asr/live/{token}/audio", b"", True)["events"])
-                    time.sleep(.03)
+                    time.sleep(0.03)
                 finals = [event for event in events if event.get("type") == "transcript.text.done"]
                 if len(finals) != 1 or not finals[0].get("text"):
                     raise RuntimeError(f"Expected one complete automatic transcript: {events}")
-                reply = post(base, "/v1/chat/completions", {"messages": [{"role": "user", "content": finals[0]["text"] + " Reply in one short English sentence."}], "max_tokens": 192, "stream": False, "reasoning_effort": "none", "chat_template_kwargs": {"enable_thinking": False}})
+                reply = post(
+                    base,
+                    "/v1/chat/completions",
+                    {
+                        "messages": [
+                            {"role": "user", "content": finals[0]["text"] + " Reply in one short English sentence."}
+                        ],
+                        "max_tokens": 192,
+                        "stream": False,
+                        "reasoning_effort": "none",
+                        "chat_template_kwargs": {"enable_thinking": False},
+                    },
+                )
                 text = reply["choices"][0]["message"]["content"]
                 if not text or not text.strip():
                     raise RuntimeError(f"Gemma returned no spoken content: {reply}")
-                audio = post(base, "/v1/audio/speech", {"input": text, "voice": "af_heart", "response_format": "wav", "stream": False})
+                audio = post(
+                    base,
+                    "/v1/audio/speech",
+                    {"input": text, "voice": "af_heart", "response_format": "wav", "stream": False},
+                )
                 if not text or audio[:4] != b"RIFF":
                     raise RuntimeError("Empty chat reply or invalid Kokoro WAV")
-            report.update(status="completed", transcript=finals[0]["text"], reply=text, wav_bytes=len(audio), timing=timing.record(), first_partial_seconds=next((item["observed_at"] - started for item in events if item.get("type") in ("transcript.text.delta", "transcript.text.snapshot") and (item.get("delta") or item.get("text"))), None), final_event=finals[0], final_after_vad_end_seconds=finals[0]["observed_at"] - started - (finals[0]["speech_end_sample"] - 512) / 16000)
+            report.update(
+                status="completed",
+                transcript=finals[0]["text"],
+                reply=text,
+                wav_bytes=len(audio),
+                timing=timing.record(),
+                first_partial_seconds=next(
+                    (
+                        item["observed_at"] - started
+                        for item in events
+                        if item.get("type") in ("transcript.text.delta", "transcript.text.snapshot")
+                        and (item.get("delta") or item.get("text"))
+                    ),
+                    None,
+                ),
+                final_event=finals[0],
+                final_after_vad_end_seconds=finals[0]["observed_at"]
+                - started
+                - (finals[0]["speech_end_sample"] - 512) / 16000,
+            )
     except Exception as error:
         report.update(status="failed", error=str(error))
         raise
@@ -133,52 +190,128 @@ def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runtimes", nargs="+", choices=("llamacpp", "koboldcpp"), default=("llamacpp", "koboldcpp"))
-    parser.add_argument("--engine", choices=("audiocpp-nemotron", "nemo-nemotron", "parakeetcpp-nemotron-cpu", "speechcpp-qwen-0.6b", "whisper-vulkan", "parakeetcpp-v3"), default="audiocpp-nemotron")
+    parser.add_argument(
+        "--engine",
+        choices=(
+            "audiocpp-nemotron",
+            "nemo-nemotron",
+            "parakeetcpp-nemotron-cpu",
+            "speechcpp-qwen-0.6b",
+            "whisper-vulkan",
+            "parakeetcpp-v3",
+        ),
+        default="audiocpp-nemotron",
+    )
     parser.add_argument("--resources", action="store_true", help="Sample ASR process CPU/RSS and GPU memory")
     args = parser.parse_args()
     engine = cfg.AsrStartupEngine(args.engine)
     context = require_native_execution("Practice gateway smoke")
     refuse_existing_sessions([19193, 19194, 19195, 19196])
     run = CasePaths(__file__).new_run()
-    report: dict[str, Any] = {"execution_context": context, "scope": "Saved PCM through both gateways; no browser microphone/echo/quality evaluation", "runtimes": {}, "engine": args.engine}
+    report: dict[str, Any] = {
+        "execution_context": context,
+        "scope": "Saved PCM through both gateways; no browser microphone/echo/quality evaluation",
+        "runtimes": {},
+        "engine": args.engine,
+    }
     samples, rate = decode_audio(Path(default_corpus()[0]["file"]))
     pcm = (mono_resample(samples, rate).clip(-1, 1) * 32767).astype("<i2").tobytes()
     pcm += bytes(64000)
     pcm = pcm.ljust((len(pcm) + 1023) // 1024 * 1024, b"\0")
     process = None
     started = time.perf_counter()
+
     def start_speech():
         nonlocal process
         process = asr.start() if engine == cfg.AsrStartupEngine.AUDIOCPP else start_tts()
-    speech_timer = BenchmarkLifecycle(lambda: str(process.pid) if process else "reused-matching-server", lambda: stop_owned(process) if process else None)
+
+    speech_timer = BenchmarkLifecycle(
+        lambda: str(process.pid) if process else "reused-matching-server",
+        lambda: stop_owned(process) if process else None,
+    )
     asr_process = None
+
     def start_asr():
         nonlocal asr_process
         asr_process = selector.backend(engine).start()
-    asr_timer = BenchmarkLifecycle(lambda: str(asr_process.pid) if asr_process else "shared-or-reused", lambda: stop_owned(asr_process) if asr_process else None)
+
+    asr_timer = BenchmarkLifecycle(
+        lambda: str(asr_process.pid) if asr_process else "shared-or-reused",
+        lambda: stop_owned(asr_process) if asr_process else None,
+    )
     try:
-        with speech_timer, asr_timer, patch.object(cfg.PARAKEETCPP_STREAM_ASR, "port", 19196), patch.object(cfg.NEMO_SPEECHCPP_ASR, "port", 19196), patch.object(cfg.SPEECHCPP_ASR, "port", 19196), patch.object(cfg.PARAKEETCPP_V3_ASR, "port", 19196), patch.object(cfg.WHISPERCPP_ASR, "port", 19196), patch.object(cfg.AUDIOCPP_SERVICE, "internal_port", 19193), patch.object(cfg, "AUDIOCPP_VAD", replace(cfg.AUDIOCPP_VAD, server_port=19193)), patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", engine), patch.object(cfg.KOBOLDCPP_SERVICE, "speech_engine", cfg.KoboldcppSpeechStartupEngine.KOKORO_AUDIOCPP), patch.object(cfg.KOBOLDCPP_SERVICE, "model", "llamacpp/gemma-4-E4B-it-Q4_0"), patch.dict(cfg.KOBOLDCPP_KCPPS_ARGS, port=19194, port_param=19194), patch.object(cfg.KOBOLDCPP_SERVICE, "streaming_ui_port", 19195):
+        with (
+            speech_timer,
+            asr_timer,
+            patch.object(cfg.PARAKEETCPP_STREAM_ASR, "port", 19196),
+            patch.object(cfg.NEMO_SPEECHCPP_ASR, "port", 19196),
+            patch.object(cfg.SPEECHCPP_ASR, "port", 19196),
+            patch.object(cfg.PARAKEETCPP_V3_ASR, "port", 19196),
+            patch.object(cfg.WHISPERCPP_ASR, "port", 19196),
+            patch.object(cfg.AUDIOCPP_SERVICE, "internal_port", 19193),
+            patch.object(cfg, "AUDIOCPP_VAD", replace(cfg.AUDIOCPP_VAD, server_port=19193)),
+            patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", engine),
+            patch.object(cfg.KOBOLDCPP_SERVICE, "speech_engine", cfg.KoboldcppSpeechStartupEngine.KOKORO_AUDIOCPP),
+            patch.object(cfg.KOBOLDCPP_SERVICE, "model", "llamacpp/gemma-4-E4B-it-Q4_0"),
+            patch.dict(cfg.KOBOLDCPP_KCPPS_ARGS, port=19194, port_param=19194),
+            patch.object(cfg.KOBOLDCPP_SERVICE, "streaming_ui_port", 19195),
+        ):
             speech_timer.prepare(start_speech, combined=True)
-            speech_url = asr.url() if engine == cfg.AsrStartupEngine.AUDIOCPP else f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}"
-            speech_timer.warmup(lambda: post(speech_url, "/v1/audio/speech", {"model": cfg.LANGUAGE_PRACTICE.tts_model, "input": "Hello.", "voice": "af_heart", "response_format": "wav", "stream": False}))
+            speech_url = (
+                asr.url()
+                if engine == cfg.AsrStartupEngine.AUDIOCPP
+                else f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}"
+            )
+            speech_timer.warmup(
+                lambda: post(
+                    speech_url,
+                    "/v1/audio/speech",
+                    {
+                        "model": cfg.LANGUAGE_PRACTICE.tts_model,
+                        "input": "Hello.",
+                        "voice": "af_heart",
+                        "response_format": "wav",
+                        "stream": False,
+                    },
+                )
+            )
             if engine != cfg.AsrStartupEngine.AUDIOCPP:
                 asr_timer.prepare(start_asr, combined=True)
             from scripts.launchers.shared.transport.multipart import audio_upload
-            upload = audio_upload(Path(default_corpus()[0]["file"]).read_bytes(), {"language": "en", "response_format": "json"})
+
+            upload = audio_upload(
+                Path(default_corpus()[0]["file"]).read_bytes(), {"language": "en", "response_format": "json"}
+            )
             recognizer_timer = speech_timer if engine == cfg.AsrStartupEngine.AUDIOCPP else asr_timer
             recognizer_timer.warmup(lambda: selector.backend(engine).transcribe(*upload))
             target = asr_process or process
-            module = "scripts.launchers.asr.parakeetcpp.streaming_server" if engine == cfg.AsrStartupEngine.PARAKEET_STREAM else None
-            monitor = monitor_process(target, run.logs / "asr-vram.jsonl", worker_module=module) if args.resources and target else nullcontext({})
+            module = (
+                "scripts.launchers.asr.parakeetcpp.streaming_server"
+                if engine == cfg.AsrStartupEngine.PARAKEET_STREAM
+                else None
+            )
+            monitor = (
+                monitor_process(target, run.logs / "asr-vram.jsonl", worker_module=module)
+                if args.resources and target
+                else nullcontext({})
+            )
             with monitor as resources:
                 for runtime in args.runtimes:
                     row = report["runtimes"][runtime] = {}
                     exercise(runtime, pcm, row, engine)
             report["asr_resources"] = resources
     finally:
-        report.update(name="Practice gateway smoke", category="asr", total_seconds=time.perf_counter() - started,
-                      status="completed" if len(report["runtimes"]) == len(args.runtimes) and all(row.get("status") == "completed" for row in report["runtimes"].values()) else "failed",
-                      speech_benchmark=speech_timer.record(), asr_benchmark=asr_timer.record())
+        report.update(
+            name="Practice gateway smoke",
+            category="asr",
+            total_seconds=time.perf_counter() - started,
+            status="completed"
+            if len(report["runtimes"]) == len(args.runtimes)
+            and all(row.get("status") == "completed" for row in report["runtimes"].values())
+            else "failed",
+            speech_benchmark=speech_timer.record(),
+            asr_benchmark=asr_timer.record(),
+        )
         run.write_report(report)
         print(run.artifacts / "report.json")
 

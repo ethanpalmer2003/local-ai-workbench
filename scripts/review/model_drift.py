@@ -44,11 +44,7 @@ def inspect() -> list[str]:
     runtime_models = runtime.get("models", [])
     if not isinstance(runtime_models, list):
         return [*issues, "AudioCpp server config 'models' must be a list"]
-    runtime_ids = [
-        item["id"]
-        for item in runtime_models
-        if isinstance(item, dict) and isinstance(item.get("id"), str)
-    ]
+    runtime_ids = [item["id"] for item in runtime_models if isinstance(item, dict) and isinstance(item.get("id"), str)]
     duplicates = sorted(model_id for model_id, count in Counter(runtime_ids).items() if count > 1)
     issues.extend(f"Duplicate AudioCpp runtime ID: {model_id}" for model_id in duplicates)
 
@@ -64,9 +60,7 @@ def inspect() -> list[str]:
         if registered is not None:
             expected_path = normalized(registered.path)
             if normalized(model_path) != expected_path:
-                issues.append(
-                    f"AudioCpp model {model_id} path differs from catalog path {registered.path}"
-                )
+                issues.append(f"AudioCpp model {model_id} path differs from catalog path {registered.path}")
         elif normalized(model_path) not in paths:
             issues.append(f"AudioCpp model {model_id} has no matching catalog model/path")
 
@@ -74,9 +68,7 @@ def inspect() -> list[str]:
     speech_ids = {
         item["id"]
         for item in runtime_models
-        if isinstance(item, dict)
-        and item.get("task") in {"tts", "clon"}
-        and isinstance(item.get("id"), str)
+        if isinstance(item, dict) and item.get("task") in {"tts", "clon"} and isinstance(item.get("id"), str)
     }
     missing = sorted(accepted - speech_ids)
     extra = sorted(speech_ids - accepted)

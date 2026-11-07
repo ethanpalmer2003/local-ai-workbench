@@ -25,9 +25,9 @@ def _transform(payload: Payload) -> Payload | None:
     if audiocpp_catalog.supports_clone(model):
         _apply_voice_ref_fallback(payload)
     else:
-        payload.pop('voice', None)
-        payload.pop('voice_ref', None)
-        payload.pop('reference_text', None)
+        payload.pop("voice", None)
+        payload.pop("voice_ref", None)
+        payload.pop("reference_text", None)
     if model in cfg.BREEZE_MODELS:
         tts_text_processing.apply_breeze_tone(payload)
     if not isinstance(payload.get("input"), str):

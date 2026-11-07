@@ -38,8 +38,7 @@ def openai_request(payload: dict[str, Any], stream: bool) -> dict[str, Any]:
         if isinstance(value, (int, float)) and not isinstance(value, bool):
             request[target] = value
     stops = [
-        str(item.get("sequence", "") if isinstance(item, dict) else item)
-        for item in payload.get("stop_sequence") or []
+        str(item.get("sequence", "") if isinstance(item, dict) else item) for item in payload.get("stop_sequence") or []
     ]
     if stops := [stop for stop in stops if stop]:
         request["stop"] = stops

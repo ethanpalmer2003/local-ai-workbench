@@ -13,6 +13,7 @@ from scripts.tests.shared.process_fixtures import running_process
 class ResourceTests(unittest.TestCase):
     def test_owned_monitor_preserves_unknown_gpu_and_summarizes_after_failure(self):
         from pathlib import Path
+
         gpu = MagicMock()
         gpu.summary.return_value = {"peak_process_used_mb": None}
         with (

@@ -160,9 +160,14 @@ class ModelCatalogTests(unittest.TestCase):
 
     def test_inactive_listing_excludes_active_models(self):
         from dataclasses import replace
+
         active = next(model for model in download.MODELS if model.group == "llamacpp")
         sample = (active, replace(active, label="llamacpp/fixture-inactive", in_use=False))
-        with patch.object(download, "MODELS", sample), patch("builtins.print") as output, patch.object(download, "download_model") as fetch:
+        with (
+            patch.object(download, "MODELS", sample),
+            patch("builtins.print") as output,
+            patch.object(download, "download_model") as fetch,
+        ):
             download.main(["--inactive", "--group", "llamacpp"])
         text = "\n".join(str(call.args[0]) for call in output.call_args_list)
         for model in sample:

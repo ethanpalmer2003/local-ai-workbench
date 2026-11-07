@@ -15,9 +15,13 @@ class ModelLanguages(unittest.TestCase):
         ids = [entry["distribution"] for entry in catalog["models"]]
         self.assertEqual(len(ids), len(set(ids)))
         covered = {key for entry in catalog["models"] for key in entry["model_ids"]}
-        expected = {model.label for model in models.MODELS if model.group.startswith(("asr/", "audiocpp", "tts/"))
-                    and model.path.suffix in (".gguf", ".bin", ".pth", ".onnx")
-                    and not any(part in model.label for part in ("silero", "fsmn", "mmproj", "/voices"))}
+        expected = {
+            model.label
+            for model in models.MODELS
+            if model.group.startswith(("asr/", "audiocpp", "tts/"))
+            and model.path.suffix in (".gguf", ".bin", ".pth", ".onnx")
+            and not any(part in model.label for part in ("silero", "fsmn", "mmproj", "/voices"))
+        }
         self.assertFalse(expected - covered, f"Missing language records: {expected - covered}")
         known = {model.label for model in models.MODELS}
         self.assertFalse(covered - known)
@@ -39,7 +43,9 @@ class ModelLanguages(unittest.TestCase):
 
     def test_exact_model_identity_and_language_filters_preserve_unknowns(self):
         catalog = model_languages.read_catalog()
-        self.assertEqual(model_languages.select(catalog, model="audiocpp/kokoro-kobold-q4")[0]["distribution"], "kokoro-v1")
+        self.assertEqual(
+            model_languages.select(catalog, model="audiocpp/kokoro-kobold-q4")[0]["distribution"], "kokoro-v1"
+        )
         french = model_languages.select(catalog, task="tts", language="French")
         ids = {row["distribution"] for row in french}
         self.assertIn("kokoro-v1", ids)

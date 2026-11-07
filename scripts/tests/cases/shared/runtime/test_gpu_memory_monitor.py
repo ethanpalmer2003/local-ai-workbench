@@ -19,7 +19,9 @@ class MemoryMonitorTests(unittest.TestCase):
             ]
             manager = MagicMock()
             manager.__enter__.return_value = counter
-            with patch("scripts.launchers.runtime.windows_gpu_counter.WindowsAdapterCounter", return_value=manager) as create:
+            with patch(
+                "scripts.launchers.runtime.windows_gpu_counter.WindowsAdapterCounter", return_value=manager
+            ) as create:
                 monitor = gpu_memory.GpuMemoryMonitor(None, Path(folder) / "fast.jsonl", fast_windows=True)
                 with monitor:
                     deadline = time.monotonic() + 2

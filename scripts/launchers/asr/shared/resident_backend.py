@@ -26,12 +26,16 @@ class ResidentBackend:
 
     def command(self) -> list[str]:
         command = build_server_command(self.settings.profile, self.settings.port)
-        if '{config}' in command:
+        if "{config}" in command:
             from scripts.launchers.asr.shared.resident_profiles import audio_config
-            path = project_cfg.component(ASR_FILE_PROFILES[self.settings.profile].component).generated_dir / f'{self.settings.profile}-{self.settings.port}.json'
+
+            path = (
+                project_cfg.component(ASR_FILE_PROFILES[self.settings.profile].component).generated_dir
+                / f"{self.settings.profile}-{self.settings.port}.json"
+            )
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(json.dumps(audio_config(self.settings.profile)), encoding='utf-8')
-            command = [part.replace('{config}', str(path)) for part in command]
+            path.write_text(json.dumps(audio_config(self.settings.profile)), encoding="utf-8")
+            command = [part.replace("{config}", str(path)) for part in command]
         return command
 
     def model(self) -> Path:
@@ -40,10 +44,16 @@ class ResidentBackend:
     def start(self):
         profile = ASR_FILE_PROFILES[self.settings.profile]
         command = self.command()
-        return native.start_server(command, [Path(command[0]), self.model()], self.settings.port,
-                                   self.settings.profile, self.ready, lambda: native.matches(command),
-                                   env={**os.environ, **dict(profile.environment_overrides)},
-                                   component_key=profile.component)
+        return native.start_server(
+            command,
+            [Path(command[0]), self.model()],
+            self.settings.port,
+            self.settings.profile,
+            self.ready,
+            lambda: native.matches(command),
+            env={**os.environ, **dict(profile.environment_overrides)},
+            component_key=profile.component,
+        )
 
     def transcribe(self, body: bytes, content_type: str, headers: dict[str, str] | None = None) -> tuple[bytes, str]:
         request = requests.parse(body, content_type)
@@ -53,7 +63,7 @@ class ResidentBackend:
 
         fields = {"response_format": "json"}
         if ASR_FILE_PROFILES[self.settings.profile].audio_family:
-            fields['model'] = 'benchmark-asr'
+            fields["model"] = "benchmark-asr"
         # Parakeet v3 auto-detects; its server does not implement language forcing.
         if self.settings.profile != "parakeetcpp-v3":
             fields["language"] = request.language

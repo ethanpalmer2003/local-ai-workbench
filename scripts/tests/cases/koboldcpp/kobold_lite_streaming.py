@@ -77,29 +77,29 @@ class StreamingPatch(unittest.TestCase):
             with self.subTest(name=name):
                 owner = "koboldcpp" if name == "kobold_streaming.cjs" else "audiocpp"
                 path = Path(__file__).parent.parent / owner / name
-                result = subprocess.run(
-                    [cfg.PI_CLIENT.node_cmd, str(path)],
-                    capture_output=True,
-                    text=True,
-                    timeout=20,
-                )
+                result = subprocess.run([cfg.PI_CLIENT.node_cmd, str(path)], capture_output=True, text=True, timeout=20)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_default_streaming_follows_the_shared_delivery_policy(self):
         from scripts.config.shared import speech_delivery
         from scripts.launchers.asr.shared import practice_models
         from scripts.launchers.koboldcpp import kobold_lite
-        spec = {'id': cfg.LANGUAGE_PRACTICE.tts_model, 'family': 'kokoro_tts', 'path': 'unused', 'mode': 'streaming'}
-        with patch.object(practice_models, 'active_tts_id', None), patch.object(
-            practice_models, 'tts_spec', return_value=spec
-        ), patch.object(speech_delivery, 'overrides', return_value={}):
-            self.assertEqual(kobold_lite.audio_delivery_plan()['mode'], 'whole', 'Lite-native TTS cannot stream')
-            with patch.object(cfg.KOBOLDCPP_SERVICE, 'transcription_engine', cfg.AsrStartupEngine.AUDIOCPP):
-                self.assertEqual(kobold_lite.audio_delivery_plan()['mode'], 'streaming')
-                with patch.object(speech_delivery, 'overrides', return_value={f"tts:{practice_models.tts_id()}": "whole"}):
-                    self.assertEqual(kobold_lite.audio_delivery_plan()['mode'], 'whole')
-                with patch.object(kobold_lite.kokoro, 'internal', return_value=True):
-                    self.assertEqual(kobold_lite.audio_delivery_plan()['mode'], 'whole')
+
+        spec = {"id": cfg.LANGUAGE_PRACTICE.tts_model, "family": "kokoro_tts", "path": "unused", "mode": "streaming"}
+        with (
+            patch.object(practice_models, "active_tts_id", None),
+            patch.object(practice_models, "tts_spec", return_value=spec),
+            patch.object(speech_delivery, "overrides", return_value={}),
+        ):
+            self.assertEqual(kobold_lite.audio_delivery_plan()["mode"], "whole", "Lite-native TTS cannot stream")
+            with patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", cfg.AsrStartupEngine.AUDIOCPP):
+                self.assertEqual(kobold_lite.audio_delivery_plan()["mode"], "streaming")
+                with patch.object(
+                    speech_delivery, "overrides", return_value={f"tts:{practice_models.tts_id()}": "whole"}
+                ):
+                    self.assertEqual(kobold_lite.audio_delivery_plan()["mode"], "whole")
+                with patch.object(kobold_lite.kokoro, "internal", return_value=True):
+                    self.assertEqual(kobold_lite.audio_delivery_plan()["mode"], "whole")
 
     def test_incompatible_upstream_is_rejected(self):
         with self.assertRaises(ValueError):

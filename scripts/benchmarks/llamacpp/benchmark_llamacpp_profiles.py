@@ -354,9 +354,7 @@ def overthink_line(run_label: str, label: str, row: dict[str, Any]) -> str:
 def run_overthink(
     args: argparse.Namespace, builds: list[str | None], prompts: dict[str, str], summary_lines: list[str]
 ) -> bool:
-    summary_lines.append(
-        "build/profile\tprompt\ttokens\ttok/s\twall_s\tthink_chars\tanswer_chars\tthink_share\tanswer"
-    )
+    summary_lines.append("build/profile\tprompt\ttokens\ttok/s\twall_s\tthink_chars\tanswer_chars\tthink_share\tanswer")
     print(summary_lines[-1])
     failed = False
     for build_name in builds:
