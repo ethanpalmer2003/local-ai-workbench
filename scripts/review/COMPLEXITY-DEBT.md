@@ -5,10 +5,6 @@ Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rath
 
 | Complexity | Function |
 | ---: | --- |
-| 16 | `scripts/tests/cases/audiocpp/audiocpp_backend_compare.py:306` `main` |
-| 16 | `scripts/tests/cases/audiocpp/audiocpp_streaming.py:140` `run_comparison` |
-| 15 | `scripts/review/structure_docs.py:64` `configuration_issues` |
-| 15 | `scripts/tests/cases/shared/live_frameworks.py:301` `running_framework` |
 | 14 | `scripts/benchmarks/koboldcpp/kobold_stack_vram.py:249` `run` |
 | 14 | `scripts/config/comfyui/workflow_overrides.py:191` `apply` |
 | 14 | `scripts/launchers/llamacpp/llamacpp_dsh.py:220` `main` |
@@ -28,7 +24,7 @@ Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rath
 | 12 | `scripts/launchers/asr/parakeetcpp/transcribe.py:13` `main` |
 | 12 | `scripts/launchers/asr/shared/live.py:58` `request` |
 | 12 | `scripts/launchers/llamacpp/llamacpp_coding.py:15` `prepare_pi_env` |
-| 12 | `scripts/review/structure_docs.py:147` `owner_issues` |
+| 12 | `scripts/review/structure_docs.py:177` `owner_issues` |
 | 11 | `scripts/benchmarks/asr/asr_resident_compare.py:170` `main` |
 | 11 | `scripts/benchmarks/llamacpp/benchmark_context_stream.py:66` `stream_request` |
 | 11 | `scripts/benchmarks/personal/comfyui/comfyui_video.py:199` `_consume_events` |
@@ -42,10 +38,10 @@ Regenerate with `python -m scripts.review.inventory_code --complexity-debt` rath
 | 11 | `scripts/launchers/audiocpp/asr.py:66` `transcribe` |
 | 11 | `scripts/launchers/runtime/gpu_memory.py:452` `_get_process_vram` |
 | 11 | `scripts/review/public_audit.py:89` `scan_text` |
-| 11 | `scripts/review/structure_docs.py:246` `naming_issues` |
+| 11 | `scripts/review/structure_docs.py:276` `naming_issues` |
 | 11 | `scripts/tests/cases/asr/shared/latency.py:58` `replay` |
 | 11 | `scripts/tests/cases/koboldcpp/kobold_image_swap.py:144` `run` |
 | 11 | `scripts/tests/cases/llamacpp/hrx/hrx_update_validation.py:131` `verify_candidate_evidence` |
 | 11 | `scripts/tools/rewrite_imports.py:88` `rewrite_file` |
 
-Remaining: 42.
+Remaining: 38.
