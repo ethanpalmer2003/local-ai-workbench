@@ -126,7 +126,7 @@ def _engine_command(name, command, run):
     return [part.replace("{config}", str(config)) for part in command]
 
 
-def _run_engine(name, command, model, clips, samples, run, port, deadline, resources, result) -> None:
+def _run_engine(name, command, clips, samples, run, port, deadline, resources, result) -> None:
     command = _engine_command(name, command, run)
     result["command"] = command
     server = ResidentHttp(
@@ -176,7 +176,7 @@ def run_engine(name, command, model, clips, samples, run, port, deadline, resour
     if "--mmproj" in command:
         projector = Path(command[command.index("--mmproj") + 1])
         result["projector"] = {"file": str(projector), "sha256": _file_sha256(projector)}
-    _run_engine(name, command, model, clips, samples, run, port, deadline, resources, result)
+    _run_engine(name, command, clips, samples, run, port, deadline, resources, result)
     return result
 
 
