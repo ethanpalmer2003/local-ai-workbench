@@ -158,8 +158,22 @@ def source_issues(path: Path, text: str) -> list[str]:
     return issues
 
 
+BARE_BATCH = re.compile(r"^[\w.\\/ -]+\.bat$", re.IGNORECASE)
+BATCH_COMMANDS = re.compile(r"^(?:call|start|cmd|explorer|if|for|echo|title|rem)\b", re.IGNORECASE)
+
+
+def _bare_batch_issue(path: Path, text: str) -> list[str]:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if BARE_BATCH.fullmatch(stripped) and not BATCH_COMMANDS.match(stripped):
+            return [f"{path.name}: invoke `{stripped}` through `call` or `start`, or the parent never resumes"]
+    return []
+
+
 def batch_issues(path: Path, text: str) -> list[str]:
     issues = []
+    if text.startswith("\ufeff"):
+        issues.append(f"{path.name}: UTF-8 BOM; cmd.exe cannot parse a BOM-prefixed batch file")
     for match in re.finditer(r"-m (scripts\.[A-Za-z_0-9.]+)", text):
         target = project_cfg.BASE_DIR / match.group(1).replace(".", "/")
         if not target.is_dir() and not target.with_suffix(".py").is_file():
@@ -171,7 +185,7 @@ def batch_issues(path: Path, text: str) -> list[str]:
         for match in re.finditer(r"\bp\.([A-Z][A-Z_0-9]+)", text):
             if not hasattr(project_cfg, match.group(1)):
                 issues.append(f"{path.name}: missing project binding {match.group(1)}")
-    return issues
+    return [*issues, *_bare_batch_issue(path, text)]
 
 
 ROOT_BATCHES = frozenset(
@@ -264,6 +278,32 @@ def markdown_anchors(path: Path) -> set[str]:
     return anchors
 
 
+def _markdown_hygiene(relative: str, text: str) -> list[str]:
+    """Whitespace and fence drift a formatter would otherwise own."""
+    issues = []
+    if not text.endswith("\n"):
+        issues.append(f"{relative}: no final newline")
+    if "\t" in text:
+        issues.append(f"{relative}: tab characters; markdown uses spaces")
+    if text.count("```") % 2:
+        issues.append(f"{relative}: unclosed code fence")
+    previous = 0
+    for line in text.splitlines():
+        if line.rstrip() != line:
+            issues.append(f"{relative}: trailing whitespace")
+            break
+    for line in text.splitlines():
+        match = re.match(r"^(#{1,6})\s", line)
+        if not match:
+            continue
+        level = len(match.group(1))
+        if previous and level > previous + 1:
+            issues.append(f"{relative}: heading level jumps from {previous} to {level}")
+            break
+        previous = level
+    return issues
+
+
 def markdown_issues(path: Path, text: str) -> list[str]:
     issues = []
     relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
@@ -271,6 +311,7 @@ def markdown_issues(path: Path, text: str) -> list[str]:
     words = len(text.split())
     if words > budget:
         issues.append(f"{relative}: {words} words exceeds {budget}; keep procedures in one owner guide")
+    issues.extend(_markdown_hygiene(relative, text))
     for match in re.finditer(r"\[[^\]]*\]\(([^)]+)\)", text):
         target, _, anchor = unquote(match.group(1).strip("<>")).partition("#")
         if re.match(r"^[a-z]+:", target, re.I):

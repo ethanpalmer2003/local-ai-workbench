@@ -6,6 +6,40 @@ import subprocess
 from scripts.config import project_config as project_cfg
 from scripts.review import frontend_wiring, inventory_code, model_references, structure_docs
 
+SPELL_EXCLUDED = (
+    "data/",
+    "frameworks/",
+    "trash/",
+    "scripts/state/",
+    "scripts/tests/output/",
+    "scripts/benchmarks/output/",
+    "scripts/tests/old/",
+)
+
+
+def _spelling_targets() -> list[str]:
+    """Tracked Python and Markdown only; generated evidence and vendors stay out of the dictionary."""
+    listed = subprocess.run(
+        ["git", "-C", str(project_cfg.BASE_DIR), "ls-files", "*.py", "*.md"],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.splitlines()
+    return [item for item in listed if item and not item.startswith(SPELL_EXCLUDED)]
+
+
+def spelling_check() -> int:
+    checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/codespell.exe"
+    targets = _spelling_targets()
+    status = 0
+    for start in range(0, len(targets), 80):
+        status |= subprocess.run(
+            [str(checker), "--ignore-words=.codespell-ignore.txt", "--count", *targets[start : start + 80]],
+            cwd=project_cfg.BASE_DIR,
+            check=False,
+        ).returncode
+    return status
+
 
 def format_check() -> int:
     """Formatting is optional: the codebase keeps hand-wrapped lines ruff format would join."""
@@ -53,9 +87,19 @@ def main(argv: list[str] | None = None) -> int:
             if not formatting_status
             else "[WARN] Formatting differs; run review/format_py.bat"
         )
+
+    print("\n=== SPELLING ===", flush=True)
+    spelling_status = spelling_check()
+    print("[OK] Spelling clean" if not spelling_status else "[FAIL] Spelling findings above")
     return int(
         bool(
-            structure_status or model_status or frontend_status or type_status or inventory_status or formatting_status
+            structure_status
+            or model_status
+            or frontend_status
+            or type_status
+            or inventory_status
+            or formatting_status
+            or spelling_status
         )
     )
 
