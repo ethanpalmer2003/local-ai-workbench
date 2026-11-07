@@ -318,7 +318,12 @@ class PracticeTests(unittest.TestCase):
                 result = subprocess.run([cfg.PI_CLIENT.node_cmd, str(Path(__file__).with_name("practice.cjs")), *mode], capture_output=True, text=True, timeout=20)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def _require_kokoro(self):
+        if not Path(cfg.KOKORO_TTS.audiocpp_model).is_file():
+            self.skipTest("Kokoro weights are not installed in this checkout")
+
     def test_sessions_bound_frames_and_preserve_ownership(self):
+        self._require_kokoro()
         turns = Mock()
         turns.push.return_value = [{"type": "speech_start"}]
         turns.poll.return_value = [{"type": "transcript.text.done", "text": "Bonjour"}]
@@ -342,6 +347,7 @@ class PracticeTests(unittest.TestCase):
         turns.close.assert_called_once()
 
     def test_failed_upload_closes_helper(self):
+        self._require_kokoro()
         turns = Mock()
         turns.push.side_effect = RuntimeError("backend died")
         sessions = live.Sessions()

@@ -851,6 +851,8 @@ class FrameworkUpdates(unittest.TestCase):
         self.assertIn("UPDATE AVAILABLE", text)
 
     def test_catalog_covers_installed_frameworks(self):
+        if not project_cfg.FRAMEWORKS_DIR.is_dir():
+            self.skipTest("frameworks are not installed in this checkout")
         covered = {
             project_cfg.framework_install_dir(tool.name).relative_to(project_cfg.FRAMEWORKS_DIR).parts[0]
             for tool in cfg.TOOLS

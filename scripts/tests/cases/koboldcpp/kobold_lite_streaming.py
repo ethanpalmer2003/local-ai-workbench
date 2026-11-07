@@ -108,6 +108,10 @@ class StreamingPatch(unittest.TestCase):
     def test_external_llm_mode_seeds_the_provider_and_drops_the_local_model(self):
         from scripts.launchers.koboldcpp import external_llm, kobold, kobold_lite
 
+        try:
+            external_llm.server_exe()
+        except FileNotFoundError:
+            self.skipTest("llama.cpp is not installed in this checkout")
         command = external_llm.command()
         self.assertIn("--jinja", command)
         self.assertEqual(command[command.index("--alias") + 1], external_llm.ALIAS)
