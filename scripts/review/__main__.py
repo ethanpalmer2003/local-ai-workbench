@@ -6,6 +6,7 @@ import subprocess
 
 from scripts.config import project_config as project_cfg
 from scripts.review import dependencies, frontend_wiring, inventory_code, model_references, structure_docs
+from scripts.review.public_audit import main as public_audit_main
 
 SPELL_EXCLUDED = (
     "data/",
@@ -82,9 +83,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-format-check", action="store_true", help="skip the ruff format comparison")
     parser.add_argument("--prune", action="store_true", help="list installed packages outside the import graph")
     parser.add_argument("--remove", action="store_true", help="with --prune: uninstall those packages")
+    parser.add_argument("--scrub", action="store_true", help="scan the tree and history for personal terms")
     args = parser.parse_args(argv)
     if args.prune:
         return dependencies.main(remove=args.remove)
+    if args.scrub:
+        return public_audit_main(["--scrub"])
 
     print("=== STRUCTURE AND DOCUMENTATION ===", flush=True)
     structure_status = structure_docs.main()
