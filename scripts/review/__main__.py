@@ -4,7 +4,7 @@ import argparse
 import subprocess
 
 from scripts.config import project_config as project_cfg
-from scripts.review import audit, frontend, model_drift, structure
+from scripts.review import frontend, inventory, model_drift, structure
 
 
 def format_check() -> int:
@@ -42,7 +42,7 @@ def main(argv: list[str] | None = None) -> int:
         type_status = 1
 
     print("\n=== REPOSITORY INVENTORY AND PYTHON COMPLEXITY ===", flush=True)
-    audit_status = audit.main()
+    inventory_status = inventory.main()
 
     formatting_status = 0
     if not args.no_format_check:
@@ -52,7 +52,9 @@ def main(argv: list[str] | None = None) -> int:
             "[OK] Formatting matches" if not formatting_status else "[WARN] Formatting differs; run review/format.bat"
         )
     return int(
-        bool(structure_status or model_status or frontend_status or type_status or audit_status or formatting_status)
+        bool(
+            structure_status or model_status or frontend_status or type_status or inventory_status or formatting_status
+        )
     )
 
 

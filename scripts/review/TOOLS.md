@@ -22,7 +22,7 @@ What runs today, in one place. Use it to compare against other projects' stacks;
 | `structure.py` | docs budgets, links, component keys, naming, folder rules | maintained files only |
 | `model_drift.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths | - |
 | `frontend.py` | asset paths, DOM ids, injected settings contracts | static, never executes pages |
-| `audit.py` | inventory, file/function size, complexity depth, duplicate bodies | advisory, not pass/fail |
+| `inventory.py` | inventory, file/function size, complexity depth, duplicate bodies | complexity gates; tables advisory |
 | `public_audit.py` | secrets, credentials, home/machine paths, private words, private inputs, large files, ignored-but-tracked | `--history` scans every commit |
 | `unittest` runner | behaviour regressions | 501 tests, ~15 s, per-test timings and `report.md` |
 

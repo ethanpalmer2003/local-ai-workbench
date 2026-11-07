@@ -197,7 +197,7 @@ def start_proxy_services(processes: list[tuple[str, subprocess.Popen[Any]]], usa
             )
 
 
-def main(argv: list[str] | None = None) -> None:
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", choices=sorted(cfg.KOBOLDCPP_MODELS), help="Select a configured chat model")
     parser.add_argument("--speech-engine", choices=[engine.value for engine in cfg.KoboldcppSpeechStartupEngine])
@@ -214,7 +214,11 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--image-on-demand", action="store_true", help="Keep Kobold loaded; swap TTS/Nova through native APIs"
     )
-    args = parser.parse_args(argv)
+    return parser
+
+
+def apply_options(args: argparse.Namespace, parser: argparse.ArgumentParser) -> bool:
+    """Fold the flags into service settings and return whether the LLM runs externally."""
     if args.practice_ui:
         cfg.KOBOLDCPP_SERVICE.streaming_ui_path = "/practice"
     if args.model:
@@ -234,6 +238,83 @@ def main(argv: list[str] | None = None) -> None:
         parser.error("External LLM needs the Lite proxy so the page can point at llama.cpp")
     if external and args.image_on_demand:
         parser.error("External LLM uses the normal lifecycle; omit --image-on-demand")
+    return external
+
+
+def check_profile_ports() -> None:
+    """Refuse an occupied port instead of starting a second session on the same profile."""
+    if not (kokoro.selected() or transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine)):
+        return
+    ports = [cast(int, cfg.KOBOLDCPP_KCPPS_ARGS["port"])]
+    if cfg.KOBOLDCPP_SERVICE.streaming_ui:
+        ports.append(cfg.KOBOLDCPP_SERVICE.streaming_ui_port)
+    if (
+        kokoro.selected()
+        and not kokoro.internal()
+        and cfg.KOBOLDCPP_SERVICE.transcription_engine != cfg.AsrStartupEngine.AUDIOCPP
+    ):
+        ports.append(cfg.AUDIOCPP_SERVICE.internal_port)
+    occupied = [port for port in ports if backend_running(port) or port_listening(port)]
+    if occupied:
+        raise RuntimeError(f"Kobold profile ports are occupied: {occupied}; close the existing session first")
+
+
+def start_lite_proxy(external: bool) -> subprocess.Popen[Any]:
+    proxy_args = [
+        "--speech-engine",
+        cfg.KOBOLDCPP_SERVICE.speech_engine.value,
+        "--transcription-engine",
+        cfg.KOBOLDCPP_SERVICE.transcription_engine.value,
+    ]
+    if external:
+        proxy_args += ["--external-endpoint", external_llm.base_url(), "--external-model", external_llm.ALIAS]
+    return launch_module(
+        "scripts.launchers.koboldcpp.kobold_lite",
+        "KoboldCpp Lite Proxy",
+        mode=ConsoleTerminalLaunchMode.SPLIT_DEPENDENT,
+        extra_args=proxy_args,
+    )
+
+
+def start_stack(external: bool, usage_profile: str) -> tuple[list[tuple[str, subprocess.Popen[Any]]], Path]:
+    processes: list[tuple[str, subprocess.Popen[Any]]] = []
+    if transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine):
+        asr_process = transcription.backend(cfg.KOBOLDCPP_SERVICE.transcription_engine).start()
+        if asr_process is not None:
+            processes.append(("Transcription", asr_process))
+    process, _, log_path = start_kobold(usage_profile, no_model=external)
+    processes.append(("KoboldCpp Server", process))
+    if external:
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+        processes.insert(
+            0, ("llama.cpp", external_llm.start(LOG_DIR / f"llamacpp_external_{time.strftime('%Y%m%d-%H%M%S')}.log"))
+        )
+    if cfg.KOBOLDCPP_SERVICE.streaming_ui and not backend_running(cfg.KOBOLDCPP_SERVICE.streaming_ui_port):
+        processes.append(("Streaming Lite", start_lite_proxy(external)))
+    start_proxy_services(processes, usage_profile)
+    return processes, log_path
+
+
+def supervise(processes: list[tuple[str, subprocess.Popen[Any]]]) -> None:
+    """Block while the stack runs; a stopped dependency ends the session."""
+    while processes:
+        time.sleep(2)
+        for name, process in processes[:]:
+            if process.poll() is None:
+                continue
+            processes.remove((name, process))
+            if name == "KoboldCpp Server":
+                return
+            if name == "Transcription":
+                raise RuntimeError("Transcription server stopped; close this session and relaunch language practice")
+            if name == "llama.cpp":
+                raise RuntimeError("llama.cpp server stopped; close this session and relaunch")
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    external = apply_options(args, parser)
     if args.image_on_demand:
         from scripts.launchers.runtime.image_on_demand import run
 
@@ -241,77 +322,13 @@ def main(argv: list[str] | None = None) -> None:
         return
     if args.with_image:
         cfg.SDCPP_SERVICE.enabled = True
-    if kokoro.selected() or transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine):
-        ports = [cast(int, cfg.KOBOLDCPP_KCPPS_ARGS["port"])]
-        if cfg.KOBOLDCPP_SERVICE.streaming_ui:
-            ports.append(cfg.KOBOLDCPP_SERVICE.streaming_ui_port)
-        if (
-            kokoro.selected()
-            and not kokoro.internal()
-            and cfg.KOBOLDCPP_SERVICE.transcription_engine != cfg.AsrStartupEngine.AUDIOCPP
-        ):
-            ports.append(cfg.AUDIOCPP_SERVICE.internal_port)
-        occupied = [port for port in ports if backend_running(port) or port_listening(port)]
-        if occupied:
-            raise RuntimeError(f"Kobold profile ports are occupied: {occupied}; close the existing session first")
-    processes: list[tuple[str, subprocess.Popen[Any]]] = []
-
+    check_profile_ports()
     try:
-        if transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine):
-            asr_process = transcription.backend(cfg.KOBOLDCPP_SERVICE.transcription_engine).start()
-            if asr_process is not None:
-                processes.append(("Transcription", asr_process))
-        process, _, log_path = start_kobold(args.usage_profile, no_model=external)
-        processes.append(("KoboldCpp Server", process))
-        if external:
-            LOG_DIR.mkdir(parents=True, exist_ok=True)
-            processes.insert(
-                0,
-                ("llama.cpp", external_llm.start(LOG_DIR / f"llamacpp_external_{time.strftime('%Y%m%d-%H%M%S')}.log")),
-            )
-        if cfg.KOBOLDCPP_SERVICE.streaming_ui and not backend_running(cfg.KOBOLDCPP_SERVICE.streaming_ui_port):
-            proxy_args = [
-                "--speech-engine",
-                cfg.KOBOLDCPP_SERVICE.speech_engine.value,
-                "--transcription-engine",
-                cfg.KOBOLDCPP_SERVICE.transcription_engine.value,
-            ]
-            if external:
-                proxy_args += ["--external-endpoint", external_llm.base_url(), "--external-model", external_llm.ALIAS]
-            processes.append(
-                (
-                    "Streaming Lite",
-                    launch_module(
-                        "scripts.launchers.koboldcpp.kobold_lite",
-                        "KoboldCpp Lite Proxy",
-                        mode=ConsoleTerminalLaunchMode.SPLIT_DEPENDENT,
-                        extra_args=proxy_args,
-                    ),
-                )
-            )
-
-        start_proxy_services(processes, args.usage_profile)
-
+        processes, log_path = start_stack(external, args.usage_profile)
         print_summary(log_path, args.usage_profile)
         if cfg.KOBOLDCPP_SERVICE.streaming_ui:
             Thread(target=open_streaming_ui, daemon=True).start()
-
-        while processes:
-            time.sleep(2)
-
-            for name, process in processes[:]:
-                if process.poll() is None:
-                    continue
-                processes.remove((name, process))
-                if name == "KoboldCpp Server":
-                    return
-                if name == "Transcription":
-                    raise RuntimeError(
-                        "Transcription server stopped; close this session and relaunch language practice"
-                    )
-                if name == "llama.cpp":
-                    raise RuntimeError("llama.cpp server stopped; close this session and relaunch")
-
+        supervise(processes)
     except KeyboardInterrupt:
         print("\nStopping...")
 
