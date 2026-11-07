@@ -93,8 +93,8 @@ class ExternalBridgeTests(unittest.TestCase):
             streamed = _Handler()
             external_bridge.respond(streamed, base + "/v1", external_bridge.STREAM_PATH, body)
             frames = streamed.wfile.getvalue().decode()
-            self.assertIn('event: message\ndata: {"token": "Hello"}', frames)
-            self.assertIn('event: message\ndata: {"token": " there"}', frames)
+            parsed = [json.loads(line[len("data: ") :]) for line in frames.splitlines() if line.startswith("data: ")]
+            self.assertEqual([item["token"] for item in parsed], ["Hello", " there"])
             self.assertEqual(streamed.headers[0], ("Content-Type", "text/event-stream"))
 
     def test_the_proxy_answers_generation_paths_when_an_external_endpoint_is_set(self):

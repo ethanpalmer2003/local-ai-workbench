@@ -39,12 +39,13 @@ from scripts.tests.cases.shared.launcher_behaviors import LauncherBehaviors
 from scripts.tests.shared.http_server import request, server
 from scripts.tests.shared.media_fixtures import PNG, wav_fixture
 from scripts.tests.shared.model_free import fixture_processes
-from scripts.tests.shared.paths import CasePaths, assets_present
+from scripts.tests.shared.model_checks import requires_model_check
+from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.process_fixtures import exited_process, running_process
 from scripts.tests.shared.timing import TimedTextTestResult, timed
 
 
-@unittest.skipUnless(assets_present(), "downloads are not installed in this checkout")
+@requires_model_check
 class DefaultPaths(unittest.TestCase):
     def test_venv_and_requirements(self):
         if not (project_cfg.SCRIPTS_DIR / ".venv").is_dir():
