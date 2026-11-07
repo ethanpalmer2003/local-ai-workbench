@@ -16,7 +16,7 @@ from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.launchers.shared.transport.http_input import chunks
 
 
-def serve(port: int):
+def serve(port: int):  # noqa: C901
     os.environ["PARAKEET_DEVICE"] = "cpu"
     model = Model(cfg.PARAKEETCPP_STREAM_LIBRARY, model_cfg.path("asr/parakeetcpp/nemotron-3.5-streaming-q8_0"))
     lock = threading.Lock()

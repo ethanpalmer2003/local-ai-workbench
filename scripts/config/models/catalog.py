@@ -26,7 +26,7 @@ def filename_from_destination(group: str, destination: str) -> str:
     return Path(destination).relative_to(base).as_posix()
 
 
-def _build(payload: dict[str, Any]) -> tuple[ModelDownload, ...]:
+def _build(payload: dict[str, Any]) -> tuple[ModelDownload, ...]:  # noqa: C901
     if payload.get("version") != CATALOG_VERSION:
         raise ValueError(f"Unsupported model catalog version: {payload.get('version')}")
     raw_models = payload.get("models")

@@ -86,7 +86,7 @@ def patch_prompts(
     return saved
 
 
-def patch_graph_prompts(
+def patch_graph_prompts(  # noqa: C901
     graph: dict[str, Any],
     positive: str | None = None,
     negative: str | None = None,

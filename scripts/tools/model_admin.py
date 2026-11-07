@@ -265,7 +265,7 @@ def replacement_pairs(old: model_cfg.ModelDownload, new: model_cfg.ModelDownload
     return sorted((pair for pair in pairs if pair[0] and pair[0] != pair[1]), key=lambda pair: -len(pair[0]))
 
 
-def command_replace(
+def command_replace(  # noqa: C901
     old: model_cfg.ModelDownload,
     new: model_cfg.ModelDownload,
     apply: bool,

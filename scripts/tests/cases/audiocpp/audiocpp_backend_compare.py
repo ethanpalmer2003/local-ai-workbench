@@ -303,7 +303,7 @@ def run_backend(
     }
 
 
-def main() -> int:
+def main() -> int:  # noqa: C901
     parser = argparse.ArgumentParser(description=__doc__)
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument("--all", action="store_true", help="run every configured build")

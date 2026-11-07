@@ -253,7 +253,7 @@ def main() -> None:
     )
 
 
-def run_proxy(
+def run_proxy(  # noqa: C901
     variant: str = "local",
     request_scope: RequestScope | None = None,
     on_server=None,
@@ -267,7 +267,7 @@ def run_proxy(
     class Handler(ProxyHandlerMixin):
         protocol_version = "HTTP/1.1"
 
-        def _forward(self, method: str) -> None:
+        def _forward(self, method: str) -> None:  # noqa: C901
             path = urlsplit(self.path).path
             if sessions.route(self, method, path, cfg.KOBOLDCPP_SERVICE.transcription_engine):
                 return

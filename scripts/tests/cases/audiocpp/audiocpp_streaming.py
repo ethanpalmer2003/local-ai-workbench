@@ -137,7 +137,7 @@ def main() -> None:
         run_comparison(args, run, memory, time.perf_counter() - setup_started)
 
 
-def run_comparison(args: argparse.Namespace, run: RunPaths, memory: BenchmarkVram, setup_seconds: float) -> None:
+def run_comparison(args: argparse.Namespace, run: RunPaths, memory: BenchmarkVram, setup_seconds: float) -> None:  # noqa: C901
     started = time.perf_counter()
     deadline = started + args.budget_seconds
     url = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}/v1/models?include_params=true&include_session_options=true"
