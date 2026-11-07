@@ -141,18 +141,18 @@ def format_ports(ports: set[tuple[str, int]]) -> str:
     return ", ".join(f"{protocol}/{port}" for protocol, port in sorted(ports))
 
 
-def main() -> int:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--non-agents",
         action="store_true",
         help="stop non-agent services only; keep coding agents, llama.cpp and Strata running",
     )
-    args = parser.parse_args()
-    if os.name != "nt":
-        print("[FAIL] This shutdown launcher supports Windows only.")
-        return 2
+    return parser.parse_args()
 
+
+def report_context() -> int | None:
+    """Print the execution token and refuse an environment that hides listeners."""
     context = execution_context()
     token = context["windows_token"]
     app_container = token["app_container"] if token else "unknown"
@@ -163,21 +163,17 @@ def main() -> int:
             "[FAIL] Run from a normal Windows terminal; AppContainer can hide listeners and deny process termination."
         )
         return 2
+    return None
 
-    ports = configured_ports()
-    configured = set(ports)
-    roots = agent_roots() if args.non_agents else []
-    keep_ports = agent_ports() if args.non_agents else set()
-    print(
-        f"Checking {len(ports)} configured service ports and all active TCP/UDP listeners for C:\\AI-owned processes."
-    )
-    if args.non_agents:
-        print("Mode          : non-agent services only (coding agents, llama.cpp and Strata are preserved).")
+
+def collect_candidates(
+    args: argparse.Namespace, configured: set[int], roots: list[Path], keep_ports: set[int]
+) -> tuple[dict[int, tuple[str, set[tuple[str, int]]]], set[tuple[str, int]]]:
+    """C\\AI-owned listeners to stop, plus configured ports whose owner could not be read."""
     try:
         before = listener_map()
     except psutil.AccessDenied as error:
-        print(f"[FAIL] Could not enumerate listening ports: {error}")
-        return 2
+        raise RuntimeError(f"Could not enumerate listening ports: {error}") from error
 
     candidates: dict[int, tuple[str, set[tuple[str, int]]]] = {}
     unknown: set[tuple[str, int]] = set()
@@ -203,7 +199,10 @@ def main() -> int:
             candidates[pid] = (name, bound)
         elif related is None:
             unknown.update((protocol, port) for protocol, port in bound if port in configured)
+    return candidates, unknown
 
+
+def terminate(candidates: dict[int, tuple[str, set[tuple[str, int]]]]) -> None:
     for pid, (name, bound) in sorted(candidates.items()):
         detail = format_ports(bound)
         result = subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)], capture_output=True, text=True, check=False)
@@ -213,9 +212,12 @@ def main() -> int:
             message = (result.stderr or result.stdout).strip().splitlines()
             print(f"[FAIL] {name} PID {pid} · {detail}" + (f" · {message[-1]}" if message else ""))
 
-    after = listener_map()
-    remaining_by_port: dict[int, list[tuple[int | None, str, bool | None, set[tuple[str, int]], bool]]] = {}
-    for pid, listeners in after.items():
+
+def remaining_listeners(
+    args: argparse.Namespace, roots: list[Path], keep_ports: set[int]
+) -> dict[int, list[tuple[int | None, str, bool | None, set[tuple[str, int]], bool]]]:
+    remaining: dict[int, list[tuple[int | None, str, bool | None, set[tuple[str, int]], bool]]] = {}
+    for pid, listeners in listener_map().items():
         for port, endpoints in listeners.items():
             if pid is None:
                 name, related, kept = "Unknown process", None, False
@@ -225,36 +227,71 @@ def main() -> int:
                     kept = bool(args.non_agents and (port in keep_ports or is_agent_process(info, roots)))
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                     name, related, kept = f"PID {pid}", None, False
-            remaining_by_port.setdefault(port, []).append(
+            remaining.setdefault(port, []).append(
                 (pid, name, related, {(protocol, port) for protocol, _ in endpoints}, kept)
             )
+    return remaining
 
+
+def report_remaining(
+    ports: list[int],
+    remaining: dict[int, list[tuple[int | None, str, bool | None, set[tuple[str, int]], bool]]],
+    unknown: set[tuple[str, int]],
+) -> None:
     print("\nConfigured-port check:")
     for port in ports:
-        listeners = remaining_by_port.get(port, [])
+        listeners = remaining.get(port, [])
         if not listeners:
             print(f"[FREE] {port}")
-        else:
-            for pid, name, related, _, kept in listeners:
-                if kept:
-                    label = "AGENT STACK (kept)"
-                else:
-                    label = (
-                        "STILL LISTENING"
-                        if related is True
-                        else "UNRELATED PROCESS"
-                        if related is False
-                        else "OWNER UNKNOWN"
-                    )
-                print(f"[WARN] {port} {label}: {name} PID {pid if pid is not None else '?'}")
-
+            continue
+        for pid, name, related, _, kept in listeners:
+            if kept:
+                label = "AGENT STACK (kept)"
+            else:
+                label = (
+                    "STILL LISTENING"
+                    if related is True
+                    else "UNRELATED PROCESS"
+                    if related is False
+                    else "OWNER UNKNOWN"
+                )
+            print(f"[WARN] {port} {label}: {name} PID {pid if pid is not None else '?'}")
     for protocol, port in sorted(unknown):
-        if port not in remaining_by_port:
+        if port not in remaining:
             print(f"[OK] {protocol}/{port} listener ended before owner details were available.")
-    remaining_related = any(
-        related is True and not kept for values in remaining_by_port.values() for _, _, related, _, kept in values
+
+
+def main() -> int:
+    args = parse_args()
+    if os.name != "nt":
+        print("[FAIL] This shutdown launcher supports Windows only.")
+        return 2
+    context_failure = report_context()
+    if context_failure is not None:
+        return context_failure
+
+    ports = configured_ports()
+    configured = set(ports)
+    roots = agent_roots() if args.non_agents else []
+    keep_ports = agent_ports() if args.non_agents else set()
+    print(
+        f"Checking {len(ports)} configured service ports and all active TCP/UDP listeners for C:\\AI-owned processes."
     )
-    return 1 if remaining_related or any(port in configured for _, port in unknown if port in remaining_by_port) else 0
+    if args.non_agents:
+        print("Mode          : non-agent services only (coding agents, llama.cpp and Strata are preserved).")
+    try:
+        candidates, unknown = collect_candidates(args, configured, roots, keep_ports)
+    except RuntimeError as error:
+        print(f"[FAIL] {error}")
+        return 2
+    terminate(candidates)
+
+    remaining = remaining_listeners(args, roots, keep_ports)
+    report_remaining(ports, remaining, unknown)
+    remaining_related = any(
+        related is True and not kept for values in remaining.values() for _, _, related, _, kept in values
+    )
+    return 1 if remaining_related or any(port in configured for _, port in unknown if port in remaining) else 0
 
 
 if __name__ == "__main__":

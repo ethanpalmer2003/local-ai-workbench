@@ -48,17 +48,20 @@ def claims_from(data, source, scope="model"):
     return result
 
 
-def summary(record, language_catalog) -> dict[str, Any]:
-    local = record.get("local", {}).get("metadata", {})
-    spec = local.get("audiocpp.model_spec.json", "{}")
+def _spec(local: dict[str, Any]) -> dict[str, Any]:
+    raw = local.get("audiocpp.model_spec.json", "{}")
     try:
-        spec = json.loads(spec) if isinstance(spec, str) else {}
+        spec = json.loads(raw) if isinstance(raw, str) else {}
     except ValueError:
-        spec = {}
-    if not isinstance(spec, dict):
-        spec = {}
-    claims = claims_from(local, "embedded") + claims_from(spec, "embedded:model_spec", "speech runtime")
+        return {}
+    return spec if isinstance(spec, dict) else {}
+
+
+def _curated_claims(
+    record: dict[str, Any], language_catalog: dict[str, Any]
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     curated = [entry for entry in language_catalog["models"] if set(entry["model_ids"]) & set(record["ids"])]
+    claims: list[dict[str, Any]] = []
     for entry in curated:
         for field, unit in (("languages", "language"), ("locales", "locale"), ("dialects", "dialect")):
             if entry[field]:
@@ -74,7 +77,13 @@ def summary(record, language_catalog) -> dict[str, Any]:
                         "validated_accuracy": False,
                     }
                 )
-    configs = []
+    return claims, curated
+
+
+def _artifact_claims(record: dict[str, Any]) -> tuple[list[dict[str, Any]], list[tuple[str, dict[str, Any]]]]:
+    """Claims and configs from sidecars and hub cards; each keeps its own scope."""
+    claims: list[dict[str, Any]] = []
+    configs: list[tuple[str, dict[str, Any]]] = []
     for item in record.get("sidecars", []):
         data = item.get("metadata", {})
         claims += claims_from(
@@ -87,28 +96,25 @@ def summary(record, language_catalog) -> dict[str, Any]:
         for name, data in hub.get("configs", {}).items():
             claims += claims_from(data, "hub:" + hub["repo"] + "/" + name)
             configs.append(("hub:" + hub["repo"] + "/" + name, data))
-    claims += claims_from(record.get("native", {}).get("metadata", {}), "native_inspector", "installed runtime")
-    fields = {
-        key: value
-        for key, value in local.items()
-        if any(
-            word in key.lower()
-            for word in (
-                "architecture",
-                "context_length",
-                "block_count",
-                "head_count",
-                "embedding_length",
-                "expert",
-                "sliding_window",
-                "license",
-                "sample_rate",
-                "file_type",
-                "size_label",
-                "parameter_count",
-            )
-        )
-    }
+    return claims, configs
+
+
+def _fields(local: dict[str, Any], configs: list[tuple[str, dict[str, Any]]]) -> dict[str, Any]:
+    listed = (
+        "architecture",
+        "context_length",
+        "block_count",
+        "head_count",
+        "embedding_length",
+        "expert",
+        "sliding_window",
+        "license",
+        "sample_rate",
+        "file_type",
+        "size_label",
+        "parameter_count",
+    )
+    fields = {key: value for key, value in local.items() if any(word in key.lower() for word in listed)}
     for source, config in configs:
         for key in (
             "architectures",
@@ -130,21 +136,41 @@ def summary(record, language_catalog) -> dict[str, Any]:
         ):
             if key in config:
                 fields[source + ":" + key] = config[key]
+    return fields
+
+
+def _tasks(record: dict[str, Any], curated: list[dict[str, Any]], spec: dict[str, Any]) -> list[str]:
     tasks = sorted({task for entry in curated for task in entry["tasks"]} | set(spec.get("tasks", [])))
     if not tasks and any(group in ("llamacpp", "koboldcpp", "strata") for group in record["groups"]):
         tasks = ["llm (registry group; modality support not established)"]
-    label = re.search(r"(?:iq|q)\d[^.]*|bf16|f16|fp16|f32", Path(record["path"]).name, re.I)
+    return tasks
+
+
+def _templates(local: dict[str, Any], configs: list[tuple[str, dict[str, Any]]]) -> list[str]:
     templates = [source for source, config in configs if config.get("chat_template")]
     if local.get("tokenizer.chat_template"):
         templates.append("embedded:tokenizer.chat_template")
+    return templates
+
+
+def summary(record, language_catalog) -> dict[str, Any]:
+    local = record.get("local", {}).get("metadata", {})
+    spec = _spec(local)
+    claims = claims_from(local, "embedded") + claims_from(spec, "embedded:model_spec", "speech runtime")
+    curated_claims, curated = _curated_claims(record, language_catalog)
+    claims += curated_claims
+    artifact_claims, configs = _artifact_claims(record)
+    claims += artifact_claims
+    claims += claims_from(record.get("native", {}).get("metadata", {}), "native_inspector", "installed runtime")
     language_sets = {
         tuple(sorted(code.lower().replace("_", "-") for code in claim["codes"]))
         for claim in claims
         if claim["unit"] == "language"
     }
+    label = re.search(r"(?:iq|q)\d[^.]*|bf16|f16|fp16|f32", Path(record["path"]).name, re.I)
     return {
-        "tasks": tasks or None,
-        "fields": fields,
+        "tasks": _tasks(record, curated, spec) or None,
+        "fields": _fields(local, configs),
         "language_claims": claims,
         "language_status": "claims_available"
         if claims
@@ -152,7 +178,7 @@ def summary(record, language_catalog) -> dict[str, Any]:
         "review_flags": ["Language claims differ; compare scopes and incomplete tags, do not union automatically"]
         if len(language_sets) > 1
         else [],
-        "chat_template_sources": templates,
+        "chat_template_sources": _templates(local, configs),
         "capabilities": spec.get("capabilities") or None,
         "modes": spec.get("modes") or None,
         "voices": spec.get("ui", {}).get("builtin_voices") or None,

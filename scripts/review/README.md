@@ -13,11 +13,11 @@ The runner executes five checks:
 - `model_drift.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
 - `frontend.py`: front-end wiring - HTML/JS asset paths, DOM element ids and injected settings keys.
 - `basedpyright`: Python type errors.
-- `audit.py`: folder counts, sparse-folder warnings, 2-3-item merge candidates, Markdown/Python-module counts, file lines, function complexity, and duplicate function bodies (advisory, not a pass/fail gate). Python-module counts exclude `__init__.py`; low counts are prompts to review, not automatic merge findings.
+- `inventory.py`: folder counts, sparse-folder warnings, 2-3-item merge candidates, Markdown/Python-module counts, file lines, function complexity (depth 4 / 100 code lines, which gates) and duplicate function bodies (advisory). Python-module counts exclude `__init__.py`; low counts are prompts to review, not automatic merge findings.
 
 Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function limits are depth 4 and 100 code lines. Inventory excludes generated output, caches, model data, third-party installations and trash.
 
-Run a single check with `python -m scripts.review.structure`, `python -m scripts.review.model_drift`, `python -m scripts.review.frontend`, or `python -m scripts.review.audit`.
+Run a single check with `python -m scripts.review.structure`, `python -m scripts.review.model_drift`, `python -m scripts.review.frontend`, or `python -m scripts.review.inventory`.
 
 ## Front-end wiring (`frontend.py`)
 
