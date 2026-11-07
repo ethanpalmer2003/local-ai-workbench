@@ -4,6 +4,7 @@ import hashlib
 import json
 import queue
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlencode
 
 from scripts.config import project_config as project_cfg
@@ -63,19 +64,24 @@ def start(port: int | None = None):
     )
 
 
-def transcribe(body: bytes, content_type: str, headers: dict[str, str] | None = None) -> tuple[bytes, str]:  # noqa: C901
-    request = requests.parse(body, content_type)
+def _validated(request: Any) -> None:
     if request.suppress_non_speech:
         raise ValueError("Non-speech token suppression is a Whisper-specific option")
     if request.response_format not in ("json", "text"):
         raise ValueError("Nemotron supports json or text output")
+
+
+def _pcm(request: Any) -> bytes:
     from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 
     samples, rate = decode_audio(request.audio)
     pcm = (mono_resample(samples, rate).clip(-1, 1) * 32767).astype("<i2").tobytes()
     if not pcm or len(pcm) > 16000 * 2 * 30:
         raise ValueError("Nemotron uploads must contain 0-30 seconds of audio")
-    # The configured model is streaming; file uploads must use its live transport too.
+    return pcm
+
+
+def _stream_url(request: Any) -> str:
     query = urlencode(
         {
             "model": "benchmark-asr",
@@ -85,29 +91,39 @@ def transcribe(body: bytes, content_type: str, headers: dict[str, str] | None = 
             "sample_format": "s16le",
         }
     )
-    stream = StreamingPost(url() + "/v1/audio/transcriptions/live?" + query, timeout=30)
+    return url() + "/v1/audio/transcriptions/live?" + query
+
+
+def _await_transcript(stream: Any, response_format: str) -> tuple[bytes, str]:
+    while True:
+        try:
+            event = stream.events.get(timeout=1)
+        except queue.Empty:
+            if stream.done.is_set():
+                raise RuntimeError("Nemotron upload ended without a final transcript")
+            continue
+        if event.get("error") or event.get("type") == "error":
+            raise RuntimeError(str(event))
+        if event.get("type") == "transcript.text.done":
+            text = event.get("text")
+            if not isinstance(text, str):
+                raise RuntimeError("Nemotron returned no text")
+            if response_format == "text":
+                return text.encode(), "text/plain"
+            return json.dumps({"text": text}).encode(), "application/json"
+
+
+def transcribe(body: bytes, content_type: str, headers: dict[str, str] | None = None) -> tuple[bytes, str]:
+    request = requests.parse(body, content_type)
+    _validated(request)
+    pcm = _pcm(request)
+    # The configured model is streaming; file uploads must use its live transport too.
+    stream = StreamingPost(_stream_url(request), timeout=30)
     try:
         stream.start()
         for offset in range(0, len(pcm), 32768):
             stream.send(pcm[offset : offset + 32768])
         stream.finish()
-        while True:
-            try:
-                event = stream.events.get(timeout=1)
-            except queue.Empty:
-                if stream.done.is_set():
-                    raise RuntimeError("Nemotron upload ended without a final transcript")
-                continue
-            if event.get("error") or event.get("type") == "error":
-                raise RuntimeError(str(event))
-            if event.get("type") == "transcript.text.done":
-                text = event.get("text")
-                if not isinstance(text, str):
-                    raise RuntimeError("Nemotron returned no text")
-                return (
-                    (text.encode(), "text/plain")
-                    if request.response_format == "text"
-                    else (json.dumps({"text": text}).encode(), "application/json")
-                )
+        return _await_transcript(stream, request.response_format)
     finally:
         stream.close()

@@ -12,58 +12,58 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import coding_clients, llamacpp, llamacpp_proxy
 
 
-def prepare_pi_env(  # noqa: C901
-    client: cfg.SharedStartupRequestCodingClientSettings | None = None, seed_dir: Path | None = None
-) -> dict[str, str]:
-    client = cfg.PI_CLIENT if client is None else client
-    env = os.environ.copy()
-    previous_dir = (
-        seed_dir
-        if seed_dir is not None
-        else Path(env.get("PI_CODING_AGENT_DIR") or Path.home() / ".pi" / "agent").expanduser()
-    )
-    agent_dir = client.agent_dir
-    if seed_dir is None and client is cfg.LITTLECODER_CLIENT and not env.get("PI_CODING_AGENT_DIR"):
-        previous_dir = cfg.PI_CLIENT.agent_dir
-    agent_dir.mkdir(parents=True, exist_ok=True)
-    if previous_dir.resolve() != agent_dir.resolve():
-        # - seed persistent state once; never overwrite newer local state
-        for name in (
-            "settings.json",
-            "auth.json",
-            "models.json",
-            "keybindings.json",
-            "little-coder-prompt-history.json",
-            "sessions",
-        ):
-            source = previous_dir / name
-            target = agent_dir / name
-            if source.exists() and not target.exists():
-                if source.is_dir():
-                    shutil.copytree(source, target)
-                else:
-                    shutil.copy2(source, target)
+def _previous_agent_dir(
+    client: cfg.SharedStartupRequestCodingClientSettings, seed_dir: Path | None, env: dict[str, str]
+) -> Path:
+    if seed_dir is not None:
+        return seed_dir
+    if client is cfg.LITTLECODER_CLIENT and not env.get("PI_CODING_AGENT_DIR"):
+        return cfg.PI_CLIENT.agent_dir
+    return Path(env.get("PI_CODING_AGENT_DIR") or Path.home() / ".pi" / "agent").expanduser()
 
-    sessions_dir = agent_dir / "sessions"
-    sessions_dir.mkdir(exist_ok=True)
-    if client.extensions:
-        extension_dir = agent_dir / "extensions"
-        extension_dir.mkdir(exist_ok=True)
-        for source in client.extensions:
-            shutil.copy2(source, extension_dir / source.name)
-    if client.packages or client.additional_tools:
-        settings_path = agent_dir / "settings.json"
-        settings = json.loads(settings_path.read_text(encoding="utf-8")) if settings_path.exists() else {}
-        settings["packages"] = [
-            value for value in settings.get("packages", []) if not pi_packages.managed_package_reference(value)
-        ]
-        for key, values in (
-            ("packages", [path.as_posix() for path in client.packages]),
-            ("defaultTools", [f"+{name}" for name in client.additional_tools]),
-        ):
-            entries = settings.setdefault(key, [])
-            entries.extend(value for value in values if value not in entries)
-        settings_path.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+
+def _seed_state(previous_dir: Path, agent_dir: Path) -> None:
+    # - seed persistent state once; never overwrite newer local state
+    for name in (
+        "settings.json",
+        "auth.json",
+        "models.json",
+        "keybindings.json",
+        "little-coder-prompt-history.json",
+        "sessions",
+    ):
+        source = previous_dir / name
+        target = agent_dir / name
+        if source.exists() and not target.exists():
+            if source.is_dir():
+                shutil.copytree(source, target)
+            else:
+                shutil.copy2(source, target)
+
+
+def _install_extensions(agent_dir: Path, client: cfg.SharedStartupRequestCodingClientSettings) -> None:
+    extension_dir = agent_dir / "extensions"
+    extension_dir.mkdir(exist_ok=True)
+    for source in client.extensions:
+        shutil.copy2(source, extension_dir / source.name)
+
+
+def _merge_settings(agent_dir: Path, client: cfg.SharedStartupRequestCodingClientSettings) -> None:
+    settings_path = agent_dir / "settings.json"
+    settings = json.loads(settings_path.read_text(encoding="utf-8")) if settings_path.exists() else {}
+    settings["packages"] = [
+        value for value in settings.get("packages", []) if not pi_packages.managed_package_reference(value)
+    ]
+    for key, values in (
+        ("packages", [path.as_posix() for path in client.packages]),
+        ("defaultTools", [f"+{name}" for name in client.additional_tools]),
+    ):
+        entries = settings.setdefault(key, [])
+        entries.extend(value for value in values if value not in entries)
+    settings_path.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+
+
+def _probe_writes(agent_dir: Path, sessions_dir: Path) -> None:
     # - exercise both settings-lock mkdir and session-file writes before loading the model.
     #   A default-mode probe keeps the Windows sandbox token able to write: TemporaryDirectory
     #   applies mode 0700, whose DACL excludes that restricted token.
@@ -75,6 +75,10 @@ def prepare_pi_env(  # noqa: C901
         finally:
             shutil.rmtree(probe, ignore_errors=True)
 
+
+def _export_env(
+    client: cfg.SharedStartupRequestCodingClientSettings, agent_dir: Path, env: dict[str, str]
+) -> dict[str, str]:
     env["PI_CODING_AGENT_DIR"] = str(agent_dir)
     env.update(pi_packages.environment(client.packages, env))
     if client is cfg.LITTLECODER_CLIENT:
@@ -95,6 +99,27 @@ def prepare_pi_env(  # noqa: C901
     ]
     env["LITTLE_CODER_BASH_ALLOW"] = ",".join(prefix for prefix in allowed if prefix)
     return env
+
+
+def prepare_pi_env(
+    client: cfg.SharedStartupRequestCodingClientSettings | None = None, seed_dir: Path | None = None
+) -> dict[str, str]:
+    client = cfg.PI_CLIENT if client is None else client
+    env = os.environ.copy()
+    previous_dir = _previous_agent_dir(client, seed_dir, env)
+    agent_dir = client.agent_dir
+    agent_dir.mkdir(parents=True, exist_ok=True)
+    if previous_dir.resolve() != agent_dir.resolve():
+        _seed_state(previous_dir, agent_dir)
+
+    sessions_dir = agent_dir / "sessions"
+    sessions_dir.mkdir(exist_ok=True)
+    if client.extensions:
+        _install_extensions(agent_dir, client)
+    if client.packages or client.additional_tools:
+        _merge_settings(agent_dir, client)
+    _probe_writes(agent_dir, sessions_dir)
+    return _export_env(client, agent_dir, env)
 
 
 def pi_command(
