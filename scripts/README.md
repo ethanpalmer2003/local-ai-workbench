@@ -11,7 +11,7 @@
 | Strata with Pi | [guide](launchers/strata/README.md) |
 | Audio / Kokoro | [guide](launchers/audiocpp/README.md) |
 | Sherpa / Piper | [TTS guide](launchers/audiocpp/RETAINED-TTS.md); official Windows CPU frameworks |
-| Kobold + speech/images | [shared GPU](config/notes/SHARED-GPU.md), [swapping](config/notes/IMAGE-ON-DEMAND.md) |
+| Koboldcpp + speech/images | [shared GPU](config/notes/SHARED-GPU.md), [swapping](config/notes/IMAGE-ON-DEMAND.md) |
 | Ports / proxies | [proxy principle](launchers/PROXIES.md) |
 | Language practice / ASR | [ASR guide](launchers/asr/README.md), [comparison setup](tests/cases/asr/COMPARISON.md), [checkpoint](../notes/asr/ASR-IMPLEMENTATION.md) |
 | Images | [settings](config/sdcpp/README.md) |

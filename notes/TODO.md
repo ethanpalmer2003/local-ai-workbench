@@ -12,7 +12,7 @@
 ## Code quality
 
 - [ ] `kobold_stack_vram.generate` returns the *input* prompt text for the audio and image kinds, not a result. Only the text caller consumes it; decide whether the other kinds should return `""`.
-- [ ] Dependency advisories: `python -m scripts.review --audit` reports 80 across 11 packages (pillow 39, filelock 12, transformers 9, aiohttp 8). Third-party and mostly transitive; triage what is reachable, then decide whether any pin moves.
+- [ ] Dependency advisories after the 2026-11-07 triage: 49 remain in 3 packages. pillow 39 is **blocked upstream** - `gradio` pins `pillow<13.0` in every release up to 6.31.0, so 12.3.0 cannot move. transformers 9 needs the 5.x major alongside peft/diffusers; nothing in project code imports it directly. accelerate 1 has no published fix. Re-run `python -m scripts.review --audit`.
 - [ ] `benchmark_context_stream.stream_request` reads `events[0]["seconds"]`, so a stream with no token events raises `IndexError` instead of a clear contract error.
 - [ ] `kobold_image_swap._swap_cycles` passes `lambda: generate(..., label)` with the loop variable bound late; it only works because `record` calls it immediately. Bind `label` as a default argument.
 
