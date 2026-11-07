@@ -5,6 +5,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tomllib
 from importlib.metadata import distributions, packages_distributions
 from pathlib import Path
 from typing import Any
@@ -121,41 +122,39 @@ def unused_packages() -> list[tuple[str, str]]:
     return sorted(((display[name], known[name]) for name in set(known) - reachable), key=lambda row: row[0].casefold())
 
 
-def pinned() -> dict[str, tuple[str, str]]:
-    """Normalized name -> (as written, version) for every explicit requirement pin."""
-    path = project_cfg.SCRIPTS_DIR / "requirements.txt"
-    pins: dict[str, tuple[str, str]] = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        entry = line.split("#", 1)[0].strip()
-        if "==" not in entry:
-            continue
-        name, version = entry.split("==", 1)
-        pins[_normalized(name)] = (name.strip(), version.strip())
-    return pins
+def locked() -> dict[str, str]:
+    """Normalized name -> version for every package uv.lock resolves."""
+    lock = project_cfg.BASE_DIR / "uv.lock"
+    if not lock.is_file():
+        return {}
+    payload = tomllib.loads(lock.read_text(encoding="utf-8"))
+    return {
+        _normalized(entry["name"]): entry["version"]
+        for entry in payload.get("package", [])
+        if isinstance(entry, dict) and "name" in entry and "version" in entry
+    }
 
 
-def drift_issues() -> list[str]:
-    """requirements.txt and the venv must describe the same set at the same versions."""
-    pins = pinned()
-    known = installed()
-    issues = [
-        f"Pinned but not installed: {name}=={version}" for key, (name, version) in pins.items() if key not in known
-    ]
-    issues.extend(f"Installed but not pinned: {name} {version}" for name, version in known.items() if name not in pins)
-    issues.extend(
-        f"Version differs: {pins[key][0]} pinned {pins[key][1]}, installed {known[key]}"
-        for key in pins
-        if key in known and known[key] != pins[key][1]
+def lock_issues() -> list[str]:
+    """uv.lock must exist and agree with pyproject; uv is the only supported installer."""
+    uv = shutil.which("uv")
+    if uv is None:
+        return ["uv is not on PATH; the lockfile cannot be verified"]
+    result = subprocess.run(
+        [uv, "lock", "--check", "--offline"], cwd=project_cfg.BASE_DIR, capture_output=True, text=True, check=False
     )
-    return sorted(issues)
+    if result.returncode == 0:
+        return []
+    detail = (result.stderr or result.stdout).strip().splitlines()
+    return [f"uv.lock is out of date: {detail[-1] if detail else 'run `uv lock`'}"]
 
 
 def summary() -> dict[str, int]:
     return {
-        "pinned": len(pinned()),
+        "locked": len(locked()),
         "installed": len(installed()),
         "unused": len(unused_packages()),
-        "drift": len(drift_issues()),
+        "drift": len(lock_issues()),
     }
 
 
@@ -172,7 +171,6 @@ def uninstall(names: list[str]) -> int:
 
 def main(remove: bool = False) -> int:
     unused = unused_packages()
-    drift = drift_issues()
     print(f"{len(unused)} installed package(s) are outside the import graph")
     for name, version in unused:
         print(f"  {name} {version}")
@@ -181,8 +179,8 @@ def main(remove: bool = False) -> int:
     if unused and remove:
         status = uninstall([name for name, _ in unused])
         print(f"[{'OK' if status == 0 else 'FAIL'}] uninstall exited {status}")
-        drift = drift_issues()
-    print(f"\n{len(drift)} requirement/venv drift entry(s)")
-    for issue in drift:
+    issues = lock_issues()
+    print(f"\n{len(issues)} lock entry issue(s)")
+    for issue in issues:
         print(f"  {issue}")
-    return int(bool(drift))
+    return int(bool(issues))

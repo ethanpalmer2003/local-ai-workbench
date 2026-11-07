@@ -132,13 +132,13 @@ def main(argv: list[str] | None = None) -> int:
     print(audit_note)
 
     print("\n=== DEPENDENCY HYGIENE ===", flush=True)
-    drift = dependencies.drift_issues()
-    print(f"{counts['pinned']} pinned, {counts['installed']} installed, {counts['unused']} unused")
+    issues = dependencies.lock_issues()
+    print(f"{counts['locked']} locked, {counts['installed']} installed, {counts['unused']} unused")
     declaration_status = declaration_check()
     print("[OK] Imports match the pins" if not declaration_status else "[FAIL] deptry reported issues")
-    for issue in drift[:10]:
+    for issue in issues[:10]:
         print(f"[FAIL] {issue}")
-    print("[OK] Requirements match the venv" if not drift else f"[FAIL] {len(drift)} drift entries")
+    print("[OK] uv.lock matches pyproject" if not issues else f"[FAIL] {len(issues)} lock issue(s)")
     return int(
         bool(
             structure_status
@@ -149,7 +149,7 @@ def main(argv: list[str] | None = None) -> int:
             or formatting_status
             or spelling_status
             or audit_status
-            or drift
+            or issues
             or declaration_status
         )
     )

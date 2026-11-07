@@ -1,6 +1,6 @@
 # New-machine setup
 
-- Workspace: `C:/AI`; interpreter/environment: `scripts/.venv`, managed with uv. Dependencies: [requirements](../scripts/requirements.txt); package installs require approval.
+- Workspace: `C:/AI`; interpreter/environment: `scripts/.venv`, managed with uv. Dependencies: declared in [pyproject.toml](../pyproject.toml), resolved in `uv.lock` (`uv sync`); package installs require approval.
 - CPU torch/torchaudio use the PyTorch CPU index. Native framework packages and model downloads are separate from Python dependencies.
 - Secrets: `scripts/.env`; HF home: `data/huggingface`. Never copy credentials into source/docs.
 - Canonical component/native-layout map: [project_config.py](../scripts/config/project_config.py); [configuration ownership](../scripts/config/README.md).

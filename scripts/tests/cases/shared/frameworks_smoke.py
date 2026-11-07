@@ -14,6 +14,7 @@ import subprocess
 import sys
 import threading
 import time
+import tomllib
 import unittest
 import urllib.error
 import urllib.request
@@ -46,16 +47,22 @@ from scripts.tests.shared.timing import timed
 
 @requires_model_check
 class DefaultPaths(unittest.TestCase):
-    def test_venv_and_requirements(self):
+    def test_venv_and_lock(self):
         if not (project_cfg.SCRIPTS_DIR / ".venv").is_dir():
             self.skipTest("this checkout has no virtual environment")
         self.assertEqual(Path(sys.prefix).resolve(), (project_cfg.SCRIPTS_DIR / ".venv").resolve())
         self.assertEqual(sys.version_info[:2], (3, 13))
-        for line in (project_cfg.SCRIPTS_DIR / "requirements.txt").read_text(encoding="utf-8").splitlines():
-            if line and not line.startswith("#"):
-                name, version = line.split("==", 1)
-                with self.subTest(package=name):
-                    self.assertEqual(importlib.metadata.version(name), version)
+        lock = tomllib.loads((project_cfg.BASE_DIR / "uv.lock").read_text(encoding="utf-8"))
+        for entry in lock.get("package", []):
+            name, version = entry.get("name"), entry.get("version")
+            if not name or not version:
+                continue
+            try:
+                installed_version = importlib.metadata.version(name)
+            except importlib.metadata.PackageNotFoundError:
+                continue
+            with self.subTest(package=name):
+                self.assertEqual(installed_version, version)
 
     def test_sdcpp_default_files(self):
         for path in (sdcpp.build_dir() / "sd-server.exe", Path(str(cfg.SDCPP_SERVER_ARGS["m"]))):
