@@ -13,6 +13,8 @@
 
 - [ ] `kobold_stack_vram.generate` returns the *input* prompt text for the audio and image kinds, not a result. Only the text caller consumes it; decide whether the other kinds should return `""`.
 - [ ] Not gated: `codespell` stays a manual pre-commit stage.
+- [ ] `benchmark_context_stream.stream_request` reads `events[0]["seconds"]`, so a stream with no token events raises `IndexError` instead of a clear contract error.
+- [ ] `kobold_image_swap._swap_cycles` passes `lambda: generate(..., label)` with the loop variable bound late; it only works because `record` calls it immediately. Bind `label` as a default argument.
 
 ## Deferred
 
