@@ -41,40 +41,43 @@ MODEL_ID = cfg.AudiocppModel.FISH_DRAMA3_Q2.value
 PORT = 18884
 
 
-def weight_estimates() -> dict[str, Any]:  # noqa: C901
-    # - Tensor offsets include alignment padding; do not read tensor payloads.
-    with MODEL.open("rb") as stream:
-        if stream.read(4) != b"GGUF":
-            raise ValueError("Expected GGUF")
-        version, count, metadata_count = struct.unpack("<IQQ", stream.read(20))
-        if version not in (2, 3):
-            raise ValueError(f"Unsupported GGUF version {version}")
-        alignment = 32
-        original_names = []
-        for _ in range(metadata_count):
-            key = _read_str(stream)
-            kind = struct.unpack("<I", stream.read(4))[0]
-            if key == "general.alignment" and kind == 4:
-                alignment = struct.unpack("<I", stream.read(4))[0]
-            elif key == "audiocpp.tensor_names" and kind == 9:
-                element_kind, length = struct.unpack("<IQ", stream.read(12))
-                if element_kind != 8:
-                    raise ValueError("Expected string tensor names")
-                original_names = [_read_str(stream) for _ in range(length)]
-            else:
-                _skip_value(stream, kind)
-        tensors: list[tuple[int, str]] = []
-        for _ in range(count):
-            name = _read_str(stream)
-            if name.startswith("_audiocpp."):
-                name = original_names[int(name.split(".")[1])]
-            dimensions = struct.unpack("<I", stream.read(4))[0]
-            stream.seek(dimensions * 8 + 4, 1)
-            offset = struct.unpack("<Q", stream.read(8))[0]
-            tensors.append((offset, name))
-        data_start = (stream.tell() + alignment - 1) // alignment * alignment
+def _gguf_header(stream) -> tuple[int, int, list[str]]:
+    if stream.read(4) != b"GGUF":
+        raise ValueError("Expected GGUF")
+    version, count, metadata_count = struct.unpack("<IQQ", stream.read(20))
+    if version not in (2, 3):
+        raise ValueError(f"Unsupported GGUF version {version}")
+    alignment = 32
+    original_names: list[str] = []
+    for _ in range(metadata_count):
+        key = _read_str(stream)
+        kind = struct.unpack("<I", stream.read(4))[0]
+        if key == "general.alignment" and kind == 4:
+            alignment = struct.unpack("<I", stream.read(4))[0]
+        elif key == "audiocpp.tensor_names" and kind == 9:
+            element_kind, length = struct.unpack("<IQ", stream.read(12))
+            if element_kind != 8:
+                raise ValueError("Expected string tensor names")
+            original_names = [_read_str(stream) for _ in range(length)]
+        else:
+            _skip_value(stream, kind)
+    return count, alignment, original_names
+
+
+def _gguf_tensors(stream, count: int, original_names: list[str]) -> list[tuple[int, str]]:
+    tensors: list[tuple[int, str]] = []
+    for _ in range(count):
+        name = _read_str(stream)
+        if name.startswith("_audiocpp."):
+            name = original_names[int(name.split(".")[1])]
+        dimensions = struct.unpack("<I", stream.read(4))[0]
+        stream.seek(dimensions * 8 + 4, 1)
+        tensors.append((struct.unpack("<Q", stream.read(8))[0], name))
     tensors.sort()
-    total = MODEL.stat().st_size - data_start
+    return tensors
+
+
+def _expert_bytes(tensors: list[tuple[int, str]], total: int) -> list[int]:
     experts = [0] * 40
     for index, (offset, name) in enumerate(tensors):
         end = tensors[index + 1][0] if index + 1 < len(tensors) else total
@@ -83,6 +86,17 @@ def weight_estimates() -> dict[str, Any]:  # noqa: C901
             experts[int(match[1])] += end - offset
     if not all(experts):
         raise ValueError("Expected routed expert banks in each of 40 layers")
+    return experts
+
+
+def weight_estimates() -> dict[str, Any]:
+    # - Tensor offsets include alignment padding; do not read tensor payloads.
+    with MODEL.open("rb") as stream:
+        count, alignment, original_names = _gguf_header(stream)
+        tensors = _gguf_tensors(stream, count, original_names)
+        data_start = (stream.tell() + alignment - 1) // alignment * alignment
+    total = MODEL.stat().st_size - data_start
+    experts = _expert_bytes(tensors, total)
     return {
         "model": str(MODEL),
         "file_bytes": MODEL.stat().st_size,
@@ -252,18 +266,7 @@ def run_case(
     return result
 
 
-def serve(layers: int, run: RunPaths) -> None:  # noqa: C901
-    # - Lazy loading keeps unselected catalog models unloaded.
-    from scripts.launchers.audiocpp.audiocpp_proxy import _transform
-    from scripts.launchers.audiocpp.tts_proxy import run_tts_json_proxy
-    from scripts.launchers.proxy_restart import (
-        OwnedBackendLifecycle,
-        ProxyRestartController,
-        reload_proxy_configuration,
-    )
-
-    if any(listening(port) for port in (8888, 18886, PORT)):
-        raise RuntimeError("Audio proxy/test port occupied; reuse or stop the existing session explicitly")
+def _interactive_config(run: RunPaths, layers: int) -> tuple[Path, Path]:
     config = run.temp / "server-interactive.json"
     source = Path(cfg.AUDIOCPP_SERVER_ARGS["config"])
     settings = audio_cfg.read(source)
@@ -277,59 +280,79 @@ def serve(layers: int, run: RunPaths) -> None:  # noqa: C901
     cfg.AUDIOCPP_SERVICE.model = cfg.AudiocppModel.BREEZE_TTS.value
     cfg.AUDIOCPP_SERVICE.port = 8888
     cfg.AUDIOCPP_SERVICE.streaming.pcm_sample_rate = 24000
+    return config, source
+
+
+def _spawn_server(exe: Path, config: Path, log) -> subprocess.Popen[Any]:
+    return subprocess.Popen(
+        [str(exe), "--config", str(config), "--port", str(PORT), "--threads", "8", "--no-ui"],
+        cwd=str(exe.parent),
+        stdout=log,
+        stderr=subprocess.STDOUT,
+    )
+
+
+def _lifecycle(process, exe: Path, config: Path, source: Path, log, monitor) -> Any:
+    from scripts.launchers.proxy_restart import OwnedBackendLifecycle
+
+    def prepare_backend() -> None:
+        updated = audio_cfg.read(source)
+        for model in updated["models"]:
+            if model["id"] == cfg.AudiocppModel.BREEZE_TTS.value:
+                model["mode"] = "streaming"
+        config.write_text(json.dumps(updated, indent=2), encoding="utf-8")
+
+    def start_backend():
+        started = _spawn_server(exe, config, log)
+        monitor.pid = started.pid
+        monitor.stage = f"interactive-pid-{started.pid}"
+        return started
+
+    return OwnedBackendLifecycle(process, start_backend, f"http://127.0.0.1:{PORT}/health", prepare_backend)
+
+
+def _reload_settings(config: Path) -> None:
+    from scripts.launchers.proxy_restart import reload_proxy_configuration
+
+    reload_proxy_configuration(cfg.AUDIOCPP_SERVICE, "AUDIOCPP_SERVICE")
+    cfg.AUDIOCPP_SERVER_ARGS["config"] = str(config)
+
+
+def _page_server() -> http.server.ThreadingHTTPServer:
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(project_cfg.SCRIPTS_DIR))
+    return http.server.ThreadingHTTPServer(("127.0.0.1", 18886), handler)
+
+
+def serve(layers: int, run: RunPaths) -> None:
+    # - Lazy loading keeps unselected catalog models unloaded.
+    from scripts.launchers.audiocpp.audiocpp_proxy import _transform
+    from scripts.launchers.audiocpp.tts_proxy import run_tts_json_proxy
+    from scripts.launchers.proxy_restart import ProxyRestartController
+
+    if any(listening(port) for port in (8888, 18886, PORT)):
+        raise RuntimeError("Audio proxy/test port occupied; reuse or stop the existing session explicitly")
+    config, source = _interactive_config(run, layers)
     exe = project_cfg.AUDIOCPP_SERVER_EXE
     with (run.logs / "server-interactive.log").open("wb") as log:
-        process = subprocess.Popen(
-            [str(exe), "--config", str(config), "--port", str(PORT), "--threads", "8", "--no-ui"],
-            cwd=str(exe.parent),
-            stdout=log,
-            stderr=subprocess.STDOUT,
-        )
-        lifecycle: OwnedBackendLifecycle | None = None
+        process = _spawn_server(exe, config, log)
+        lifecycle = None
         try:
             wait_for_health(PORT, process)
-
-            def prepare_backend() -> None:
-                updated = audio_cfg.read(source)
-                for model in updated["models"]:
-                    if model["id"] == cfg.AudiocppModel.BREEZE_TTS.value:
-                        model["mode"] = "streaming"
-                config.write_text(json.dumps(updated, indent=2), encoding="utf-8")
-
-            interactive_monitor = GpuMemoryMonitor(process.pid, run.logs / "vram-interactive.jsonl")
-
-            def start_backend():
-                started = subprocess.Popen(
-                    [str(exe), "--config", str(config), "--port", str(PORT), "--threads", "8", "--no-ui"],
-                    cwd=str(exe.parent),
-                    stdout=log,
-                    stderr=subprocess.STDOUT,
-                )
-                interactive_monitor.pid = started.pid
-                interactive_monitor.stage = f"interactive-pid-{started.pid}"
-                return started
-
-            service = cfg.AUDIOCPP_SERVICE
-            lifecycle = OwnedBackendLifecycle(
-                process, start_backend, f"http://127.0.0.1:{PORT}/health", prepare_backend
-            )
-
-            def reload_settings() -> None:
-                reload_proxy_configuration(service, "AUDIOCPP_SERVICE")
-                cfg.AUDIOCPP_SERVER_ARGS["config"] = str(config)
-
+            monitor = GpuMemoryMonitor(process.pid, run.logs / "vram-interactive.jsonl")
+            lifecycle = _lifecycle(process, exe, config, source, log, monitor)
             controller = ProxyRestartController(
-                {"backend": lifecycle.restart, "proxy": reload_settings},
+                {"backend": lifecycle.restart, "proxy": functools.partial(_reload_settings, config)},
                 {"backend": [source, Path(cfg.__file__)], "proxy": [Path(cfg.__file__)]},
             )
-            handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(project_cfg.SCRIPTS_DIR))
-            page_server = http.server.ThreadingHTTPServer(("127.0.0.1", 18886), handler)
+            page_server = _page_server()
             threading.Thread(target=page_server.serve_forever, daemon=True).start()
-            with interactive_monitor:
+            with monitor:
                 print(f"[OK] Audio HTML proxy on http://127.0.0.1:8888; Drama CPU expert layers={layers}", flush=True)
                 print("[OK] Test page: http://127.0.0.1:18886/tests/ui/speech.html", flush=True)
                 try:
-                    run_tts_json_proxy(service, f"http://127.0.0.1:{PORT}", _transform, restart_controller=controller)
+                    run_tts_json_proxy(
+                        cfg.AUDIOCPP_SERVICE, f"http://127.0.0.1:{PORT}", _transform, restart_controller=controller
+                    )
                 finally:
                     page_server.shutdown()
                     page_server.server_close()
