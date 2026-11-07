@@ -79,5 +79,19 @@ class InputOverlayTests(unittest.TestCase):
                 self.assertEqual(inputs.setting("chat.tts.instruction", "none"), "none")
 
 
+    def test_the_tracked_example_manifest_carries_placeholders_only(self):
+        example = Path(inputs.__file__).with_name("voice_sources.example.json")
+        payload = json.loads(example.read_text(encoding="utf-8"))
+        self.assertTrue(payload["voices"])
+        for name, entry in payload["voices"].items():
+            self.assertTrue(name.startswith("<"), name)
+            self.assertTrue(entry["url"].startswith("https://example.invalid/"), entry["url"])
+            # - every field the downloader reads must be demonstrated
+            self.assertEqual(
+                set(entry) - {"transcripts_xlsx"},
+                {"category", "url", "exclude", "selected", "count", "selection", "fallback"},
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

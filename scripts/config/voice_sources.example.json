@@ -1,0 +1,14 @@
+{
+  "default": "<voice-id>",
+  "voices": {
+    "<voice-id>": {
+      "category": "soundspriters",
+      "url": "https://example.invalid/voice-asset.zip",
+      "count": 1,
+      "selection": "longestText",
+      "fallback": "longestAudio",
+      "exclude": [],
+      "selected": []
+    }
+  }
+}
