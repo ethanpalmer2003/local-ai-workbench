@@ -195,7 +195,188 @@ def _wav_duration(data: bytes) -> float:
         return audio.getnframes() / audio.getframerate()
 
 
-def run_tts_json_proxy(  # noqa: C901
+class _TtsProxyHandler(ProxyHandlerMixin):
+    upstream_url = ""
+    tag = "audiocpp-proxy"
+    audio_service = None
+    test_page_redirect = None
+    transform = None
+    transform_lock = Lock()
+    protocol_version = "HTTP/1.1"
+
+    def _call_upstream(self, method: str, body: bytes):
+        """
+        - POST/GET to the upstream server
+        - Returns (resp, resp_body, total_time, ttfb)
+        - ttfb is time-to-first-byte, i.e. how long the server spent before
+          it started responding (generation/model load) versus how long the
+          audio transfer took
+        """
+        req = urllib.request.Request(
+            self.upstream_url + self.path,
+            data=body if body else None,
+            method=method,
+            headers=build_forward_headers(self.headers, body),
+        )
+        upstream_start = time.perf_counter()
+        with urllib.request.urlopen(req) as resp:
+            ttfb = time.perf_counter() - upstream_start
+            resp_body = resp.read()
+        return resp, resp_body, time.perf_counter() - upstream_start, ttfb
+
+    def _send_audio(self, resp: HTTPResponse, resp_body: bytes):
+        self.send_response(resp.status)
+        relay_response_headers(self, resp.getheaders(), len(resp_body))
+        self.end_headers()
+        self.wfile.write(resp_body)
+        self.wfile.flush()
+
+    # ----------------------------------------------------------
+    # Request handling
+
+    def _forward(self, method: str):
+        if method == "GET":
+            self._forward_get(method)
+            return
+
+        if urlsplit(self.path).path != "/v1/audio/speech":
+            body = read_request_body(self)
+            relay_stream(
+                self, method, self.upstream_url + self.path, build_forward_headers(self.headers, body), body, self.tag
+            )
+            return
+
+        rid = uuid.uuid4().hex[:6]
+        raw_input = None
+        request_start = time.perf_counter()
+        try:
+            prepared = self._prepare(rid)
+            if prepared is None:
+                return
+            raw_input = prepared.raw_input
+            fallback = prepared.fallback
+            _log_tts_request(
+                self.tag,
+                rid,
+                raw_input,
+                prepared.payload,
+                fallback_from=str(fallback) if fallback is not None else None,
+            )
+            if is_streaming_request(prepared.payload):
+                self._stream(method, prepared, rid)
+            else:
+                self._complete(method, prepared, rid, request_start)
+        except audiocpp_catalog.ComparisonSelectionError as error:
+            send_json_error(self, 400, str(error), "invalid_comparison_selection")
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            send_json_error(self, 400, "invalid JSON", "invalid_request")
+        except urllib.error.URLError as e:
+            _log_tts_error(self.tag, rid, raw_input, e)
+            forward_upstream_error(self, self.tag, e)
+        except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+            pass
+        except Exception:
+            traceback.print_exc()
+            with contextlib.suppress(Exception):
+                send_json_error(self, 500, "proxy error", "proxy_error")
+
+    def _forward_get(self, method: str):
+        if self.test_page_redirect and urlsplit(self.path).path in ("/test", "/test/"):
+            self.send_response(307)
+            self.send_header("Location", self.test_page_redirect)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        if self.audio_service is not None and (asset := _test_asset(urlsplit(self.path).path)) is not None:
+            send_bytes(self, 200, asset[0], asset[1])
+            return
+        if self.path == "/proxy/comparison-catalog" and self.audio_service is not None:
+            body = json.dumps(audiocpp_catalog.comparison_catalog()).encode("utf-8")
+            send_bytes(self, 200, body, "application/json")
+            return
+        if urlsplit(self.path).path == "/proxy/config" and self.audio_service is not None:
+            model = parse_qs(urlsplit(self.path).query).get("model", [None])[0]
+            body = json.dumps(audiocpp_catalog.runtime_defaults(self.audio_service, model)).encode("utf-8")
+            send_bytes(self, 200, body, "application/json")
+            return
+        try:
+            try:
+                response, body, _, _ = self._call_upstream(method, read_request_body(self))
+                self._send_audio(response, body)
+            except urllib.error.URLError as error:
+                forward_upstream_error(self, self.tag, error)
+        except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+            print(f"[{self.tag}] client disconnected mid-response")
+
+    def _prepare(self, rid: str) -> _Prepared | None:
+        """
+        - Read and self.transform the request while holding the self.transform turn
+        - Returns None when the self.transform skipped the request (204 already sent)
+        """
+        with self.transform_lock:
+            body = read_request_body(self)
+            transform_start = time.perf_counter()
+            payload: Payload = json.loads(body)
+            raw = payload.get("input")
+            raw_input = raw if isinstance(raw, str) else None
+            fallback = None
+            if self.transform:
+                result = self.transform(payload)
+                if result is None:
+                    send_bytes(self, 204, b"")
+                    _log_tts_skip(self.tag, rid, raw_input)
+                    return None
+                payload = result
+                fallback = payload.pop("_voice_fallback", None)
+                body = json.dumps(payload).encode("utf-8")
+            transform_ms = (time.perf_counter() - transform_start) * 1000 if self.transform else 0.0
+        return _Prepared(payload, body, fallback, transform_ms, raw_input)
+
+    def _stream(self, method: str, prepared: _Prepared, rid: str):
+        # - Once headers are sent, errors must close the stream, not append JSON.
+        try:
+            stats = relay_stream(
+                self,
+                method,
+                self.upstream_url + self.path,
+                build_forward_headers(self.headers, prepared.body),
+                prepared.body,
+                self.tag,
+                response_headers=streamed_speech_response_headers(prepared.payload),
+            )
+            if stats:
+                _log_stream_stats(self.tag, rid, stats, str(prepared.payload.get("model") or "") or None)
+        except Exception:
+            traceback.print_exc()
+        finally:
+            self.close_connection = True
+
+    def _complete(self, method: str, prepared: _Prepared, rid: str, request_start: float):
+        payload = prepared.payload
+        resp, resp_body, generation_time, ttfb = self._call_upstream(method, prepared.body)
+        audio_duration = _wav_duration(resp_body)
+        self._send_audio(resp, resp_body)
+        total = time.perf_counter() - request_start
+        spoken = payload.get("input")
+        instruction, guidance_scale = _request_options(payload)
+        _log_tts_response(
+            self.tag,
+            rid,
+            spoken if isinstance(spoken, str) else None,
+            generation_time,
+            generation_time - ttfb,
+            audio_duration,
+            total,
+            transform_ms=prepared.transform_ms,
+            instruction=instruction,
+            guidance_scale=guidance_scale,
+        )
+
+    def log_message(self, format: str, *args: Any) -> None:
+        pass  # per-request summary is printed in _forward instead
+
+
+def run_tts_json_proxy(
     service: cfg.GenericStartupServiceSettings,
     upstream_url: str,
     transform: Callable[[Payload], Payload | None] | None = None,
@@ -206,180 +387,19 @@ def run_tts_json_proxy(  # noqa: C901
     test_page_redirect: str | None = None,
 ):
     """Relay TTS requests; serialize stateful text preparation, leaving playback to clients."""
-    transform_lock = Lock()
     audio_service = service if isinstance(service, cfg.AudiocppStartupRequestServiceSettings) else None
-
-    class TTSProxyHandler(ProxyHandlerMixin):
-        protocol_version = "HTTP/1.1"
-
-        def _call_upstream(self, method: str, body: bytes):
-            """
-            - POST/GET to the upstream server
-            - Returns (resp, resp_body, total_time, ttfb)
-            - ttfb is time-to-first-byte, i.e. how long the server spent before
-              it started responding (generation/model load) versus how long the
-              audio transfer took
-            """
-            req = urllib.request.Request(
-                upstream_url + self.path,
-                data=body if body else None,
-                method=method,
-                headers=build_forward_headers(self.headers, body),
-            )
-            upstream_start = time.perf_counter()
-            with urllib.request.urlopen(req) as resp:
-                ttfb = time.perf_counter() - upstream_start
-                resp_body = resp.read()
-            return resp, resp_body, time.perf_counter() - upstream_start, ttfb
-
-        def _send_audio(self, resp: HTTPResponse, resp_body: bytes):
-            self.send_response(resp.status)
-            relay_response_headers(self, resp.getheaders(), len(resp_body))
-            self.end_headers()
-            self.wfile.write(resp_body)
-            self.wfile.flush()
-
-        # ----------------------------------------------------------
-        # Request handling
-
-        def _forward(self, method: str):
-            if method == "GET":
-                self._forward_get(method)
-                return
-
-            if urlsplit(self.path).path != "/v1/audio/speech":
-                body = read_request_body(self)
-                relay_stream(
-                    self, method, upstream_url + self.path, build_forward_headers(self.headers, body), body, tag
-                )
-                return
-
-            rid = uuid.uuid4().hex[:6]
-            raw_input = None
-            request_start = time.perf_counter()
-            try:
-                prepared = self._prepare(rid)
-                if prepared is None:
-                    return
-                raw_input = prepared.raw_input
-                fallback = prepared.fallback
-                _log_tts_request(
-                    tag, rid, raw_input, prepared.payload, fallback_from=str(fallback) if fallback is not None else None
-                )
-                if is_streaming_request(prepared.payload):
-                    self._stream(method, prepared, rid)
-                else:
-                    self._complete(method, prepared, rid, request_start)
-            except audiocpp_catalog.ComparisonSelectionError as error:
-                send_json_error(self, 400, str(error), "invalid_comparison_selection")
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                send_json_error(self, 400, "invalid JSON", "invalid_request")
-            except urllib.error.URLError as e:
-                _log_tts_error(tag, rid, raw_input, e)
-                forward_upstream_error(self, tag, e)
-            except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
-                pass
-            except Exception:
-                traceback.print_exc()
-                with contextlib.suppress(Exception):
-                    send_json_error(self, 500, "proxy error", "proxy_error")
-
-        def _forward_get(self, method: str):
-            if test_page_redirect and urlsplit(self.path).path in ("/test", "/test/"):
-                self.send_response(307)
-                self.send_header("Location", test_page_redirect)
-                self.send_header("Content-Length", "0")
-                self.end_headers()
-                return
-            if audio_service is not None and (asset := _test_asset(urlsplit(self.path).path)) is not None:
-                send_bytes(self, 200, asset[0], asset[1])
-                return
-            if self.path == "/proxy/comparison-catalog" and audio_service is not None:
-                body = json.dumps(audiocpp_catalog.comparison_catalog()).encode("utf-8")
-                send_bytes(self, 200, body, "application/json")
-                return
-            if urlsplit(self.path).path == "/proxy/config" and audio_service is not None:
-                model = parse_qs(urlsplit(self.path).query).get("model", [None])[0]
-                body = json.dumps(audiocpp_catalog.runtime_defaults(audio_service, model)).encode("utf-8")
-                send_bytes(self, 200, body, "application/json")
-                return
-            try:
-                try:
-                    response, body, _, _ = self._call_upstream(method, read_request_body(self))
-                    self._send_audio(response, body)
-                except urllib.error.URLError as error:
-                    forward_upstream_error(self, tag, error)
-            except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
-                print(f"[{tag}] client disconnected mid-response")
-
-        def _prepare(self, rid: str) -> _Prepared | None:
-            """
-            - Read and transform the request while holding the transform turn
-            - Returns None when the transform skipped the request (204 already sent)
-            """
-            with transform_lock:
-                body = read_request_body(self)
-                transform_start = time.perf_counter()
-                payload: Payload = json.loads(body)
-                raw = payload.get("input")
-                raw_input = raw if isinstance(raw, str) else None
-                fallback = None
-                if transform:
-                    result = transform(payload)
-                    if result is None:
-                        send_bytes(self, 204, b"")
-                        _log_tts_skip(tag, rid, raw_input)
-                        return None
-                    payload = result
-                    fallback = payload.pop("_voice_fallback", None)
-                    body = json.dumps(payload).encode("utf-8")
-                transform_ms = (time.perf_counter() - transform_start) * 1000 if transform else 0.0
-            return _Prepared(payload, body, fallback, transform_ms, raw_input)
-
-        def _stream(self, method: str, prepared: _Prepared, rid: str):
-            # - Once headers are sent, errors must close the stream, not append JSON.
-            try:
-                stats = relay_stream(
-                    self,
-                    method,
-                    upstream_url + self.path,
-                    build_forward_headers(self.headers, prepared.body),
-                    prepared.body,
-                    tag,
-                    response_headers=streamed_speech_response_headers(prepared.payload),
-                )
-                if stats:
-                    _log_stream_stats(tag, rid, stats, str(prepared.payload.get("model") or "") or None)
-            except Exception:
-                traceback.print_exc()
-            finally:
-                self.close_connection = True
-
-        def _complete(self, method: str, prepared: _Prepared, rid: str, request_start: float):
-            payload = prepared.payload
-            resp, resp_body, generation_time, ttfb = self._call_upstream(method, prepared.body)
-            audio_duration = _wav_duration(resp_body)
-            self._send_audio(resp, resp_body)
-            total = time.perf_counter() - request_start
-            spoken = payload.get("input")
-            instruction, guidance_scale = _request_options(payload)
-            _log_tts_response(
-                tag,
-                rid,
-                spoken if isinstance(spoken, str) else None,
-                generation_time,
-                generation_time - ttfb,
-                audio_duration,
-                total,
-                transform_ms=prepared.transform_ms,
-                instruction=instruction,
-                guidance_scale=guidance_scale,
-            )
-
-        def log_message(self, format: str, *args: Any) -> None:
-            pass  # per-request summary is printed in _forward instead
-
+    attributes: dict[str, object] = {
+        "upstream_url": upstream_url,
+        "tag": tag,
+        "audio_service": audio_service,
+        "test_page_redirect": test_page_redirect,
+        "transform_lock": Lock(),
+        "restart_controller": restart_controller,
+        "request_scope": request_scope,
+    }
+    if transform is not None:
+        # - a plain function attribute would bind as a method and receive self
+        attributes["transform"] = staticmethod(transform)
+    handler = type("TTSProxyHandler", (_TtsProxyHandler,), attributes)
     print(f"[{tag}] service: {service}")
-    TTSProxyHandler.restart_controller = restart_controller
-    TTSProxyHandler.request_scope = request_scope
-    serve_proxy(TTSProxyHandler, service.listen_ip, service.port, upstream_url, tag, on_server)
+    serve_proxy(handler, service.listen_ip, service.port, upstream_url, tag, on_server)
