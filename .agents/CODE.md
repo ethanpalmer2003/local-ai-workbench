@@ -13,6 +13,7 @@
 ## Imports and paths
 
 - Import heavy or optional dependencies only where they are used; keep python-dotenv optional.
+- Dependencies stay as new as every installed dependent allows. Read the constraint from the package's `dist-info` rather than guessing, move the pin and `requirements.txt` together, and delete pins nothing imports instead of carrying their advisories.
 - Import `project_cfg` from `config/project_config.py` and backend settings as `cfg` from `launchers/launcher_config.py`; reference them module-qualified.
 - Derive paths from canonical roots and create directories explicitly. Write generated image bytes straight to the target file.
 
