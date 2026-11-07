@@ -25,6 +25,7 @@ SKIP_MODULES = {
 # - Bats with no `python -m` target (external CLI or another bootstrap script).
 SKIP_BATCHES = {
     "bat/resume_command_code_session.bat": "calls the framework-local cmdc shim",
+    "bat/models/sync_python_env.bat": "runs uv sync against the project environment",
     "bat/browser/comfyui/comfyui_bootstrap.bat": "bootstraps ComfyUI's own python main.py",
     "bat/browser/comfyui/launch_comfyui.bat": "delegates to comfyui_bootstrap.bat",
 }
