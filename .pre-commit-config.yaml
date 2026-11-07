@@ -16,11 +16,10 @@ repos:
         pass_filenames: false
         files: \.pyi?$
       - id: codespell
-        name: codespell (manual)
+        name: codespell
         entry: scripts/.venv/Scripts/codespell.exe
         language: system
         pass_filenames: true
         types_or: [python, markdown]
         exclude: ^(data|frameworks|trash|scripts/state|scripts/tests/output|scripts/benchmarks/output)/
-        stages: [manual]
         args: ["--ignore-words=.codespell-ignore.txt"]

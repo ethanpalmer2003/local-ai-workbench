@@ -11,7 +11,7 @@ What runs today. Use it to compare against other projects' stacks.
 | `scripts/review/format_py.bat` | applies `ruff format` |
 | `python -m scripts.tests.run` | regression suite through pytest, timings and reports |
 | ... with `AI_MODEL_CHECKS=1` | adds asset/model checks kept out of regressions |
-| `pre-commit run --all-files` | ruff lint and format; codespell is manual |
+| `pre-commit run --all-files` | ruff lint and format, codespell |
 | `python -m scripts.review.public_audit [--history]` | publish gate |
 | `python -m scripts.benchmarks.audit_timing` | benchmark timing-contract audit |
 | `python -m coverage run -m scripts.tests.run` | line coverage, then `coverage report` |
@@ -25,15 +25,15 @@ What runs today. Use it to compare against other projects' stacks.
 | ruff format | `[tool.ruff.format]`; generated `ids.py` excluded |
 | basedpyright | type errors, `--level error`, no strict mode |
 | pytest | regression execution, timings, failure details |
-| `structure_docs.py` | doc budgets, links, component keys, naming, folder rules |
+| `structure_docs.py` | doc budgets, links, anchors, markdown hygiene, component keys, naming, folder rules, batch references |
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
 | `frontend_wiring.py` | asset paths, DOM ids, injected settings contracts |
 | `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
 | `public_audit.py` | secrets, credentials, home/machine paths, private words/inputs, large files, ignored-but-tracked |
 | `audit_timing.py` | every benchmark runner uses the shared timing contract |
-| `coverage.py`, `pip-audit`, `codespell` | coverage, dependency advisories, spelling (manual hook) |
+| `coverage.py`, `pip-audit` | coverage, dependency advisories (network) |
 
-Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown is covered by `structure_docs.py`, HTML/JS by `frontend_wiring.py`.
+Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown and batch files are covered by `structure_docs.py`, HTML/JS by `frontend_wiring.py`; codespell reads tracked Python and Markdown.
 
 Lint gates at McCabe 10. Anything above it must carry `# noqa: C901` and appear in `COMPLEXITY-DEBT.md`; the table is currently empty, so the gate is fully enforced. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
 
@@ -42,6 +42,6 @@ Lint gates at McCabe 10. Anything above it must carry `# noqa: C901` and appear 
 - Mutation testing.
 - Dead-code and duplicate-code detectors - `inventory_code.py` covers function bodies only.
 - Standalone `bandit`/`semgrep`; ruff `S` covers the common cases.
-- Markdown linting; `structure_docs.py` enforces links, budgets and naming.
+- Markdown formatting; `structure_docs.py` enforces links, budgets, anchors and hygiene, and the doc tables are generated.
 - Import-boundary linting; layering is convention.
 - JS/TS tooling and a CI server; everything runs locally.
