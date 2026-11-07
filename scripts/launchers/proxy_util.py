@@ -371,7 +371,7 @@ def serve_proxy(
         controller.listener_requested = False
 
 
-def run_json_proxy(
+def run_json_proxy(  # noqa: C901
     service: cfg.GenericStartupServiceSettings,
     upstream_url: str,
     transform: Callable[[dict[str, object]], dict[str, object] | None] | None = None,
