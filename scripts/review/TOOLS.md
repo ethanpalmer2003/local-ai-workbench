@@ -27,7 +27,7 @@ What runs today. Use it to compare against other projects' stacks.
 | pytest | regression execution, timings, failure details |
 | `structure_docs.py` | doc budgets, links, anchors, markdown hygiene, component keys, naming, folder rules, batch references |
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
-| `frontend_wiring.py` | asset paths, DOM ids, injected settings contracts |
+| `frontend_wiring.py` | HTML asset targets resolve; JS path literals resolve; every DOM id a script queries exists; injected settings keys are both emitted by the launcher and provided by each fixture |
 | `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
 | `public_audit.py` | secrets, credentials, home/machine paths, private words/inputs, large files, ignored-but-tracked |
 | `audit_timing.py` | which benchmark runners use the shared timing contract |
