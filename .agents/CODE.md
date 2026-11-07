@@ -4,6 +4,7 @@
 - Functions stay within depth 4 and 100 lines; extract by responsibility. Preserve unexpected tracebacks.
 - Keep lifecycle (`Startup`, `Request`, `StartupRequest`) and scope (`Generic`, `Shared`) explicit in settings classes; name mode-specific values.
 - Preserve external keys, flags and IDs. Fix a contract at its source instead of a cast or suppression.
+- Suppressions live only in `pyproject.toml` (`ignore`, `per-file-ignores`), each with a one-line reason. No inline `# noqa`: restructure, then ignore the narrowest file glob. `RUF100` and the review gate reject both stale and inline annotations.
 - Shared path/model/proxy defaults live in configuration; orchestration-only switches stay local.
 - Signatures and calls stay single-line up to 120 characters; pass-through arguments go last.
 - Pick defaults from measured evidence and keep the caveats and execution context with them.

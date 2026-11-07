@@ -21,14 +21,14 @@ What runs today. Use it to compare against other projects' stacks.
 
 | Tool | Owns |
 | --- | --- |
-| ruff lint | `[tool.ruff.lint]`: `E4 E7 E9 F UP C4 SIM I S C90 PT RET N`, line length 120, py313 |
+| ruff lint | `[tool.ruff.lint]`: `E4 E7 E9 F UP C4 SIM I S C90 PT RET N RUF100`, line length 120, py313 |
 | ruff format | `[tool.ruff.format]`; generated `ids.py` excluded |
 | basedpyright | type errors, `--level error`, no strict mode |
 | pytest | regression execution, timings, failure details |
 | `structure_docs.py` | doc budgets, links, component keys, naming, folder rules |
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
 | `frontend_wiring.py` | asset paths, DOM ids, injected settings contracts |
-| `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
+| `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
 | `public_audit.py` | secrets, credentials, home/machine paths, private words/inputs, large files, ignored-but-tracked |
 | `audit_timing.py` | every benchmark runner uses the shared timing contract |
 | `coverage.py`, `pip-audit`, `codespell` | coverage, dependency advisories, spelling (manual hook) |

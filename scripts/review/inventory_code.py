@@ -47,6 +47,7 @@ REVIEW_EXCLUDED = EXCLUDED | {
     "retired",
 }
 FUNCTIONS = (ast.FunctionDef, ast.AsyncFunctionDef)
+INLINE_NOQA = re.compile(r"#\s*noqa\b", re.IGNORECASE)
 BLOCKS = (ast.If, ast.For, ast.AsyncFor, ast.While, ast.With, ast.AsyncWith, ast.Try, ast.TryStar, ast.Match)
 
 
@@ -267,6 +268,38 @@ def folder_inventory_report(
     return lines
 
 
+def _duplicate_section(duplicates: list[list[Fingerprint]]) -> list[str]:
+    lines = [
+        "",
+        "## Duplicate function bodies",
+        "",
+        f"Identical normalized bodies at or above {MIN_DUPLICATE_LINES} code lines (advisory; not a pass/fail gate).",
+        "",
+        "| Copies | Code lines | Functions |",
+        "| ---: | ---: | --- |",
+    ]
+    if not duplicates:
+        return [*lines, "| None | - | - |"]
+    lines.extend(
+        f"| {len(group)} | {group[0].code_lines} | "
+        + "; ".join(f"{item.path}:{item.line} {item.name}" for item in group)
+        + " |"
+        for group in duplicates
+    )
+    return lines
+
+
+def _suppression_section(suppressions: list[str]) -> list[str]:
+    lines = [
+        "",
+        "## Inline suppressions",
+        "",
+        "Every suppression belongs in `pyproject.toml`; an inline annotation fails the gate.",
+        "",
+    ]
+    return [*lines, *(f"- {item}" for item in suppressions)] if suppressions else [*lines, "None."]
+
+
 def report(
     results: list[FunctionSize],
     files: int,
@@ -274,6 +307,7 @@ def report(
     source_files: list[dict[str, int | str]],
     artifacts: Path,
     duplicates: list[list[Fingerprint]],
+    suppressions: list[str],
 ) -> int:
     sparse_folders = [
         item
@@ -296,6 +330,7 @@ def report(
         "sparse_folders": sparse_folders,
         "small_folder_candidates": small_folders,
         "source_file_lines": source_files,
+        "inline_suppressions": suppressions,
     }
     lines = [
         "# Repository code review",
@@ -326,29 +361,15 @@ def report(
         )
     )
     lines.extend(f"| {item.path}:{item.line} | {item.name} | {item.code_lines} | {item.depth} |" for item in violations)
-    lines.extend(
-        (
-            "",
-            "## Duplicate function bodies",
-            "",
-            f"Identical normalized bodies at or above {MIN_DUPLICATE_LINES} code lines (advisory; not a pass/fail gate).",
-            "",
-            "| Copies | Code lines | Functions |",
-            "| ---: | ---: | --- |",
-        )
-    )
-    if duplicates:
-        lines.extend(
-            f"| {len(group)} | {group[0].code_lines} | "
-            + "; ".join(f"{item.path}:{item.line} {item.name}" for item in group)
-            + " |"
-            for group in duplicates
-        )
-    else:
-        lines.append("| None | - | - |")
+    lines.extend(_duplicate_section(duplicates))
+    lines.extend(_suppression_section(suppressions))
     (artifacts / "review.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     (artifacts / "review.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"{len(folders)} folders, {len(source_files)} Python/Markdown files; {len(violations)} complexity violations")
+    if suppressions:
+        print(f"[FAIL] {len(suppressions)} inline suppression(s); move them into pyproject.toml")
+        for item in suppressions[:10]:
+            print(f"[FAIL] {item}")
     if sparse_folders:
         print(f"[WARN] {len(sparse_folders)} empty or one-item folders; see report.")
     if small_folders:
@@ -358,7 +379,7 @@ def report(
     if duplicates:
         print(f"[INFO] {len(duplicates)} duplicate function groups (>= {MIN_DUPLICATE_LINES} code lines); see report.")
     print(f"Review report: {artifacts / 'review.md'}")
-    return bool(violations)
+    return bool(violations or suppressions)
 
 
 def _debt_row(item: dict[str, Any], root: Path) -> tuple[int, str, str]:
@@ -404,6 +425,40 @@ def complexity_debt(root: Path) -> int:
     return len(rows)
 
 
+def python_sources(root: Path):
+    """Every maintained Python file, tests included; generated evidence and vendors excluded."""
+    for directory, folders, names in os.walk(root):
+        parent = Path(directory)
+        folders[:] = sorted(name for name in folders if name not in REVIEW_EXCLUDED)
+        for name in sorted(names):
+            if name.endswith(".py"):
+                yield parent / name
+
+
+def _comment_lines(source: str):
+    """(line number, comment text) for real comments; docstrings and string literals are prose, not suppressions."""
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(source).readline):
+            if token.type == tokenize.COMMENT:
+                yield token.start[0], token.string
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        return
+
+
+def suppression_issues(root: Path) -> list[str]:
+    """Inline `# noqa` is banned: every suppression belongs in pyproject's per-file ignores."""
+    issues = []
+    for path in python_sources(root):
+        try:
+            source = path.read_text(encoding="utf-8-sig", errors="replace")
+        except OSError:
+            continue
+        for number, comment in _comment_lines(source):
+            if INLINE_NOQA.search(comment):
+                issues.append(f"Inline suppression: {path.relative_to(project_cfg.BASE_DIR).as_posix()}:{number}")
+    return issues
+
+
 def main() -> int:
     if "--complexity-debt" in sys.argv[1:]:
         print(f"Complexity debt rows: {complexity_debt(project_cfg.BASE_DIR)} -> {DEBT_DOC.name}")
@@ -421,9 +476,11 @@ def main() -> int:
         for item in fingerprints_source(path.read_text(encoding="utf-8-sig"), path.relative_to(root).as_posix())
     ]
     folders, source_files = repository_inventory(project_cfg.BASE_DIR)
+    suppressions = suppression_issues(root)
     artifacts = project_cfg.component("shared").generated_dir / "code_review" / str(time.time_ns())
     artifacts.mkdir(parents=True, exist_ok=False)
-    return report(results, len(files), folders, source_files, artifacts, duplicate_groups(fingerprints))
+    status = report(results, len(files), folders, source_files, artifacts, duplicate_groups(fingerprints), suppressions)
+    return int(bool(suppressions) or status)
 
 
 if __name__ == "__main__":

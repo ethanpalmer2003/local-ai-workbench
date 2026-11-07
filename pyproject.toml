@@ -24,7 +24,7 @@ line-ending = "auto"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "UP", "C4", "SIM", "I", "S", "C90", "PT", "RET", "N"]
+select = ["E4", "E7", "E9", "F", "UP", "C4", "SIM", "I", "S", "C90", "PT", "RET", "N", "RUF100"]
 # - StrEnum changes str(member); retain existing enum string representations
 # - S603/S606/S607: known local executables are launched by absolute path
 # - S310: curated HTTPS URLs are fetched, not user-supplied ones
