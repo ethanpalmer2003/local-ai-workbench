@@ -95,42 +95,46 @@ def inspect_record(row, previous, *, refresh=False, full_arrays=False, tensor_in
     return record
 
 
-def enrich_hub(records, cache):  # noqa: C901
+def _hub_jobs(records) -> dict[tuple[str, str, str], Any]:
     jobs = {}
     for record in records.values():
         for source in record["registry"]:
             hub = metadata_sources.hub_source(source["url"])
             if hub:
                 jobs[(hub.repo_id, hub.revision, hub.filename.rpartition("/")[0])] = hub
+    return jobs
 
-    def fetch(item):
-        key, source = item
-        try:
-            result = metadata_sources.hub_metadata(source)
-            result.update(status="ok", checked_at=datetime.now(UTC).isoformat())
-        except Exception as error:
-            result = {
-                "status": "error",
-                "repo": source.repo_id,
-                "requested_revision": source.revision,
-                "error": str(error),
-            }
-        return "@".join(key), result
 
+def _fetch_hub(item) -> tuple[str, dict[str, Any]]:
+    key, source = item
+    try:
+        result = metadata_sources.hub_metadata(source)
+        result.update(status="ok", checked_at=datetime.now(UTC).isoformat())
+    except Exception as error:
+        result = {"status": "error", "repo": source.repo_id, "requested_revision": source.revision, "error": str(error)}
+    return "@".join(key), result
+
+
+def _record_hub_keys(record) -> set[str]:
+    keys = set()
+    for source in record["registry"]:
+        hub = metadata_sources.hub_source(source["url"])
+        if hub:
+            keys.add("@".join((hub.repo_id, hub.revision, hub.filename.rpartition("/")[0])))
+    return keys
+
+
+def enrich_hub(records, cache) -> None:
+    jobs = _hub_jobs(records)
     with ThreadPoolExecutor(max_workers=4) as pool:
-        for key, result in pool.map(fetch, jobs.items()):
+        for key, result in pool.map(_fetch_hub, jobs.items()):
             # Preserve last good metadata on transient/network errors and retain the new error.
             if result["status"] == "error" and cache.get(key, {}).get("status") == "ok":
                 cache[key]["last_error"] = result
             else:
                 cache[key] = result
     for record in records.values():
-        keys = set()
-        for source in record["registry"]:
-            hub = metadata_sources.hub_source(source["url"])
-            if hub:
-                keys.add("@".join((hub.repo_id, hub.revision, hub.filename.rpartition("/")[0])))
-        record["hub"] = [cache[key] for key in sorted(keys) if key in cache]
+        record["hub"] = [cache[key] for key in sorted(_record_hub_keys(record)) if key in cache]
 
 
 def save_inventory(path: Path, data):
