@@ -1,12 +1,27 @@
 """Run the repository structure, type and size/complexity reviews."""
 
+import argparse
 import subprocess
 
 from scripts.config import project_config as project_cfg
 from scripts.review import audit, frontend, model_drift, structure
 
 
-def main() -> int:
+def format_check() -> int:
+    """Formatting is optional: the codebase keeps hand-wrapped lines ruff format would join."""
+    checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/ruff.exe"
+    return subprocess.run(
+        [str(checker), "format", "--check", "--config", str(project_cfg.BASE_DIR / "pyproject.toml"), "scripts"],
+        cwd=project_cfg.BASE_DIR,
+        check=False,
+    ).returncode
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--format-check", action="store_true", help="also fail on ruff format differences")
+    args = parser.parse_args(argv)
+
     print("=== STRUCTURE AND DOCUMENTATION ===", flush=True)
     structure_status = structure.main()
 
@@ -28,7 +43,15 @@ def main() -> int:
 
     print("\n=== REPOSITORY INVENTORY AND PYTHON COMPLEXITY ===", flush=True)
     audit_status = audit.main()
-    return int(bool(structure_status or model_status or frontend_status or type_status or audit_status))
+
+    formatting_status = 0
+    if args.format_check:
+        print("\n=== PYTHON FORMATTING ===", flush=True)
+        formatting_status = format_check()
+        print("[OK] Formatting matches" if not formatting_status else "[WARN] Formatting differs; run review/format.bat")
+    return int(
+        bool(structure_status or model_status or frontend_status or type_status or audit_status or formatting_status)
+    )
 
 
 if __name__ == "__main__":

@@ -15,10 +15,13 @@ class ResourceTests(unittest.TestCase):
         from pathlib import Path
         gpu = MagicMock()
         gpu.summary.return_value = {"peak_process_used_mb": None}
-        result = {}
-        with patch("scripts.launchers.runtime.gpu_memory.GpuMemoryMonitor", return_value=gpu) as factory, patch.object(resources, "watch_resources"), self.assertRaisesRegex(RuntimeError, "fixture"):
-            with resources.monitor_process(running_process(pid=123), Path("unused.jsonl")) as result:
-                raise RuntimeError("fixture")
+        with (
+            patch("scripts.launchers.runtime.gpu_memory.GpuMemoryMonitor", return_value=gpu) as factory,
+            patch.object(resources, "watch_resources"),
+            self.assertRaisesRegex(RuntimeError, "fixture"),
+            resources.monitor_process(running_process(pid=123), Path("unused.jsonl")) as result,
+        ):
+            raise RuntimeError("fixture")
         factory.assert_called_once_with(123, Path("unused.jsonl"))
         self.assertEqual(result["gpu"]["peak_process_used_mb"], None)
         self.assertEqual(result["pid"], 123)

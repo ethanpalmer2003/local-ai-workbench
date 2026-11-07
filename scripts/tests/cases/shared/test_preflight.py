@@ -18,9 +18,11 @@ class PreflightTests(unittest.TestCase):
                 preflight.require_paths({"model": present, "server": Path(folder) / "missing.exe"})
 
     def test_an_occupied_port_stops_the_run_instead_of_waiting(self):
-        with patch.object(launch_util, "port_listening", side_effect=[False, True]):
-            with self.assertRaisesRegex(RuntimeError, "Ports already in use: audio: 8888"):
-                preflight.require_free_ports({"kobold": 5002, "audio": 8888})
+        with (
+            patch.object(launch_util, "port_listening", side_effect=[False, True]),
+            self.assertRaisesRegex(RuntimeError, "Ports already in use: audio: 8888"),
+        ):
+            preflight.require_free_ports({"kobold": 5002, "audio": 8888})
 
     def test_idle_ports_pass_without_output(self):
         with patch.object(launch_util, "port_listening", return_value=False):

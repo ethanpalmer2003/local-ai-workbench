@@ -64,9 +64,9 @@ class TestBoundaries(unittest.TestCase):
             patch.object(launch_util, "listening_process_ids", return_value=[4242]),
             patch.object(launch_util, "describe_process", return_value="node.exe | C:/AI/frameworks/pi"),
             patch("scripts.launchers.launch_util.subprocess.run") as run,
+            self.assertRaisesRegex(RuntimeError, "unowned listeners"),
         ):
-            with self.assertRaisesRegex(RuntimeError, "unowned listeners"):
-                launch_util.kill_owned_processes_on_ports([18501], owned_pids=set())
+            launch_util.kill_owned_processes_on_ports([18501], owned_pids=set())
         run.assert_not_called()
 
     @unittest.skipUnless(sys.platform == "win32", "Windows port ownership only")
@@ -110,9 +110,9 @@ class TestBoundaries(unittest.TestCase):
                 side_effect=lambda port: [4242] if port == 18501 else [],
             ),
             patch.object(native_suites.launch_util, "describe_process", return_value="node.exe | strata"),
+            self.assertRaisesRegex(RuntimeError, "refuse to stop an existing session"),
         ):
-            with self.assertRaisesRegex(RuntimeError, "refuse to stop an existing session"):
-                native_suites.refuse_existing_sessions()
+            native_suites.refuse_existing_sessions()
 
     def test_native_policy_refuses_and_restores(self):
         from scripts.launchers import launcher_config as cfg
