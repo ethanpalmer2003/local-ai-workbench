@@ -13,7 +13,7 @@ What runs today. Use it to compare against other projects' stacks.
 | ... with `AI_MODEL_CHECKS=1` | adds asset/model checks kept out of regressions |
 | `pre-commit run --all-files` | ruff lint and format, codespell |
 | `python -m scripts.review.public_audit [--history]` | publish gate |
-| `python -m scripts.benchmarks.audit_timing` | benchmark timing-contract audit |
+| `python -m scripts.benchmarks.audit_timing` | benchmark timing-contract inventory (printed, not gated) |
 | `python -m coverage run -m scripts.tests.run` | line coverage, then `coverage report` |
 | `python -m pip_audit -r scripts/requirements.txt` | dependency advisories (network) |
 
@@ -30,8 +30,8 @@ What runs today. Use it to compare against other projects' stacks.
 | `frontend_wiring.py` | asset paths, DOM ids, injected settings contracts |
 | `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
 | `public_audit.py` | secrets, credentials, home/machine paths, private words/inputs, large files, ignored-but-tracked |
-| `audit_timing.py` | every benchmark runner uses the shared timing contract |
-| `coverage.py`, `pip-audit` | coverage, dependency advisories (network) |
+| `audit_timing.py` | which benchmark runners use the shared timing contract |
+| `coverage.py`, `pip-audit` | coverage; dependency advisories under `review --audit` (network) |
 
 Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown and batch files are covered by `structure_docs.py`, HTML/JS by `frontend_wiring.py`; codespell reads tracked Python and Markdown.
 
