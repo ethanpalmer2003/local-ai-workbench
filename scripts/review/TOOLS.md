@@ -21,7 +21,7 @@ What runs today. Use it to compare against other projects' stacks.
 
 | Tool | Owns |
 | --- | --- |
-| ruff lint | `[tool.ruff.lint]`: `E4 E7 E9 F UP C4 SIM I S C90`, line length 120, py313 |
+| ruff lint | `[tool.ruff.lint]`: `E4 E7 E9 F UP C4 SIM I S C90 PT RET N`, line length 120, py313 |
 | ruff format | `[tool.ruff.format]`; generated `ids.py` excluded |
 | basedpyright | type errors, `--level error`, no strict mode |
 | pytest | regression execution, timings, failure details |

@@ -24,7 +24,7 @@ line-ending = "auto"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "UP", "C4", "SIM", "I", "S", "C90"]
+select = ["E4", "E7", "E9", "F", "UP", "C4", "SIM", "I", "S", "C90", "PT", "RET", "N"]
 # - StrEnum changes str(member); retain existing enum string representations
 # - S603/S606/S607: known local executables are launched by absolute path
 # - S310: curated HTTPS URLs are fetched, not user-supplied ones
@@ -32,7 +32,13 @@ ignore = ["UP042", "S603", "S606", "S607", "S310"]
 
 [tool.ruff.lint.per-file-ignores]
 # - asserts are the assertion mechanism in tests
-"scripts/tests/**" = ["S101"]
+# - PT009/PT027/PT018 want bare `assert`; the suite is unittest.TestCase by design
+# - N802/N803: unittest hooks (`stopTest`) and test doubles keep the upstream names
+"scripts/tests/**" = ["S101", "PT009", "PT027", "PT018", "N802", "N803"]
+# - ComfyUI calls INPUT_TYPES / IS_CHANGED by name, so they cannot be snake_case
+"scripts/config/comfyui/ltx_prompt_cache.py" = ["N802"]
+# - ctypes structures mirror the Win32 job-object names verbatim
+"scripts/launchers/launch_util.py" = ["N801"]
 
 [tool.ruff.lint.mccabe]
 # - gate at a level the launchers already meet; tighten separately

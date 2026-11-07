@@ -78,8 +78,7 @@ class LlamaConfig:
         if name:
             if name not in builds:
                 raise ValueError(f"Unknown build: {name}")
-            build = builds[name]
-            return build
+            return builds[name]
 
         if dir_path:
             dp = Path(dir_path).resolve()
@@ -88,8 +87,7 @@ class LlamaConfig:
                     return build
             return cfg.LlamacppStartupBuild(bin_dir=dp)
 
-        build = builds[cfg.LLAMACPP_ACTIVE_BUILD]
-        return build
+        return builds[cfg.LLAMACPP_ACTIVE_BUILD]
 
     @property
     def alias(self) -> str:
