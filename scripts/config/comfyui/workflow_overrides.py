@@ -86,7 +86,45 @@ def patch_prompts(
     return saved
 
 
-def patch_graph_prompts(  # noqa: C901
+def _text_encoder_ref(graph: dict[str, Any], kind: str, ref: Any) -> str | None:
+    """Walk a conditioning reference down to the TextEncode node it came from."""
+    if not isinstance(ref, list) or len(ref) != 2:
+        return None
+    node = graph.get(str(ref[0]))
+    if node is None:
+        return None
+    if str(node["class_type"]).endswith("TextEncode"):
+        return str(ref[0])
+    for name, value in node["inputs"].items():
+        if name == kind:
+            return _text_encoder_ref(graph, kind, value)
+    return None
+
+
+def _prompt_targets(graph: dict[str, Any]) -> dict[str, str]:
+    targets: dict[str, str] = {}
+    for node in graph.values():
+        for name, ref in node["inputs"].items():
+            if name in ("positive", "negative") and name not in targets:
+                found = _text_encoder_ref(graph, name, ref)
+                if found:
+                    targets[name] = found
+    return targets
+
+
+def _apply_prompt(graph: dict[str, Any], key: str, replace_text: str | None, append_text: str | None) -> None:
+    current = graph[key]["inputs"].get("text")
+    if not isinstance(current, str):
+        # - the API graph omits untouched widget text, so only a replacement is possible
+        if replace_text is None:
+            return
+        current = ""
+    text = _written(current, replace_text, append_text)
+    if text is not None:
+        graph[key]["inputs"]["text"] = text
+
+
+def patch_graph_prompts(
     graph: dict[str, Any],
     positive: str | None = None,
     negative: str | None = None,
@@ -96,27 +134,7 @@ def patch_graph_prompts(  # noqa: C901
     """Apply the same prompt override to an already-converted API graph."""
     if all(value is None for value in (positive, negative, positive_append, negative_append)):
         return
-
-    def resolve(kind: str, ref: Any) -> str | None:
-        if not isinstance(ref, list) or len(ref) != 2:
-            return None
-        node = graph.get(str(ref[0]))
-        if node is None:
-            return None
-        if str(node["class_type"]).endswith("TextEncode"):
-            return str(ref[0])
-        for name, value in node["inputs"].items():
-            if name == kind:
-                return resolve(kind, value)
-        return None
-
-    targets: dict[str, str] = {}
-    for node in graph.values():
-        for name, ref in node["inputs"].items():
-            if name in ("positive", "negative") and name not in targets:
-                found = resolve(name, ref)
-                if found:
-                    targets[name] = found
+    targets = _prompt_targets(graph)
     for kind, replace_text, append_text in (
         ("positive", positive, positive_append),
         ("negative", negative, negative_append),
@@ -124,15 +142,7 @@ def patch_graph_prompts(  # noqa: C901
         key = targets.get(kind)
         if key is None or (kind == "negative" and targets.get("positive") == key):
             continue
-        current = graph[key]["inputs"].get("text")
-        if not isinstance(current, str):
-            # - the API graph omits untouched widget text, so only a replacement is possible
-            if replace_text is None:
-                continue
-            current = ""
-        text = _written(current, replace_text, append_text)
-        if text is not None:
-            graph[key]["inputs"]["text"] = text
+        _apply_prompt(graph, key, replace_text, append_text)
 
 
 class VideoVAE(StrEnum):

@@ -5,14 +5,10 @@ Regenerate with the command in the tests/tooling notes rather than editing by ha
 
 | Complexity | Function |
 | ---: | --- |
-| 25 | `scripts/launchers/asr/server.py:26` `run_proxy` |
 | 22 | `scripts/tests/cases/asr/shared/practice_smoke.py:41` `exercise` |
 | 22 | `scripts/benchmarks/coding_agents/shared/benchmark_requests.py:232` `handler` |
-| 21 | `scripts/launchers/asr/server.py:61` `_route_request` |
 | 19 | `scripts/tools/model_admin.py:268` `command_replace` |
-| 18 | `scripts/config/models/catalog.py:29` `_build` |
 | 17 | `scripts/launchers/koboldcpp/kobold_lite.py:256` `run_proxy` |
-| 17 | `scripts/config/comfyui/workflow_overrides.py:89` `patch_graph_prompts` |
 | 16 | `scripts/tests/cases/audiocpp/audiocpp_streaming.py:140` `run_comparison` |
 | 16 | `scripts/tests/cases/audiocpp/audiocpp_backend_compare.py:306` `main` |
 | 16 | `scripts/launchers/proxy_util.py:374` `run_json_proxy` |
@@ -25,14 +21,14 @@ Regenerate with the command in the tests/tooling notes rather than editing by ha
 | 14 | `scripts/tests/cases/asr/shared/language_practice_whisper.py:38` `main` |
 | 14 | `scripts/review/model_references.py:16` `inspect` |
 | 14 | `scripts/launchers/llamacpp/llamacpp_dsh.py:220` `main` |
-| 14 | `scripts/config/comfyui/workflow_overrides.py:181` `apply` |
+| 14 | `scripts/config/comfyui/workflow_overrides.py:191` `apply` |
 | 14 | `scripts/benchmarks/koboldcpp/kobold_stack_vram.py:249` `run` |
 | 13 | `scripts/launchers/koboldcpp/kobold.py:38` `server_command` |
 | 13 | `scripts/launchers/asr/parakeetcpp/streaming_server.py:32` `do_POST` |
 | 13 | `scripts/download/models/metadata_evidence.py:18` `measurements` |
 | 13 | `scripts/download/input/get_tts_voices.py:1320` `main` |
 | 13 | `scripts/download/input/get_tts_voices.py:1149` `validate_character` |
-| 13 | `scripts/config/comfyui/workflow_overrides.py:265` `workflow` |
+| 13 | `scripts/config/comfyui/workflow_overrides.py:275` `workflow` |
 | 13 | `scripts/benchmarks/personal/comfyui/comfyui_video.py:668` `_resolve_arguments` |
 | 13 | `scripts/benchmarks/koboldcpp/kobold_stack_vram.py:45` `generate` |
 | 12 | `scripts/review/structure_docs.py:147` `owner_issues` |
@@ -63,4 +59,4 @@ Regenerate with the command in the tests/tooling notes rather than editing by ha
 | 11 | `scripts/benchmarks/llamacpp/benchmark_context_stream.py:66` `stream_request` |
 | 11 | `scripts/benchmarks/asr/asr_resident_compare.py:170` `main` |
 
-Remaining: 57.
+Remaining: 53.

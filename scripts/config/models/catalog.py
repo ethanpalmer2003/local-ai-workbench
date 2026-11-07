@@ -26,78 +26,88 @@ def filename_from_destination(group: str, destination: str) -> str:
     return Path(destination).relative_to(base).as_posix()
 
 
-def _build(payload: dict[str, Any]) -> tuple[ModelDownload, ...]:  # noqa: C901
+def _destination(group: str, label: str, raw: dict[str, Any], destinations: set[str]) -> tuple[str, str]:
+    """Resolve the filename/destination pair and prove it stays inside the owner."""
+    filename = raw.get("filename")
+    destination = raw.get("destination")
+    if destination is None:
+        if not filename:
+            raise ValueError(f"Model {label} needs filename or destination")
+        destination = project_cfg.model_destination(group, str(filename))
+    if filename is None:
+        filename = filename_from_destination(group, str(destination))
+    destination = str(destination)
+    if Path(destination).is_absolute() or ".." in Path(destination).parts:
+        raise ValueError(f"Model destination must be relative: {label}")
+    if destination in destinations:
+        raise ValueError(f"Duplicate model destination: {destination}")
+    target = (project_cfg.DATA_DIR / destination).resolve()
+    if not target.is_relative_to(project_cfg.component(group).models_dir.resolve()):
+        raise ValueError(f"Model destination is outside its owner: {label}")
+    return str(filename), destination
+
+
+def _download_fields(raw: dict[str, Any], label: str) -> tuple[str | None, bool, str | None, list[Any], list[Any]]:
+    url = raw.get("url")
+    in_use = bool(raw.get("in_use", False))
+    if in_use and not url:
+        raise ValueError(f"Active model has no download URL: {label}")
+    sha256 = raw.get("sha256")
+    if sha256 is not None and not SHA256.match(str(sha256)):
+        raise ValueError(f"Invalid SHA256 for {label}")
+    roles = raw.get("roles") or []
+    runtimes = raw.get("runtimes") or []
+    if not isinstance(roles, list) or not isinstance(runtimes, list):
+        raise ValueError(f"Model roles/runtimes must be lists: {label}")
+    return (str(url) if url else None), in_use, (str(sha256) if sha256 else None), roles, runtimes
+
+
+def _entry(raw: dict[str, Any], labels: set[str], destinations: set[str]) -> ModelDownload:
+    """Validate one catalog entry and register its uniqueness keys."""
+    category = str(raw.get("category", ""))
+    group = str(raw.get("group", ""))
+    label = str(raw.get("label", ""))
+    if category not in CATEGORIES:
+        raise ValueError(f"Unknown model category for {label}: {category}")
+    if group not in project_cfg.COMPONENTS:
+        raise ValueError(f"Unknown model owner for {label}: {group}")
+    if not label.startswith(group + "/"):
+        raise ValueError(f"Model label does not match its owner: {label}")
+    if label in labels:
+        raise ValueError(f"Duplicate model label: {label}")
+    filename, destination = _destination(group, label, raw, destinations)
+    url, in_use, sha256, roles, runtimes = _download_fields(raw, label)
+    labels.add(label)
+    destinations.add(destination)
+    return ModelDownload(
+        group,
+        label,
+        url,
+        destination,
+        in_use,
+        str(raw.get("notes") or ""),
+        sha256,
+        tuple(str(item) for item in roles),
+        tuple(str(item) for item in runtimes),
+        str(raw["source_page"]) if raw.get("source_page") else None,
+        filename,
+        category,
+    )
+
+
+def _build(payload: dict[str, Any]) -> tuple[ModelDownload, ...]:
     if payload.get("version") != CATALOG_VERSION:
         raise ValueError(f"Unsupported model catalog version: {payload.get('version')}")
     raw_models = payload.get("models")
     if not isinstance(raw_models, list):
         raise ValueError("Model catalog 'models' must be a list")
-
     models: list[ModelDownload] = []
     labels: set[str] = set()
     destinations: set[str] = set()
     for raw in raw_models:
         if not isinstance(raw, dict):
             raise ValueError("Model catalog entries must be objects")
-        category = str(raw.get("category", ""))
-        group = str(raw.get("group", ""))
-        label = str(raw.get("label", ""))
-        if category not in CATEGORIES:
-            raise ValueError(f"Unknown model category for {label}: {category}")
-        if group not in project_cfg.COMPONENTS:
-            raise ValueError(f"Unknown model owner for {label}: {group}")
-        if not label.startswith(group + "/"):
-            raise ValueError(f"Model label does not match its owner: {label}")
-        if label in labels:
-            raise ValueError(f"Duplicate model label: {label}")
-
-        filename = raw.get("filename")
-        destination = raw.get("destination")
-        if destination is None:
-            if not filename:
-                raise ValueError(f"Model {label} needs filename or destination")
-            destination = project_cfg.model_destination(group, str(filename))
-        if filename is None:
-            filename = filename_from_destination(group, str(destination))
-        destination = str(destination)
-        if Path(destination).is_absolute() or ".." in Path(destination).parts:
-            raise ValueError(f"Model destination must be relative: {label}")
-        if destination in destinations:
-            raise ValueError(f"Duplicate model destination: {destination}")
-        target = (project_cfg.DATA_DIR / destination).resolve()
-        if not target.is_relative_to(project_cfg.component(group).models_dir.resolve()):
-            raise ValueError(f"Model destination is outside its owner: {label}")
-
-        url = raw.get("url")
-        in_use = bool(raw.get("in_use", False))
-        if in_use and not url:
-            raise ValueError(f"Active model has no download URL: {label}")
-        sha256 = raw.get("sha256")
-        if sha256 is not None and not SHA256.match(str(sha256)):
-            raise ValueError(f"Invalid SHA256 for {label}")
-        roles = raw.get("roles") or []
-        runtimes = raw.get("runtimes") or []
-        if not isinstance(roles, list) or not isinstance(runtimes, list):
-            raise ValueError(f"Model roles/runtimes must be lists: {label}")
-
-        labels.add(label)
-        destinations.add(destination)
-        models.append(
-            ModelDownload(
-                group,
-                label,
-                str(url) if url else None,
-                destination,
-                in_use,
-                str(raw.get("notes") or ""),
-                str(sha256) if sha256 else None,
-                tuple(str(item) for item in roles),
-                tuple(str(item) for item in runtimes),
-                str(raw["source_page"]) if raw.get("source_page") else None,
-                str(filename),
-                category,
-            )
-        )
+        models.append(_entry(raw, labels, destinations))
     return tuple(models)
 
 
