@@ -5,6 +5,7 @@ import json
 import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from threading import Event, Thread
 from types import SimpleNamespace
 from typing import Any
@@ -85,7 +86,7 @@ class SwapProbe:
         folder = RunPaths(self.paths.root / label)
         folder.create()
         profile = "shared" if backend == "image" else "standalone"
-        self.record(label, lambda: backends.start(backend, folder, self.owned, usage_profile=profile))
+        self.record(label, partial(backends.start, backend, folder, self.owned, usage_profile=profile))
         process = self.owned[-1]
         self.active[backend] = process
         pid = launch_util.listening_process_ids(backends.ports(backend)[-1])[0]
@@ -132,7 +133,7 @@ class SwapProbe:
                 return
 
     def speech(self, label: str) -> None:
-        self.record(label, lambda: generate("audio", self.paths, label, SPEECH))
+        self.record(label, partial(generate, "audio", self.paths, label, SPEECH))
 
     def parallel_conversation(self, label: str) -> None:
         self.memory.stage = label
@@ -147,7 +148,7 @@ class SwapProbe:
             self.start_backend("image", f"cycle-{cycle}-image-start")
             for image in (1, 2):
                 label = f"cycle-{cycle}-image-{image}"
-                self.record(label, lambda: generate("image", self.paths, label))
+                self.record(label, partial(generate, "image", self.paths, label))
             self.stop_backend("image", f"cycle-{cycle}-image-stop")
             self.start_backend("audio", f"cycle-{cycle}-audio-start")
             self.speech(f"cycle-{cycle}-audio-first")

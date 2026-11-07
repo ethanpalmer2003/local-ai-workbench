@@ -33,6 +33,7 @@ from scripts.tests.shared.http_server import request
 from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 llm_mode = "kobold"
+SPEECH_TEXT = "Hello there, this is a short voice test."
 
 
 def text_target() -> tuple[int, str]:
@@ -151,12 +152,9 @@ def _describe_result(
 
 
 def generate(
-    kind: str,
-    paths: RunPaths,
-    label: str,
-    text: str = "Hello there, this is a short voice test.",
-    text_port: int | None = None,
-) -> str:
+    kind: str, paths: RunPaths, label: str, text: str = SPEECH_TEXT, text_port: int | None = None
+) -> str | None:
+    """Run one generation; return the reply text, or None for audio and image kinds."""
     started = time.monotonic()
     payload, port, route = _request_spec(kind, text, text_port)
     (paths.artifacts / f"{label}-{kind}-request.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
@@ -174,7 +172,7 @@ def generate(
     result, prompt_text = _describe_result(kind, paths, label, body, content_type, speech, started)
     (paths.artifacts / f"{label}-{kind}-result.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(f"[OK] {label} {kind}: {result['seconds']:.2f}s", flush=True)
-    return prompt_text if prompt_text is not None else text
+    return prompt_text
 
 
 def _measure_sequence(
@@ -204,9 +202,9 @@ def _measure_sequence(
             monitor.stage = combo + "_idle"
             time.sleep(8)
             monitor.stage = combo + "_text"
-            text = generate("text", paths, combo + "-serial")
+            reply = generate("text", paths, combo + "-serial")
             monitor.stage = combo + "_audio"
-            generate("audio", paths, combo + "-serial", text)
+            generate("audio", paths, combo + "-serial", reply or SPEECH_TEXT)
             if combo.endswith("image"):
                 monitor.stage = combo + "_image"
                 generate("image", paths, combo + "-serial")

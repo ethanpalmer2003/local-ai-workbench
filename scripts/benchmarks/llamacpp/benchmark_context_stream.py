@@ -136,7 +136,7 @@ def stream_request(
     (trace.with_suffix(".txt")).write_text("".join(content), encoding="utf-8")
     return {
         "request_seconds": time.perf_counter() - started,
-        "first_token_seconds": events[0]["seconds"],
+        "first_token_seconds": events[0]["seconds"] if events else None,
         "prompt_tokens": len(prompt),
         "prompt_sha256": hashlib.sha256(json.dumps(prompt).encode()).hexdigest(),
         "timings": final["timings"],
@@ -218,8 +218,11 @@ def collect_requests(
             row, timing = lifecycle.measure(operation)
             row.update(timing)
         result["warmups" if label.startswith("warmup") else "requests"].append({"label": label, **row})
+        first_token = row["first_token_seconds"]
+        ttft = "n/a" if first_token is None else f"{first_token:.2f}s"
         print(
-            f"[RESULT] {build}/{label}: {row['timings']['predicted_per_second']:.2f} tok/s; input={row['prompt_tokens']}; TTFT={row['first_token_seconds']:.2f}s",
+            f"[RESULT] {build}/{label}: {row['timings']['predicted_per_second']:.2f} tok/s; "
+            f"input={row['prompt_tokens']}; TTFT={ttft}",
             flush=True,
         )
         if label == f"warmup-{args.warmups}":
