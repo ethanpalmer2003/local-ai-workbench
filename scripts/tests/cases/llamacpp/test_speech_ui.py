@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import speech_ui
+from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.paths import CasePaths
 
 
@@ -68,6 +69,7 @@ class SpeechUiTests(unittest.TestCase):
             speech_ui.route(SimpleNamespace(path="/?ui=llama", headers={}), "GET", runtime)
         runtime.load.assert_not_called()
 
+    @fixture_processes()
     def test_shared_browser_speech_transport(self):
         result = subprocess.run(
             [cfg.PI_CLIENT.node_cmd, str(Path(__file__).with_name("speech_ui.cjs"))],

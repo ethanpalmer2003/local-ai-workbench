@@ -1,5 +1,6 @@
 from scripts.tests.cases.asr.llamacpp.test_gemma_audio import GemmaAudioTests
 from scripts.tests.cases.asr.llamacpp.test_qwen_asr_profiles import QwenAsrProfiles
+from scripts.tests.cases.asr.shared.test_delivery import DeliveryTests
 from scripts.tests.cases.asr.shared.test_file_profiles import FileProfiles
 from scripts.tests.cases.asr.shared.test_practice import PracticeTests
 from scripts.tests.cases.asr.shared.test_startup_contracts import StartupContracts
@@ -17,11 +18,17 @@ from scripts.tests.cases.coding_agents.shared.test_benchmark_matrix import Bench
 from scripts.tests.cases.coding_agents.shared.test_benchmark_requests import BenchmarkRequestsTests
 from scripts.tests.cases.koboldcpp.kobold_lite_streaming import StreamingPatch
 from scripts.tests.cases.koboldcpp.test_external_bridge import ExternalBridgeTests
+from scripts.tests.cases.koboldcpp.test_kobold_image_swap import SwapTests
+from scripts.tests.cases.koboldcpp.test_kobold_stack_vram import StackProbeTests
 from scripts.tests.cases.llamacpp.hrx.test_hrx_build import HrxBuildTests
 from scripts.tests.cases.llamacpp.test_ngram import NgramWorkloads
-from scripts.tests.cases.personal.comfyui.test_comfyui_video import WorkflowTests
+from scripts.tests.cases.llamacpp.test_speech_ui import SpeechUiTests
+from scripts.tests.cases.personal.comfyui.test_comfyui_video import ExecutionTests, WorkflowTests
+from scripts.tests.cases.personal.comfyui.test_ltx_prompt_cache import PromptCacheTests
+from scripts.tests.cases.personal.comfyui.test_verify_node import VerifyNodeTests
 from scripts.tests.cases.shared import frameworks_smoke
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
+from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
 from scripts.tests.cases.shared.framework_updates import FrameworkUpdates
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
 from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
@@ -57,12 +64,14 @@ if __name__ == "__main__":
             frameworks_smoke.main(
                 extra_groups=(
                     BenchmarkLifecycleTests,
+                    BenchmarkVramTests,
                     SharedRuntimeTests,
                     StartupContracts,
                     RegressionFixtures,
                     TestBoundaries,
                     VadTurns,
                     PracticeTests,
+                    DeliveryTests,
                     StreamingAdapters,
                     ModelLanguages,
                     ModelAnalysisTests,
@@ -72,6 +81,9 @@ if __name__ == "__main__":
                     ModelAdminTests,
                     AudioComparison,
                     WorkflowTests,
+                    ExecutionTests,
+                    VerifyNodeTests,
+                    PromptCacheTests,
                     TtsProfiles,
                     FrameworkClients,
                     BenchmarkBackendsTests,
@@ -96,6 +108,7 @@ if __name__ == "__main__":
                     FrameworkUpdates,
                     ReportOutputs,
                     NgramWorkloads,
+                    SpeechUiTests,
                     Reporting,
                     ResourceTests,
                     MemoryMonitorTests,
@@ -105,6 +118,8 @@ if __name__ == "__main__":
                     SharedContracts,
                     StreamingPatch,
                     ExternalBridgeTests,
+                    SwapTests,
+                    StackProbeTests,
                     TransportBenchmark,
                     BackendSessions,
                 )
