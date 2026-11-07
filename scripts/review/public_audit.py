@@ -164,9 +164,9 @@ def audit(root: Path) -> list[Finding]:
     return findings
 
 
-def history_findings(root: Path) -> list[Finding]:
+def history_findings(root: Path, extra_terms: tuple[str, ...] = ()) -> list[Finding]:
     """Paths that carried an audited pattern in any commit; only a rewrite removes them."""
-    vocabulary = [voice_patterns(voice_terms())]
+    vocabulary = [voice_patterns(voice_terms()), *[voice_patterns((term,)) for term in extra_terms]]
     if private_words():
         vocabulary.append(voice_patterns(private_words()))
     pattern = "|".join([SECRETS.pattern, HOME_PATHS.pattern, *vocabulary])
@@ -187,13 +187,43 @@ def history_findings(root: Path) -> list[Finding]:
     return [Finding("history", path, f"still in commit {rev}") for path, rev in sorted(seen.items())]
 
 
-def main() -> int:
+def identity_terms() -> tuple[str, ...]:
+    """This machine's account name and git identity; personal identifiers a clone would inherit."""
+    terms = [Path.home().name]
+    email = subprocess.run(
+        ["git", "-C", str(project_cfg.BASE_DIR), "config", "user.email"], capture_output=True, text=True, check=False
+    ).stdout.strip()
+    if email:
+        terms.append(email)
+    return tuple(term for term in terms if len(term) >= 4)
+
+
+def scrub_findings(root: Path) -> list[Finding]:
+    """Tree and history, this machine's identity included; run before a repository goes public."""
+    extra = identity_terms()
+    findings = audit(root)
+    for term in extra:
+        pattern = rf"(?i)(?<![A-Za-z0-9]){re.escape(term)}(?![A-Za-z0-9])"
+        for path in tracked_files(root):
+            if path in SELF_REFERENTIAL:
+                continue
+            target = root / path
+            if not target.is_file() or target.suffix.lower() not in TEXT_SUFFIXES:
+                continue
+            if re.search(pattern, target.read_text(encoding="utf-8", errors="ignore")):
+                findings.append(Finding("identity", path, f"contains {term}"))
+    findings.extend(history_findings(root, extra_terms=extra))
+    return findings
+
+
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     parser.add_argument("--history", action="store_true", help="also scan every commit")
-    args = parser.parse_args()
-    findings = audit(project_cfg.BASE_DIR)
-    if args.history:
+    parser.add_argument("--scrub", action="store_true", help="tree and history, identity terms included")
+    args = parser.parse_args(argv)
+    findings = scrub_findings(project_cfg.BASE_DIR) if args.scrub else audit(project_cfg.BASE_DIR)
+    if args.history and not args.scrub:
         findings.extend(history_findings(project_cfg.BASE_DIR))
     if args.json:
         print(json.dumps([finding.__dict__ for finding in findings], indent=2))

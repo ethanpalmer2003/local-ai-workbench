@@ -14,6 +14,7 @@ What runs today. Use it to compare against other projects' stacks.
 | ... with `AI_MODEL_CHECKS=1` | adds asset/model checks kept out of regressions |
 | `pre-commit run --all-files` | ruff lint and format, codespell |
 | `python -m scripts.review.public_audit [--history]` | publish gate |
+| `python -m scripts.review --scrub` | tree and history scan for personal terms before publishing |
 | `python -m scripts.benchmarks.audit_timing` | benchmark timing-contract inventory (printed, not gated) |
 | `python -m coverage run -m scripts.tests.run` | line coverage, then `coverage report` |
 
@@ -27,7 +28,7 @@ What runs today. Use it to compare against other projects' stacks.
 | pytest | regression execution, timings, failure details |
 | `structure_docs.py` | doc budgets, links, anchors, markdown hygiene, component keys, naming, folder rules, batch references |
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
-| `frontend_wiring.py` | HTML asset targets resolve; JS path literals resolve; every DOM id a script queries exists; injected settings keys are both emitted by the launcher and provided by each fixture |
+| `frontend_wiring.py` | HTML/JS asset targets resolve, queried DOM ids exist, injected settings keys are both emitted and provided |
 | `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
 | `public_audit.py` | secrets, credentials, home/machine paths, private words/inputs, large files, ignored-but-tracked |
 | `audit_timing.py` | which benchmark runners use the shared timing contract |
