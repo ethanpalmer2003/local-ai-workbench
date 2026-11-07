@@ -99,7 +99,8 @@ def main(argv: list[str] | None = None) -> int:
         type_status = 1
 
     print("\n=== REPOSITORY INVENTORY AND PYTHON COMPLEXITY ===", flush=True)
-    inventory_status = inventory_code.main()
+    counts = dependencies.summary()
+    inventory_status = inventory_code.main(counts)
 
     formatting_status = 0
     if not args.no_format_check:
@@ -118,6 +119,13 @@ def main(argv: list[str] | None = None) -> int:
     print("\n=== DEPENDENCY ADVISORIES ===", flush=True)
     audit_status, audit_note = security_audit()
     print(audit_note)
+
+    print("\n=== DEPENDENCY HYGIENE ===", flush=True)
+    drift = dependencies.drift_issues()
+    print(f"{counts['pinned']} pinned, {counts['installed']} installed, {counts['unused']} unused")
+    for issue in drift[:10]:
+        print(f"[FAIL] {issue}")
+    print("[OK] Requirements match the venv" if not drift else f"[FAIL] {len(drift)} drift entries")
     return int(
         bool(
             structure_status
@@ -128,6 +136,7 @@ def main(argv: list[str] | None = None) -> int:
             or formatting_status
             or spelling_status
             or audit_status
+            or drift
         )
     )
 
