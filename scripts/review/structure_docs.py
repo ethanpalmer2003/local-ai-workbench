@@ -13,6 +13,8 @@ from scripts.download.frameworks import framework_catalog as update_config
 from scripts.launchers import launcher_config as cfg
 
 GUIDE_WORDS = 500
+README_WORDS = 750
+AGENTS_WORDS = 450
 RULE_WORDS = 300
 LEGACY_BINDINGS = {
     "KOBOLD",
@@ -304,11 +306,29 @@ def _markdown_hygiene(relative: str, text: str) -> list[str]:
     return issues
 
 
+def prose_words(text: str) -> int:
+    """Words a reader reads: code fences, inline code, link targets and table rules are structure."""
+    cleaned = re.sub(r"```.*?```", " ", text, flags=re.DOTALL)
+    cleaned = re.sub(r"`[^`]*`", " ", cleaned)
+    cleaned = re.sub(r"\]\([^)]*\)", "] ", cleaned)
+    cleaned = re.sub(r"(?m)^\s*\|[-: |]+\|\s*$", " ", cleaned)
+    return len(cleaned.replace("|", " ").split())
+
+
+def markdown_budget(relative: str, path: Path) -> int:
+    """One cap per document role; a hub README carries tables, not policy."""
+    if relative == "AGENTS.md":
+        return AGENTS_WORDS
+    if relative.startswith(".agents/"):
+        return RULE_WORDS
+    return README_WORDS if path.name.lower() == "readme.md" else GUIDE_WORDS
+
+
 def markdown_issues(path: Path, text: str) -> list[str]:
     issues = []
     relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
-    budget = 450 if relative == "AGENTS.md" else RULE_WORDS if relative.startswith(".agents/") else GUIDE_WORDS
-    words = len(text.split())
+    budget = markdown_budget(relative, path)
+    words = prose_words(text)
     if words > budget:
         issues.append(f"{relative}: {words} words exceeds {budget}; keep procedures in one owner guide")
     issues.extend(_markdown_hygiene(relative, text))
