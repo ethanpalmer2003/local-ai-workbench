@@ -454,14 +454,14 @@ KOBOLD_CHAT = SpeechWorkflowDefaults(
     tts_voice=_CHAT_TTS_VOICE,
     clone_voice=bool(_CHAT_TTS_VOICE),
 )
-# - Language practice: Gemma chat, Kokoro TTS without cloning, Whisper Vulkan recognition.
-#   Whisper is the fastest multilingual engine measured on the pinned corpus and reads all four
-#   practice languages; the AudioCpp Nemotron default misheard English and could not transcribe
-#   Japanese at all (notes/TODO.md records that engine's failure).
+# - Language practice: Gemma chat, Kokoro TTS without cloning, Qwen3-ASR recognition.
+#   Qwen reads all four practice languages with the lowest pooled error on the pinned corpus;
+#   Whisper Vulkan stays the faster alternate. AudioCpp Nemotron misheard English and could not
+#   transcribe Japanese at all (notes/TODO.md records that engine's failure).
 LANGUAGE_PRACTICE = SpeechWorkflowDefaults(
     profile="language",
     framework="llamacpp",
-    asr_engine=AsrStartupEngine.WHISPER_VULKAN,
+    asr_engine=AsrStartupEngine.QWEN3_ASR,
     llm_model="llamacpp/gemma-4-E4B-it-Q4_0",
     tts_model=KOKORO_TTS_PACKAGES[DEFAULT_KOKORO_PACKAGE],
     tts_voice="af_heart",

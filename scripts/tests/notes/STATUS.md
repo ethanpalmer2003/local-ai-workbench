@@ -19,7 +19,7 @@
 
 - [Brief real-time screen](BRIEF-REALTIME-SCREEN.md): four TTS frameworks and both Gemma E4B runtimes checked with warmed timing; multilingual/playback/overlap remain unranked.
 
-- Language recognition defaults to Whisper Vulkan: fastest of the measured recognisers and it reads all four practice languages. Qwen3-ASR 1.7B stays as a measured arm and scored lower pooled error on every language [over 80 pinned clips](output/shared/framework_compare/unreviewed/1794105071762308200/artifacts/report.json), so the faster default is a latency choice, not an accuracy one. Whisper replaces AudioCpp Nemotron, which misheard English and could not transcribe Japanese at all.
+- Language recognition defaults to Qwen3-ASR 1.7B through llama.cpp: lowest pooled error on every language over 80 pinned clips (en 3.9%, es 2.3%, fr 4.6%, ja CER 5.5%) [report](output/shared/framework_compare/unreviewed/1794105071762308200/artifacts/report.json). Whisper Vulkan stays the measured faster alternate (0.21 s vs 0.28 s p50) and replaces AudioCpp Nemotron, which misheard English and could not transcribe Japanese.
 
 - Pending work lives in [TODO](../../../notes/TODO.md), not duplicated here. Static path/type checks do not establish native runtime correctness.
 

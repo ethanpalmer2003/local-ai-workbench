@@ -14,7 +14,7 @@ Only long opt-in work appears. `[WARN] stale` keeps the recorded numbers and nam
 | Single AudioCpp server speech | 2026-10-29 | completed | - | [WARN] unprovenanced | [report](../output/audiocpp/single_server_speech/unreviewed/1793236264505744900/artifacts/report.json) |
 | AudioCpp streaming | 2026-11-01 | unreviewed | - | [WARN] unprovenanced | [report](../output/audiocpp/audiocpp_streaming/unreviewed/1793567191146977100/artifacts/report.json) |
 | AudioCpp backend comparison | 2026-11-03 | completed | 17 s | [WARN] unprovenanced | [report](../output/audiocpp/audiocpp_backend_compare/inconclusive/1793664213010818900/artifacts/report.json) |
-| Audio framework comparison | 2026-11-08 | unreviewed | - | [WARN] unprovenanced | [report](../output/audiocpp/audio_comparison/unreviewed/1794104729336112400/artifacts/report.json) |
+| Audio framework comparison | 2026-11-08 | unreviewed | - | [WARN] unprovenanced | [report](../output/audiocpp/audio_comparison/unreviewed/1794107560297469600/artifacts/report.json) |
 | Ming page smoke | 2026-10-28 | completed | 5 s | [WARN] unprovenanced | [report](../output/audiocpp/ming_page_smoke/unreviewed/1793151979038233700/artifacts/report.json) |
 | Practice gateway smoke | 2026-11-02 | completed | 33 s | [WARN] unprovenanced | [report](../output/asr/shared/practice_smoke/unreviewed/1793663941119536700/artifacts/report.json) |
 | Resident ASR comparison | 2026-10-29 | - | - | [WARN] unprovenanced | [report](../output/asr/shared/resident_compare/unreviewed/1793254500105109300/artifacts/report.json) |
@@ -25,15 +25,15 @@ Only long opt-in work appears. `[WARN] stale` keeps the recorded numbers and nam
 | Gemma audio comparison | 2026-10-28 | completed | 65 s | [WARN] unprovenanced | [report](../output/asr/shared/gemma_audio_compare/unreviewed/1793150755034054900/artifacts/report.json) |
 | Parakeet Vulkan smoke | 2026-11-02 | completed | 18 s | [WARN] unprovenanced | [report](../output/asr/parakeetcpp/smoke/unreviewed/1793663975781685200/artifacts/report.json) |
 | Kobold embedded speech comparison | 2026-11-03 | completed | 51 s | [WARN] unprovenanced | [report](../output/koboldcpp/kobold_embedded_compare/unreviewed/1793664161815113700/artifacts/report.json) |
-| Kobold Lite streaming | 2026-11-08 | unreviewed | - | [WARN] unprovenanced | [report](../output/koboldcpp/kobold_lite_streaming/unreviewed/1794104733627200200/artifacts/report.json) |
+| Kobold Lite streaming | 2026-11-08 | unreviewed | - | [WARN] unprovenanced | [report](../output/koboldcpp/kobold_lite_streaming/unreviewed/1794107564049218800/artifacts/report.json) |
 | Kobold speech modes | 2026-11-01 | completed | 82 s | [WARN] unprovenanced | [report](../output/koboldcpp/kobold_audiocpp_modes/unreviewed/1793567892804776000/artifacts/report.json) |
-| Kobold stacked VRAM | 2026-11-08 | unreviewed | - | [WARN] unprovenanced | [report](../output/koboldcpp/test_kobold_stack_vram/unreviewed/1794104734233387900/artifacts/report.json) |
+| Kobold stacked VRAM | 2026-11-08 | unreviewed | - | [WARN] unprovenanced | [report](../output/koboldcpp/test_kobold_stack_vram/unreviewed/1794107564632349300/artifacts/report.json) |
 | Speculative decoding benchmark | 2026-10-04 | completed | 79 s | [WARN] unprovenanced | [report](../output/llamacpp/benchmark_specspeed/no-gain/1791091419645895000/artifacts/report.json) |
 | Context stream benchmark | 2026-10-21 | completed | 164 s | [WARN] unprovenanced | [report](../output/llamacpp/benchmark_context_stream/inconclusive/1792564726546315900/artifacts/report.json) |
 | Speed benchmark | 2026-10-04 | completed | 518 s | [WARN] unprovenanced | [report](../output/llamacpp/benchmark_speedbench/verified/1791093433528713400/artifacts/report.json) |
 | N-gram benchmark | 2026-10-04 | completed | 88 s | [WARN] unprovenanced | [report](../output/llamacpp/benchmark_ngram/no-gain/1791087672992167800/artifacts/report.json) |
 | llama.cpp backend benchmark | 2026-10-10 | unreviewed | - | [WARN] unprovenanced | [report](../output/llamacpp/benchmark_backends/unreviewed/1791614205669862400/artifacts/report.json) |
 | Gemma with Breeze speech | 2026-11-01 | completed | 56 s | [WARN] unprovenanced | [report](../output/llamacpp/gemma_breeze/unreviewed/1793568210170472700/artifacts/report.json) |
-| HRX build | 2026-11-08 | unreviewed | - | [WARN] unprovenanced | [report](../output/llamacpp/hrx/test_hrx_build/unreviewed/1794104733280253700/artifacts/report.json) |
+| HRX build | 2026-11-08 | unreviewed | - | [WARN] unprovenanced | [report](../output/llamacpp/hrx/test_hrx_build/unreviewed/1794107563789854500/artifacts/report.json) |
 | Drama offload screen | 2026-10-28 | completed | 107 s | [WARN] unprovenanced | [report](../output/shared/drama3_offload/unreviewed/1793151003911821700/artifacts/report.json) |
-| Language practice versus Lemonade | 2026-11-08 | passed | practice TTFT 0.07 s; lemonade TTFT 0.07 s | [OK] | [report](../../benchmarks/output/shared/framework_compare/unreviewed/1794105071762308200/artifacts/report.json) |
+| Language practice versus Lemonade | 2026-11-08 | passed | practice TTFT 0.07 s; lemonade TTFT 0.07 s | [WARN] stale: llamacpp moved, audiocpp moved, lemonade_server moved | [report](../../benchmarks/output/shared/framework_compare/unreviewed/1794105071762308200/artifacts/report.json) |
