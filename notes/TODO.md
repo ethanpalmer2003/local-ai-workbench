@@ -17,10 +17,9 @@
 - [ ] Publish a dated report for the Strata profile pair: the runs on disk are aborted stubs, so the recorded numbers need a rerun first.
 - [ ] ComfyUI: validate promising 480 screens at 640 and longer clips, then publish a dated report for the 640 scaling claim, which kept no artifact; assess appearance, autotune/cache and monitor overhead.
 
-## Needs a device or another host
+## Needs a device
 
 - [ ] Validate Handy microphone selection, dictation and paste. UI shows Default microphone and Average all channels; no dictation or paste was tested.
-- [ ] hipfire/TabbyAPI: validate on a Linux/ROCm host, convert the Swift checkpoint to MQ4/EXL3. The `benchmark_llm_inference` sweep was retired to `C:/AI/trash/retired-llm-inference-sweep`; restore or rebuild it first. Windows is unsupported; no model downloads were added.
 
 ## Code and docs only
 
