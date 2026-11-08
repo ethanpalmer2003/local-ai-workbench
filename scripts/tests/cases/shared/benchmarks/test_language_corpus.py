@@ -27,13 +27,13 @@ def archive(directory: Path, members: dict[str, bytes]) -> Path:
 
 
 class CorpusManifestTests(unittest.TestCase):
-    def test_manifest_pins_a_revision_and_five_distinct_clips_per_language(self):
+    def test_manifest_pins_a_revision_and_twenty_distinct_clips_per_language(self):
         spec = fleurs.spec()
         self.assertRegex(spec["revision"], r"^[0-9a-f]{40}$")
         self.assertEqual(spec["split"], "test")
         languages = [clip["language"] for clip in spec["clips"]]
         for code in LANGUAGES:
-            self.assertEqual(languages.count(code), 5)
+            self.assertEqual(languages.count(code), 20)
         for field in ("reference", "member", "id"):
             values = [clip[field] for clip in spec["clips"]]
             self.assertEqual(len(values), len(set(values)), f"repeated {field}")
@@ -59,7 +59,7 @@ class CorpusManifestTests(unittest.TestCase):
         self.assertEqual(identity["corpus"], "google/fleurs")
         self.assertRegex(identity["revision"], r"^[0-9a-f]{40}$")
         self.assertRegex(identity["manifest_sha256"], r"^[0-9a-f]{64}$")
-        self.assertEqual(identity["clips"], 20)
+        self.assertEqual(identity["clips"], 80)
 
 
 class ExtractionTests(unittest.TestCase):
