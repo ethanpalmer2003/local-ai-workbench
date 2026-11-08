@@ -2,6 +2,7 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from typing import cast
 
 from scripts.config import models as model_cfg
 from scripts.config import overlay_inputs as inputs
@@ -641,6 +642,9 @@ KOBOLDCPP_KCPPS_ARGS = {
     "splitmode": "layer",
     "whispermodel": str(model_cfg.path("asr/whispercpp/large-v3-turbo-q5_0")),
 }
+
+# - The port the server listens on; typed so callers need not narrow the kcpps mapping
+KOBOLDCPP_PORT: int = cast(int, KOBOLDCPP_KCPPS_ARGS["port"])
 
 # - KoboldCpp chat allowlist, in the canonical registry-label namespace; paths come from the registry.
 KOBOLDCPP_MODELS = {
