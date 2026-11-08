@@ -56,47 +56,50 @@ def command_output(command: str) -> str | None:
     return None
 
 
+def _ninja_row(line: str) -> tuple[int, int, str, str] | None:
+    if not line or line.startswith("#"):
+        return None
+    parts = line.split("\t")
+    if len(parts) < 5:
+        return None
+    try:
+        return int(parts[0]), int(parts[1]), parts[3], parts[4]
+    except ValueError:
+        return None
+
+
+def _ninja_groups(log_path: Path) -> dict[tuple[int, int, str], set[str]]:
+    groups: dict[tuple[int, int, str], set[str]] = defaultdict(set)
+    for line in log_path.read_text(errors="replace").splitlines():
+        parsed = _ninja_row(line)
+        if parsed is not None:
+            start, end, output, command = parsed
+            groups[(start, end, command)].add(output)
+    return groups
+
+
+def _output_kind(outputs: set[str]) -> str | None:
+    if any(output.lower().endswith(OBJ_EXTS) for output in outputs):
+        return "compile"
+    if any(output.lower().endswith(LINK_EXTS) for output in outputs):
+        return "link"
+    return None
+
+
 def read_ninja_log(build_dir: Path) -> dict[str, list[tuple[str, float]]]:
     log_path = build_dir / ".ninja_log"
     if not log_path.exists():
         return {"compile": [], "link": []}
 
-    groups: dict[tuple[int, int, str], set[str]] = defaultdict(set)
-
-    for line in log_path.read_text(errors="replace").splitlines():
-        if not line or line.startswith("#"):
-            continue
-
-        parts = line.split("\t")
-        if len(parts) < 5:
-            continue
-
-        try:
-            start = int(parts[0])
-            end = int(parts[1])
-        except ValueError:
-            continue
-
-        groups[(start, end, parts[4])].add(parts[3])
-
     result: dict[str, list[tuple[str, float]]] = {"compile": [], "link": []}
-
-    for (start, end, _), outputs in groups.items():
+    for (start, end, _), outputs in _ninja_groups(log_path).items():
         seconds = (end - start) / 1000
-        if seconds <= 0:
+        kind = _output_kind(outputs)
+        if seconds <= 0 or kind is None:
             continue
-
-        if any(output.lower().endswith(OBJ_EXTS) for output in outputs):
-            kind = "compile"
-        elif any(output.lower().endswith(LINK_EXTS) for output in outputs):
-            kind = "link"
-        else:
-            continue
-
-        for output in outputs:
-            if output.lower().endswith(OBJ_EXTS + LINK_EXTS):
-                result[kind].append((output.replace("\\", "/"), seconds))
-
+        result[kind].extend(
+            (output.replace("\\", "/"), seconds) for output in outputs if output.lower().endswith(OBJ_EXTS + LINK_EXTS)
+        )
     return result
 
 

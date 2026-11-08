@@ -16,9 +16,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only", nargs="+", help="build only these catalog names")
     parser.add_argument(
-        "--foreground",
-        action="store_true",
-        help="Build in this console instead of one new terminal per target.",
+        "--foreground", action="store_true", help="Build in this console instead of one new terminal per target."
     )
     parser.add_argument("--dry-run", action="store_true", help="Print the resolved commands and stop.")
     args = parser.parse_args()
@@ -44,7 +42,9 @@ def main() -> int:
                 failed += 1
             continue
         print(f"[BUILD] {tool.name}: new terminal -> {command}", flush=True)
-        subprocess.Popen(["cmd.exe", "/k", *tool.build_command], cwd=folder, creationflags=subprocess.CREATE_NEW_CONSOLE)
+        subprocess.Popen(
+            ["cmd.exe", "/k", *tool.build_command], cwd=folder, creationflags=subprocess.CREATE_NEW_CONSOLE
+        )
     if args.foreground and failed:
         print(f"\n[FAIL] {failed} build(s) failed")
     return 1 if failed else 0

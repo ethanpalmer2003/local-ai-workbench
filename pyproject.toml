@@ -49,7 +49,7 @@ cache-dir = "scripts/state/cache/ruff"
 line-length = 120
 target-version = "py313"
 include = ["*.py", "*.pyi"]
-extend-exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "frameworks", "trash", "scripts/config/models/ids.py"]
+extend-exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "/frameworks", "trash", "scripts/config/models/ids.py"]
 
 [tool.ruff.format]
 quote-style = "double"

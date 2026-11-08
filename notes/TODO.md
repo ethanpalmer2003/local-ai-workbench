@@ -9,10 +9,6 @@
 - [ ] Measure multilingual/noisy accuracy and real microphone latency; browser model/API routes responded, but capture produced no transcript. No multilingual/noisy reference corpus is configured. All 16 resident profiles have brief synthetic-English checks; decide whether CrispASR/FunASR need resident adapters. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py).
 - [ ] Validate Handy microphone selection, dictation and paste. UI shows Default microphone and Average all channels; no dictation or paste was tested.
 
-## Code quality
-
-- [ ] The lint config never sees the updater tree. `[tool.ruff] extend-exclude` (and `[tool.deptry] exclude`) list the bare name `frameworks`, which also matches `scripts/download/frameworks/`; anchor it as `/frameworks` (as `.gitignore` and the codespell hook already do). That exposes 18 real findings: 8 `I001` import orders, 1 `S101` `assert` in `restrict_specspeed`, and 9 functions over McCabe 10 (`process_source` 20, `stop_installation_processes` 19, `package_audiocpp_hip` 13, `process_bat` 13, `read_ninja_log` 12, `process_tool` 12, `process` 11, `process_audiocpp_hip` 11, `run` 11). Fix the config and burn those down together, then re-check `COMPLEXITY-DEBT.md`.
-
 ## Deferred
 
 - [ ] Kobold/Drama active-overlap baseline at the selected 40-layer/2048-context setup; measure simultaneous generation, queueing and playback underruns, then review listening, buffering, restart behavior and Lite patch rebase. [Procedure](../scripts/tests/notes/audiocpp/AUDIOCPP-OPTIMIZATIONS.md). Drama tests remain deferred.

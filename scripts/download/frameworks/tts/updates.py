@@ -1,9 +1,10 @@
 """TTS runtime releases and Piper wheel installation."""
 
-from pathlib import Path
 import json
 import shutil
 import subprocess
+from pathlib import Path
+
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import update_shared as shared
 from scripts.download.frameworks.update_types import ReleaseType, ToolSpec

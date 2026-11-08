@@ -9,8 +9,7 @@ import time
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.download.frameworks import github
-from scripts.download.frameworks import native_build
+from scripts.download.frameworks import github, native_build
 from scripts.download.frameworks.native_build import run as run
 from scripts.download.frameworks.update_shared import UpdateError, replace_installation
 from scripts.download.frameworks.update_types import ToolSpec
@@ -30,29 +29,16 @@ def latest_source_tag(tool: ToolSpec) -> str:
     return tag
 
 
-def process(tool: ToolSpec, destination: Path, temporary: Path, check_only: bool, force: bool = False) -> bool:
-    tag = latest_source_tag(tool)
-    commit = github.get_json(f"{github.API}/repos/{tool.repo}/commits/{tag}")["sha"]
-    marker = destination / ".build_manifest.json"
+def _install_is_current(marker: Path, commit: str, destination: Path, force: bool) -> bool:
     installed = json.loads(marker.read_text(encoding="utf-8")) if marker.is_file() else {}
-    current = (
+    return (
         not force
         and installed.get("source_commit") == commit
         and all((destination / name).is_file() for name in ("whisper-cli.exe", "whisper-server.exe"))
     )
-    print(f"Whisper {tag}: {commit}; {'current' if current else 'update available'}", flush=True)
-    if current or check_only:
-        return not current
-    context = dict(require_native_execution("Whisper native build/install"))
-    logs = project_cfg.component("asr/whispercpp").logs_dir / "builds" / str(time.time_ns())
-    logs.mkdir(parents=True)
-    print(f"[LOGS] {logs}", flush=True)
-    manifest = {
-        "repository": f"https://github.com/{tool.repo}",
-        "release_tag": tag,
-        "source_commit": commit,
-        "execution_context": context,
-    }
+
+
+def _toolchain() -> tuple[dict[str, str], str, str, Path]:
     env = visual_studio_environment()
     sdk = Path(env.get("VULKAN_SDK", ""))
     if not (sdk / "Bin/glslc.exe").is_file() or not (sdk / "Lib/vulkan-1.lib").is_file():
@@ -61,8 +47,12 @@ def process(tool: ToolSpec, destination: Path, temporary: Path, check_only: bool
     ninja = shutil.which("ninja", path=env.get("PATH"))
     if not cmake or not ninja:
         raise UpdateError("CMake and Ninja are required in the Visual Studio build environment")
+    return env, cmake, ninja, sdk
+
+
+def _checked_out_source(tool: ToolSpec, tag: str, commit: str, logs: Path) -> Path:
     additions = project_cfg.framework_install_dir(tool.source_checkout)
-    source, build = additions / f"source-{tag}", additions / f"build-{tag}-vulkan"
+    source = additions / f"source-{tag}"
     additions.mkdir(parents=True, exist_ok=True)
     if not source.exists():
         run(
@@ -75,7 +65,11 @@ def process(tool: ToolSpec, destination: Path, temporary: Path, check_only: bool
     dirty = subprocess.check_output(["git", "-C", str(source), "diff", "--name-only"], text=True, timeout=30).strip()
     if dirty:
         raise UpdateError(f"Source has local changes; review before building: {dirty}")
-    configure = [
+    return source
+
+
+def _configure_command(cmake: str, source: Path, build: Path, ninja: str) -> list[str]:
+    return [
         cmake,
         "-S",
         str(source),
@@ -94,9 +88,9 @@ def process(tool: ToolSpec, destination: Path, temporary: Path, check_only: bool
         "-DWHISPER_BUILD_SERVER=ON",
         "-DWHISPER_BUILD_IS_DEV=OFF",
     ]
-    run(configure, logs / "configure.log", env, 180)
-    build_command = [cmake, "--build", str(build), "--target", "whisper-cli", "whisper-server", "--parallel", "6"]
-    run(build_command, logs / "build.log", env)
+
+
+def _staged_package(build: Path, temporary: Path, logs: Path) -> Path:
     staged = temporary / "vulkan-package"
     staged.mkdir()
     for file in (build / "bin").iterdir():
@@ -105,6 +99,35 @@ def process(tool: ToolSpec, destination: Path, temporary: Path, check_only: bool
     for name in ("whisper-cli.exe", "whisper-server.exe", "ggml-vulkan.dll"):
         if not (staged / name).is_file():
             raise UpdateError(f"Build is missing {name}; see {logs}")
+    return staged
+
+
+def process(tool: ToolSpec, destination: Path, temporary: Path, check_only: bool, force: bool = False) -> bool:
+    tag = latest_source_tag(tool)
+    commit = github.get_json(f"{github.API}/repos/{tool.repo}/commits/{tag}")["sha"]
+    marker = destination / ".build_manifest.json"
+    current = _install_is_current(marker, commit, destination, force)
+    print(f"Whisper {tag}: {commit}; {'current' if current else 'update available'}", flush=True)
+    if current or check_only:
+        return not current
+    context = dict(require_native_execution("Whisper native build/install"))
+    logs = project_cfg.component("asr/whispercpp").logs_dir / "builds" / str(time.time_ns())
+    logs.mkdir(parents=True)
+    print(f"[LOGS] {logs}", flush=True)
+    manifest = {
+        "repository": f"https://github.com/{tool.repo}",
+        "release_tag": tag,
+        "source_commit": commit,
+        "execution_context": context,
+    }
+    env, cmake, ninja, sdk = _toolchain()
+    build = project_cfg.framework_install_dir(tool.source_checkout) / f"build-{tag}-vulkan"
+    source = _checked_out_source(tool, tag, commit, logs)
+    configure = _configure_command(cmake, source, build, ninja)
+    run(configure, logs / "configure.log", env, 180)
+    build_command = [cmake, "--build", str(build), "--target", "whisper-cli", "whisper-server", "--parallel", "6"]
+    run(build_command, logs / "build.log", env)
+    staged = _staged_package(build, temporary, logs)
     manifest.update(
         backend="vulkan",
         vulkan_sdk=str(sdk),

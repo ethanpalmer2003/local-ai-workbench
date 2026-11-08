@@ -2,6 +2,7 @@
 
 import subprocess
 from pathlib import Path
+
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import update_shared as updater
 
@@ -37,5 +38,3 @@ def run(command: list[str], log: Path, env: dict[str, str] | None = None, timeou
     print(subprocess.list2cmdline(command), flush=True)
     with log.open("w", encoding="utf-8") as output:
         subprocess.run(command, env=env, stdout=output, stderr=subprocess.STDOUT, check=True, timeout=timeout)
-
-

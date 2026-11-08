@@ -2,23 +2,24 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+import ast
 import base64
 import hashlib
 import json
-import ast
 import os
 import re
 import subprocess
+from pathlib import Path
+
 import requests
 import yaml
 
 from scripts.config import project_config as project_cfg
-from scripts.download.frameworks.update_types import ReleaseType, ToolSpec
-from scripts.download.frameworks import update_types as cfg
-from scripts.download.frameworks import update_shared as shared
 from scripts.config.coding_agents.pi import packages as pi_packages
+from scripts.download.frameworks import update_shared as shared
+from scripts.download.frameworks import update_types as cfg
 from scripts.download.frameworks.npm import command as npm_command
+from scripts.download.frameworks.update_types import ReleaseType, ToolSpec
 
 
 def pi_tools() -> tuple[ToolSpec, ...]:
@@ -219,55 +220,68 @@ def pull_checkout(checkout: Path) -> str:
     ).stdout.strip()
 
 
-def process_bat(
-    tool: ToolSpec, dest_dir: Path, exe: Path, check_only: bool, summary: shared.UpdateSummary | None
-) -> None:
-    """Compare the checkout's commit when the entry names its repo, then run its updater."""
-    if tool.repo:
-        command = ["git", "-c", f"safe.directory={dest_dir.as_posix()}", "-C", str(dest_dir)]
-        local = subprocess.run([*command, "rev-parse", "HEAD"], capture_output=True, text=True, check=False)
-        latest = shared.github.get_json(f"{shared.github.API}/repos/{tool.repo}/commits/{tool.branch}")["sha"]
-        print(f"Local commit  : {local.stdout.strip() or 'NOT INSTALLED'}\nUpstream commit: {latest}")
-        vendor = managed_nodes(exe)
-        folder = dest_dir / tool.tracked_checkouts
-        drift = checkout_drift(folder, {name for name, _url in vendor}) if tool.tracked_checkouts else []
-        for name, local_sha, remote_sha, via_vendor in drift:
-            print(
-                f"  behind: {name} {local_sha} -> {remote_sha} ({'vendor updater' if via_vendor else 'updater pull'})"
-            )
-        core_stale = local.stdout.strip() != latest
-        vendor_stale = [entry for entry in drift if entry[3]]
-        if not core_stale and not drift:
-            print("Status: UP TO DATE")
-            if summary is not None:
-                summary.record(tool, "current")
-            return
-        print("Status: UPDATE AVAILABLE")
-        if summary is not None:
-            detail = f"{len(drift)} custom node(s) behind" if drift else ""
-            summary.record(tool, "available", detail)
-        if check_only:
-            return
-        for name, _local_sha, _remote_sha, via_vendor in drift:
-            if not via_vendor:
-                print(f"Status: PULLING {name}")
-                pull_checkout(folder / name)
-        if not core_stale and not vendor_stale:
-            print("Status: UPDATED")
-            return
-    else:
-        print("Status: MANUAL CHECK REQUIRED")
-        if summary is not None:
-            summary.record(tool, "manual_check", "external updater; version check unavailable", actionable=True)
-        return
-    if check_only:
-        return
-    if not exe.exists():
-        raise shared.UpdateError(f"Updater not found: {exe}")
+def _report_drift(drift: list[tuple[str, str, str, bool]]) -> None:
+    for name, local_sha, remote_sha, via_vendor in drift:
+        print(f"  behind: {name} {local_sha} -> {remote_sha} ({'vendor updater' if via_vendor else 'updater pull'})")
+
+
+def _pull_drift(folder: Path, drift: list[tuple[str, str, str, bool]]) -> None:
+    for name, _local_sha, _remote_sha, via_vendor in drift:
+        if not via_vendor:
+            print(f"Status: PULLING {name}")
+            pull_checkout(folder / name)
+
+
+def _launch_updater(exe: Path, dest_dir: Path) -> None:
     print("Status: UPDATING IN NEW TERMINAL")
     env = os.environ.copy()
     env["PIP_REQUIRE_VIRTUALENV"] = "false"
     subprocess.Popen(["cmd.exe", "/k", str(exe)], cwd=dest_dir, env=env, creationflags=subprocess.CREATE_NEW_CONSOLE)
+
+
+def _vendor_batch_state(
+    tool: ToolSpec, dest_dir: Path, exe: Path, check_only: bool, summary: shared.UpdateSummary | None
+) -> bool:
+    """None-safe report of a vendor-managed checkout: True when the call is finished."""
+    if not tool.repo:
+        print("Status: MANUAL CHECK REQUIRED")
+        if summary is not None:
+            summary.record(tool, "manual_check", "external updater; version check unavailable", actionable=True)
+        return True
+    command = ["git", "-c", f"safe.directory={dest_dir.as_posix()}", "-C", str(dest_dir)]
+    local = subprocess.run([*command, "rev-parse", "HEAD"], capture_output=True, text=True, check=False)
+    latest = shared.github.get_json(f"{shared.github.API}/repos/{tool.repo}/commits/{tool.branch}")["sha"]
+    print(f"Local commit  : {local.stdout.strip() or 'NOT INSTALLED'}\nUpstream commit: {latest}")
+    folder = dest_dir / tool.tracked_checkouts
+    drift = checkout_drift(folder, {name for name, _url in managed_nodes(exe)}) if tool.tracked_checkouts else []
+    _report_drift(drift)
+    core_stale = local.stdout.strip() != latest
+    if not core_stale and not drift:
+        print("Status: UP TO DATE")
+        if summary is not None:
+            summary.record(tool, "current")
+        return True
+    print("Status: UPDATE AVAILABLE")
+    if summary is not None:
+        summary.record(tool, "available", f"{len(drift)} custom node(s) behind" if drift else "")
+    if check_only:
+        return True
+    _pull_drift(folder, drift)
+    if not core_stale and not any(entry[3] for entry in drift):
+        print("Status: UPDATED")
+        return True
+    return False
+
+
+def process_bat(
+    tool: ToolSpec, dest_dir: Path, exe: Path, check_only: bool, summary: shared.UpdateSummary | None
+) -> None:
+    """Compare the checkout's commit when the entry names its repo, then run its updater."""
+    if _vendor_batch_state(tool, dest_dir, exe, check_only, summary):
+        return
+    if not exe.exists():
+        raise shared.UpdateError(f"Updater not found: {exe}")
+    _launch_updater(exe, dest_dir)
 
 
 def process_strata(tool: ToolSpec, dest_dir: Path, check_only: bool, summary: shared.UpdateSummary | None) -> None:
@@ -433,7 +447,8 @@ def restrict_specspeed(path: Path) -> None:
         if isinstance(node, ast.Assign)
         and any(isinstance(target, ast.Name) and target.id == "PROMPTS" for target in node.targets)
     )
-    assert isinstance(node.value, ast.List)
+    if not isinstance(node.value, ast.List):
+        raise shared.UpdateError(f"specspeed PROMPTS is not a list literal: {path}")
     prompts = [entry for entry in node.value.elts if ast.literal_eval(entry)[0] in ("code", "code2", "prose_en")]
     lines = source.splitlines(keepends=True)
     lines[node.lineno - 1 : node.end_lineno] = [

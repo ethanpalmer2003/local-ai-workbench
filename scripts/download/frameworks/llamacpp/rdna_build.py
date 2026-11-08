@@ -316,45 +316,65 @@ def add_arguments(parser: argparse.ArgumentParser | argparse._ArgumentGroup) -> 
     )
 
 
+def _build_state(src_dir: Path, args: argparse.Namespace) -> tuple[dict[str, object], list[str], list[ExtraPR]]:
+    explicit_patches: list[str] = [p for spec in args.patches for p in spec.split(",") if p]
+    extra_prs = [ExtraPR.parse(spec) for spec in args.extra_pr]
+    return {"patches": explicit_patches, "extra_pr": args.extra_pr, "boosts_commit": ""}, explicit_patches, extra_prs
+
+
+def _git_commit(cwd: Path, ref: str) -> str:
+    return subprocess.run(["git", "rev-parse", ref], cwd=cwd, capture_output=True, text=True).stdout.strip()
+
+
+def _wants_setup(
+    args: argparse.Namespace,
+    src_dir: Path,
+    boosts_dir: Path,
+    state_file: Path,
+    extra_prs: list[ExtraPR],
+    current_state: dict[str, object],
+) -> bool:
+    """Patch setup runs unless the checkout is missing, forced, or already matches its state file."""
+    if not src_dir.exists():
+        if args.skip_patch_setup:
+            print(f"Warning: Directory '{src_dir}' does not exist. Ignoring --skip-patch-setup and forcing git setup.")
+        return True
+    if args.skip_patch_setup or extra_prs or not boosts_dir.exists():
+        return not args.skip_patch_setup
+    run_git(["fetch", "origin"], cwd=boosts_dir)
+    current_state["boosts_commit"] = _git_commit(boosts_dir, "origin/main")
+    if not state_file.exists():
+        return True
+    try:
+        unchanged = json.loads(state_file.read_text(encoding="utf-8")) == current_state
+    except (OSError, json.JSONDecodeError):
+        return True
+    if unchanged:
+        print("No upstream updates or argument changes detected. Auto-skipping patch setup.")
+    return not unchanged
+
+
+def _report_skipped(skipped: list[tuple[str, str]]) -> None:
+    if not skipped:
+        return
+    print(f"\n{len(skipped)} patch(es)/commit(s) skipped (didn't apply cleanly):")
+    for ref, reason in skipped:
+        print(f"  - {ref}: {reason}")
+    print("Apply any of these manually if you need them.")
+
+
 def run(args: argparse.Namespace) -> None:
     src_dir = Path(args.rdna_dir)
     boosts_dir = RDNA_SOURCE.boosts_dir
     state_file = src_dir / ".build_state.json"
-
-    extra_prs = [ExtraPR.parse(spec) for spec in args.extra_pr]
-    explicit_patches: list[str] = [p for spec in args.patches for p in spec.split(",") if p]
-
-    current_state = {"patches": explicit_patches, "extra_pr": args.extra_pr, "boosts_commit": ""}
-    do_setup = not args.skip_patch_setup
-
-    # FAIL-SAFE: Force setup if the directory doesn't exist yet
-    if not src_dir.exists():
-        if args.skip_patch_setup:
-            print(f"Warning: Directory '{src_dir}' does not exist. Ignoring --skip-patch-setup and forcing git setup.")
-        do_setup = True
-
-    # Auto-skip check
-    if do_setup and not extra_prs and boosts_dir.exists() and src_dir.exists():
-        run_git(["fetch", "origin"], cwd=boosts_dir)
-        current_state["boosts_commit"] = subprocess.run(
-            ["git", "rev-parse", "origin/main"], cwd=boosts_dir, capture_output=True, text=True
-        ).stdout.strip()
-        if state_file.exists():
-            try:
-                if json.loads(state_file.read_text(encoding="utf-8")) == current_state:
-                    print("No upstream updates or argument changes detected. Auto-skipping patch setup.")
-                    do_setup = False
-            except (OSError, json.JSONDecodeError):
-                pass
+    current_state, explicit_patches, extra_prs = _build_state(src_dir, args)
 
     skipped: list[tuple[str, str]] = []
-    if do_setup:
+    if _wants_setup(args, src_dir, boosts_dir, state_file, extra_prs, current_state):
         skipped = setup_rdna_source(src_dir, explicit_patches or None, extra_prs)
         # Save state after successful setup
         if boosts_dir.exists():
-            current_state["boosts_commit"] = subprocess.run(
-                ["git", "rev-parse", "HEAD"], cwd=boosts_dir, capture_output=True, text=True
-            ).stdout.strip()
+            current_state["boosts_commit"] = _git_commit(boosts_dir, "HEAD")
             state_file.write_text(json.dumps(current_state))
     else:
         print("Skipping git setup/patch step; building as-is.")
@@ -367,11 +387,7 @@ def run(args: argparse.Namespace) -> None:
         jobs=args.jobs,
     )
 
-    if skipped:
-        print(f"\n{len(skipped)} patch(es)/commit(s) skipped (didn't apply cleanly):")
-        for ref, reason in skipped:
-            print(f"  - {ref}: {reason}")
-        print("Apply any of these manually if you need them.")
+    _report_skipped(skipped)
 
 
 def main() -> None:

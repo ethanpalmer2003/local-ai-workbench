@@ -14,9 +14,12 @@ import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import NotRequired, TextIO, TypedDict, cast
+from typing import TYPE_CHECKING, NotRequired, TextIO, TypedDict, cast
 
 import requests
+
+if TYPE_CHECKING:
+    import psutil
 
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import github
@@ -25,12 +28,7 @@ from scripts.file_util import archive_path
 
 MARKER_NAME = ".release_published_at"
 ASSET_MARKER_NAME = ".release_asset"
-CATEGORY_HEADINGS = (
-    ("llamacpp", "LLAMA.CPP"),
-    ("speech", "TTS / ASR"),
-    ("asr", "ASR"),
-    ("other", "OTHER"),
-)
+CATEGORY_HEADINGS = (("llamacpp", "LLAMA.CPP"), ("speech", "TTS / ASR"), ("asr", "ASR"), ("other", "OTHER"))
 # - these name the exact entry; collapsing them would hide which one broke
 EXPANDED_STATUSES = ("CHECK FAILED", "SKIPPED BY OPTION")
 
@@ -139,8 +137,15 @@ class UpdateSummary:
 
     def status_sections(self, category: str, kind: str) -> list[tuple[str, list[str]]]:
         return [
-            (title, [entry for entry in names if self._in_category(entry, category)
-                     and self.kinds.get(entry.partition(" :: ")[0], cfg.UNCLASSIFIED_KIND) == kind])
+            (
+                title,
+                [
+                    entry
+                    for entry in names
+                    if self._in_category(entry, category)
+                    and self.kinds.get(entry.partition(" :: ")[0], cfg.UNCLASSIFIED_KIND) == kind
+                ],
+            )
             for title, names in self.groups()
         ]
 
@@ -324,39 +329,37 @@ def replace_installation(staged: Path, dest_dir: Path) -> None:
     shutil.copytree(staged, dest_dir)
 
 
-def stop_installation_processes(dest_dir: Path) -> list[int]:
-    """Stop processes running from or launched with paths inside an installation."""
+def _runs_from(value: str, target: str) -> bool:
+    """True when one command-line value names the installation, as a path or as --x=VALUE."""
+    target_prefix = target.rstrip("\\")
+    raw = os.path.normcase(str(value).strip('"').replace("/", "\\"))
+    occurrence = raw.find(target_prefix)
+    if occurrence >= 0:
+        suffix = raw[occurrence + len(target_prefix) :]
+        if not suffix or suffix.startswith(("\\", "=")):
+            return True
+    try:
+        candidate = os.path.normcase(os.path.abspath(str(value).strip('"')))
+        return os.path.commonpath((target, candidate)) == target
+    except ValueError:
+        return False
+
+
+def _matching_processes(target: str) -> list[psutil.Process]:
     import psutil
 
-    target = os.path.normcase(os.path.abspath(dest_dir))
-    matches = []
+    matches: list[psutil.Process] = []
     for process in psutil.process_iter(["name", "exe", "cmdline"]):
         info = process.info
-        exe = info.get("exe")
-        command = info.get("cmdline") or []
-        paths = [exe, *(str(argument) for argument in command)]
-        for value in paths:
-            if not value:
-                continue
-            raw = os.path.normcase(str(value).strip('"').replace("/", "\\"))
-            target_prefix = target.rstrip("\\")
-            occurrence = raw.find(target_prefix)
-            suffix = raw[occurrence + len(target_prefix) :] if occurrence >= 0 else None
-            if suffix is not None and (not suffix or suffix.startswith(("\\", "="))):
-                matches.append(process)
-                break
-            candidate = os.path.normcase(os.path.abspath(str(value).strip('"')))
-            try:
-                if os.path.commonpath((target, candidate)) == target:
-                    matches.append(process)
-                    break
-            except ValueError:
-                continue
+        values = [info.get("exe"), *(str(argument) for argument in (info.get("cmdline") or []))]
+        if any(_runs_from(value, target) for value in values if value):
+            matches.append(process)
+    return matches
 
-    if not matches:
-        return []
 
-    # Stop child processes as well, so a launcher cannot leave a backend alive.
+def _process_tree(matches: list[psutil.Process]) -> dict[int, psutil.Process]:
+    import psutil
+
     tree: dict[int, psutil.Process] = {}
     for process in matches:
         try:
@@ -367,8 +370,12 @@ def stop_installation_processes(dest_dir: Path) -> list[int]:
             continue
         except psutil.AccessDenied as error:
             raise UpdateError(f"Cannot inspect child processes of PID {process.pid}: {error}") from error
+    return tree
 
-    processes = list(tree.values())
+
+def _terminate_processes(processes: list[psutil.Process], dest_dir: Path) -> None:
+    import psutil
+
     for process in reversed(processes):
         try:
             process.terminate()
@@ -389,6 +396,16 @@ def stop_installation_processes(dest_dir: Path) -> list[int]:
         remaining = ", ".join(f"PID {process.pid}" for process in alive)
         raise UpdateError(f"Services are still running from {dest_dir}: {remaining}; update was not started")
 
+
+def stop_installation_processes(dest_dir: Path) -> list[int]:
+    """Stop processes running from or launched with paths inside an installation."""
+    target = os.path.normcase(os.path.abspath(dest_dir))
+    matches = _matching_processes(target)
+    if not matches:
+        return []
+    # Stop child processes as well, so a launcher cannot leave a backend alive.
+    tree = _process_tree(matches)
+    _terminate_processes(list(tree.values()), dest_dir)
     stopped = sorted(tree)
     print(f"Stopped {len(stopped)} process(es) for {dest_dir}: {', '.join(map(str, stopped))}")
     return stopped
@@ -477,10 +494,7 @@ def snapshot_source_patches(tool: cfg.ToolSpec, dest_dir: Path, local: str, late
 def source_ahead(command: list[str], branch: str) -> bool:
     """Local commits on top of upstream make a --ff-only pull impossible."""
     result = subprocess.run(
-        [*command, "rev-list", "--count", f"origin/{branch}..HEAD"],
-        capture_output=True,
-        text=True,
-        check=False,
+        [*command, "rev-list", "--count", f"origin/{branch}..HEAD"], capture_output=True, text=True, check=False
     )
     count = result.stdout.strip()
     return result.returncode == 0 and count.isdigit() and int(count) > 0
@@ -489,12 +503,91 @@ def source_ahead(command: list[str], branch: str) -> bool:
 def source_tree_dirty(command: list[str]) -> bool:
     """Tracked local edits block a fast-forward; untracked build output does not."""
     status = subprocess.run(
-        [*command, "status", "--porcelain", "--untracked-files=no"],
-        capture_output=True,
-        text=True,
-        check=False,
+        [*command, "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True, check=False
     )
     return bool(status.stdout.strip())
+
+
+def _head_commit(dest_dir: Path) -> str:
+    return subprocess.check_output(["git", "-C", str(dest_dir), "rev-parse", "HEAD"], text=True).strip()
+
+
+def _clone_source(tool: cfg.ToolSpec, dest_dir: Path) -> str:
+    dest_dir.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        ["git", "clone", "--depth", "1", "--branch", tool.branch, f"https://github.com/{tool.repo}.git", str(dest_dir)],
+        check=True,
+    )
+    print("Status: SOURCE INSTALLED (not compiled)")
+    return _head_commit(dest_dir)
+
+
+def _install_missing_source(
+    tool: cfg.ToolSpec, dest_dir: Path, summary: UpdateSummary | None, check_only: bool, latest: str
+) -> str:
+    if summary is not None:
+        summary.record(tool, "available", "not installed")
+    print(f"Local commit  : NOT INSTALLED\nUpstream commit: {latest}")
+    return latest if check_only else _clone_source(tool, dest_dir)
+
+
+def _checkout_ahead(tool: cfg.ToolSpec, command: list[str], dest_dir: Path) -> bool:
+    """Local commits on top of upstream make a --ff-only pull impossible."""
+    if SOURCE_AHEAD_CHECK and SOURCE_AHEAD_CHECK(tool, dest_dir):
+        return True
+    return source_ahead(command, tool.branch)
+
+
+def _pull(command: list[str], branch: str, options: tuple[str, ...] = ()) -> None:
+    subprocess.run([*command, "pull", *options, "origin", branch], check=True)
+
+
+def _replay_local_commit(
+    tool: cfg.ToolSpec, command: list[str], summary: UpdateSummary | None, check_only: bool
+) -> None:
+    # - Our own patch commit is replayed on top of upstream, so it stays one known change.
+    print("Status: UPDATE AVAILABLE; LOCAL COMMIT REPLAYED ON PULL")
+    if summary is not None:
+        summary.record(tool, "source_build" if tool.rebuild_required else "available", actionable=True)
+    if not check_only:
+        _pull(command, tool.branch, ("--rebase", "--autostash"))
+        print("Status: SOURCE UPDATED; REBUILD REQUIRED")
+
+
+def _fast_forward(tool: cfg.ToolSpec, command: list[str], summary: UpdateSummary | None, check_only: bool) -> None:
+    if tool.rebuild_required:
+        # - clean checkout: fast-forward is safe, but the binary stays stale until
+        #   someone recompiles, so this is not reported as a finished update.
+        report_source_build(tool, summary)
+        if not check_only:
+            _pull(command, tool.branch, ("--ff-only",))
+            print("Status: SOURCE UPDATED; BUILD REQUIRED")
+        return
+    if summary is not None:
+        summary.record(tool, "available")
+    print("Status: UPDATE AVAILABLE")
+    if not check_only:
+        _pull(command, tool.branch, ("--ff-only",))
+        print("Status: UPDATED")
+
+
+def _apply_behind(
+    tool: cfg.ToolSpec, command: list[str], dest_dir: Path, summary: UpdateSummary | None, check_only: bool, ahead: bool
+) -> None:
+    """Report, and where it is safe, move a checkout that is behind upstream."""
+    if tool.rebase_local:
+        if source_tree_dirty(command):
+            report_local_changes(tool, summary)
+        else:
+            _replay_local_commit(tool, command, summary, check_only)
+        return
+    if tool.manual_merge or ahead:
+        report_rebuild(tool, summary)
+        return
+    if source_tree_dirty(command):
+        report_local_changes(tool, summary)
+        return
+    _fast_forward(tool, command, summary, check_only)
 
 
 def process_source(tool: cfg.ToolSpec, dest_dir: Path, check_only: bool, summary: UpdateSummary | None = None) -> str:
@@ -509,27 +602,7 @@ def process_source(tool: cfg.ToolSpec, dest_dir: Path, check_only: bool, summary
             ) from error
         raise
     if not dest_dir.exists():
-        if summary is not None:
-            summary.record(tool, "available", "not installed")
-        print(f"Local commit  : NOT INSTALLED\nUpstream commit: {latest}")
-        if not check_only:
-            dest_dir.parent.mkdir(parents=True, exist_ok=True)
-            subprocess.run(
-                [
-                    "git",
-                    "clone",
-                    "--depth",
-                    "1",
-                    "--branch",
-                    tool.branch,
-                    f"https://github.com/{tool.repo}.git",
-                    str(dest_dir),
-                ],
-                check=True,
-            )
-            print("Status: SOURCE INSTALLED (not compiled)")
-            return subprocess.check_output(["git", "-C", str(dest_dir), "rev-parse", "HEAD"], text=True).strip()
-        return latest
+        return _install_missing_source(tool, dest_dir, summary, check_only, latest)
     command = ["git", "-c", f"safe.directory={dest_dir.as_posix()}", "-C", str(dest_dir)]
     local = subprocess.run([*command, "rev-parse", "HEAD"], capture_output=True, text=True, check=True)
     print(f"Local commit  : {local.stdout.strip()}\nUpstream commit: {latest}")
@@ -541,41 +614,10 @@ def process_source(tool: cfg.ToolSpec, dest_dir: Path, check_only: bool, summary
             summary.record(tool, "current")
         print("Status: SOURCE UP TO DATE")
     elif contains.returncode in (1, 128):
-        local_commits = bool(SOURCE_AHEAD_CHECK and SOURCE_AHEAD_CHECK(tool, dest_dir)) or source_ahead(
-            command, tool.branch
-        )
-        if tool.rebase_local:
-            if source_tree_dirty(command):
-                report_local_changes(tool, summary)
-            else:
-                # - Our own patch commit is replayed on top of upstream, so it stays one known change.
-                print("Status: UPDATE AVAILABLE; LOCAL COMMIT REPLAYED ON PULL")
-                if summary is not None:
-                    summary.record(tool, "source_build" if tool.rebuild_required else "available", actionable=True)
-                if not check_only:
-                    subprocess.run([*command, "pull", "--rebase", "--autostash", "origin", tool.branch], check=True)
-                    print("Status: SOURCE UPDATED; REBUILD REQUIRED")
-        elif tool.manual_merge or local_commits:
-            report_rebuild(tool, summary)
-        elif source_tree_dirty(command):
-            report_local_changes(tool, summary)
-        elif tool.rebuild_required:
-            # - clean checkout: fast-forward is safe, but the binary stays stale until
-            #   someone recompiles, so this is not reported as a finished update.
-            report_source_build(tool, summary)
-            if not check_only:
-                subprocess.run([*command, "pull", "--ff-only", "origin", tool.branch], check=True)
-                print("Status: SOURCE UPDATED; BUILD REQUIRED")
-        else:
-            if summary is not None:
-                summary.record(tool, "available")
-            print("Status: UPDATE AVAILABLE")
-            if not check_only:
-                subprocess.run([*command, "pull", "--ff-only", "origin", tool.branch], check=True)
-                print("Status: UPDATED")
+        _apply_behind(tool, command, dest_dir, summary, check_only, _checkout_ahead(tool, command, dest_dir))
     else:
         raise UpdateError(contains.stderr.decode("utf-8", errors="replace"))
-    return subprocess.check_output([*command, "rev-parse", "HEAD"], text=True).strip()
+    return _head_commit(dest_dir)
 
 
 def installed_release_asset(tool: cfg.ToolSpec, dest_dir: Path) -> str | None:
@@ -608,10 +650,44 @@ def process_managed_tool(
     return False
 
 
+def _needs_update(tool: cfg.ToolSpec, release: Release, asset: Asset, dest_dir: Path, exe: Path) -> bool:
+    remote_stamp = release["published_at"]
+    if tool.release_type in (cfg.ReleaseType.DATE, cfg.ReleaseType.WHEEL):
+        # Compare against the release timestamp recorded at install time,
+        # not the exe's mtime (zip extraction can preserve old file dates).
+        marker = dest_dir / MARKER_NAME
+        local_stamp = marker.read_text().strip() if marker.exists() else None
+        local_asset = installed_release_asset(tool, dest_dir)
+        print(f"Local release : {local_stamp or 'UNKNOWN'}")
+        print(f"Latest release: {remote_stamp}")
+        if local_asset:
+            print(f"Local asset   : {local_asset}")
+        return (
+            not exe.exists()
+            or local_stamp != remote_stamp
+            or (local_asset is not None and local_asset != asset["name"])
+        )
+    local_version = get_local_version(tool, exe)
+    latest_version = release["tag_name"]
+    print(f"Local version : {local_version}")
+    print(f"Latest version: {latest_version}")
+    return not local_version or local_version != latest_version
+
+
+def _install_release(tool: cfg.ToolSpec, asset: Asset, dest_dir: Path, tmp_dir: Path, release: Release) -> None:
+    print("Status: UPDATING")
+    installer = RELEASE_INSTALLERS.get(tool.release_type, update_tool)
+    installer(asset, dest_dir, tmp_dir, tool.exe)
+    if tool.release_type in (cfg.ReleaseType.DATE, cfg.ReleaseType.WHEEL):
+        (dest_dir / MARKER_NAME).write_text(release["published_at"])
+        (dest_dir / ASSET_MARKER_NAME).write_text(asset["name"], encoding="utf-8")
+    print("Status: UPDATED")
+
+
 def process_tool(tool: cfg.ToolSpec, tmp_dir: Path, check_only: bool, summary: UpdateSummary | None = None) -> bool:
     dest_dir = project_cfg.framework_install_dir(tool.name) / tool.install_subdir
     exe = dest_dir / tool.exe
-    label = f"{tool.name} ({tool.package})" if tool.package else tool.name
+    label = tool_label(tool)
     print(f"\n=== {label} ===")
 
     try:
@@ -627,47 +703,15 @@ def process_tool(tool: cfg.ToolSpec, tmp_dir: Path, check_only: bool, summary: U
         if note := RELEASE_NOTES.get(tool.name):
             note(release)
 
-        marker = dest_dir / MARKER_NAME
-        remote_stamp = release["published_at"]
-
-        if tool.release_type in (cfg.ReleaseType.DATE, cfg.ReleaseType.WHEEL):
-            # Compare against the release timestamp recorded at install time,
-            # not the exe's mtime (zip extraction can preserve old file dates).
-            local_stamp = marker.read_text().strip() if marker.exists() else None
-            local_asset = installed_release_asset(tool, dest_dir)
-            print(f"Local release : {local_stamp or 'UNKNOWN'}")
-            print(f"Latest release: {remote_stamp}")
-            if local_asset:
-                print(f"Local asset   : {local_asset}")
-            needs_update = (
-                not exe.exists()
-                or local_stamp != remote_stamp
-                or (local_asset is not None and local_asset != asset["name"])
-            )
-
-        else:
-            local_version = get_local_version(tool, exe)
-            latest_version = release["tag_name"]
-
-            print(f"Local version : {local_version}")
-            print(f"Latest version: {latest_version}")
-            needs_update = not local_version or local_version != latest_version
-
+        needs_update = _needs_update(tool, release, asset, dest_dir, exe)
         if summary is not None:
             summary.record(tool, "available" if needs_update else "current")
-        if needs_update:
-            print("Status: UPDATE AVAILABLE")
-            if not check_only:
-                print("Status: UPDATING")
-                installer = RELEASE_INSTALLERS.get(tool.release_type, update_tool)
-                installer(asset, dest_dir, tmp_dir, tool.exe)
-                if tool.release_type in (cfg.ReleaseType.DATE, cfg.ReleaseType.WHEEL):
-                    marker.write_text(remote_stamp)
-                    (dest_dir / ASSET_MARKER_NAME).write_text(asset["name"], encoding="utf-8")
-                print("Status: UPDATED")
-        else:
+        if not needs_update:
             print("Status: UP TO DATE")
-
+            return True
+        print("Status: UPDATE AVAILABLE")
+        if not check_only:
+            _install_release(tool, asset, dest_dir, tmp_dir, release)
         return True
 
     except UpdateError as error:
@@ -752,9 +796,7 @@ def apply_updates(tools: list[cfg.ToolSpec], folder: Path, summary: UpdateSummar
             print(f"\n=== {title} ===")
             for name in names:
                 print(f"- {name}")
-    builds = [
-        tool_label(tool) for tool in selected if tool.rebuild_required and tool_label(tool) in updated
-    ]
+    builds = [tool_label(tool) for tool in selected if tool.rebuild_required and tool_label(tool) in updated]
     if builds:
         print("\n=== BUILD REQUIRED ===")
         for name in builds:
