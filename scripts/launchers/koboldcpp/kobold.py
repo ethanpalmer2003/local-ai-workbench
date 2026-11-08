@@ -48,7 +48,7 @@ def _server_options(usage_profile: str) -> dict[str, Any]:
         # - None skips the flag so the config file's empty whispermodel disables the built-in model; "" emits an empty CLI argument the console wrapper drops
         options["whispermodel"] = None
     if cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.GEMMA_KOBOLD:
-        if cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model] != cfg.GEMMA_AUDIO_ASR.model:
+        if cfg.kobold_chat_model_path() != cfg.GEMMA_AUDIO_ASR.model:
             raise ValueError("Gemma audio needs the matching Gemma 4 E4B chat model")
         options["mmproj"] = str(cfg.GEMMA_AUDIO_ASR.mmproj)
     if cfg.KOBOLDCPP_ADMIN_PASSWORD:
@@ -61,7 +61,7 @@ def _model_config(options: dict[str, Any], no_model: bool) -> Path:
         # - the UI runs without weights; llama.cpp serves the model
         options.pop("model", None)
         return external_llm.no_model_config()
-    options["model"] = str(cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model])
+    options["model"] = str(cfg.kobold_chat_model_path())
     return cfg.KOBOLDCPP_SERVICE.config
 
 
@@ -124,7 +124,7 @@ def print_summary(log_path: Path, usage_profile: str = "standalone") -> None:
     extra_args = model_overrides(usage_profile)
     print(f"GPU profile: {usage_profile}")
     print(f"Model:     {cfg.KOBOLDCPP_SERVICE.model}")
-    print(f"GGUF:      {cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model].name}")
+    print(f"GGUF:      {cfg.kobold_chat_model_path().name}")
     print(f"Context:   {cfg.KOBOLDCPP_KCPPS_ARGS['contextsize']}")
     if transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine):
         print(

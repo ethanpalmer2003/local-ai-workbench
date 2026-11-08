@@ -647,16 +647,28 @@ KOBOLDCPP_KCPPS_ARGS = {
 KOBOLDCPP_PORT: int = cast(int, KOBOLDCPP_KCPPS_ARGS["port"])
 
 # - KoboldCpp chat allowlist, in the canonical registry-label namespace; paths come from the registry.
+#   The character weights sit in the private overlay, so a clone without it keeps the tracked model.
+KOBOLDCPP_CHAT_LABELS = (
+    "llamacpp/gemma-4-E4B-it-Q4_0",
+    "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS",
+    "koboldcpp/TheDrummer_Snowpiercer-15B-v4-IQ4_XS",
+    "koboldcpp/TheDrummer_Cydonia-24B-v4.3-IQ3_XXS",
+    "koboldcpp/TheDrummer_Orion-26B-A4B-v1.1-IQ3_XXS",
+)
 KOBOLDCPP_MODELS = {
     label: model_cfg.path(label)
-    for label in (
-        "llamacpp/gemma-4-E4B-it-Q4_0",
-        "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS",
-        "koboldcpp/TheDrummer_Snowpiercer-15B-v4-IQ4_XS",
-        "koboldcpp/TheDrummer_Cydonia-24B-v4.3-IQ3_XXS",
-        "koboldcpp/TheDrummer_Orion-26B-A4B-v1.1-IQ3_XXS",
-    )
+    for label in KOBOLDCPP_CHAT_LABELS
+    if label in {model.label for model in model_cfg.MODELS}
 }
+
+
+def kobold_chat_model_label() -> str:
+    """The configured chat model, or the first allowed one when the private weights are absent."""
+    return KOBOLDCPP_SERVICE.model if KOBOLDCPP_SERVICE.model in KOBOLDCPP_MODELS else next(iter(KOBOLDCPP_MODELS))
+
+
+def kobold_chat_model_path() -> Path:
+    return KOBOLDCPP_MODELS[kobold_chat_model_label()]
 
 
 # 	Vulkan0 (GPU)	Vulkan_Host (CPU)

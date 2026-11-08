@@ -28,7 +28,7 @@ def command() -> list[str]:
 
 
 def start() -> subprocess.Popen[Any] | None:
-    if cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model] != cfg.GEMMA_AUDIO_ASR.model:
+    if cfg.kobold_chat_model_path() != cfg.GEMMA_AUDIO_ASR.model:
         raise ValueError("Gemma audio needs the matching Gemma 4 E4B chat model")
     if not cfg.GEMMA_AUDIO_ASR.mmproj.is_file():
         raise FileNotFoundError(f"Missing Gemma multimodal projector: {cfg.GEMMA_AUDIO_ASR.mmproj}")

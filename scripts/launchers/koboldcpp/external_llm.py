@@ -33,7 +33,7 @@ def server_exe(build: str = "vulkan") -> Path:
 
 
 def model_path() -> Path:
-    return cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model]
+    return cfg.kobold_chat_model_path()
 
 
 def matching_options() -> dict[str, object]:
