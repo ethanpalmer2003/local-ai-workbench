@@ -33,4 +33,4 @@
 ## Guides and checks
 - One owner guide per procedure; link instead of repeating. Maintained guides <=500 words, detailed agent rules <=300; root AGENTS <=450.
 - Run `python -m scripts.review.structure_docs` and allowed import/type checks after structural edits; live tests stay opt-in.
-- Detailed rules: [code](.agents/CODE.md), [checks](.agents/CHECKS.md), [folders](.agents/FOLDERS.md), [notes](.agents/NOTES-CONVENTIONS.md), [skills](.agents/SKILLS.md), [TTS tests](.agents/TTS-TEST-SPAWNING.md), [security](.agents/AGENT-SECURITY.md).
+- Detailed rules: [code](.agents/CODE.md), [checks](.agents/CHECKS.md), [folders](.agents/FOLDERS.md), [notes](.agents/NOTES-CONVENTIONS.md), [skills](.agents/SKILLS.md).

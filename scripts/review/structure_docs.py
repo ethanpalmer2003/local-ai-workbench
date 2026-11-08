@@ -16,6 +16,12 @@ GUIDE_WORDS = 500
 README_WORDS = 750
 AGENTS_WORDS = 450
 RULE_WORDS = 300
+# - names tooling requires keep their spelling; every other Markdown basename is uppercase
+MARKDOWN_NAME_ALLOWED = frozenset({"README.md", "AGENTS.md", "SKILL.md"})
+# - a document below this is a candidate for merging into its owner; reviewed, not failed
+SHORT_DOCUMENT_WORDS = 60
+# - review records state a dated decision, and the complexity ledger is generated
+SHORT_DOCUMENT_SKIP = ("notes/reviews/", "scripts/review/COMPLEXITY-DEBT.md")
 LEGACY_BINDINGS = {
     "KOBOLD",
     "STRATA",
@@ -420,6 +426,28 @@ def naming_issues() -> list[str]:
     return issues
 
 
+def markdown_name_issues(path: Path) -> list[str]:
+    """Markdown basenames are uppercase, so a document is recognizable across the workspace."""
+    if path.name in MARKDOWN_NAME_ALLOWED or path.stem == path.stem.upper():
+        return []
+    return [f"{path.relative_to(project_cfg.BASE_DIR).as_posix()}: Markdown basename must be uppercase"]
+
+
+def short_documents(files: list[Path]) -> list[tuple[int, str]]:
+    """Documents too short to own a rule; listed for review, never failed."""
+    short = []
+    for path in files:
+        if path.suffix != ".md":
+            continue
+        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+        if path.name in MARKDOWN_NAME_ALLOWED or relative.startswith(SHORT_DOCUMENT_SKIP):
+            continue
+        words = prose_words(path.read_text(encoding="utf-8-sig"))
+        if words < SHORT_DOCUMENT_WORDS:
+            short.append((words, relative))
+    return sorted(short)
+
+
 def main() -> int:
     issues = configuration_issues() + physical_root_issues() + naming_issues()
     files = maintained_files()
@@ -429,6 +457,7 @@ def main() -> int:
         if path.suffix == ".py":
             issues += source_issues(path, text)
         elif path.suffix == ".md":
+            issues += markdown_name_issues(path)
             issues += markdown_issues(path, text)
         elif path.suffix == ".bat":
             issues += batch_issues(path, text)
@@ -436,6 +465,8 @@ def main() -> int:
         print(f"[FAIL] {issue}")
     if len(issues) > 40:
         print(f"[WARN] {len(issues) - 40} further issues; output bounded at 40")
+    for words, relative in short_documents(files):
+        print(f"[WARN] short document ({words} words): {relative}; merge it into its owner or justify it")
     print(f"[{'FAIL' if issues else 'OK'}] Structure/docs: {len(files)} files, {len(issues)} issues")
     return int(bool(issues))
 

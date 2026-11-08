@@ -4,7 +4,7 @@
 multiple servers, concurrent ASR/chat/TTS and interruption handling.
 
 Profile counts, streaming/VAD terminology and pacing status: see
-[CAPABILITIES-notes.md](CAPABILITIES-notes.md).
+[CAPABILITIES-NOTES.md](CAPABILITIES-NOTES.md).
 
 | Selected profile(s) | Recognition group | VAD support / local state |
 | --- | --- | --- |
