@@ -1,5 +1,6 @@
 """Check component ownership, config naming, imports and concise maintained documentation."""
 
+import argparse
 import ast
 import re
 from functools import cache
@@ -330,6 +331,43 @@ def markdown_budget(relative: str, path: Path) -> int:
     return README_WORDS if path.name.lower() == "readme.md" else GUIDE_WORDS
 
 
+def short_candidate(relative: str, path: Path) -> bool:
+    """Documents the review list owns; generated and tool-required files stay out of it."""
+    return path.name not in MARKDOWN_NAME_ALLOWED and not relative.startswith(SHORT_DOCUMENT_SKIP)
+
+
+def word_marker(words: int, budget: int, relative: str, path: Path) -> str:
+    """Both ends at once: over the document budget, under the review floor, or neither."""
+    if words > budget:
+        return "over"
+    return "short" if words < SHORT_DOCUMENT_WORDS and short_candidate(relative, path) else ""
+
+
+def word_rows(files: list[Path]) -> list[tuple[int, int, str, str]]:
+    """Every maintained document with its word count and budget, longest first."""
+    rows = []
+    for path in files:
+        if path.suffix != ".md":
+            continue
+        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+        budget = markdown_budget(relative, path)
+        words = prose_words(path.read_text(encoding="utf-8-sig"))
+        rows.append((words, budget, relative, word_marker(words, budget, relative, path)))
+    return sorted(rows, reverse=True)
+
+
+def print_word_counts(files: list[Path]) -> int:
+    """One table covering both ends: the over-budget documents and the review candidates."""
+    rows = word_rows(files)
+    over = sum(1 for *_, marker in rows if marker == "over")
+    short = sum(1 for *_, marker in rows if marker == "short")
+    print(f"{'words':>6} {'budget':>6}  {'mark':6}  document")
+    for words, budget, relative, marker in rows:
+        print(f"{words:6d} {budget:6d}  {marker:6}  {relative}")
+    print(f"{len(rows)} documents, {over} over budget, {short} under {SHORT_DOCUMENT_WORDS} words")
+    return int(bool(over))
+
+
 def markdown_issues(path: Path, text: str) -> list[str]:
     issues = []
     relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
@@ -440,7 +478,7 @@ def short_documents(files: list[Path]) -> list[tuple[int, str]]:
         if path.suffix != ".md":
             continue
         relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
-        if path.name in MARKDOWN_NAME_ALLOWED or relative.startswith(SHORT_DOCUMENT_SKIP):
+        if not short_candidate(relative, path):
             continue
         words = prose_words(path.read_text(encoding="utf-8-sig"))
         if words < SHORT_DOCUMENT_WORDS:
@@ -448,7 +486,12 @@ def short_documents(files: list[Path]) -> list[tuple[int, str]]:
     return sorted(short)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--words", action="store_true", help="list every maintained document by word count")
+    args = parser.parse_args(argv)
+    if args.words:
+        return print_word_counts(maintained_files())
     issues = configuration_issues() + physical_root_issues() + naming_issues()
     files = maintained_files()
     for path in files:
