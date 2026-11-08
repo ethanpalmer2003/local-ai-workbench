@@ -494,7 +494,8 @@ class PracticeTests(unittest.TestCase):
             [model["id"] for model in config["models"]], ["benchmark-asr", cfg.LANGUAGE_PRACTICE.tts_model]
         )
         self.assertFalse(config["lazy_load"])
-        self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.AUDIOCPP)
+        self.assertEqual(cfg.ASR_SERVICE.engine, cfg.LANGUAGE_PRACTICE.asr_engine)
+        self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.QWEN3_ASR)
 
 
 if __name__ == "__main__":

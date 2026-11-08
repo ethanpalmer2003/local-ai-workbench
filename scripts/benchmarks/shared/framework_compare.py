@@ -30,6 +30,7 @@ from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr import selector
 from scripts.launchers.asr import server as asr_gateway
 from scripts.launchers.audiocpp import asr as audiocpp_asr
 from scripts.launchers.lemonade_server import lemonade
@@ -119,18 +120,15 @@ def _chat_command(weights: Path, port: int) -> list[str]:
     return command
 
 
-def _gateway_thread(port: int, errors: list[str], box: dict[str, Any]) -> threading.Thread:
-    """Run the practice gateway in-process; it fronts AudioCpp speech and recognition."""
+def _gateway_thread(
+    port: int, engine: cfg.AsrStartupEngine, errors: list[str], box: dict[str, Any]
+) -> threading.Thread:
+    """Run the practice gateway in-process; it fronts AudioCpp speech and the profile's recogniser."""
 
     def run_gateway() -> None:
         try:
             asr_gateway.run_proxy(
-                cfg.AsrStartupEngine.AUDIOCPP,
-                "127.0.0.1",
-                port,
-                None,
-                audiocpp_asr.url(),
-                lambda value: box.update(gateway=value),
+                engine, "127.0.0.1", port, None, audiocpp_asr.url(), lambda value: box.update(gateway=value)
             )
         except Exception as error:  # a thread cannot raise into the caller
             errors.append(str(error))
@@ -155,7 +153,8 @@ def _serve_practice(weights: Path, run: RunPaths) -> Iterator[Served]:
     """llama.cpp chat plus the AudioCpp speech/gateway pair of the language profile."""
     errors: list[str] = []
     box: dict[str, Any] = {}
-    chat = speech = thread = None
+    chat = speech = recogniser = thread = None
+    engine = cfg.ASR_SERVICE.engine
     chat_port, speech_port, gateway_port = _free_port(), _free_port(), _free_port()
     command = _chat_command(weights, chat_port)
     with (
@@ -176,8 +175,11 @@ def _serve_practice(weights: Path, run: RunPaths) -> Iterator[Served]:
                 component_key="llamacpp",
             )
             speech = audiocpp_asr.start(speech_port)
+            # - The profile's recogniser is its own backend; AudioCpp still provides the speech leg
+            if engine is not cfg.AsrStartupEngine.AUDIOCPP:
+                recogniser = selector.backend(engine).start()
             base = f"http://127.0.0.1:{gateway_port}"
-            thread = _gateway_thread(gateway_port, errors, box)
+            thread = _gateway_thread(gateway_port, engine, errors, box)
             _await_gateway(base, errors)
             models = audiocpp_asr.speech_config(speech_port)["models"]
             yield Served(
@@ -187,7 +189,7 @@ def _serve_practice(weights: Path, run: RunPaths) -> Iterator[Served]:
                 asr=base,
                 chat_model=weights.stem,
                 tts_model=cfg.LANGUAGE_PRACTICE.tts_model,
-                asr_model=Path(str(models[0]["path"])).stem,
+                asr_model=_recogniser_model(engine, models),
                 details={
                     "gateway": base,
                     "ports": {"chat": chat_port, "speech": speech_port, "gateway": gateway_port},
@@ -201,12 +203,29 @@ def _serve_practice(weights: Path, run: RunPaths) -> Iterator[Served]:
                 if gateway is not None:
                     gateway.shutdown()
                 thread.join(timeout=10)
+            if recogniser is not None:
+                stop_owned(recogniser)
+                _await_exit(recogniser.pid)
             if speech is not None:
                 stop_owned(speech)
                 _await_exit(speech.pid)
             if chat is not None:
                 stop_owned(chat)
                 _await_exit(chat.pid)
+
+
+def _recogniser_path() -> Path:
+    """The file behind the profile's recogniser, so its identity is recorded with the run."""
+    if cfg.ASR_SERVICE.engine is cfg.AsrStartupEngine.QWEN3_ASR:
+        return Path(cfg.QWEN3_ASR.model)
+    return Path(str(audiocpp_asr.speech_config(0)["models"][0]["path"]))
+
+
+def _recogniser_model(engine: cfg.AsrStartupEngine, models: list[dict[str, Any]]) -> str:
+    """Readable name for the recogniser that answered, not its internal request id."""
+    if engine is cfg.AsrStartupEngine.QWEN3_ASR:
+        return Path(cfg.QWEN3_ASR.model).stem
+    return Path(str(models[0]["path"])).stem
 
 
 def _lemonade_catalog(base: str) -> dict[str, Any]:
@@ -658,11 +677,10 @@ def summarize(results: list[dict[str, Any]]) -> str:
 
 def _source_models(weights: Path) -> list[dict[str, Any]]:
     """Weight files behind both stacks, recorded so a swap is visible later."""
-    asr_models = audiocpp_asr.speech_config(0)["models"]
     return [
         provenance.file_identity("chat", weights),
         provenance.file_identity("practice tts", model_cfg.path(cfg.LANGUAGE_PRACTICE.tts_model)),
-        provenance.file_identity("practice asr", Path(str(asr_models[0]["path"]))),
+        provenance.file_identity("practice asr", _recogniser_path()),
         provenance.file_identity("lemonade server", cfg.LEMONADE_SERVICE.exe),
     ]
 
