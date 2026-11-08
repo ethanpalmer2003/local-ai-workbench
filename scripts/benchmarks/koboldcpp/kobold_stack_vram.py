@@ -265,7 +265,7 @@ def preflight() -> None:
     inputs = (
         {"llama.cpp server": external_llm.server_exe(), "llama.cpp model": external_llm.model_path()}
         if external
-        else {"kobold model": cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model]}
+        else {"kobold model": cfg.kobold_chat_model_path()}
     )
     inputs["audio config"] = Path(cfg.AUDIOCPP_SERVER_ARGS["config"])
     preflight_check.require_paths(inputs)
@@ -353,7 +353,7 @@ def _settings(audio_model: dict[str, Any], guards: dict[str, Any]) -> dict[str, 
         "llm_mode": llm_mode,
         "kobold_effective_command": kobold.server_command("shared", no_model=llm_mode == "external"),
         "kobold_shared_model_args": kobold.model_overrides("shared"),
-        "kobold_model": str(cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model]),
+        "kobold_model": str(cfg.kobold_chat_model_path()),
         "audio_model": audio_model,
         "audio_service": asdict(cfg.AUDIOCPP_SERVICE),
         "image_args": cfg.SDCPP_SERVER_ARGS,

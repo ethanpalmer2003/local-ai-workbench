@@ -91,11 +91,7 @@ class DefaultPaths(unittest.TestCase):
         self.assertTrue(conf.get_ini(), "default INI is empty or unreadable")
 
     def test_kobold_default_files(self):
-        for path in (
-            cfg.KOBOLDCPP_SERVICE.exe,
-            cfg.KOBOLDCPP_SERVICE.config,
-            cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model],
-        ):
+        for path in (cfg.KOBOLDCPP_SERVICE.exe, cfg.KOBOLDCPP_SERVICE.config, cfg.kobold_chat_model_path()):
             self.assertTrue(path.is_file(), str(path))
 
     def test_dsh_default_files(self):
@@ -255,9 +251,7 @@ class LaunchCommands(unittest.TestCase):
                 generated, Path(folder) / "generated" / "shared" / "configs" / cfg.KOBOLDCPP_SERVICE.config.name
             )
             self.assertNotIn("{AI_ROOT}", generated.read_text(encoding="utf-8"))
-            self.assertEqual(
-                command[command.index("--model") + 1], str(cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model])
-            )
+            self.assertEqual(command[command.index("--model") + 1], str(cfg.kobold_chat_model_path()))
             self.assertEqual(command[command.index("--port") + 1], str(cfg.KOBOLDCPP_KCPPS_ARGS["port"]))
             self.assertEqual(command[command.index("--usevulkan") + 1], "0")
             self.assertEqual(
