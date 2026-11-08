@@ -2,7 +2,7 @@
 
 A Windows-first workbench for running local AI at home: one launcher, configuration catalog,
 test suite and benchmark per framework, organised around three things people actually do with
-it - character, language practice and coding.
+it - character chat, language practice and coding.
 
 ## Purpose
 
@@ -14,7 +14,7 @@ AudioCpp (speech synthesis and recognition), whisper.cpp, Parakeet.cpp, SD.cpp a
 
 Three workflow profiles decide what a stack must provide before it is considered at all:
 
-- `character` - character: a mid-size chat model plus voice-design speech (AudioCpp Breeze).
+- `character` - character chat: a mid-size chat model plus voice-design speech (AudioCpp Breeze).
 - `language` - language practice: a lightweight multilingual model, fast Kokoro speech and
   recognition that reads the practice languages (Qwen3-ASR by default).
 - `coding` - coding: a coding model behind an agent client (Pi, DeepSeek Harness, LittleCoder).
@@ -25,7 +25,7 @@ Three workflow profiles decide what a stack must provide before it is considered
 # Coding: llama.cpp plus the Pi agent client
 C:\AI\bat\launch_llamacpp_pi_agent.bat
 
-# Character: KoboldCpp with Breeze speech through the AudioCpp proxy
+# Character chat: KoboldCpp with Breeze speech through the AudioCpp proxy
 C:\AI\bat\browser\launch_kobold.bat
 
 # Language practice: chat, speech and recognition behind one gateway

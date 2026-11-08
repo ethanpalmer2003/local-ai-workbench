@@ -376,7 +376,7 @@ class ProfileRequirements:
     llm_role: str
 
 
-# - The three profiles this repository runs. the character profile needs voice-design speech, language needs ASR plus
+# - The three profiles this repository runs. The character profile needs voice-design speech, language needs ASR plus
 #   fast multilingual speech, and coding needs an agent in front of the inference engine.
 PROFILE_REQUIREMENTS = {
     "character": ProfileRequirements(TtsQualityClass.VOICE_DESIGN, asr=False, agent=False, llm_role="mid"),

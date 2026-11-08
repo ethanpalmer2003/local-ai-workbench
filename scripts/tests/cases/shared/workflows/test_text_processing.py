@@ -42,7 +42,7 @@ class TextProcessingTests(unittest.TestCase):
         self.assertEqual(text_processing.clean_text(text), text)
         self.assertEqual(text_processing.clean_text("می\u200dروم"), "می\u200dروم")
 
-    def test_rp_proxy_and_kokoro_use_identical_generic_rules(self):
+    def test_character_proxy_and_kokoro_use_identical_generic_rules(self):
         text = "#Hello - `bonjour` 🙂 <END>"
         expected = text_processing.clean_text(text)
         self.assertEqual(expected, "Hello bonjour")
