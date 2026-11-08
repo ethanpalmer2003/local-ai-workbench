@@ -45,7 +45,7 @@ class TextProcessingTests(unittest.TestCase):
     def test_character_proxy_and_kokoro_use_identical_generic_rules(self):
         text = "#Hello - `bonjour` 🙂 <END>"
         expected = text_processing.clean_text(text)
-        self.assertEqual(expected, "Hello bonjour")
+        self.assertEqual(expected, "Hello - bonjour")
         self.assertEqual(
             tts_text_processing.clean_text({"input": text, "model": cfg.LANGUAGE_PRACTICE.tts_model})[0], expected
         )

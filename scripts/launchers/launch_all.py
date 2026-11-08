@@ -35,7 +35,6 @@ def stack_services() -> list[tuple[str, Callable[[], Any]]]:
                 ("AudioCpp Proxy", lambda: launch_module("scripts.launchers.audiocpp.audiocpp_proxy", "AudioCpp Proxy"))
             )
 
-
     if cfg.SDCPP_SERVICE.enabled:
         if cfg.SDCPP_SERVICE.mode == cfg.ServiceMode.SERVER:
             # - sdcpp.main() owns the SDCPP_OUT_DIR decision (raw server vs
@@ -53,7 +52,6 @@ def main() -> None:
 
     try:
         for name, launch in stack_services():
-
             print(f"Starting {name}...")
             process = launch()
             if not isinstance(process, Popen):

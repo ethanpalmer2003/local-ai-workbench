@@ -42,7 +42,7 @@ Lint gates at McCabe 10. Anything above it must carry `# noqa: C901` and appear 
 ## Deliberately absent
 
 - Mutation testing.
-- Dead-code and duplicate-code detectors - `inventory_code.py` covers function bodies only.
+- Dead-code and duplicate-code detectors: `inventory_code.py` covers function bodies only.
 - Standalone `bandit`/`semgrep`; ruff `S` covers the common cases.
 - Markdown formatting; `structure_docs.py` enforces links, budgets, anchors and hygiene, and the doc tables are generated.
 - Import-boundary linting; layering is convention.
