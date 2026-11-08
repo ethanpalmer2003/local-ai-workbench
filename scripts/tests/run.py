@@ -32,6 +32,7 @@ from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import Bench
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
 from scripts.tests.cases.shared.benchmarks.test_framework_compare import (
     AlternateArmTests,
+    KoboldArmTests,
     LemonadeModelTests,
     RecognitionLegTests,
     SpeechLegTests,
@@ -94,6 +95,7 @@ if __name__ == "__main__":
                     SummaryTests,
                     LemonadeModelTests,
                     AlternateArmTests,
+                    KoboldArmTests,
                     SpeechPlausibilityTests,
                     CorpusManifestTests,
                     ExtractionTests,
