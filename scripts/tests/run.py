@@ -59,7 +59,12 @@ from scripts.tests.cases.shared.runtime.test_backend_sessions import BackendSess
 from scripts.tests.cases.shared.runtime.test_gpu_memory_monitor import MemoryMonitorTests
 from scripts.tests.cases.shared.runtime.test_image_on_demand import NativePassthroughTests, ResidencyTests
 from scripts.tests.cases.shared.runtime.test_resources import ResourceTests
-from scripts.tests.cases.shared.runtime.test_shared_runtime import ReadinessRouteTests, SharedRuntimeTests
+from scripts.tests.cases.shared.runtime.test_shared_runtime import (
+    OwnedLaunchTests,
+    ReadinessRouteTests,
+    SharedRuntimeTests,
+    SweepMessageTests,
+)
 from scripts.tests.cases.shared.shared_contracts import SharedContracts
 from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
 from scripts.tests.cases.shared.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
@@ -101,6 +106,8 @@ if __name__ == "__main__":
                     RenderTests,
                     SharedRuntimeTests,
                     ReadinessRouteTests,
+                    OwnedLaunchTests,
+                    SweepMessageTests,
                     StartupContracts,
                     RegressionFixtures,
                     TestBoundaries,

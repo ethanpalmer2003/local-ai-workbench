@@ -99,7 +99,9 @@ def new_log_path(usage_profile: str = "standalone") -> Path:
     return LOG_DIR / name
 
 
-def start_kobold(usage_profile: str = "standalone", no_model: bool = False) -> tuple[subprocess.Popen[Any], Path, Path]:
+def start_kobold(
+    usage_profile: str = "standalone", no_model: bool = False, owned: bool = False
+) -> tuple[subprocess.Popen[Any], Path, Path]:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     log_path = new_log_path(usage_profile)
     command = server_command(usage_profile, no_model)
@@ -113,6 +115,7 @@ def start_kobold(usage_profile: str = "standalone", no_model: bool = False) -> t
         else cast(int, cfg.KOBOLDCPP_KCPPS_ARGS["port"]),
         report_vram=True,
         log_file=str(log_path),
+        bind_job=owned,
     )
     return process, config_path, log_path
 

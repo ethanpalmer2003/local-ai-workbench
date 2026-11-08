@@ -242,7 +242,17 @@ def process_start_time(pid: int) -> float | None:
         return None
 
 
-def sweep_escaped_children(ports: int | list[int], since: float | None) -> list[int]:
+def is_descendant(pid: int, root: int) -> bool:
+    """True when pid sits under root; the wrapper's own child is not an escape."""
+    try:
+        import psutil
+
+        return root in {parent.pid for parent in psutil.Process(pid).parents()}
+    except Exception:
+        return False
+
+
+def sweep_escaped_children(ports: int | list[int], since: float | None, root: int | None = None) -> list[int]:
     """Kill listeners on `ports` that started at or after `since`.
 
     - A descendant launched with CREATE_NEW_CONSOLE escapes `taskkill /T`, so the
@@ -262,7 +272,10 @@ def sweep_escaped_children(ports: int | list[int], since: float | None) -> list[
             kill_process_tree(pid)
             killed.append(pid)
     for pid in killed:
-        print(f"[launcher] swept escaped child pid {pid} still holding a service port", flush=True)
+        # - A descendant the tree kill could not reach in time is the normal case for a
+        #   console wrapper; only a pid outside the tree is an actual escape
+        kind = "stopped remaining child" if root is not None and is_descendant(pid, root) else "swept escaped child"
+        print(f"[launcher] {kind} pid {pid} still holding a service port", flush=True)
     return killed
 
 
@@ -295,7 +308,7 @@ def kill_process_tree(pid: int, ports: int | list[int] | None = None) -> None:
                 _kernel32.CloseHandle(handle)
 
     if ports:
-        sweep_escaped_children(ports, started)
+        sweep_escaped_children(ports, started, pid)
 
     # - an already-dead pid is the normal case for a shutdown path, not a fault
     benign = ("not found", "no running instance", "could not find")
@@ -417,6 +430,7 @@ def launch_process(
     mode: ConsoleTerminalLaunchMode | str | None = None,
     log_file: str | None = None,
     env: Mapping[str, str | None] | None = None,
+    bind_job: bool = False,
 ) -> subprocess.Popen[Any]:
     """
     - kill_ports: service ports are prepared according to the configured
@@ -425,6 +439,10 @@ def launch_process(
       modes mirror them through PowerShell Tee-Object in their own window
     - the child's TEMP/TMP/TMPDIR point inside the project, so a sandboxed
       shell that denies the system temp directory cannot abort the child
+    - bind_job: an owned launch joins the launcher's kill-on-close job even in
+      SPLIT_INDEPENDENT, so a descendant spawned after the kill snapshot cannot
+      escape; leave it off for services the user starts and expects to outlive
+      the launcher
     """
     resolved = _launch_mode(mode)
     full_cmd = [*cmd, *(extra_args or [])]
@@ -454,6 +472,13 @@ def launch_process(
         )
 
     _bind_job(proc, resolved)
+    if bind_job and resolved == ConsoleTerminalLaunchMode.SPLIT_INDEPENDENT:
+        try:
+            assign_process_to_job(proc.pid)
+        except OSError:
+            kill_process_tree(proc.pid)
+            proc.wait(timeout=10)
+            raise
     if report_vram:
         report_vram_usage_async(title, proc.pid, vram_before, log_file=log_file)
     return proc
