@@ -1,7 +1,6 @@
-"""Review repository structure, source-file sizes, Python function complexity and duplicate bodies."""
+"""Review repository structure, source-file sizes and Python function complexity."""
 
 import ast
-import hashlib
 import io
 import json
 import os
@@ -19,7 +18,6 @@ from scripts.config import project_config as project_cfg
 MAX_DEPTH = 4
 MAX_CODE_LINES = 100
 MAX_SMALL_FOLDER_ITEMS = 3
-MIN_DUPLICATE_LINES = 15
 DEBT_DOC = project_cfg.SCRIPTS_DIR / "review" / "COMPLEXITY-DEBT.md"
 DEBT_PREAMBLE = (
     "# McCabe debt",
@@ -61,15 +59,6 @@ class FunctionSize:
     @property
     def exceeds_limits(self) -> bool:
         return self.code_lines > MAX_CODE_LINES or self.depth > MAX_DEPTH
-
-
-@dataclass(frozen=True)
-class Fingerprint:
-    path: str
-    name: str
-    line: int
-    code_lines: int
-    digest: str
 
 
 def nesting(node: ast.AST, depth: int = 0) -> int:
@@ -138,42 +127,6 @@ def inspect_source(source: str, path: str) -> list[FunctionSize]:
         depth = max((nesting(child) for child in node.body), default=0)
         results.append(FunctionSize(path, node.name, node.lineno, count, depth))
     return results
-
-
-def fingerprints_source(source: str, path: str) -> list[Fingerprint]:
-    """Fingerprint every function body (name/docstring excluded) that clears the duplication threshold."""
-    tree = ast.parse(source, filename=path)
-    code_lines = code_line_numbers(source, tree)
-    results = []
-    for node in ast.walk(tree):
-        if not isinstance(node, FUNCTIONS):
-            continue
-        body = list(node.body)
-        if (
-            body
-            and isinstance(body[0], ast.Expr)
-            and isinstance(body[0].value, ast.Constant)
-            and isinstance(body[0].value.value, str)
-        ):
-            body = body[1:]
-        if not body:
-            continue
-        own = len({line for line in code_lines if node.lineno <= line <= (node.end_lineno or node.lineno)})
-        if own < MIN_DUPLICATE_LINES:
-            continue
-        normal = "\n".join([ast.dump(node.args)] + [ast.dump(statement) for statement in body])
-        digest = hashlib.sha256(normal.encode("utf-8")).hexdigest()
-        results.append(Fingerprint(path, node.name, node.lineno, own, digest))
-    return results
-
-
-def duplicate_groups(fingerprints: list[Fingerprint]) -> list[list[Fingerprint]]:
-    grouped: dict[str, list[Fingerprint]] = {}
-    for item in fingerprints:
-        grouped.setdefault(item.digest, []).append(item)
-    groups = [sorted(items, key=lambda item: (item.path, item.line)) for items in grouped.values() if len(items) > 1]
-    groups.sort(key=lambda items: (-items[0].code_lines, items[0].path, items[0].line))
-    return groups
 
 
 def maintained_python(root: Path):
@@ -267,27 +220,6 @@ def folder_inventory_report(
     return lines
 
 
-def _duplicate_section(duplicates: list[list[Fingerprint]]) -> list[str]:
-    lines = [
-        "",
-        "## Duplicate function bodies",
-        "",
-        f"Identical normalized bodies at or above {MIN_DUPLICATE_LINES} code lines (advisory; not a pass/fail gate).",
-        "",
-        "| Copies | Code lines | Functions |",
-        "| ---: | ---: | --- |",
-    ]
-    if not duplicates:
-        return [*lines, "| None | - | - |"]
-    lines.extend(
-        f"| {len(group)} | {group[0].code_lines} | "
-        + "; ".join(f"{item.path}:{item.line} {item.name}" for item in group)
-        + " |"
-        for group in duplicates
-    )
-    return lines
-
-
 def _suppression_section(suppressions: list[str]) -> list[str]:
     lines = [
         "",
@@ -317,7 +249,6 @@ def report(
     folders: list[dict[str, int | str]],
     source_files: list[dict[str, int | str]],
     artifacts: Path,
-    duplicates: list[list[Fingerprint]],
     suppressions: list[str],
     dependencies: dict[str, int] | None = None,
 ) -> int:
@@ -336,8 +267,6 @@ def report(
         "files": files,
         "functions": len(results),
         "violations": [asdict(item) for item in violations],
-        "duplicate_limits": {"min_code_lines": MIN_DUPLICATE_LINES},
-        "duplicate_groups": [[asdict(item) for item in group] for group in duplicates],
         "folders": folders,
         "sparse_folders": sparse_folders,
         "small_folder_candidates": small_folders,
@@ -349,7 +278,7 @@ def report(
         "# Repository code review",
         "",
         f"{len(folders)} folders; {len(source_files)} Python/Markdown files; {files} maintained Python files audited; "
-        f"{len(results)} functions; {len(violations)} complexity violations; {len(duplicates)} duplicate groups.",
+        f"{len(results)} functions; {len(violations)} complexity violations.",
         "",
         f"Function limits: depth {MAX_DEPTH}, {MAX_CODE_LINES} code lines per function.",
         "Blank/comment/docstring lines excluded from function size; multiline signatures/data count. Nested bodies are",
@@ -374,7 +303,6 @@ def report(
         )
     )
     lines.extend(f"| {item.path}:{item.line} | {item.name} | {item.code_lines} | {item.depth} |" for item in violations)
-    lines.extend(_duplicate_section(duplicates))
     lines.extend(_suppression_section(suppressions))
     lines.extend(_dependency_section(dependencies or {}))
     (artifacts / "review.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -390,8 +318,6 @@ def report(
         print(
             f"[INFO] {len(small_folders)} folders have 2 to {MAX_SMALL_FOLDER_ITEMS} items; review candidates in report."
         )
-    if duplicates:
-        print(f"[INFO] {len(duplicates)} duplicate function groups (>= {MIN_DUPLICATE_LINES} code lines); see report.")
     print(f"Review report: {artifacts / 'review.md'}")
     return bool(violations or suppressions)
 
@@ -484,25 +410,11 @@ def main(dependencies: dict[str, int] | None = None) -> int:
         for path in files
         for result in inspect_source(path.read_text(encoding="utf-8-sig"), path.relative_to(root).as_posix())
     ]
-    fingerprints = [
-        item
-        for path in files
-        for item in fingerprints_source(path.read_text(encoding="utf-8-sig"), path.relative_to(root).as_posix())
-    ]
     folders, source_files = repository_inventory(project_cfg.BASE_DIR)
     suppressions = suppression_issues(root)
     artifacts = project_cfg.component("shared").generated_dir / "code_review" / str(time.time_ns())
     artifacts.mkdir(parents=True, exist_ok=False)
-    status = report(
-        results,
-        len(files),
-        folders,
-        source_files,
-        artifacts,
-        duplicate_groups(fingerprints),
-        suppressions,
-        dependencies,
-    )
+    status = report(results, len(files), folders, source_files, artifacts, suppressions, dependencies)
     return int(bool(suppressions) or status)
 
 
