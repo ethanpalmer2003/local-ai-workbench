@@ -21,6 +21,8 @@
 
 - Settings: component first; `_SERVICE` for services, `_CLIENT` for coding clients, `_ASR` for ASR profiles. Directory bindings are `Path`; distinguish install, build, bin and SDK roles.
 - Group by purpose, not count; native adapters stay with their owner. Avoid empty placeholders and one-item shells; keep a small folder that carries ownership, native layout or output identity. Audit counts are prompts, not orders.
+- An entry point's name states what it runs: widen the behavior to fit the name rather than narrowing the name. `tests` is test code only.
+- Vendor and upstream scripts stay as shipped; these naming rules cover launcher-repo files only.
 - Historical results and logs keep their paths; `CasePaths` mirrors sources without empty parallel folders.
 - Exceptions are explicit in `COMPONENTS`/`MODEL_ALIASES`: shared llama.cpp/Kobold installs, native app casing, ComfyUI typed storage. Preserve portable data, junctions, shared weights and vendor archive internals.
 
