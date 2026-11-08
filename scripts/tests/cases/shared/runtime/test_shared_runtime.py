@@ -21,7 +21,7 @@ from scripts.tests.shared.process_fixtures import exited_process, inspected_proc
 
 
 class SweepMessageTests(unittest.TestCase):
-    def _sweep(self, descendant):
+    def _sweep(self, known):
         from unittest.mock import patch
 
         from scripts.launchers import launch_util
@@ -30,18 +30,34 @@ class SweepMessageTests(unittest.TestCase):
             patch.object(launch_util, "listening_process_ids", return_value=[77]),
             patch.object(launch_util, "process_start_time", return_value=100.0),
             patch.object(launch_util, "kill_process_tree"),
-            patch.object(launch_util, "is_descendant", return_value=descendant),
             patch("builtins.print") as printed,
             patch.object(launch_util.sys, "platform", "win32"),
         ):
-            launch_util.sweep_escaped_children(5002, 99.0, 4242)
+            launch_util.sweep_escaped_children(5002, 99.0, known)
         return printed.call_args.args[0]
 
-    def test_a_child_the_tree_kill_missed_is_reported_as_stopped_not_escaped(self):
-        self.assertIn("stopped remaining child", self._sweep(True))
+    def test_a_known_descendant_is_reported_as_stopped_not_escaped(self):
+        self.assertIn("stopped remaining child", self._sweep({77}))
 
-    def test_a_pid_outside_the_tree_is_still_reported_as_escaped(self):
-        self.assertIn("swept escaped child", self._sweep(False))
+    def test_a_pid_outside_the_sampled_tree_is_still_reported_as_escaped(self):
+        self.assertIn("swept escaped child", self._sweep({88}))
+
+    def test_the_descendant_set_is_sampled_before_the_kill_severs_the_tree(self):
+        from unittest.mock import patch
+
+        from scripts.launchers import launch_util
+
+        with (
+            patch.object(launch_util, "process_start_time", return_value=100.0),
+            patch.object(launch_util, "descendant_pids", return_value={5}) as sampled,
+            patch.object(launch_util, "subprocess") as run,
+            patch.object(launch_util, "sweep_escaped_children") as sweep,
+            patch.object(launch_util, "_pid_alive", return_value=False),
+        ):
+            run.run.return_value = type("R", (), {"stdout": "", "stderr": "", "returncode": 0})()
+            launch_util.kill_process_tree(4242, ports=5002)
+        sampled.assert_called_once_with(4242)
+        self.assertEqual(sweep.call_args.args[2], {5})
 
 
 class OwnedLaunchTests(unittest.TestCase):
