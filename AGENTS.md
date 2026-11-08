@@ -27,7 +27,7 @@
 - Preserve nonempty data by moving it to `C:/AI/trash`; direct deletion is for empty files/directories only. Verify resolved move/delete paths stay within the intended workspace.
 - Preserve existing work and evidence. `.gitignore` entries cover whole folders.
 - Use uv and `C:/AI/scripts/.venv`; secrets are in `scripts/.env`, Hugging Face data in `data/huggingface/`.
-- Follow [.agents/CODEX.md](.agents/CODEX.md) for PowerShell/allow-list behavior. A command refusal is a hard stop; report what must be allowed.
+- Codex under [.agents/CODEX-HARNESS.md](.agents/CODEX-HARNESS.md): a command refusal is a hard stop; report what must be allowed.
 - Running under DeepSeek Harness: [.agents/DEEPSEEK-HARNESS.md](.agents/DEEPSEEK-HARNESS.md) covers its permissions, sandbox denials and the settled workarounds.
 
 ## Guides and checks

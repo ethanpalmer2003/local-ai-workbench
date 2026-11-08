@@ -4,13 +4,12 @@
 - Functions stay within depth 4 and 100 lines; extract by responsibility. Preserve unexpected tracebacks.
 - Keep lifecycle (`Startup`, `Request`, `StartupRequest`) and scope (`Generic`, `Shared`) explicit in settings classes.
 - Preserve external keys, flags and IDs. Fix a contract at its source instead of a cast or suppression.
-- Suppressions live only in `pyproject.toml` (`ignore`, `per-file-ignores`), each with a one-line reason. No inline `# noqa`: restructure, then ignore the narrowest file glob. `RUF100` and the review gate reject both stale and inline annotations.
+- Suppressions live only in `pyproject.toml`, each with a one-line reason; an inline `# noqa` is rejected, so restructure and ignore the narrowest glob.
 - One supported way per job. No second installer, runner or format "just in case": uv is the only package manager, `uv.lock` the only resolution.
 - Shared path/model/proxy defaults live in configuration; orchestration-only switches stay local.
 - Signatures and calls stay single-line up to 120 characters; pass-through arguments go last.
 - ASCII punctuation only: `scripts/review/typography.py` rejects dashes, curly quotes, ellipsis and no-break spaces.
 - Pick defaults from measured evidence, keeping the caveats and execution context with them.
-- ComfyUI tuning: screen square-equivalent 480 before 640, match cache and monitoring, report decode plus total time.
 
 ## Imports and paths
 
@@ -22,6 +21,8 @@
 ## Execution
 
 - Run modules as `scripts.*` from `C:/AI`; wrappers set the working directory.
+- PowerShell uses absolute forward-slash paths and an explicit working directory.
+- Run Git from PowerShell; Git Bash is `C:/Program Files/Git/bin/bash.exe`, since plain `bash` hits the WindowsApps launcher.
 
 ## Checks
 
