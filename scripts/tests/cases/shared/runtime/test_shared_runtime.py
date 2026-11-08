@@ -90,7 +90,7 @@ class ReadinessRouteTests(unittest.TestCase):
         from scripts.launchers import launch_util
         from scripts.launchers import launcher_config as cfg
 
-        self.assertEqual(launch_util.backend_for_port(int(cfg.KOBOLDCPP_KCPPS_ARGS["port"])), "koboldcpp")
+        self.assertEqual(launch_util.backend_for_port(cfg.KOBOLDCPP_PORT), "koboldcpp")
         self.assertEqual(launch_util.backend_for_port(cfg.KOBOLDCPP_SERVICE.streaming_ui_port), "koboldcpp")
         self.assertEqual(launch_util.ready_url("koboldcpp", 5002), "http://127.0.0.1:5002/api/v1/model")
 
