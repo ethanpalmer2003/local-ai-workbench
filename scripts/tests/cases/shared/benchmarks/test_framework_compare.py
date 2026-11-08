@@ -187,6 +187,27 @@ class RecognitionLegTests(unittest.TestCase):
         self.assertEqual(row["reference_words"], 3)
         self.assertIn("multipart/form-data", post.call_args.kwargs["headers"]["Content-Type"])
 
+    def test_kobold_style_posts_base64_audio_to_its_own_route(self):
+        clip = {"id": "en-0", "language": "en", "file": __file__, "reference": "one", "duration_seconds": 1.0}
+        response = FakeResponse(payload={"text": " Unfortunately, studying"})
+        kobold = compare.Served(
+            backend="koboldcpp",
+            chat="http://k",
+            tts="http://k",
+            asr="http://k",
+            chat_model="gemma",
+            tts_model="kokoro",
+            asr_model="whisper",
+            asr_style="kobold",
+        )
+        with patch.object(compare.requests, "post", return_value=response) as post:
+            row = compare._asr_row(kobold, clip)
+        self.assertEqual(row["status"], "measured")
+        self.assertEqual(row["text"], "Unfortunately, studying")
+        self.assertEqual(post.call_args.kwargs["url"], "http://k/api/extra/transcribe")
+        self.assertIn("audio_data", post.call_args.kwargs["json"])
+        self.assertEqual(post.call_args.kwargs["json"]["langcode"], "en")
+
     def test_pooled_scores_group_clips_by_language(self):
         rows = [
             {"language": "en", "wer": 0.5, "cer": 0.1, "reference_words": 10, "reference_characters": 20},
