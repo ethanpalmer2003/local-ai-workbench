@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.lemonade_server import lemonade
+from scripts.tests.shared import process_fixtures
 from scripts.tests.shared.paths import CasePaths
 
 
@@ -16,7 +17,7 @@ class LemonadeOwnedStartTests(unittest.TestCase):
 
         from scripts.launchers.lemonade_server import lemonade
 
-        process = MagicMock(pid=99)
+        process = process_fixtures.fake_process(pid=99)
         with (
             patch.object(lemonade.launch_util, "launch_process", return_value=process) as launched,
             patch.object(lemonade, "ready", return_value=True),

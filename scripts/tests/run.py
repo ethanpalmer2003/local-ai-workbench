@@ -20,7 +20,7 @@ from scripts.tests.cases.koboldcpp.kobold_lite_streaming import StreamingPatch
 from scripts.tests.cases.koboldcpp.test_external_bridge import ExternalBridgeTests
 from scripts.tests.cases.koboldcpp.test_kobold_image_swap import SwapTests
 from scripts.tests.cases.koboldcpp.test_kobold_stack_vram import StackProbeTests
-from scripts.tests.cases.lemonade_server.test_lemonade_launcher import LemonadeLauncherTests
+from scripts.tests.cases.lemonade_server.test_lemonade_launcher import LemonadeLauncherTests, LemonadeOwnedStartTests
 from scripts.tests.cases.llamacpp.hrx.test_hrx_build import HrxBuildTests
 from scripts.tests.cases.llamacpp.test_ngram import NgramWorkloads
 from scripts.tests.cases.llamacpp.test_speech_ui import SpeechUiTests
@@ -152,6 +152,7 @@ if __name__ == "__main__":
                     NgramWorkloads,
                     SpeechUiTests,
                     LemonadeLauncherTests,
+                    LemonadeOwnedStartTests,
                     Reporting,
                     ResourceTests,
                     MemoryMonitorTests,
