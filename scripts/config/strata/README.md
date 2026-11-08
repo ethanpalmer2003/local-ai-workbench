@@ -1,18 +1,10 @@
 # Strata backend configuration
 
 - Pi/backend source: [decode.json](decode.json) (default) and [prefill.json](prefill.json); editable native JSON, never regenerated.
-- Two profiles, both measured with the issue #3695 harness (`scripts.benchmarks.inference_engines.benchmark_strata_reference`) on this machine:
-
-| profile | decode | cold prompt read | what it is |
-| --- | ---: | ---: | --- |
-| [decode.json](decode.json) | 36.9 tok/s | 187 tok/s | experts on the SSD page cache: fastest per generated token |
-| [prefill.json](prefill.json) | 24.6 tok/s | 525 tok/s | 18 GiB of experts in RAM plus the reference env switches: fastest to read a fresh prompt |
-
-- Pick by what the workload spends time on: a long fresh prompt (new files, cold session) wants the prefill profile; a long answer or many short turns in a warm session wants the decode profile. Cached prompt tokens cost neither arm, so reuse decides which side dominates.
+- Which profile to run, what each was measured at and what stays unmeasured: [TUNING.md](TUNING.md).
 - Switching: `--config C:/AI/scripts/config/strata/prefill.json` on the launch bat, or edit `STRATA.config_path`. A loaded model keeps its settings until restart.
 - Default location: `STRATA.config_path` in [launcher_config.py](../../launchers/launcher_config.py).
 - Alternate file: `C:/AI/bat/launch_strata_pi_agent.bat --config C:/path/to/config.json`.
-- Experimental RX 7800 XT / 32 GB alternative: [reference profile, tests and limits](REFERENCE.md).
 - Launch host/port/API key: supplied separately by the launcher; API key kept in memory.
 - Model paths/load/memory settings: edit `decode.json`; restart the backend.
 - Engine/console logs: `scripts/state/strata/`.

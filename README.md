@@ -26,14 +26,13 @@ cannot meet the requirement is refused up front rather than discovered at runtim
 
 ## Tuning for this device
 
-Not every framework has a rival to measure against. ComfyUI is the only image-generation stack in use,
-so its work is profiling and tuning for AMD performance on this GPU instead of a comparison: current
-settings, the isolated flag comparisons behind them and what stays unmeasured are in
-[ComfyUI tuning](scripts/config/comfyui/TUNING.md).
+Not every framework has a rival to measure against, and some comparisons answer a question inside one
+framework: ROCm against Vulkan, context and offload settings, quantisation and batch size measure AMD
+performance for a fixed workload, not one framework against another.
 
-- Some comparisons answer the same question inside one framework: ROCm against Vulkan, context and
-  offload settings, quantisation and batch size. These measure AMD performance for a fixed workload,
-  not one framework against another.
+- Each tuned component owns a `TUNING.md` stating what is in use, the evidence behind it and what stays
+  unmeasured: [ComfyUI](scripts/config/comfyui/TUNING.md), [SD.cpp](scripts/config/sdcpp/TUNING.md),
+  [llama.cpp](scripts/config/llamacpp/TUNING.md), [Strata](scripts/config/strata/TUNING.md).
 - Tuning evidence is recorded like comparison evidence: provenance plus a measured pair, because a
   single run cannot show that a change helped.
 

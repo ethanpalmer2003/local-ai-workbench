@@ -1,4 +1,4 @@
-# llama.cpp settings rationale
+# llama.cpp tuning
 
 - Owners: [profiles](../../launchers/llamacpp/llamacpp_profiles.py), [native INI](swift-q3.ini), [service/build selection](../../launchers/launcher_config.py).
 - Profile values override INI; the launcher supplies the selected model. Request sampling/reasoning may override startup defaults.

@@ -7,6 +7,7 @@
 - One procedure owner; replace duplicate explanations with links. Keep commands, required actions, constraints and useful evidence.
 - Budgets: guides <=500 words; detailed agent rules <=300; root AGENTS <=450. Third-party documents and immutable run evidence are excluded. A document under 100 words is listed for review, never failed: merge it into its owner if it has one, otherwise leave the advisory visible.
 - Use uppercase Markdown basenames except `README.md`, `AGENTS.md`, `SKILL.md` and other tool-required names; `structure_docs` rejects anything else. Only README belongs directly at `scripts/tests/`.
+- A component with measured settings owns `TUNING.md`: what is in use, the evidence links, and what stays unmeasured. Its README links the page instead of repeating the settings.
 - `TODO.md` owns pending work; completed evidence belongs in test status/results. Retire obsolete nonempty files to trash with provenance.
 - Download definitions stay in Python catalogs; docs link to them. Update links and commands with path changes.
 
