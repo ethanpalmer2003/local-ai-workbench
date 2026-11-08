@@ -497,66 +497,13 @@ def short_documents(files: list[Path]) -> list[tuple[int, str]]:
     return sorted(short)
 
 
-DUPLICATE_PROSE_WORDS = 8
-
-
-def prose_sentences(text: str) -> list[str]:
-    """Sentences a reader reads, so a rule copied into a second document is visible."""
-    cleaned = re.sub(r"```.*?```", " ", text, flags=re.DOTALL)
-    cleaned = re.sub(r"(?m)^\s*(?:#+|\|).*$", " ", cleaned)
-    cleaned = re.sub(r"(?m)^\s*(?:[-*+]|\d+\.)\s+", "", cleaned)
-    cleaned = re.sub(r"[`*_>|#]", " ", cleaned)
-    cleaned = re.sub(r"\]\([^)]*\)", "] ", cleaned)
-    return [sentence.strip() for sentence in re.split(r"(?<=[.!?])\s+", cleaned) if sentence.strip()]
-
-
-def duplicate_prose(files: list[Path]) -> list[tuple[str, list[str]]]:
-    """Rules stated in more than one document: advisory input for merging them into one owner."""
-    owners: dict[str, list[str]] = {}
-    shown: dict[str, str] = {}
-    for path in files:
-        if path.suffix != ".md":
-            continue
-        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
-        if relative.startswith(SHORT_DOCUMENT_SKIP):
-            continue
-        for sentence in prose_sentences(path.read_text(encoding="utf-8-sig")):
-            key = " ".join(sentence.lower().split())
-            if len(key.split()) < DUPLICATE_PROSE_WORDS:
-                continue
-            owners.setdefault(key, []).append(relative)
-            shown.setdefault(key, sentence)
-    copied = [(shown[key], sorted(set(paths))) for key, paths in owners.items() if len(set(paths)) > 1]
-    return sorted(copied, key=lambda item: (-len(item[1]), item[0].lower()))
-
-
-def print_duplicate_prose(files: list[Path]) -> None:
-    """Every sentence repeated across documents, longest list of owners first."""
-    repeated = duplicate_prose(files)
-    for sentence, paths in repeated:
-        print(f"{sentence}\n    {', '.join(paths)}")
-    print(f"{len(repeated)} sentence(s) repeated across documents")
-
-
-def listed_output(args: argparse.Namespace, files: list[Path]) -> int | None:
-    """The counting modes print and return; the audit continues when neither flag is set."""
-    if args.words:
-        return print_word_counts(files)
-    if args.duplicates:
-        print_duplicate_prose(files)
-        return 0
-    return None
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--words", action="store_true", help="list every maintained document by word count")
-    parser.add_argument("--duplicates", action="store_true", help="list prose repeated across documents")
     args = parser.parse_args(argv)
     files = maintained_files()
-    listed = listed_output(args, files)
-    if listed is not None:
-        return listed
+    if args.words:
+        return print_word_counts(files)
     issues = configuration_issues() + physical_root_issues() + naming_issues() + root_document_issues()
     for path in files:
         text = path.read_text(encoding="utf-8-sig")
@@ -574,8 +521,6 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[WARN] {len(issues) - 40} further issues; output bounded at 40")
     for words, relative in short_documents(files):
         print(f"[WARN] short document ({words} words): {relative}; merge it into its owner or justify it")
-    for sentence, paths in duplicate_prose(files)[:10]:
-        print(f"[WARN] prose repeated in {len(paths)} documents ({', '.join(paths)}): {sentence[:90]}")
     print(f"[{'FAIL' if issues else 'OK'}] Structure/docs: {len(files)} files, {len(issues)} issues")
     return int(bool(issues))
 

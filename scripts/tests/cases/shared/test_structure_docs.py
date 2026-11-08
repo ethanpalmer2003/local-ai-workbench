@@ -94,38 +94,6 @@ class WordCountTests(unittest.TestCase):
         self.assertEqual(rows[1][3], "short")
 
 
-class DuplicateProseTests(unittest.TestCase):
-    def _fixture(self, name: str, text: str) -> Path:
-        folder = BASE / "scripts/tests/output/duplicate-prose-fixture"
-        folder.mkdir(parents=True, exist_ok=True)
-        path = folder / name
-        path.write_text(text, encoding="utf-8")
-        return path
-
-    def test_a_sentence_copied_into_a_second_document_is_reported(self):
-        sentence = "The benchmark records provenance beside every measurement it writes."
-        first = self._fixture("FIRST.md", f"# First\n\n{sentence}\n")
-        second = self._fixture("SECOND.md", f"# Second\n\nText.\n\n{sentence}\n")
-        try:
-            found = structure_docs.duplicate_prose([first, second])
-        finally:
-            first.unlink()
-            second.unlink()
-            first.parent.rmdir()
-        self.assertEqual(len(found), 1)
-        self.assertEqual(found[0][0], sentence)
-        self.assertEqual(len(found[0][1]), 2)
-
-    def test_repetition_inside_one_document_and_short_lines_are_ignored(self):
-        sentence = "A setting that states its own rule once is not a duplicate."
-        path = self._fixture("ONLY.md", f"# Only\n\n{sentence}\n\n{sentence}\n\nRun the checks.\n")
-        try:
-            self.assertEqual(structure_docs.duplicate_prose([path]), [])
-        finally:
-            path.unlink()
-            path.parent.rmdir()
-
-
 def _short_candidates() -> list[Path]:
     return [
         BASE / "notes/reviews" / "STRUCTURE-REVIEW.md",

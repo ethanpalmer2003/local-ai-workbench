@@ -26,7 +26,7 @@ What runs today. Use it to compare against other projects' stacks.
 | ruff format | `[tool.ruff.format]`; generated `ids.py` excluded |
 | basedpyright | type errors, `--level error`, no strict mode |
 | pytest | regression execution, timings, failure details |
-| `structure_docs.py` | doc budgets, links, anchors, markdown hygiene, duplicated prose (advisory), component keys, naming, folder rules, batch references |
+| `structure_docs.py` | doc budgets, links, anchors, markdown hygiene, root placement, component keys, naming, folder rules, batch references |
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
 | `frontend_wiring.py` | HTML/JS asset targets resolve, queried DOM ids exist, injected settings keys are both emitted and provided |
 | `inventory_code.py` | inventory, file/function size, complexity depth, duplicate bodies, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
