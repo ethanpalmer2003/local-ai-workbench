@@ -19,7 +19,7 @@ RULE_WORDS = 300
 # - names tooling requires keep their spelling; every other Markdown basename is uppercase
 MARKDOWN_NAME_ALLOWED = frozenset({"README.md", "AGENTS.md", "SKILL.md"})
 # - a document below this is a candidate for merging into its owner; reviewed, not failed
-SHORT_DOCUMENT_WORDS = 60
+SHORT_DOCUMENT_WORDS = 100
 # - review records state a dated decision, and the complexity ledger is generated
 SHORT_DOCUMENT_SKIP = ("notes/reviews/", "scripts/review/COMPLEXITY-DEBT.md")
 LEGACY_BINDINGS = {
