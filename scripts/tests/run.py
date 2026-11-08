@@ -69,6 +69,7 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
 from scripts.tests.cases.shared.shared_contracts import SharedContracts
 from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
 from scripts.tests.cases.shared.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
+from scripts.tests.cases.shared.test_dashes import CheckTests, ScanTests, SuffixTests
 from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
 from scripts.tests.cases.shared.test_inputs_overlay import InputOverlayTests
 from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
@@ -106,6 +107,9 @@ if __name__ == "__main__":
                     FreshnessTests,
                     HeadlineTests,
                     RenderTests,
+                    CheckTests,
+                    ScanTests,
+                    SuffixTests,
                     SharedRuntimeTests,
                     ReadinessRouteTests,
                     OwnedLaunchTests,

@@ -54,14 +54,14 @@ def tts_models() -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = [
         {"id": key, "label": label, "family": "kokoro_tts"}
         for key, label in (
-            (cfg.KOKORO_TTS_PACKAGES["multilingual"], "Kokoro - multilingual bundle"),
-            (cfg.KOKORO_TTS_PACKAGES["small"], "Kokoro - compact bundle"),
+            (cfg.KOKORO_TTS_PACKAGES["multilingual"], "Kokoro: multilingual bundle"),
+            (cfg.KOKORO_TTS_PACKAGES["small"], "Kokoro: compact bundle"),
         )
     ]
     labels = {
-        "breeze_tts": "Breeze TTS 2 - voice design",
+        "breeze_tts": "Breeze TTS 2: voice design",
         "ming3_tts": "Ming 3.0 TTS 0.5B",
-        "fish_drama3": "Drama 3 - heavy/offloaded",
+        "fish_drama3": "Drama 3: heavy/offloaded",
     }
     for spec in native_specs:
         model = _catalog_model(spec)

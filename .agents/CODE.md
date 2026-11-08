@@ -8,7 +8,8 @@
 - One supported way per job. No second installer, runner or format "just in case": uv is the only package manager, `uv.lock` the only resolution.
 - Shared path/model/proxy defaults live in configuration; orchestration-only switches stay local.
 - Signatures and calls stay single-line up to 120 characters; pass-through arguments go last.
-- Pick defaults from measured evidence and keep the caveats and execution context with them.
+- No em-dashes or en-dashes; `scripts/review/dashes.py` gates it.
+- Pick defaults from measured evidence, keeping the caveats and execution context with them.
 - ComfyUI tuning: screen square-equivalent 480 before 640, match cache and monitoring, report decode plus total time.
 
 ## Imports and paths

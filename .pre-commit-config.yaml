@@ -23,3 +23,10 @@ repos:
         types_or: [python, markdown]
         exclude: ^(data|frameworks|trash|scripts/state|scripts/tests/output|scripts/benchmarks/output)/
         args: ["--ignore-words=.codespell-ignore.txt"]
+      - id: no-typographic-dashes
+        name: no em-dashes or en-dashes
+        entry: scripts/.venv/Scripts/python.exe -m scripts.review.dashes
+        language: system
+        pass_filenames: true
+        types: [text]
+        exclude: ^(data|frameworks|trash|scripts/state|scripts/tests/output|scripts/benchmarks/output)/

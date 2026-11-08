@@ -2,7 +2,7 @@
 
 A Windows-first workbench for running local AI at home: one launcher, configuration catalog,
 test suite and benchmark per framework, organised around three things people actually do with
-it - character chat, language practice and coding.
+it: character chat, language practice and coding.
 
 ## Purpose
 
@@ -14,10 +14,10 @@ AudioCpp (speech synthesis and recognition), whisper.cpp, Parakeet.cpp, SD.cpp a
 
 Three workflow profiles decide what a stack must provide before it is considered at all:
 
-- `character` - character chat: a mid-size chat model plus voice-design speech (AudioCpp Breeze).
-- `language` - language practice: a lightweight multilingual model, fast Kokoro speech and
+- `character`: character chat: a mid-size chat model plus voice-design speech (AudioCpp Breeze).
+- `language`: language practice: a lightweight multilingual model, fast Kokoro speech and
   recognition that reads the practice languages (Qwen3-ASR by default).
-- `coding` - coding: a coding model behind an agent client (Pi, DeepSeek Harness, LittleCoder).
+- `coding`: coding: a coding model behind an agent client (Pi, DeepSeek Harness, LittleCoder).
 
 ## Examples
 
@@ -38,8 +38,8 @@ C:\AI\bat\benchmarks\benchmark_framework_compare.bat
 C:\AI\scripts\.venv\Scripts\python.exe -m scripts.tools.capability_matrix
 ```
 
-Long runs record provenance - workspace and framework commits, weight identity, effective
-settings, corpus revision and manifest hash - so a later run can tell what changed, and a stale
+Long runs record provenance (workspace and framework commits, weight identity, effective
+settings, corpus revision and manifest hash), so a later run can tell what changed, and a stale
 result is marked rather than silently compared. Recognition is scored on a pinned multilingual
 corpus with word and character error rates, and synthesised speech is rejected when it cannot be
 the sentence it claims to be.

@@ -659,8 +659,8 @@ async function refreshPracticeStatus() {
     refreshTtsVoices();
     $('enable-asr').disabled = !serviceReady;
     refreshLanguages();
-    $('asr-languages').textContent = `ASR - ${capabilities.asr.model}: ${capabilities.asr.languages.map(row => row.name).join(', ') || 'Coverage unknown'}.`;
-    $('tts-languages').textContent = `TTS - ${capabilities.tts.model}: ${capabilities.tts.languages.map(row => row.name).join(', ')}.`;
+    $('asr-languages').textContent = `ASR: ${capabilities.asr.model}: ${capabilities.asr.languages.map(row => row.name).join(', ') || 'Coverage unknown'}.`;
+    $('tts-languages').textContent = `TTS: ${capabilities.tts.model}: ${capabilities.tts.languages.map(row => row.name).join(', ')}.`;
     $('language-notes').textContent = [capabilities.asr.notes, capabilities.tts.notes].filter(Boolean).join(' ');
     refreshCaptureButton();
 }
