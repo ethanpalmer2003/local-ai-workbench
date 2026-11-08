@@ -87,6 +87,7 @@ class InputOverlayTests(unittest.TestCase):
         self.assertTrue(payload["voices"])
         for name, entry in payload["voices"].items():
             self.assertTrue(name.startswith("<"), name)
+            self.assertTrue(entry["category"].startswith("<"), entry["category"])
             self.assertTrue(entry["url"].startswith("https://example.invalid/"), entry["url"])
             # - every field the downloader reads must be demonstrated
             self.assertEqual(
