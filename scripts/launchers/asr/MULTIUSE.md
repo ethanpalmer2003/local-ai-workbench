@@ -24,10 +24,10 @@ These combinations are not ten validated presets.
 One process or separate ports do not guarantee parallel GPU execution. Each model
 needs memory/workspaces; exclude lazy loading from resident timing.
 
-Our Gemma audio llama.cpp command uses `-np 1`: a shared chat/audio instance has
+The Gemma audio llama.cpp command uses `-np 1`: a shared chat/audio instance has
 one configured slot. Requests may queue; more slots require an explicit settings
 comparison and additional context memory. Separate llama.cpp models use separate
-servers in our setup. Kobold shared-model request scheduling also needs measurement;
+servers in this setup. Kobold shared-model request scheduling also needs measurement;
 sharing Gemma weights does not prove simultaneous recognition/generation.
 
 Practice defaults to one AudioCpp Nemotron/Kokoro server. NeMo/Parakeet CPU stream; Qwen, Whisper and

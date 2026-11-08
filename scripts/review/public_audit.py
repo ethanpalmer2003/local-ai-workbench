@@ -2,7 +2,7 @@
 
 - Reports only; exits 1 when anything is found, so it can gate a release
 - Categories: secrets, personal home paths, machine paths in native configs,
-  private vocabulary, character/voice inputs, typographic dashes, large files,
+  private vocabulary, character/voice inputs, typographic punctuation, large files,
   tracked ignored paths
 - Allow-list entries state why a hit is expected; keep it short and specific
 """
@@ -17,7 +17,7 @@ from pathlib import Path
 
 from scripts.config import overlay_inputs as inputs
 from scripts.config import project_config as project_cfg
-from scripts.review import dashes
+from scripts.review import typography
 
 TEXT_SUFFIXES = {
     ".py",
@@ -144,7 +144,7 @@ def scan_text(path: str, text: str, words: tuple[str, ...]) -> list[Finding]:
         *_credential_findings(path, text),
         *_path_findings(path, text),
         *_word_findings(path, text, words),
-        *(Finding("dash", path, f"line {number}: {kind}") for number, kind in dashes.scan_text(path, text)),
+        *(Finding("typography", path, f"line {number}: {kind}") for number, kind in typography.scan_text(path, text)),
     ]
 
 

@@ -14,7 +14,7 @@ C:/AI/bat/update_frameworks.bat --only asr
 - Detailed logs: `scripts/state/logs/shared/framework_updates/`. Native/backend work requires the documented execution context.
 - Verify advertised archive SHA256 before replacement; preserve previous installs in trash. Before applying, stop processes using selected update targets (including child processes); if shutdown fails, block all updates. Unrelated services are left running.
 - Date-based packages track release timestamp and asset name. Installers run only where the entry declares it: Handy's portable setup (only while the app is missing), Strata's desktop app, and the Electron coding-agent apps, each installed silently and the resulting version re-read; a running app is stopped first.
-- Source entries: `SOURCE UPDATE AVAILABLE; BUILD REQUIRED` (clean checkout, you recompile), `UPSTREAM CHANGED; MANUAL MERGE/REBUILD REQUIRED` (local patches first), or a replayed local commit where `rebase_local` is set.
+- Source entries: `SOURCE UPDATE AVAILABLE; BUILD REQUIRED` (clean checkout, recompile required), `UPSTREAM CHANGED; MANUAL MERGE/REBUILD REQUIRED` (local patches first), or a replayed local commit where `rebase_local` is set.
 - `C:/AI/bat/build_frameworks.bat` recompiles every entry that declares a build command; one new terminal per target unless `--foreground`, `--dry-run` prints the commands. Entries with `in_use=False` are ignored outright: never checked, never listed.
 
 Per-component install and update specifics are in [UPDATES-COMPONENTS.md](UPDATES-COMPONENTS.md).

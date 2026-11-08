@@ -2,7 +2,7 @@
 
 - Portable Windows app v0.9.8 installed at `frameworks/asr/handy/app/`; [upstream](https://github.com/cjpais/Handy).
 - Hotkey -> microphone/VAD -> local transcription -> paste into another app. Bundles inference; Windows x64 supports Vulkan through transcribe-cpp and ONNX models through transcribe-rs.
-- Uses its own libraries, not our standalone ASR executables. Model compatibility depends on its bundled engine; ONNX and GGUF packages differ.
+- Uses its own libraries, not the standalone ASR executables. Model compatibility depends on its bundled engine; ONNX and GGUF packages differ.
 
 ```powershell
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.handy.app

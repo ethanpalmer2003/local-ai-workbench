@@ -9,13 +9,13 @@
 - Use text-safe `[OK]`, `[WARN]`, `[FAIL]`, `->`; bound searches and report truncation.
 
 ## Clarify before acting
-- Ask at once when the request is ambiguous or assumes a detail you would otherwise invent; never guess intent to keep moving. Conciseness still wins.
+- Ask at once when the request is ambiguous or assumes an invented detail; never guess intent to keep moving. Conciseness still wins.
 
 ## Work and permissions
 - Routine reads, Git status/diff/log, static checks and task-owned runs under five minutes are allowed.
 - Get approval for package changes, pushes, deletion, persistent services and runs over five minutes; prior approval covers the agreed task and routine retries.
 - Respect explicit test deferrals. Never infer permission for live tests from a TODO or saved result.
-- Fix a defect in code you are already touching, then and there. Record a larger unrelated fix as a TODO entry.
+- Fix a defect in code already being touched, then and there. Record a larger unrelated fix as a TODO entry.
 - Each invocation uses its current tool policy; earlier outside-sandbox approval does not change later defaults.
 - Before native/GPU work, servers or process discovery, state execution context; check the token with `C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.runtime.execution_context` and record it with benchmark evidence.
 - Before manual llama-server startup, check `launch_util.llama_server_running()`; do not stop an unrelated session. Port policy: [shared launcher helpers](scripts/launchers/shared/README.md).

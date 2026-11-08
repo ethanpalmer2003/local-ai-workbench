@@ -3,7 +3,7 @@
 Counts, terminology and status that support the [ASR capabilities](CAPABILITIES.md) profile table.
 
 19 tracked profiles; 14 resident adapters. CPU/GPU variants are profiles, not
-different recognition models. This groups our selected models, not every model
+different recognition models. This groups the selected models, not every model
 each framework can run. [Coverage ledger](../../tests/cases/asr/shared/coverage.py)
 owns test readiness; [screen results](../../tests/notes/asr/ASR-SCREEN.md) own measurements.
 

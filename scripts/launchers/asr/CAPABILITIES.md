@@ -13,8 +13,8 @@ Profile counts, streaming/VAD terminology and pacing status: see
 | Sherpa | Stateful streaming; English only | Decoder endpointing; separate Silero/TEN-VAD available, not configured locally |
 | speech.cpp | VAD-delimited live utterances; multilingual | Silero in native live mode; shared automatic practice turns use completed-segment decoding |
 | Whisper Vulkan/FA | Offline; upstream windowed live example | Shared Silero automatic practice turns; native server VAD remains off |
-| Kobold Whisper | Completed audio requests | No dedicated VAD exposed by our adapter; external gating needed |
-| llama.cpp audio adapter | Completed audio requests in our adapter | External gating needed; toolkit streaming does not establish this port's support |
+| Kobold Whisper | Completed audio requests | No dedicated VAD exposed by this adapter; external gating needed |
+| llama.cpp audio adapter | Completed audio requests in this adapter | External gating needed; toolkit streaming does not establish this port's support |
 | Gemma audio, llama.cpp/Kobold | Prompted completed clips, maximum 30 seconds | External gating needed; no incremental adapter |
 | Parakeet CPU/Vulkan | Offline; English only | Optional Silero downloaded and enabled in file launcher; benchmark server differs |
 | FunASR | Offline; excludes French/Spanish | FSMN-VAD downloaded and configured |

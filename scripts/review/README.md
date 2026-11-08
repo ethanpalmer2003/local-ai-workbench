@@ -14,7 +14,7 @@ The runner executes these checks:
 - `frontend.py`: front-end wiring: HTML/JS asset paths, DOM element ids and injected settings keys.
 - `basedpyright`: Python type errors.
 - `inventory.py`: folder counts, sparse-folder warnings, 2-3-item merge candidates, Markdown/Python-module counts, file lines, function complexity (depth 4 / 100 code lines, which gates) and duplicate function bodies (advisory). Python-module counts exclude `__init__.py`; low counts are prompts to review, not automatic merge findings.
-- `dashes.py`: em-dashes and en-dashes in every tracked text file, quoted corpus references excepted. It gates, and the pre-commit hook runs the same module on staged files.
+- `typography.py`: ASCII punctuation only: em and en dashes, curly quotes, the ellipsis and no-break spaces are rejected in every tracked text file, quoted corpus references excepted. It gates, and the pre-commit hook runs the same module on staged files.
 
 Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function limits are depth 4 and 100 code lines. Inventory excludes generated output, caches, model data, third-party installations and trash.
 
