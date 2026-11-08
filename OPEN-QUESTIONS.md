@@ -1,11 +1,19 @@
 # Open questions
 
-Running list for this repository. Nothing here is decided.
+Running list for this repository, grouped by area. Nothing here is decided.
+
+## Publishing
 
 - **Visibility.** The repo is private and history is already squashed to one root commit, then scrubbed of a personal name with `git filter-repo --replace-text` (2026-11-07). Flipping it public is deferred; a repo that was ever public is treated as leaked, so this is the last step, not the first.
 - **Name and history scrub.** On 2026-11-08 all 99 commits were rewritten with `git filter-branch`: the old profile name became `character`, an unused browser front-end was dropped with its wiring, and every typographic dash outside the quoted corpus references became ASCII. `main` was force-pushed and the rewritten-away objects pruned locally; a clone made before that date must be re-cloned. GitHub can keep unreachable objects for a while, so a fresh clone is the only proof.
+
+## Private data
+
 - **Private overlay.** Personal material lives outside git in `data/input/` (or `AI_INPUT_DIR`), and public docs name only the variable. Whether that should become a second private repository is settled; what stays open is how much of the download machinery can be useful without it.
 - **Voice manifest example.** The downloader takes its choices from `voice_sources.json`, so a fresh clone has no usable `--characters` values. A tracked, placeholder-only example would document the schema; a real one would publish voice ids.
 - **Character catalog entries.** Four `koboldcpp/TheDrummer_*` models are tracked and named by the chat default and `KOBOLDCPP_MODELS`. They could move to `models.private.json`, but that allowlist and the default are code-owned today.
+
+## Repository conventions
+
 - **Hardware specs.** Machine numbers stay in the docs by decision; revisiting them is cheap but not planned.
 - **Lint strictness.** The gate sits at McCabe 10 with no grandfathering left, and every other ruff rule is clean repo-wide. Whether to tighten further (`ARG`, `PL`, stricter McCabe) is open.

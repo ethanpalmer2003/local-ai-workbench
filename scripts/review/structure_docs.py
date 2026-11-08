@@ -51,7 +51,8 @@ EXCLUDED = {".git", ".venv", "node_modules", "__pycache__", "state", "output", "
 
 
 def maintained_files() -> list[Path]:
-    files = [project_cfg.BASE_DIR / "AGENTS.md", project_cfg.BASE_DIR / "README.md"]
+    # - every root document is maintained, including the running lists
+    files = sorted(project_cfg.BASE_DIR.glob("*.md"))
     for root in (
         project_cfg.SCRIPTS_DIR,
         project_cfg.BAT_DIR,
