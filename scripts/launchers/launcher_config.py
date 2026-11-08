@@ -357,16 +357,80 @@ class AsrStartupEngine(str, Enum):
     GRANITE = "granite-audio"
 
 
+class TtsQualityClass(str, Enum):
+    """What a profile needs from speech output; a framework that cannot meet it is not an option."""
+
+    NONE = "none"
+    FAST_MULTILINGUAL = "fast-multilingual"
+    VOICE_DESIGN = "voice-design"
+
+
+@dataclass(frozen=True)
+class ProfileRequirements:
+    """One workflow profile: the parts a framework must provide to be considered at all."""
+
+    tts: TtsQualityClass
+    asr: bool
+    agent: bool
+    llm_role: str
+
+
+# - The three profiles this repository runs. the character profile needs voice-design speech, language needs ASR plus
+#   fast multilingual speech, and coding needs an agent in front of the inference engine.
+PROFILE_REQUIREMENTS = {
+    "character": ProfileRequirements(TtsQualityClass.VOICE_DESIGN, asr=False, agent=False, llm_role="mid"),
+    "language": ProfileRequirements(TtsQualityClass.FAST_MULTILINGUAL, asr=True, agent=False, llm_role="lightweight"),
+    "coding": ProfileRequirements(TtsQualityClass.NONE, asr=False, agent=True, llm_role="coding"),
+}
+
+# - Speech output each framework can actually provide; Lemonade has kokoro only and no Breeze,
+#   which is why it is a language profile and never a character one.
+FRAMEWORK_TTS_CLASSES = {
+    "koboldcpp": TtsQualityClass.VOICE_DESIGN,
+    "audiocpp": TtsQualityClass.VOICE_DESIGN,
+    "lemonade_server": TtsQualityClass.FAST_MULTILINGUAL,
+    "llamacpp": TtsQualityClass.NONE,
+}
+
+
+def tts_class_for(model: str) -> TtsQualityClass:
+    """The speech class a TTS model provides, read from its catalog label."""
+    if "breeze" in model:
+        return TtsQualityClass.VOICE_DESIGN
+    if "kokoro" in model:
+        return TtsQualityClass.FAST_MULTILINGUAL
+    return TtsQualityClass.NONE
+
+
+def model_fits_profile(profile: str, tts_model: str) -> bool:
+    """True when the TTS model meets the profile's speech requirement."""
+    required = PROFILE_REQUIREMENTS[profile].tts
+    return required is TtsQualityClass.NONE or tts_class_for(tts_model) is required
+
+
+def require_profile_fit(profile: str, tts_model: str) -> None:
+    """Refuse a stack the profile cannot be served by, instead of discovering it at runtime."""
+    if not model_fits_profile(profile, tts_model):
+        required = PROFILE_REQUIREMENTS[profile].tts
+        provided = tts_class_for(tts_model)
+        raise ValueError(f"{tts_model} provides {provided.value} speech; the {profile} profile needs {required.value}")
+
+
 @dataclass(frozen=True)
 class SpeechWorkflowDefaults:
     """One workspace workflow's default speech stack, declared in a single place."""
 
+    profile: str
     framework: str
     asr_engine: AsrStartupEngine | None
     llm_model: str
     tts_model: str
     tts_voice: str
     clone_voice: bool
+
+
+# - A default may be replaced from the overlay, so the profile requirement is checked where a
+#   framework is selected for a profile (require_profile_fit), not on every dataclass change.
 
 
 # - Kokoro TTS packages: the selected package is the single source of the practice TTS default.
@@ -382,6 +446,7 @@ DEFAULT_KOKORO_PACKAGE = "multilingual"
 # - A voice id from the overlay's defaults.json enables cloning; without one, Breeze uses its own default.
 _CHAT_TTS_VOICE: str = inputs.setting("chat.tts.voice", inputs.default_voice())
 KOBOLD_CHAT = SpeechWorkflowDefaults(
+    profile="character",
     framework="koboldcpp",
     asr_engine=None,
     llm_model=inputs.setting("chat.llm", "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS"),
@@ -391,6 +456,7 @@ KOBOLD_CHAT = SpeechWorkflowDefaults(
 )
 # - Language practice: Gemma chat, Kokoro TTS without cloning, AudioCpp ASR.
 LANGUAGE_PRACTICE = SpeechWorkflowDefaults(
+    profile="language",
     framework="llamacpp",
     asr_engine=AsrStartupEngine.AUDIOCPP,
     llm_model="llamacpp/gemma-4-E4B-it-Q4_0",
