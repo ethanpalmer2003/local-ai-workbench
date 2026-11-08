@@ -18,7 +18,7 @@ The runner executes these checks:
 
 Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function limits are depth 4 and 100 code lines. Inventory excludes generated output, caches, model data, third-party installations and trash.
 
-Run a single check with `python -m scripts.review.structure_docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `structure_docs --words` prints every maintained document by word count with its budget, marking both over-budget documents and short ones.
+Run a single check with `python -m scripts.review.structure_docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `structure_docs --words` prints every maintained document by word count with its budget, marking both over-budget documents and short ones; `--duplicates` lists prose repeated across documents, an advisory for merging a copied rule into one owner.
 
 ## Front-end wiring (`frontend.py`)
 
