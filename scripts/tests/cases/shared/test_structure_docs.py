@@ -27,7 +27,7 @@ class ShortDocumentTests(unittest.TestCase):
         folder.mkdir(parents=True, exist_ok=True)
         short, long = folder / "SHORT.md", folder / "LONG.md"
         short.write_text("# Short\n\nOne sentence only.\n", encoding="utf-8")
-        long.write_text("# Long\n\n" + "word " * 80 + "\n", encoding="utf-8")
+        long.write_text("# Long\n\n" + "word " * 140 + "\n", encoding="utf-8")
         try:
             listed = structure_docs.short_documents([short, long])
         finally:
