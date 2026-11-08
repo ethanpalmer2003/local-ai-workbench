@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from scripts.benchmarks.shared import framework_compare as compare
+from scripts.tests.shared.process_fixtures import fake_process
 
 
 class FakeResponse:
@@ -353,6 +354,47 @@ class AlternateArmTests(unittest.TestCase):
         results = [{"backend": "whisper", "models": {"chat": "-", "tts": "-", "asr": "whisper"}, "legs": {}}]
         text = compare.summarize(results)
         self.assertNotIn("| whisper |", text)
+
+
+class KoboldArmTests(unittest.TestCase):
+    """The fourth arm serves chat, speech and recognition from one KoboldCpp process."""
+
+    @contextmanager
+    def stubbed(self, ready: bool = True):
+        process = fake_process()
+        with (
+            patch.object(compare.kobold, "start_kobold", return_value=(process, Path("k.kcpps"), Path("k.log"))),
+            patch.object(compare, "wait_for_backend", return_value=ready),
+            patch.object(compare, "_await_exit"),
+            patch.object(compare, "stop_owned") as stop,
+        ):
+            yield process, stop
+
+    def test_the_arm_serves_three_legs_from_one_owned_process_on_a_free_port(self):
+        with self.stubbed() as (process, stop):
+            with compare._serve_koboldcpp(Path("m.gguf"), MagicMock()) as served:
+                settings = compare.cfg.KOBOLDCPP_SERVICE
+                self.assertIs(settings.speech_engine, compare.cfg.KoboldcppSpeechStartupEngine.KOKORO_INTERNAL)
+                self.assertIs(settings.transcription_engine, compare.cfg.AsrStartupEngine.EMBEDDED)
+                self.assertEqual(settings.model, compare.KOBOLD_ARM_MODEL)
+                self.assertEqual(served.details["port"], compare.cfg.KOBOLDCPP_KCPPS_ARGS["port"])
+            self.assertEqual(served.asr_style, "kobold")
+            self.assertEqual((served.chat, served.tts, served.asr), (served.chat, served.chat, served.chat))
+            self.assertEqual(served.chat_model, compare.KOBOLD_ARM_MODEL)
+            self.assertEqual(served.details["weights"], str(compare.model_cfg.path(compare.KOBOLD_ARM_MODEL)))
+        stop.assert_called_once_with(process)
+
+    def test_a_stack_left_in_the_configured_port_is_not_the_one_measured(self):
+        with self.stubbed() as (_, _), compare._serve_koboldcpp(Path("m.gguf"), MagicMock()) as served:
+            self.assertNotEqual(served.details["port"], compare.cfg.KOBOLDCPP_PORT)
+
+    def test_a_stack_that_never_answers_fails_instead_of_measuring_nothing(self):
+        with (
+            self.stubbed(ready=False),
+            self.assertRaises(TimeoutError),
+            compare._serve_koboldcpp(Path("m.gguf"), MagicMock()),
+        ):
+            pass
 
 
 class LemonadeModelTests(unittest.TestCase):
