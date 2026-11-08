@@ -242,17 +242,17 @@ def process_start_time(pid: int) -> float | None:
         return None
 
 
-def is_descendant(pid: int, root: int) -> bool:
-    """True when pid sits under root; the wrapper's own child is not an escape."""
+def descendant_pids(pid: int) -> set[int]:
+    """Every current descendant of pid, sampled before the kill severs the parent links."""
     try:
         import psutil
 
-        return root in {parent.pid for parent in psutil.Process(pid).parents()}
+        return {child.pid for child in psutil.Process(pid).children(recursive=True)}
     except Exception:
-        return False
+        return set()
 
 
-def sweep_escaped_children(ports: int | list[int], since: float | None, root: int | None = None) -> list[int]:
+def sweep_escaped_children(ports: int | list[int], since: float | None, known: set[int] | None = None) -> list[int]:
     """Kill listeners on `ports` that started at or after `since`.
 
     - A descendant launched with CREATE_NEW_CONSOLE escapes `taskkill /T`, so the
@@ -274,7 +274,7 @@ def sweep_escaped_children(ports: int | list[int], since: float | None, root: in
     for pid in killed:
         # - A descendant the tree kill could not reach in time is the normal case for a
         #   console wrapper; only a pid outside the tree is an actual escape
-        kind = "stopped remaining child" if root is not None and is_descendant(pid, root) else "swept escaped child"
+        kind = "stopped remaining child" if known and pid in known else "swept escaped child"
         print(f"[launcher] {kind} pid {pid} still holding a service port", flush=True)
     return killed
 
@@ -295,6 +295,7 @@ def kill_process_tree(pid: int, ports: int | list[int] | None = None) -> None:
         return
 
     started = process_start_time(pid)
+    known = descendant_pids(pid)
 
     result = subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)], capture_output=True, text=True, check=False)
     detail = f"{result.stdout or ''}{result.stderr or ''}".strip()
@@ -308,7 +309,7 @@ def kill_process_tree(pid: int, ports: int | list[int] | None = None) -> None:
                 _kernel32.CloseHandle(handle)
 
     if ports:
-        sweep_escaped_children(ports, started, pid)
+        sweep_escaped_children(ports, started, known)
 
     # - an already-dead pid is the normal case for a shutdown path, not a fault
     benign = ("not found", "no running instance", "could not find")
