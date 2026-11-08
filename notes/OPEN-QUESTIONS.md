@@ -1,6 +1,6 @@
 # Open questions
 
-Running list for this repository, grouped by area. Nothing here is decided.
+Running list for this repository, grouped by area. Nothing here is decided; recorded work is in [TODO](TODO.md).
 
 ## Publishing
 

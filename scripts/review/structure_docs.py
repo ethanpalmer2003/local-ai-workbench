@@ -19,6 +19,8 @@ AGENTS_WORDS = 450
 RULE_WORDS = 300
 # - names tooling requires keep their spelling; every other Markdown basename is uppercase
 MARKDOWN_NAME_ALLOWED = frozenset({"README.md", "AGENTS.md", "SKILL.md"})
+# - only these sit at the workspace root; every other document lives under notes/
+ROOT_MARKDOWN_ALLOWED = frozenset({"README.md", "AGENTS.md"})
 # - a document below this is a candidate for merging into its owner; reviewed, not failed
 SHORT_DOCUMENT_WORDS = 100
 # - review records state a dated decision, and the complexity ledger is generated
@@ -51,7 +53,7 @@ EXCLUDED = {".git", ".venv", "node_modules", "__pycache__", "state", "output", "
 
 
 def maintained_files() -> list[Path]:
-    # - every root document is maintained, including the running lists
+    # - root documents are checked here and their placement is checked by root_document_issues()
     files = sorted(project_cfg.BASE_DIR.glob("*.md"))
     for root in (
         project_cfg.SCRIPTS_DIR,
@@ -471,6 +473,15 @@ def markdown_name_issues(path: Path) -> list[str]:
     return [f"{path.relative_to(project_cfg.BASE_DIR).as_posix()}: Markdown basename must be uppercase"]
 
 
+def root_document_issues() -> list[str]:
+    """The root is navigation only; guides and running lists belong under notes/."""
+    return [
+        f"{path.name}: move root documents to notes/; only README.md and AGENTS.md stay here"
+        for path in sorted(project_cfg.BASE_DIR.glob("*.md"))
+        if path.name not in ROOT_MARKDOWN_ALLOWED
+    ]
+
+
 def short_documents(files: list[Path]) -> list[tuple[int, str]]:
     """Documents too short to own a rule; listed for review, never failed."""
     short = []
@@ -492,7 +503,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.words:
         return print_word_counts(maintained_files())
-    issues = configuration_issues() + physical_root_issues() + naming_issues()
+    issues = configuration_issues() + physical_root_issues() + naming_issues() + root_document_issues()
     files = maintained_files()
     for path in files:
         text = path.read_text(encoding="utf-8-sig")

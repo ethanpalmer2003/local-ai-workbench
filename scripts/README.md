@@ -2,7 +2,7 @@
 
 - Component paths: [project_config.py](config/project_config.py); runtime settings: [launcher_config.py](launchers/launcher_config.py).
 - Use one component key wherever a component owns files; matching keys do not require empty mirror folders. [folder rules](../.agents/FOLDERS.md).
-- New machine: [onboarding](../notes/ONBOARDING.md). Pending work: [TODO](../notes/TODO.md).
+- New machine: [onboarding](../notes/ONBOARDING.md). Pending work: [TODO](../notes/TODO.md); open questions: [OPEN-QUESTIONS](../notes/OPEN-QUESTIONS.md).
 - Routine batch entry points: [bat/README.md](../bat/README.md).
 
 | Task | Owner guide |

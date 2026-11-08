@@ -1,4 +1,4 @@
-"""Structure checks that read documents: basename casing and the short-document review list."""
+"""Structure checks that read documents: basename casing, root placement and the short-document review list."""
 
 import unittest
 from pathlib import Path
@@ -19,6 +19,26 @@ class MarkdownNameTests(unittest.TestCase):
         issues = structure_docs.markdown_name_issues(BASE / "notes" / "lower-case-notes.md")
         self.assertEqual(len(issues), 1)
         self.assertIn("Markdown basename must be uppercase", issues[0])
+
+
+class RootDocumentTests(unittest.TestCase):
+    def test_readme_and_agents_are_the_only_allowed_root_documents(self):
+        for name in ("README.md", "AGENTS.md"):
+            with self.subTest(name=name):
+                self.assertIn(name, structure_docs.ROOT_MARKDOWN_ALLOWED)
+
+    def test_a_document_outside_the_allowed_pair_is_reported(self):
+        stray = BASE / "STRAY.md"
+        stray.write_text("# Stray\n\nA document that belongs under notes.\n", encoding="utf-8")
+        try:
+            issues = structure_docs.root_document_issues()
+        finally:
+            stray.unlink()
+        self.assertEqual(len(issues), 1)
+        self.assertIn("STRAY.md", issues[0])
+
+    def test_a_clean_root_reports_nothing(self):
+        self.assertEqual(structure_docs.root_document_issues(), [])
 
 
 class ShortDocumentTests(unittest.TestCase):
