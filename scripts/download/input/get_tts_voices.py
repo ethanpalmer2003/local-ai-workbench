@@ -122,7 +122,6 @@ class SelectionRequest:
     preferred: str
     fallback: str | None
     count: int
-    ids: list[str]
     excluded: set[str]
     selected_ids: list[str]
     durations: dict[str, float]
@@ -197,13 +196,18 @@ def roots(downloaded):
     return list(dict.fromkeys(found)) or [downloaded]
 
 
-def get_files(roots, excluded):
+def get_files(roots):
     for ext in ("*.ogg", "*.wav"):
         files = [f for r in roots for f in r.rglob(ext)]
         if files:
             # "[old]" files are superseded versions of the same clip (same id, sometimes different text)
-            return [f for f in files if audio_id(f).lower() not in excluded and not f.stem.lower().startswith("[old]")]
+            return [f for f in files if not f.stem.lower().startswith("[old]")]
     raise ValueError("No .ogg or .wav files found")
+
+
+def voice_files(roots_, excluded, generated):
+    """The clips a voice may use: excluded ids and superseded takes never reach the pool."""
+    return [f for f in get_files(roots_) if generated not in f.parents and audio_id(f).lower() not in excluded]
 
 
 def duration(path):
@@ -363,14 +367,11 @@ def get_text(files):
     return text
 
 
-def sort_map(mapping, durations, excluded):
+def sort_map(mapping, durations):
     return dict(
         sorted(
             mapping.items(),
-            key=lambda x: (
-                2 if x[0] in excluded else 0 if x[1].strip() else 1,
-                -len(x[1]) if x[1].strip() else -durations.get(x[0], 0),
-            ),
+            key=lambda x: (0 if x[1].strip() else 1, -len(x[1]) if x[1].strip() else -durations.get(x[0], 0)),
         )
     )
 
@@ -406,8 +407,8 @@ def load_map(cache, files, durations, excluded):
     for f in files:
         existing.setdefault(audio_id(f), "")
 
-    mapping = sort_map(existing, durations, excluded)
-    missing = sum(not v.strip() for k, v in mapping.items() if k not in excluded)
+    mapping = sort_map(existing, durations)
+    missing = sum(not mapping.get(audio_id(f), "").strip() for f in files)
 
     if missing:
         print(f"WARNING: {missing} IDs have no transcript.")
@@ -423,11 +424,11 @@ def download(url, path):
         shutil.copyfileobj(r, f)
 
 
-def ordered_pool(files, mapping, mode, ids, durations):
-    if mode == "selected":
+def ordered_pool(files, mapping, mode, pinned_ids, durations):
+    if mode == "pinned":
         by_id = {audio_id(f): f for f in files}
         out = []
-        for x in ids:
+        for x in pinned_ids:
             f = by_id.get(x.lower())
             if f is None:
                 raise FileNotFoundError(f"Missing audio file: {x}")
@@ -460,16 +461,16 @@ def ordered_pool(files, mapping, mode, ids, durations):
     raise ValueError(f"Invalid selection mode: {mode}")
 
 
-def choose(files, mapping, mode, count, ids, durations):
-    pool = ordered_pool(files, mapping, mode, ids, durations)
-    return pool if mode == "selected" else pool[:count]
+def choose(files, mapping, mode, count, pinned_ids, durations):
+    pool = ordered_pool(files, mapping, mode, pinned_ids, durations)
+    return pool if mode == "pinned" else pool[:count]
 
 
 class VoiceSelector:
     # - longestText is the primary mode: orders by transcript length, so it needs transcripts to exist
     # - longestAudio is the bootstrap mode: picks UNTRANSCRIBED clips longest-first, purely so
     #   --transcribe can fill them in - once transcripts exist, selection goes back to longestText
-    MODES = frozenset(("random", "longestAudio", "longestText", "selected", "alphabeticalText", "alphabeticalAudio"))
+    MODES = frozenset(("random", "longestAudio", "longestText", "pinned", "alphabeticalText", "alphabeticalAudio"))
 
     def __init__(self, request: SelectionRequest):
         self.request = request
@@ -499,7 +500,7 @@ class VoiceSelector:
                 raise ValueError(f"Required clips alone exceed max duration: {total:.1f}s > {target}s")
 
             picked, total, cut = accumulate(
-                ordered_pool(candidates, request.mapping, request.preferred, request.ids, request.durations),
+                ordered_pool(candidates, request.mapping, request.preferred, request.selected_ids, request.durations),
                 request.durations,
                 dur_mode,
                 target,
@@ -514,7 +515,7 @@ class VoiceSelector:
                 used.update(audio_id(f) for f in picked)
                 remaining = [f for f in candidates if audio_id(f) not in used]
                 more, total, _ = accumulate(
-                    ordered_pool(remaining, request.mapping, request.fallback, request.ids, request.durations),
+                    ordered_pool(remaining, request.mapping, request.fallback, request.selected_ids, request.durations),
                     request.durations,
                     dur_mode,
                     target,
@@ -530,9 +531,11 @@ class VoiceSelector:
 
         remaining = request.count - len(required)
         if remaining <= 0:
-            return required[: request.count], "selected"
+            return required[: request.count], "pinned"
 
-        selected = choose(candidates, request.mapping, request.preferred, remaining, request.ids, request.durations)
+        selected = choose(
+            candidates, request.mapping, request.preferred, remaining, request.selected_ids, request.durations
+        )
         method = request.preferred
         if len(selected) < remaining and request.fallback:
             needed = remaining - len(selected)
@@ -541,7 +544,9 @@ class VoiceSelector:
             )
             used.update(audio_id(f) for f in selected)
             candidates = [f for f in candidates if audio_id(f) not in used]
-            selected += choose(candidates, request.mapping, request.fallback, needed, request.ids, request.durations)
+            selected += choose(
+                candidates, request.mapping, request.fallback, needed, request.selected_ids, request.durations
+            )
             method = f"{request.preferred}+{request.fallback}"
         return required + selected, method
 
@@ -577,14 +582,13 @@ def get_selection(selected_dir: Path, request: SelectionRequest):
         "fallback": request.fallback,
         "method": None,
         "count": request.count,
-        "ids": request.ids,
         "duration_target": request.duration_target.as_json() if request.duration_target else None,
         "constraints": {"selected": request.selected_ids, "excluded": sorted(request.excluded)},
         "mapping": hash_data(request.mapping),
         "inventory": hash_data(inventory),
     }
 
-    keys = ("selection", "fallback", "count", "ids", "duration_target", "constraints", "mapping", "inventory")
+    keys = ("selection", "fallback", "count", "duration_target", "constraints", "mapping", "inventory")
 
     old = _selection_manifest_matches(manifest, current, selected_dir, keys)
     if old is not None:
@@ -655,7 +659,7 @@ def transcribe(files, mapping, cache, durations, excluded):
         finally:
             archive_path(tmp, cache.parent)
 
-    mapping = sort_map(mapping, durations, excluded)
+    mapping = sort_map(mapping, durations)
     save_json(cache, mapping)
     return mapping
 
@@ -799,7 +803,7 @@ def prepare_sources(
     print("Using folders:", ", ".join(p.name for p in roots_))
 
     excluded = set(config.exclude)
-    files = [f for f in get_files(roots_, excluded) if workspace.generated not in f.parents]
+    files = voice_files(roots_, excluded, workspace.generated)
     durations = load_durations(durations_path)
 
     # - only longestAudio actually ranks by duration; precompute durations just for it
@@ -816,13 +820,13 @@ def prepare_sources(
         added = import_xlsx_transcripts(xlsx_path, files, mapping)
         if added:
             print(f"Imported {added} transcripts from {xlsx_path}")
-            mapping = sort_map(mapping, durations, excluded)
+            mapping = sort_map(mapping, durations)
             save_json(cache, mapping)
 
     return VoiceInventory(files, mapping, durations)
 
 
-def prepare(char, preferred, fallback, count, ids, do_transcribe, duration_target=None, top_n=0):
+def prepare(char, preferred, fallback, count, do_transcribe, duration_target=None, top_n=0):
     config = CHARACTER_CONFIGS[char]
     count = config.count if count is None else count
     name = char.value
@@ -854,7 +858,6 @@ def prepare(char, preferred, fallback, count, ids, do_transcribe, duration_targe
             preferred,
             fallback,
             count,
-            ids,
             excluded,
             list(config.selected),
             inventory.durations,
@@ -993,18 +996,7 @@ def source_files(char):
     """(workspace, config, files) for a character without downloading anything; files is None if no audio."""
     config = CHARACTER_CONFIGS[char]
     workspace = CharacterWorkspace(DATA, char.value, config.category)
-    directory = workspace.directory
-    has_audio = directory.is_dir() and any(
-        f.is_file() and workspace.generated not in f.parents and f.suffix.lower() in (".ogg", ".wav", ".mp3")
-        for f in directory.rglob("*")
-    )
-    if not has_audio:
-        return workspace, config, None
-    try:
-        files = [f for f in get_files(roots(directory), set(config.exclude)) if workspace.generated not in f.parents]
-    except ValueError:
-        return workspace, config, None
-    return workspace, config, files
+    return workspace, config, _source_files(workspace, set(config.exclude))
 
 
 def cleanup_character(char, drop_orphans=False):
@@ -1042,7 +1034,7 @@ def cleanup_character(char, drop_orphans=False):
 
     result["keys"] = sum(norm_key(k) != str(k).lower() for k in raw)
     result["texts"] = sum(clean_text(v) != str(v) for v in raw.values())
-    mapping = sort_map(mapping, load_durations(workspace.durations), excluded)
+    mapping = sort_map(mapping, load_durations(workspace.durations))
 
     if mapping == raw:
         result["status"] = "ALREADY CLEAN"
@@ -1070,7 +1062,7 @@ def print_cleanup(rows):
             print(f"  Orphan transcripts kept: {r['orphans']} (use --drop-orphans to remove them)")
 
 
-def plan_character(char, preferred, fallback, count, ids, targets, top_n):
+def plan_character(char, preferred, fallback, count, targets, top_n):
     """Dry run for one character: what --transcribe / --transcribe-top would transcribe. Writes nothing."""
     workspace, config, files = source_files(char)
     plan: dict[str, Any] = {
@@ -1095,7 +1087,7 @@ def plan_character(char, preferred, fallback, count, ids, targets, top_n):
     for i in all_ids:
         mapping.setdefault(i, "")
     durations = load_durations(workspace.durations)
-    mapping = sort_map(mapping, durations, excluded)
+    mapping = sort_map(mapping, durations)
 
     plan["files"] = len(all_ids)
     plan["with_text"] = sum(bool(mapping[i].strip()) for i in all_ids)
@@ -1111,7 +1103,7 @@ def plan_character(char, preferred, fallback, count, ids, targets, top_n):
         try:
             desired, method = select(
                 SelectionRequest(
-                    files, mapping, preferred, fallback, count, ids, excluded, list(config.selected), durations, target
+                    files, mapping, preferred, fallback, count, excluded, list(config.selected), durations, target
                 )
             )
             need = sum(not mapping[audio_id(f)].strip() for f in desired)
@@ -1156,7 +1148,7 @@ def _source_files(workspace, excluded) -> list[Path] | None:
     if not has_audio:
         return None
     try:
-        return [f for f in get_files(roots(directory), excluded) if workspace.generated not in f.parents]
+        return voice_files(roots(directory), excluded, workspace.generated)
     except ValueError:
         return None
 
@@ -1270,17 +1262,16 @@ def argument_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser()
     p.add_argument(
         "--selection",
-        choices=["random", "longestAudio", "longestText", "selected", "alphabeticalText", "alphabeticalAudio"],
+        choices=["random", "longestAudio", "longestText", "pinned", "alphabeticalText", "alphabeticalAudio"],
         default="longestText",
     )
     p.add_argument(
         "--fallback",
-        choices=["random", "longestAudio", "longestText", "selected", "alphabeticalText", "alphabeticalAudio"],
+        choices=["random", "longestAudio", "longestText", "pinned", "alphabeticalText", "alphabeticalAudio"],
         default="longestAudio",
     )
     p.add_argument("--count", type=int, default=None)
     p.add_argument("--characters", nargs="+", choices=list(CHARACTER_CONFIGS), default=list(CHARACTER_CONFIGS)[:1])
-    p.add_argument("--ids", nargs="*", default=[])
     p.add_argument("--all", action="store_true", help="Run every character")
     p.add_argument(
         "--cleanup",
@@ -1345,13 +1336,7 @@ def _planned(a, targets) -> list[Any]:
         count = config.count if a.count is None else a.count
         plans.append(
             plan_character(
-                char,
-                config.selection or a.selection,
-                config.fallback or a.fallback,
-                count,
-                a.ids,
-                targets,
-                a.transcribe_top,
+                char, config.selection or a.selection, config.fallback or a.fallback, count, targets, a.transcribe_top
             )
         )
     return plans
@@ -1398,7 +1383,6 @@ def _prepare_variant(a, name: str, config, duration_target) -> PreparationResult
             config.selection or a.selection,
             config.fallback or a.fallback,
             a.count,
-            a.ids,
             a.transcribe,
             duration_target,
             a.transcribe_top,
