@@ -18,4 +18,13 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 
 ## Deferred
 
+### OS limits
+
+Windows is the only supported host, so anything that needs another operating system waits here rather than in the TODO, where it would sit as work that cannot start.
+
+- **ExLlama-family engines.** hipfire and TabbyAPI with ExLlamaV3 need a Linux host with ROCm and EXL2/EXL3 weights rather than GGUF; the Windows sweep behind them was retired to `C:/AI/trash/retired-llm-inference-sweep`, and no model was downloaded for it.
+- **Nothing else is known to be blocked.** A test or launcher that names a platform limit adds the entry here with its evidence.
+
+### Visibility
+
 - **Visibility.** Both repositories stay private for now. A repository that was ever public is treated as leaked, so publishing remains the last step if it ever happens, not a decision that expires.
