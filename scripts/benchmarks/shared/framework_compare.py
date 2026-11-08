@@ -743,6 +743,16 @@ def _asr_summary(results: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def _leg_notes(backend: str, name: str, leg: dict[str, Any]) -> list[str]:
+    """One leg's gaps: the rows that did not measure, or the reason the leg never ran."""
+    if leg["status"] != "measured":
+        return [f"- {backend} {name}: {leg.get('reason') or 'no measurement'}"]
+    failed = [row for row in leg.get("rows") or [] if row["status"] != "measured"]
+    reasons = {row.get("reason") or "no measurement" for row in failed}
+    items = ", ".join(str(row.get("clip") or row.get("language")) for row in failed)
+    return [f"- {backend} {name} {items}: {reason}" for reason in reasons]
+
+
 def _unavailable(results: list[dict[str, Any]]) -> list[str]:
     """Why work could not be measured; a capability gap is evidence, not a silent omission."""
     notes = []
@@ -750,14 +760,7 @@ def _unavailable(results: list[dict[str, Any]]) -> list[str]:
         if not result["legs"]:
             continue
         for name, leg in result["legs"].items():
-            if leg["status"] == "measured":
-                failed = [row for row in leg.get("rows") or [] if row["status"] != "measured"]
-                reasons = {row.get("reason") or "no measurement" for row in failed}
-                if failed:
-                    items = ", ".join(str(row.get("clip") or row.get("language")) for row in failed)
-                    notes.extend(f"- {result['backend']} {name} {items}: {reason}" for reason in reasons)
-                continue
-            notes.append(f"- {result['backend']} {name}: {leg.get('reason') or 'no measurement'}")
+            notes.extend(_leg_notes(result["backend"], name, leg))
     return notes
 
 
