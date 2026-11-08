@@ -1,7 +1,8 @@
 """Compare the practice llama.cpp server, KoboldCpp and Lemonade on one GGUF.
 
 Fast by default: one warmup plus two measured streaming requests per backend, each started
-and stopped in turn so the GPU holds one model at a time.
+and stopped in turn so the GPU holds one model at a time. Lemonade serves only its own
+kokoro TTS, so it is a language-practice candidate and never a character one.
 """
 
 from __future__ import annotations
@@ -46,8 +47,14 @@ class Served:
 
 @contextmanager
 def _serve_koboldcpp(weights: Path) -> Iterator[Served]:
+    configured = cfg.KOBOLDCPP_MODELS[cfg.KOBOLDCPP_SERVICE.model]
+    if weights != configured:
+        raise ValueError(f"KoboldCpp serves its configured model only: {configured}")
     port = cast(int, cfg.KOBOLDCPP_KCPPS_ARGS["port"])
     process, _config, _log = kobold.start_kobold()
+    if not launch_util.wait_for_backend(port, 240):
+        launch_util.kill_process_tree(process.pid, ports=port)
+        raise TimeoutError(f"KoboldCpp did not answer on port {port}")
     try:
         yield Served(f"http://127.0.0.1:{port}", weights.stem, port)
     finally:
