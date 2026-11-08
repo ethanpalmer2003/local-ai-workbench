@@ -9,7 +9,7 @@ Rules live in [NOTES-CONVENTIONS.md](../../NOTES-CONVENTIONS.md). This is the or
 
 1. **Find the owner.** Search for an existing document or code location that already covers the topic (`grep`/`glob`, then read). One procedure owner; replace duplicates with links.
 2. **Decide it is prose at all.** If the fact is a name, id, path, default or count, it belongs in code, JSON or config, and the document links to it. Prose carries decisions a reader cannot infer.
-3. **Place it.** Root `README.md`/`AGENTS.md` hold navigation and invariants; feature procedures sit beside the owning code; plans and reviews in `notes/`; test status in `scripts/tests/notes/`.
+3. **Place it.** Only `README.md` and `AGENTS.md` sit at the root; every other document lives in `notes/`, except feature procedures beside the owning code and test status in `scripts/tests/notes/`.
 4. **Write short.** Guides <=500 words, `.agents/` rules <=300, root AGENTS <=450. Describe capability and the command, not instances: no model ids, character or voice names, asset filenames.
 5. **Link, do not restate.** Link the owner of a rule, the command that produces data, and the evidence that proves a claim.
 6. **Verify.** `python -m scripts.review.structure` must report 0 issues; confirm budgets, link targets and that no deleted file is still referenced (`git grep <basename>`).
