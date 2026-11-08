@@ -11,12 +11,18 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+import requests
+
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 
 HEALTH_ROUTE = "/api/v0/health"
+LOAD_ROUTE = "/api/v1/load"
 LOG_DIR = project_cfg.component("lemonade_server").logs_dir
+# - Lemonade waits up to 600 s for the llama.cpp server it wraps, and a first request is what
+#   usually triggers that load; loading explicitly keeps the wait short and visible
+LOAD_TIMEOUT_S = 180.0
 
 
 def server_command(port: int | None = None) -> list[str]:
@@ -89,3 +95,32 @@ def start(models_dir: Path, port: int | None = None) -> tuple[subprocess.Popen[A
 
 def stop(process: subprocess.Popen[Any], port: int | None = None) -> None:
     launch_util.kill_process_tree(process.pid, ports=port or cfg.LEMONADE_SERVICE.port)
+
+
+def health(port: int | None = None) -> dict[str, Any]:
+    """The server's own view of what is loaded and whether each wrapped backend is ready."""
+    response = requests.get(f"http://127.0.0.1:{port or cfg.LEMONADE_SERVICE.port}{HEALTH_ROUTE}", timeout=15)
+    response.raise_for_status()
+    value = response.json()
+    return value if isinstance(value, dict) else {}
+
+
+def loaded(port: int | None = None) -> list[dict[str, Any]]:
+    return [row for row in health(port).get("all_models_loaded") or [] if isinstance(row, dict)]
+
+
+def load(model: str, port: int | None = None, timeout_s: float | None = None) -> dict[str, Any]:
+    """Load one model by name and wait for its backend, instead of stalling inside a first request."""
+    served = port or cfg.LEMONADE_SERVICE.port
+    response = requests.post(f"http://127.0.0.1:{served}{LOAD_ROUTE}", json={"model_name": model}, timeout=60)
+    response.raise_for_status()
+    deadline = time.monotonic() + (timeout_s if timeout_s is not None else LOAD_TIMEOUT_S)
+    while time.monotonic() < deadline:
+        for row in loaded(served):
+            if row.get("backend_health") == "ready" and row.get("model_name") == model:
+                return row
+        time.sleep(0.5)
+    raise TimeoutError(
+        f"Lemonade loaded {model} but its backend never reported ready within "
+        f"{timeout_s if timeout_s is not None else LOAD_TIMEOUT_S:.0f}s"
+    )
