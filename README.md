@@ -1,19 +1,18 @@
 # AI workspace
 
-A Windows-first workbench for local AI frameworks: installation, weights, configuration, launch
-and recorded evidence per engine. The work it serves is evaluation, so a framework can be measured
-on its own or in a workflow that needs several of them working together.
+A Windows-first workbench for local AI frameworks: installation, weights, configuration, launch and
+recorded evidence per engine. Two jobs run through it on one machine: comparing frameworks that offer
+the same capability, and tuning a framework for this hardware, an RX 7800 XT with 16 GB.
 
 ## Purpose
 
-Local AI arrives as a set of frameworks that each own their config, ports, weights and quirks.
-Comparing them needs more than a working install: one canonical key per component, readiness checks
-that mean the same thing everywhere, provenance recorded beside every measurement, and results that
-say what changed since the last run. This repository provides that for llama.cpp, KoboldCpp,
-Lemonade, AudioCpp (speech synthesis and recognition), whisper.cpp, Parakeet.cpp, SD.cpp and
-ComfyUI.
+Local AI arrives as a set of frameworks that each own their config, ports, weights and quirks. Both
+jobs need more than a working install: one canonical key per component, readiness checks that mean the
+same thing everywhere, provenance recorded beside every measurement, and results that say what changed
+since the last run. This repository provides that for llama.cpp, KoboldCpp, Lemonade, AudioCpp (speech
+synthesis and recognition), whisper.cpp, Parakeet.cpp, SD.cpp and ComfyUI.
 
-## What gets evaluated
+## Comparing frameworks
 
 Frameworks are measured individually, and in the combined workflows a real capability requires:
 
@@ -24,6 +23,17 @@ Frameworks are measured individually, and in the combined workflows a real capab
 
 Each workflow states what a framework must provide before it is considered at all, so a stack that
 cannot meet the requirement is refused up front rather than discovered at runtime.
+
+## Tuning for this device
+
+Not every framework has a rival to measure against. ComfyUI is the only image-generation stack in use,
+so its work is profiling and tuning for AMD performance on this GPU instead of a comparison.
+
+- Some comparisons answer the same question inside one framework: ROCm against Vulkan, context and
+  offload settings, quantisation and batch size. These measure AMD performance for a fixed workload,
+  not one framework against another.
+- Tuning evidence is recorded like comparison evidence: provenance plus a measured pair, because a
+  single run cannot show that a change helped.
 
 ## Examples
 
@@ -37,15 +47,18 @@ C:\AI\bat\browser\launch_language_kobold.bat
 # Compare the practice stack with Lemonade on chat, speech and recognition
 C:\AI\bat\benchmarks\benchmark_framework_compare.bat
 
+# ComfyUI with its tuned attention and VRAM settings
+C:\AI\bat\browser\comfyui\launch_comfyui.bat
+
 # Refresh the last-run evidence table for the long opt-in checks
 C:\AI\scripts\.venv\Scripts\python.exe -m scripts.tools.capability_matrix
 ```
 
 Long runs record provenance (workspace and framework commits, weight identity, effective settings,
-corpus revision and manifest hash), so a later run can tell what changed, and a stale result is
-marked rather than silently compared. Recognition is scored on a pinned multilingual corpus with
-word and character error rates, and synthesised speech is rejected when it cannot be the sentence it
-claims to be.
+corpus revision and manifest hash), so a later run can tell what changed, and a stale result is marked
+rather than silently compared. Recognition is scored on a pinned multilingual corpus with word and
+character error rates, and synthesised speech is rejected when it cannot be the sentence it claims to
+be.
 
 ## Layout
 

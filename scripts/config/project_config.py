@@ -193,7 +193,6 @@ COMPONENTS.update(
         # - benchmark corpora are downloaded reference audio, not model weights
         "benchmarks": ComponentPaths("benchmarks", models_override="benchmarks"),
         "strata": ComponentPaths("strata", framework_override="Strata"),
-        "wan2gp": ComponentPaths("wan2gp", framework_override="Wan2GP"),
     }
 )
 MODEL_ALIASES: dict[str, str] = {}
@@ -275,9 +274,6 @@ SDCPP_MODELS_DIR = component("sdcpp").models_dir
 SDCPP_ROCM_DIR = SDCPP_FRAMEWORK_DIR / "rocm"
 SDCPP_VULKAN_DIR = SDCPP_FRAMEWORK_DIR / "vulkan"
 SDCPP_ROCM_SDK_BIN_DIR = DATA_DIR / "ROCm" / "therock-dist-windows-gfx110X-all-10.2.0a20260927" / "bin"
-
-# --- other frameworks ---
-WAN2GP_FRAMEWORK_DIR = component("wan2gp").framework_dir
 
 
 # ============================================================
