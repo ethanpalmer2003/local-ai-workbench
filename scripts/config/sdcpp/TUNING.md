@@ -4,6 +4,8 @@ How the image stack is configured on this machine, an RX 7800 XT. Build/model se
 in the [backend configuration](README.md); the measured screens are [quantized memory](Q4-MEMORY.md),
 [full-precision memory](MEMORY.md) and [quantized checkpoint](QUANTIZED.md).
 
+Screens recorded 2026-10-26 for the quantized checkpoint; the full-precision screen predates them and carries a commit, not a date.
+
 ## What is in use
 
 - Default build Vulkan, checkpoint `nova3d-q4`, no CPU offload and no VAE tiling; ROCm is a retained
