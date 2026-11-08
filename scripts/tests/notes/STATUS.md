@@ -21,6 +21,8 @@
 
 - Pending work lives in [TODO](../../../notes/TODO.md), not duplicated here. Static path/type checks do not establish native runtime correctness.
 
+- Long-check freshness, last-run numbers and evidence links: [capability matrix](CAPABILITY-MATRIX.md), regenerated with `python -m scripts.tools.capability_matrix`.
+
 - Historical evidence and prior per-area scope moved to [evidence](STATUS-EVIDENCE.md).
 - Current validation: 363 non-live regressions pass, including practice/browser routing and cleanup, drift boundaries and Silero/duplex contracts; types, structure/docs and size checks pass. [VAD evidence](audiocpp/AUDIOCPP-VAD.md) distinguishes native checks; [review index](../../../notes/reviews/README.md) owns review status.
 - Report classification and execution-context rules: [test guide](../README.md).
