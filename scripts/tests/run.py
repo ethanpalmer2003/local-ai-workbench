@@ -36,6 +36,7 @@ from scripts.tests.cases.shared.benchmarks.test_framework_compare import (
     SpeechLegTests,
     StreamChatTests,
     SummaryTests,
+    WhisperArmTests,
 )
 from scripts.tests.cases.shared.benchmarks.test_language_corpus import CorpusManifestTests, ExtractionTests
 from scripts.tests.cases.shared.benchmarks.test_provenance import (
@@ -86,6 +87,7 @@ if __name__ == "__main__":
                     RecognitionLegTests,
                     SummaryTests,
                     LemonadeModelTests,
+                    WhisperArmTests,
                     CorpusManifestTests,
                     ExtractionTests,
                     WorkspaceTests,
