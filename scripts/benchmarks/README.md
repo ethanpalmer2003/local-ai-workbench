@@ -35,6 +35,11 @@ Warmup, startup, model loading, cleanup, failed requests and old wall-time sampl
 are excluded. p95 requires 20 samples. Retain native decode/kernel metrics as separate
 fields; HTTP request time is not decode throughput.
 
+A surprising number is investigated, not excused as a configuration artifact: rerun the
+configuration where the claim should hold, then state whether the component genuinely
+lacks the capability. A root-cause claim needs an experiment that separates the
+hypotheses, and an invalidated hypothesis is retracted explicitly.
+
 `resident_http.py` provides a task-owned persistent HTTP process for any domain.
 It refuses occupied ports. A model reload within the same PID must change the
 adapter identity; the lifecycle cannot discover hidden server-side reloads.
