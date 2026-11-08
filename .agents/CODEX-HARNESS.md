@@ -1,7 +1,5 @@
 # Codex on Windows
 
-- Use PowerShell with absolute forward-slash paths and an explicit working directory.
-- Run Git directly from PowerShell. If Git Bash is needed, use C:/Program Files/Git/bin/bash.exe; plain bash resolves to the WindowsApps launcher.
 - Git Bash has failed to start in the current sandbox with an MSYS access-denied error. Use PowerShell for equivalent authorized work.
 - Separate shell startup errors from command and approval denials. When a command is denied, stop and report it through the approval workflow. The denial remains in force across shells and wrappers.
 - The saved legacy sandbox setting does not elevate the current session. Permission profiles and command allow-lists remain controlled by Codex.
