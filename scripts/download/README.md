@@ -20,6 +20,7 @@ C:/AI/bat/models/check_installed_models.bat --group asr
 - LLM weights share `models/llms/{coding_models,multilingual_models,character_models}`; runtime/model IDs stay stable. Gemma audio projectors stay beside their main weights.
 - ComfyUI typed weights remain in `data/videogen`; Strata keeps its native pack/model layout. These are declared mappings.
 - Downloaded benchmark tools stay in `frameworks/benchmarks`; owned runners stay in `scripts/benchmarks/`.
+- Benchmark corpora: the tracked manifest in `config/benchmarks/language_corpus.json` pins the corpus revision and each clip's reference text; `python -m scripts.download.benchmarks.fleurs --download` fetches those clips into `data/benchmarks/corpora`. A changed manifest hash means new numbers are a new baseline.
 - Input preparation tools live in `download/input/`; personal voice recordings/transcripts are supplied locally. [Onboarding](../../notes/ONBOARDING.md).
 - `python -m scripts.download.input.get_tts_voices --transcribe` fills missing voice-reference transcripts with Qwen3-ASR 1.7B, reusing a matching service or stopping the one it starts.
 
