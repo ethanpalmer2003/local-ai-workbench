@@ -64,6 +64,9 @@ CHAT_TEMPLATES_DIR = HF_HOME_DIR / "chat-templates"
 # - HF_HOME is the permanent Windows env var; HF_HUB_DIR is set here for runtime
 os.environ["HF_HOME"] = str(HF_HOME_DIR)
 os.environ["HF_HUB_DIR"] = str(HF_HOME_DIR)
+# - The hub cache must stay out of HF_MODELS_DIR: component model folders are the only
+#   registered children there, and a cache root would read as an unowned model folder
+os.environ["HF_HUB_CACHE"] = str(HF_HOME_DIR / "hub")
 
 
 # ============================================================
@@ -187,6 +190,8 @@ COMPONENTS.update(
             "coding_agents/commandcode-desktop", framework_override="coding_agents/Command Code"
         ),
         "comfyui": ComponentPaths("comfyui", models_override="videogen"),
+        # - benchmark corpora are downloaded reference audio, not model weights
+        "benchmarks": ComponentPaths("benchmarks", models_override="benchmarks"),
         "strata": ComponentPaths("strata", framework_override="Strata"),
         "wan2gp": ComponentPaths("wan2gp", framework_override="Wan2GP"),
     }
