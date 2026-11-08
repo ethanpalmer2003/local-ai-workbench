@@ -10,6 +10,7 @@ reason the server gave, never dropped.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import socket
 import threading
@@ -84,6 +85,8 @@ class Served:
     chat_model: str
     tts_model: str
     asr_model: str
+    # - "kobold" posts base64 audio to /api/extra/transcribe; the other arms use multipart
+    asr_style: str = "openai"
     details: dict[str, Any] = field(default_factory=dict)
 
 
@@ -515,20 +518,29 @@ def _tts_leg(served: Served, run: RunPaths) -> dict[str, Any]:
 
 
 def _transcribe(served: Served, audio: bytes, language: str) -> tuple[str, float]:
-    body, content_type = audio_upload(
-        audio, {"model": served.asr_model, "language": language, "response_format": "json"}
-    )
+    if served.asr_style == "kobold":
+        request: dict[str, Any] = {
+            "url": f"{served.asr}/api/extra/transcribe",
+            "json": {"audio_data": base64.b64encode(audio).decode(), "langcode": language},
+        }
+    else:
+        body, content_type = audio_upload(
+            audio, {"model": served.asr_model, "language": language, "response_format": "json"}
+        )
+        request = {
+            "url": f"{served.asr}/v1/audio/transcriptions",
+            "data": body,
+            "headers": {"Content-Type": content_type},
+        }
     started = time.perf_counter()
-    response = requests.post(
-        f"{served.asr}/v1/audio/transcriptions", data=body, headers={"Content-Type": content_type}, timeout=300
-    )
+    response = requests.post(timeout=300, **request)
     seconds = time.perf_counter() - started
     _checked(response, "Recogniser")
     value = response.json()
     text = value.get("text") if isinstance(value, dict) else None
     if not isinstance(text, str):
         raise ValueError("Recogniser returned no transcript")
-    return text, seconds
+    return text.strip(), seconds
 
 
 def _asr_row(served: Served, clip: dict[str, Any]) -> dict[str, Any]:
