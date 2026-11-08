@@ -35,6 +35,7 @@ from scripts.tests.cases.shared.benchmarks.test_framework_compare import (
     LemonadeModelTests,
     RecognitionLegTests,
     SpeechLegTests,
+    SpeechPlausibilityTests,
     StreamChatTests,
     SummaryTests,
 )
@@ -88,6 +89,7 @@ if __name__ == "__main__":
                     SummaryTests,
                     LemonadeModelTests,
                     AlternateArmTests,
+                    SpeechPlausibilityTests,
                     CorpusManifestTests,
                     ExtractionTests,
                     WorkspaceTests,

@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+import numpy as np
 import psutil
 import requests
 
@@ -66,6 +67,10 @@ LEGS = ("chat", "tts", "asr")
 LEMONADE_TTS_MODEL = "kokoro-v1"
 LEMONADE_ASR_MODEL = "Whisper-Large-v3-Turbo"
 DEFAULT_WEIGHTS = model_cfg.path(cfg.LANGUAGE_PRACTICE.llm_model)
+# - A sentence spoken far too fast or far too slowly is broken speech, not a speed result
+SPEECH_RATE = {"latin": (9.0, 28.0), "cjk": (2.5, 14.0)}
+CJK_LANGUAGES = frozenset({"ja", "zh", "yue", "ko"})
+SILENCE_RMS = 0.005
 
 
 @dataclass(frozen=True)
@@ -441,6 +446,22 @@ def _speech(served: Served, text: str, voice: str, locale: str) -> tuple[bytes, 
     return data, seconds
 
 
+def _speech_issues(language: str, characters: int, audio_seconds: float, rms: float) -> list[str]:
+    """Reasons the waveform cannot be the sentence: silence, or a rate no speaker reaches."""
+    issues = []
+    if rms < SILENCE_RMS:
+        issues.append(f"near-silent (rms {rms:.3f})")
+    low, high = SPEECH_RATE["cjk" if language in CJK_LANGUAGES else "latin"]
+    rate = characters / audio_seconds if audio_seconds else 0.0
+    if not audio_seconds:
+        issues.append("no audio")
+    elif rate < low:
+        issues.append(f"{rate:.1f} characters/s is too slow for this sentence")
+    elif rate > high:
+        issues.append(f"{rate:.1f} characters/s is too fast for this sentence")
+    return issues
+
+
 def _tts_row(served: Served, run: RunPaths, text: tuple[str, str, str, str]) -> dict[str, Any]:
     language, locale, voice, sentence = text
     row: dict[str, Any] = {"language": language, "locale": locale, "voice": voice, "characters": len(sentence)}
@@ -452,12 +473,16 @@ def _tts_row(served: Served, run: RunPaths, text: tuple[str, str, str, str]) -> 
     path.write_bytes(data)
     samples, rate = decode_audio(path)
     audio_seconds = len(samples) / rate if rate else 0.0
+    rms = float(np.sqrt(np.mean(np.square(samples)))) if len(samples) else 0.0
+    issues = _speech_issues(language, len(sentence), audio_seconds, rms)
     return {
         **row,
         "status": "measured",
         "seconds": seconds,
         "audio_seconds": audio_seconds,
         "real_time_factor": seconds / audio_seconds if audio_seconds else None,
+        "rms": rms,
+        "implausible": issues,
         "file": path.name,
     }
 
@@ -617,9 +642,10 @@ def _tts_summary(results: list[dict[str, Any]]) -> list[str]:
             if row["status"] != "measured":
                 lines.append(f"| {result['backend']} | {result['models']['tts']} | {row['language']} | - | - | - |")
                 continue
+            mark = " [WARN] implausible" if row.get("implausible") else ""
             lines.append(
                 f"| {result['backend']} | {result['models']['tts']} | {row['language']} | {row['voice']} | "
-                f"{row['real_time_factor']:.2f} | {row['audio_seconds']:.2f} |"
+                f"{row['real_time_factor']:.2f}{mark} | {row['audio_seconds']:.2f} |"
             )
     return lines
 
@@ -645,6 +671,8 @@ def _unavailable(results: list[dict[str, Any]]) -> list[str]:
     """Why work could not be measured; a capability gap is evidence, not a silent omission."""
     notes = []
     for result in results:
+        if not result["legs"]:
+            continue
         for name, leg in result["legs"].items():
             if leg["status"] == "measured":
                 failed = [row for row in leg.get("rows") or [] if row["status"] != "measured"]
@@ -664,6 +692,16 @@ def _script_notes(results: list[dict[str, Any]]) -> list[str]:
     }
     unspaced = sorted(languages & {"ja", "zh", "yue"})
     return [f"- recognition {'/'.join(unspaced)}: read CER; WER depends on word segmentation"] if unspaced else []
+
+
+def _speech_notes(results: list[dict[str, Any]]) -> list[str]:
+    """Broken speech is named with its reason, so a fast number cannot pass as a win."""
+    return [
+        f"- speech {row['language']} ({result['backend']}): " + "; ".join(row["implausible"])
+        for result in results
+        for row in (result["legs"].get("tts") or {}).get("rows") or []
+        if row.get("implausible")
+    ]
 
 
 def _duration_notes(results: list[dict[str, Any]]) -> list[str]:
@@ -691,7 +729,7 @@ def summarize(results: list[dict[str, Any]]) -> str:
         ("## Recognition", _asr_summary(results)),
     ]
     body = "\n\n".join(f"{title}\n\n" + "\n".join(lines) for title, lines in sections)
-    notes = [*_unavailable(results), *_duration_notes(results), *_script_notes(results)]
+    notes = [*_unavailable(results), *_speech_notes(results), *_duration_notes(results), *_script_notes(results)]
     return body + ("\n\n## Notes\n\n" + "\n".join(notes) if notes else "")
 
 
