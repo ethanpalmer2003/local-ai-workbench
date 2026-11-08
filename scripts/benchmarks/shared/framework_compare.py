@@ -56,10 +56,10 @@ TTS_TEXTS = (
     ("fr", "fr-fr", "ff_siwis", "Bonjour. Je voudrais un billet pour le centre-ville, s'il vous plaît."),
     ("ja", "ja", "jf_alpha", "おはようございます。市内中心部までの切符をお願いします。"),
 )
-# - "whisper" is the practice stack with its other installed recogniser, kept as a third arm so
-#   the recognition choice stays measured instead of being re-probed by hand
-BACKENDS = ("practice", "whisper", "lemonade")
-WHISPER_ENGINE = cfg.AsrStartupEngine.WHISPER_VULKAN
+# - "qwen" is the practice stack with the other installed recogniser, kept as a third arm so the
+#   recognition choice stays measured instead of being re-probed by hand
+BACKENDS = ("practice", "qwen", "lemonade")
+ALTERNATE_ENGINE = cfg.AsrStartupEngine.QWEN3_ASR
 LEGS = ("chat", "tts", "asr")
 # - Ports are taken from the OS per run: a stack left in TIME_WAIT must not fail the next run
 # - Lemonade names these by its own catalog: kokoro-v1 for speech, whisper.cpp models for recognition
@@ -298,7 +298,7 @@ def serve(backend: str, weights: Path, run: RunPaths) -> AbstractContextManager[
     handlers = {
         "practice": _serve_practice,
         "lemonade": _serve_lemonade,
-        "whisper": partial(_serve_practice, recogniser_engine=WHISPER_ENGINE),
+        "qwen": partial(_serve_practice, recogniser_engine=ALTERNATE_ENGINE),
     }
     return handlers[backend](weights, run)
 
@@ -554,7 +554,7 @@ def measure(
     started = time.perf_counter()
     # - The whisper arm is the practice stack's second recogniser, so it is not a second stack:
     #   chat and speech are measured once, under the profile default
-    legs = ("asr",) if backend == "whisper" else options.legs
+    legs = ("asr",) if backend == "qwen" else options.legs
     result: dict[str, Any] = {"backend": backend, "legs": {}}
     with serve(backend, weights, run) as served:
         result["startup_seconds"] = time.perf_counter() - started
@@ -701,7 +701,7 @@ def _source_models(weights: Path) -> list[dict[str, Any]]:
         provenance.file_identity("chat", weights),
         provenance.file_identity("practice tts", model_cfg.path(cfg.LANGUAGE_PRACTICE.tts_model)),
         provenance.file_identity("practice asr", _recogniser_path()),
-        provenance.file_identity("practice asr alternate", _recogniser_path(WHISPER_ENGINE)),
+        provenance.file_identity("practice asr alternate", _recogniser_path(ALTERNATE_ENGINE)),
         provenance.file_identity("lemonade server", cfg.LEMONADE_SERVICE.exe),
     ]
 
@@ -720,7 +720,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--legs", nargs="+", choices=LEGS, default=list(LEGS), help="legs to measure")
     parser.add_argument("--tokens", type=int, default=64, help="maximum reply tokens per chat request")
     parser.add_argument("--requests", type=int, default=2, help="measured chat requests per backend")
-    parser.add_argument("--clips", type=int, default=20, help="recognition clips from the pinned corpus")
+    parser.add_argument("--clips", type=int, default=80, help="recognition clips from the pinned corpus")
     args = parser.parse_args(argv)
     context = require_native_execution("Language practice comparison")
     paths = BenchmarkPaths(source=__file__).new_run()

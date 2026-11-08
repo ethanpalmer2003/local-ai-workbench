@@ -495,7 +495,7 @@ class PracticeTests(unittest.TestCase):
         )
         self.assertFalse(config["lazy_load"])
         self.assertEqual(cfg.ASR_SERVICE.engine, cfg.LANGUAGE_PRACTICE.asr_engine)
-        self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.QWEN3_ASR)
+        self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.WHISPER_VULKAN)
 
 
 if __name__ == "__main__":

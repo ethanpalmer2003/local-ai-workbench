@@ -31,12 +31,12 @@ from scripts.tests.cases.shared import frameworks_smoke
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
 from scripts.tests.cases.shared.benchmarks.test_framework_compare import (
+    AlternateArmTests,
     LemonadeModelTests,
     RecognitionLegTests,
     SpeechLegTests,
     StreamChatTests,
     SummaryTests,
-    WhisperArmTests,
 )
 from scripts.tests.cases.shared.benchmarks.test_language_corpus import CorpusManifestTests, ExtractionTests
 from scripts.tests.cases.shared.benchmarks.test_provenance import (
@@ -87,7 +87,7 @@ if __name__ == "__main__":
                     RecognitionLegTests,
                     SummaryTests,
                     LemonadeModelTests,
-                    WhisperArmTests,
+                    AlternateArmTests,
                     CorpusManifestTests,
                     ExtractionTests,
                     WorkspaceTests,

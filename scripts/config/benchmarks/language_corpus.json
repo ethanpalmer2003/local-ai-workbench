@@ -3,7 +3,7 @@
   "corpus_name": "FLEURS",
   "revision": "70bb2e84b976b7e960aa89f1c648e09c59f894dd",
   "split": "test",
-  "selection": "First 5 rows per language with a distinct reference of at most 200 characters",
+  "selection": "First 20 rows per language with a distinct reference of at most 200 characters",
   "clips": [
     {
       "id": "en-0",
@@ -41,6 +41,111 @@
       "reference": "The term bug is used by entomologists in a formal sense for this group of insects."
     },
     {
+      "id": "en-5",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/18066939864018796519.wav",
+      "reference": "Popular sports include football, basketball, volleyball, water-polo, fencing, rugby, cycling, ice hockey, roller hockey and F1 motor racing."
+    },
+    {
+      "id": "en-6",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/16847628585853049714.wav",
+      "reference": "You can use boda-boda (motorcycle taxi) to get around Goma. The normal (local) price is ~500 Congolese Francs for the short ride."
+    },
+    {
+      "id": "en-7",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/1596269393232229615.wav",
+      "reference": "Bishkek was described as sinking into a state of \"anarchy\" by one observer, as gangs of people roamed the streets and plundered stores of consumer goods."
+    },
+    {
+      "id": "en-8",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/2637301866626572038.wav",
+      "reference": "During the Revolutionary War, the thirteen states first formed a weak central government—with the Congress being its only component—under the Articles of Confederation."
+    },
+    {
+      "id": "en-9",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/1722118868151836971.wav",
+      "reference": "Current senator and Argentine First Lady Cristina Fernandez de Kirchner announced her presidential candidacy yesterday evening in La Plata, a city 50 kilometers (31 miles) away from Buenos Aires."
+    },
+    {
+      "id": "en-10",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/13230261475791184258.wav",
+      "reference": "The governor's office said nineteen of the injured were police officers."
+    },
+    {
+      "id": "en-11",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/5106380017322065030.wav",
+      "reference": "However, that is not true. Although there is something written on the back of the document, it is not a treasure map."
+    },
+    {
+      "id": "en-12",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/10492135991603561867.wav",
+      "reference": "In some areas boiling water for a minute is enough, in others several minutes are needed."
+    },
+    {
+      "id": "en-13",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/6817878979697223927.wav",
+      "reference": "All nouns, alongside the word Sie for you, always begin with a capital letter, even in the middle of a sentence."
+    },
+    {
+      "id": "en-14",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/10197164397713068203.wav",
+      "reference": "The cabbage juice changes color depending on how acidic or basic (alkaline) the chemical is."
+    },
+    {
+      "id": "en-15",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/1218355507714944126.wav",
+      "reference": "In its early days, the show was featured solely at the long-running internet radio site TogiNet Radio, a site focused on talk radio."
+    },
+    {
+      "id": "en-16",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/283614893570272908.wav",
+      "reference": "Four skiers in the women's sitting group failed to finish their runs, and 45 of the 117 total skiers in the Giant Slalom failed to rank in the race."
+    },
+    {
+      "id": "en-17",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/4496786334735634498.wav",
+      "reference": "Apia is the capital of Samoa. The town is on the island of Upolu and has a population of just under 40,000."
+    },
+    {
+      "id": "en-18",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/6917907748364342404.wav",
+      "reference": "He did not set a figure for the cuts, saying they will be made based on China's economic output."
+    },
+    {
+      "id": "en-19",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/16851035292487940942.wav",
+      "reference": "After the dam was built in 1963, the seasonal floods that would spread sediment throughout the river were halted."
+    },
+    {
       "id": "es-0",
       "language": "es",
       "config": "es_419",
@@ -74,6 +179,111 @@
       "config": "es_419",
       "member": "test/12431219804763611753.wav",
       "reference": "La segregación y la recombinación barajan la variación entre uno y otro generación tras generación."
+    },
+    {
+      "id": "es-5",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/8992992823346849455.wav",
+      "reference": "En muchas otras ciudades italianas, así como en todo el mundo, en particular en Polonia, se llevaron a cabo montajes parecidos que vieron muchísimas personas."
+    },
+    {
+      "id": "es-6",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/6965860545953972563.wav",
+      "reference": "Estas parejas podrían elegir planificar la adopción de un bebé."
+    },
+    {
+      "id": "es-7",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/3422631223145518136.wav",
+      "reference": "No ha podido tomarse medicamentos para aliviar el dolor, porque está prohibido su uso en los Juegos."
+    },
+    {
+      "id": "es-8",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/16217310890815300034.wav",
+      "reference": "También puede ser conveniente comprar una Wild Card que permite la entrada a selecciones de parques en Sudáfrica o a todos los Parques Nacionales del país."
+    },
+    {
+      "id": "es-9",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/10931675615482490825.wav",
+      "reference": "Los equipos de rescate antincendios lograron extinguir el fuego a las 11:35 p. m."
+    },
+    {
+      "id": "es-10",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/17636596177265663971.wav",
+      "reference": "Al poco tiempo de desatarse las hostilidades, los británicos comenzaron un bloqueo naval a Alemania."
+    },
+    {
+      "id": "es-11",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/6581855941279867439.wav",
+      "reference": "En definitiva, no debería causarnos sorpresa si nuestros propios predecesores resolvían sus «problemas proteicos» del mismo modo que los chimpancés de la sabana en la actualidad."
+    },
+    {
+      "id": "es-12",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/14270137861388940483.wav",
+      "reference": "Después del accidente, trasladaron a Gibson a un hospital, pero falleció al poco tiempo."
+    },
+    {
+      "id": "es-13",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/4570903375997816310.wav",
+      "reference": "La bomba atómica opera en base al principio de que se requiere energía para conformar un núcleo con gran cantidad de protones y neutrones."
+    },
+    {
+      "id": "es-14",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/16446183822893392228.wav",
+      "reference": "En 1889, el puerto fue el escenario de un nefasto enfrentamiento naval cuando siete barcos alemanes, americanos y e ingleses se negaron a salir del puerto."
+    },
+    {
+      "id": "es-15",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/3403486107983659935.wav",
+      "reference": "En un principio, se lo trasladó al Hospital James Paget de Great Yarmouth."
+    },
+    {
+      "id": "es-16",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/8800278107896366203.wav",
+      "reference": "Sin embargo, hay muchas características en las aves que todavía las asemejan a los dinosaurios."
+    },
+    {
+      "id": "es-17",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/12937561755889799165.wav",
+      "reference": "Todo en el Universo está hecho de materia, compuesta por partículas pequeñas denominadas átomos."
+    },
+    {
+      "id": "es-18",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/15529629029987624112.wav",
+      "reference": "Indica que la posición más efectiva donde colocar el objeto central es la intersección que se forma entre las líneas horizontales y verticales que dividen la imagen en tercios (ver ejemplo)."
+    },
+    {
+      "id": "es-19",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/10192388533260519980.wav",
+      "reference": "Se puede definir a una civilización como una cultura específica de la que forma parte un extenso grupo de personas que viven y trabajan en conjunto; es decir, una sociedad."
     },
     {
       "id": "fr-0",
@@ -111,6 +321,111 @@
       "reference": "La surface de la lune est constituée de pierres et de poussière. Sa couche extérieure est appelée la croûte."
     },
     {
+      "id": "fr-5",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/118005971910520590.wav",
+      "reference": "Premièrement, la plupart des cavaliers portent des bottes d'équitation avec un talon et une semelle lisse et assez étroite."
+    },
+    {
+      "id": "fr-6",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/12217957387078475556.wav",
+      "reference": "Le travail effectué était principalement théorique, mais le programme a été écrit pour simuler les observations faites de la galaxie du Sagittaire."
+    },
+    {
+      "id": "fr-7",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/14361567643536061453.wav",
+      "reference": "Le Vatican compte environ 800 habitants. C'est le plus petit pays indépendant au monde, et le moins peuplé."
+    },
+    {
+      "id": "fr-8",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/15942080413960253441.wav",
+      "reference": "Tout le monde fait partie de la société et utilise les systèmes de transport. Quasiment tout le monde se plaint des systèmes de transport."
+    },
+    {
+      "id": "fr-9",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/9747669897173511466.wav",
+      "reference": "L'usage de l'enregistrement vidéo a mené à de grandes découvertes dans l'interprétation des micro-expressions, c'est-à-dire des expressions faciales durant quelques millisecondes."
+    },
+    {
+      "id": "fr-10",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/9182067139125495353.wav",
+      "reference": "Les alliages sont essentiellement un mélange de deux métaux ou plus. N'oubliez pas que le tableau périodique comporte de nombreux éléments."
+    },
+    {
+      "id": "fr-11",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/3683527580499257367.wav",
+      "reference": "Initialement, l'émission était uniquement diffusée sur le vénérable site de radio Internet TogiNet Radio, un site consacré à la radio parlée."
+    },
+    {
+      "id": "fr-12",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/15679345674072383870.wav",
+      "reference": "En ce qui concerne les inversions magnétiques, plus le nombre de Rossby est petit, moins l’étoile est active ."
+    },
+    {
+      "id": "fr-13",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/7250834376430784014.wav",
+      "reference": "Pensez à l'itinéraire de ski comme à un itinéraire de randonnée similaire."
+    },
+    {
+      "id": "fr-14",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/2757290274126351777.wav",
+      "reference": "Avant l'arrivée des troupes, Haïti n'avait pas rencontré de problèmes liés à la maladie depuis les années 1800."
+    },
+    {
+      "id": "fr-15",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/17384584725417924254.wav",
+      "reference": "Cuomo, 53 ans, a commencé son mandat de gouverneur au début de cette année et a signé le mois dernier un projet de loi légalisant le mariage entre personnes du même sexe."
+    },
+    {
+      "id": "fr-16",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/5472816019113202964.wav",
+      "reference": "Ottawa est la charmante capitale bilingue du Canada et dispose d'un grand nombre de galeries d'art et de musées qui mettent en valeur le passé et le présent du Canada."
+    },
+    {
+      "id": "fr-17",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/14133596223444314003.wav",
+      "reference": "L'autorité centrale de l'église était à Rome depuis plus de 1000 ans et cette concentration de pouvoir et d'argent a conduit beaucoup de gens à se demander si cette doctrine était respectée."
+    },
+    {
+      "id": "fr-18",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/9188184299031901646.wav",
+      "reference": "Ces événements ont eu lieu dans la période généralement considérée comme le Haut Moyen Âge – période de l'histoire en Europe courant du XIe au XIIIe siècle (1000-1300)."
+    },
+    {
+      "id": "fr-19",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/10166091086920486572.wav",
+      "reference": "Le même mois, un autre avion de ligne a fait une sortie de piste à Mashhad et a heurté un mur, tuant ainsi dix-sept personnes."
+    },
+    {
       "id": "ja-0",
       "language": "ja",
       "config": "ja_jp",
@@ -144,6 +459,111 @@
       "config": "ja_jp",
       "member": "test/15381272810814802884.wav",
       "reference": "北マリアナ諸島の危機管理室（EMO）によると、全国的に被害は報告されていないとのことです。"
+    },
+    {
+      "id": "ja-5",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/12283431306979433028.wav",
+      "reference": "エアロスミスはツアーで予定していたコンサートを中止しました。"
+    },
+    {
+      "id": "ja-6",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/13965438796589242057.wav",
+      "reference": "これらはたまに混雑する家族向けのビーチで、海岸にはさまざまな店舗が並んでいます。安全に泳ぐことができます。"
+    },
+    {
+      "id": "ja-7",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/13548897059510104589.wav",
+      "reference": "一部の路線では大企業は自社機を持っているが、それ以外の路線や小規模企業では問題があった。"
+    },
+    {
+      "id": "ja-8",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/2897195784813296214.wav",
+      "reference": "文明という言葉は、市民を意味するラテン語の形容詞civilisから来ており、市民を意味するラテン語の名詞civis、都市や都市国家を意味し、何らかの形で社会の規模を定義するcivitasという名詞に関係しています。"
+    },
+    {
+      "id": "ja-9",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/3563562150682074308.wav",
+      "reference": "衛星はロケットで宇宙に送られました。科学者が宇宙で望遠鏡を使う理由は、地球の大気によって人間の視界に入る光や景色の一部が歪むからです。"
+    },
+    {
+      "id": "ja-10",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/1631358912830229396.wav",
+      "reference": "ドイツの焼き菓子の多くは、アーモンドやヘーゼルナッツなどの木の実を使っています。人気のあるケーキは、特に強いコーヒーとよく合います。"
+    },
+    {
+      "id": "ja-11",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/17416616907086415885.wav",
+      "reference": "自動車の保有者増加は、道路事故発生率の増加につながり、結果として、負傷した身体を治療するための新技術が医療分野で開発されることになります。"
+    },
+    {
+      "id": "ja-12",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/8675814957598723431.wav",
+      "reference": "社会化の重要性を示すために用いられる最も一般的な方法の1つは、育児放棄、不運、または故意の虐待によって、成長過程で大人によって社会への適応が阻まれた子供たちの数少ない不幸な事例を取りあげることです。"
+    },
+    {
+      "id": "ja-13",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/877296300632288928.wav",
+      "reference": "しかし、そうではありませんでした。裏面に何か書かれていますが宝の地図ではありませんでした。"
+    },
+    {
+      "id": "ja-14",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/12611331702345578435.wav",
+      "reference": "宇宙に存在するあらゆるものは物質でできています。あらゆる物質は原子と呼ばれる微小な粒子でできています。"
+    },
+    {
+      "id": "ja-15",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/15989996923025289316.wav",
+      "reference": "モルドバの首都はチインウです。現地語はルーマニア語ですが、ロシア語が広く使われています。"
+    },
+    {
+      "id": "ja-16",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/13182877928935129574.wav",
+      "reference": "植物は自然環境にあるときに最も見栄えがするのですから、「1本だけ」ならと標本に持ち帰りたい誘惑に負けないでください。"
+    },
+    {
+      "id": "ja-17",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/18170662450548791876.wav",
+      "reference": "当初、番組はトークラジオに特化したインターネットラジオサイト「TogiNet Radio」のみで取り上げられ、これは長寿サイトです。"
+    },
+    {
+      "id": "ja-18",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/7412852678244109743.wav",
+      "reference": "ほとんどが砂浜で安全に泳ぐことができ、ポフツカワの木陰が日除けになります。"
+    },
+    {
+      "id": "ja-19",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/8683099911166631378.wav",
+      "reference": "さらに北方の広い地域は人口が少なく、ほとんど人が住んでいない原生地域もあります。"
     }
   ]
 }
