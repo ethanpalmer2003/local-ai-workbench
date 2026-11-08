@@ -6,7 +6,7 @@
 - Describe capability and the command to run, not instances. Model ids, character/voice names and asset filenames stay in catalogs and overlay manifests; docs name the role that consumes them. One owner per rule, including code versus doc.
 - One procedure owner; replace duplicate explanations with links. Keep commands, required actions, constraints and useful evidence.
 - Budgets: guides <=500 words; detailed agent rules <=300; root AGENTS <=450. Third-party documents and immutable run evidence are excluded.
-- Use uppercase Markdown basenames except `README.md` and tool-required names. Only README belongs directly at `scripts/tests/`.
+- Use uppercase Markdown basenames except `README.md`, `AGENTS.md`, `SKILL.md` and other tool-required names; `structure_docs` rejects anything else. Only README belongs directly at `scripts/tests/`.
 - `TODO.md` owns pending work; completed evidence belongs in test status/results. Retire obsolete nonempty files to trash with provenance.
 - Download definitions stay in Python catalogs; docs link to them. Update links and commands with path changes.
 

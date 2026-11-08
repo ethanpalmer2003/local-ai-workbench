@@ -1,7 +1,7 @@
 # ============================== SETTINGS ==============================
 # Edit the defaults here, or override on the command line, e.g.:
-#   .\fix-low-integrity.ps1 -Paths C:\AI              (quick check of all of C:\AI)
-#   .\fix-low-integrity.ps1 -Paths C:\AI -Mode Fix    (fix it)
+#   .\scripts\tools\fix_low_integrity.ps1 -Paths C:\AI              (quick check of all of C:\AI)
+#   .\scripts\tools\fix_low_integrity.ps1 -Paths C:\AI -Mode Fix    (fix it)
 param(
     [ValidateSet("Check","Fix")]
     [string]  $Mode     = "Check",                  # Check = report only | Fix = set Medium
@@ -12,7 +12,7 @@ param(
 )
 # ======================================================================
 # Fixes Electron apps crashing at launch (exit -2147483645 / 0x80000003)
-# caused by a Low mandatory integrity label. See electron-low-integrity-crash.md
+# caused by a Low mandatory integrity label. See .agents/ELECTRON-LOW-INTEGRITY-CRASH.md
 
 # icacls prints "<path> <first ACE>" for each item, then indented ACE lines.
 # The path may contain spaces, so resolve it by finding the longest existing prefix.

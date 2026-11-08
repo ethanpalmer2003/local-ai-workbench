@@ -16,6 +16,7 @@
 
 - Iterate with the failing module; run the model-free suite once at the end. Skip type checks after documentation-only edits.
 - Prove a live configuration in seconds first: paths, ports, mode flags, one short request. A misconfiguration must fail immediately, not after a multi-minute timeout.
+- Slow speech tests (Qwen3-TTS, Chatterbox, Sesame CSM) run in a console that stays open, through `launch_module(..., mode=SPLIT_INDEPENDENT)`; quick ones (Kokoro, Edge TTS) run inline. Wait for the user before another slow test.
 - GPU metrics are sampled lower bounds; missing PIDs or counters are not zero.
 - Performance runners use `BenchmarkLifecycle`, separating setup/load/warmup/cleanup and ranking only completed resident requests. Owner: [benchmark contract](../scripts/benchmarks/README.md).
 

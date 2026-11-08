@@ -4,11 +4,11 @@ DSH-adjacent Electron apps (DeepSeek Harness, VS Code forks, any Electron shell)
 
 - Cause: a process at Medium integrity may not write to a Low-labelled object, and Electron's own process launch inherits the label, so the app aborts at startup. The DACL looks permissive while the label still refuses the write.
 - Confirm: `icacls <path>` shows a `Mandatory Label\Low Mandatory Level` line. A healthy install shows `Medium`.
-- Repair: [fix-low-integrity.ps1](fix-low-integrity.ps1) scans for the label and runs `icacls <path> /setintegritylevel M`, recursing with `(OI)(CI)M` for folders. `-Mode Check` only reports.
+- Repair: [fix_low_integrity.ps1](../scripts/tools/fix_low_integrity.ps1) scans for the label and runs `icacls <path> /setintegritylevel M`, recursing with `(OI)(CI)M` for folders. `-Mode Check` only reports.
 
 ```powershell
-.\.agents\fix-low-integrity.ps1 -Paths C:\AI\frameworks
-.\.agents\fix-low-integrity.ps1 -Paths C:\AI -Mode Fix
+scripts\tools\fix_low_integrity.ps1 -Paths C:\AI\frameworks
+scripts\tools\fix_low_integrity.ps1 -Paths C:\AI -Mode Fix
 ```
 
 Agent consequences:
