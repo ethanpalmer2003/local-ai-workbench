@@ -14,7 +14,6 @@
 ## Work and permissions
 - Routine reads, Git status/diff/log, static checks and task-owned runs under five minutes are allowed.
 - Get approval for package changes, pushes, deletion, persistent services and runs over five minutes; prior approval covers the agreed task and routine retries.
-- Commit only when the user asks; keep the message broad and short.
 - Respect explicit test deferrals. Never infer permission for live tests from a TODO or saved result.
 - Fix a defect in code already being touched, then and there. Record a larger unrelated fix as a TODO entry.
 - Each invocation uses its current tool policy; earlier outside-sandbox approval does not change later defaults.
