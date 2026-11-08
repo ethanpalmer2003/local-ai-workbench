@@ -19,11 +19,13 @@
 
 - [Brief real-time screen](BRIEF-REALTIME-SCREEN.md): four TTS frameworks and both Gemma E4B runtimes checked with warmed timing; multilingual/playback/overlap remain unranked.
 
-- Language recognition defaults to Qwen3-ASR 1.7B through llama.cpp: lowest pooled error on every language over 80 pinned clips (en 3.9%, es 2.3%, fr 4.6%, ja CER 5.5%) [report](output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json). Whisper Vulkan stays the measured faster alternate (0.21 s vs 0.28 s p50) and replaces AudioCpp Nemotron, which misheard English and could not transcribe Japanese.
+- Language recognition defaults to Qwen3-ASR 1.7B through llama.cpp: lowest pooled error on every language over 80 pinned clips (en 3.9%, es 2.3%, fr 4.6%, ja CER 5.5%) [report](output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json). Whisper Vulkan stays the measured faster alternate (0.21 s vs 0.28 s p50) and replaces AudioCpp Nemotron, which failed Japanese.
 
-- Four-arm language comparison (practice, practice+Whisper, Lemonade, KoboldCpp) on the same Gemma weights and 80 clips: KoboldCpp starts fastest (12.0 s) but streams in coarser chunks, so its 0.40 s TTFT is the comparable number and its 15.2 chunks/s is not; its built-in Kokoro speaks en/es/fr and returns an empty WAV for ja. Recognition ranks Qwen3-ASR first on all four languages, ahead of KoboldCpp's embedded whisper and Lemonade's whisper [report](output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
+- Four-arm language comparison (practice, practice+Whisper, Lemonade, KoboldCpp) on the same Gemma weights and 80 clips: KoboldCpp starts fastest (12.0 s) but streams in coarser chunks, so its 0.40 s TTFT is the comparable number and its 15.2 chunks/s is not; Qwen3-ASR ranks first on all four languages [report](output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
 
-- Pending work lives in [TODO](../../../notes/TODO.md), not duplicated here. Static path/type checks do not establish native runtime correctness.
+- KoboldCpp internal speech is English-only despite accepting the same Kokoro voice ids: its `Kokoro_no_espeak_Q4` GGUF names 28 voices in `af`/`am`/`bf`/`bm` and none in `ef`/`ff`/`jf`/`zf`, so `jf_alpha` returned 0.00 s of audio and the Spanish and French rows used a fallback voice; none may be ranked.
+
+- Pending work lives in [TODO](../../../notes/TODO.md), not duplicated here. Path/type checks do not establish native runtime correctness.
 
 - Long-check freshness, last-run numbers and evidence links: [capability matrix](CAPABILITY-MATRIX.md), regenerated with `python -m scripts.tools.capability_matrix`.
 
