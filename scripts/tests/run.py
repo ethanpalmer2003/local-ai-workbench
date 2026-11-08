@@ -75,6 +75,7 @@ from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
 from scripts.tests.cases.shared.test_structure_docs import (
+    DuplicateProseTests,
     MarkdownNameTests,
     RootDocumentTests,
     ShortDocumentTests,
@@ -116,6 +117,7 @@ if __name__ == "__main__":
                     CheckTests,
                     ScanTests,
                     SuffixTests,
+                    DuplicateProseTests,
                     MarkdownNameTests,
                     RootDocumentTests,
                     ShortDocumentTests,
