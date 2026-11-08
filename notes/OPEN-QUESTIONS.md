@@ -17,3 +17,7 @@ Running list for this repository, grouped by area. Nothing here is decided; reco
 
 - **Hardware specs.** Machine numbers stay in the docs by decision; revisiting them is cheap but not planned.
 - **Lint strictness.** The gate sits at McCabe 10 with no grandfathering left, and every other ruff rule is clean repo-wide. Whether to tighten further (`ARG`, `PL`, stricter McCabe) is open.
+
+## Tooling
+
+- **Embedding index over code and docs.** A local embedding model with retrieval could answer cross-cutting questions such as where a port is set or which page owns a rule, and it would read code and Markdown together. Against it: the repository is small enough for `grep` plus the owner rules, an index needs its own refresh path and a component key, and retrieval may invite paraphrased duplicates that the one-owner rule exists to prevent. Whether any of that is worth building is open.
