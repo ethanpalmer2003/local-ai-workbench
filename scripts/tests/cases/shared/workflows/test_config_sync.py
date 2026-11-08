@@ -114,29 +114,3 @@ class ConfigSyncTests(unittest.TestCase):
                 self.assertEqual(server.read()["backend"], "vulkan")
                 path.write_text(json.dumps({"backend": "cpu", "models": []}), encoding="utf-8")
                 self.assertEqual(server.read()["backend"], "cpu")
-
-
-class CommandCodeLinkTests(unittest.TestCase):
-    def test_the_plan_names_every_state(self):
-        self.assertEqual(sync.commandcode_plan(False, False, False), "absent")
-        self.assertEqual(sync.commandcode_plan(True, True, False), "linked")
-        self.assertEqual(sync.commandcode_plan(True, False, True), "replace-copy")
-        self.assertEqual(sync.commandcode_plan(True, False, False), "link")
-
-    def test_a_real_folder_where_the_link_belongs_is_a_copy_to_replace(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = Path(folder)
-            source, target = root / "overlay/.commandcode", root / "workspace/.commandcode"
-            source.mkdir(parents=True)
-            target.mkdir(parents=True)
-            with patch.object(sync, "commandcode_paths", return_value=(source, target)), patch("builtins.print"):
-                self.assertEqual(sync.commandcode_state()[2], "replace-copy")
-
-    def test_a_missing_overlay_folder_is_reported_as_absent(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = Path(folder)
-            source, target = root / "overlay/.commandcode", root / "workspace/.commandcode"
-            target.mkdir(parents=True)
-            with patch.object(sync, "commandcode_paths", return_value=(source, target)), patch("builtins.print"):
-                self.assertEqual(sync.commandcode_state()[2], "absent")
-            self.assertEqual(list(target.iterdir()), [])

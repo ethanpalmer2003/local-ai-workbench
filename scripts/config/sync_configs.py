@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import subprocess
 from pathlib import Path
 
 from scripts.config import overlay_inputs as inputs
@@ -136,60 +135,9 @@ def sync_comfyui(apply: bool = False) -> list[Path]:
     return changed
 
 
-def commandcode_paths() -> tuple[Path, Path]:
-    """Where the overlay keeps Command Code settings, and the ignored path the tool reads."""
-    return inputs.input_dir() / ".commandcode", project_cfg.BASE_DIR / ".commandcode"
-
-
-def commandcode_plan(source_exists: bool, linked: bool, real_folder: bool) -> str:
-    """What the link step would do; kept pure so the decision can be tested without touching disk."""
-    if not source_exists:
-        return "absent"
-    if linked:
-        return "linked"
-    return "replace-copy" if real_folder else "link"
-
-
-def commandcode_state() -> tuple[Path, Path, str]:
-    """The overlay folder, the workspace path and what a run would do."""
-    source, target = commandcode_paths()
-    linked = target.is_junction() and target.resolve() == source.resolve()
-    real_folder = target.exists() and not target.is_junction()
-    return source, target, commandcode_plan(source.is_dir(), linked, real_folder)
-
-
-def _link_directory(source: Path, target: Path) -> None:
-    """A directory junction needs no elevation on Windows and is transparent to the client."""
-    result = subprocess.run(
-        ["cmd", "/c", "mklink", "/J", str(target), str(source)], capture_output=True, text=True, check=False
-    )
-    if result.returncode != 0:
-        detail = (result.stderr or result.stdout).strip()
-        raise RuntimeError(f"Could not link {target} to {source}: {detail}")
-
-
-def sync_commandcode(apply: bool = False) -> None:
-    """One physical copy: the workspace path is a junction to the overlay folder."""
-    source, target, plan = commandcode_state()
-    if plan == "absent":
-        print(f"[INFO] Command Code: no .commandcode folder in the overlay ({source}); nothing to link.")
-        return
-    if plan == "linked":
-        print(f"[OK] Command Code: {target} already points at {source}.")
-        return
-    if plan == "replace-copy":
-        print(f"{'ARCHIVE' if apply else 'WOULD ARCHIVE'} the real folder {target}")
-        if apply:
-            archive_path(target, project_cfg.BASE_DIR)
-    print(f"{'LINK' if apply else 'WOULD LINK'} {target} -> {source}")
-    if apply:
-        _link_directory(source, target)
-        print(f"[OK] Command Code: {target} -> {source}")
-
-
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--only", choices=("pi", "audiocpp", "comfyui", "commandcode"))
+    parser.add_argument("--only", choices=("pi", "audiocpp", "comfyui"))
     parser.add_argument("--apply", action="store_true", help="Write changes; default is preview only")
     args = parser.parse_args(argv)
     if args.only in (None, "pi"):
@@ -199,8 +147,6 @@ def main(argv: list[str] | None = None) -> None:
         print(f"[OK] AudioCpp editable base: {server.CONFIG_PATH}; no regeneration required.")
     if args.only in (None, "comfyui"):
         sync_comfyui(args.apply)
-    if args.only in (None, "commandcode"):
-        sync_commandcode(args.apply)
 
 
 if __name__ == "__main__":

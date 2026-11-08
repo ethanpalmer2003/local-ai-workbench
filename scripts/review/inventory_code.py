@@ -41,7 +41,6 @@ REVIEW_EXCLUDED = EXCLUDED | {
     "dist",
     "build",
     ".mypy_cache",
-    ".commandcode",
     ".zed",
     "old",
     "retired",

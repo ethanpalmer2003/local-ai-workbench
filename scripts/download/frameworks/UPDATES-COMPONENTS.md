@@ -15,6 +15,5 @@ Per-component install and update specifics; commands, categories and the HRX not
 | Strata | Delegates native app/engine updater; engine and control install themselves, and the fetched desktop installer is run silently then version-checked |
 | Avalon | llama.cpp fork (`freriadoc/Avalon`) cloned and compiled by hand with cmake. One local commit carries the MSVC fix for `close()` in `ggml/src/ggml-cuda/moe-cache.cu`; `pull --rebase --autostash` replays it, so the update is never blocked and the change stays single. A dirty tree still reports a merge. A pulled commit is reported as still needing a build, which `bat/build_frameworks.bat` runs |
 | DeepSeek Harness | Electron app tracking its nightly feed (`download.deepseek.com/dsh-desk`); compared by the executable's own version and installed silently when the app is closed |
-| Command Code | Electron app from its GitHub release; installed silently when the app is closed |
 | ComfyUI | Delegated updater; owned config sync is separate |
 | Model servers | `frameworks/model_servers/` groups the engines that wrap other engines: KoboldCpp, Lemonade Server, LocalAI and Text generation WebUI. KoboldCpp installs from its GitHub release; the other three are parked until installed, because each ships its own launcher: LocalAI has no Windows binary, Text generation WebUI a portable zip, Lemonade a self-updating app |

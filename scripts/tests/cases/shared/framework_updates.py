@@ -807,31 +807,15 @@ class FrameworkUpdates(unittest.TestCase):
                 self.assertIn(f"Latest ROCm: {expected}", output.getvalue())
                 update.assert_not_called()
 
-    def test_command_code_checks_cover_desktop_and_local_cli(self):
-        tools = {tool.name: tool for tool in cfg.TOOLS if tool.name.startswith("coding_agents/commandcode")}
-        self.assertEqual(set(tools), {"coding_agents/commandcode", "coding_agents/commandcode-desktop"})
-        self.assertEqual(tools["coding_agents/commandcode"].release_type, cfg.ReleaseType.NPM)
-        self.assertEqual(tools["coding_agents/commandcode"].package, "command-code")
-        self.assertEqual(tools["coding_agents/commandcode-desktop"].release_type, cfg.ReleaseType.DESKTOP)
-        self.assertEqual(project_cfg.framework_install_dir("coding_agents/commandcode").name, "commandcode")
-        self.assertEqual(project_cfg.framework_install_dir("coding_agents/commandcode-desktop").name, "Command Code")
-
-    def test_desktop_version_check_reads_the_packaged_manifest(self):
-        tool = next(tool for tool in cfg.TOOLS if tool.name == "coding_agents/commandcode-desktop")
+    def test_installed_desktop_version_reads_the_packaged_manifest(self):
+        tool = cfg.ToolSpec("coding_agents/demo", "Demo.exe", cfg.ReleaseType.DESKTOP)
         with CasePaths(__file__).temporary_directory() as folder:
             dest = Path(folder)
             (dest / "resources" / "app").mkdir(parents=True)
             (dest / "resources" / "app" / "package.json").write_text('{"version":"0.1.60"}', encoding="utf-8")
-            with (
-                patch.object(other_updates.requests, "get") as get,
-                contextlib.redirect_stdout(io.StringIO()) as output,
-            ):
-                get.return_value.json.return_value = {"tag_name": "v0.1.61"}
-                other_updates.process_desktop(tool, dest, check_only=True, summary=None)
-            text = output.getvalue()
-        self.assertIn("Local version : 0.1.60", text)
-        self.assertIn("Latest version: 0.1.61", text)
-        self.assertIn("UPDATE AVAILABLE", text)
+            self.assertEqual(other_updates.installed_desktop_version(tool, dest), "0.1.60")
+            (dest / "resources" / "app" / "package.json").unlink()
+            self.assertIsNone(other_updates.installed_desktop_version(tool, dest))
 
     def test_catalog_covers_installed_frameworks(self):
         if not project_cfg.FRAMEWORKS_DIR.is_dir():

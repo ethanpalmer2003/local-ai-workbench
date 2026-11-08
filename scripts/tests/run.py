@@ -76,7 +76,7 @@ from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
 from scripts.tests.cases.shared.test_structure_docs import MarkdownNameTests, ShortDocumentTests, WordCountTests
 from scripts.tests.cases.shared.test_typography import CheckTests, ScanTests, SuffixTests
-from scripts.tests.cases.shared.workflows.test_config_sync import CommandCodeLinkTests, ConfigSyncTests
+from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
 from scripts.tests.cases.shared.workflows.test_kokoro_profiles import KokoroProfiles
 from scripts.tests.cases.shared.workflows.test_text_processing import TextProcessingTests
 from scripts.tests.cases.shared.workflows.test_workflow_defaults import WorkflowDefaultsTests
@@ -145,7 +145,6 @@ if __name__ == "__main__":
                     StrataProfileTests,
                     PiPackageTests,
                     ConfigSyncTests,
-                    CommandCodeLinkTests,
                     ModelCatalogTests,
                     InputOverlayTests,
                     PreflightTests,
