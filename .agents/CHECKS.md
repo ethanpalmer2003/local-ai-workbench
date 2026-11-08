@@ -25,6 +25,6 @@
 - Read the latest [checkpoint](../notes/reviews/README.md); focus on changed contracts.
 - Trace startup, readiness, requests, cleanup and process ownership; check error propagation and external API contracts.
 - Check component keys, directory roles/types and config prefixes against [folder rules](FOLDERS.md); judge sparse-folder audit findings by ownership.
-- Follow a moved path through imports, catalogs, native settings, batches, UI/assets and docs; preserve sessions, shared assets and evidence.
+- Check a move or rename against [folder rules](FOLDERS.md); preserve sessions, shared assets and evidence.
 - `scripts/review/frontend.py` checks asset paths, DOM ids and injected settings keys.
 - Report findings, checks run and remaining limits.

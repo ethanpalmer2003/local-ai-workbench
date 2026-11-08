@@ -1,6 +1,6 @@
 # Batch entry points
 
-Coding-agent entry points stay at the root. Browser, model, test, and benchmark batches are grouped by role; each launcher passes `%*` through to its Python module. Browser names state which HTML they open first: `launch_test*` is the shared `/test/` page, `launch_language*` is the shared `/practice` page, `launch_kobold*` is the KoboldCpp chat stack, and `launch_sdcpp` / `launch_comfyui` are each framework's own built-in UI.
+Coding-agent entry points stay at the root. Browser, model, test, and benchmark batches are grouped by role; each launcher passes `%*` through to its Python module. Browser names state which HTML they open first: `launch_test*` is the shared `/test/` page, `launch_language*` is the shared `/practice` page, `launch_kobold*` is the KoboldCpp chat stack, and `launch_sdcpp` / `launch_comfyui` are each framework's own built-in UI. Naming rule: [folder rules](../.agents/FOLDERS.md).
 
 ## Root
 

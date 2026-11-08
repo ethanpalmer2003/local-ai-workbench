@@ -28,7 +28,7 @@ resource-counter scope. Never replace missing memory counters with file size.
 5. Record first output with `timing.mark("first_output")` for streaming. Total request
    duration alone does not measure interactive streaming latency.
 6. Preserve `record()` including failures; clean up owned processes in `finally`
-   or with the lifecycle context manager. Never terminate an unrelated session.
+   or with the lifecycle context manager. Process ownership: [AGENTS](../../AGENTS.md).
 
 Only completed `resident_request` rows qualify for `summarize_requests`.
 Warmup, startup, model loading, cleanup, failed requests and old wall-time samples
