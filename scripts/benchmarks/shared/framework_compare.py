@@ -57,18 +57,18 @@ TTS_TEXTS = (
     ("fr", "fr-fr", "ff_siwis", "Bonjour. Je voudrais un billet pour le centre-ville, s'il vous plaît."),
     ("ja", "ja", "jf_alpha", "おはようございます。市内中心部までの切符をお願いします。"),
 )
-# - "qwen" is the practice stack with the other installed recogniser, kept as a third arm so the
-#   recognition choice stays measured instead of being re-probed by hand
-BACKENDS = ("practice", "qwen", "lemonade")
-ALTERNATE_ENGINE = cfg.AsrStartupEngine.QWEN3_ASR
+# - "whisper" is the practice stack with its other installed recogniser, kept as a third arm so
+#   the recognition choice stays measured instead of being re-probed by hand
+BACKENDS = ("practice", "whisper", "lemonade")
+ALTERNATE_ENGINE = cfg.AsrStartupEngine.WHISPER_VULKAN
 LEGS = ("chat", "tts", "asr")
 # - Ports are taken from the OS per run: a stack left in TIME_WAIT must not fail the next run
 # - Lemonade names these by its own catalog: kokoro-v1 for speech, whisper.cpp models for recognition
 LEMONADE_TTS_MODEL = "kokoro-v1"
 LEMONADE_ASR_MODEL = "Whisper-Large-v3-Turbo"
 DEFAULT_WEIGHTS = model_cfg.path(cfg.LANGUAGE_PRACTICE.llm_model)
-# - A sentence spoken far too fast or far too slowly is broken speech, not a speed result
-SPEECH_RATE = {"latin": (9.0, 28.0), "cjk": (2.5, 14.0)}
+# - A sentence spoken far too fast or far too slowly is broken speech, not a speed result;
+#   the corpus manifest owns the bands, so a new corpus can state its own speaking rate
 CJK_LANGUAGES = frozenset({"ja", "zh", "yue", "ko"})
 SILENCE_RMS = 0.005
 
@@ -303,7 +303,7 @@ def serve(backend: str, weights: Path, run: RunPaths) -> AbstractContextManager[
     handlers = {
         "practice": _serve_practice,
         "lemonade": _serve_lemonade,
-        "qwen": partial(_serve_practice, recogniser_engine=ALTERNATE_ENGINE),
+        "whisper": partial(_serve_practice, recogniser_engine=ALTERNATE_ENGINE),
     }
     return handlers[backend](weights, run)
 
@@ -446,12 +446,19 @@ def _speech(served: Served, text: str, voice: str, locale: str) -> tuple[bytes, 
     return data, seconds
 
 
-def _speech_issues(language: str, characters: int, audio_seconds: float, rms: float) -> list[str]:
+def _speech_issues(
+    language: str,
+    characters: int,
+    audio_seconds: float,
+    rms: float,
+    bands: dict[str, tuple[float, float]] | None = None,
+) -> list[str]:
     """Reasons the waveform cannot be the sentence: silence, or a rate no speaker reaches."""
+    rate_bands = bands or corpus.speech_rate()
     issues = []
     if rms < SILENCE_RMS:
         issues.append(f"near-silent (rms {rms:.3f})")
-    low, high = SPEECH_RATE["cjk" if language in CJK_LANGUAGES else "latin"]
+    low, high = rate_bands["cjk" if language in CJK_LANGUAGES else "latin"]
     rate = characters / audio_seconds if audio_seconds else 0.0
     if not audio_seconds:
         issues.append("no audio")
@@ -579,7 +586,7 @@ def measure(
     started = time.perf_counter()
     # - The whisper arm is the practice stack's second recogniser, so it is not a second stack:
     #   chat and speech are measured once, under the profile default
-    legs = ("asr",) if backend == "qwen" else options.legs
+    legs = ("asr",) if backend == "whisper" else options.legs
     result: dict[str, Any] = {"backend": backend, "legs": {}}
     with serve(backend, weights, run) as served:
         result["startup_seconds"] = time.perf_counter() - started

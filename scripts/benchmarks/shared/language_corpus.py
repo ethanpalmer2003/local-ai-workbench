@@ -33,6 +33,20 @@ def identity() -> dict[str, Any]:
     }
 
 
+# - Characters per second a real speaker produces; the manifest may tune it per corpus
+DEFAULT_SPEECH_RATE = {"latin": (9.0, 28.0), "cjk": (2.5, 14.0)}
+
+
+def speech_rate() -> dict[str, tuple[float, float]]:
+    """Rate bands a synthesised sentence must fall inside to count as speech."""
+    recorded = fleurs.spec().get("speech_rate") or {}
+    bands = dict(DEFAULT_SPEECH_RATE)
+    for script, values in recorded.items():
+        if script in bands and isinstance(values, list) and len(values) == 2:
+            bands[script] = (float(values[0]), float(values[1]))
+    return bands
+
+
 def missing() -> list[Path]:
     return fleurs.missing()
 
