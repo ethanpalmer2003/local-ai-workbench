@@ -27,7 +27,9 @@ cannot meet the requirement is refused up front rather than discovered at runtim
 ## Tuning for this device
 
 Not every framework has a rival to measure against. ComfyUI is the only image-generation stack in use,
-so its work is profiling and tuning for AMD performance on this GPU instead of a comparison.
+so its work is profiling and tuning for AMD performance on this GPU instead of a comparison: current
+settings, the isolated flag comparisons behind them and what stays unmeasured are in
+[ComfyUI tuning](scripts/config/comfyui/TUNING.md).
 
 - Some comparisons answer the same question inside one framework: ROCm against Vulkan, context and
   offload settings, quantisation and batch size. These measure AMD performance for a fixed workload,

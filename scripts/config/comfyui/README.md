@@ -1,6 +1,6 @@
 # ComfyUI configuration
 
-- Native install: `component("comfyui").framework_dir/rocm`; browser launcher: `bat/browser/comfyui/launch_comfyui.bat` and its shared bootstrap.
+- Native install: `component("comfyui").framework_dir/rocm`; browser launcher: `bat/browser/comfyui/launch_comfyui.bat` and its shared bootstrap. Tuned settings and what stays unmeasured: [TUNING.md](TUNING.md).
 - Models use typed directories under `data/videogen`, declared in [extra_model_paths.yaml](extra_model_paths.yaml) and the component map. Keep native node model fields/filenames unchanged.
 - Editable workflows/node code stay here. `python -m scripts.config.sync_configs --only comfyui --apply` copies owned files into the installation; preview/apply ownership is recorded under state.
 - Sync preserves replaced/removed managed files in trash, refuses missing source directories, and leaves unrelated nodes/user data intact. It does not install custom nodes or restart the server.
