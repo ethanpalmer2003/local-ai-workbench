@@ -61,7 +61,7 @@ Live entries free their ports instead of refusing.
 | [benchmark_tts_speed.bat](benchmarks/benchmark_tts_speed.bat) | Piper/Sherpa TTS speed screen. |
 | [benchmark_coding_agents.bat](benchmarks/benchmark_coding_agents.bat) | Coding-agent comparisons; defaults to one task, one repeat. |
 | [benchmark_strata_avalon.bat](benchmarks/benchmark_strata_avalon.bat) | Strata vs Avalon, same weights: prefill, decode, TTFT. |
-| [benchmark_framework_compare.bat](benchmarks/benchmark_framework_compare.bat) | llama.cpp, KoboldCpp and Lemonade on one GGUF: load, TTFT, chunks/s. |
+| [benchmark_framework_compare.bat](benchmarks/benchmark_framework_compare.bat) | Practice stack vs Lemonade on the language profile: chat, Kokoro speech, recognition WER/CER. |
 
 Routine LLM check: `benchmark_strata_avalon.bat` (engine speed) then `benchmark_coding_agents.bat` (agent completion).
 

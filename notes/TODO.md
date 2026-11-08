@@ -8,6 +8,7 @@
 - [ ] Finish live voice-practice checks on both chat consumers: pipelining/interruption, microphone capture, playback and echo. Saved-PCM sequential ASR/chat/TTS passed on both; AudioCpp ASR resources sampled (2026-10-31). Browser mic session returned audio requests but no transcript; no spoken-input result. [Report](../scripts/tests/output/asr/shared/practice_smoke/unreviewed/1793511451717288800/artifacts/report.json) · [Scenario matrix](../scripts/launchers/asr/MULTIUSE-SCENARIOS.md).
 - [ ] Measure multilingual/noisy accuracy and real microphone latency; browser model/API routes responded, but capture produced no transcript. No multilingual/noisy reference corpus is configured. All 16 resident profiles have brief synthetic-English checks; decide whether CrispASR/FunASR need resident adapters. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py).
 - [ ] Validate Handy microphone selection, dictation and paste. UI shows Default microphone and Average all channels; no dictation or paste was tested.
+- [ ] Japanese recognition in the practice profile: the AudioCpp Nemotron backend closes the stream or resets the connection for every FLEURS `ja` clip, though its card lists `ja-JP` as transcription-ready. The language profile can use `whisper-vulkan` or `qwen3-asr` for Japanese today; re-test Nemotron after an upstream build change. [Report](../scripts/benchmarks/output/shared/framework_compare/unreviewed/1794102411976669000/artifacts/report.json).
 
 ## Deferred
 
