@@ -1,0 +1,149 @@
+{
+  "corpus": "google/fleurs",
+  "corpus_name": "FLEURS",
+  "revision": "70bb2e84b976b7e960aa89f1c648e09c59f894dd",
+  "split": "test",
+  "selection": "First 5 rows per language with a distinct reference of at most 200 characters",
+  "clips": [
+    {
+      "id": "en-0",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/12741024238657315067.wav",
+      "reference": "Unfortunately, studying traffic flow is difficult because driver behavior cannot be predicted with one-hundred percent certainty."
+    },
+    {
+      "id": "en-1",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/621925716775998155.wav",
+      "reference": "Twentieth century research has shown that there are two pools of genetic variation: hidden and expressed."
+    },
+    {
+      "id": "en-2",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/2589557553267364799.wav",
+      "reference": "Remember that even though music on the main stages may have finished, there may be sections of the festival that will keep playing music until late into the night."
+    },
+    {
+      "id": "en-3",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/8173060820032255320.wav",
+      "reference": "Police superintendent Chandra Shekhar Solanki said the accused appeared in court with covered faces."
+    },
+    {
+      "id": "en-4",
+      "language": "en",
+      "config": "en_us",
+      "member": "test/2652155470394119415.wav",
+      "reference": "The term bug is used by entomologists in a formal sense for this group of insects."
+    },
+    {
+      "id": "es-0",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/7285658688146080595.wav",
+      "reference": "Esto parece tener sentido, ya que en la Tierra no se percibe su movimiento, ¿cierto?"
+    },
+    {
+      "id": "es-1",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/4963359825952343829.wav",
+      "reference": "Construimos nuestras casas a partir de las plantas y con ellas también fabricamos ropa. La mayoría de los alimentos que ingerimos son plantas. Sin ellas, los animales no sobrevivirían."
+    },
+    {
+      "id": "es-2",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/5047945814639237534.wav",
+      "reference": "Durante esta fase de la historia de Europa, la iglesia católica, que había acumulado riqueza y poder, fue cuestionada."
+    },
+    {
+      "id": "es-3",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/11137049735103408221.wav",
+      "reference": "Las escenas se proyectan en las pirámides y todas ellas son iluminadas."
+    },
+    {
+      "id": "es-4",
+      "language": "es",
+      "config": "es_419",
+      "member": "test/12431219804763611753.wav",
+      "reference": "La segregación y la recombinación barajan la variación entre uno y otro generación tras generación."
+    },
+    {
+      "id": "fr-0",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/7105431834829365765.wav",
+      "reference": "Les voyageurs à destination de pays où les taxes sont élevées peuvent parfois faire des économies considérables, en particulier sur des produits comme les boissons alcoolisées ou le tabac."
+    },
+    {
+      "id": "fr-1",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/17999210160761730950.wav",
+      "reference": "Le groupe Aerosmith a annulé les derniers concerts de sa tournée."
+    },
+    {
+      "id": "fr-2",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/17467158799788389101.wav",
+      "reference": "Il s'agit de l'un des parcs d'attraction les plus connus en Afrique du Sud et considéré comme le fleuron des parcs Nationaux sud-africains (SANParks)."
+    },
+    {
+      "id": "fr-3",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/8969527857548188961.wav",
+      "reference": "Tout comme la lune exerce une traction sur la terre, provoquant des marées, la Voie lactée exerce une force sur la galaxie du Sagittaire."
+    },
+    {
+      "id": "fr-4",
+      "language": "fr",
+      "config": "fr_fr",
+      "member": "test/7989253100718399733.wav",
+      "reference": "La surface de la lune est constituée de pierres et de poussière. Sa couche extérieure est appelée la croûte."
+    },
+    {
+      "id": "ja-0",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/17808260654685775088.wav",
+      "reference": "技術決定論のほとんどの解釈は、2つの一般論を共有しています。1つは技術の発展自体が文化的・政治的な影響を大きく超えた道をたどっていること、もう1つは技術が社会的に条件づけられたものではなく、むしろ内在する社会に「影響」を与えることです。"
+    },
+    {
+      "id": "ja-1",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/9364520089078562923.wav",
+      "reference": "地殻が薄いため、近い方には海が多くなることがあります。溶岩が浮上しやすくなっていました。"
+    },
+    {
+      "id": "ja-2",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/8740859839695260023.wav",
+      "reference": "都市はモロッコのスルタンによってダルル・バディアとして再建され、貿易拠点を設立したスペイン人貿易商によってカサブランカと名付けられました。"
+    },
+    {
+      "id": "ja-3",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/4824217744848869807.wav",
+      "reference": "上空の澄んだ美しい空と、周囲の多くの山々以外には何も見えません。洞窟の中からは、外界はほとんど見えず、外界の音も聞こえません。"
+    },
+    {
+      "id": "ja-4",
+      "language": "ja",
+      "config": "ja_jp",
+      "member": "test/15381272810814802884.wav",
+      "reference": "北マリアナ諸島の危機管理室（EMO）によると、全国的に被害は報告されていないとのことです。"
+    }
+  ]
+}

@@ -30,7 +30,20 @@ from scripts.tests.cases.personal.comfyui.test_verify_node import VerifyNodeTest
 from scripts.tests.cases.shared import frameworks_smoke
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
-from scripts.tests.cases.shared.benchmarks.test_framework_compare import FrameworkCompareTests
+from scripts.tests.cases.shared.benchmarks.test_framework_compare import (
+    LemonadeModelTests,
+    RecognitionLegTests,
+    SpeechLegTests,
+    StreamChatTests,
+    SummaryTests,
+)
+from scripts.tests.cases.shared.benchmarks.test_language_corpus import CorpusManifestTests, ExtractionTests
+from scripts.tests.cases.shared.benchmarks.test_provenance import (
+    BlockTests,
+    CorpusTests,
+    FileIdentityTests,
+    WorkspaceTests,
+)
 from scripts.tests.cases.shared.framework_updates import FrameworkUpdates
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
 from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
@@ -47,6 +60,7 @@ from scripts.tests.cases.shared.runtime.test_resources import ResourceTests
 from scripts.tests.cases.shared.runtime.test_shared_runtime import SharedRuntimeTests
 from scripts.tests.cases.shared.shared_contracts import SharedContracts
 from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
+from scripts.tests.cases.shared.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
 from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
 from scripts.tests.cases.shared.test_inputs_overlay import InputOverlayTests
 from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
@@ -67,7 +81,20 @@ if __name__ == "__main__":
                 extra_groups=(
                     BenchmarkLifecycleTests,
                     BenchmarkVramTests,
-                    FrameworkCompareTests,
+                    StreamChatTests,
+                    SpeechLegTests,
+                    RecognitionLegTests,
+                    SummaryTests,
+                    LemonadeModelTests,
+                    CorpusManifestTests,
+                    ExtractionTests,
+                    WorkspaceTests,
+                    FileIdentityTests,
+                    CorpusTests,
+                    BlockTests,
+                    FreshnessTests,
+                    HeadlineTests,
+                    RenderTests,
                     SharedRuntimeTests,
                     StartupContracts,
                     RegressionFixtures,
