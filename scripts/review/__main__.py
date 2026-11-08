@@ -5,7 +5,7 @@ import json
 import subprocess
 
 from scripts.config import project_config as project_cfg
-from scripts.review import dashes, dependencies, frontend_wiring, inventory_code, model_references, structure_docs
+from scripts.review import dependencies, frontend_wiring, inventory_code, model_references, structure_docs, typography
 from scripts.review.public_audit import main as public_audit_main
 
 SPELL_EXCLUDED = (
@@ -123,8 +123,8 @@ def main(argv: list[str] | None = None) -> int:
             else "[WARN] Formatting differs; run review/format_py.bat"
         )
 
-    print("\n=== TYPOGRAPHIC DASHES ===", flush=True)
-    dash_status = dashes.main([])
+    print("\n=== TYPOGRAPHIC PUNCTUATION ===", flush=True)
+    dash_status = typography.main([])
 
     print("\n=== SPELLING ===", flush=True)
     spelling_status = spelling_check()

@@ -1,6 +1,6 @@
 # Local HRX patches
 
-These are our additional routing experiments, not the community repository's `.diff`. They apply on top of the existing local Windows/codebook patches, whose complete tracked snapshots and base/upstream revisions are retained under `state/hrx/source-patches/`.
+These are additional routing experiments, not the community repository's `.diff`. They apply on top of the existing local Windows/codebook patches, whose complete tracked snapshots and base/upstream revisions are retained under `state/hrx/source-patches/`.
 
 The installed latest-stack rebuild additionally uses `latest-loom-q4-bounds.patch` and `msvc-test-lambdas.patch`. Their hashes, complete source state and installed binary hashes are in `latest-stack-manifest.json`. HRX/ROCr patches are now committed on local integration branches; llama.cpp modifications remain exported working-tree patches.
 

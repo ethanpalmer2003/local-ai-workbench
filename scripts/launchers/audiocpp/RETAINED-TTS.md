@@ -8,7 +8,7 @@ Retained alternatives; AudioCpp is the selected language-practice TTS framework.
 Further Piper/Sherpa TTS integration/comparisons are not planned. This does not
 change Sherpa ASR coverage.
 
-Why selected: AudioCpp generated Kokoro faster than Sherpa and Kobold in our
+Why selected: AudioCpp generated Kokoro faster than Sherpa and Kobold in the
 brief checks, and supports the chosen speech models/integration. Piper's tested
 Lessac voices were faster, but are different, English-only models; the user
 deprioritized that lightweight route. This is not a universal speed or listening
