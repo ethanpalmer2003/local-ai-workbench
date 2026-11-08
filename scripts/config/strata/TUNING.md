@@ -1,6 +1,6 @@
 # Strata tuning
 
-Two backend profiles, both measured on this machine with the issue #3695 harness on 2026-10-26; a dated report link is still missing
+Two backend profiles, both measured on this machine with the issue #3695 harness on 2026-10-26; a dated report link is still missing ([TODO](../../../notes/TODO.md))
 (`scripts.benchmarks.inference_engines.benchmark_strata_reference`). Selection mechanics and the profile
 files themselves are owned by the [backend configuration](README.md).
 

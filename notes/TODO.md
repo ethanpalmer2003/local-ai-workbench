@@ -12,7 +12,8 @@
 - [ ] KoboldCpp's built-in Kokoro returns an empty WAV for Japanese: `jf_alpha` gave a 200 RIFF with 0.00 s of audio while English, Spanish and French speak. Check which voices its build ships and report upstream. [Report](../scripts/benchmarks/output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
 - [ ] Re-test AudioCpp Nemotron streaming for Japanese after an upstream build change: it closed the stream or reset the connection for every FLEURS `ja` clip although its card lists `ja-JP` as transcription-ready. The language profile now recognises through Whisper Vulkan, so this is a candidate engine, not the default. [Report](../scripts/benchmarks/output/shared/framework_compare/unreviewed/1794102411976669000/artifacts/report.json).
 
-- [ ] Refresh the capability matrix when the stack settles: 31 of 32 entries are stale. Keep it marked until then.
+- [ ] Refresh the capability matrix once the stack settles; 31 of 32 entries are stale.
+- [ ] Link dated reports for the Strata profile pair and the ComfyUI 640 scaling claim.
 
 ## Deferred
 
