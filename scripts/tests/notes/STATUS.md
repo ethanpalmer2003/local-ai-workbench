@@ -19,6 +19,8 @@
 
 - [Brief real-time screen](BRIEF-REALTIME-SCREEN.md): four TTS frameworks and both Gemma E4B runtimes checked with warmed timing; multilingual/playback/overlap remain unranked.
 
+- Language recognition now defaults to Qwen3-ASR 1.7B: on the pinned FLEURS clips it transcribed all four practice languages (en WER 7.6%, es 2.2%, fr 2.8%, ja CER 4.7%) where AudioCpp Nemotron misheard English, trailed on French and could not transcribe Japanese. [Whisper Vulkan](output/asr/asr_resident_compare/unreviewed/1794103191119104000/artifacts/report.json) stays the faster engine (0.20 s vs 0.41 s p50) and [Lemonade's Whisper](output/shared/framework_compare/unreviewed/1794103274817532100/artifacts/report.json) matches it on Latin-script languages.
+
 - Pending work lives in [TODO](../../../notes/TODO.md), not duplicated here. Static path/type checks do not establish native runtime correctness.
 
 - Long-check freshness, last-run numbers and evidence links: [capability matrix](CAPABILITY-MATRIX.md), regenerated with `python -m scripts.tools.capability_matrix`.
