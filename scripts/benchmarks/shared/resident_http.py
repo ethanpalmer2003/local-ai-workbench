@@ -44,7 +44,7 @@ class ResidentHttp:
             raise RuntimeError(f"Port {self.port} occupied; existing session retained")
         self.log.parent.mkdir(parents=True, exist_ok=True)
         self.stream = self.log.open("wb")
-        self.process = subprocess.Popen(
+        self.process = subprocess.Popen(  # owned: this benchmark stops the server it starts
             self.command,
             cwd=str(self.cwd or Path(self.command[0]).parent),
             env={**os.environ, **(self.env or {})},

@@ -265,7 +265,7 @@ def _serve_lemonade(weights: Path, run: RunPaths) -> Iterator[Served]:
     models_dir = weights.parent
     port = _free_port()
     with lemonade.run_config(models_dir, port):
-        process, log = lemonade.start(models_dir, port)
+        process, log = lemonade.start(models_dir, port, owned=True)
         base = f"http://127.0.0.1:{port}"
         try:
             catalog = _lemonade_catalog(base)

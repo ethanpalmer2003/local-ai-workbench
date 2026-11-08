@@ -76,8 +76,12 @@ def new_log_path() -> Path:
     return LOG_DIR / f"lemonade_{time.strftime('%Y%m%d-%H%M%S')}.log"
 
 
-def start(models_dir: Path, port: int | None = None) -> tuple[subprocess.Popen[Any], Path]:
-    """Start the server on this run's weights; the caller stops it."""
+def start(models_dir: Path, port: int | None = None, owned: bool = False) -> tuple[subprocess.Popen[Any], Path]:
+    """Start the server on this run's weights; the caller stops it.
+
+    owned: a benchmark owns this server, so it joins the launcher's kill-on-close job and
+    cannot outlive the run that started it.
+    """
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     log_path = new_log_path()
     process = launch_util.launch_process(
@@ -86,6 +90,7 @@ def start(models_dir: Path, port: int | None = None) -> tuple[subprocess.Popen[A
         cwd=str(project_cfg.SCRIPTS_DIR),
         report_vram=True,
         log_file=str(log_path),
+        bind_job=owned,
     )
     if not ready(port):
         launch_util.kill_process_tree(process.pid)
