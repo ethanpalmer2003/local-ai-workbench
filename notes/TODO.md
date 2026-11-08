@@ -1,7 +1,7 @@
 # TODO
 
-- Pending work only. Entries do not authorize live tests, package changes, or long runs.
-- [Status/evidence](../scripts/tests/notes/STATUS.md); procedures stay with their owner guides.
+- Work that will happen: the decision is made and the owner is linked. Undecided choices: [OPEN-QUESTIONS](OPEN-QUESTIONS.md).
+- Entries do not authorize live tests, package changes or long runs. [Status/evidence](../scripts/tests/notes/STATUS.md); procedures stay with their owner guides.
 
 ## Voice and ASR
 
