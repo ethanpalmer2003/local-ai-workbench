@@ -9,7 +9,7 @@
 
 - Paired easy Pi task: Strata Swift and 27B both passed 8/8; 31.84/79.03-second timings had different token totals/prefill costs. No general ranking.
 - Four-client easy tasks tied supplied-test quality; observed fastest client varied by task. Historical harness output was superseded by the [current coding-agent benchmark](../../benchmarks/coding_agents/README.md) and retired to trash.
-- MTP depth 2 and ngram 24/48/64 have bounded short-task support. [Settings/evidence](../../config/llamacpp/SETTINGS.md).
+- MTP depth 2 and ngram 24/48/64 have bounded short-task support. [Settings/evidence](../../config/llamacpp/TUNING.md).
 
 ## Delivery and transport outcomes
 

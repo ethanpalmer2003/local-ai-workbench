@@ -10,6 +10,7 @@
 | AudioCpp native model/session options | [audiocpp/server.json](audiocpp/server.json) |
 | Framework update coverage | [framework_catalog.py](../download/frameworks/framework_catalog.py) |
 | ComfyUI paths/workflows/node | [comfyui/](comfyui/README.md) |
+| Device tuning decisions | `TUNING.md` per component: [comfyui](comfyui/TUNING.md), [sdcpp](sdcpp/TUNING.md), [llamacpp](llamacpp/TUNING.md), [strata](strata/TUNING.md) |
 
 - One editable owner per setting. Native config is read directly when supported; Python selects catalog IDs and runtime overrides.
 - Paths use `project_cfg.component(key)`; `_DIR` values are `Path`, converted at CLI/JSON boundaries. Component prefix first; service/client bindings use `_SERVICE`/`_CLIENT`.

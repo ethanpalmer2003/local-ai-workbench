@@ -11,8 +11,6 @@
 | VAE tiles 256 | 29.50 | 8.79 / 8.85 |
 | CPU weights / 8 GiB managed budget | 27.71 | 7.01 / 7.01 |
 
-- CPU text encoding exchanges VRAM for host RAM; smaller tiles add decoding time. Managed budgets can substantially increase host RAM.
-- Settings were screened independently; do not add savings or assume combinations were measured.
-- Default backend remains Vulkan; ROCm is a retained alternative. Current quantized model findings: [Q4 memory](Q4-MEMORY.md).
+- What these screens led to is owned by [TUNING](TUNING.md); current quantized model findings: [Q4 memory](Q4-MEMORY.md).
 - Rerun through `scripts.benchmarks.personal.sdcpp.sdcpp_memory_compare` only when requested, matching model/hashes/context and recording execution token.
 - Historical complete outputs remain under `tests/output/probes/sdcpp_memory_compare/`; source reorganization does not rewrite them.
