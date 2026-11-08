@@ -9,7 +9,7 @@
 - Use text-safe `[OK]`, `[WARN]`, `[FAIL]`, `->`; bound searches and report truncation.
 
 ## Clarify before acting
-- Ask at once when the request is ambiguous or assumes an invented detail; never guess intent to keep moving. Conciseness still wins.
+- Ask at once when the request is ambiguous or assumes an invented detail; never guess intent to keep moving.
 
 ## Work and permissions
 - Routine reads, Git status/diff/log, static checks and task-owned runs under five minutes are allowed.
