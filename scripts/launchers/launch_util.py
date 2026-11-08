@@ -18,7 +18,7 @@ import urllib.request
 from collections.abc import Callable, Mapping
 from ctypes import wintypes
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 from urllib.error import HTTPError, URLError
 
 from scripts.config import project_config as project_cfg
@@ -180,6 +180,15 @@ def prepare_service_port(port: int, title: str) -> None:
         raise RuntimeError(f"Could not clear service port {port}; cannot start {title}")
 
 
+def backend_for_port(port: int) -> str:
+    """Which backend answers on this port; KoboldCpp serves no /health, so a wrong guess reads as down."""
+    if port in (cfg.SDCPP_SERVICE.port, cfg.SDCPP_SERVICE.internal_port):
+        return "sdcpp"
+    if port in (cfg.KOBOLDCPP_SERVICE.streaming_ui_port, cast(int, cfg.KOBOLDCPP_KCPPS_ARGS["port"])):
+        return "koboldcpp"
+    return "llamacpp"
+
+
 def backend_running(port: int, timeout: float = 2.0, *, backend: str | None = None) -> bool:
     """
     - True if the backend's shared readiness route answers right now.
@@ -188,7 +197,7 @@ def backend_running(port: int, timeout: float = 2.0, *, backend: str | None = No
     - Session-locality check for llamacpp: an agent that's still talking while
       this returns False is NOT being served by the local llama-server
     """
-    selected = backend or ("sdcpp" if port in (cfg.SDCPP_SERVICE.port, cfg.SDCPP_SERVICE.internal_port) else "llamacpp")
+    selected = backend or backend_for_port(port)
     try:
         with urllib.request.urlopen(ready_url(selected, port), timeout=timeout):
             return True

@@ -19,6 +19,23 @@ from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.process_fixtures import exited_process, inspected_process, running_process
 
 
+class ReadinessRouteTests(unittest.TestCase):
+    def test_kobold_ports_are_probed_on_a_route_kobold_serves(self):
+        from scripts.launchers import launch_util
+        from scripts.launchers import launcher_config as cfg
+
+        self.assertEqual(launch_util.backend_for_port(cfg.KOBOLDCPP_KCPPS_ARGS["port"]), "koboldcpp")
+        self.assertEqual(launch_util.backend_for_port(cfg.KOBOLDCPP_SERVICE.streaming_ui_port), "koboldcpp")
+        self.assertEqual(launch_util.ready_url("koboldcpp", 5002), "http://127.0.0.1:5002/api/v1/model")
+
+    def test_other_ports_keep_the_llama_cpp_and_sd_cpp_routes(self):
+        from scripts.launchers import launch_util
+        from scripts.launchers import launcher_config as cfg
+
+        self.assertEqual(launch_util.backend_for_port(cfg.SDCPP_SERVICE.port), "sdcpp")
+        self.assertEqual(launch_util.backend_for_port(cfg.LLAMACPP_SERVICE.port), "llamacpp")
+
+
 class SharedRuntimeTests(unittest.TestCase):
     def test_python_redirector_resolves_only_its_owned_module_worker(self):
         child = inspected_process(pid=11, parent=10, command=["python", "-m", "owned.module"])
