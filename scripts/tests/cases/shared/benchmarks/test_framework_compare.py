@@ -46,6 +46,17 @@ def served(backend: str = "practice") -> compare.Served:
     )
 
 
+def _chat_result(backend: str, chunks: int) -> dict[str, object]:
+    """One measured chat leg, shaped as `_chat_leg` returns it."""
+    row = {"chunks": chunks, "first_token_seconds": 0.1, "chunks_per_second": 10.0}
+    return {
+        "backend": backend,
+        "startup_seconds": 1.0,
+        "models": {"chat": "m.gguf", "tts": "-", "asr": "-"},
+        "legs": {"chat": {"status": "measured", "model": "m.gguf", "requests": [row]}},
+    }
+
+
 class StreamChatTests(unittest.TestCase):
     def test_delta_parsing_skips_keepalives_and_the_terminator(self):
         self.assertIsNone(compare._delta_text(b""))
@@ -317,6 +328,39 @@ class SummaryTests(unittest.TestCase):
         ]
         self.assertIn("speech fr: the stacks produced different amounts of audio", compare.summarize(results))
 
+    def test_a_sentence_with_no_audio_is_shown_with_dashes_instead_of_crashing_the_table(self):
+        results = [
+            {
+                "backend": "kobold",
+                "models": {"chat": "-", "tts": "kokoro-kobold-q4", "asr": "-"},
+                "legs": {
+                    "tts": {
+                        "status": "measured",
+                        "rows": [
+                            {
+                                "language": "ja",
+                                "status": "measured",
+                                "audio_seconds": 0.0,
+                                "real_time_factor": None,
+                                "voice": "jf_alpha",
+                                "implausible": ["no audio"],
+                            }
+                        ],
+                    }
+                },
+            }
+        ]
+        text = compare.summarize(results)
+        self.assertIn("| kobold | kokoro-kobold-q4 | ja | jf_alpha | - [WARN] implausible | 0.00 |", text)
+
+    def test_chunk_counts_that_differ_between_stacks_are_named(self):
+        results = [_chat_result(backend, chunks) for backend, chunks in (("practice", 64), ("kobold", 15))]
+        self.assertIn("chunks per reply differ between stacks (practice 64, kobold 15)", compare.summarize(results))
+
+    def test_comparable_chunk_counts_need_no_note(self):
+        results = [_chat_result(backend, chunks) for backend, chunks in (("practice", 64), ("lemonade", 60))]
+        self.assertNotIn("chunks per reply differ", compare.summarize(results))
+
     def test_status_needs_at_least_one_measurement_per_selected_leg_set(self):
         options = compare.Options(legs=("chat", "tts", "asr"), tokens=8, requests_count=1, clips=1)
         nothing = [{"backend": "practice", "legs": {"chat": {"status": "unavailable"}}}]
@@ -380,7 +424,7 @@ class KoboldArmTests(unittest.TestCase):
                 self.assertEqual(served.details["port"], compare.cfg.KOBOLDCPP_KCPPS_ARGS["port"])
             self.assertEqual(served.asr_style, "kobold")
             self.assertEqual((served.chat, served.tts, served.asr), (served.chat, served.chat, served.chat))
-            self.assertEqual(served.chat_model, compare.KOBOLD_ARM_MODEL)
+            self.assertEqual(served.chat_model, compare.model_cfg.path(compare.KOBOLD_ARM_MODEL).stem)
             self.assertEqual(served.details["weights"], str(compare.model_cfg.path(compare.KOBOLD_ARM_MODEL)))
         stop.assert_called_once_with(process)
 

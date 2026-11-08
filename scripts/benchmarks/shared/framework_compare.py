@@ -331,7 +331,7 @@ def _serve_koboldcpp(weights: Path, run: RunPaths) -> Iterator[Served]:
                 chat=base,
                 tts=base,
                 asr=base,
-                chat_model=settings.model,
+                chat_model=model_cfg.path(settings.model).stem,
                 tts_model=cfg.KOKORO_TTS.koboldcpp_model.stem,
                 asr_model=Path(str(arguments["whispermodel"])).stem,
                 # - Kobold posts base64 audio to /api/extra/transcribe instead of multipart uploads
@@ -700,6 +700,11 @@ def _chat_summary(results: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def _number(value: float | None, places: int = 2) -> str:
+    """A measurement or a dash; an empty waveform has no rate to divide by."""
+    return "-" if value is None else f"{value:.{places}f}"
+
+
 def _tts_summary(results: list[dict[str, Any]]) -> list[str]:
     lines = ["| backend | model | language | voice | RTF | audio s |", "| --- | --- | --- | --- | ---: | ---: |"]
     for result in results:
@@ -716,7 +721,7 @@ def _tts_summary(results: list[dict[str, Any]]) -> list[str]:
             mark = " [WARN] implausible" if row.get("implausible") else ""
             lines.append(
                 f"| {result['backend']} | {result['models']['tts']} | {row['language']} | {row['voice']} | "
-                f"{row['real_time_factor']:.2f}{mark} | {row['audio_seconds']:.2f} |"
+                f"{_number(row['real_time_factor'])}{mark} | {_number(row['audio_seconds'])} |"
             )
     return lines
 
@@ -754,6 +759,22 @@ def _unavailable(results: list[dict[str, Any]]) -> list[str]:
                 continue
             notes.append(f"- {result['backend']} {name}: {leg.get('reason') or 'no measurement'}")
     return notes
+
+
+def _chunk_note(results: list[dict[str, Any]]) -> list[str]:
+    """A chunk is each server's own stream unit: unequal counts are not a speed difference."""
+    means = {}
+    for result in results:
+        rows = [row["chunks"] for row in (result["legs"].get("chat") or {}).get("requests") or [] if row["chunks"]]
+        if rows:
+            means[result["backend"]] = sum(rows) / len(rows)
+    if len(means) < 2 or min(means.values()) <= 0 or max(means.values()) < 2 * min(means.values()):
+        return []
+    detail = ", ".join(f"{backend} {value:.0f}" for backend, value in means.items())
+    return [
+        f"- chat: chunks per reply differ between stacks ({detail}); each server sets its own stream unit, "
+        "so read time to first token, not chunks/s"
+    ]
 
 
 def _script_notes(results: list[dict[str, Any]]) -> list[str]:
@@ -800,7 +821,13 @@ def summarize(results: list[dict[str, Any]]) -> str:
         ("## Recognition", _asr_summary(results)),
     ]
     body = "\n\n".join(f"{title}\n\n" + "\n".join(lines) for title, lines in sections)
-    notes = [*_unavailable(results), *_speech_notes(results), *_duration_notes(results), *_script_notes(results)]
+    notes = [
+        *_unavailable(results),
+        *_speech_notes(results),
+        *_duration_notes(results),
+        *_chunk_note(results),
+        *_script_notes(results),
+    ]
     return body + ("\n\n## Notes\n\n" + "\n".join(notes) if notes else "")
 
 
@@ -880,6 +907,7 @@ def main(argv: list[str] | None = None) -> int:
         "execution_context": context,
     }
     paths.write_report(report)
+    # - Write the report before rendering: a formatting defect must not discard a finished run
     table = summarize(results)
     (paths.artifacts / "summary.md").write_text(table + "\n", encoding="utf-8")
     print(table)
