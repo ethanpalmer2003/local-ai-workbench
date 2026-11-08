@@ -17,6 +17,7 @@ import time
 from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import asdict, dataclass, field, replace
+from functools import partial
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -55,7 +56,10 @@ TTS_TEXTS = (
     ("fr", "fr-fr", "ff_siwis", "Bonjour. Je voudrais un billet pour le centre-ville, s'il vous plaît."),
     ("ja", "ja", "jf_alpha", "おはようございます。市内中心部までの切符をお願いします。"),
 )
-BACKENDS = ("practice", "lemonade")
+# - "whisper" is the practice stack with its other installed recogniser, kept as a third arm so
+#   the recognition choice stays measured instead of being re-probed by hand
+BACKENDS = ("practice", "whisper", "lemonade")
+WHISPER_ENGINE = cfg.AsrStartupEngine.WHISPER_VULKAN
 LEGS = ("chat", "tts", "asr")
 # - Ports are taken from the OS per run: a stack left in TIME_WAIT must not fail the next run
 # - Lemonade names these by its own catalog: kokoro-v1 for speech, whisper.cpp models for recognition
@@ -149,12 +153,14 @@ def _await_gateway(base: str, errors: list[str]) -> None:
 
 
 @contextmanager
-def _serve_practice(weights: Path, run: RunPaths) -> Iterator[Served]:
+def _serve_practice(
+    weights: Path, run: RunPaths, recogniser_engine: cfg.AsrStartupEngine | None = None
+) -> Iterator[Served]:
     """llama.cpp chat plus the AudioCpp speech/gateway pair of the language profile."""
     errors: list[str] = []
     box: dict[str, Any] = {}
     chat = speech = recogniser = thread = None
-    engine = cfg.ASR_SERVICE.engine
+    engine = recogniser_engine or cfg.ASR_SERVICE.engine
     chat_port, speech_port, gateway_port = _free_port(), _free_port(), _free_port()
     command = _chat_command(weights, chat_port)
     with (
@@ -214,18 +220,19 @@ def _serve_practice(weights: Path, run: RunPaths) -> Iterator[Served]:
                 _await_exit(chat.pid)
 
 
-def _recogniser_path() -> Path:
-    """The file behind the profile's recogniser, so its identity is recorded with the run."""
-    if cfg.ASR_SERVICE.engine is cfg.AsrStartupEngine.QWEN3_ASR:
+def _recogniser_path(engine: cfg.AsrStartupEngine | None = None) -> Path:
+    """The file behind a recogniser, so its identity is recorded with the run."""
+    engine = engine or cfg.ASR_SERVICE.engine
+    if engine is cfg.AsrStartupEngine.QWEN3_ASR:
         return Path(cfg.QWEN3_ASR.model)
+    if engine is cfg.AsrStartupEngine.WHISPER_VULKAN:
+        return Path(cfg.WHISPERCPP_ASR.model)
     return Path(str(audiocpp_asr.speech_config(0)["models"][0]["path"]))
 
 
 def _recogniser_model(engine: cfg.AsrStartupEngine, models: list[dict[str, Any]]) -> str:
     """Readable name for the recogniser that answered, not its internal request id."""
-    if engine is cfg.AsrStartupEngine.QWEN3_ASR:
-        return Path(cfg.QWEN3_ASR.model).stem
-    return Path(str(models[0]["path"])).stem
+    return _recogniser_path(engine).stem
 
 
 def _lemonade_catalog(base: str) -> dict[str, Any]:
@@ -288,7 +295,11 @@ def _serve_lemonade(weights: Path, run: RunPaths) -> Iterator[Served]:
 
 
 def serve(backend: str, weights: Path, run: RunPaths) -> AbstractContextManager[Served]:
-    handlers = {"practice": _serve_practice, "lemonade": _serve_lemonade}
+    handlers = {
+        "practice": _serve_practice,
+        "lemonade": _serve_lemonade,
+        "whisper": partial(_serve_practice, recogniser_engine=WHISPER_ENGINE),
+    }
     return handlers[backend](weights, run)
 
 
@@ -541,16 +552,19 @@ def measure(
 ) -> dict[str, Any]:
     """Start one stack, exercise each selected leg, then stop it again."""
     started = time.perf_counter()
+    # - The whisper arm is the practice stack's second recogniser, so it is not a second stack:
+    #   chat and speech are measured once, under the profile default
+    legs = ("asr",) if backend == "whisper" else options.legs
     result: dict[str, Any] = {"backend": backend, "legs": {}}
     with serve(backend, weights, run) as served:
         result["startup_seconds"] = time.perf_counter() - started
         result["models"] = {"chat": served.chat_model, "tts": served.tts_model, "asr": served.asr_model}
         result["details"] = served.details
-        if "chat" in options.legs:
+        if "chat" in legs:
             result["legs"]["chat"] = _chat_leg(served, options)
-        if "tts" in options.legs:
+        if "tts" in legs:
             result["legs"]["tts"] = _tts_leg(served, run)
-        if "asr" in options.legs:
+        if "asr" in legs:
             result["legs"]["asr"] = _asr_leg(served, clips)
     return result
 
@@ -567,7 +581,9 @@ def _chat_summary(results: list[dict[str, Any]]) -> list[str]:
     lines = ["| backend | model | startup s | TTFT s | chunks/s |", "| --- | --- | ---: | ---: | ---: |"]
     for result in results:
         leg = result["legs"].get("chat")
-        if not leg or leg["status"] != "measured":
+        if not leg:
+            continue
+        if leg["status"] != "measured":
             lines.append(f"| {result['backend']} | {result['models']['chat']} | n/a | n/a | n/a |")
             continue
         rows = [row for row in leg["requests"] if row["chunks"]]
@@ -591,7 +607,9 @@ def _chat_summary(results: list[dict[str, Any]]) -> list[str]:
 def _tts_summary(results: list[dict[str, Any]]) -> list[str]:
     lines = ["| backend | model | language | voice | RTF | audio s |", "| --- | --- | --- | --- | ---: | ---: |"]
     for result in results:
-        leg = result["legs"].get("tts") or {}
+        leg = result["legs"].get("tts")
+        if not leg:
+            continue
         if leg.get("status") != "measured":
             lines.append(f"| {result['backend']} | {result['models']['tts']} | unavailable | - | - | - |")
             continue
@@ -609,7 +627,9 @@ def _tts_summary(results: list[dict[str, Any]]) -> list[str]:
 def _asr_summary(results: list[dict[str, Any]]) -> list[str]:
     lines = ["| backend | model | language | clips | WER | CER |", "| --- | --- | --- | ---: | ---: | ---: |"]
     for result in results:
-        leg = result["legs"].get("asr") or {}
+        leg = result["legs"].get("asr")
+        if not leg:
+            continue
         if leg.get("status") != "measured":
             lines.append(f"| {result['backend']} | {result['models']['asr']} | unavailable | 0 | - | - |")
             continue
@@ -681,6 +701,7 @@ def _source_models(weights: Path) -> list[dict[str, Any]]:
         provenance.file_identity("chat", weights),
         provenance.file_identity("practice tts", model_cfg.path(cfg.LANGUAGE_PRACTICE.tts_model)),
         provenance.file_identity("practice asr", _recogniser_path()),
+        provenance.file_identity("practice asr alternate", _recogniser_path(WHISPER_ENGINE)),
         provenance.file_identity("lemonade server", cfg.LEMONADE_SERVICE.exe),
     ]
 

@@ -2,6 +2,7 @@
 
 import tempfile
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -257,6 +258,37 @@ class SummaryTests(unittest.TestCase):
         self.assertEqual(compare._status(nothing, options), "failed")
         measured = [{"backend": "practice", "legs": {"chat": {"status": "measured"}}}]
         self.assertEqual(compare._status(measured, options), "passed")
+
+
+class WhisperArmTests(unittest.TestCase):
+    @contextmanager
+    def stub(self, backend):
+        yield served(backend)
+
+    def test_the_whisper_arm_measures_recognition_only(self):
+        options = compare.Options(legs=("chat", "tts", "asr"), tokens=8, requests_count=1, clips=1)
+        asr = {"status": "measured", "rows": [], "languages": []}
+        with (
+            patch.object(compare, "serve", return_value=self.stub("whisper")),
+            patch.object(compare, "_asr_leg", return_value=asr),
+            patch.object(compare, "_chat_leg") as chat,
+            patch.object(compare, "_tts_leg") as tts,
+        ):
+            result = compare.measure("whisper", Path("m.gguf"), MagicMock(), options, [])
+        self.assertEqual(set(result["legs"]), {"asr"})
+        chat.assert_not_called()
+        tts.assert_not_called()
+
+    def test_the_whisper_arm_names_its_own_weights(self):
+        self.assertEqual(
+            compare._recogniser_model(compare.WHISPER_ENGINE, []), Path(str(compare.cfg.WHISPERCPP_ASR.model)).stem
+        )
+        self.assertEqual(compare._recogniser_path(compare.WHISPER_ENGINE), Path(compare.cfg.WHISPERCPP_ASR.model))
+
+    def test_a_recognition_only_arm_is_absent_from_the_chat_and_speech_tables(self):
+        results = [{"backend": "whisper", "models": {"chat": "-", "tts": "-", "asr": "whisper"}, "legs": {}}]
+        text = compare.summarize(results)
+        self.assertNotIn("| whisper |", text)
 
 
 class LemonadeModelTests(unittest.TestCase):

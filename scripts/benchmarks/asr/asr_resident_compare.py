@@ -190,7 +190,7 @@ def _parser() -> argparse.ArgumentParser:
         "--language", help="Explicit corpus language for every engine; omit to retain manifest language"
     )
     parser.add_argument("--samples", type=int, choices=range(1, 5), default=2)
-    parser.add_argument("--clips", type=int, choices=range(1, 5), default=2)
+    parser.add_argument("--clips", type=int, choices=range(1, 21), default=2)
     parser.add_argument("--corpus", type=Path)
     parser.add_argument("--port", type=int, default=18941)
     parser.add_argument("--budget", type=int, choices=range(1, 241), default=180)
