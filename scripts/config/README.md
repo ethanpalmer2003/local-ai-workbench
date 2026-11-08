@@ -19,7 +19,6 @@
 ```powershell
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync_configs
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync_configs --only comfyui --apply
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync_configs --only commandcode --apply
 ```
 
 - Preview is read-only. Apply manages owned ComfyUI copies, preserving replaced files in trash; it does not install packages or restart servers.

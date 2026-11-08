@@ -117,12 +117,6 @@ class LauncherBehaviors(unittest.TestCase):
                 "cmdline": [r"C:\Program Files\nodejs\node.exe", root + r"\frameworks\coding_agents\pi\dist\cli.js"],
             },
             {
-                "name": "Command Code.exe",
-                "exe": root + r"\frameworks\coding_agents\Command Code\Command Code.exe",
-                "cwd": root,
-                "cmdline": [root + r"\frameworks\coding_agents\Command Code\Command Code.exe"],
-            },
-            {
                 "name": "llama-server.exe",
                 "exe": root + r"\frameworks\llamacpp\llama-server.exe",
                 "cwd": r"C:\Windows\System32",

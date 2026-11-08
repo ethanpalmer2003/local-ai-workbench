@@ -77,15 +77,6 @@ TOOLS = [
     ),
     *benchmark_tools(),
     *pi_tools(),
-    ToolSpec("coding_agents/commandcode", "", ReleaseType.NPM, package="command-code"),
-    ToolSpec(
-        "coding_agents/commandcode-desktop",
-        "Command Code.exe",
-        ReleaseType.DESKTOP,
-        repo="CommandCodeAI/gui",
-        asset_pattern=r"^CommandCode-.*-x64-setup\.exe$",
-        group="coding_agents/commandcode",
-    ),
     # - Benchmark and launcher clients stay tracked: they are exercised on this host,
     #   so a stale install shows up as a failed task rather than an update notice.
     ToolSpec("coding_agents/littlecoder", "", ReleaseType.NPM, package="little-coder"),

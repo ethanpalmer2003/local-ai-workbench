@@ -153,8 +153,6 @@ COMPONENTS = {
         "llamacpp",
         "koboldcpp",
         "sdcpp",
-        "coding_agents/commandcode",
-        "coding_agents/commandcode-desktop",
         "coding_agents/pi",
         "coding_agents/deepseek",
         "coding_agents/ohmypi",
@@ -186,9 +184,6 @@ COMPONENTS.update(
         "asr/koboldcpp": ComponentPaths("asr/koboldcpp", framework_override="model_servers/koboldcpp"),
         "asr/audiocpp": ComponentPaths("asr/audiocpp", framework_override="audiocpp"),
         "asr/sherpa-onnx": ComponentPaths("asr/sherpa-onnx", framework_override="tts/sherpa-onnx"),
-        "coding_agents/commandcode-desktop": ComponentPaths(
-            "coding_agents/commandcode-desktop", framework_override="coding_agents/Command Code"
-        ),
         "comfyui": ComponentPaths("comfyui", models_override="videogen"),
         # - benchmark corpora are downloaded reference audio, not model weights
         "benchmarks": ComponentPaths("benchmarks", models_override="benchmarks"),

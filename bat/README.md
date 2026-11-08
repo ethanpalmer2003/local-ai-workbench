@@ -7,7 +7,6 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 | Batch | Purpose |
 | --- | --- |
 | [update_frameworks.bat](update_frameworks.bat) | Check/apply framework updates (`--check-only`, `--only KEY`, `--category`). |
-| [resume_command_code_session.bat](resume_command_code_session.bat) | Resume the latest Command Code session with the framework-local CLI (`frameworks/coding_agents/commandcode`). |
 | [manage_kill_ai_services.bat](manage_kill_ai_services.bat) | Stop C:\AI-owned listeners; `--non-agents` keeps coding agents, llama.cpp and Strata running. |
 | [launch_llamacpp_pi_agent.bat](launch_llamacpp_pi_agent.bat) | llama.cpp coding agent, default Pi; `--client little-coder`, `ohmypi`, `nanocoder`, or `none`. |
 | [launch_strata_pi_agent.bat](launch_strata_pi_agent.bat) | Strata coding agent with Pi. |
