@@ -10,6 +10,24 @@ from scripts.launchers.lemonade_server import lemonade
 from scripts.tests.shared.paths import CasePaths
 
 
+class LemonadeOwnedStartTests(unittest.TestCase):
+    def test_an_owned_start_joins_the_launch_job_and_a_plain_start_does_not(self):
+        from unittest.mock import MagicMock, patch
+
+        from scripts.launchers.lemonade_server import lemonade
+
+        process = MagicMock(pid=99)
+        with (
+            patch.object(lemonade.launch_util, "launch_process", return_value=process) as launched,
+            patch.object(lemonade, "ready", return_value=True),
+            patch.object(lemonade, "new_log_path", return_value=MagicMock()),
+        ):
+            lemonade.start(MagicMock(), 1234, owned=True)
+            self.assertTrue(launched.call_args.kwargs["bind_job"])
+            lemonade.start(MagicMock(), 1234)
+            self.assertFalse(launched.call_args.kwargs["bind_job"])
+
+
 class LemonadeLauncherTests(unittest.TestCase):
     def __init__(self, methodName: str = "runTest") -> None:
         super().__init__(methodName)
