@@ -2,7 +2,7 @@
   "default": "<voice-id>",
   "voices": {
     "<voice-id>": {
-      "category": "voice",
+      "category": "<category>",
       "url": "https://example.invalid/voice-asset.zip",
       "count": 1,
       "selection": "longestText",
