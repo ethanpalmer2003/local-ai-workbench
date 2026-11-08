@@ -15,8 +15,58 @@ from scripts.launchers.shared.native_abi.cabi import structures
 from scripts.launchers.shared.native_abi.native_library import NativeLibrary
 from scripts.launchers.shared.services import native, process
 from scripts.launchers.shared.transport.multipart import audio_upload
+from scripts.tests.shared import process_fixtures
 from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.process_fixtures import exited_process, inspected_process, running_process
+
+
+class SweepMessageTests(unittest.TestCase):
+    def _sweep(self, descendant):
+        from unittest.mock import patch
+
+        from scripts.launchers import launch_util
+
+        with (
+            patch.object(launch_util, "listening_process_ids", return_value=[77]),
+            patch.object(launch_util, "process_start_time", return_value=100.0),
+            patch.object(launch_util, "kill_process_tree"),
+            patch.object(launch_util, "is_descendant", return_value=descendant),
+            patch("builtins.print") as printed,
+            patch.object(launch_util.sys, "platform", "win32"),
+        ):
+            launch_util.sweep_escaped_children(5002, 99.0, 4242)
+        return printed.call_args.args[0]
+
+    def test_a_child_the_tree_kill_missed_is_reported_as_stopped_not_escaped(self):
+        self.assertIn("stopped remaining child", self._sweep(True))
+
+    def test_a_pid_outside_the_tree_is_still_reported_as_escaped(self):
+        self.assertIn("swept escaped child", self._sweep(False))
+
+
+class OwnedLaunchTests(unittest.TestCase):
+    def _launch(self, bind_job):
+        from unittest.mock import patch
+
+        from scripts.launchers import launch_util
+
+        process = process_fixtures.fake_process(pid=4242)
+        with (
+            patch.object(launch_util.subprocess, "Popen", return_value=process),
+            patch.object(launch_util, "_clear_requested_ports"),
+            patch.object(launch_util, "get_gpu_memory_snapshot"),
+            patch.object(launch_util, "_child_environment", return_value={}),
+            patch.object(launch_util, "assign_process_to_job") as assign,
+            patch.object(launch_util, "prune_stale_temp"),
+        ):
+            launch_util.launch_process(["exe"], "title", bind_job=bind_job)
+        return assign
+
+    def test_an_owned_launch_joins_the_kill_on_close_job(self):
+        self.assertEqual(self._launch(True).call_args.args, (4242,))
+
+    def test_a_user_launched_service_is_left_out_of_the_job(self):
+        self.assertFalse(self._launch(False).called)
 
 
 class ReadinessRouteTests(unittest.TestCase):
