@@ -54,6 +54,12 @@ class CorpusManifestTests(unittest.TestCase):
             with patch.object(fleurs, "manifest_path", return_value=path), self.assertRaises(ValueError):
                 fleurs.spec()
 
+    def test_the_manifest_states_the_speaking_rate_each_script_must_fall_inside(self):
+        bands = language_corpus.speech_rate()
+        self.assertEqual(set(bands), {"latin", "cjk"})
+        self.assertLess(bands["latin"][0], bands["latin"][1])
+        self.assertLess(bands["cjk"][0], bands["cjk"][1])
+
     def test_identity_carries_the_revision_and_manifest_hash_the_report_records(self):
         identity = language_corpus.identity()
         self.assertEqual(identity["corpus"], "google/fleurs")
