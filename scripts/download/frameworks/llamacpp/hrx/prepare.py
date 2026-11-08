@@ -56,7 +56,9 @@ def main() -> None:
         checkpoint = args.checkpoint.resolve()
     else:
         marker = (
-            CHECKPOINT_POINTER if CHECKPOINT_POINTER.exists() else cfg.LLAMACPP_BUILDS["hrx"].bin_dir / "checkpoint.json"
+            CHECKPOINT_POINTER
+            if CHECKPOINT_POINTER.exists()
+            else cfg.LLAMACPP_BUILDS["hrx"].bin_dir / "checkpoint.json"
         )
         checkpoint = Path(json.loads(marker.read_text(encoding="utf-8"))["checkpoint"])
     install_checkpoint(checkpoint)

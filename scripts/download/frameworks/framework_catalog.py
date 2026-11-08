@@ -1,19 +1,20 @@
 """Compose the llama.cpp, speech and other framework catalogs."""
 
 from dataclasses import replace
-from scripts.download.frameworks.asr import updates as asr_updates
-from scripts.download.frameworks.update_types import (
-    ReleaseType as ReleaseType,
-    ToolSpec as ToolSpec,
-    update_kind as update_kind,
-)
-from scripts.download.frameworks.llamacpp import updates as llamacpp_updates
-from scripts.download.frameworks.audiocpp import updates as audiocpp_updates
-from scripts.download.frameworks.tts import updates as tts_updates
-from scripts.download.frameworks.shared import other_updates
+
 from scripts.download.frameworks import update_shared
-from scripts.download.frameworks.llamacpp.updates import hrx_tools as hrx_tools, rdna_tools as rdna_tools
-from scripts.download.frameworks.shared.other_updates import pi_tools as pi_tools, benchmark_tools as benchmark_tools
+from scripts.download.frameworks.asr import updates as asr_updates
+from scripts.download.frameworks.audiocpp import updates as audiocpp_updates
+from scripts.download.frameworks.llamacpp import updates as llamacpp_updates
+from scripts.download.frameworks.llamacpp.updates import hrx_tools as hrx_tools
+from scripts.download.frameworks.llamacpp.updates import rdna_tools as rdna_tools
+from scripts.download.frameworks.shared import other_updates
+from scripts.download.frameworks.shared.other_updates import benchmark_tools as benchmark_tools
+from scripts.download.frameworks.shared.other_updates import pi_tools as pi_tools
+from scripts.download.frameworks.tts import updates as tts_updates
+from scripts.download.frameworks.update_types import ReleaseType as ReleaseType
+from scripts.download.frameworks.update_types import ToolSpec as ToolSpec
+from scripts.download.frameworks.update_types import update_kind as update_kind
 
 CATEGORIES = dict(update_shared.CATEGORY_HEADINGS)
 CATALOGS = {

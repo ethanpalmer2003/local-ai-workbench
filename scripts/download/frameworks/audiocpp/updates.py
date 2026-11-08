@@ -127,56 +127,68 @@ def ensure_audiocpp_not_running(dest_dir: Path) -> None:
     shared.stop_installation_processes(dest_dir)
 
 
-def package_audiocpp_hip(source_dir: Path, rocm_path: Path, staged: Path, manifest: dict[str, str]) -> None:
-    import fnmatch
+HIP_EXECUTABLES = ("audiocpp_server.exe", "audiocpp_cli.exe")
+HIP_DLL_PATTERNS = (
+    "amdhip64*.dll",
+    "amd_comgr*.dll",
+    "hipblas.dll",
+    "libhipblas.dll",
+    "hipblaslt.dll",
+    "libhipblaslt.dll",
+    "rocblas.dll",
+)
+HIP_DLL_GROUPS = (
+    ("amdhip64",),
+    ("amd_comgr",),
+    ("hipblas.dll", "libhipblas.dll"),
+    ("hipblaslt.dll", "libhipblaslt.dll"),
+    ("rocblas.dll",),
+)
+HIP_KERNEL_FOLDERS = ("rocblas", "hipblaslt")
 
-    build_bin = source_dir / "build/audiocpp-rocm-therock-10.2-hip-7.17-gfx1101/bin"
-    for exe in ("audiocpp_server.exe", "audiocpp_cli.exe"):
+
+def _copy_executables(build_bin: Path, staged: Path) -> None:
+    for exe in HIP_EXECUTABLES:
         source_exe = build_bin / exe
         if not source_exe.is_file():
             raise shared.UpdateError(f"HIP build did not produce {source_exe}")
         shutil.copy2(source_exe, staged / exe)
-    runtime_bin = rocm_path / "bin"
-    patterns = (
-        "amdhip64*.dll",
-        "amd_comgr*.dll",
-        "hipblas.dll",
-        "libhipblas.dll",
-        "hipblaslt.dll",
-        "libhipblaslt.dll",
-        "rocblas.dll",
-    )
-    copied_names: set[str] = set()
-    for pattern in patterns:
+
+
+def _copy_runtime_dlls(runtime_bin: Path, staged: Path) -> set[str]:
+    import fnmatch
+
+    copied: set[str] = set()
+    for pattern in HIP_DLL_PATTERNS:
         matches = sorted(
             (path for path in runtime_bin.rglob("*.dll") if fnmatch.fnmatch(path.name.lower(), pattern.lower())),
             key=lambda path: (len(path.parts), str(path).lower()),
         )
-        if not matches:
-            continue
-        source_dll = matches[0]
-        if source_dll.name.lower() not in copied_names:
-            shutil.copy2(source_dll, staged / source_dll.name)
-            copied_names.add(source_dll.name.lower())
-    required_groups = (
-        ("amdhip64",),
-        ("amd_comgr",),
-        ("hipblas.dll", "libhipblas.dll"),
-        ("hipblaslt.dll", "libhipblaslt.dll"),
-        ("rocblas.dll",),
-    )
-    for group in required_groups:
+        if matches and matches[0].name.lower() not in copied:
+            shutil.copy2(matches[0], staged / matches[0].name)
+            copied.add(matches[0].name.lower())
+    return copied
+
+
+def _require_runtime_dlls(copied: set[str]) -> None:
+    for group in HIP_DLL_GROUPS:
         if not any(
             filename.startswith(name) if name.startswith("amd") else filename == name
-            for filename in copied_names
+            for filename in copied
             for name in group
         ):
             raise shared.UpdateError(f"ROCm package is missing a required runtime DLL: {' or '.join(group)}")
-    for folder in ("rocblas", "hipblaslt"):
+
+
+def _copy_kernel_folders(runtime_bin: Path, staged: Path) -> None:
+    for folder in HIP_KERNEL_FOLDERS:
         source_folder = runtime_bin / folder
         if not source_folder.is_dir():
             raise shared.UpdateError(f"ROCm package is missing its {folder} kernel directory")
         shutil.copytree(source_folder, staged / folder)
+
+
+def _copy_crt_libraries(staged: Path) -> None:
     previous_hip = project_cfg.AUDIOCPP_ROCM_LEGACY_DIR
     if not previous_hip.is_dir():
         previous_hip = project_cfg.FRAMEWORKS_DIR / "audiocpp"
@@ -184,6 +196,15 @@ def package_audiocpp_hip(source_dir: Path, rocm_path: Path, staged: Path, manife
         crt = previous_hip / name
         if crt.is_file():
             shutil.copy2(crt, staged / name)
+
+
+def package_audiocpp_hip(source_dir: Path, rocm_path: Path, staged: Path, manifest: dict[str, str]) -> None:
+    build_bin = source_dir / "build/audiocpp-rocm-therock-10.2-hip-7.17-gfx1101/bin"
+    runtime_bin = rocm_path / "bin"
+    _copy_executables(build_bin, staged)
+    _require_runtime_dlls(_copy_runtime_dlls(runtime_bin, staged))
+    _copy_kernel_folders(runtime_bin, staged)
+    _copy_crt_libraries(staged)
     (staged / "README-HIP.txt").write_text(
         f"audio.cpp Windows HIP build\nUpstream commit: {manifest['source_commit']}\nROCm: {manifest['rocm_version']}\nGPU targets: {manifest['gpu_targets']}\n",
         encoding="utf-8",
@@ -212,6 +233,29 @@ def install_audiocpp_hip(staged: Path, dest_dir: Path) -> None:
         raise
 
 
+def _require_clean_source(source_dir: Path) -> None:
+    if not source_dir.exists():
+        return
+    command = ["git", "-c", f"safe.directory={source_dir.as_posix()}", "-C", str(source_dir)]
+    dirty = subprocess.run([*command, "status", "--porcelain"], capture_output=True, text=True, check=True)
+    if dirty.stdout.strip():
+        raise shared.UpdateError(f"AudioCpp source checkout has local changes; review it before building: {source_dir}")
+
+
+def _resolve_commit(
+    tool: cfg.ToolSpec, source_tool: cfg.ToolSpec, source_dir: Path, latest: str, check_only: bool
+) -> str:
+    if check_only:
+        shared.process_source(source_tool, source_dir, True)
+        return latest
+    commit = shared.process_source(source_tool, source_dir, False)
+    if commit != latest:
+        raise shared.UpdateError(
+            "AudioCpp checkout did not land on the latest upstream commit; check for local commits or a concurrent upstream update before building."
+        )
+    return commit
+
+
 def process_audiocpp_hip(tool: cfg.ToolSpec, dest_dir: Path, tmp_dir: Path, check_only: bool) -> bool:
     if not tool.repo or not tool.source_checkout or (not tool.gpu_targets):
         raise shared.UpdateError("AudioCpp HIP build entry is missing its source or GPU target configuration")
@@ -219,23 +263,9 @@ def process_audiocpp_hip(tool: cfg.ToolSpec, dest_dir: Path, tmp_dir: Path, chec
     source_tool = cfg.ToolSpec(
         name=tool.name, exe="", release_type=cfg.ReleaseType.SOURCE, repo=tool.repo, branch=tool.branch
     )
-    if source_dir.exists():
-        command = ["git", "-c", f"safe.directory={source_dir.as_posix()}", "-C", str(source_dir)]
-        dirty = subprocess.run([*command, "status", "--porcelain"], capture_output=True, text=True, check=True)
-        if dirty.stdout.strip():
-            raise shared.UpdateError(
-                f"AudioCpp source checkout has local changes; review it before building: {source_dir}"
-            )
+    _require_clean_source(source_dir)
     latest_commit = shared.github.get_json(f"{shared.github.API}/repos/{tool.repo}/commits/{tool.branch}")["sha"]
-    if check_only:
-        commit = latest_commit
-        shared.process_source(source_tool, source_dir, True)
-    else:
-        commit = shared.process_source(source_tool, source_dir, False)
-        if commit != latest_commit:
-            raise shared.UpdateError(
-                "AudioCpp checkout did not land on the latest upstream commit; check for local commits or a concurrent upstream update before building."
-            )
+    commit = _resolve_commit(tool, source_tool, source_dir, latest_commit, check_only)
     rocm_path = find_audiocpp_rocm_path()
     rocm_version = audiocpp_rocm_version(rocm_path)
     manifest = {

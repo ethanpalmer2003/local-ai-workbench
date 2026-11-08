@@ -54,8 +54,12 @@ TOOLS = [
         asset_pattern=r"^parakeet-v.*-bin-win-cpu-x64\.zip$",
     ),
     ToolSpec(
-        "asr/parakeetcpp/cpu-stream", "parakeet.dll", ReleaseType.MANUAL,
-        repo="mudler/parakeet.cpp", source_checkout="asr/parakeetcpp/additions", in_use=False,
+        "asr/parakeetcpp/cpu-stream",
+        "parakeet.dll",
+        ReleaseType.MANUAL,
+        repo="mudler/parakeet.cpp",
+        source_checkout="asr/parakeetcpp/additions",
+        in_use=False,
     ),  # Pinned optional C API build; routine updates must not rebuild it.
     ToolSpec(
         "asr/whispercpp/vulkan",
