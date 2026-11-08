@@ -137,7 +137,7 @@ def sync_comfyui(apply: bool = False) -> list[Path]:
 
 def sync_commandcode(apply: bool = False) -> list[Path]:
     """Copy the private Command Code settings and taste profiles back into the working tree."""
-    source = inputs.input_dir() / "commandcode"
+    source = inputs.input_dir() / ".commandcode"
     target = project_cfg.BASE_DIR / ".commandcode"
     if not source.is_dir():
         raise FileNotFoundError(f"Private Command Code folder missing: {source}")
@@ -171,10 +171,10 @@ def main(argv: list[str] | None = None) -> None:
     if args.only in (None, "comfyui"):
         sync_comfyui(args.apply)
     if args.only in (None, "commandcode"):
-        if (inputs.input_dir() / "commandcode").is_dir():
+        if (inputs.input_dir() / ".commandcode").is_dir():
             sync_commandcode(args.apply)
         else:
-            print("[INFO] Command Code: no private folder in the overlay; the local .commandcode stays as is.")
+            print("[INFO] Command Code: no .commandcode folder in the overlay; the local one stays as is.")
 
 
 if __name__ == "__main__":

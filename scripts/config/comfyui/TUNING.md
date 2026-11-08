@@ -14,8 +14,7 @@ cache off, flash-attention Triton autotune on, Triton backend off, dynamic VRAM 
 
 ## What the screens measured
 
-- Screen at square-equivalent 480, then confirm at 640. Prior scaling found 1024/256 spatial tiling
-  raised total time at 640 by 84.6%, so a small-resolution gain did not scale.
+- Screen at square-equivalent 480, then confirm at 640: a low-resolution gain has not survived the 640 check. The number behind that is owned by the [benchmark note](../../benchmarks/personal/comfyui/README.md), which has no dated report linked yet.
 - Record decode and total time separately; sampled VRAM is a lower bound, and prompt-cache warmth and
   GPU-monitor overhead are separate factors.
 
