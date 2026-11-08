@@ -133,6 +133,49 @@ class SpeechLegTests(unittest.TestCase):
         self.assertIn("no kokoro", leg["reason"])
 
 
+class SpeechPlausibilityTests(unittest.TestCase):
+    def test_a_speakable_sentence_has_no_issue(self):
+        self.assertEqual(compare._speech_issues("en", 68, 3.8, 0.05), [])
+        self.assertEqual(compare._speech_issues("ja", 30, 5.0, 0.05), [])
+
+    def test_near_silence_is_named(self):
+        self.assertIn("near-silent", compare._speech_issues("fr", 74, 4.1, 0.0)[0])
+
+    def test_a_sentence_that_is_far_too_short_is_named_as_too_fast(self):
+        issues = compare._speech_issues("fr", 74, 0.50, 0.05)
+        self.assertTrue(any("too fast" in issue for issue in issues))
+
+    def test_a_sentence_that_drags_is_named_as_too_slow(self):
+        issues = compare._speech_issues("ja", 30, 13.25, 0.05)
+        self.assertTrue(any("too slow" in issue for issue in issues))
+
+    def test_broken_speech_appears_in_the_notes_instead_of_ranking(self):
+        results = [
+            {
+                "backend": "lemonade",
+                "models": {"chat": "-", "tts": "kokoro-v1", "asr": "-"},
+                "legs": {
+                    "tts": {
+                        "status": "measured",
+                        "rows": [
+                            {
+                                "language": "fr",
+                                "status": "measured",
+                                "implausible": ["near-silent (rms 0.000)"],
+                                "voice": "ff_siwis",
+                                "real_time_factor": 0.6,
+                                "audio_seconds": 0.5,
+                            }
+                        ],
+                    }
+                },
+            }
+        ]
+        text = compare.summarize(results)
+        self.assertIn("[WARN] implausible", text)
+        self.assertIn("- speech fr (lemonade): near-silent", text)
+
+
 class RecognitionLegTests(unittest.TestCase):
     def test_transcription_scores_word_and_character_errors_against_the_reference(self):
         clip = {"id": "en-0", "language": "en", "file": __file__, "reference": "one two three", "duration_seconds": 2.0}
