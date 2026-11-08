@@ -36,6 +36,9 @@ TEXT_SUFFIXES = {
     ".toml",
     ".ps1",
     ".cfg",
+    ".csv",
+    ".html",
+    ".css",
 }
 DOC_SUFFIXES = {".md"}
 CONFIG_PREFIX = "scripts/config/"

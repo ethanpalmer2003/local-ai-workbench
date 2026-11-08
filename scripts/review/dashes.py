@@ -31,6 +31,9 @@ TEXT_SUFFIXES = {
     ".toml",
     ".ps1",
     ".cfg",
+    ".csv",
+    ".html",
+    ".css",
 }
 
 

@@ -62,6 +62,8 @@ class SuffixTests(unittest.TestCase):
         self.assertTrue(dashes.is_text("README.md"))
         self.assertTrue(dashes.is_text("scripts/launchers/launcher_config.py"))
         self.assertTrue(dashes.is_text("scripts/config/benchmarks/language_corpus.json"))
+        self.assertTrue(dashes.is_text("scripts/tests/ui/speech.html"))
+        self.assertTrue(dashes.is_text("scripts/tests/notes/asr/leaderboards-2026-10-29/table-15.csv"))
         self.assertFalse(dashes.is_text("data/huggingface/models/llms/character_models/x.gguf"))
         self.assertFalse(dashes.is_text("frameworks/llamacpp/llama-server.exe"))
 
