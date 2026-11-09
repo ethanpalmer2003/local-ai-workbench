@@ -72,8 +72,7 @@ class RoleTests(unittest.TestCase):
             "notes/reviews/STRUCTURE-REVIEW.md": "review record",
             "notes/ONBOARDING.md": "note topic",
             "scripts/tests/notes/STATUS.md": "test note",
-            "scripts/review/COMPLEXITY-DEBT.md": "generated report",
-            "scripts/config/comfyui/TUNING.md": "tuning",
+            "scripts/config/comfyui/TUNING.md": "component guide",
             "scripts/config/comfyui/README.md": "hub",
             "scripts/config/llamacpp/HRX.md": "component guide",
         }

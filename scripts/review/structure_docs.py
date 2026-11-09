@@ -491,8 +491,6 @@ ROLE_RULES = (
     ("review record", r"notes/reviews/.*\.md"),
     ("note topic", r"notes/.*\.md"),
     ("test note", r"scripts/tests/notes/.*\.md"),
-    ("generated report", r"scripts/review/COMPLEXITY-DEBT\.md"),
-    ("tuning", r"scripts/(?:[^/]+/)+TUNING\.md"),
     ("hub", r"^(?:[^/]+/)+README\.md$"),
     ("component guide", r"scripts/(?:[^/]+/)+[A-Z][A-Z0-9-]*\.md"),
 )
