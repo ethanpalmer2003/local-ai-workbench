@@ -1,7 +1,5 @@
 """Model update signals: source checks, newer-release hints and overlay-aware catalog writes."""
 
-import contextlib
-import io
 import json
 import tempfile
 import unittest
@@ -142,43 +140,195 @@ class UpdateModelsTests(unittest.TestCase):
         self.assertEqual(entry["group"], "koboldcpp")
         self.assertEqual(entry["url"], "https://huggingface.co/a/Family-v1.2-GGUF/blob/main/Family-v1.2-IQ3_XXS.gguf")
 
-    def test_candidates_come_from_a_newer_versioned_repo(self) -> None:
-        hub = FakeHub({}, ids=["a/Family-v1.2-GGUF"], repo_files=["Family-v1.2-IQ3_XXS.gguf"])
-        found = update_models.candidates(hub, [self._old()])
-        self.assertEqual([candidate.label for candidate in found], ["koboldcpp/Family-v1.2-IQ3_XXS"])
+    def test_plan_upgrades_a_newer_versioned_release(self) -> None:
+        hub = FakeHub(
+            {"Family-v1.1-IQ3_XXS.gguf": 8}, ids=["a/Family-v1.2-GGUF"], repo_files=["Family-v1.2-IQ3_XXS.gguf"]
+        )
+        actions = update_models.plan(hub, [self._old()])
+        self.assertEqual(
+            [(action.kind, action.label) for action in actions], [("upgrade", "koboldcpp/Family-v1.2-IQ3_XXS")]
+        )
+
+    def test_plan_repairs_a_size_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "Family-v1.1-IQ3_XXS.gguf"
+            path.write_bytes(b"12345678")
+            model = cast(
+                ModelDownload,
+                cast(
+                    object,
+                    SimpleNamespace(
+                        label="koboldcpp/Family-v1.1-IQ3_XXS",
+                        group="koboldcpp",
+                        category="llms",
+                        filename="Family-v1.1-IQ3_XXS.gguf",
+                        url="https://huggingface.co/a/Family-v1.1-GGUF/blob/main/Family-v1.1-IQ3_XXS.gguf",
+                        in_use=True,
+                        notes="",
+                        sha256=None,
+                        roles=(),
+                        runtimes=(),
+                        source_page=None,
+                        path=path,
+                    ),
+                ),
+            )
+            hub = FakeHub({"Family-v1.1-IQ3_XXS.gguf": 9})
+            actions = update_models.plan(hub, [model])
+        self.assertEqual([action.kind for action in actions], ["repair"])
+        self.assertEqual(actions[0].expected, 9)
 
     def test_apply_downloads_the_new_file_then_replaces(self) -> None:
-        old = self._old()
-        entry = update_models._entry(old, "Family-v1.2-IQ3_XXS.gguf", "a/Family-v1.2-GGUF")
-        new = cast(ModelDownload, cast(object, SimpleNamespace(label=entry["label"])))
-        candidate = update_models.Candidate(old, entry)
-        with (
-            patch.object(update_models.model_admin, "references", return_value=([], [])),
-            patch.object(update_models.catalog, "entry_home", return_value=Path("overlay.json")),
-            patch.object(update_models.catalog, "upsert_entry") as upsert,
-            patch.object(update_models.catalog, "get", return_value=new),
-            patch.object(update_models.download_catalog, "download_model") as download,
-            patch.object(update_models.model_admin, "command_replace", return_value=0) as replace,
-        ):
-            self.assertTrue(update_models._apply(candidate))
+        with tempfile.TemporaryDirectory() as folder:
+            old = self._old()
+            entry = update_models._entry(old, "Family-v1.2-IQ3_XXS.gguf", "a/Family-v1.2-GGUF")
+            new = cast(
+                ModelDownload,
+                cast(object, SimpleNamespace(label=entry["label"], path=Path(folder) / "Family-v1.2.gguf")),
+            )
+            action = update_models.Action("upgrade", old, entry)
+
+            def fake_fetch(model: ModelDownload, expected: int | None = None, limit: int | None = None) -> int:
+                update_models._part(model).write_bytes(b"x")
+                return 1
+
+            with (
+                patch.object(update_models.model_admin, "references", return_value=([], [])),
+                patch.object(update_models.catalog, "entry_home", return_value=Path("overlay.json")),
+                patch.object(update_models.catalog, "upsert_entry") as upsert,
+                patch.object(update_models.catalog, "get", return_value=new),
+                patch.object(update_models, "_fetch_part", side_effect=fake_fetch),
+                patch.object(update_models.model_admin, "command_replace", return_value=0) as replace,
+            ):
+                self.assertTrue(update_models._apply_upgrade(action))
         upsert.assert_called_once_with(entry, Path("overlay.json"))
-        download.assert_called_once_with(new)
         replace.assert_called_once()
 
     def test_a_failed_download_keeps_the_old_entry(self) -> None:
         old = self._old()
         entry = update_models._entry(old, "Family-v1.2-IQ3_XXS.gguf", "a/Family-v1.2-GGUF")
-        candidate = update_models.Candidate(old, entry)
+        action = update_models.Action("upgrade", old, entry)
         with (
             patch.object(update_models.model_admin, "references", return_value=([], [])),
             patch.object(update_models.catalog, "upsert_entry"),
             patch.object(update_models.catalog, "remove_entry") as remove,
             patch.object(update_models.catalog, "get", return_value=object()),
-            patch.object(update_models.download_catalog, "download_model", side_effect=OSError("offline")),
-            contextlib.redirect_stdout(io.StringIO()),
+            patch.object(update_models, "_fetch_part", side_effect=OSError("offline")),
         ):
-            self.assertFalse(update_models._apply(candidate))
+            self.assertFalse(update_models._apply_upgrade(action))
         remove.assert_called_once_with(entry["label"])
+
+    def test_repair_replaces_the_file_with_the_fresh_download(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "family.gguf"
+            target.write_bytes(b"old")
+            model = cast(
+                ModelDownload,
+                cast(
+                    object,
+                    SimpleNamespace(
+                        label="koboldcpp/family", url="https://huggingface.co/a/b/blob/main/family.gguf", path=target
+                    ),
+                ),
+            )
+
+            def fake_fetch(
+                url: str, destination: Path, expected: int | None, label: str, limit: int | None = None
+            ) -> int:
+                destination.write_bytes(b"new")
+                return 3
+
+            with (
+                patch.object(update_models, "_fetch", side_effect=fake_fetch),
+                patch.object(update_models.model_admin, "move_to_trash") as move,
+            ):
+                self.assertTrue(update_models._apply_repair(update_models.Action("repair", model, expected=3)))
+            self.assertEqual(target.read_bytes(), b"new")
+        move.assert_called_once()
+
+    def test_a_failed_repair_keeps_the_old_file(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "family.gguf"
+            target.write_bytes(b"old")
+            model = cast(
+                ModelDownload,
+                cast(
+                    object,
+                    SimpleNamespace(
+                        label="koboldcpp/family", url="https://huggingface.co/a/b/blob/main/family.gguf", path=target
+                    ),
+                ),
+            )
+            with patch.object(update_models, "_fetch", side_effect=RuntimeError("HTTP 500")):
+                self.assertFalse(update_models._apply_repair(update_models.Action("repair", model)))
+            self.assertEqual(target.read_bytes(), b"old")
+
+    def test_a_limited_repair_keeps_the_partial_and_the_old_file(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "family.gguf"
+            target.write_bytes(b"old")
+            model = cast(
+                ModelDownload,
+                cast(
+                    object,
+                    SimpleNamespace(
+                        label="koboldcpp/family", url="https://huggingface.co/a/b/blob/main/family.gguf", path=target
+                    ),
+                ),
+            )
+
+            def fake_fetch(
+                url: str, destination: Path, expected: int | None, label: str, limit: int | None = None
+            ) -> int:
+                destination.write_bytes(b"abc")
+                return 3
+
+            with patch.object(update_models, "_fetch", side_effect=fake_fetch):
+                self.assertTrue(update_models._apply_repair(update_models.Action("repair", model), limit=3))
+            self.assertEqual(target.read_bytes(), b"old")
+
+
+class FakeResponse:
+    """A requests response double for the streaming fetch."""
+
+    def __init__(self, status: int, headers: dict[str, str], chunks: list[bytes]) -> None:
+        self.status_code = status
+        self.headers = headers
+        self.chunks = chunks
+
+    def iter_content(self, chunk_size: int):
+        yield from self.chunks
+
+    def __enter__(self) -> "FakeResponse":
+        return self
+
+    def __exit__(self, *exc: object) -> bool:
+        return False
+
+
+class FetchTests(unittest.TestCase):
+    def test_the_resolve_url_keeps_the_revision_and_subfolder(self) -> None:
+        model = cast(
+            ModelDownload, cast(object, SimpleNamespace(url="https://huggingface.co/a/b/blob/main/sub/f.gguf"))
+        )
+        self.assertEqual(update_models._resolve_url(model), "https://huggingface.co/a/b/resolve/main/sub/f.gguf")
+
+    def test_fetch_resumes_a_partial_file(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "f.bin"
+            target.write_bytes(b"abc")
+            response = FakeResponse(206, {"Content-Length": "5"}, [b"45678"])
+            with patch.object(update_models.requests, "get", return_value=response) as get:
+                self.assertEqual(update_models._fetch("https://example/f", target, 8, "f"), 8)
+            self.assertEqual(target.read_bytes(), b"abc45678")
+            self.assertEqual(get.call_args.kwargs["headers"]["Range"], "bytes=3-")
+
+    def test_fetch_rejects_an_error_status(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / "f.bin"
+            response = FakeResponse(404, {}, [])
+            with patch.object(update_models.requests, "get", return_value=response), self.assertRaises(RuntimeError):
+                update_models._fetch("https://example/f", target, None, "f")
 
 
 class DownloadModelsTests(unittest.TestCase):
