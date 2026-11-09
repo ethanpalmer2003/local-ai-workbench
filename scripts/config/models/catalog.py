@@ -196,6 +196,39 @@ def load_entries(path: Path | None = None) -> list[dict[str, Any]]:
     return list(payload.get("models") or [])
 
 
+def overlay_path() -> Path:
+    """The private overlay that carries personal entries; absent when no private checkout exists."""
+    return inputs.model_overlay_path()
+
+
+def entry_home(label: str) -> Path:
+    """The file that lists this label: the tracked catalog first, otherwise the private overlay."""
+    if any(str(entry.get("label")) == label for entry in load_entries()):
+        return CATALOG_PATH
+    return overlay_path()
+
+
+def upsert_entry(entry: dict[str, Any], path: Path | None = None) -> Path:
+    """Add or replace one entry in an explicit file, or in the file that already owns it."""
+    target = path or entry_home(str(entry.get("label")))
+    entries = [item for item in load_entries(target) if str(item.get("label")) != str(entry.get("label"))]
+    save_catalog([*entries, entry], target)
+    return target
+
+
+def remove_entry(label: str) -> Path | None:
+    """Drop one entry from its owning file; None when no file lists it."""
+    home = entry_home(label)
+    if not home.is_file():
+        return None
+    entries = load_entries(home)
+    kept = [entry for entry in entries if str(entry.get("label")) != label]
+    if len(kept) == len(entries):
+        return None
+    save_catalog(kept, home)
+    return home
+
+
 def validate_entries(entries: list[dict[str, Any]]) -> None:
     _build({"version": CATALOG_VERSION, "models": entries})
 
