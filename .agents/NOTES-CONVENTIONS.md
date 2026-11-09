@@ -1,15 +1,23 @@
 # Markdown
 
-- Only `README.md` and `AGENTS.md` sit at the root; every other document lives in `notes/`, including plans, reviews and lists. Feature procedures stay beside owning code; test-wide status goes in `scripts/tests/notes/`.
-- Group test notes by component when several belong together (`scripts/tests/notes/asr/`); keep cross-domain status at the notes root and avoid one-note folders.
-- Prefer documenting in the code: a name or comment that states the rule beats a paragraph. Write prose only for decisions a reader cannot infer, and never in two places.
-- Describe capability and the command to run, not instances. Model ids, defaults, counts, versions and asset filenames stay in config, catalogs and overlay manifests; docs name the role that consumes them.
-- One owner per thing: a procedure, an implementation choice or a fact is stated once, and every other mention links to it. Keep the commands and evidence a reader needs.
-- Budgets: large 700 words, medium 500, small 300; each role picks one. Third-party documents and immutable run evidence are excluded.
-- Use uppercase Markdown basenames except `README.md`, `AGENTS.md`, `SKILL.md` and other tool-required names; `structure_docs` rejects anything else. Only README belongs directly at `scripts/tests/`.
-- A component with measured settings owns `TUNING.md`: what is in use, the evidence links, and what stays unmeasured. Its README links the page instead of repeating it.
-- `TODO.md` owns pending work; completed evidence belongs in test status/results. Retire obsolete nonempty files to trash with provenance.
-- Download definitions stay in Python catalogs; docs link to them and update both with a path change.
+- This page owns document organization: a document's role decides its home and word cap, and the gate rejects a home the role forbids. `--roles` prints the counts.
 
-- Maintained non-test Markdown covers current behavior, decisions and pending work only. Keep migration narratives out; preserve superseded text in trash. Test status/results own dated evidence.
+| Role | Home | Cap |
+| --- | --- | --- |
+| root | repo root: `README.md`, `AGENTS.md` | large, 700 |
+| hub | each folder's `README.md` | large, 700 |
+| agent rule | `.agents/`, including skills | small, 300 |
+| note | `notes/`, including the running lists | medium, 500 |
+| review record | `notes/reviews/` | medium, 500 |
+| component guide | a component folder or `scripts/tests/notes/`, uppercase name | medium, 500 |
 
+- A document that matches no role fails, so a new kind edits this table rather than adding a rule.
+- Uppercase basenames except `README.md`, `AGENTS.md`, `SKILL.md` and other tool-required names.
+- Prefer documenting in the code: a name or comment that states the rule beats a paragraph.
+- One owner per thing: a procedure, choice or fact is stated once, and every other mention links to it.
+- Describe capability and the command to run, not instances. Model ids, defaults, counts and versions stay in config and catalogs.
+- A component with measured settings owns `TUNING.md`; its README links the page instead of repeating it.
+- `TODO.md` owns pending work; completed evidence belongs in test status/results.
+- Test notes group by component when several belong together.
+- Maintained non-test Markdown covers current behavior, decisions and pending work only.
+- Download definitions stay in Python catalogs; docs link to them.

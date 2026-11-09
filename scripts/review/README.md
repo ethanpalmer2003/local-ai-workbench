@@ -18,23 +18,7 @@ The runner executes these checks:
 
 Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function complexity is gated by ruff at McCabe 10; the inventory lists the largest functions for context. Inventory excludes generated output, caches, model data, third-party installations and trash.
 
-Run a single check with `python -m scripts.review.structure_docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `structure_docs --words` prints every maintained document by word count with its budget.
-
-## Document roles
-
-`structure_docs` gives every maintained document one role and rejects a home that role does not allow;
-`--roles` prints the counts.
-
-| Role | Home | Cap |
-| --- | --- | --- |
-| root | repo root: `README.md`, `AGENTS.md` | large, 700 |
-| agent rule | `.agents/`, including skills | small, 300 |
-| hub | each folder's `README.md` | large, 700 |
-| note | `notes/`, including the running lists | medium, 500 |
-| review record | `notes/reviews/` | medium, 500 |
-| component guide | a component folder or `scripts/tests/notes/`, uppercase name; `TUNING.md` and the generated ledger included | medium, 500 |
-
-A document matching no role fails, so a new kind is a deliberate addition to `ROLE_RULES`.
+Run a single check with `python -m scripts.review.structure_docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `structure_docs --words` prints every maintained document by word count with its budget; `--roles` prints the counts per role. Document organization lives in [NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
 
 ## Framework validation
 
