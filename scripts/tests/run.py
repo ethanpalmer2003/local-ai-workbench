@@ -80,8 +80,6 @@ from scripts.tests.cases.shared.test_structure_docs import (
     ModelNameTests,
     RoleTests,
     RootDocumentTests,
-    ShortDocumentTests,
-    WordCountTests,
 )
 from scripts.tests.cases.shared.test_typography import CheckTests, ScanTests, SuffixTests
 from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
@@ -123,8 +121,6 @@ if __name__ == "__main__":
                     ModelNameTests,
                     RoleTests,
                     RootDocumentTests,
-                    ShortDocumentTests,
-                    WordCountTests,
                     SharedRuntimeTests,
                     ReadinessRouteTests,
                     OwnedLaunchTests,

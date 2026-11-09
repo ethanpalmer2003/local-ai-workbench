@@ -13,6 +13,7 @@ from scripts.config import paths as config_paths
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import framework_catalog as update_config
 from scripts.launchers import launcher_config as cfg
+from scripts.review import MAX_REPORTED
 
 # - three caps only; each document role picks one, so a new kind needs no new number
 WORD_TIERS = {"large": 700, "medium": 500, "small": 300}
@@ -35,34 +36,6 @@ MODEL_NAME_ALLOWED = (
     "notes/reviews/",
     "scripts/tests/notes/",
 )
-# - a document below this is a candidate for merging into its owner; reviewed, not failed
-SHORT_DOCUMENT_WORDS = 100
-# - review records state a dated decision, and the complexity ledger is generated
-SHORT_DOCUMENT_SKIP = ("notes/reviews/", "scripts/review/COMPLEXITY-DEBT.md")
-LEGACY_BINDINGS = {
-    "KOBOLD",
-    "STRATA",
-    "ASR",
-    "WHISPER_ASR",
-    "PARAKEET_ASR",
-    "QWEN_ASR",
-    "KOKORO",
-    "PI",
-    "DSH",
-    "OHMYPI",
-    "LITTLECODER",
-    "NANOCODER",
-    "ACTIVE_LLAMACPP_BUILD",
-    "ACTIVE_LLAMACPP_CODING_AGENT_PROFILE",
-    "AUDIOCPP_DIR",
-    "AUDIOCPP_ROCM_RELEASE_DIR",
-    "HF_HUB_DIR",
-    "COMFYUI_DIR",
-    "SDCPP_OUT_DIR",
-    "SDCPP_ROCM_BIN_DIR",
-    "BENCHMARKS_DIR",
-    "VIDEOGEN_MODELS_DIR",
-}
 EXCLUDED = {".git", ".venv", "node_modules", "__pycache__", "state", "output", "old", "retired", "comfyui-archive"}
 
 
@@ -96,14 +69,12 @@ def _component_key_issues() -> list[str]:
 
 
 def _binding_issues() -> list[str]:
-    issues = []
-    for module in (project_cfg, cfg):
-        for name, value in vars(module).items():
-            if name.isupper() and name.endswith("_DIR") and not isinstance(value, Path):
-                issues.append(f"{module.__name__}.{name} must be a Path")
-            if name in LEGACY_BINDINGS:
-                issues.append(f"Legacy config binding: {module.__name__}.{name}")
-    return issues
+    return [
+        f"{module.__name__}.{name} must be a Path"
+        for module in (project_cfg, cfg)
+        for name, value in vars(module).items()
+        if name.isupper() and name.endswith("_DIR") and not isinstance(value, Path)
+    ]
 
 
 def _model_owner_issues() -> list[str]:
@@ -343,20 +314,8 @@ def markdown_budget(relative: str) -> int:
     return WORD_TIERS[ROLE_TIERS.get(document_role(relative) or "", "medium")]
 
 
-def short_candidate(relative: str, path: Path) -> bool:
-    """Documents the review list owns; generated and tool-required files stay out of it."""
-    return path.name not in MARKDOWN_NAME_ALLOWED and not relative.startswith(SHORT_DOCUMENT_SKIP)
-
-
-def word_marker(words: int, budget: int, relative: str, path: Path) -> str:
-    """Both ends at once: over the document budget, under the review floor, or neither."""
-    if words > budget:
-        return "over"
-    return "short" if words < SHORT_DOCUMENT_WORDS and short_candidate(relative, path) else ""
-
-
-def word_rows(files: list[Path]) -> list[tuple[int, int, str, str]]:
-    """Every maintained document with its word count and budget, longest first."""
+def word_rows(files: list[Path]) -> list[tuple[int, int, str, bool]]:
+    """Every maintained document with its word count, budget and whether it exceeds it."""
     rows = []
     for path in files:
         if path.suffix != ".md":
@@ -364,19 +323,18 @@ def word_rows(files: list[Path]) -> list[tuple[int, int, str, str]]:
         relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
         budget = markdown_budget(relative)
         words = prose_words(path.read_text(encoding="utf-8-sig"))
-        rows.append((words, budget, relative, word_marker(words, budget, relative, path)))
+        rows.append((words, budget, relative, words > budget))
     return sorted(rows, reverse=True)
 
 
 def print_word_counts(files: list[Path]) -> int:
-    """One table covering both ends: the over-budget documents and the review candidates."""
+    """The over-budget documents, longest first."""
     rows = word_rows(files)
-    over = sum(1 for *_, marker in rows if marker == "over")
-    short = sum(1 for *_, marker in rows if marker == "short")
+    over = sum(1 for *_, exceeded in rows if exceeded)
     print(f"{'words':>6} {'budget':>6}  {'mark':6}  document")
-    for words, budget, relative, marker in rows:
-        print(f"{words:6d} {budget:6d}  {marker:6}  {relative}")
-    print(f"{len(rows)} documents, {over} over budget, {short} under {SHORT_DOCUMENT_WORDS} words")
+    for words, budget, relative, exceeded in rows:
+        print(f"{words:6d} {budget:6d}  {'over' if exceeded else '':6}  {relative}")
+    print(f"{len(rows)} documents, {over} over budget")
     return int(bool(over))
 
 
@@ -573,21 +531,6 @@ def model_name_issues(files: list[Path]) -> list[str]:
     return issues
 
 
-def short_documents(files: list[Path]) -> list[tuple[int, str]]:
-    """Documents too short to own a rule; listed for review, never failed."""
-    short = []
-    for path in files:
-        if path.suffix != ".md":
-            continue
-        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
-        if not short_candidate(relative, path):
-            continue
-        words = prose_words(path.read_text(encoding="utf-8-sig"))
-        if words < SHORT_DOCUMENT_WORDS:
-            short.append((words, relative))
-    return sorted(short)
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--words", action="store_true", help="list every maintained document by word count")
@@ -611,12 +554,10 @@ def main(argv: list[str] | None = None) -> int:
             issues += markdown_issues(path, text)
         elif path.suffix == ".bat":
             issues += batch_issues(path, text)
-    for issue in issues[:40]:
+    for issue in issues[:MAX_REPORTED]:
         print(f"[FAIL] {issue}")
-    if len(issues) > 40:
-        print(f"[WARN] {len(issues) - 40} further issues; output bounded at 40")
-    for words, relative in short_documents(files):
-        print(f"[WARN] short document ({words} words): {relative}; merge it into its owner or justify it")
+    if len(issues) > MAX_REPORTED:
+        print(f"[WARN] {len(issues) - MAX_REPORTED} further issues; output bounded at {MAX_REPORTED}")
     print(f"[{'FAIL' if issues else 'OK'}] Structure/docs: {len(files)} files, {len(issues)} issues")
     return int(bool(issues))
 

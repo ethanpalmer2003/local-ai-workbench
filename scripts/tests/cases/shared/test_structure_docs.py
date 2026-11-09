@@ -42,26 +42,6 @@ class RootDocumentTests(unittest.TestCase):
         self.assertEqual(structure_docs.root_document_issues(), [])
 
 
-class ShortDocumentTests(unittest.TestCase):
-    def test_only_documents_under_the_threshold_are_listed(self):
-        folder = BASE / "scripts/tests/output/short-doc-fixture"
-        folder.mkdir(parents=True, exist_ok=True)
-        short, long = folder / "SHORT.md", folder / "LONG.md"
-        short.write_text("# Short\n\nOne sentence only.\n", encoding="utf-8")
-        long.write_text("# Long\n\n" + "word " * 140 + "\n", encoding="utf-8")
-        try:
-            listed = structure_docs.short_documents([short, long])
-        finally:
-            short.unlink()
-            long.unlink()
-            folder.rmdir()
-        self.assertEqual([relative for _, relative in listed], ["scripts/tests/output/short-doc-fixture/SHORT.md"])
-
-    def test_review_records_and_the_generated_ledger_are_skipped(self):
-        listed = [relative for _, relative in structure_docs.short_documents(_short_candidates())]
-        self.assertFalse([relative for relative in listed if relative.startswith("notes/reviews/")])
-
-
 class RoleTests(unittest.TestCase):
     def test_known_homes_claim_their_role(self):
         cases = {
@@ -109,39 +89,6 @@ class RoleTests(unittest.TestCase):
                 self.assertEqual(structure_docs.markdown_budget(relative), cap)
 
 
-class WordCountTests(unittest.TestCase):
-    def test_a_document_over_its_budget_is_marked_over(self):
-        self.assertEqual(structure_docs.word_marker(600, 500, "notes/BIG.md", BASE / "notes/BIG.md"), "over")
-
-    def test_a_document_under_the_floor_is_marked_short(self):
-        self.assertEqual(structure_docs.word_marker(50, 500, "notes/SMALL.md", BASE / "notes/SMALL.md"), "short")
-
-    def test_exempt_documents_are_not_marked_short(self):
-        for name in ("README.md", "AGENTS.md", "SKILL.md"):
-            with self.subTest(name=name):
-                self.assertEqual(structure_docs.word_marker(10, 500, name, BASE / name), "")
-        review = "notes/reviews/STRUCTURE-REVIEW.md"
-        self.assertEqual(structure_docs.word_marker(10, 500, review, BASE / review), "")
-
-    def test_rows_are_ordered_by_word_count(self):
-        folder = BASE / "scripts/tests/output/word-row-fixture"
-        folder.mkdir(parents=True, exist_ok=True)
-        small, big = folder / "SMALL.md", folder / "BIG.md"
-        small.write_text("# Small\n\nshort\n", encoding="utf-8")
-        big.write_text("# Big\n\n" + "word " * 40 + "\n", encoding="utf-8")
-        try:
-            rows = structure_docs.word_rows([small, big])
-        finally:
-            small.unlink()
-            big.unlink()
-            folder.rmdir()
-        self.assertEqual(
-            [row[2] for row in rows], [big.relative_to(BASE).as_posix(), small.relative_to(BASE).as_posix()]
-        )
-        self.assertEqual(rows[0][3], "short")
-        self.assertEqual(rows[1][3], "short")
-
-
 class ModelNameTests(unittest.TestCase):
     def _fixture(self, text: str) -> Path:
         folder = BASE / "scripts/tests/output/model-name-fixture"
@@ -174,14 +121,6 @@ class ModelNameTests(unittest.TestCase):
             with self.subTest(relative=relative):
                 self.assertTrue(structure_docs.model_names_skipped(relative))
         self.assertFalse(structure_docs.model_names_skipped("scripts/launchers/asr/README.md"))
-
-
-def _short_candidates() -> list[Path]:
-    return [
-        BASE / "notes/reviews" / "STRUCTURE-REVIEW.md",
-        BASE / "scripts/review" / "COMPLEXITY-DEBT.md",
-        BASE / "scripts/AGENTS.md",
-    ]
 
 
 if __name__ == "__main__":
