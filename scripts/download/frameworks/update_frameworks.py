@@ -6,6 +6,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import framework_catalog as cfg
+from scripts.download.frameworks import toolchains
 from scripts.download.frameworks import update_shared as updater
 from scripts.download.frameworks.coding_agents.pi import packages as pi_packages
 
@@ -53,6 +54,9 @@ def main() -> int:
         updater.check_tools(tools, Path(folder), summary, log)
         summary.print()
         failed = bool(summary.failures)
+        toolchain_rows: list[toolchains.Row] = []
+        if not args.only and not args.category:
+            toolchain_rows = toolchains.check()
         if not args.check_only:
             pi_needs_sync = pi_selected and bool(summary.package_sync)
             if updater.stop_update_services(
@@ -68,6 +72,7 @@ def main() -> int:
                     print("\n=== PI PACKAGE SYNC ===")
                     pi_packages.sync(apply=True)
                 failed = updater.apply_updates(tools, Path(folder), summary, log) or failed
+                failed = toolchains.apply(toolchain_rows) or failed
     print(f"\nDetails: {log_path}")
     print("\n=== COMPLETE ===")
     return int(failed)

@@ -224,10 +224,12 @@ def _pull_drift(folder: Path, drift: list[tuple[str, str, str, bool]]) -> None:
 
 
 def _launch_updater(exe: Path, dest_dir: Path) -> None:
-    print("Status: UPDATING IN NEW TERMINAL")
     env = os.environ.copy()
     env["PIP_REQUIRE_VIRTUALENV"] = "false"
-    subprocess.Popen(["cmd.exe", "/k", str(exe)], cwd=dest_dir, env=env, creationflags=subprocess.CREATE_NEW_CONSOLE)
+    process = subprocess.Popen(
+        ["cmd.exe", "/k", str(exe)], cwd=dest_dir, env=env, creationflags=subprocess.CREATE_NEW_CONSOLE
+    )
+    print(f"Status: UPDATING IN NEW TERMINAL (pid {process.pid}); this window stays open")
 
 
 def _vendor_batch_state(
