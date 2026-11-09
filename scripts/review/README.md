@@ -9,7 +9,7 @@ C:/AI/scripts/review/check_repo.bat
 
 The runner executes these checks:
 
-- `structure_docs.py`: component/config ownership, path/import/link validity, maintained Markdown budgets, Markdown basename casing, and a review list for documents under 100 words.
+- `structure_docs.py`: component/config ownership, path/import/link validity, maintained Markdown budgets, Markdown basename casing, and document roles.
 - `model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
 - `frontend_wiring.py`: front-end wiring: HTML/JS asset paths, DOM element ids and injected settings keys.
 - `basedpyright`: Python type errors.
@@ -18,7 +18,7 @@ The runner executes these checks:
 
 Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function limits are depth 4 and 100 code lines. Inventory excludes generated output, caches, model data, third-party installations and trash.
 
-Run a single check with `python -m scripts.review.structure_docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `structure_docs --words` prints every maintained document by word count with its budget, marking both over-budget documents and short ones.
+Run a single check with `python -m scripts.review.structure_docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `structure_docs --words` prints every maintained document by word count with its budget.
 
 ## Document roles
 
