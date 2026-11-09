@@ -6,7 +6,9 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from scripts.config import project_config as project_cfg
 from scripts.download.models import download_catalog as download
+from scripts.download.models import transfer
 from scripts.download.models.hub_sources import parse_url
 from scripts.tests.shared.http_fixtures import http_response
 from scripts.tests.shared.paths import CasePaths
@@ -99,14 +101,14 @@ class ModelCatalogTests(unittest.TestCase):
                 "models/audio/consumer.gguf",
             )
             with (
-                patch.object(download.project_cfg, "DATA_DIR", root),
+                patch.object(project_cfg, "DATA_DIR", root),
                 patch("huggingface_hub.hf_hub_download", return_value=str(cached)) as fetch,
             ):
                 download.download_model(model)
                 self.assertEqual(model.path.read_bytes(), b"model")
                 self.assertEqual(fetch.call_args.kwargs["filename"], "nested/source.gguf")
                 self.assertEqual(fetch.call_args.kwargs["revision"], "v1")
-                self.assertEqual(fetch.call_args.kwargs["local_dir"], str(model.path.parent))
+                self.assertEqual(fetch.call_args.kwargs["local_dir"], str(transfer.staging_dir(model)))
 
     def test_existing_consumer_file_skips_hub_and_range_downloads(self):
         with CasePaths(__file__).temporary_directory() as folder:
@@ -117,7 +119,7 @@ class ModelCatalogTests(unittest.TestCase):
                 "https://huggingface.co/Jmica/Drama-3-GGUF/blob/main/model.gguf",
                 "audiocpp/model.gguf",
             )
-            with patch.object(download.project_cfg, "DATA_DIR", root):
+            with patch.object(project_cfg, "DATA_DIR", root):
                 model.path.parent.mkdir()
                 model.path.write_bytes(b"existing-model")
                 with (

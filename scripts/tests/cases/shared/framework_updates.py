@@ -28,6 +28,15 @@ from scripts.tests.shared.timing import timed
 class FrameworkUpdates(unittest.TestCase):
     pi_tool = next(tool for tool in cfg.TOOLS if tool.package == "@earendil-works/pi-coding-agent")
 
+    def setUp(self):
+        # - Toolchain checks run real executables; the model-free suite forbids starting processes.
+        check = patch.object(entry.toolchains, "check", return_value=[])
+        check.start()
+        self.addCleanup(check.stop)
+        apply_toolchains = patch.object(entry.toolchains, "apply", return_value=False)
+        apply_toolchains.start()
+        self.addCleanup(apply_toolchains.stop)
+
     def test_category_selects_only_speech_and_preserves_check_only(self):
         tools = [
             cfg.ToolSpec("llamacpp/demo", "tool.exe", cfg.ReleaseType.DATE, category="llamacpp"),
