@@ -5,11 +5,15 @@ from pathlib import Path
 
 from scripts.config.models import MODELS as MODELS
 from scripts.config.models import ModelDownload as ModelDownload
+from scripts.download.models import transfer
 from scripts.download.models.hub_sources import parse_url
 
 
 def download_model(
-    model: ModelDownload, mode: str = "stream", range_download: bool = False, resume_file: Path | None = None
+    model: ModelDownload,
+    mode: str = transfer.DEFAULT_MODE,
+    range_download: bool = False,
+    resume_file: Path | None = None,
 ) -> None:
     if model.path.is_file() and model.path.stat().st_size > 0:
         print(f"[SKIP] Already present: {model.path}")
@@ -29,12 +33,7 @@ def download_model(
 
         download_ranges(parse_url(model.url), model.path, resume_file)
         return
-    from scripts.download.models import transfer
-
-    if mode == "stream":
-        transfer.download_stream(model)
-        return
-    transfer.download_hub(model)
+    transfer.download(model, mode=mode)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -49,9 +48,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--download", action="store_true", help="Download selected entries; otherwise only list")
     parser.add_argument(
         "--mode",
-        choices=("stream", "hub"),
-        default="stream",
-        help="stream: plain HTTP ranges with resume (default); hub: the Hub client, cache and Xet aware",
+        choices=transfer.MODES,
+        default=transfer.DEFAULT_MODE,
+        help="hub: the Hub client, cache and Xet aware (default); stream: plain HTTP ranges with resume",
     )
     parser.add_argument(
         "--range-download",

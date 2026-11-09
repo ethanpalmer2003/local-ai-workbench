@@ -16,6 +16,7 @@ from typing import Any
 
 from tqdm import tqdm
 
+from scripts.config import project_config as project_cfg
 from scripts.config.models import MODELS, ModelDownload, catalog
 from scripts.download.models import transfer, updates
 from scripts.download.models.hub_sources import parse_url
@@ -113,7 +114,7 @@ def _apply_upgrade(action: Action) -> bool:
     catalog.upsert_entry(entry, catalog.entry_home(old.label))
     new = catalog.get(action.label)
     try:
-        transfer.download_stream(new)
+        transfer.download(new)
     except Exception as error:  # - a failed download must leave the old entry in place
         catalog.remove_entry(action.label)
         tqdm.write(f"[FAIL] {old.label} -> {action.label}: {error}")
@@ -127,7 +128,7 @@ def _apply_refresh(action: Action, limit: int | None = None) -> bool:
         tqdm.write(f"[SKIP] {model.label}: refresh is only implemented for Hub files")
         return True
     try:
-        part = transfer.stream_part(model, action.expected, limit)
+        part = transfer.fetch_part(model, action.expected, limit)
         size = part.stat().st_size
         if limit is not None and size >= limit:
             tqdm.write(f"[OK] Transfer check for {model.label}: {size} bytes, partial kept for the real run")
@@ -154,7 +155,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _arguments(argv)
     from huggingface_hub import HfApi
 
-    api = HfApi()
+    api = HfApi(token=project_cfg.HF_TOKEN)
     models = [model for model in MODELS if model.in_use and model.url]
     if args.only:
         models = [model for model in models if model.label in set(args.only)]

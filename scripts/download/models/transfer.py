@@ -1,10 +1,11 @@
 """One place for model file transfers, with two modes.
 
-`download_stream` uses plain authenticated HTTP ranges into a resumable `.part` file; it works when
-the Xet backend stalls and resumes a partial transfer. `download_hub` uses the Hub client, which can
-deduplicate chunks through Xet but stalls on large files here.
+`download_hub` (default) uses the Hub client: cache aware and Xet capable, which is fastest here and
+reuses chunks. `download_stream` uses plain authenticated HTTP ranges into a resumable `.part`; it is
+the fallback when the Hub client stalls, and it can stop after a byte limit for a connectivity check.
 """
 
+import shutil
 from pathlib import Path
 
 import requests
@@ -15,7 +16,8 @@ from scripts.config.models import ModelDownload
 from scripts.download.models.hub_sources import parse_url
 
 CHUNK = 1024 * 1024
-MODES = ("stream", "hub")
+DEFAULT_MODE = "hub"
+MODES = ("hub", "stream")
 
 
 def resolve_url(model: ModelDownload) -> str:
@@ -75,32 +77,66 @@ def stream_part(model: ModelDownload, expected: int | None = None, limit: int | 
     return destination
 
 
-def commit(part: Path, destination: Path) -> None:
-    part.replace(destination)
+def hub_part(model: ModelDownload, expected: int | None = None) -> Path:
+    """Download through the Hub client into a clean staging folder and return that file.
 
-
-def download_stream(model: ModelDownload, expected: int | None = None, limit: int | None = None) -> Path:
-    """Stream a complete file into place; a failed transfer leaves the `.part` for a rerun."""
-    part = stream_part(model, expected, limit)
-    if limit is None:
-        commit(part, model.path)
-    return part
-
-
-def download_hub(model: ModelDownload) -> Path:
-    """The Hub client path: cache aware and Xet-capable, with the same final destination."""
+    The staging folder is recreated first: a crashed run can leave a lock file behind, and the next
+    attempt would then wait on it instead of transferring.
+    """
     from huggingface_hub import hf_hub_download
 
-    model.path.parent.mkdir(parents=True, exist_ok=True)
+    staging = model.path.parent / f".hub-{model.path.stem}"
+    shutil.rmtree(staging, ignore_errors=True)
+    staging.mkdir(parents=True, exist_ok=True)
     downloaded = Path(
         hf_hub_download(
             repo_id=parse_url(str(model.url)).repo_id,
             filename=parse_url(str(model.url)).filename,
             revision=parse_url(str(model.url)).revision,
             token=project_cfg.HF_TOKEN,
-            local_dir=str(model.path.parent),
+            local_dir=str(staging),
         )
     )
-    if downloaded != model.path:
-        downloaded.replace(model.path)
+    if expected and downloaded.stat().st_size != expected:
+        raise RuntimeError(f"downloaded {downloaded.stat().st_size} bytes, expected {expected}")
+    return downloaded
+
+
+def fetch_part(
+    model: ModelDownload, expected: int | None = None, limit: int | None = None, mode: str = DEFAULT_MODE
+) -> Path:
+    """Fetch this model's file with the requested mode and return the completed path.
+
+    A byte limit is only meaningful for the streaming mode, so it selects that mode.
+    """
+    if limit is not None:
+        mode = "stream"
+    if mode == "hub":
+        return hub_part(model, expected)
+    return stream_part(model, expected, limit)
+
+
+def commit(part: Path, destination: Path) -> None:
+    part.replace(destination)
+    if part.parent.name.startswith(".hub-"):
+        shutil.rmtree(part.parent, ignore_errors=True)
+
+
+def download(model: ModelDownload, expected: int | None = None, mode: str = DEFAULT_MODE) -> Path:
+    """Fetch a complete file into its final path; a failed stream leaves the `.part` for a rerun."""
+    part = fetch_part(model, expected, None, mode)
+    commit(part, model.path)
+    return model.path
+
+
+def download_stream(model: ModelDownload, expected: int | None = None, limit: int | None = None) -> Path:
+    part = stream_part(model, expected, limit)
+    if limit is None:
+        commit(part, model.path)
+    return part
+
+
+def download_hub(model: ModelDownload, expected: int | None = None) -> Path:
+    part = hub_part(model, expected)
+    commit(part, model.path)
     return model.path
