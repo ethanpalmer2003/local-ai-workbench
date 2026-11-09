@@ -189,7 +189,7 @@ class UpdateModelsTests(unittest.TestCase):
             patch.object(update_models.catalog, "entry_home", return_value=Path("overlay.json")),
             patch.object(update_models.catalog, "upsert_entry") as upsert,
             patch.object(update_models.catalog, "get", return_value=new),
-            patch.object(update_models.transfer, "download_stream") as download,
+            patch.object(update_models.transfer, "download") as download,
             patch.object(update_models.model_admin, "command_replace", return_value=0) as replace,
         ):
             self.assertTrue(update_models._apply_upgrade(action))
@@ -206,7 +206,7 @@ class UpdateModelsTests(unittest.TestCase):
             patch.object(update_models.catalog, "upsert_entry"),
             patch.object(update_models.catalog, "remove_entry") as remove,
             patch.object(update_models.catalog, "get", return_value=object()),
-            patch.object(update_models.transfer, "download_stream", side_effect=OSError("offline")),
+            patch.object(update_models.transfer, "download", side_effect=OSError("offline")),
         ):
             self.assertFalse(update_models._apply_upgrade(action))
         remove.assert_called_once_with(entry["label"])
@@ -221,7 +221,7 @@ class UpdateModelsTests(unittest.TestCase):
                 return part
 
             with (
-                patch.object(update_models.transfer, "stream_part", side_effect=fake_stream),
+                patch.object(update_models.transfer, "fetch_part", side_effect=fake_stream),
                 patch.object(update_models.model_admin, "move_to_trash") as move,
             ):
                 self.assertTrue(update_models._apply_refresh(update_models.Action("refresh", model, expected=3)))
@@ -231,7 +231,7 @@ class UpdateModelsTests(unittest.TestCase):
     def test_a_failed_refresh_keeps_the_old_file(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             model = self._drifted(folder)
-            with patch.object(update_models.transfer, "stream_part", side_effect=RuntimeError("HTTP 500")):
+            with patch.object(update_models.transfer, "fetch_part", side_effect=RuntimeError("HTTP 500")):
                 self.assertFalse(update_models._apply_refresh(update_models.Action("refresh", model)))
             self.assertEqual(model.path.read_bytes(), b"12345678")
 
@@ -244,7 +244,7 @@ class UpdateModelsTests(unittest.TestCase):
                 part.write_bytes(b"abc")
                 return part
 
-            with patch.object(update_models.transfer, "stream_part", side_effect=fake_stream):
+            with patch.object(update_models.transfer, "fetch_part", side_effect=fake_stream):
                 self.assertTrue(update_models._apply_refresh(update_models.Action("refresh", model), limit=3))
             self.assertEqual(model.path.read_bytes(), b"12345678")
 
@@ -268,6 +268,10 @@ class FakeResponse:
 
 
 class TransferTests(unittest.TestCase):
+    def test_the_single_default_mode_is_the_hub_client(self) -> None:
+        self.assertEqual(transfer.DEFAULT_MODE, "hub")
+        self.assertEqual(transfer.MODES, ("hub", "stream"))
+
     def test_the_resolve_url_keeps_the_revision_and_subfolder(self) -> None:
         model = cast(
             ModelDownload, cast(object, SimpleNamespace(url="https://huggingface.co/a/b/blob/main/sub/f.gguf"))
