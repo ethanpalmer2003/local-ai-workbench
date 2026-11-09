@@ -15,6 +15,7 @@ from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.benchmarks.shared.vram import BenchmarkVram
+from scripts.config import models
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
@@ -85,14 +86,23 @@ def run_arm(
                 ).encode()
                 tick = time.perf_counter()
                 timing = {}
-                if index == 0:
-                    values = []
-                    lifecycle.warmup(
-                        lambda: values.append(backend.transcribe(body, "application/json")), includes_model_load=True
+                try:
+                    if index == 0:
+                        values = []
+                        lifecycle.warmup(
+                            lambda: values.append(backend.transcribe(body, "application/json")),
+                            includes_model_load=True,
+                        )
+                        data, _ = values[0]
+                    else:
+                        (data, _), timing = lifecycle.measure(lambda: backend.transcribe(body, "application/json"))
+                except RuntimeError as error:
+                    # - one bad clip must not throw away the other arm's measurements
+                    result["warmups" if index == 0 else "samples"].append(
+                        {"clip": clip["id"], "status": "failed", "error": str(error)}
                     )
-                    data, _ = values[0]
-                else:
-                    (data, _), timing = lifecycle.measure(lambda: backend.transcribe(body, "application/json"))
+                    print(f"[{engine}] {clip['id']}: FAILED ({error})", flush=True)
+                    continue
                 elapsed = time.perf_counter() - tick
                 text = json.loads(data)["text"]
                 if not text.strip():
@@ -158,8 +168,13 @@ def main() -> None:
     for path in (cfg.GEMMA_AUDIO_ASR.model, cfg.GEMMA_AUDIO_ASR.mmproj):
         with path.open("rb") as source:
             integrity[str(path)] = hashlib.file_digest(source, "sha256").hexdigest()
-    if integrity[str(cfg.GEMMA_AUDIO_ASR.mmproj)] != "197f49a93027f9843772bd24a6a9e0be2a32a788de5a3def330e9c585d86edd1":
-        raise RuntimeError("Gemma projector checksum differs from upstream metadata")
+    # - the catalog owns the recorded identity; a hardcoded digest goes stale when upstream rebuilds
+    projector = integrity[str(cfg.GEMMA_AUDIO_ASR.mmproj)]
+    expected = next((row.sha256 for row in models.MODELS if row.path == cfg.GEMMA_AUDIO_ASR.mmproj), None)
+    if expected and projector != expected:
+        raise RuntimeError(f"Gemma projector checksum {projector} differs from the recorded catalog {expected}")
+    if not expected:
+        print(f"[WARN] no recorded checksum for the Gemma projector; on disk {projector}", flush=True)
     deadline = time.monotonic() + 240
     with report_run(
         run,
@@ -177,21 +192,23 @@ def main() -> None:
             paths.create()
             report.results.append(run_arm(engine, clips, paths, context, deadline))
             report.save(run)
-        summary = {
-            result["engine"]: {
-                "short_clip_median_seconds": statistics.median(
-                    row["seconds"] for row in result["samples"] if row["duration_seconds"] < 12
-                ),
-                "long_clip_median_seconds": statistics.median(
-                    row["seconds"] for row in result["samples"] if row["duration_seconds"] == 30
-                ),
-                "wer": sum(row["word_errors"] for row in result["samples"])
-                / sum(row["reference_words"] for row in result["samples"]),
-            }
-            for result in report.results
-        }
+        summary = {result["engine"]: summarize_results(result) for result in report.results}
         (run.artifacts / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
         print(json.dumps(summary), flush=True)
+
+
+def summarize_results(result: dict[str, Any]) -> dict[str, Any]:
+    """Medians and WER over the clips that produced text; a failed clip is named, not folded in."""
+    rows = [row for row in result["samples"] if row.get("status") != "failed"]
+    short = [row["seconds"] for row in rows if row["duration_seconds"] < 12]
+    long = [row["seconds"] for row in rows if row["duration_seconds"] == 30]
+    reference = sum(row["reference_words"] for row in rows)
+    return {
+        "short_clip_median_seconds": statistics.median(short) if short else None,
+        "long_clip_median_seconds": statistics.median(long) if long else None,
+        "wer": sum(row["word_errors"] for row in rows) / reference if reference else None,
+        "failed_clips": [row["clip"] for row in result["samples"] if row.get("status") == "failed"],
+    }
 
 
 if __name__ == "__main__":
