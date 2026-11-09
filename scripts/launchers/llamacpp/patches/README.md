@@ -1,5 +1,7 @@
 # llama.cpp UI patches
 
+Indexed with the other upstream responses: [notes/UPSTREAM.md](../../../../notes/UPSTREAM.md).
+
 The patch set targets `frameworks/llamacpp/rdna/tools/ui`:
 
 - [workspace-speech-additions.patch](workspace-speech-additions.patch) adds the settings panel and type declarations.
