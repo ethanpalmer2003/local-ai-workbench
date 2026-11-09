@@ -214,14 +214,16 @@ class UpdateModelsTests(unittest.TestCase):
     def test_refresh_swaps_in_the_complete_download(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             model = self._drifted(folder)
-            part = model.path.with_name(model.path.name + ".part")
+            staging = transfer.staging_dir(model)
+            part = staging / model.path.name
 
-            def fake_stream(target: ModelDownload, expected: int | None = None, limit: int | None = None) -> Path:
+            def fake_fetch(target: ModelDownload, expected: int | None = None) -> Path:
+                staging.mkdir(parents=True, exist_ok=True)
                 part.write_bytes(b"new")
                 return part
 
             with (
-                patch.object(update_models.transfer, "fetch_part", side_effect=fake_stream),
+                patch.object(update_models.transfer, "fetch", side_effect=fake_fetch),
                 patch.object(update_models.model_admin, "move_to_trash") as move,
             ):
                 self.assertTrue(update_models._apply_refresh(update_models.Action("refresh", model, expected=3)))
@@ -231,72 +233,53 @@ class UpdateModelsTests(unittest.TestCase):
     def test_a_failed_refresh_keeps_the_old_file(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             model = self._drifted(folder)
-            with patch.object(update_models.transfer, "fetch_part", side_effect=RuntimeError("HTTP 500")):
+            with patch.object(update_models.transfer, "fetch", side_effect=RuntimeError("HTTP 500")):
                 self.assertFalse(update_models._apply_refresh(update_models.Action("refresh", model)))
             self.assertEqual(model.path.read_bytes(), b"12345678")
 
-    def test_a_limited_refresh_keeps_the_partial_and_the_old_file(self) -> None:
-        with tempfile.TemporaryDirectory() as folder:
-            model = self._drifted(folder)
-            part = model.path.with_name(model.path.name + ".part")
-
-            def fake_stream(target: ModelDownload, expected: int | None = None, limit: int | None = None) -> Path:
-                part.write_bytes(b"abc")
-                return part
-
-            with patch.object(update_models.transfer, "fetch_part", side_effect=fake_stream):
-                self.assertTrue(update_models._apply_refresh(update_models.Action("refresh", model), limit=3))
-            self.assertEqual(model.path.read_bytes(), b"12345678")
-
-
-class FakeResponse:
-    """A requests response double for the streaming fetch."""
-
-    def __init__(self, status: int, headers: dict[str, str], chunks: list[bytes]) -> None:
-        self.status_code = status
-        self.headers = headers
-        self.chunks = chunks
-
-    def iter_content(self, chunk_size: int):
-        yield from self.chunks
-
-    def __enter__(self) -> "FakeResponse":
-        return self
-
-    def __exit__(self, *exc: object) -> bool:
-        return False
-
 
 class TransferTests(unittest.TestCase):
-    def test_the_single_default_mode_is_the_hub_client(self) -> None:
-        self.assertEqual(transfer.DEFAULT_MODE, "hub")
-        self.assertEqual(transfer.MODES, ("hub", "stream"))
+    def _staged_file(self, local_dir: str, filename: str) -> Path:
+        staged = Path(local_dir) / filename
+        staged.parent.mkdir(parents=True, exist_ok=True)
+        staged.write_bytes(b"fresh")
+        return staged
 
-    def test_the_resolve_url_keeps_the_revision_and_subfolder(self) -> None:
-        model = cast(
-            ModelDownload, cast(object, SimpleNamespace(url="https://huggingface.co/a/b/blob/main/sub/f.gguf"))
-        )
-        self.assertEqual(transfer.resolve_url(model), "https://huggingface.co/a/b/resolve/main/sub/f.gguf")
-
-    def test_stream_part_resumes_a_partial_file(self) -> None:
+    def test_fetch_recreates_the_staging_folder_and_checks_the_size(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             model = _model("https://huggingface.co/a/b/blob/main/f.gguf", Path(folder) / "f.gguf")
-            part = transfer.part_path(model)
-            part.write_bytes(b"abc")
-            response = FakeResponse(206, {"Content-Length": "5"}, [b"45678"])
-            with patch.object(transfer.requests, "get", return_value=response) as get:
-                result = transfer.stream_part(model, expected=8)
-            self.assertEqual(result.read_bytes(), b"abc45678")
-            self.assertEqual(get.call_args.kwargs["headers"]["Range"], "bytes=3-")
+            staging = transfer.staging_dir(model)
+            staging.mkdir(parents=True)
+            (staging / "stale.lock").write_bytes(b"x")
 
-    def test_stream_part_rejects_an_error_status(self) -> None:
+            def fake_hub(**kwargs: Any) -> str:
+                return str(self._staged_file(kwargs["local_dir"], kwargs["filename"]))
+
+            with patch("huggingface_hub.hf_hub_download", side_effect=fake_hub):
+                staged = transfer.fetch(model, expected=5)
+            self.assertEqual(staged.read_bytes(), b"fresh")
+            self.assertFalse((staging / "stale.lock").exists())
+
+    def test_fetch_rejects_a_size_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             model = _model("https://huggingface.co/a/b/blob/main/f.gguf", Path(folder) / "f.gguf")
-            with (
-                patch.object(transfer.requests, "get", return_value=FakeResponse(404, {}, [])),
-                self.assertRaises(RuntimeError),
-            ):
-                transfer.stream_part(model)
+
+            def fake_hub(**kwargs: Any) -> str:
+                return str(self._staged_file(kwargs["local_dir"], kwargs["filename"]))
+
+            with patch("huggingface_hub.hf_hub_download", side_effect=fake_hub), self.assertRaises(RuntimeError):
+                transfer.fetch(model, expected=99)
+
+    def test_commit_moves_the_file_and_removes_the_staging_folder(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            model = _model("https://huggingface.co/a/b/blob/main/f.gguf", Path(folder) / "f.gguf")
+            staging = transfer.staging_dir(model)
+            staging.mkdir(parents=True)
+            part = staging / model.path.name
+            part.write_bytes(b"new")
+            transfer.commit(part, model.path)
+            self.assertEqual(model.path.read_bytes(), b"new")
+            self.assertFalse(staging.exists())
 
 
 class DownloadModelsTests(unittest.TestCase):
