@@ -20,6 +20,20 @@ Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function limi
 
 Run a single check with `python -m scripts.review.structure_docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `structure_docs --words` prints every maintained document by word count with its budget, marking both over-budget documents and short ones.
 
+## Framework validation
+
+This gate is repo-wide and never loads a model. A check that belongs to one framework stays beside that
+component:
+
+| Check | Location | Runs at |
+| --- | --- | --- |
+| Startup contract | `config/<component>/verify*.py`, e.g. [verify_node.py](../config/comfyui/verify_node.py) | launcher |
+| Offline contract | `tests/cases/<component>/` | model-free suite |
+| Update check | [framework updates](../download/frameworks/UPDATES.md), driven by `update_shared.py` | update run |
+| Live preflight | [benchmarks/shared/preflight.py](../benchmarks/shared/preflight.py) | benchmark run |
+
+A framework without a startup validator makes its launcher fail on missing paths instead.
+
 ## Front-end wiring (`frontend_wiring.py`)
 
 Static and literal-only; it never executes the pages.
