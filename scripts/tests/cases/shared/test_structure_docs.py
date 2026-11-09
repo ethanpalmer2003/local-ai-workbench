@@ -89,6 +89,29 @@ class RoleTests(unittest.TestCase):
                 self.assertEqual(structure_docs.markdown_budget(relative), cap)
 
 
+class PointerTests(unittest.TestCase):
+    def test_pointers_count_markdown_targets_and_separate_other_links(self):
+        folder = BASE / "scripts/tests/output/pointer-fixture"
+        folder.mkdir(parents=True, exist_ok=True)
+        source, target = folder / "SOURCE.md", folder / "TARGET.md"
+        source.write_text(
+            "# Source\n\n[Target](TARGET.md) and [web](https://example.com) and [code](../x.py).\n", encoding="utf-8"
+        )
+        target.write_text("# Target\n\nNo outgoing links.\n", encoding="utf-8")
+        try:
+            stats = structure_docs.pointer_stats([source, target])
+        finally:
+            source.unlink()
+            target.unlink()
+            folder.rmdir()
+        key = target.relative_to(BASE).as_posix()
+        self.assertEqual(stats["external"], 1)
+        self.assertEqual(stats["other"], 1)
+        self.assertEqual(stats["targets"][key], 1)
+        self.assertEqual(stats["sources"][source.relative_to(BASE).as_posix()], 1)
+        self.assertIn(source.relative_to(BASE).as_posix(), stats["unlinked"])
+
+
 class ModelNameTests(unittest.TestCase):
     def _fixture(self, text: str) -> Path:
         folder = BASE / "scripts/tests/output/model-name-fixture"
