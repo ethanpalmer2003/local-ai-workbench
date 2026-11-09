@@ -27,6 +27,11 @@ class StageRunnerTests(unittest.TestCase):
             seen.append(line)
         self.assertEqual(seen, ["check 1/3", "check 2/3", "check 3/3"])
 
+    def test_stream_mode_keeps_blank_separator_lines(self) -> None:
+        self.assertTrue(stage_runner.echoed(""))
+        self.assertTrue(stage_runner.echoed("=== OTHER ==="))
+        self.assertFalse(stage_runner.echoed("[PROGRESS] launchers [##--] 2/6 kobold"))
+
     def test_slow_and_failed_stages_are_marked(self) -> None:
         stage = stage_runner.Stage("gate", "scripts.review", typical=55, high=80)
         self.assertEqual(stage_runner._mark(stage_runner.Result("gate", "ok", 95.0), stage), "SLOW")
