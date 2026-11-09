@@ -72,8 +72,12 @@ def tile_cases(group: str) -> tuple[tuple[str, LTXWorkflowOverrides], ...]:
     return tuple(cases)
 
 
+# - one wrapper carries the launch settings; its `set "NAME=value"` lines decide the flags
+WRAPPERS = {"user": "launch_comfyui.bat"}
+
+
 def launch_options(preset: str) -> tuple[list[str], dict[str, str]]:
-    wrapper = project_cfg.BAT_DIR / "browser/comfyui" / f"comfyui-{preset}.bat"
+    wrapper = project_cfg.BAT_DIR / "browser/comfyui" / WRAPPERS.get(preset, "launch_comfyui.bat")
     settings = dict(re.findall(r'(?m)^[ \t]*set "([A-Z_0-9]+)=([^"\r\n]*)"', wrapper.read_text(encoding="utf-8")))
     flags = ["--disable-partner-nodes", "--disable-pinned-memory", "--enable-manager", "--enable-manager-legacy-ui"]
     for setting, on, off in (
