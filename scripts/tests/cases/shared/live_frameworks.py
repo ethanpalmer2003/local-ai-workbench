@@ -30,6 +30,7 @@ from scripts.launchers.llamacpp import llamacpp, llamacpp_coding, llamacpp_dsh
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
+from scripts.tests.shared import live_stamp
 from scripts.tests.shared.http_server import request
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.progress import ProgressBar
@@ -405,13 +406,23 @@ def running_framework(
 
 
 def run_live(frameworks: list[str]) -> bool:
+    if live_stamp.unchanged("launchers", frameworks):
+        print(
+            f"[SKIP] launchers: sources unchanged since the last pass ({', '.join(frameworks)}); "
+            "set AI_LIVE_FORCE=1 to rerun",
+            flush=True,
+        )
+        return True
     context = dict(require_native_execution("Native framework workflows"))
     from scripts.tests.shared.native_suites import native_policy, refuse_existing_sessions
 
     with native_policy():
         launch_util.assign_current_process_to_job()
         refuse_existing_sessions()
-        return _run_live(frameworks, context)
+        passed = _run_live(frameworks, context)
+    if passed:
+        live_stamp.record("launchers", frameworks)
+    return passed
 
 
 def run_practice(output: RunPaths) -> tuple[bool, Path]:

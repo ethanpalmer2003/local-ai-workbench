@@ -10,6 +10,7 @@ from scripts.benchmarks.shared.reporting import RunReport
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.tests.shared import live_stamp
 from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.progress import ProgressBar
 
@@ -36,11 +37,21 @@ PROBES = {
 def run_probes(names: list[str]) -> bool:
     from scripts.tests.shared.native_suites import native_policy, refuse_existing_sessions
 
+    if live_stamp.unchanged("backends", names):
+        print(
+            f"[SKIP] backends: sources unchanged since the last pass ({', '.join(names)}); "
+            "set AI_LIVE_FORCE=1 to rerun",
+            flush=True,
+        )
+        return True
     context = dict(require_native_execution("Quick native validation"))
     with native_policy():
         launch_util.assign_current_process_to_job()
         refuse_existing_sessions()
-        return _run_probes(names, context)
+        passed = _run_probes(names, context)
+    if passed:
+        live_stamp.record("backends", names)
+    return passed
 
 
 def _run_probes(names: list[str], context: dict[str, object]) -> bool:
