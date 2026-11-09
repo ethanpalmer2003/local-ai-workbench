@@ -1,7 +1,7 @@
 # Upstream issues and local patches
 
 Every upstream defect we answer, split by whether a local build is involved. Reports stay local drafts;
-nothing is posted upstream, and owners keep the detail.
+nothing is posted upstream.
 
 ## No rebuild
 
@@ -9,7 +9,7 @@ nothing is posted upstream, and owners keep the detail.
 | --- | --- | --- | --- |
 | KoboldCpp Lite | OpenAI speech arrives whole, so audio cannot play while the reply generates | Proxy patches the Lite page at request time; two reviewable variants, no pull request | [patch guide](../scripts/launchers/koboldcpp/patches/README.md), [proxies](../scripts/launchers/PROXIES.md) |
 | llama.cpp web UI | No workspace speech panel in the RDNA build | Two patches add the panel, built into a local UI directory | [UI patches](../scripts/launchers/llamacpp/patches/README.md) |
-| llama.cpp Vulkan | 27B MTP profile freezes the server on the fourth 256-token generation (4k and 8k context, two profiles); a graph reallocation is the last log line. Three long generations pass, then the request never returns | Benchmarks use the Lemonade build for repeated long generations; Vulkan runs stay short. Retest after a build change | [llama.cpp benchmarks](../scripts/benchmarks/llamacpp/README.md) |
+| llama.cpp Vulkan | Freezes on the fourth 256-token generation | Long runs use the Lemonade build; [draft](reviews/LLAMACPP-VULKAN-2026-11-09.md) | [benchmarks](../scripts/benchmarks/llamacpp/README.md) |
 | Parakeet.cpp | Vulkan streaming crashes | Streaming disabled; the CPU adapter carries paced capture; retest after an upstream fix | [guide](../scripts/launchers/asr/PARAKEET.md) |
 | AudioCpp Nemotron | Japanese streaming closes or resets despite `ja-JP` on the card | Candidate engine only; the practice profile uses another backend; retest after a build change | [evaluation](asr/ASR-EVALUATION.md) |
 | Strata | Not a defect: the comparison protocol comes from an upstream issue | The harness follows it so numbers compare | [tuning](../scripts/config/strata/TUNING.md) |
