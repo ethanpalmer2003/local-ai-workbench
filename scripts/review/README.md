@@ -20,6 +20,27 @@ Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function limi
 
 Run a single check with `python -m scripts.review.structure_docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `structure_docs --words` prints every maintained document by word count with its budget, marking both over-budget documents and short ones.
 
+## Document roles
+
+`structure_docs` gives every maintained document one role and rejects a home that role does not allow;
+`--roles` prints the counts.
+
+| Role | Home |
+| --- | --- |
+| root | repo root: `README.md`, `AGENTS.md` |
+| agent rule | `.agents/` |
+| agent skill | `.agents/skills/<name>/` |
+| running list | `notes/` root only |
+| review record | `notes/reviews/` |
+| note topic | `notes/` |
+| test note | `scripts/tests/notes/` |
+| generated report | `scripts/review/COMPLEXITY-DEBT.md` |
+| tuning | a component folder |
+| hub | each folder's `README.md` |
+| component guide | a component folder, uppercase name |
+
+A document matching no role fails, so a new kind is a deliberate addition to `ROLE_RULES`.
+
 ## Framework validation
 
 This gate is repo-wide and never loads a model. A check that belongs to one framework stays beside that

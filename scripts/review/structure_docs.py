@@ -3,6 +3,7 @@
 import argparse
 import ast
 import re
+from collections import Counter
 from functools import cache
 from pathlib import Path
 from urllib.parse import unquote
@@ -480,6 +481,68 @@ def markdown_name_issues(path: Path) -> list[str]:
     return [f"{path.relative_to(project_cfg.BASE_DIR).as_posix()}: Markdown basename must be uppercase"]
 
 
+# - one home per role: the table is the whole taxonomy, so an unlisted kind fails instead of drifting in
+RUNNING_LISTS = frozenset({"TODO.md", "OPEN-QUESTIONS.md", "UPSTREAM.md"})
+ROLE_RULES = (
+    ("root", r"(?:README|AGENTS)\.md"),
+    ("agent skill", r"\.agents/skills/[^/]+/SKILL\.md"),
+    ("agent rule", r".*AGENTS\.md|\.agents/.*\.md"),
+    ("running list", r"notes/(?:TODO|OPEN-QUESTIONS|UPSTREAM)\.md"),
+    ("review record", r"notes/reviews/.*\.md"),
+    ("note topic", r"notes/.*\.md"),
+    ("test note", r"scripts/tests/notes/.*\.md"),
+    ("generated report", r"scripts/review/COMPLEXITY-DEBT\.md"),
+    ("tuning", r"scripts/(?:[^/]+/)+TUNING\.md"),
+    ("hub", r"^(?:[^/]+/)+README\.md$"),
+    ("component guide", r"scripts/(?:[^/]+/)+[A-Z][A-Z0-9-]*\.md"),
+)
+
+
+def document_role(relative: str) -> str | None:
+    """The role a document's home and basename give it, or None when it matches no known kind."""
+    for role, pattern in ROLE_RULES:
+        if re.fullmatch(pattern, relative):
+            return role
+    return None
+
+
+def _component_folder(path: Path) -> bool:
+    return any(path.as_posix().endswith("/" + key) for key in project_cfg.COMPONENTS)
+
+
+def _role_placement_issues(path: Path, relative: str) -> list[str]:
+    if path.name in RUNNING_LISTS and path.parent != project_cfg.BASE_DIR / "notes":
+        return [f"{relative}: running lists live at the notes root, not beside a component"]
+    if path.name == "TUNING.md" and not _component_folder(path.parent):
+        return [f"{relative}: TUNING.md belongs in a component folder"]
+    return []
+
+
+def role_issues(files: list[Path]) -> list[str]:
+    """Every maintained document must claim a role, and its role must allow that home."""
+    issues: list[str] = []
+    for path in files:
+        if path.suffix != ".md":
+            continue
+        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+        issues.extend(_role_placement_issues(path, relative))
+        if document_role(relative) is None:
+            issues.append(f"{relative}: no document role; add the kind to ROLE_RULES or move the document")
+    return issues
+
+
+def print_role_counts(files: list[Path]) -> int:
+    """How many maintained documents each role holds, unclassified last."""
+    counts = Counter(
+        document_role(path.relative_to(project_cfg.BASE_DIR).as_posix()) or "unclassified"
+        for path in files
+        if path.suffix == ".md"
+    )
+    for role, count in counts.most_common():
+        print(f"{count:4d}  {role}")
+    return int("unclassified" in counts)
+
+
 def root_document_issues() -> list[str]:
     """The root is navigation only; guides and running lists belong under notes/."""
     return [
@@ -531,11 +594,15 @@ def short_documents(files: list[Path]) -> list[tuple[int, str]]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--words", action="store_true", help="list every maintained document by word count")
+    parser.add_argument("--roles", action="store_true", help="list every maintained document by role")
     args = parser.parse_args(argv)
     files = maintained_files()
     if args.words:
         return print_word_counts(files)
+    if args.roles:
+        return print_role_counts(files)
     issues = configuration_issues() + physical_root_issues() + naming_issues() + root_document_issues()
+    issues += role_issues(files)
     issues += model_name_issues(files)
     for path in files:
         text = path.read_text(encoding="utf-8-sig")
