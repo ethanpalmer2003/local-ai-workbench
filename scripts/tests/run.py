@@ -27,7 +27,7 @@ from scripts.tests.cases.llamacpp.test_ngram import NgramWorkloads
 from scripts.tests.cases.llamacpp.test_speech_ui import SpeechUiTests
 from scripts.tests.cases.personal.comfyui.test_comfyui_video import ExecutionTests, WorkflowTests
 from scripts.tests.cases.personal.comfyui.test_ltx_prompt_cache import PromptCacheTests
-from scripts.tests.cases.personal.comfyui.test_verify_node import VerifyNodeTests
+from scripts.tests.cases.personal.comfyui.test_verify_node import ProviderTests, VerifyNodeTests
 from scripts.tests.cases.shared import frameworks_smoke
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
@@ -145,6 +145,7 @@ if __name__ == "__main__":
                     WorkflowTests,
                     ExecutionTests,
                     VerifyNodeTests,
+                    ProviderTests,
                     PromptCacheTests,
                     TtsProfiles,
                     FrameworkClients,

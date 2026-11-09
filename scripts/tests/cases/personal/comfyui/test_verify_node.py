@@ -2,6 +2,7 @@
 
 import contextlib
 import io
+import tempfile
 import unittest
 from pathlib import Path
 from types import ModuleType
@@ -85,6 +86,7 @@ class VerifyNodeTests(unittest.TestCase):
     def test_main_reports_success_and_failure(self) -> None:
         with (
             patch.object(verify_node, "runtime_issues", return_value=[]),
+            patch.object(verify_node, "provider_issues", return_value=[]),
             contextlib.redirect_stdout(io.StringIO()) as output,
         ):
             self.assertEqual(verify_node.main([str(TRACKED_NODE)]), 0)
@@ -92,6 +94,36 @@ class VerifyNodeTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()) as output:
             self.assertEqual(verify_node.main([str(TRACKED_NODE.parent / "absent.py")]), 1)
         self.assertIn("missing installed copy", output.getvalue())
+
+
+class ProviderTests(unittest.TestCase):
+    def test_registered_type_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            custom_nodes = Path(directory)
+            provider = custom_nodes / "ComfyUI-GGUF"
+            provider.mkdir()
+            (provider / "nodes.py").write_text(
+                'NODE_CLASS_MAPPINGS = {\n    "CLIPLoaderGGUF": CLIPLoaderGGUF,\n}\n', encoding="utf-8"
+            )
+            issues = verify_node.provider_issues(custom_nodes)
+            self.assertNotIn("CLIPLoaderGGUF: custom_nodes/ComfyUI-GGUF does not register it", issues)
+
+    def test_missing_folder_and_missing_registration_are_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            custom_nodes = Path(directory)
+            (custom_nodes / "ComfyUI-GGUF").mkdir()
+            issues = verify_node.provider_issues(custom_nodes)
+            self.assertTrue(any("does not register" in issue for issue in issues), issues)
+            self.assertTrue(any("is missing" in issue for issue in issues), issues)
+
+    def test_comment_only_mention_is_not_a_registration(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            custom_nodes = Path(directory)
+            provider = custom_nodes / "ComfyUI-GGUF"
+            provider.mkdir()
+            (provider / "notes.py").write_text('"""CLIPLoaderGGUF is handled elsewhere."""\n', encoding="utf-8")
+            issues = verify_node.provider_issues(custom_nodes)
+            self.assertTrue(any(issue.startswith("CLIPLoaderGGUF") for issue in issues), issues)
 
 
 if __name__ == "__main__":

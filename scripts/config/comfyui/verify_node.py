@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import re
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -24,6 +25,15 @@ METHODS = ("IS_CHANGED", "check_lazy_status", "encode")
 RUNTIME_MODULES = ("folder_paths", "torch")
 # - <installation>/custom_nodes/<node>/__init__.py
 INSTALLATION_LEVEL = 2
+# - node types the tracked workflows queue, and the custom-node folder that must register them; a
+#   type is matched where it is spelled as a NODE_CLASS_MAPPINGS key, since importing the other
+#   providers needs ComfyUI's own runtime
+REQUIRED_PROVIDERS = {
+    "CLIPLoaderGGUF": "ComfyUI-GGUF",
+    "CLIPLoaderGGUFDynamicVRAM": "ComfyUI-GGUF",
+    "LocalLTXCachedTextEncode": "ltx-prompt-cache",
+    "UnetLoaderGGUFDynamicVRAM": "ComfyUI-GGUF",
+}
 
 
 def installation_root(node: Path) -> Path:
@@ -98,12 +108,38 @@ def runtime_issues(root: Path) -> list[str]:
         sys.path.remove(entry)
 
 
+def _registered(folder: Path, name: str) -> bool:
+    pattern = re.compile(rf"""["']{re.escape(name)}["']\s*:""")
+    for path in folder.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        try:
+            if pattern.search(path.read_text(encoding="utf-8", errors="ignore")):
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def provider_issues(custom_nodes: Path) -> list[str]:
+    """Providers that must be present for every node type the tracked workflows queue."""
+    issues = []
+    for name, folder_name in sorted(REQUIRED_PROVIDERS.items()):
+        folder = custom_nodes / folder_name
+        if not folder.is_dir():
+            issues.append(f"{name}: custom_nodes/{folder_name} is missing")
+        elif not _registered(folder, name):
+            issues.append(f"{name}: custom_nodes/{folder_name} does not register it")
+    return issues
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("node", type=Path, help="Installed node copy ComfyUI loads at startup")
     args = parser.parse_args(argv)
     if args.node.is_file():
         issues = runtime_issues(installation_root(args.node))
+        issues += provider_issues(args.node.parent.parent)
         try:
             issues += contract_issues(load(args.node))
         except Exception as error:
