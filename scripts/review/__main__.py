@@ -5,7 +5,7 @@ import json
 import subprocess
 
 from scripts.config import project_config as project_cfg
-from scripts.review import dependencies, frontend_wiring, inventory_code, model_references, structure_docs, typography
+from scripts.review import frontend_wiring, inventory_code, model_references, package_audit, structure_docs, typography
 from scripts.review.public_audit import main as public_audit_main
 
 SPELL_EXCLUDED = (
@@ -81,17 +81,17 @@ def format_check() -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-format-check", action="store_true", help="skip the ruff format comparison")
-    parser.add_argument("--prune", action="store_true", help="list installed packages outside the import graph")
-    parser.add_argument("--remove", action="store_true", help="with --prune: uninstall those packages")
+    parser.add_argument("--prune", action="store_true", help="list installed packages nothing imports or declares")
+    parser.add_argument("--remove", action="store_true", help="with --prune: uninstall those leftovers")
     parser.add_argument("--scrub", action="store_true", help="scan the tree and history for personal terms")
     args = parser.parse_args(argv)
     if args.prune:
-        return dependencies.main(remove=args.remove)
+        return package_audit.main(remove=args.remove)
     if args.scrub:
         return public_audit_main(["--scrub"])
 
     print("=== STRUCTURE AND DOCUMENTATION ===", flush=True)
-    structure_status = structure_docs.main()
+    structure_status = structure_docs.main([])
 
     print("\n=== MODEL REFERENCE DRIFT ===", flush=True)
     model_status = model_references.main()
@@ -110,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
         type_status = 1
 
     print("\n=== REPOSITORY INVENTORY AND PYTHON COMPLEXITY ===", flush=True)
-    counts = dependencies.summary()
+    counts = package_audit.summary()
     inventory_status = inventory_code.main(counts)
 
     formatting_status = 0
@@ -135,8 +135,8 @@ def main(argv: list[str] | None = None) -> int:
     print(audit_note)
 
     print("\n=== DEPENDENCY HYGIENE ===", flush=True)
-    issues = dependencies.lock_issues()
-    print(f"{counts['locked']} locked, {counts['installed']} installed, {counts['unused']} unused")
+    issues = package_audit.lock_issues()
+    print(f"{counts['locked']} locked, {counts['installed']} installed, {counts['leftovers']} leftovers")
     declaration_status = declaration_check()
     print("[OK] Imports match the pins" if not declaration_status else "[FAIL] deptry reported issues")
     for issue in issues[:10]:

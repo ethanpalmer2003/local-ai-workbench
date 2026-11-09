@@ -1,4 +1,8 @@
-"""Report installed packages the repository never imports, from the real import graph."""
+"""Installed distributions that are neither imported nor declared, plus uv lock consistency.
+
+deptry owns the declared side: whether every import is covered and every declaration is used. This
+module owns the leftovers, packages a past install left behind, and delegates the lock to uv.
+"""
 
 import ast
 import re
@@ -110,15 +114,30 @@ def required_names() -> set[str]:
     return reached
 
 
-def unused_packages() -> list[tuple[str, str]]:
-    """(display name, version) for installed distributions nothing requires."""
+def declared() -> set[str]:
+    """Distribution names pyproject declares; deptry owns whether each one is used."""
+    payload = tomllib.loads((project_cfg.BASE_DIR / "pyproject.toml").read_text(encoding="utf-8"))
+    groups = [payload.get("project", {}).get("dependencies", [])]
+    groups.extend(payload.get("dependency-groups", {}).values())
+    groups.extend(payload.get("project", {}).get("optional-dependencies", {}).values())
+    names: set[str] = set()
+    for group in groups:
+        for text in group:
+            parsed = _requirement(text)
+            if parsed is not None:
+                names.add(_normalized(parsed.name))
+    return names
+
+
+def leftovers() -> list[tuple[str, str]]:
+    """(display name, version) for installed distributions nothing imports and no manifest declares."""
     known = installed()
     display = {}
     for dist in distributions():
         name = dist.metadata["Name"]
         if name:
             display[_normalized(name)] = name
-    reachable = required_names()
+    reachable = required_names() | declared()
     return sorted(((display[name], known[name]) for name in set(known) - reachable), key=lambda row: row[0].casefold())
 
 
@@ -153,7 +172,7 @@ def summary() -> dict[str, int]:
     return {
         "locked": len(locked()),
         "installed": len(installed()),
-        "unused": len(unused_packages()),
+        "leftovers": len(leftovers()),
         "drift": len(lock_issues()),
     }
 
@@ -170,14 +189,14 @@ def uninstall(names: list[str]) -> int:
 
 
 def main(remove: bool = False) -> int:
-    unused = unused_packages()
-    print(f"{len(unused)} installed package(s) are outside the import graph")
-    for name, version in unused:
+    found = leftovers()
+    print(f"{len(found)} installed package(s) that no import or manifest declares")
+    for name, version in found:
         print(f"  {name} {version}")
-    if unused and not remove:
-        print("\nRemove with:\n  uv pip uninstall " + " ".join(name for name, _ in unused))
-    if unused and remove:
-        status = uninstall([name for name, _ in unused])
+    if found and not remove:
+        print("\nRemove with:\n  uv pip uninstall " + " ".join(name for name, _ in found))
+    if found and remove:
+        status = uninstall([name for name, _ in found])
         print(f"[{'OK' if status == 0 else 'FAIL'}] uninstall exited {status}")
     issues = lock_issues()
     print(f"\n{len(issues)} lock entry issue(s)")
