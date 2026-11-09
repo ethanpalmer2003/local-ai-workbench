@@ -28,14 +28,11 @@ Run a single check with `python -m scripts.review.structure_docs`, `python -m sc
 | Role | Home |
 | --- | --- |
 | root | repo root: `README.md`, `AGENTS.md` |
-| agent rule | `.agents/` |
-| agent skill | `.agents/skills/<name>/` |
-| running list | `notes/` root only |
-| review record | `notes/reviews/` |
-| note topic | `notes/` |
-| test note | `scripts/tests/notes/` |
+| agent rule | `.agents/`, including skills |
 | hub | each folder's `README.md` |
-| component guide | a component folder, uppercase name; `TUNING.md` and the generated ledger are kinds of it |
+| note | `notes/`, including the running lists |
+| review record | `notes/reviews/` |
+| component guide | a component folder or `scripts/tests/notes/`, uppercase name; `TUNING.md` and the generated ledger included |
 
 A document matching no role fails, so a new kind is a deliberate addition to `ROLE_RULES`.
 

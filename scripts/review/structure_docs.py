@@ -485,12 +485,9 @@ def markdown_name_issues(path: Path) -> list[str]:
 RUNNING_LISTS = frozenset({"TODO.md", "OPEN-QUESTIONS.md", "UPSTREAM.md"})
 ROLE_RULES = (
     ("root", r"(?:README|AGENTS)\.md"),
-    ("agent skill", r"\.agents/skills/[^/]+/SKILL\.md"),
     ("agent rule", r".*AGENTS\.md|\.agents/.*\.md"),
-    ("running list", r"notes/(?:TODO|OPEN-QUESTIONS|UPSTREAM)\.md"),
     ("review record", r"notes/reviews/.*\.md"),
-    ("note topic", r"notes/.*\.md"),
-    ("test note", r"scripts/tests/notes/.*\.md"),
+    ("note", r"notes/.*\.md"),
     ("hub", r"^(?:[^/]+/)+README\.md$"),
     ("component guide", r"scripts/(?:[^/]+/)+[A-Z][A-Z0-9-]*\.md"),
 )
