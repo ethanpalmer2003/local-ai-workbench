@@ -17,11 +17,6 @@
 - [ ] Publish a dated report for the Strata profile pair: the runs on disk are aborted stubs, so the recorded numbers need a rerun first.
 - [ ] ComfyUI: validate promising 480 screens at 640 and longer clips, then publish a dated report for the 640 scaling claim, which kept no artifact; assess appearance, autotune/cache and monitor overhead; pinned memory is off with no recorded reason, so compare it on before keeping that default.
 
-## Code and docs only
-
-- [ ] Lemonade's Kokoro mis-speaks French and Japanese: its espeak-ng data ships `fr` and `ja` dictionaries, but `koko.exe` defaults to `-l en-us` and English styles, so its kokoro recipe maps language and style wrongly. The [draft](reviews/UPSTREAM-KOKORO-2026-11-08.md) stays local; posting is not planned. [Report](../scripts/benchmarks/output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
-- [ ] KoboldCpp's Kokoro returns an empty WAV for Japanese and an English fallback elsewhere: the build embeds only `kokoro_ipa.embd`, so no other language has a phonemizer. The [draft](reviews/UPSTREAM-KOKORO-2026-11-08.md) stays local; posting is not planned. [Report](../scripts/benchmarks/output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
-
 ## Needs a device
 
 - [ ] Validate Handy microphone selection, dictation and paste. `selected_microphone` is null (the default device) and the last attempt captured 0 samples in 17 ms, so the device is the suspect; the model, VAD and hotkey are configured.
