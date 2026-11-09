@@ -111,6 +111,7 @@ def references() -> dict[Path, str]:
         project_cfg.AUDIOCPP_ROCM_DIR: "AudioCpp release zip",
         project_cfg.SDCPP_ROCM_DIR: "sd.cpp runtime folder",
         project_cfg.LLAMACPP_ROCM_LEMONADE_DIR: "llama.cpp rocm-lemonade build",
+        project_cfg.LLAMACPP_ROCM_STOCK_DIR: "llama.cpp rocm-stock build",
     }
 
 
