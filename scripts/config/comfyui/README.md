@@ -7,6 +7,20 @@
 - Sync preserves replaced/removed managed files in trash, refuses missing source directories, and leaves unrelated nodes/user data intact. It does not install custom nodes or restart the server.
 - Startup syncs the tracked workflow/node copies, then loads the installed node under ComfyUI's own interpreter ([verify_node.py](verify_node.py)); a broken node stops the launch instead of failing mid-workflow. Native dependency/custom-node installation remains a separate fresh-machine task.
 
+## Required custom nodes
+
+The saved workflows name every node type they run, but a type does not name the package that provides it.
+These are the providers the tracked graphs need:
+
+| Node type | Provider |
+| --- | --- |
+| `UnetLoaderGGUFDynamicVRAM`, `CLIPLoaderGGUF`, `CLIPLoaderGGUFDynamicVRAM` | `molbal/ComfyUI-GGUF` |
+| `LocalLTXCachedTextEncode` | this repository, synced from [ltx_prompt_cache.py](ltx_prompt_cache.py) |
+
+The other installed nodes (`ComfyUI-Manager`, `ComfyUI-INT8-Fast-ROCM`, `comfyui-h3-sla-attention-rocm`,
+`CFZ-Caching`, `CFZ-SwitchMenu`, `ComfyUI-HFRemoteVae`) do not appear in these workflows; the INT8 and H3
+nodes serve weights whose workflows are not tracked here.
+
 ## LTX 2.5
 
 - Saved workflows use model-specific text encoder, diffusion model, audio/video VAE and optional upscale/LoRA files. Exported graphs remain editable native JSON.
