@@ -14,5 +14,6 @@ title %RUN_TITLE%
 set "RUN_EXIT=%ERRORLEVEL%"
 popd
 echo.
+echo [DONE] %RUN_MODULE% exit code %RUN_EXIT%
 pause
 exit /b %RUN_EXIT%
