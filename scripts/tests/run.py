@@ -80,6 +80,7 @@ from scripts.tests.cases.shared.test_docs import (
 )
 from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
 from scripts.tests.cases.shared.test_inputs_overlay import InputOverlayTests
+from scripts.tests.cases.shared.test_layout import PolicyTests
 from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
@@ -159,6 +160,7 @@ if __name__ == "__main__":
                     ConfigSyncTests,
                     ModelCatalogTests,
                     InputOverlayTests,
+                    PolicyTests,
                     PreflightTests,
                     PublicAuditTests,
                     KokoroProfiles,
