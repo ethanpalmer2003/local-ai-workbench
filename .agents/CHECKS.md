@@ -9,7 +9,7 @@
 
 - `python -m scripts.review.structure_docs` checks keys, paths, imports, links and Markdown budgets.
 - `basedpyright --level error` catches type/name contracts; syntax compilation alone is not enough. Run from `C:/AI` with the project environment and a normal-token invocation, or dependency discovery reports false missing imports.
-- `python -m scripts.review` or `scripts/review/check_repo.bat` adds types, inventory and the depth/length audit. Existing audit findings stay visible and are not type failures.
+- `python -m scripts.review` or `scripts/review/check_repo.bat` adds types, inventory, formatting and spelling.
 - Import smoke checks must not start a suite, model, GPU workload or service.
 
 ## When
