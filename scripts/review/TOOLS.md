@@ -10,8 +10,8 @@ Measured on this machine; only the last two open a model or service. When to run
 | --- | --- | --- |
 | edit | staged-file hooks: ruff, codespell, ASCII punctuation | seconds |
 | module | one `scripts.review.*` check: docs, layout, wiring, typography, model references | under 2 s |
-| gate | `python -m scripts.review`: adds types, inventory, formatting, spelling, deps | about 40 s |
-| suite | `python -m scripts.tests.run`, model-free | about 30 s |
+| gate | `python -m scripts.review`: adds lint, types, inventory, formatting, spelling, deps | about 45 s |
+| suite | `python -m scripts.review --tests`, model-free | about 75 s total |
 | live | `bat/tests/test_live_launchers.bat`, `test_live_backends.bat` | minutes |
 | measure | a benchmark runner | minutes to hours |
 | publish | `public_audit --history` and `--scrub` | seconds to a minute |
@@ -20,7 +20,8 @@ Measured on this machine; only the last two open a model or service. When to run
 
 | Command | Covers |
 | --- | --- |
-| `python -m scripts.review` | structure/docs, model references, front-end wiring, types, inventory, formatting, spelling, advisories, deptry, lock and leftovers |
+| `python -m scripts.review` | layout, docs, model references, front-end wiring, lint, types, inventory, formatting, spelling, advisories, deptry, lock and leftovers |
+| ... --tests | the same, then the model-free test suite |
 | `... --prune` | installed packages nothing imports or declares, with the uninstall command |
 | `scripts/review/check_repo.bat` | the same, from a normal terminal |
 | `scripts/review/format_py.bat` | applies `ruff format` |
