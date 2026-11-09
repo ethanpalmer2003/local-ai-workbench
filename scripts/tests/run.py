@@ -53,6 +53,7 @@ from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisT
 from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
 from scripts.tests.cases.shared.models.test_model_languages import ModelLanguages
 from scripts.tests.cases.shared.models.test_model_sync import ModelSyncTests
+from scripts.tests.cases.shared.models.test_model_updates import CatalogOverlayTests, ModelUpdatesTests
 from scripts.tests.cases.shared.regression.test_regression_fixtures import RegressionFixtures
 from scripts.tests.cases.shared.regression.test_test_boundaries import TestBoundaries
 from scripts.tests.cases.shared.reports.test_reporting import Reporting
@@ -85,6 +86,7 @@ from scripts.tests.cases.shared.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
+from scripts.tests.cases.shared.test_stage_runner import StageRunnerTests
 from scripts.tests.cases.shared.test_typography import CheckTests, ScanTests, SuffixTests
 from scripts.tests.cases.shared.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
@@ -161,9 +163,12 @@ if __name__ == "__main__":
                     PiPackageTests,
                     ConfigSyncTests,
                     ModelCatalogTests,
+                    CatalogOverlayTests,
+                    ModelUpdatesTests,
                     InputOverlayTests,
                     PolicyTests,
                     LiveStampTests,
+                    StageRunnerTests,
                     ValidatePlanTests,
                     PreflightTests,
                     PublicAuditTests,
