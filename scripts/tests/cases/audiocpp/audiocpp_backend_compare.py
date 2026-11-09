@@ -60,7 +60,7 @@ PROFILES = {
     ),
 }
 PORTS = {"vulkan": 18881, "hip": 18882, "hip-7.1-old": 18883, "rocm-release": 18884}
-ROCM_RUNTIME_DIR = project_cfg.AUDIOCPP_ROCM_BUILD_DIR
+ROCM_RUNTIME_DIRS = {"hip": project_cfg.AUDIOCPP_ROCM_BUILD_DIR, "rocm-release": project_cfg.ROCM_SDK_BIN_DIR}
 BUILDS = {
     "vulkan": project_cfg.AUDIOCPP_VULKAN_BIN_DIR / "audiocpp_server.exe",
     "rocm-release": project_cfg.AUDIOCPP_ROCM_BIN_DIR / "audiocpp_server.exe",
@@ -224,8 +224,9 @@ def run_backend(
     if backend != "vulkan":
         env = os.environ.copy()
         runtime_dirs = [str(exe.parent)]
-        if backend == "hip":
-            runtime_dirs.append(str(ROCM_RUNTIME_DIR))
+        runtime = ROCM_RUNTIME_DIRS.get(backend)
+        if runtime is not None:
+            runtime_dirs.append(str(runtime))
         env["PATH"] = os.pathsep.join((*runtime_dirs, env.get("PATH", "")))
     baseline = snapshot_dict()
     memory_path = run_root / "logs" / f"vram-{backend}.jsonl"

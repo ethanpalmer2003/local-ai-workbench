@@ -266,7 +266,8 @@ SDCPP_FRAMEWORK_DIR = component("sdcpp").framework_dir
 SDCPP_MODELS_DIR = component("sdcpp").models_dir
 SDCPP_ROCM_DIR = SDCPP_FRAMEWORK_DIR / "rocm"
 SDCPP_VULKAN_DIR = SDCPP_FRAMEWORK_DIR / "vulkan"
-SDCPP_ROCM_SDK_BIN_DIR = DATA_DIR / "ROCm" / "therock-dist-windows-gfx110X-all-10.2.0a20260927" / "bin"
+# shared TheRock ROCm runtime: sd.cpp and the AudioCpp ROCm release both load their HIP libraries from it
+ROCM_SDK_BIN_DIR = DATA_DIR / "ROCm" / "therock-dist-windows-gfx110X-all-10.2.0a20260927" / "bin"
 
 
 # ============================================================

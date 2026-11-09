@@ -71,7 +71,7 @@ def find_audiocpp_rocm_path() -> Path:
     installed = Path("C:\\Program Files\\AMD\\ROCm")
     if installed.is_dir():
         candidates.extend(sorted(installed.iterdir(), reverse=True))
-    candidates.append(project_cfg.SDCPP_ROCM_SDK_BIN_DIR.parent)
+    candidates.append(project_cfg.ROCM_SDK_BIN_DIR.parent)
     for candidate in candidates:
         if not candidate.is_dir():
             continue
