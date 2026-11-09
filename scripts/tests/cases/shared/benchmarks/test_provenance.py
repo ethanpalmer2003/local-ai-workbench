@@ -19,6 +19,8 @@ COMMIT = "a" * 40
 
 def fake_git(command, **_kwargs):
     """Answer a git call the way a clean checkout would; keep the command for assertions."""
+    if "--show-toplevel" in command:
+        return subprocess.CompletedProcess(command, 0, stdout=f"{command[2]}\n")
     output = f"{COMMIT}\n" if "rev-parse" in command else ""
     return subprocess.CompletedProcess(command, 0, stdout=output)
 
@@ -33,11 +35,22 @@ class WorkspaceTests(unittest.TestCase):
 
     def test_uncommitted_changes_are_visible_in_the_record(self):
         def dirty_git(command, **_kwargs):
+            if "--show-toplevel" in command:
+                return subprocess.CompletedProcess(command, 0, stdout=f"{command[2]}\n")
             output = f"{COMMIT}\n" if "rev-parse" in command else " M scripts/x.py\n"
             return subprocess.CompletedProcess(command, 0, stdout=output)
 
         with patch.object(provenance.subprocess, "run", side_effect=dirty_git):
             self.assertTrue(provenance.git_state(project_config.BASE_DIR)["dirty"])
+
+    def test_a_folder_inside_the_workspace_does_not_borrow_its_commit(self):
+        def nested_git(command, **_kwargs):
+            top = str(project_config.BASE_DIR) if "--show-toplevel" in command else ""
+            return subprocess.CompletedProcess(command, 0, stdout=top + "\n")
+
+        install = Path(project_config.BASE_DIR) / "frameworks" / "llamacpp"
+        with patch.object(provenance.subprocess, "run", side_effect=nested_git):
+            self.assertEqual(provenance.git_state(install), {"commit": None, "dirty": None})
 
     def test_a_folder_outside_a_checkout_records_no_commit_instead_of_failing(self):
         failed = subprocess.CalledProcessError(128, "git")
