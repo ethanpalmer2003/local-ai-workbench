@@ -15,9 +15,9 @@ from typing import Any
 
 from scripts.config import project_config as project_cfg
 
-MAX_DEPTH = 4
-MAX_CODE_LINES = 100
 MAX_SMALL_FOLDER_ITEMS = 3
+# - function size is reported for context; the one gate is ruff's McCabe complexity
+LARGEST_FUNCTIONS = 20
 DEBT_DOC = project_cfg.SCRIPTS_DIR / "review" / "COMPLEXITY-DEBT.md"
 DEBT_PREAMBLE = (
     "# McCabe debt",
@@ -55,10 +55,6 @@ class FunctionSize:
     line: int
     code_lines: int
     depth: int
-
-    @property
-    def exceeds_limits(self) -> bool:
-        return self.code_lines > MAX_CODE_LINES or self.depth > MAX_DEPTH
 
 
 def nesting(node: ast.AST, depth: int = 0) -> int:
@@ -258,15 +254,13 @@ def report(
         if int(item["items"]) <= 1 and not (str(item["directory"]).endswith("/patches") and int(item["files"]) == 1)
     ]
     small_folders = [item for item in folders if 1 < int(item["items"]) <= MAX_SMALL_FOLDER_ITEMS]
-    violations = sorted(
-        (item for item in results if item.exceeds_limits),
-        key=lambda item: (-item.depth, -item.code_lines, item.path, item.line),
-    )
+    largest = sorted(results, key=lambda item: (-item.code_lines, -item.depth, item.path, item.line))[
+        :LARGEST_FUNCTIONS
+    ]
     payload = {
-        "limits": {"depth": MAX_DEPTH, "code_lines": MAX_CODE_LINES},
         "files": files,
         "functions": len(results),
-        "violations": [asdict(item) for item in violations],
+        "largest_functions": [asdict(item) for item in largest],
         "folders": folders,
         "sparse_folders": sparse_folders,
         "small_folder_candidates": small_folders,
@@ -278,13 +272,13 @@ def report(
         "# Repository code review",
         "",
         f"{len(folders)} folders; {len(source_files)} Python/Markdown files; {files} maintained Python files audited; "
-        f"{len(results)} functions; {len(violations)} complexity violations.",
+        f"{len(results)} functions.",
         "",
-        f"Function limits: depth {MAX_DEPTH}, {MAX_CODE_LINES} code lines per function.",
-        "Blank/comment/docstring lines excluded from function size; multiline signatures/data count. Nested bodies are",
-        "measured independently. Function audit excludes the tests tree; benchmarks and probes are included. File/folder inventory excludes",
-        "third-party installs, model data, generated state, trash and caches. Whole-file/folder sizes are context only;",
-        "they have no pass/fail threshold. JavaScript/TypeScript line counts are not included.",
+        "Function size is context, not a gate: ruff's McCabe rule fails a function above 10. Code lines exclude",
+        "blank/comment/docstring lines; multiline signatures/data count. Nested bodies are measured independently.",
+        "The function audit excludes the tests tree; benchmarks and probes are included. File/folder inventory excludes",
+        "third-party installs, model data, generated state, trash and caches. JavaScript/TypeScript line counts are not",
+        "included.",
         "",
         "## Largest Python and Markdown files",
         "",
@@ -296,18 +290,18 @@ def report(
     lines.extend(
         (
             "",
-            "## Function complexity findings",
+            f"## Largest functions (top {LARGEST_FUNCTIONS})",
             "",
             "| File:line | Function | Code lines | Depth |",
             "| --- | --- | ---: | ---: |",
         )
     )
-    lines.extend(f"| {item.path}:{item.line} | {item.name} | {item.code_lines} | {item.depth} |" for item in violations)
+    lines.extend(f"| {item.path}:{item.line} | {item.name} | {item.code_lines} | {item.depth} |" for item in largest)
     lines.extend(_suppression_section(suppressions))
     lines.extend(_dependency_section(dependencies or {}))
     (artifacts / "review.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     (artifacts / "review.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"{len(folders)} folders, {len(source_files)} Python/Markdown files; {len(violations)} complexity violations")
+    print(f"{len(folders)} folders, {len(source_files)} Python/Markdown files; {len(results)} functions")
     if suppressions:
         print(f"[FAIL] {len(suppressions)} inline suppression(s); move them into pyproject.toml")
         for item in suppressions[:10]:
@@ -319,7 +313,7 @@ def report(
             f"[INFO] {len(small_folders)} folders have 2 to {MAX_SMALL_FOLDER_ITEMS} items; review candidates in report."
         )
     print(f"Review report: {artifacts / 'review.md'}")
-    return bool(violations or suppressions)
+    return bool(suppressions)
 
 
 def _debt_row(item: dict[str, Any], root: Path) -> tuple[int, str, str]:

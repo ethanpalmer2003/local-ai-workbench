@@ -13,10 +13,10 @@ The runner executes these checks:
 - `model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
 - `frontend_wiring.py`: front-end wiring: HTML/JS asset paths, DOM element ids and injected settings keys.
 - `basedpyright`: Python type errors.
-- `inventory_code.py`: folder counts, sparse-folder warnings, 2-3-item merge candidates, Markdown/Python-module counts, file lines and function complexity (depth 4 / 100 code lines, which gates). Python-module counts exclude `__init__.py`; low counts are prompts to review, not automatic merge findings.
+- `inventory_code.py`: folder counts, sparse-folder warnings, 2-3-item merge candidates, Markdown/Python-module counts, file lines and function size for context; the gate is ruff's McCabe rule. Python-module counts exclude `__init__.py`; low counts are prompts to review, not automatic merge findings.
 - `typography.py`: ASCII punctuation only: em and en dashes, curly quotes, the ellipsis and no-break spaces are rejected in every tracked text file, quoted corpus references excepted. It gates, and the pre-commit hook runs the same module on staged files.
 
-Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function limits are depth 4 and 100 code lines. Inventory excludes generated output, caches, model data, third-party installations and trash.
+Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function complexity is gated by ruff at McCabe 10; the inventory lists the largest functions for context. Inventory excludes generated output, caches, model data, third-party installations and trash.
 
 Run a single check with `python -m scripts.review.structure_docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `structure_docs --words` prints every maintained document by word count with its budget.
 

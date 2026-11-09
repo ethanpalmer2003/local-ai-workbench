@@ -1,7 +1,7 @@
 # Code
 
 - Direct flow; a helper owns reused behavior, a class owns state, settings or policy.
-- Functions stay within depth 4 and 100 lines; extract by responsibility. Preserve unexpected tracebacks.
+- Functions stay at McCabe complexity 10 or below; extract by responsibility. Preserve unexpected tracebacks.
 - Keep lifecycle (`Startup`, `Request`, `StartupRequest`) and scope (`Generic`, `Shared`) explicit in settings classes.
 - Preserve external keys, flags and IDs. Fix a contract at its source instead of a cast or suppression.
 - Suppressions live only in `pyproject.toml`, each with a one-line reason; an inline `# noqa` is rejected, so restructure and ignore the narrowest glob.
