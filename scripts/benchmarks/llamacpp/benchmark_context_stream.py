@@ -100,6 +100,9 @@ def _consume_stream(
         if item.get("stop"):
             final = item
             continue
+        if item.get("prompt_progress"):
+            # - prompt-processing progress carries a placeholder token and is not an output token
+            continue
         tokens = item.get("tokens") or []
         if tokens:
             count += len(tokens)

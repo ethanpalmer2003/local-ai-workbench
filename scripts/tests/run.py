@@ -31,6 +31,7 @@ from scripts.tests.cases.personal.comfyui.test_verify_node import ProviderTests,
 from scripts.tests.cases.shared import frameworks_smoke
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
+from scripts.tests.cases.shared.benchmarks.test_context_stream import ContextStreamTests
 from scripts.tests.cases.shared.benchmarks.test_framework_compare import (
     AlternateArmTests,
     KoboldArmTests,
@@ -195,6 +196,7 @@ if __name__ == "__main__":
                     QwenAsrProfiles,
                     GemmaAudioTests,
                     ModelSyncTests,
+                    ContextStreamTests,
                     FrameworkUpdates,
                     ReportOutputs,
                     NgramWorkloads,
