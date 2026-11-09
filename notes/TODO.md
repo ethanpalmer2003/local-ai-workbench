@@ -17,7 +17,7 @@
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md).
 - [ ] llama.cpp: filled-context Vulkan/Lemonade comparison, medium/high-context speculation and short-context variation. Short-context is measured on Lemonade; Vulkan freezes on long generations and stays short ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). Filled-context and speculation variants are open.
 - [ ] Publish a dated report for the Strata profile pair. The prefill arm measures cleanly; the decode arm stops on the run's own 1 GiB RAM floor because its expert cache commits the pack, so it needs a resident budget rather than an override.
-- [ ] ComfyUI: validate promising 480 screens at 640 and longer clips, then publish a dated report for the 640 scaling claim, which kept no artifact; assess appearance, autotune/cache and monitor overhead; pinned memory is off with no recorded reason, so compare it on before keeping that default.
+- [ ] ComfyUI: the 640 validation now runs (both encoders, 5 s at 24 fps, 156 s and 159 s, 576x736, VRAM peak 15.8 GiB). Still open: longer clips, a dated 640 report, the appearance review, and the pinned-memory comparison that is off with no recorded reason; autotune/cache and monitor overhead remain unassessed.
 
 ## Needs a device
 
