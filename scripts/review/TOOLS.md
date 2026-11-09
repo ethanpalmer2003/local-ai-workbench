@@ -2,6 +2,20 @@
 
 What runs today. Use it to compare against other projects' stacks.
 
+## Levels
+
+Measured on this machine; only the last two open a model or service. When to run which is [checks policy](../../.agents/CHECKS.md).
+
+| Level | Scope | Typical time |
+| --- | --- | --- |
+| edit | staged-file hooks: ruff, codespell, ASCII punctuation | seconds |
+| module | one `scripts.review.*` check: docs, layout, wiring, typography, model references | under 2 s |
+| gate | `python -m scripts.review`: adds types, inventory, formatting, spelling, deps | about 40 s |
+| suite | `python -m scripts.tests.run`, model-free | about 30 s |
+| live | `bat/tests/test_live_launchers.bat`, `test_live_backends.bat` | minutes |
+| measure | a benchmark runner | minutes to hours |
+| publish | `public_audit --history` and `--scrub` | seconds to a minute |
+
 ## Entry points
 
 | Command | Covers |
