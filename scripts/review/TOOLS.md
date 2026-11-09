@@ -6,8 +6,8 @@ What runs today. Use it to compare against other projects' stacks.
 
 | Command | Covers |
 | --- | --- |
-| `python -m scripts.review` | structure/docs, model references, front-end wiring, types, inventory/complexity, formatting, spelling, dependency advisories |
-| `... --prune` | installed packages outside the import graph, with the uninstall command |
+| `python -m scripts.review` | structure/docs, model references, front-end wiring, types, inventory, formatting, spelling, advisories, deptry, lock and leftovers |
+| `... --prune` | installed packages nothing imports or declares, with the uninstall command |
 | `scripts/review/check_repo.bat` | the same, from a normal terminal |
 | `scripts/review/format_py.bat` | applies `ruff format` |
 | `python -m scripts.tests.run` | regression suite through pytest, timings and reports |
@@ -29,15 +29,15 @@ What runs today. Use it to compare against other projects' stacks.
 | `structure_docs.py` | doc budgets, links, anchors, markdown hygiene, root placement, component keys, naming, folder rules, batch references |
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
 | `frontend_wiring.py` | HTML/JS asset targets resolve, queried DOM ids exist, injected settings keys are both emitted and provided |
-| `inventory_code.py` | inventory, file/function size, complexity depth, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
+| `inventory_code.py` | inventory, file/function size, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
 | `public_audit.py` | secrets, credentials, home/machine paths, private words/inputs, large files, ignored-but-tracked |
 | `audit_timing.py` | which benchmark runners use the shared timing contract |
-| `dependencies.py` | installed packages the import graph never reaches; `--prune [--remove]`; `uv lock --check` |
+| `package_audit.py` | leftovers no import or manifest declares; `--prune [--remove]`; `uv lock --check` |
 | `coverage.py`, `pip-audit` | coverage; advisories run inside the gate (network, unreachable feed is a warning) |
 
 Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown and batch files are covered by `structure_docs.py`, HTML/JS by `frontend_wiring.py`; codespell reads tracked Python and Markdown.
 
-Lint gates at McCabe 10. Anything above it must carry `# noqa: C901` and appear in `COMPLEXITY-DEBT.md`; the table is currently empty, so the gate is fully enforced. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
+Lint gates at McCabe 10. Anything above it is listed in `COMPLEXITY-DEBT.md` and has to be split; inline suppressions are banned, so the ledger is the only place debt is recorded. The table is currently empty. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
 
 ## Deliberately absent
 

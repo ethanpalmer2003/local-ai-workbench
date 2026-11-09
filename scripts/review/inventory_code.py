@@ -235,7 +235,7 @@ def _dependency_section(counts: dict[str, int]) -> list[str]:
         "## Dependencies",
         "",
         f"{counts['locked']} locked; {counts['installed']} installed; "
-        f"{counts['unused']} outside the import graph; {counts['drift']} lock issues.",
+        f"{counts['leftovers']} leftovers; {counts['drift']} lock issues.",
     ]
 
 
