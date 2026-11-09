@@ -92,8 +92,29 @@ class InputOverlayTests(unittest.TestCase):
             # - every field the downloader reads must be demonstrated
             self.assertEqual(
                 set(entry) - {"transcripts_xlsx"},
-                {"category", "url", "exclude", "selected", "count", "selection", "fallback"},
+                {"category", "url", "exclude", "selected", "count", "selection", "fallback", "superseded_by"},
             )
+
+    def test_superseded_voices_name_their_replacement_and_stay_listed(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            (root / "voice_sources.json").write_text(
+                json.dumps(
+                    {
+                        "default": "current",
+                        "voices": {
+                            "current": {},
+                            "old": {"superseded_by": "current"},
+                            "self": {"superseded_by": "self"},
+                            "nonsense": {"superseded_by": ""},
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with patch.dict(inputs.os.environ, {"AI_INPUT_DIR": str(root)}):
+                self.assertEqual(inputs.superseded_voices(), {"old": "current"})
+                self.assertIn("old", inputs.voice_ids())
 
 
 if __name__ == "__main__":

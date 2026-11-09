@@ -52,6 +52,7 @@ class CharacterConfig:
     selection: str | None = None
     fallback: str | None = None
     transcripts_xlsx: str | None = None
+    superseded_by: str | None = None
 
     def __post_init__(self) -> None:
         if self.count <= 0:
@@ -162,6 +163,7 @@ def load_character_configs() -> dict[str, CharacterConfig]:
             selection=entry.get("selection"),
             fallback=entry.get("fallback"),
             transcripts_xlsx=entry.get("transcripts_xlsx"),
+            superseded_by=entry.get("superseded_by") or None,
         )
     return configs
 
@@ -173,7 +175,8 @@ def load_json(path, default=None):
     if default is None:
         default = {}
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        # - utf-8-sig: an editor may save a transcript cache with a BOM
+        return json.loads(path.read_text(encoding="utf-8-sig"))
     except FileNotFoundError:
         return default
 
@@ -829,7 +832,9 @@ def prepare_sources(
 def prepare(char, preferred, fallback, count, do_transcribe, duration_target=None, top_n=0):
     config = CHARACTER_CONFIGS[char]
     count = config.count if count is None else count
-    name = char.value
+    name = getattr(char, "value", char)
+    if config.superseded_by:
+        print(f"NOTE: {name} is superseded by {config.superseded_by}; preparing its own clips anyway.")
     workspace = CharacterWorkspace(DATA, name, config.category)
     excluded = set(config.exclude)
     selected_dir = workspace.selected
@@ -1205,6 +1210,7 @@ def validate_character(char):
         "dup_ids": 0,
         "dup_detail": [],
         "usable": 0,
+        "superseded_by": config.superseded_by,
     }
 
     files = _source_files(workspace, excluded)
@@ -1238,6 +1244,8 @@ def print_validation(rows):
     print("\n=== VALIDATION ===")
     for r in rows:
         print(f"{r['character']}: {r['status']}")
+        if r["superseded_by"]:
+            print(f"  Superseded by: {r['superseded_by']}")
         if r["status"] == "NO SOURCES":
             continue
         print(
