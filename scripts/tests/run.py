@@ -53,7 +53,13 @@ from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisT
 from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
 from scripts.tests.cases.shared.models.test_model_languages import ModelLanguages
 from scripts.tests.cases.shared.models.test_model_sync import ModelSyncTests
-from scripts.tests.cases.shared.models.test_model_updates import CatalogOverlayTests, ModelUpdatesTests
+from scripts.tests.cases.shared.models.test_model_updates import (
+    CatalogOverlayTests,
+    DownloadModelsTests,
+    ModelUpdatesTests,
+    TransferTests,
+    UpdateModelsTests,
+)
 from scripts.tests.cases.shared.regression.test_regression_fixtures import RegressionFixtures
 from scripts.tests.cases.shared.regression.test_test_boundaries import TestBoundaries
 from scripts.tests.cases.shared.reports.test_reporting import Reporting
@@ -167,6 +173,9 @@ if __name__ == "__main__":
                     ModelCatalogTests,
                     CatalogOverlayTests,
                     ModelUpdatesTests,
+                    UpdateModelsTests,
+                    TransferTests,
+                    DownloadModelsTests,
                     InputOverlayTests,
                     PolicyTests,
                     LiveStampTests,
