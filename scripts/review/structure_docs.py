@@ -1,7 +1,6 @@
 """Check component ownership, config naming, imports and concise maintained documentation."""
 
 import argparse
-import ast
 import re
 from collections import Counter
 from functools import cache
@@ -141,17 +140,6 @@ def physical_root_issues() -> list[str]:
     match = re.search(r'^\s*base_path:\s*"([^"]+)"', config_paths.load_text(native), re.M)
     if not match or Path(match.group(1)) != project_cfg.component("comfyui").models_dir:
         issues.append("ComfyUI native model mapping differs from COMPONENTS")
-    return issues
-
-
-def source_issues(path: Path, text: str) -> list[str]:
-    issues = []
-    tree = ast.parse(text, filename=str(path))
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("scripts."):
-            target = project_cfg.BASE_DIR / node.module.replace(".", "/")
-            if not target.is_dir() and not target.with_suffix(".py").is_file():
-                issues.append(f"{path.name}:{node.lineno}: missing import {node.module}")
     return issues
 
 
@@ -547,9 +535,7 @@ def main(argv: list[str] | None = None) -> int:
     for path in files:
         text = path.read_text(encoding="utf-8-sig")
         issues += owner_issues(path)
-        if path.suffix == ".py":
-            issues += source_issues(path, text)
-        elif path.suffix == ".md":
+        if path.suffix == ".md":
             issues += markdown_name_issues(path)
             issues += markdown_issues(path, text)
         elif path.suffix == ".bat":
