@@ -412,6 +412,40 @@ def print_pointer_counts(files: list[Path]) -> int:
     return 0
 
 
+def _link_problem(relative: str, raw: str, target: str) -> str | None:
+    """Why a link target is unusable, or None when webfetch-style checks can proceed."""
+    if UNTRACKED_PARTS & set(target.split("/")):
+        return f"{relative}: link into an untracked path {target}; cite the run without a link"
+    if re.match(r"^[a-z]+:", target, re.I):
+        return f"{relative}: unsupported link scheme {target}"
+    if re.match(r"^[A-Za-z]:|^/", target):
+        return f"{relative}: absolute link {target}; links must be relative"
+    if "\\" in target:
+        return f"{relative}: backslash in link {target}; use forward slashes"
+    if " " in raw and not raw.startswith("<"):
+        return f"{relative}: link with a space {target}; wrap the target in angle brackets"
+    return None
+
+
+def _link_issues(path: Path, relative: str, text: str) -> list[str]:
+    issues = []
+    for match in re.finditer(r"\[[^\]]*\]\(([^)]+)\)", text):
+        raw = match.group(1).strip()
+        target, _, anchor = unquote(raw.strip("<>")).partition("#")
+        if re.match(r"^https?://|^mailto:", target, re.I):
+            continue
+        problem = _link_problem(relative, raw, target)
+        if problem is not None:
+            issues.append(problem)
+            continue
+        destination = path.parent / target if target else path
+        if not destination.exists():
+            issues.append(f"{relative}: missing link {target}")
+        elif anchor and destination.suffix == ".md" and anchor not in markdown_anchors(destination):
+            issues.append(f"{relative}: missing heading {target}#{anchor}")
+    return issues
+
+
 def markdown_issues(path: Path, text: str) -> list[str]:
     issues = []
     relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
@@ -420,18 +454,7 @@ def markdown_issues(path: Path, text: str) -> list[str]:
     if words > budget:
         issues.append(f"{relative}: {words} words exceeds {budget}; keep procedures in one owner guide")
     issues.extend(_markdown_hygiene(relative, text))
-    for match in re.finditer(r"\[[^\]]*\]\(([^)]+)\)", text):
-        target, _, anchor = unquote(match.group(1).strip("<>")).partition("#")
-        if re.match(r"^[a-z]+:", target, re.I):
-            continue
-        if UNTRACKED_PARTS & set(target.split("/")):
-            issues.append(f"{relative}: link into an untracked path {target}; cite the run without a link")
-            continue
-        destination = path.parent / target if target else path
-        if not destination.exists():
-            issues.append(f"{relative}: missing link {target}")
-        elif anchor and destination.suffix == ".md" and anchor not in markdown_anchors(destination):
-            issues.append(f"{relative}: missing heading {target}#{anchor}")
+    issues.extend(_link_issues(path, relative, text))
     for match in re.finditer(r"(?i)(?:C:[/\\]AI[/\\])?(bat[/\\][^`\"\r\n]*?\.bat)", text):
         target = match.group(1).replace("\\", "/")
         if any(char in target for char in "<>*{}"):
