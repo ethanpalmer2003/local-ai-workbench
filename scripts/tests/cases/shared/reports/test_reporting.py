@@ -73,6 +73,24 @@ class Reporting(unittest.TestCase):
             payload = json.loads((output.artifacts / "report.json").read_text(encoding="utf-8"))
             self.assertEqual(payload["status"], "completed")
 
+    def test_a_report_without_a_recorded_identity_stays_unprovenanced(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            output = RunPaths(Path(folder))
+            output.create()
+            with report_run(output, "fixture", "model-free"):
+                pass
+            payload = json.loads((output.artifacts / "report.json").read_text(encoding="utf-8"))
+            self.assertNotIn("provenance", payload)
+
+    def test_a_recorded_identity_reaches_the_report(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            output = RunPaths(Path(folder))
+            output.create()
+            with report_run(output, "fixture", "model-free") as report:
+                report.provenance = {"subject": "fixture", "models": [], "frameworks": []}
+            payload = json.loads((output.artifacts / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual(payload["provenance"]["subject"], "fixture")
+
 
 if __name__ == "__main__":
     with timed("shared/test_reporting"):

@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import summarize_report
 from scripts.benchmarks.shared.paths import RunPaths
 
@@ -47,11 +48,20 @@ class RunReport:
     settings: dict[str, Any] = field(default_factory=dict)
     results: list[dict[str, Any]] = field(default_factory=list)
     error: str | None = None
+    provenance: dict[str, Any] = field(default_factory=dict)
+
+    def record_provenance(self, *, models: list[dict[str, Any]], frameworks: list[dict[str, Any]]) -> None:
+        """Stamp what this run used, so the capability matrix can judge it instead of guessing."""
+        self.provenance = provenance.block(
+            subject=self.name, config=self.settings, frameworks=frameworks, models=models
+        )
 
     def save(self, output: RunPaths) -> None:
         self.total_seconds = round(time.perf_counter() - self.started, 3)
         payload = asdict(self)
         payload.pop("started")
+        if not payload.get("provenance"):
+            payload.pop("provenance", None)
         payload["total_seconds_scope"] = "whole_run_including_setup_warmup_and_cleanup"
         payload["resident_request_summary"] = summarize_report(self.results)
         output.write_report(payload)
