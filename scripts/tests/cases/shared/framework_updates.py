@@ -213,6 +213,7 @@ class FrameworkUpdates(unittest.TestCase):
                 ),
                 patch.object(strata_updates.subprocess, "run") as run,
             ):
+                run.return_value.returncode = 0
                 run.return_value.stdout = json.dumps(
                     {
                         part: {"status": "current", "installed": "1", "offered": "1"}
