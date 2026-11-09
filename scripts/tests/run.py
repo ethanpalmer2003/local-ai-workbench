@@ -70,12 +70,7 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
 from scripts.tests.cases.shared.shared_contracts import SharedContracts
 from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
 from scripts.tests.cases.shared.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
-from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
-from scripts.tests.cases.shared.test_inputs_overlay import InputOverlayTests
-from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
-from scripts.tests.cases.shared.test_preflight import PreflightTests
-from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
-from scripts.tests.cases.shared.test_structure_docs import (
+from scripts.tests.cases.shared.test_docs import (
     LinkTests,
     MarkdownNameTests,
     ModelNameTests,
@@ -83,6 +78,11 @@ from scripts.tests.cases.shared.test_structure_docs import (
     RoleTests,
     RootDocumentTests,
 )
+from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
+from scripts.tests.cases.shared.test_inputs_overlay import InputOverlayTests
+from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
+from scripts.tests.cases.shared.test_preflight import PreflightTests
+from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
 from scripts.tests.cases.shared.test_typography import CheckTests, ScanTests, SuffixTests
 from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
 from scripts.tests.cases.shared.workflows.test_kokoro_profiles import KokoroProfiles

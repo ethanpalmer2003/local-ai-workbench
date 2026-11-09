@@ -5,7 +5,7 @@ from pathlib import Path
 
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
-from scripts.review import structure_docs
+from scripts.review import docs
 
 BASE = Path(project_cfg.BASE_DIR)
 
@@ -14,10 +14,10 @@ class MarkdownNameTests(unittest.TestCase):
     def test_tool_required_names_and_uppercase_basenames_pass(self):
         for name in ("README.md", "AGENTS.md", "SKILL.md", "CHECKS.md", "CAPABILITIES-NOTES.md"):
             with self.subTest(name=name):
-                self.assertEqual(structure_docs.markdown_name_issues(BASE / name), [])
+                self.assertEqual(docs.markdown_name_issues(BASE / name), [])
 
     def test_a_lowercase_basename_is_reported(self):
-        issues = structure_docs.markdown_name_issues(BASE / "notes" / "lower-case-notes.md")
+        issues = docs.markdown_name_issues(BASE / "notes" / "lower-case-notes.md")
         self.assertEqual(len(issues), 1)
         self.assertIn("Markdown basename must be uppercase", issues[0])
 
@@ -26,20 +26,20 @@ class RootDocumentTests(unittest.TestCase):
     def test_readme_and_agents_are_the_only_allowed_root_documents(self):
         for name in ("README.md", "AGENTS.md"):
             with self.subTest(name=name):
-                self.assertIn(name, structure_docs.ROOT_MARKDOWN_ALLOWED)
+                self.assertIn(name, docs.ROOT_MARKDOWN_ALLOWED)
 
     def test_a_document_outside_the_allowed_pair_is_reported(self):
         stray = BASE / "STRAY.md"
         stray.write_text("# Stray\n\nA document that belongs under notes.\n", encoding="utf-8")
         try:
-            issues = structure_docs.root_document_issues()
+            issues = docs.root_document_issues()
         finally:
             stray.unlink()
         self.assertEqual(len(issues), 1)
         self.assertIn("STRAY.md", issues[0])
 
     def test_a_clean_root_reports_nothing(self):
-        self.assertEqual(structure_docs.root_document_issues(), [])
+        self.assertEqual(docs.root_document_issues(), [])
 
 
 class RoleTests(unittest.TestCase):
@@ -58,20 +58,20 @@ class RoleTests(unittest.TestCase):
         }
         for relative, role in cases.items():
             with self.subTest(relative=relative):
-                self.assertEqual(structure_docs.document_role(relative), role)
+                self.assertEqual(docs.document_role(relative), role)
 
     def test_a_running_list_beside_a_component_is_reported(self):
-        issues = structure_docs.role_issues([BASE / "scripts/config/TODO.md"])
+        issues = docs.role_issues([BASE / "scripts/config/TODO.md"])
         self.assertEqual(len(issues), 1, issues)
         self.assertIn("notes root", issues[0])
 
     def test_a_tuning_document_outside_a_component_is_reported(self):
-        issues = structure_docs.role_issues([BASE / "notes/TUNING.md"])
+        issues = docs.role_issues([BASE / "notes/TUNING.md"])
         self.assertEqual(len(issues), 1, issues)
         self.assertIn("component folder", issues[0])
 
     def test_a_document_with_no_known_role_is_reported(self):
-        issues = structure_docs.role_issues([BASE / "docs/UNCLASSIFIED.md"])
+        issues = docs.role_issues([BASE / "docs/UNCLASSIFIED.md"])
         self.assertEqual(len(issues), 1, issues)
         self.assertIn("no document role", issues[0])
 
@@ -86,7 +86,7 @@ class RoleTests(unittest.TestCase):
         }
         for relative, cap in cases.items():
             with self.subTest(relative=relative):
-                self.assertEqual(structure_docs.markdown_budget(relative), cap)
+                self.assertEqual(docs.markdown_budget(relative), cap)
 
 
 class PointerTests(unittest.TestCase):
@@ -101,7 +101,7 @@ class PointerTests(unittest.TestCase):
         )
         target.write_text("# Target\n\nNo outgoing links.\n", encoding="utf-8")
         try:
-            stats = structure_docs.pointer_stats([source, target])
+            stats = docs.pointer_stats([source, target])
         finally:
             source.unlink()
             target.unlink()
@@ -127,7 +127,7 @@ class LinkTests(unittest.TestCase):
     def test_a_link_into_an_untracked_path_is_reported(self):
         path = self._fixture("# Linked\n\n[Report](../output/run/REPORT.md)\n")
         try:
-            issues = structure_docs.markdown_issues(path, path.read_text(encoding="utf-8"))
+            issues = docs.markdown_issues(path, path.read_text(encoding="utf-8"))
         finally:
             path.unlink()
             path.parent.rmdir()
@@ -136,7 +136,7 @@ class LinkTests(unittest.TestCase):
     def test_a_tracked_neighbour_link_resolves(self):
         path = self._fixture("# Linked\n\n[Itself](LINKED.md)\n")
         try:
-            issues = structure_docs.markdown_issues(path, path.read_text(encoding="utf-8"))
+            issues = docs.markdown_issues(path, path.read_text(encoding="utf-8"))
         finally:
             path.unlink()
             path.parent.rmdir()
@@ -154,7 +154,7 @@ class LinkTests(unittest.TestCase):
             with self.subTest(name=name):
                 path = self._fixture(f"# Linked\n\n{link}\n")
                 try:
-                    issues = structure_docs.markdown_issues(path, path.read_text(encoding="utf-8"))
+                    issues = docs.markdown_issues(path, path.read_text(encoding="utf-8"))
                 finally:
                     path.unlink()
                     path.parent.rmdir()
@@ -173,7 +173,7 @@ class ModelNameTests(unittest.TestCase):
         label = next(model.label for model in model_cfg.MODELS if len(model.label) >= 6)
         path = self._fixture(f"# Named\n\nRun `{label}` before the check.\n")
         try:
-            issues = structure_docs.model_name_issues([path])
+            issues = docs.model_name_issues([path])
         finally:
             path.unlink()
             path.parent.rmdir()
@@ -183,7 +183,7 @@ class ModelNameTests(unittest.TestCase):
     def test_a_role_reference_is_clean(self):
         path = self._fixture("# Role\n\nThe whisper.cpp turbo entry in the catalog speaks first.\n")
         try:
-            self.assertEqual(structure_docs.model_name_issues([path]), [])
+            self.assertEqual(docs.model_name_issues([path]), [])
         finally:
             path.unlink()
             path.parent.rmdir()
@@ -191,8 +191,8 @@ class ModelNameTests(unittest.TestCase):
     def test_catalog_and_dated_evidence_are_skipped(self):
         for relative in ("scripts/config/models/README.md", "notes/reviews/RUN.md", "scripts/tests/notes/OUTCOMES.md"):
             with self.subTest(relative=relative):
-                self.assertTrue(structure_docs.model_names_skipped(relative))
-        self.assertFalse(structure_docs.model_names_skipped("scripts/launchers/asr/README.md"))
+                self.assertTrue(docs.model_names_skipped(relative))
+        self.assertFalse(docs.model_names_skipped("scripts/launchers/asr/README.md"))
 
 
 if __name__ == "__main__":

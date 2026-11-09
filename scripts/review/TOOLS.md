@@ -26,7 +26,8 @@ What runs today. Use it to compare against other projects' stacks.
 | ruff format | `[tool.ruff.format]`; generated `ids.py` excluded |
 | basedpyright | type errors, `--level error`, no strict mode |
 | pytest | regression execution, timings, failure details |
-| `structure_docs.py` | doc budgets, links, anchors, markdown hygiene, root placement, component keys, naming, folder rules, batch references |
+| `layout.py` | component keys, ownership, install roots, folder naming, batch references |
+| `docs.py` | doc budgets, roles, links, anchors, markdown hygiene, root placement, model-name policy |
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
 | `frontend_wiring.py` | HTML/JS asset targets resolve, queried DOM ids exist, injected settings keys are both emitted and provided |
 | `inventory_code.py` | inventory, file/function size, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
@@ -35,7 +36,7 @@ What runs today. Use it to compare against other projects' stacks.
 | `package_audit.py` | leftovers no import or manifest declares; `--prune [--remove]`; `uv lock --check` |
 | `coverage.py`, `pip-audit` | coverage; advisories run inside the gate (network, unreachable feed is a warning) |
 
-Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown and batch files are covered by `structure_docs.py`, HTML/JS by `frontend_wiring.py`; codespell reads tracked Python and Markdown.
+Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown is covered by `docs.py`, batch files by `layout.py`, HTML/JS by `frontend_wiring.py`; codespell reads tracked Python and Markdown.
 
 Lint gates at McCabe 10. Anything above it is listed in `COMPLEXITY-DEBT.md` and has to be split; inline suppressions are banned, so the ledger is the only place debt is recorded. The table is currently empty. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
 
@@ -44,6 +45,6 @@ Lint gates at McCabe 10. Anything above it is listed in `COMPLEXITY-DEBT.md` and
 - Mutation testing.
 - Dead-code and duplicate-code detectors: `inventory_code.py` covers function bodies only.
 - Standalone `bandit`/`semgrep`; ruff `S` covers the common cases.
-- Markdown formatting; `structure_docs.py` enforces links, budgets, anchors and hygiene, and the doc tables are generated.
+- Markdown formatting; `docs.py` enforces links, budgets, anchors and hygiene, and the doc tables are generated.
 - Import-boundary linting; layering is convention.
 - JS/TS tooling and a CI server; everything runs locally.
