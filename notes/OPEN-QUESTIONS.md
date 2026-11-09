@@ -4,10 +4,11 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 
 ## Unresolved
 
-- **ASR installs to retire.** CrispASR, FunASR and the Sherpa ASR engine were retired on 2026-11-08: the first ran whisper.cpp's own weights, the second lacks French and Spanish, and the third was English-only. nemo-speechcpp stays as the first-partial and low-VRAM alternative to the AudioCpp default.
+- None. New questions land here until they are answered or deferred.
 
 ## Resolved, revisit if needed
 
+- **ASR installs.** CrispASR, FunASR and the Sherpa ASR engine were retired on 2026-11-08, and `nemo-speechcpp` stays as the first-partial and low-VRAM alternative: [evaluation](asr/ASR-EVALUATION.md).
 - **Character catalog entries.** The four tracked `koboldcpp/TheDrummer_*` weights moved to `models.private.json` on 2026-11-08. `KOBOLDCPP_MODELS` keeps a tracked fallback, so a clone without the overlay still starts the chat stack.
 - **Voice manifest example.** A placeholder-only example is tracked and tested at `scripts/config/voice_sources.example.json`; no real id or source name is in it.
 - **Private overlay.** Settled: personal material stays outside git as a second private repository, and the machinery is useful without it.
