@@ -6,7 +6,6 @@
 | --- | --- | --- |
 | NeMo-Speech.cpp | v0.2.0 | `asr/nemo-speechcpp/vulkan/bin/nemo-speech.exe` |
 | speech.cpp | v0.9.0 | `asr/speechcpp/vulkan/speech.exe` |
-| CrispASR | v0.8.45 | `asr/crispasr/vulkan/crispasr.exe` |
 | FunASR llama.cpp runtime | v1.4.16 | `asr/funasr/vulkan/llama-funasr-sensevoice.exe` |
 
 NeMo retains its vendor bin/lib layout. Other archives retain their runtime files beside the executable. No source build was needed. Sherpa remains installed once under `frameworks/tts/sherpa-onnx`; AudioCpp remains under its existing root because both also provide TTS.

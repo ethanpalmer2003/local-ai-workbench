@@ -16,7 +16,7 @@ from scripts.tests.shared.paths import RunPaths
 def extract_text(engine: str, stdout: str, destination: Path) -> str:
     if destination.is_file():
         return destination.read_text(encoding="utf-8").strip()
-    if engine in ("nemo-speechcpp", "crispasr") or engine.startswith("audiocpp-"):
+    if engine == "nemo-speechcpp" or engine.startswith("audiocpp-"):
         raise ValueError("Native CLI did not write the requested transcript file")
     if engine == "sherpa-onnx":
         texts: dict[int, str] = {}

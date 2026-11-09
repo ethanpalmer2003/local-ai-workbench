@@ -4,7 +4,7 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 
 ## Unresolved
 
-- None. New questions land here until they are answered or deferred.
+- **ASR installs to retire.** nemo-speechcpp, FunASR and sherpa-onnx each keep a file engine but show no advantage over the AudioCpp Nemotron default, Parakeet.cpp or whisper.cpp. Which of the three to remove is open; CrispASR was retired on 2026-11-08 because it ran whisper.cpp's own weights.
 
 ## Resolved, revisit if needed
 
