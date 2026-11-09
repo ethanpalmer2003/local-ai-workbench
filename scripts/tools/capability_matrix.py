@@ -185,9 +185,10 @@ def _when(row: Row, report: dict[str, Any] | None) -> str:
 
 
 def _evidence_link(row: Row) -> str:
+    """Cite the run instead of linking it: output folders are untracked, so a link would rot."""
     if row.evidence is None:
         return "-"
-    return f"[report]({Path(os.path.relpath(row.evidence, OUTPUT.parent)).as_posix()})"
+    return f"report ({Path(os.path.relpath(row.evidence, OUTPUT.parent)).as_posix()})"
 
 
 def _status(report: dict[str, Any] | None) -> str:
