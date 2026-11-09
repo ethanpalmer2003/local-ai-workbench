@@ -28,6 +28,7 @@ PROGRESS_RE = re.compile(r"^\[PROGRESS\] \S+ \[[#-]*\] (\d+)/(\d+)(?: (.*))?$")
 SKIP_RE = re.compile(r"^\[SKIP\] (\S+):")
 SHOWN_RE = re.compile(r"^\[(?:OK|FAIL|WARN|ERROR|SKIP|TIME|START|RESULTS)\]")
 BAR_FORMAT = "{desc:>12} {percentage:3.0f}%|{bar:26}| {n:.0f}/{total:.0f}s  {postfix}"
+TIMEOUT = object()
 
 
 @dataclass(frozen=True)
@@ -74,6 +75,11 @@ def skipped(line: str) -> str | None:
     """The stage key on a whole-stage skip line, otherwise None."""
     match = SKIP_RE.match(line)
     return match.group(1) if match else None
+
+
+def echoed(line: str) -> bool:
+    """Stream mode shows every child line; blank separators count, progress lines do not."""
+    return not PROGRESS_RE.match(line)
 
 
 def _consume(line: str, live: _Live, bar: Any, stage: Stage, show: bool = True) -> None:
@@ -148,19 +154,20 @@ def _run_stage(stage: Stage, log_path: Path, bar: Any, prefix: float, stream: bo
             try:
                 line = lines.get(timeout=0.2)
             except queue.Empty:
-                line = ""
+                line = TIMEOUT
             if line is None:
                 break
-            if line:
+            if line is TIMEOUT:
+                # A surviving grandchild can hold the pipe open; stop once the output is drained.
+                if process.poll() is not None:
+                    deadline = deadline or time.perf_counter() + 2.0
+                    if time.perf_counter() > deadline:
+                        break
+            else:
                 log.write(line + "\n")
-                if stream and not PROGRESS_RE.match(line):
+                if stream and echoed(line):
                     bar.write(line)
                 _consume(line, live, bar, stage, show=not stream)
-            elif process.poll() is not None:
-                # A surviving grandchild can hold the pipe open; stop once the output is drained.
-                deadline = deadline or time.perf_counter() + 2.0
-                if time.perf_counter() > deadline:
-                    break
             _refresh(bar, stage, prefix, live, started)
         seconds = time.perf_counter() - started
         code = process.wait()
