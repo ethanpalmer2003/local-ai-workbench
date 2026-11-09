@@ -20,6 +20,7 @@ from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.reporting import RunReport
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
@@ -40,6 +41,15 @@ live_timeout = 300.0
 # - One target per user-facing launch entry. Backend probes cover engines/models
 #   that launchers do not exercise; the two sets must stay disjoint.
 LAUNCHER_TARGETS: tuple[str, ...] = ("sdcpp", "audiocpp", "llamacpp", "kobold", "dsh-headless", "practice")
+# - the installed tree each target launches from, so a moved build marks the row stale
+TARGET_COMPONENTS: dict[str, str] = {
+    "sdcpp": "sdcpp",
+    "audiocpp": "audiocpp",
+    "llamacpp": "llamacpp",
+    "kobold": "koboldcpp",
+    "dsh-headless": "coding_agents/deepseek",
+    "practice": "audiocpp",
+}
 
 
 def target_available(name: str) -> tuple[bool, str]:
@@ -451,6 +461,12 @@ def _run_live(frameworks: list[str], context: dict[str, Any]) -> bool:
     output = CasePaths(__file__).new_run()
     report = RunReport("native/launchers", "native-launchers")
     report.settings["execution_context"] = context
+    report.record_provenance(
+        models=[],
+        frameworks=[
+            provenance.framework_state(TARGET_COMPONENTS[name]) for name in frameworks if name in TARGET_COMPONENTS
+        ],
+    )
     report.save(output)
     rows: list[dict[str, Any]] = []
     progress = ProgressBar(len(frameworks), "launchers")

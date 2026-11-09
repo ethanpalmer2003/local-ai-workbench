@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import post_json, stop_server, wait_ready
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.paths import BenchmarkPaths, Outcome, RunPaths
 from scripts.benchmarks.shared.vram import snapshot_dict
 from scripts.config import project_config as project_cfg
@@ -343,6 +344,16 @@ def write_outputs(run: RunPaths, evidence: dict[str, Any]) -> None:
             "total_seconds": evidence["total_seconds"],
             "reasoning": "not applicable (raw completion)",
             "limitations": evidence["limitations"],
+            "provenance": provenance.block(
+                subject="llamacpp/benchmark_context_stream",
+                config={"builds": sorted(evidence["results"]), **evidence["settings"]},
+                frameworks=[provenance.framework_state("llamacpp")],
+                models=[
+                    provenance.file_identity(
+                        "llama.cpp profile", LlamaConfig(str(evidence["settings"].get("profile", ""))).model
+                    )
+                ],
+            ),
         }
     )
     print(f"[OUTPUT] {run.root}", flush=True)
