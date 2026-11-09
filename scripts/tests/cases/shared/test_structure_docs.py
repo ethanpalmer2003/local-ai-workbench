@@ -66,12 +66,12 @@ class RoleTests(unittest.TestCase):
     def test_known_homes_claim_their_role(self):
         cases = {
             "AGENTS.md": "root",
-            ".agents/skills/docs-writing/SKILL.md": "agent skill",
+            ".agents/skills/docs-writing/SKILL.md": "agent rule",
             ".agents/CHECKS.md": "agent rule",
-            "notes/TODO.md": "running list",
+            "notes/TODO.md": "note",
             "notes/reviews/STRUCTURE-REVIEW.md": "review record",
-            "notes/ONBOARDING.md": "note topic",
-            "scripts/tests/notes/STATUS.md": "test note",
+            "notes/ONBOARDING.md": "note",
+            "scripts/tests/notes/STATUS.md": "component guide",
             "scripts/config/comfyui/TUNING.md": "component guide",
             "scripts/config/comfyui/README.md": "hub",
             "scripts/config/llamacpp/HRX.md": "component guide",
