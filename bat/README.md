@@ -44,6 +44,7 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 | [test_live_launchers.bat](tests/test_live_launchers.bat) | Live launcher/proxy wiring: starts each launcher, generates output, stops owned. |
 | [test_live_backends.bat](tests/test_live_backends.bat) | Live backend probes: every model loads and answers; `--only` narrows it. |
 | [test_live_all.bat](tests/test_live_all.bat) | Both native suites: launchers first, then every backend probe. |
+| [test_full.bat](tests/test_full.bat) | Everything in one progress bar: gate, model-free suite and both live suites, skipping unchanged ones. |
 
 Live entries free their ports instead of refusing.
 
