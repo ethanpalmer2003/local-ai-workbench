@@ -38,7 +38,7 @@ What runs today. Use it to compare against other projects' stacks.
 
 Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Markdown is covered by `docs.py`, batch files by `layout.py`, HTML/JS by `frontend_wiring.py`; codespell reads tracked Python and Markdown.
 
-Lint gates at McCabe 10. Anything above it is listed in `COMPLEXITY-DEBT.md` and has to be split; inline suppressions are banned, so the ledger is the only place debt is recorded. The table is currently empty. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
+Lint gates at the [McCabe limit](../../.agents/CODE.md). Anything above it is listed in `COMPLEXITY-DEBT.md` and has to be split; inline suppressions are banned, so the ledger is the only place debt is recorded. The table is currently empty. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
 
 ## Deliberately absent
 

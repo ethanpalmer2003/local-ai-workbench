@@ -47,6 +47,37 @@ ROLE_RULES = (
     ("hub", r"^(?:[^/]+/)+README\.md$"),
     ("component guide", r"scripts/(?:[^/]+/)+[A-Z][A-Z0-9-]*\.md"),
 )
+# - a policy number is stated once; every other document links to its owner instead of repeating it
+POLICY_NUMBERS = (
+    (
+        r"\b(?:300|500|700)\s+words\b|\b(?:large|medium|small),\s*(?:300|500|700)\b",
+        "word caps",
+        ".agents/NOTES-CONVENTIONS.md",
+    ),
+    (r"[Mm]cCabe[^.\n]{0,20}\b10\b", "McCabe limit", ".agents/CODE.md"),
+)
+
+
+def policy_number_issues(relative: str, text: str) -> list[str]:
+    """A policy number lives in one owning document; anything else states it again."""
+    issues = []
+    for pattern, name, owner in POLICY_NUMBERS:
+        if relative != owner and re.search(pattern, text):
+            issues.append(f"{relative}: restates the {name}; that number is owned by {owner}")
+    return issues
+
+
+def cap_table_issues() -> list[str]:
+    """The caps the docs state must match the tiers the gate uses."""
+    rules = (project_cfg.BASE_DIR / ".agents" / "NOTES-CONVENTIONS.md").read_text(encoding="utf-8-sig")
+    stated = {tier: int(number) for tier, number in re.findall(r"\|\s*(large|medium|small),\s*(\d+)\s*\|", rules)}
+    issues = [
+        f"NOTES-CONVENTIONS states {tier} {stated[tier]} words but the gate uses {WORD_TIERS[tier]}"
+        for tier in WORD_TIERS
+        if tier in stated and stated[tier] != WORD_TIERS[tier]
+    ]
+    issues.extend(f"NOTES-CONVENTIONS does not state the {tier} cap" for tier in WORD_TIERS if tier not in stated)
+    return issues
 
 
 def document_role(relative: str) -> str | None:
@@ -331,6 +362,7 @@ def markdown_issues(path: Path, text: str) -> list[str]:
     issues.extend(_link_issues(path, relative, text))
     issues.extend(_batch_reference_issues(relative, text))
     issues.extend(_module_reference_issues(relative, text))
+    issues.extend(policy_number_issues(relative, text))
     return issues
 
 
@@ -371,7 +403,7 @@ def main(argv: list[str] | None = None) -> int:
         return print_role_counts(files)
     if args.links:
         return print_pointer_counts(files)
-    issues = root_document_issues() + role_issues(files) + model_name_issues(files)
+    issues = root_document_issues() + role_issues(files) + model_name_issues(files) + cap_table_issues()
     for path in files:
         if path.suffix != ".md":
             continue

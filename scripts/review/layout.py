@@ -1,6 +1,7 @@
 """Check component ownership, install roots, folder naming and batch references."""
 
 import re
+import tomllib
 from pathlib import Path
 
 from scripts.config import models as model_cfg
@@ -281,9 +282,24 @@ def naming_issues() -> list[str]:
     return issues
 
 
+def policy_limit_issues() -> list[str]:
+    """The documented complexity limit must match the configured one."""
+    payload = tomllib.loads((project_cfg.BASE_DIR / "pyproject.toml").read_text(encoding="utf-8"))
+    limit = payload.get("tool", {}).get("ruff", {}).get("lint", {}).get("mccabe", {}).get("max-complexity")
+    rules = (project_cfg.BASE_DIR / ".agents" / "CODE.md").read_text(encoding="utf-8-sig")
+    stated = re.search(r"[Mm]cCabe[^.\n]{0,20}?(\d+)", rules)
+    if limit is None:
+        return ["pyproject.toml has no McCabe limit"]
+    if stated is None:
+        return ["CODE.md does not state the McCabe limit"]
+    if int(stated.group(1)) != int(limit):
+        return [f"CODE.md states McCabe {stated.group(1)} but pyproject configures {limit}"]
+    return []
+
+
 def main() -> int:
     files = maintained_files()
-    issues = configuration_issues() + physical_root_issues() + naming_issues()
+    issues = configuration_issues() + physical_root_issues() + naming_issues() + policy_limit_issues()
     for path in files:
         issues += owner_issues(path)
         if path.suffix == ".bat":

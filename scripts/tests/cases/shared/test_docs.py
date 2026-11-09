@@ -88,6 +88,14 @@ class RoleTests(unittest.TestCase):
             with self.subTest(relative=relative):
                 self.assertEqual(docs.markdown_budget(relative), cap)
 
+    def test_a_policy_number_outside_its_owner_is_reported(self):
+        issues = docs.policy_number_issues("notes/OTHER.md", "The gate stays at McCabe 10.")
+        self.assertTrue(any("McCabe" in issue for issue in issues), issues)
+        self.assertEqual(docs.policy_number_issues(".agents/CODE.md", "McCabe complexity 10"), [])
+
+    def test_documented_caps_match_the_gate(self):
+        self.assertEqual(docs.cap_table_issues(), [])
+
 
 class PointerTests(unittest.TestCase):
     def test_pointers_count_markdown_targets_and_separate_other_links(self):
