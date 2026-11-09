@@ -717,8 +717,11 @@ def process_tool(tool: cfg.ToolSpec, tmp_dir: Path, check_only: bool, summary: U
     except UpdateError as error:
         print(f"Status: FAILED; {error}")
         return False
-    except (requests.RequestException, OSError, subprocess.SubprocessError):
-        # - expected per-tool failures may continue; programming errors keep their traceback
+    except subprocess.SubprocessError as error:
+        # - expected per-tool failures may continue; keep the captured reason visible
+        print(f"Status: FAILED; {error}")
+        return False
+    except (requests.RequestException, OSError):
         import traceback
 
         traceback.print_exc()

@@ -92,37 +92,70 @@ def install_app(destination: Path) -> str | None:
     return installed
 
 
-def process(destination: Path, check_only: bool) -> dict[str, Any] | None:
+def _environment() -> dict[str, str]:
     environment = os.environ.copy()
     for name in ("PYTHONHOME", "PYTHONPATH", "VIRTUAL_ENV", "STRATA_NO_ACQUIRE"):
         environment.pop(name, None)
-    result = subprocess.run(
-        update_command(destination, check_only),
-        cwd=destination / "control",
-        env=environment,
-        check=True,
-        timeout=180 if check_only else None,
-        stdout=subprocess.PIPE if check_only else None,
-        stderr=subprocess.STDOUT if check_only else None,
-        text=True,
-        encoding="utf-8",
+    return environment
+
+
+def _tail(text: str, count: int = 15) -> str:
+    return "".join(text.splitlines(keepends=True)[-count:])
+
+
+def _report(text: str) -> dict[str, Any]:
+    try:
+        report = json.loads(text)
+    except json.JSONDecodeError as error:
+        raise subprocess.SubprocessError(f"Invalid Strata update report: {text[:500]}") from error
+    if not isinstance(report, dict) or any(
+        not isinstance(report.get(part), dict) or not isinstance(report[part].get("status"), str)
+        for part in ("engine", "control", "app")
+    ):
+        raise subprocess.SubprocessError("Incomplete Strata update report")
+    print("Native update metadata:\n" + json.dumps(report, indent=2))
+    for part in ("engine", "control", "app"):
+        print(describe(part, report[part]))
+    return report
+
+
+def _stream(command: list[str], cwd: Path, environment: dict[str, str]) -> None:
+    """Run the native updater while echoing its output and keeping the tail for a failure."""
+    process = subprocess.Popen(
+        command, cwd=cwd, env=environment, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8"
     )
+    if process.stdout is None:
+        raise subprocess.SubprocessError("strata update produced no output stream")
+    tail: list[str] = []
+    for line in process.stdout:
+        print(line, end="", flush=True)
+        tail = [*tail[-15:], line]
+    code = process.wait()
+    if code != 0:
+        raise subprocess.SubprocessError(f"strata update exited {code}; last output:\n{''.join(tail)}")
+
+
+def process(destination: Path, check_only: bool) -> dict[str, Any] | None:
+    environment = _environment()
+    command = update_command(destination, check_only)
     if check_only:
-        try:
-            report = json.loads(result.stdout)
-        except json.JSONDecodeError as error:
-            raise subprocess.SubprocessError(f"Invalid Strata update report: {result.stdout[:500]}") from error
-        if not isinstance(report, dict) or any(
-            not isinstance(report.get(part), dict) or not isinstance(report[part].get("status"), str)
-            for part in ("engine", "control", "app")
-        ):
-            raise subprocess.SubprocessError("Incomplete Strata update report")
-        print("Native update metadata:\n" + json.dumps(report, indent=2))
-        for part in ("engine", "control", "app"):
-            print(describe(part, report[part]))
-        return report
-    if not check_only:
-        # - Strata's own CLI fetches and verifies the installer but has no install switch,
-        #   so the framework updater runs it silently and checks the resulting version.
-        install_app(destination)
+        result = subprocess.run(
+            command,
+            cwd=destination / "control",
+            env=environment,
+            check=False,
+            timeout=180,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        if result.returncode != 0:
+            raise subprocess.SubprocessError(
+                f"strata update exited {result.returncode}:\n{_tail(result.stdout or result.stderr or '')}"
+            )
+        return _report(result.stdout)
+    _stream(command, destination / "control", environment)
+    # - Strata's own CLI fetches and verifies the installer but has no install switch,
+    #   so the framework updater runs it silently and checks the resulting version.
+    install_app(destination)
     return None
