@@ -19,8 +19,8 @@
 
 ## Code and docs only
 
-- [ ] Lemonade's Kokoro mis-speaks French and Japanese: its espeak-ng data ships `fr` and `ja` dictionaries, but `koko.exe` defaults to `-l en-us` and English styles, so its kokoro recipe maps language and style wrongly. File [the draft](reviews/UPSTREAM-KOKORO-2026-11-08.md). [Report](../scripts/benchmarks/output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
-- [ ] KoboldCpp's Kokoro returns an empty WAV for Japanese and an English fallback elsewhere: the build embeds only `kokoro_ipa.embd`, so no other language has a phonemizer. File [the draft](reviews/UPSTREAM-KOKORO-2026-11-08.md). [Report](../scripts/benchmarks/output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
+- [ ] Lemonade's Kokoro mis-speaks French and Japanese: its espeak-ng data ships `fr` and `ja` dictionaries, but `koko.exe` defaults to `-l en-us` and English styles, so its kokoro recipe maps language and style wrongly. The [draft](reviews/UPSTREAM-KOKORO-2026-11-08.md) stays local; posting is not planned. [Report](../scripts/benchmarks/output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
+- [ ] KoboldCpp's Kokoro returns an empty WAV for Japanese and an English fallback elsewhere: the build embeds only `kokoro_ipa.embd`, so no other language has a phonemizer. The [draft](reviews/UPSTREAM-KOKORO-2026-11-08.md) stays local; posting is not planned. [Report](../scripts/benchmarks/output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
 
 ## Needs a device
 
