@@ -45,6 +45,19 @@ class StageRunnerTests(unittest.TestCase):
         self.assertIn("[OK]", stage_runner._describe(stage_runner.Result("gate", "ok", 54.0), stage))
         self.assertIn("[SKIP]", stage_runner._describe(stage_runner.Result("gate", "skipped", 0.1), stage))
 
+    def test_a_stage_is_capped_at_twice_its_high_mark(self) -> None:
+        stage = stage_runner.Stage("gate", "scripts.review", typical=55, high=80)
+        self.assertEqual(stage_runner.limit_for(stage), 160.0)
+        # - a very fast stage keeps a floor, so a cold start is not mistaken for a freeze
+        tiny = stage_runner.Stage("quick", "scripts.review", typical=1, high=5)
+        self.assertEqual(stage_runner.limit_for(tiny), stage_runner.MINIMUM_LIMIT)
+        explicit = stage_runner.Stage("gate", "scripts.review", typical=55, high=80, limit=42)
+        self.assertEqual(stage_runner.limit_for(explicit), 42.0)
+
+    def test_the_one_stage_cli_accepts_an_explicit_limit(self) -> None:
+        stage = stage_runner._stage_from_argv(["pkg.module", "--stage-limit", "90", "--check"])
+        self.assertEqual((stage.key, stage.limit, stage.arguments), ("module", 90.0, ("--check",)))
+
     def test_an_empty_plan_runs_nothing(self) -> None:
         self.assertEqual(stage_runner.run(()), [])
 

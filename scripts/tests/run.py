@@ -90,6 +90,7 @@ from scripts.tests.cases.shared.test_inputs_overlay import InputOverlayTests
 from scripts.tests.cases.shared.test_layout import PolicyTests
 from scripts.tests.cases.shared.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
+from scripts.tests.cases.shared.test_model_run import ModelRunTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
 from scripts.tests.cases.shared.test_rocm_inventory import RocmInventoryTests
@@ -181,6 +182,7 @@ if __name__ == "__main__":
                     LiveStampTests,
                     RocmInventoryTests,
                     StageRunnerTests,
+                    ModelRunTests,
                     ToolchainTests,
                     ValidatePlanTests,
                     PreflightTests,
