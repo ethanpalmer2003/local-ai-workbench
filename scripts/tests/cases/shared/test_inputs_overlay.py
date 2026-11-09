@@ -114,7 +114,9 @@ class InputOverlayTests(unittest.TestCase):
             )
             with patch.dict(inputs.os.environ, {"AI_INPUT_DIR": str(root)}):
                 self.assertEqual(inputs.superseded_voices(), {"old": "current"})
-                self.assertIn("old", inputs.voice_ids())
+                # - a superseded id stays listed but sorts last, so a picker opens on a current voice
+                self.assertEqual(inputs.voice_ids(), ("current", "nonsense", "self", "old"))
+                self.assertEqual(inputs.default_voice(), "current")
 
 
 if __name__ == "__main__":
