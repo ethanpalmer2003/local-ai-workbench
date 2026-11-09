@@ -68,6 +68,16 @@ def declaration_check() -> int:
     return subprocess.run([str(checker), "scripts"], cwd=project_cfg.BASE_DIR, check=False).returncode
 
 
+def lint_check() -> int:
+    """ruff lint: the configured rule set, including the McCabe limit."""
+    checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/ruff.exe"
+    return subprocess.run(
+        [str(checker), "check", "--config", str(project_cfg.BASE_DIR / "pyproject.toml"), "."],
+        cwd=project_cfg.BASE_DIR,
+        check=False,
+    ).returncode
+
+
 def format_check() -> int:
     """Formatting is optional: the codebase keeps hand-wrapped lines ruff format would join."""
     checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/ruff.exe"
@@ -81,6 +91,7 @@ def format_check() -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-format-check", action="store_true", help="skip the ruff format comparison")
+    parser.add_argument("--tests", action="store_true", help="also run the model-free test suite")
     parser.add_argument("--prune", action="store_true", help="list installed packages nothing imports or declares")
     parser.add_argument("--remove", action="store_true", help="with --prune: uninstall those leftovers")
     parser.add_argument("--scrub", action="store_true", help="scan the tree and history for personal terms")
@@ -102,6 +113,10 @@ def main(argv: list[str] | None = None) -> int:
     print("\n=== FRONT-END WIRING ===", flush=True)
     frontend_status = frontend_wiring.main()
 
+    print("\n=== LINT ===", flush=True)
+    lint_status = lint_check()
+    print("[OK] Lint clean" if not lint_status else "[FAIL] Lint findings above")
+
     print("\n=== TYPE CHECK ===", flush=True)
     checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/basedpyright.exe"
     try:
@@ -112,7 +127,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[FAIL] Could not run basedpyright at {checker}: {error}")
         type_status = 1
 
-    print("\n=== REPOSITORY INVENTORY AND PYTHON COMPLEXITY ===", flush=True)
+    print("\n=== REPOSITORY INVENTORY ===", flush=True)
     counts = package_audit.summary()
     inventory_status = inventory_code.main(counts)
 
@@ -145,12 +160,22 @@ def main(argv: list[str] | None = None) -> int:
     for issue in issues[:10]:
         print(f"[FAIL] {issue}")
     print("[OK] uv.lock matches pyproject" if not issues else f"[FAIL] {len(issues)} lock issue(s)")
+
+    tests_status = 0
+    if args.tests:
+        print("\n=== TEST SUITE ===", flush=True)
+        tests_status = subprocess.run(
+            [str(project_cfg.SCRIPTS_DIR / ".venv/Scripts/python.exe"), "-m", "scripts.tests.run"],
+            cwd=project_cfg.BASE_DIR,
+            check=False,
+        ).returncode
     return int(
         bool(
             layout_status
             or docs_status
             or model_status
             or frontend_status
+            or lint_status
             or type_status
             or inventory_status
             or dash_status
@@ -159,6 +184,7 @@ def main(argv: list[str] | None = None) -> int:
             or audit_status
             or issues
             or declaration_status
+            or tests_status
         )
     )
 
