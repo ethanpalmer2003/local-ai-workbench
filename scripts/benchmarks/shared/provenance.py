@@ -19,8 +19,18 @@ from scripts.launchers.runtime.execution_context import execution_context
 
 
 def git_state(path: Path) -> dict[str, Any]:
-    """Commit and dirty flag for a checkout, or nulls when the folder is not a repository."""
+    """Commit and dirty flag for a checkout, or nulls when the folder is not its own repository."""
     try:
+        top = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=True,
+        ).stdout.strip()
+        # - a plain folder inside the workspace checkout must not borrow the workspace commit
+        if not top or Path(top).resolve() != Path(path).resolve():
+            return {"commit": None, "dirty": None}
         commit = subprocess.run(
             ["git", "-C", str(path), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=30, check=True
         ).stdout.strip()

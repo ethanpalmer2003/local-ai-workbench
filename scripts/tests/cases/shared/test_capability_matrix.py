@@ -12,6 +12,8 @@ from scripts.tools import capability_matrix as matrix
 
 def fake_git(command, **_kwargs):
     """A clean checkout at a fixed commit; git itself never starts in the model-free suite."""
+    if "--show-toplevel" in command:
+        return subprocess.CompletedProcess(command, 0, stdout=f"{command[2]}\n")
     output = f"{'a' * 40}\n" if "rev-parse" in command else ""
     return subprocess.CompletedProcess(command, 0, stdout=output)
 
