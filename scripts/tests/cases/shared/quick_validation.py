@@ -6,6 +6,7 @@ import subprocess
 import sys
 import time
 
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.reporting import RunReport
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
@@ -54,11 +55,29 @@ def run_probes(names: list[str]) -> bool:
     return passed
 
 
+PROBE_COMPONENTS: dict[str, tuple[str, ...]] = {
+    "parakeet": ("asr/parakeetcpp",),
+    "whisper": ("asr/whispercpp",),
+    "practice-whisper": ("asr/whispercpp", "audiocpp"),
+    "practice-qwen": ("asr/llamacpp", "audiocpp"),
+    "gemma": ("asr/llamacpp", "audiocpp"),
+    "kokoro": ("koboldcpp", "audiocpp"),
+    "images": ("koboldcpp", "sdcpp"),
+    "ming3-tts": ("audiocpp",),
+}
+
+
 def _run_probes(names: list[str], context: dict[str, object]) -> bool:
     run = CasePaths(__file__).new_run()
     print(f"[OUTPUT] {run.root}", flush=True)
     report = RunReport("native/backends", "native-backends")
     report.settings["execution_context"] = context
+    report.record_provenance(
+        models=[],
+        frameworks=[
+            provenance.framework_state(key) for key in sorted({key for name in names for key in PROBE_COMPONENTS[name]})
+        ],
+    )
     report.save(run)
     results = []
     progress = ProgressBar(len(names), "backends")
