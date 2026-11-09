@@ -42,3 +42,21 @@ class StageRunnerTests(unittest.TestCase):
 
     def test_an_empty_plan_runs_nothing(self) -> None:
         self.assertEqual(stage_runner.run(()), [])
+
+    def test_the_one_stage_cli_keeps_child_arguments(self) -> None:
+        stage = stage_runner._stage_from_argv(["pkg.module", "--update", "--stage-known", "gate"])
+        self.assertEqual(stage.key, "gate")
+        self.assertEqual(stage.module, "pkg.module")
+        self.assertEqual(stage.typical, 55)
+        self.assertEqual(stage.high, 80)
+        self.assertEqual(stage.arguments, ("--update",))
+
+    def test_the_one_stage_cli_accepts_explicit_bounds_and_title(self) -> None:
+        stage = stage_runner._stage_from_argv(
+            ["pkg.module", "--stage-title", "build", "--stage-typical", "90", "--stage-high", "600", "--check"]
+        )
+        self.assertEqual((stage.key, stage.typical, stage.high, stage.arguments), ("build", 90.0, 600.0, ("--check",)))
+
+    def test_the_one_stage_cli_needs_a_module(self) -> None:
+        with self.assertRaises(SystemExit):
+            stage_runner._stage_from_argv([])
