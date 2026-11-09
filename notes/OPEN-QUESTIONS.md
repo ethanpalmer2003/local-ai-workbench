@@ -14,10 +14,6 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 
 ## Deferred
 
-### Rebuild-dependent fixes
-
-- **Kokoro languages in Lemonade and KoboldCpp.** Lemonade's `koko.exe` defaults to `en-us` and English styles, so its recipe maps French and Japanese wrongly; KoboldCpp embeds only the English phonemizer, so Japanese yields an empty WAV and other languages fall back. Neither is a wrong request, so the proxy rewrite used elsewhere cannot reach them: one needs a corrected Lemonade recipe, the other a build with another phonemizer. Waiting is the decision until either framework is rebuilt for another reason; evidence is in the [local drafts](reviews/UPSTREAM-KOKORO-2026-11-08.md).
-
 ### OS limits
 
 Windows is the only supported host, so anything that needs another operating system waits here rather than in the TODO, where it would sit as work that cannot start.
