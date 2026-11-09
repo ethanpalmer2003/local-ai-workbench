@@ -1,5 +1,7 @@
 """Model update signals: source checks, newer-release hints and overlay-aware catalog writes."""
 
+import contextlib
+import io
 import json
 import tempfile
 import unittest
@@ -9,16 +11,23 @@ from typing import Any, cast
 from unittest.mock import patch
 
 from scripts.config.models import ModelDownload, catalog
-from scripts.download.models import update_models, updates
+from scripts.download.models import download_models, update_models, updates
 
 
 class FakeHub:
     """A Hub double: one repository with the given files and versioned sibling ids."""
 
-    def __init__(self, files: dict[str, int], ids: list[str] | None = None, broken: bool = False) -> None:
+    def __init__(
+        self,
+        files: dict[str, int],
+        ids: list[str] | None = None,
+        broken: bool = False,
+        repo_files: list[str] | None = None,
+    ) -> None:
         self.files = files
         self.ids = ids or []
         self.broken = broken
+        self.repo_files = repo_files if repo_files is not None else list(files)
 
     def model_info(self, repo_id: str, *, revision: str | None = None, files_metadata: bool = False) -> Any:
         if self.broken:
@@ -28,6 +37,9 @@ class FakeHub:
 
     def list_models(self, *, search: str, limit: int) -> Any:
         return [SimpleNamespace(id=repo) for repo in self.ids]
+
+    def list_repo_files(self, repo_id: str, *, revision: str | None = None) -> Any:
+        return list(self.repo_files)
 
 
 def _model(url: str, path: Path | None = None, label: str = "koboldcpp/family-v1.1") -> ModelDownload:
@@ -88,11 +100,97 @@ class ModelUpdatesTests(unittest.TestCase):
         row = updates.check(_model(""), FakeHub({}))
         self.assertEqual(row.source, "no url")
 
-    def test_the_update_batch_checks_then_downloads_active_files(self) -> None:
-        stages = update_models.plan()
-        self.assertEqual([stage.key for stage in stages], ["models", "model-downloads"])
-        self.assertEqual(stages[1].arguments, ("--active", "--download"))
-        self.assertEqual(update_models.plan(("--verify",))[0].arguments, ("--verify",))
+
+class UpdateModelsTests(unittest.TestCase):
+    def _old(self) -> ModelDownload:
+        return cast(
+            ModelDownload,
+            cast(
+                object,
+                SimpleNamespace(
+                    label="koboldcpp/Family-v1.1-IQ3_XXS",
+                    group="koboldcpp",
+                    category="llms",
+                    filename="Family-v1.1-IQ3_XXS.gguf",
+                    destination="huggingface/models/llms/character_models/Family-v1.1-IQ3_XXS.gguf",
+                    url="https://huggingface.co/a/Family-v1.1-GGUF/blob/main/Family-v1.1-IQ3_XXS.gguf",
+                    in_use=True,
+                    notes="",
+                    sha256=None,
+                    roles=("chat",),
+                    runtimes=("llamacpp",),
+                    source_page=None,
+                    path=Path("Family-v1.1-IQ3_XXS.gguf"),
+                ),
+            ),
+        )
+
+    def test_file_matching_prefers_the_version_swap(self) -> None:
+        hub = FakeHub({}, repo_files=["Family-v1.2-IQ3_XXS.gguf", "Family-v1.2-IQ4_XS.gguf"])
+        self.assertEqual(update_models._file_for(hub, self._old(), "a/Family-v1.2-GGUF"), "Family-v1.2-IQ3_XXS.gguf")
+
+    def test_file_matching_falls_back_to_a_unique_quant(self) -> None:
+        hub = FakeHub({}, repo_files=["renamed-IQ3_XXS.gguf"])
+        self.assertEqual(update_models._file_for(hub, self._old(), "a/Family-v1.2-GGUF"), "renamed-IQ3_XXS.gguf")
+        ambiguous = FakeHub({}, repo_files=["one-IQ3_XXS.gguf", "two-IQ3_XXS.gguf"])
+        self.assertIsNone(update_models._file_for(ambiguous, self._old(), "a/Family-v1.2-GGUF"))
+
+    def test_the_new_entry_keeps_ownership_and_moves_the_file(self) -> None:
+        entry = update_models._entry(self._old(), "Family-v1.2-IQ3_XXS.gguf", "a/Family-v1.2-GGUF")
+        self.assertEqual(entry["label"], "koboldcpp/Family-v1.2-IQ3_XXS")
+        self.assertEqual(entry["filename"], "Family-v1.2-IQ3_XXS.gguf")
+        self.assertEqual(entry["group"], "koboldcpp")
+        self.assertEqual(entry["url"], "https://huggingface.co/a/Family-v1.2-GGUF/blob/main/Family-v1.2-IQ3_XXS.gguf")
+
+    def test_candidates_come_from_a_newer_versioned_repo(self) -> None:
+        hub = FakeHub({}, ids=["a/Family-v1.2-GGUF"], repo_files=["Family-v1.2-IQ3_XXS.gguf"])
+        found = update_models.candidates(hub, [self._old()])
+        self.assertEqual([candidate.label for candidate in found], ["koboldcpp/Family-v1.2-IQ3_XXS"])
+
+    def test_apply_downloads_the_new_file_then_replaces(self) -> None:
+        old = self._old()
+        entry = update_models._entry(old, "Family-v1.2-IQ3_XXS.gguf", "a/Family-v1.2-GGUF")
+        new = cast(ModelDownload, cast(object, SimpleNamespace(label=entry["label"])))
+        candidate = update_models.Candidate(old, entry)
+        with (
+            patch.object(update_models.model_admin, "references", return_value=([], [])),
+            patch.object(update_models.catalog, "entry_home", return_value=Path("overlay.json")),
+            patch.object(update_models.catalog, "upsert_entry") as upsert,
+            patch.object(update_models.catalog, "get", return_value=new),
+            patch.object(update_models.download_catalog, "download_model") as download,
+            patch.object(update_models.model_admin, "command_replace", return_value=0) as replace,
+        ):
+            self.assertTrue(update_models._apply(candidate))
+        upsert.assert_called_once_with(entry, Path("overlay.json"))
+        download.assert_called_once_with(new)
+        replace.assert_called_once()
+
+    def test_a_failed_download_keeps_the_old_entry(self) -> None:
+        old = self._old()
+        entry = update_models._entry(old, "Family-v1.2-IQ3_XXS.gguf", "a/Family-v1.2-GGUF")
+        candidate = update_models.Candidate(old, entry)
+        with (
+            patch.object(update_models.model_admin, "references", return_value=([], [])),
+            patch.object(update_models.catalog, "upsert_entry"),
+            patch.object(update_models.catalog, "remove_entry") as remove,
+            patch.object(update_models.catalog, "get", return_value=object()),
+            patch.object(update_models.download_catalog, "download_model", side_effect=OSError("offline")),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            self.assertFalse(update_models._apply(candidate))
+        remove.assert_called_once_with(entry["label"])
+
+
+class DownloadModelsTests(unittest.TestCase):
+    def test_no_arguments_fetch_only_the_missing_active_files(self) -> None:
+        with patch.object(download_models.download_catalog, "main") as main:
+            self.assertEqual(download_models.main([]), 0)
+        main.assert_called_once_with(["--active", "--download"])
+
+    def test_repo_flags_go_to_the_arbitrary_downloader(self) -> None:
+        with patch.object(download_models.cli_download, "main") as main:
+            self.assertEqual(download_models.main(["--url", "https://huggingface.co/a/b/blob/main/f.gguf"]), 0)
+        main.assert_called_once()
 
 
 class CatalogOverlayTests(unittest.TestCase):

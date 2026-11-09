@@ -8,7 +8,6 @@ below `low`, which is normal and not reported.
 RANGES: dict[str, tuple[int, int, int]] = {
     "frameworks": (15, 35, 300),
     "models": (10, 30, 120),
-    "model-downloads": (60, 120, 3600),
     "gate": (45, 55, 80),
     "suite": (18, 28, 50),
     "launchers": (240, 275, 380),
