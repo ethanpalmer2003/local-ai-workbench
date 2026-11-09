@@ -21,6 +21,7 @@ from typing import Any
 from tqdm import tqdm
 
 from scripts.config import project_config as project_cfg
+from scripts.launchers import launch_util
 from scripts.tools import stage_times
 
 STEP_RE = re.compile(r"^=== (.+) ===$")
@@ -29,6 +30,9 @@ SKIP_RE = re.compile(r"^\[SKIP\] (\S+):")
 SHOWN_RE = re.compile(r"^\[(?:OK|FAIL|WARN|ERROR|SKIP|TIME|START|RESULTS)\]")
 BAR_FORMAT = "{desc:>12} {percentage:3.0f}%|{bar:26}| {n:.0f}/{total:.0f}s  {postfix}"
 TIMEOUT = object()
+# - a stage that exceeds this multiple of its high mark is killed, so a frozen child ends the run
+LIMIT_FACTOR = 2.0
+MINIMUM_LIMIT = 120.0
 
 
 @dataclass(frozen=True)
@@ -39,6 +43,14 @@ class Stage:
     high: float
     arguments: tuple[str, ...] = ()
     stream: bool = False
+    limit: float | None = None
+
+
+def limit_for(stage: Stage) -> float:
+    """Wall-clock cap for one stage: an explicit limit, else twice the high mark, never tiny."""
+    if stage.limit is not None:
+        return stage.limit
+    return max(MINIMUM_LIMIT, stage.high * LIMIT_FACTOR)
 
 
 @dataclass
@@ -131,6 +143,47 @@ def _tail(path: Path, count: int = 12) -> list[str]:
         return []
 
 
+def _overdue(process: subprocess.Popen[Any], stage: Stage, started: float, bar: Any) -> bool:
+    """Stop a child that outlived its cap; True once the tree has been asked to die."""
+    limit = limit_for(stage)
+    if time.perf_counter() - started <= limit:
+        return False
+    bar.write(f"[FAIL] {stage.key}: still running after {limit:.0f} s; stopping it")
+    launch_util.kill_process_tree(process.pid)
+    return True
+
+
+@dataclass
+class _Pump:
+    """One line at a time: echo it, track progress, and stop a child that outlived its cap."""
+
+    process: subprocess.Popen[Any]
+    stage: Stage
+    log: Any
+    bar: Any
+    started: float
+    stream: bool
+    live: _Live
+    killed: bool = False
+    drained: float | None = None
+
+    def feed(self, line: Any) -> bool:
+        if line is None:
+            return True
+        if line is TIMEOUT:
+            self.killed = self.killed or _overdue(self.process, self.stage, self.started, self.bar)
+            if self.process.poll() is None:
+                return False
+            # - a surviving grandchild can hold the pipe open; stop once the output is drained
+            self.drained = self.drained or time.perf_counter() + 2.0
+            return time.perf_counter() > self.drained
+        self.log.write(line + "\n")
+        if self.stream and echoed(line):
+            self.bar.write(line)
+        _consume(line, self.live, self.bar, self.stage, show=not self.stream)
+        return False
+
+
 def _run_stage(stage: Stage, log_path: Path, bar: Any, prefix: float, stream: bool) -> Result:
     started = time.perf_counter()
     live = _Live()
@@ -149,29 +202,25 @@ def _run_stage(stage: Stage, log_path: Path, bar: Any, prefix: float, stream: bo
         )
         lines: queue.Queue[str | None] = queue.Queue()
         threading.Thread(target=_reader, args=(process.stdout, lines), daemon=True).start()
-        deadline: float | None = None
+        pump = _Pump(process, stage, log, bar, started, stream, live)
         while True:
             try:
                 line = lines.get(timeout=0.2)
             except queue.Empty:
                 line = TIMEOUT
-            if line is None:
+            if pump.feed(line):
                 break
-            if line is TIMEOUT:
-                # A surviving grandchild can hold the pipe open; stop once the output is drained.
-                if process.poll() is not None:
-                    deadline = deadline or time.perf_counter() + 2.0
-                    if time.perf_counter() > deadline:
-                        break
-            else:
-                log.write(line + "\n")
-                if stream and echoed(line):
-                    bar.write(line)
-                _consume(line, live, bar, stage, show=not stream)
             _refresh(bar, stage, prefix, live, started)
         seconds = time.perf_counter() - started
         code = process.wait()
-    status = "skipped" if live.skipped and not code else ("failed" if code else "ok")
+    killed = pump.killed
+    status = "skipped" if live.skipped and not code else ("failed" if code or killed else "ok")
+    if killed:
+        note = f"timed out after {limit_for(stage):.0f} s"
+        bar.write(f"[FAIL] {stage.key}: {note}; tail of {log_path.name}")
+        for row in _tail(log_path):
+            bar.write(f"  | {row}")
+        return Result(stage.key, status, seconds, note, log_path)
     if status == "failed":
         bar.write(f"[FAIL] {stage.key}: exit {code}; tail of {log_path.name}")
         for row in _tail(log_path):
@@ -233,7 +282,7 @@ def run(stages: tuple[Stage, ...], *, title: str = "stages", stream: bool = Fals
     return results
 
 
-FLAGS = ("--stage-title", "--stage-known", "--stage-typical", "--stage-high")
+FLAGS = ("--stage-title", "--stage-known", "--stage-typical", "--stage-high", "--stage-limit")
 
 
 def _stage_from_argv(argv: list[str]) -> Stage:
@@ -244,6 +293,7 @@ def _stage_from_argv(argv: list[str]) -> Stage:
     title = module.rsplit(".", 1)[-1]
     typical: float | None = None
     high: float | None = None
+    limit: float | None = None
     child: list[str] = []
     index = 1
     while index < len(argv):
@@ -262,10 +312,12 @@ def _stage_from_argv(argv: list[str]) -> Stage:
             typical, high = stage_times.typical(value), float(stage_times.high(value))
         elif flag == "--stage-typical":
             typical = float(value)
+        elif flag == "--stage-limit":
+            limit = float(value)
         else:
             high = float(value)
         index += 2
-    return Stage(title, module, typical or 60.0, high or 600.0, tuple(child))
+    return Stage(title, module, typical or 60.0, high or 600.0, tuple(child), limit=limit)
 
 
 def main(argv: list[str] | None = None) -> int:
