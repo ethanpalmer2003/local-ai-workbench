@@ -26,7 +26,7 @@ Measured on this machine; only the last two open a model or service. When to run
 | `scripts/review/check_repo.bat` | the same, from a normal terminal |
 | `scripts/review/format_py.bat` | applies `ruff format` |
 | `python -m scripts.tests.run` | regression suite through pytest, timings and reports |
-| `python -m scripts.tests.validate` | updates frameworks, then gate, suite and both live suites in one progress bar; skips unchanged live stages |
+| `python -m scripts.tests.validate` | updates frameworks, then gate, suite and both live suites in one progress bar; `--models` adds the source check; skips unchanged live stages |
 | ... with `AI_MODEL_CHECKS=1` | adds asset/model checks kept out of regressions |
 | `pre-commit run --all-files` | ruff lint and format, codespell |
 | `python -m scripts.review.public_audit [--history]` | publish gate |

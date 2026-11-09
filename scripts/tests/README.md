@@ -15,7 +15,7 @@
 | Live launcher/proxy wiring (VRAM) | `C:/AI/bat/tests/test_live_launchers.bat`: `sdcpp`, `audiocpp`, `llamacpp` (Pi + LittleCoder), `kobold` (+ combined-proxy readiness), `dsh-headless`, `practice` gateway |
 | Live backend probes (VRAM) | `C:/AI/bat/tests/test_live_backends.bat`: `parakeet`, `whisper`, `practice-whisper`, `practice-qwen`, `gemma`, `kokoro`, `images`, `ming3-tts`; `--only NAME...` narrows |
 | Both native suites | `C:/AI/bat/tests/test_live_all.bat` |
-| Everything, skip-aware, one progress bar | `C:/AI/bat/tests/test_full.bat`: updates frameworks, then the gate, suite and both live suites; expected ranges live in [stage_times](shared/stage_times.py) |
+| Everything, skip-aware, one progress bar | `C:/AI/bat/tests/test_full.bat`: updates frameworks, then the gate, suite and both live suites; `--models` adds the catalog source check, `--no-update` drops the preflight; expected ranges live in [stage_times](shared/stage_times.py) |
 | Piper / Sherpa resident speed | [benchmark_tts_speed.bat](../../bat/benchmarks/benchmark_tts_speed.bat); shared lifecycle, voice loaded once, WAV saving excluded |
 | Audio model setup | [guide](../config/audiocpp/MODELS.md); loader checks passed, synthesis prepared |
 | ASR | [framework/shared suites](cases/asr/README.md) |
