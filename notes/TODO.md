@@ -15,7 +15,7 @@
 - [ ] Retest Parakeet Nemotron Vulkan streaming after an upstream fix; it stays disabled after a crash. Keep CPU/GPU and offline results separate.
 - [ ] HRX IQ3_XXS/kernel/register analysis and latest-source build. Native and long runs need approval. [HRX guide](../scripts/config/llamacpp/HRX.md).
 - [ ] Publish a dated report for the Strata profile pair: the runs on disk are aborted stubs, so the recorded numbers need a rerun first.
-- [ ] ComfyUI: validate promising 480 screens at 640 and longer clips, then publish a dated report for the 640 scaling claim, which kept no artifact; assess appearance, autotune/cache and monitor overhead.
+- [ ] ComfyUI: validate promising 480 screens at 640 and longer clips, then publish a dated report for the 640 scaling claim, which kept no artifact; assess appearance, autotune/cache and monitor overhead; pinned memory is off with no recorded reason, so compare it on before keeping that default.
 
 ## Code and docs only
 
