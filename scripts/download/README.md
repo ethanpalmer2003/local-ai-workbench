@@ -6,7 +6,7 @@
 ```powershell
 C:/AI/bat/models/download_models.bat --list
 C:/AI/bat/models/download_models.bat --group asr --list
-C:/AI/bat/models/download_models.bat --model asr/whispercpp/large-v3-turbo-q5_0 --download
+C:/AI/bat/models/download_models.bat --group asr --download
 C:/AI/bat/models/check_installed_models.bat --group asr
 ```
 

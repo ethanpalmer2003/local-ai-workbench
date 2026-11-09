@@ -3,6 +3,7 @@
 import unittest
 from pathlib import Path
 
+from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.review import structure_docs
 
@@ -92,6 +93,40 @@ class WordCountTests(unittest.TestCase):
         )
         self.assertEqual(rows[0][3], "short")
         self.assertEqual(rows[1][3], "short")
+
+
+class ModelNameTests(unittest.TestCase):
+    def _fixture(self, text: str) -> Path:
+        folder = BASE / "scripts/tests/output/model-name-fixture"
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / "NAMED.md"
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def test_a_label_in_a_document_is_reported(self):
+        label = next(model.label for model in model_cfg.MODELS if len(model.label) >= 6)
+        path = self._fixture(f"# Named\n\nRun `{label}` before the check.\n")
+        try:
+            issues = structure_docs.model_name_issues([path])
+        finally:
+            path.unlink()
+            path.parent.rmdir()
+        self.assertEqual(len(issues), 1)
+        self.assertIn(label, issues[0])
+
+    def test_a_role_reference_is_clean(self):
+        path = self._fixture("# Role\n\nThe whisper.cpp turbo entry in the catalog speaks first.\n")
+        try:
+            self.assertEqual(structure_docs.model_name_issues([path]), [])
+        finally:
+            path.unlink()
+            path.parent.rmdir()
+
+    def test_catalog_and_dated_evidence_are_skipped(self):
+        for relative in ("scripts/config/models/README.md", "notes/reviews/RUN.md", "scripts/tests/notes/OUTCOMES.md"):
+            with self.subTest(relative=relative):
+                self.assertTrue(structure_docs.model_names_skipped(relative))
+        self.assertFalse(structure_docs.model_names_skipped("scripts/launchers/asr/README.md"))
 
 
 def _short_candidates() -> list[Path]:

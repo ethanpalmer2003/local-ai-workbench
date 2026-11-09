@@ -13,9 +13,7 @@ It does not silently start a second ASR/TTS server or rebuild AudioCpp.
 Streaming thresholds/silence are **session options**, not request options in this
 release. Pre-roll is buffered by the controller; native speech padding is zero.
 
-The pinned, SHA-256-verified 1.24 MB safetensors asset lives under
-`models/audiocpp/silero-vad/`; download ID `audiocpp/silero-vad` in the canonical
-catalog. Other frameworks' Silero GGUFs are not interchangeable.
+The pinned, SHA-256-verified Silero VAD asset is the AudioCpp VAD entry in the catalog. Other frameworks' Silero GGUFs are not interchangeable.
 
 ## Use
 

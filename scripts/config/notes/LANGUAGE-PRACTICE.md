@@ -14,7 +14,7 @@
 - Build/update explicitly with `bat/update_frameworks.bat --only asr/whispercpp/vulkan-build`; add `--check-only` to report revisions.
 - Requires Visual Studio C++ Build Tools, CMake, Ninja and `VULKAN_SDK`; no CPU Whisper package selected.
 - Installs: `frameworks/asr/whispercpp/{vulkan-build,vulkan}`; legacy community Vulkan remains disabled/retained for comparison.
-- Model: `asr/whispercpp/large-v3-turbo-q5_0`; optional `small`/`base` trade accuracy for speed.
+- Model: the whisper.cpp turbo entry in the catalog; the smaller entries trade accuracy for speed.
 
 ## Whisper embedded versus installed standalone
 
