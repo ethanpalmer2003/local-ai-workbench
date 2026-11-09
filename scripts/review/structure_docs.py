@@ -5,6 +5,7 @@ import re
 from collections import Counter
 from functools import cache
 from pathlib import Path
+from typing import Any
 from urllib.parse import unquote
 
 from scripts.config import models as model_cfg
@@ -326,6 +327,63 @@ def print_word_counts(files: list[Path]) -> int:
     return int(bool(over))
 
 
+MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+
+
+def pointer_stats(files: list[Path]) -> dict[str, Any]:
+    """Where Markdown points: internal pointers per target and source, plus external and non-Markdown links."""
+    sources: Counter[str] = Counter()
+    targets: Counter[str] = Counter()
+    external = other = 0
+    for path in files:
+        if path.suffix != ".md":
+            continue
+        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+        for match in MARKDOWN_LINK.finditer(path.read_text(encoding="utf-8-sig")):
+            target = unquote(match.group(1).strip("<>").split(" ")[0]).partition("#")[0]
+            if not target:
+                continue
+            if re.match(r"^[a-z]+:", target, re.I):
+                external += 1
+                continue
+            if not target.endswith(".md"):
+                other += 1
+                continue
+            destination = (path.parent / target).resolve()
+            key = (
+                destination.relative_to(project_cfg.BASE_DIR).as_posix()
+                if destination.is_relative_to(project_cfg.BASE_DIR)
+                else str(destination)
+            )
+            sources[relative] += 1
+            targets[key] += 1
+    maintained = {path.relative_to(project_cfg.BASE_DIR).as_posix() for path in files if path.suffix == ".md"}
+    return {
+        "sources": sources,
+        "targets": targets,
+        "external": external,
+        "other": other,
+        "unlinked": sorted(maintained - set(targets)),
+    }
+
+
+def print_pointer_counts(files: list[Path]) -> int:
+    """Markdown pointers, the most-linked documents and the ones nothing points at."""
+    stats = pointer_stats(files)
+    targets: Counter[str] = stats["targets"]
+    sources: Counter[str] = stats["sources"]
+    print(f"{sum(targets.values())} Markdown pointers from {len(sources)} documents to {len(targets)} targets")
+    print(f"{stats['external']} external links; {stats['other']} links to other files")
+    print("\nmost linked:")
+    for name, count in targets.most_common(10):
+        print(f"{count:5}  {name}")
+    unlinked: list[str] = stats["unlinked"]
+    print(f"\n{len(unlinked)} document(s) no other document points at:")
+    for name in unlinked:
+        print(f"       {name}")
+    return 0
+
+
 def markdown_issues(path: Path, text: str) -> list[str]:
     issues = []
     relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
@@ -523,12 +581,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--words", action="store_true", help="list every maintained document by word count")
     parser.add_argument("--roles", action="store_true", help="list every maintained document by role")
+    parser.add_argument("--links", action="store_true", help="report Markdown pointers and unlinked documents")
     args = parser.parse_args(argv)
     files = maintained_files()
     if args.words:
         return print_word_counts(files)
     if args.roles:
         return print_role_counts(files)
+    if args.links:
+        return print_pointer_counts(files)
     issues = configuration_issues() + physical_root_issues() + naming_issues() + root_document_issues()
     issues += role_issues(files)
     issues += model_name_issues(files)
