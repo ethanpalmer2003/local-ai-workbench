@@ -2,7 +2,7 @@
 setlocal
 pushd C:\AI
 title KoboldCpp Language Practice
-"scripts\.venv\Scripts\python.exe" -m scripts.launchers.koboldcpp.kobold --model llamacpp/gemma-4-E4B-it-Q4_0 --usage-profile shared --transcription-engine audiocpp-nemotron --speech-engine kokoro-audiocpp --practice-ui %*
+"scripts\.venv\Scripts\python.exe" -m scripts.launchers.koboldcpp.kobold --usage-profile shared --transcription-engine audiocpp-nemotron --speech-engine kokoro-audiocpp --practice-ui %*
 set "PRACTICE_EXIT=%ERRORLEVEL%"
 popd
 pause
