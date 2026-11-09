@@ -8,7 +8,8 @@
       "selection": "longestText",
       "fallback": "longestAudio",
       "exclude": [],
-      "selected": []
+      "selected": [],
+      "superseded_by": null
     }
   }
 }

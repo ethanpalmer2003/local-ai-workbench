@@ -50,6 +50,20 @@ def voice_ids() -> tuple[str, ...]:
     return ()
 
 
+def superseded_voices() -> dict[str, str]:
+    """Voice ids replaced by another id: `superseded_by` keeps the old clips usable but secondary."""
+    manifest = voice_sources_path()
+    if not manifest.is_file():
+        return {}
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    pairs: dict[str, str] = {}
+    for name, entry in (payload.get("voices") or {}).items():
+        replacement = entry.get("superseded_by") if isinstance(entry, dict) else None
+        if isinstance(replacement, str) and replacement and replacement != name:
+            pairs[name] = replacement
+    return pairs
+
+
 def default_voice() -> str:
     """The manifest's chosen default, else the first discovered id, else empty."""
     manifest = voice_sources_path()
