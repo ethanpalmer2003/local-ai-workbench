@@ -1,9 +1,5 @@
 @echo off
-setlocal
-pushd C:\AI
-title KoboldCpp Language Practice (no model, llama.cpp)
-"scripts\.venv\Scripts\python.exe" -m scripts.launchers.koboldcpp.kobold --llm external --usage-profile shared --transcription-engine audiocpp-nemotron --speech-engine kokoro-audiocpp --practice-ui %*
-set "PRACTICE_EXIT=%ERRORLEVEL%"
-popd
-pause
-exit /b %PRACTICE_EXIT%
+set "RUN_TITLE=KoboldCpp Language Practice (no model, llama.cpp)"
+set "RUN_MODULE=scripts.launchers.koboldcpp.kobold"
+call "%~dp0..\_run.bat" --llm external --usage-profile shared --transcription-engine audiocpp-nemotron --speech-engine kokoro-audiocpp --practice-ui %*
+exit /b %ERRORLEVEL%

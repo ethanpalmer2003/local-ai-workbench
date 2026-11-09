@@ -1,10 +1,7 @@
 @echo off
-setlocal
-pushd "C:\AI"
-title Cleanup State
 rem - Prunes orphaned temp extractions, aborted downloads and old logs. --dry-run to preview.
-"scripts\.venv\Scripts\python.exe" -m scripts.tools.state_cleanup %*
-set "CLEAN_EXIT=%ERRORLEVEL%"
-popd
-pause
-exit /b %CLEAN_EXIT%
+
+set "RUN_TITLE=Cleanup State"
+set "RUN_MODULE=scripts.tools.state_cleanup"
+call "%~dp0_run.bat" %*
+exit /b %ERRORLEVEL%
