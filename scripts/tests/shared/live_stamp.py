@@ -9,11 +9,34 @@ import json
 import os
 import time
 
+from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 
 INPUT_ROOTS = ("scripts/launchers", "scripts/config", "scripts/tests/cases", "scripts/benchmarks", "bat")
 SUFFIXES = frozenset({".py", ".cjs", ".mjs", ".js", ".html", ".json", ".yaml", ".bat"})
 SKIP_PARTS = frozenset({"__pycache__", "state", "output", "old", "retired"})
+
+
+def _installation_identity() -> bytes:
+    """Installed models and frameworks: size and timestamp, never their bytes."""
+    lines: list[str] = []
+    for model in model_cfg.MODELS:
+        try:
+            stat = model.path.stat()
+        except OSError:
+            lines.append(f"{model.path}:missing")
+            continue
+        lines.append(f"{model.path}:{stat.st_size}:{stat.st_mtime_ns}")
+    for component in project_cfg.COMPONENTS.values():
+        root = component.framework_dir
+        if not root.is_dir():
+            continue
+        lines.append(f"{root}:{root.stat().st_mtime_ns}")
+        for marker in (".last_update_hash", ".git/HEAD"):
+            path = root / marker
+            if path.is_file():
+                lines.append(f"{path}:{path.read_text(encoding='utf-8', errors='ignore').strip()}")
+    return "\n".join(lines).encode()
 
 
 def fingerprint() -> str:
@@ -28,6 +51,8 @@ def fingerprint() -> str:
             digest.update(path.relative_to(project_cfg.BASE_DIR).as_posix().encode())
             digest.update(b"\0")
             digest.update(path.read_bytes())
+    digest.update(b"\0installed\0")
+    digest.update(_installation_identity())
     return digest.hexdigest()
 
 
