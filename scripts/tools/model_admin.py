@@ -229,13 +229,16 @@ def command_remove(model: model_cfg.ModelDownload, apply: bool) -> int:
         print("\n[Dry run] Re-run with --apply to edit catalog.json and move files to trash.")
         return 0
     stamp = str(time.time_ns())
-    backup_file(catalog.CATALOG_PATH, stamp)
-    entries = [entry for entry in catalog.load_entries() if entry.get("label") != model.label]
-    catalog.save_catalog(entries)
-    catalog.write_ids(catalog.load_catalog())
+    home = catalog.entry_home(model.label)
+    backup_file(home, stamp)
+    removed = catalog.remove_entry(model.label)
+    if removed is None:
+        print(f"[WARN] {model.label} is not listed in any catalog file; the weights were still retired.")
+    else:
+        catalog.write_ids()
+        print(f"[OK] Removed {model.label} from {display_path(removed)}")
     for file in files:
         move_to_trash(file, stamp)
-    print(f"[OK] Removed {model.label} from {catalog.CATALOG_PATH}")
     return run_model_sync()
 
 
@@ -331,14 +334,13 @@ def _retire_old(old: model_cfg.ModelDownload, new: model_cfg.ModelDownload, stam
 def _apply_replacement(
     old: model_cfg.ModelDownload, new: model_cfg.ModelDownload, changed: list[tuple[Path, str]], stamp: str
 ) -> None:
-    backup_file(catalog.CATALOG_PATH, stamp)
+    backup_file(catalog.entry_home(old.label), stamp)
     for file, updated in changed:
         backup_file(file, stamp)
         file.write_text(updated, encoding="utf-8")
         print(f"[OK] {display_path(file)}")
-    entries = [entry for entry in catalog.load_entries() if entry.get("label") != old.label]
-    catalog.save_catalog(entries)
-    catalog.write_ids(catalog.load_catalog())
+    catalog.remove_entry(old.label)
+    catalog.write_ids()
     _retire_old(old, new, stamp)
 
 
@@ -381,7 +383,11 @@ def command_add(args: argparse.Namespace) -> int:
         "runtimes": list(args.runtimes or []),
         "source_page": args.source_page,
     }
-    entries = [*catalog.load_entries(), entry]
+    target = catalog.overlay_path() if args.overlay else catalog.CATALOG_PATH
+    if not target.is_file():
+        print(f"[FAIL] Catalog file does not exist: {target}")
+        return 1
+    entries = [*catalog.load_entries(target), entry]
     try:
         catalog.validate_entries(entries)
     except ValueError as error:
@@ -389,13 +395,14 @@ def command_add(args: argparse.Namespace) -> int:
         return 1
     print(json.dumps(entry, indent=2))
     if not args.apply:
-        print("\n[Dry run] Re-run with --apply to append this entry to catalog.json.")
+        print(f"\n[Dry run] Re-run with --apply to append this entry to {display_path(target)}.")
         return 0
     stamp = str(time.time_ns())
-    backup_file(catalog.CATALOG_PATH, stamp)
-    catalog.save_catalog(entries)
-    catalog.write_ids(catalog.load_catalog())
-    print(f"[OK] Added {args.label} to {catalog.CATALOG_PATH}")
+    backup_file(target, stamp)
+    catalog.upsert_entry(entry, target)
+    if target == catalog.CATALOG_PATH:
+        catalog.write_ids()
+    print(f"[OK] Added {args.label} to {display_path(target)}")
     if args.download:
         from scripts.download.models import download_catalog as download
 
@@ -432,6 +439,9 @@ def main(argv: list[str] | None = None) -> int:
     add.add_argument("--runtimes", nargs="+")
     add.add_argument("--source-page")
     add.add_argument("--apply", action="store_true")
+    add.add_argument(
+        "--overlay", action="store_true", help="Append to the private input overlay instead of the catalog"
+    )
     add.add_argument("--download", action="store_true", help="Download after adding")
     args = parser.parse_args(argv)
     if args.command in ("status", "where"):
