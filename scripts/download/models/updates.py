@@ -36,6 +36,7 @@ class Row:
     installed: str
     upstream: str
     newer: str
+    upstream_bytes: int | None = None
 
 
 def _size(value: int | None) -> str:
@@ -117,15 +118,15 @@ def check(model: ModelDownload, api: Hub, verify: bool = False) -> Row:
     newer = _newer(api, source.repo_id)
     if sibling is None:
         return Row(label, "missing", size, "-", newer)
-    upstream = _size(getattr(sibling, "size", None))
-    installed_size = getattr(sibling, "size", None)
-    if installed and installed_size and installed != installed_size:
-        return Row(label, "changed", size, upstream, newer)
+    upstream_bytes = getattr(sibling, "size", None)
+    upstream = _size(upstream_bytes)
+    if installed and upstream_bytes and installed != upstream_bytes:
+        return Row(label, "changed", size, upstream, newer, upstream_bytes)
     lfs = getattr(sibling, "lfs", None)
     expected = getattr(lfs, "oid", None) if lfs is not None else None
     if verify and expected and installed and expected != _sha256(model.path):
-        return Row(label, "changed", size, upstream, newer)
-    return Row(label, "ok", size, upstream, newer)
+        return Row(label, "changed", size, upstream, newer, upstream_bytes)
+    return Row(label, "ok", size, upstream, newer, upstream_bytes)
 
 
 def _print(rows: list[Row]) -> None:
