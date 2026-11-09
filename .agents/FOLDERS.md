@@ -28,4 +28,4 @@
 ## Moves
 
 - A move updates every consumer in the same change: imports, settings, catalogs, native preferences, batches and docs. Keep existing sessions and evidence.
-- Guard: `python -m scripts.review.structure`; full review: `python -m scripts.review`.
+- Guard: `python -m scripts.review.layout`; full review: `python -m scripts.review`.
