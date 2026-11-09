@@ -28,7 +28,6 @@ learner accents or multilingual accuracy.
 | Qwen3-ASR 1.7B | Not selected for conversation practice; selected for TTS voice-reference transcription. |
 | Parakeet 110M / installed Sherpa Zipformer | English-only references; Sherpa French streaming models remain separate candidates. |
 | SenseVoiceSmall / FunASR | Not a fit for required French/Spanish coverage. This does not reject other FunASR models. |
-| CrispASR | Unranked: no warmed resident adapter; cold timings cannot justify elimination. |
 | Handy | Dictation frontend, not a competing recognition model; manual workflow checks remain. |
 
 Promote alternatives only after matched learner recordings compare accuracy,

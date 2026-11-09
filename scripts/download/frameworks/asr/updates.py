@@ -92,13 +92,6 @@ TOOLS = [
         asset_pattern=r"^speech-[\d.]+-windows-x64-vulkan\.zip$",
     ),
     ToolSpec(
-        "asr/crispasr/vulkan",
-        "crispasr.exe",
-        ReleaseType.DATE,
-        repo="CrispStrobe/CrispASR",
-        asset_pattern=r"^crispasr-windows-x86_64-vulkan\.zip$",
-    ),
-    ToolSpec(
         "asr/funasr/vulkan",
         "llama-funasr-sensevoice.exe",
         ReleaseType.DATE,

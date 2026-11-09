@@ -7,7 +7,6 @@ All required weights are downloaded and pinned in [the model catalog](../../conf
 | `nemo-speechcpp` | Q8_0 GGUF | Offline, stateful streaming WAV, live microphone |
 | `speechcpp` | Packed Q8_0 ASR + Silero VAD | Offline, VAD-delimited live microphone |
 | `funasr` | Q8 ASR + FSMN-VAD | Offline; language auto-detection |
-| `crispasr` | Existing Whisper-family turbo, Q5_0 | Offline baseline |
 | `sherpa-onnx` | Streaming English encoder/joiner, INT8 | Recorded WAV through online decoder, CPU |
 | `audiocpp-vulkan`, `audiocpp-rocm` | Q8_0 GGUF | Offline, stateful streaming WAV |
 | `audiocpp-ming-audio-tiny` | Existing Q4_K audio GGUF | Offline ASR; expert offload; auto language |
@@ -21,7 +20,6 @@ C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli 
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli --engine nemo-speechcpp --input C:/AI/data/input/speech.wav --mode streaming
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli --engine speechcpp --input C:/AI/data/input/speech.wav
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli --engine funasr --input C:/AI/data/input/speech.wav
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli --engine crispasr --input C:/AI/data/input/speech.wav
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli --engine sherpa-onnx --input C:/AI/data/input/speech.wav
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli --engine audiocpp-vulkan --input C:/AI/data/input/speech.wav --mode streaming
 ```
@@ -32,4 +30,4 @@ Use mono 16 kHz PCM16 WAV for common file comparisons. The Python entry also acc
 
 Model restore: `download_models.bat --active --group asr --download`; AudioCpp uses model ID `audiocpp/nemotron-3.5-q8_0`. Native auto-fetch caches stay inside canonical model roots. [Downloads/evidence](../../../notes/asr/ASR-DOWNLOADS.md), [comparison](../../tests/cases/asr/COMPARISON.md).
 
-The original seven profiles pass brief file checks. [Additional profiles and limits](../../tests/notes/asr/ASR-EXTRA-PROFILES.md) cover the additional profiles. Resident adapters are available; microphone/first-partial latency and server/browser integration remain unverified. Nemotron streaming explicitly uses CPU because the installed Vulkan path crashes.
+The original six profiles pass brief file checks. [Additional profiles and limits](../../tests/notes/asr/ASR-EXTRA-PROFILES.md) cover the additional profiles. Resident adapters are available; microphone/first-partial latency and server/browser integration remain unverified. Nemotron streaming explicitly uses CPU because the installed Vulkan path crashes.

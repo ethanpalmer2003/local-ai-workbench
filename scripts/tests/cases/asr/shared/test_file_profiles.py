@@ -128,7 +128,7 @@ class FileProfiles(unittest.TestCase):
                 self.assertIn(str(model_cfg.path(profile.models[0])), " ".join(command))
 
     def test_modes_never_silently_fall_back(self):
-        for engine in ("funasr", "speechcpp", "crispasr"):
+        for engine in ("funasr", "speechcpp"):
             with self.subTest(engine=engine), self.assertRaisesRegex(ValueError, "configured modes"):
                 build_command(engine, Path("sample.wav"), "streaming")
         self.assertIn("--stream", build_command("nemo-speechcpp", Path("sample.wav"), "streaming"))

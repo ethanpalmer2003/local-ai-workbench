@@ -45,8 +45,6 @@ def _output_arguments(key: str, output: Path | None) -> list[str]:
         return ["--output", str(output)]
     if key.startswith("audiocpp-"):
         return ["--text-out", str(output)]
-    if key == "crispasr":
-        return ["--output-txt", "--output-file", str(output.with_suffix(""))]
     return []
 
 
@@ -107,7 +105,7 @@ def _require_files(parser: argparse.ArgumentParser, command: list[str], profile:
 def _prepare_output(parser: argparse.ArgumentParser, args) -> None:
     if not args.output:
         return
-    if args.engine not in ("nemo-speechcpp", "crispasr") and not args.engine.startswith("audiocpp-"):
+    if args.engine != "nemo-speechcpp" and not args.engine.startswith("audiocpp-"):
         parser.error("--output is not configured for this engine; redirect stdout instead")
     if args.output.exists():
         parser.error(f"Output already exists: {args.output}")

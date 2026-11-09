@@ -18,7 +18,6 @@ def coverage() -> list[dict[str, str]]:
             "Qwen 0.6B; offline HTTP validated, VAD/Realtime pending",
         ),
         "funasr": ("file_diagnostic", "cold-only", "SenseVoice; installed CLI has no configured resident adapter"),
-        "crispasr": ("file_diagnostic", "adapter-pending", "Whisper; resident server adapter pending"),
         "sherpa-onnx": ("resident_compare", "resident-validated", "English Zipformer C API; recorded input, not paced"),
         "audiocpp-vulkan": ("resident_compare", "resident-validated", "Nemotron; persistent ASR HTTP"),
         "audiocpp-rocm": ("resident_compare", "resident-validated", "Nemotron; persistent ASR HTTP"),
