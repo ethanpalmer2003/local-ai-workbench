@@ -21,7 +21,7 @@ C:/AI/bat/benchmarks/benchmark_asr_compare.bat --run --samples 2 --clips 2
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.tests.cases.asr.shared.coverage
 ```
 
-Preview does not start native code. Default: all fifteen configured resident profiles: AudioCpp Cohere, NeMo and Ming;
+Preview does not start native code. Default is every configured resident profile: AudioCpp Cohere, NeMo and Ming;
 speech.cpp; Parakeet CPU/Vulkan, v3 and Nemotron streaming; Whisper Vulkan and embedded Kobold Whisper;
 llama.cpp Qwen, Gemma and Granite. Cohere and Granite have brief saved checks
 on two synthetic English clips, three repeats each; this does not establish multilingual/noisy quality.

@@ -1,5 +1,7 @@
 # ASR selection rationale
 
+The configured engines and models are owned by `launcher_config`; this page records why each option exists.
+
 Goal: English/French/Spanish conversation with Gemma E4B and Kokoro. Language
 quality and runtime behavior are separate; synthetic English checks do not rank
 learner accents or multilingual accuracy.
@@ -8,8 +10,8 @@ learner accents or multilingual accuracy.
 
 | Runtime/profile | Decision | Reason and limit |
 | --- | --- | --- |
-| AudioCpp Vulkan + Nemotron 3.5 | Default | True streaming; shared ASR/Kokoro server; good final latency. NeMo produced earlier partials in the brief screen. |
-| NeMo-Speech.cpp Vulkan + Nemotron | Keep alternative | Streaming/Silero/Gemma works; separate Kokoro server; no overall advantage shown. |
+| AudioCpp Vulkan + Nemotron 3.5 | Keep | True streaming with the shared ASR/Kokoro server and the best final latency; NeMo still produced earlier partials. |
+| NeMo-Speech.cpp Vulkan + Nemotron | Keep alternative | Fastest first partial and lowest VRAM in the streaming screen, at the cost of the slowest final; separate Kokoro server. |
 | Parakeet.cpp CPU + Nemotron | Keep for GPU pressure | Paced streaming works off-GPU; about 1.1 GiB sampled RAM and optional pinned C API build. |
 | Parakeet.cpp Vulkan + Nemotron | Disabled pending fix | Streaming crashes; offline decoding still works. |
 | whisper.cpp Vulkan/FA + turbo Q5 | Keep accuracy baseline | Multilingual automatic turns; slower completed-turn decode. Learner/noisy quality may justify it. |
@@ -25,7 +27,7 @@ learner accents or multilingual accuracy.
 | Parakeet v3 0.6B | Keep: fast multilingual European-language comparator. Current practice path decodes completed VAD segments. |
 | Gemma E4B audio | Lower priority: shares chat weights but is slow on the short screen; no incremental adapter. |
 | Ming Audio Tiny | Lower priority: slow with expert offload; no incremental adapter or quality benefit shown. |
-| Qwen3-ASR 1.7B | Not selected for conversation practice; selected for TTS voice-reference transcription. |
+| Qwen3-ASR 1.7B | Conversation practice and TTS reference transcription: best multilingual accuracy on the pinned corpus. |
 | Parakeet 110M | English-only reference; the Sherpa ASR weights were retired on 2026-11-08. |
 | Handy | Dictation frontend, not a competing recognition model; manual workflow checks remain. |
 
