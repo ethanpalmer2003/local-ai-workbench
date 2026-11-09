@@ -37,6 +37,7 @@ class Stage:
     typical: float
     high: float
     arguments: tuple[str, ...] = ()
+    stream: bool = False
 
 
 @dataclass
@@ -214,7 +215,7 @@ def run(stages: tuple[Stage, ...], *, title: str = "stages", stream: bool = Fals
     with tqdm(total=total, unit="s", ascii=True, desc=title, bar_format=BAR_FORMAT) as bar:
         prefix = 0.0
         for stage in stages:
-            result = _run_stage(stage, log_dir / f"{stage.key}.log", bar, prefix, stream)
+            result = _run_stage(stage, log_dir / f"{stage.key}.log", bar, prefix, stream or stage.stream)
             bar.write(_describe(result, stage))
             results.append(result)
             prefix += stage.typical

@@ -27,7 +27,10 @@ DEFAULT_KEYS = tuple(key for key in ALL_KEYS if key != "models")
 def _stage(key: str) -> stage_runner.Stage:
     module, arguments = MODULES[key]
     _, typical, high = stage_times.RANGES[key]
-    return stage_runner.Stage(key=key, module=module, arguments=arguments, typical=typical, high=high)
+    # - update stages keep every line; the checks and live suites keep their tagged summaries
+    return stage_runner.Stage(
+        key=key, module=module, arguments=arguments, typical=typical, high=high, stream=key in ("frameworks", "models")
+    )
 
 
 def plan(only: list[str] | None = None, models: bool = False) -> tuple[stage_runner.Stage, ...]:

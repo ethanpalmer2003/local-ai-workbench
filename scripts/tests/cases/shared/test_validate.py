@@ -28,6 +28,12 @@ class ValidatePlanTests(unittest.TestCase):
         keys = [stage.key for stage in validate.plan(models=True)]
         self.assertEqual(keys, ["frameworks", "models", "gate", "suite", "launchers", "backends"])
 
+    def test_update_stages_keep_their_own_output(self) -> None:
+        stages = {stage.key: stage for stage in validate.plan(models=True)}
+        self.assertTrue(stages["frameworks"].stream)
+        self.assertTrue(stages["models"].stream)
+        self.assertFalse(stages["gate"].stream)
+
     def test_plan_narrows_by_key(self) -> None:
         self.assertEqual([stage.key for stage in validate.plan(["suite"])], ["suite"])
         self.assertEqual(len(validate.plan(DEFAULT)), len(DEFAULT))
