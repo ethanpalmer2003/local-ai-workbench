@@ -43,5 +43,5 @@
 - Model weights: under `C:/AI/data/`.
 - Application binaries: remain under `C:/AI/frameworks/`; app-updated components under `desktop/components/`.
 - Verification: junction identity, native profiles/runtime/component paths, shared config pointer and model discovery passed.
-- [Verification record](../../tests/output/regression/strata_relocation/unreviewed/1792964068994666100/artifacts/verification.json).
+- Verification record (../../tests/output/regression/strata_relocation/unreviewed/1792964068994666100/artifacts/verification.json).
 - Desktop UI/model startup: not exercised during relocation.

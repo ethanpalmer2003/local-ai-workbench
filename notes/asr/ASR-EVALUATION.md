@@ -38,7 +38,7 @@ label failures, unsupported languages and untested quality distinctly.
 Evidence: [streaming runtimes](../../scripts/tests/notes/asr/NEMOTRON-STREAMING.md),
 [automatic alternatives](../../scripts/tests/notes/asr/ASR-PRACTICE-ALTERNATIVES.md),
 [file screen](../../scripts/tests/notes/asr/ASR-SCREEN.md),
-[Cohere/Granite brief checks](../../scripts/tests/output/asr/shared/resident_compare/unreviewed/1793254500105109300/artifacts/report.json),
+Cohere/Granite brief checks (../../scripts/tests/output/asr/shared/resident_compare/unreviewed/1793254500105109300/artifacts/report.json),
 [capabilities](../../scripts/launchers/asr/CAPABILITIES.md),
 [language coverage](../../scripts/config/notes/MODEL-LANGUAGES.md).
 TTS framework selection is separate: [AudioCpp choice](../../scripts/launchers/audiocpp/RETAINED-TTS.md).

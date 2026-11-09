@@ -30,11 +30,11 @@ trailing locale token; the adapter removes it from displayed text and retains
 `raw_text`. French/Spanish, learner accents, physical microphone/echo and stable
 latency percentiles remain ungraded. Runtime conversions/lookahead may differ.
 
-- [AudioCpp report](../../output/asr/shared/practice_smoke/unreviewed/1793244849940625700/artifacts/report.json)
-- [NeMo report](../../output/asr/shared/practice_smoke/unreviewed/1793244869851308600/artifacts/report.json)
-- [Parakeet worker report](../../output/asr/shared/practice_smoke/unreviewed/1793245036143686600/artifacts/report.json)
-- [Both-gateway NeMo check](../../output/asr/shared/practice_smoke/unreviewed/1793244346730960300/artifacts/report.json)
-- [Both-gateway CPU check](../../output/asr/shared/practice_smoke/unreviewed/1793244611283906800/artifacts/report.json)
+- AudioCpp report (../../output/asr/shared/practice_smoke/unreviewed/1793244849940625700/artifacts/report.json)
+- NeMo report (../../output/asr/shared/practice_smoke/unreviewed/1793244869851308600/artifacts/report.json)
+- Parakeet worker report (../../output/asr/shared/practice_smoke/unreviewed/1793245036143686600/artifacts/report.json)
+- Both-gateway NeMo check (../../output/asr/shared/practice_smoke/unreviewed/1793244346730960300/artifacts/report.json)
+- Both-gateway CPU check (../../output/asr/shared/practice_smoke/unreviewed/1793244611283906800/artifacts/report.json)
 
 Approved execution: AppContainer false, administrator false. Isolated ports;
 only owned services stopped. No packages installed. Shared build logs/manifest

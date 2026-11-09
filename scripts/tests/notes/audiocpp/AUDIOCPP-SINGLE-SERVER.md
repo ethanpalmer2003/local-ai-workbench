@@ -28,9 +28,9 @@ Sampled process GPU allocation peak: 2162 MiB; process RAM working-set peak:
 166 MB. Only three process GPU samples were available; peaks are lower bounds,
 not exact memory requirements. Desktop/other allocations are separate.
 
-[Streaming/overlap report](../../output/audiocpp/single_server_speech/unreviewed/1793236264505744900/artifacts/report.json),
-[memory](../../output/audiocpp/single_server_speech/unreviewed/1793236264505744900/artifacts/vram.json),
-[offline-mode report](../../output/audiocpp/single_server_speech/unreviewed/1793236100539245300/artifacts/report.json).
+Streaming/overlap report (../../output/audiocpp/single_server_speech/unreviewed/1793236264505744900/artifacts/report.json),
+memory (../../output/audiocpp/single_server_speech/unreviewed/1793236264505744900/artifacts/vram.json),
+offline-mode report (../../output/audiocpp/single_server_speech/unreviewed/1793236100539245300/artifacts/report.json).
 
 ## Scope and reuse
 

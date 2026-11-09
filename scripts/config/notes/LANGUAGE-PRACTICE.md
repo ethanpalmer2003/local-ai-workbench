@@ -7,7 +7,7 @@
 ## Qwen3-ASR alternative through llama.cpp
 
 - `QWEN3_ASR` uses Q8_0 main/projector through the shared Vulkan llama.cpp install. Named Qwen batches exist for both chat consumers.
-- Prior two-clip API integration passed; it was clean English, not multilingual quality evidence. [Saved run](../../tests/output/probes/language_practice_whisper/unreviewed/1793082524839352700/artifacts/report.json).
+- Prior two-clip API integration passed; it was clean English, not multilingual quality evidence. Saved run (../../tests/output/probes/language_practice_whisper/unreviewed/1793082524839352700/artifacts/report.json).
 
 ## Current standalone Whisper experiments
 
@@ -23,7 +23,7 @@
 
 ## Initial Whisper results 2026-10-26
 
-- Prior ABBA screen: matching clean synthetic transcripts, 32 requests. [Results](../tests/output/probes/whisper_embedded_compare/unreviewed/1793071343555664800/artifacts/report.json).
+- Prior ABBA screen: matching clean synthetic transcripts, 32 requests. Results (../tests/output/probes/whisper_embedded_compare/unreviewed/1793071343555664800/artifacts/report.json).
 - Current FA sample: about 875 MiB loaded, 922 MiB sampled peak; budget approximately 1 GiB. Sampled, model-specific, not a general cap.
 
 ## Benchmarks

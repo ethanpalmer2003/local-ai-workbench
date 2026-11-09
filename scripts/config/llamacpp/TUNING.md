@@ -15,5 +15,5 @@
 
 - Legacy ngram 32/4/8 remains a named profile. Do not combine unrelated screens into a stronger claim.
 - Optional `swift15-8k`: short greedy screen rose from 38.02 to 57.26 tok/s versus 96K capacity, with identical 64-token outputs. Use only when complete prompt/history/output fits; filled-context/everyday-sampling performance remains unverified.
-- Screens recorded 2026-10-04: [MTP evidence](../../tests/output/llamacpp/benchmark_speedbench/verified/1791093433528713400/artifacts/comparison.md), [copy evidence](../../tests/output/llamacpp/benchmark_ngram/no-gain/1791087672992167800/artifacts/comparison.md).
+- Screens recorded 2026-10-04: MTP evidence (../../tests/output/llamacpp/benchmark_speedbench/verified/1791093433528713400/artifacts/comparison.md), copy evidence (../../tests/output/llamacpp/benchmark_ngram/no-gain/1791087672992167800/artifacts/comparison.md).
 - [HRX limits](HRX.md), [model benchmarks](../../benchmarks/MODEL-COMPARISONS.md), [pending grids](../../../notes/TODO.md).

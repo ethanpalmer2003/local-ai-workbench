@@ -18,7 +18,7 @@ Rocinante/Gemma delivery, SSE transport and Ming listening impressions moved to 
 ## Breeze Q4_0 backend screen
 
 - Default-voice RTF: Vulkan 0.552, old ROCm 0.620, current ROCm 0.681; Vulkan used less sampled process VRAM. Listening quality was not graded.
-- [Backend evidence](../output/probes/audiocpp_backend_compare/).
+- Backend evidence (../output/probes/audiocpp_backend_compare/).
 
 ## llama.cpp warmed short-context stream
 
@@ -27,7 +27,7 @@ Rocinante/Gemma delivery, SSE transport and Ming listening impressions moved to 
 ## Drama 3 Q2 CPU expert offload
 
 - Longer-speech screen: 28 layers RTF 1.21/9.11 GiB peak; 40 layers 1.38/6.12 GiB. Neither reached real time; one sample and differing audio lengths limit ranking. User selected 40 layers/2048 context.
-- [Offload evidence](../output/probes/drama3_offload/).
+- Offload evidence (../output/probes/drama3_offload/).
 
 ## Drama 3 with resident Rocinante
 

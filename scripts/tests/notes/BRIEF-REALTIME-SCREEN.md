@@ -21,9 +21,9 @@ phonemizers; five threads versus Sherpa's four and Piper's runtime default.
 Two model families do not isolate a four-way framework effect. No listening,
 multilingual quality, streaming-first-audio or active-LLM overlap ranking.
 
-[Kokoro evidence](../output/shared/kobold_embedded_compare/unreviewed/1793231643344683600/artifacts/comparison.md);
-[Piper](../output/tts/shared/resident/unreviewed/1793231696855565000/artifacts/piper.json);
-[Sherpa](../output/tts/shared/resident/unreviewed/1793231696855565000/artifacts/sherpa-onnx.json).
+Kokoro evidence (../output/shared/kobold_embedded_compare/unreviewed/1793231643344683600/artifacts/comparison.md);
+Piper (../output/tts/shared/resident/unreviewed/1793231696855565000/artifacts/piper.json);
+Sherpa (../output/tts/shared/resident/unreviewed/1793231696855565000/artifacts/sherpa-onnx.json).
 
 ## Gemma E4B
 
@@ -40,7 +40,7 @@ answers and reported 6/28 generated tokens.
 Kobold delivered one content chunk per response; llama.cpp delivered 5/27.
 This describes the tested OpenAI endpoint, not every Kobold streaming interface.
 Combined startup/loading was 4.58/8.08 seconds respectively, excluded above.
-[Matched report](../output/shared/gemma_runtime_screen/unreviewed/1793231834278361100/artifacts/report.json).
+Matched report (../output/shared/gemma_runtime_screen/unreviewed/1793231834278361100/artifacts/report.json).
 An initial template/reasoning-mismatched run is diagnostic only, excluded.
 
 ## Preliminary shortlist

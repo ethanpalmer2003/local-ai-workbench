@@ -18,7 +18,7 @@ These are two samples, not percentiles. The marker is the detector's estimate,
 not human-labelled speech end. No explicit client commit was used to end speech;
 the controller closed the ASR upload only after the native VAD speech-end event.
 
-[Native report](../../output/audiocpp/vad_turns/unreviewed/1793238226107251600/artifacts/report.json).
+Native report (../../output/audiocpp/vad_turns/unreviewed/1793238226107251600/artifacts/report.json).
 The report preserves raw turn events, settings, generated server config and lifecycle
 phases; stdout/stderr logs preserve native VAD event timing/sample indices.
 Both server models remain reported loaded afterward. Task-owned processes cleaned up.

@@ -24,9 +24,9 @@ English-only. More bytes do not make high a size/computation-matched Kokoro mode
 
 ## Evidence and reproducibility
 
-- [AudioCpp](../output/shared/kobold_embedded_compare/unreviewed/1793232624639086900/external/artifacts/results.json).
-- [Sherpa](../output/tts/shared/resident/unreviewed/1793232572040133000/artifacts/sherpa-onnx.json).
-- [Piper high](../output/tts/shared/resident/unreviewed/1793232601649332800/artifacts/piper.json).
+- AudioCpp (../output/shared/kobold_embedded_compare/unreviewed/1793232624639086900/external/artifacts/results.json).
+- Sherpa (../output/tts/shared/resident/unreviewed/1793232572040133000/artifacts/sherpa-onnx.json).
+- Piper high (../output/tts/shared/resident/unreviewed/1793232601649332800/artifacts/piper.json).
 - Model metadata/voice mapping in `scripts/state/logs/shared/tts-matched-provenance.log`.
 - Models and ancillary files are pinned in the canonical download catalog.
   The resident runner accepts `--profile kokoro-v1.0-int8 --engine sherpa-onnx`

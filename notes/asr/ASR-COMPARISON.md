@@ -3,7 +3,7 @@
 2026-10-27. User explicitly authorized native testing after the initial implementation-only approval rejection.
 
 - Seven profiles, ten supported engine/mode combinations, two identical synthetic English clips (5.3 and 11.5 seconds), two trials per clip: **40 completed samples, zero failures**. Whole run 62.4 seconds.
-- [Comparison table](../../scripts/tests/output/asr/shared/cli_compare/unreviewed/1793160809243462800/artifacts/comparison.md), [raw results/model hashes/context](../../scripts/tests/output/asr/shared/cli_compare/unreviewed/1793160809243462800/artifacts/report.json), [CSV](../../scripts/tests/output/asr/shared/cli_compare/unreviewed/1793160809243462800/artifacts/summary.csv).
+- Comparison table (../../scripts/tests/output/asr/shared/cli_compare/unreviewed/1793160809243462800/artifacts/comparison.md), raw results/model hashes/context (../../scripts/tests/output/asr/shared/cli_compare/unreviewed/1793160809243462800/artifacts/report.json), CSV (../../scripts/tests/output/asr/shared/cli_compare/unreviewed/1793160809243462800/artifacts/summary.csv).
 - Approved outside-sandbox execution, actual token AppContainer=false, administrator=false. Vulkan0 selected for NeMo, speech.cpp, FunASR, CrispASR and AudioCpp Vulkan; AudioCpp ROCm uses RX 7800 XT gfx1101; Sherpa uses CPU, four threads. Backend evidence stays in each sample's stderr log.
 
 FunASR/SenseVoice was fastest in startup-inclusive offline file checks; speech.cpp/Qwen3-ASR was next. AudioCpp Vulkan/Nemotron was fastest among the tested stateful streaming-file paths. This is a comparison of complete model/runtime configurations, with different weights, quantization implementations and thread policies.

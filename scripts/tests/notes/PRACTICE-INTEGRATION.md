@@ -5,7 +5,7 @@ Silero speech end -> Nemotron final transcript -> Gemma E4B reply -> Kokoro WAV.
 One Vulkan AudioCpp server serves ASR/TTS, with one CPU Silero helper per active
 microphone session. The same AudioCpp server stayed loaded across both chat runs.
 
-- [Combined native report](../output/asr/shared/practice_smoke/unreviewed/1793240046629735700/artifacts/report.json)
+- Combined native report (../output/asr/shared/practice_smoke/unreviewed/1793240046629735700/artifacts/report.json)
 - Native log: `scripts/state/logs/shared/practice-smoke-complete.log`
 - 353 model-free regression checks: `scripts/state/logs/shared/practice-regressions.log`
 

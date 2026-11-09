@@ -15,7 +15,7 @@ excluded; AppContainer false, administrator false. Task-owned servers cleaned up
 | Parakeet Nemotron 3.5 Q8 | 106 ms |
 | AudioCpp Ming Audio Tiny Q4_K | 3.249 s |
 
-[Resident evidence](../../output/asr/shared/resident_compare/unreviewed/1793233359234075000/artifacts/report.json).
+Resident evidence (../../output/asr/shared/resident_compare/unreviewed/1793233359234075000/artifacts/report.json).
 All return the expected transcript on this clip; multilingual/noisy accuracy is
 ungraded. Ming uses bounded expert offload and 96 generated tokens; no streaming.
 
@@ -26,7 +26,7 @@ The direct launcher requires `--build cpu --stream`; no silent fallback. Streami
 does not combine with offline VAD or `--json`. This is unpaced recorded audio,
 not a microphone latency test.
 
-[VAD check](../../output/asr/shared/resident_compare/unreviewed/1793233429648563300/artifacts/modes.json),
+VAD check (../../output/asr/shared/resident_compare/unreviewed/1793233429648563300/artifacts/modes.json),
 Vulkan failure (`scripts/state/logs/shared/parakeet-nemotron-stream-check.log`),
 CPU streaming (`scripts/state/logs/shared/parakeet-nemotron-shared-stream-check.log`).
 The VAD artifact retains the rejected JSON+stream attempt; the linked CPU log
