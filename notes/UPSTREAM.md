@@ -14,6 +14,22 @@ nothing is posted to a third-party tracker. Patch owners keep the detail, this p
 | KoboldCpp Kokoro | Empty Japanese WAV, English fallback elsewhere | Unfiled draft: the build embeds an English phonemizer only | [draft](reviews/UPSTREAM-KOKORO-2026-11-08.md) |
 | Strata | Not a defect: the comparison protocol comes from an upstream issue | The harness follows that protocol so its numbers stay comparable | [tuning](../scripts/config/strata/TUNING.md) |
 
+## ComfyUI
+
+The install is a self-updating clone of a ROCm fork that is never edited, so this stack has no local
+patches. Our layer is launch flags and the startup sync; install-time fixes stay in the fork's scripts.
+
+| Upstream | Symptom | Local response | Owner |
+| --- | --- | --- | --- |
+| ComfyUI requirements | Lists plain torch, which would replace the ROCm build on update | Updater filters torch before installing | vendor updater |
+| rocm-sdk wheels | DLL moves between core and devel packages; some gfx targets lack MIOpen and rocBLAS folders | Installer copies the DLL; launch skips absent paths | vendor installer, [bootstrap](../bat/browser/comfyui/comfyui_bootstrap.bat) |
+| triton-windows with INT8-Fast-ROCM | Triton backend crashes the server with that node loaded; the node stays faster than native | The backend stays off | [bootstrap](../bat/browser/comfyui/comfyui_bootstrap.bat) |
+| ROCm torch | Invalid kernel file error on one device | `HIP_VISIBLE_DEVICES` escape hatch stays commented | [bootstrap](../bat/browser/comfyui/comfyui_bootstrap.bat) |
+| sageattention wheel | Rebuilt wheels keep one version string, so pip skips them | Updater force-reinstalls it every run | vendor updater |
+
+Partner nodes are off as policy, not a defect; owned files and the node check:
+[ComfyUI configuration](../scripts/config/comfyui/README.md).
+
 Rules that keep this honest:
 
 - A workaround that changes a vendor binary, page or build lives in its component folder with a patch, never as an edited vendor tree.
