@@ -33,7 +33,7 @@ C:/AI/bat/browser/launch_language.bat
 C:/AI/bat/browser/launch_test_asr.bat
 ```
 
-- Select alternatives with `--transcription-engine` (streaming: `nemo-nemotron`, `parakeetcpp-nemotron-cpu`; completed-turn: `speechcpp-qwen-0.6b`, `whisper-vulkan`, `parakeetcpp-v3`); Kokoro stays Vulkan. Default: AudioCpp Nemotron/Kokoro.
+- Select alternatives with `--transcription-engine` (streaming: `nemo-nemotron`, `parakeetcpp-nemotron-cpu`; completed-turn: `speechcpp-qwen-0.6b`, `whisper-vulkan`, `parakeetcpp-v3`); Kokoro stays Vulkan; the configured engine comes from `ASR_SERVICE`.
 - Kobold Gemma audio profile shares its loaded model; standalone Gemma ASR plus Kobold chat loads two instances. Direct llama.cpp Gemma can share one server for chat/audio.
 - Common `/practice` page: automatic microphone turns with the default backend, WAV upload, transcript editing, Gemma chat and Kokoro playback. NeMo, Parakeet CPU Nemotron, Qwen 0.6B, Whisper and Parakeet v3 support automatic turns. `--practice-ui` selects it for Kobold.
 - External API, language options and service limits: [ASR language options, external API and limits](README-LANGUAGES-API-LIMITS.md).

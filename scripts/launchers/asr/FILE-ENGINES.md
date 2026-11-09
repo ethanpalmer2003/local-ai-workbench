@@ -1,6 +1,6 @@
 # Additional ASR engines
 
-All required weights are downloaded and pinned in [the model catalog](../../config/models/catalog.json). Shared settings: [file_profiles.py](../../config/asr/file_profiles.py). No servers start automatically. Existing Whisper remains the language-practice default.
+All required weights are downloaded and pinned in [the model catalog](../../config/models/catalog.json). Shared settings: [file_profiles.py](../../config/asr/file_profiles.py). No servers start automatically; the configured engine is read from `ASR_SERVICE`.
 
 | `--engine` | Weights (catalog owns identity) | Configured modes |
 | --- | --- | --- |
@@ -26,4 +26,4 @@ Use mono 16 kHz PCM16 WAV for common file comparisons. The Python entry also acc
 
 Model restore: `download_models.bat --active --group asr --download`; AudioCpp uses model ID `audiocpp/nemotron-3.5-q8_0`. Native auto-fetch caches stay inside canonical model roots. [Downloads/evidence](../../../notes/asr/ASR-DOWNLOADS.md), [comparison](../../tests/cases/asr/COMPARISON.md).
 
-All eight profiles pass brief file checks. [Additional profiles and limits](../../tests/notes/asr/ASR-EXTRA-PROFILES.md) cover the additional profiles. Resident adapters are available; microphone/first-partial latency and server/browser integration remain unverified. Nemotron streaming explicitly uses CPU because the installed Vulkan path crashes.
+Every configured profile passes brief file checks. [Additional profiles and limits](../../tests/notes/asr/ASR-EXTRA-PROFILES.md) cover the additional profiles. Resident adapters are available; microphone/first-partial latency and server/browser integration remain unverified. Nemotron streaming explicitly uses CPU because the installed Vulkan path crashes.
