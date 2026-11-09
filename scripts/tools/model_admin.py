@@ -350,6 +350,7 @@ def command_replace(
     apply: bool,
     include_docs: bool,
     include_tests: bool = False,
+    download: bool = False,
 ) -> int:
     print(f"Replace {old.label} -> {new.label}")
     strata = _replace_report(old, new)
@@ -359,10 +360,16 @@ def command_replace(
     changed = _replacement_changes(old, new, include_docs, include_tests)
     _print_changes(changed)
     if not apply:
+        if download and not new.path.is_file():
+            print(f"\n--apply would download {new.label} before rewriting references.")
         _print_dry_run(include_docs, include_tests)
         return 0
     if strata:
         return 1
+    if download and not new.path.is_file():
+        from scripts.download.models import download_catalog
+
+        download_catalog.download_model(new)
     stamp = str(time.time_ns())
     _apply_replacement(old, new, changed, stamp)
     print(f"[OK] Removed {old.label}; kept {new.label}")
@@ -426,6 +433,7 @@ def main(argv: list[str] | None = None) -> int:
     replace.add_argument("--apply", action="store_true", help="Rewrite files, edit catalog.json and move weights")
     replace.add_argument("--include-docs", action="store_true", help="Also rewrite maintained Markdown docs")
     replace.add_argument("--include-tests", action="store_true", help="Also rewrite maintained test fixtures")
+    replace.add_argument("--download", action="store_true", help="Fetch the new model first when it is missing")
     add = sub.add_parser("add", help="Append a catalog entry")
     add.add_argument("--category", required=True, choices=catalog.CATEGORIES)
     add.add_argument("--group", required=True)
@@ -453,7 +461,7 @@ def main(argv: list[str] | None = None) -> int:
         old, new = model_for(args.old), model_for(args.new)
         if old.label == new.label:
             parser.error("old and new are the same catalog entry")
-        return command_replace(old, new, args.apply, args.include_docs, args.include_tests)
+        return command_replace(old, new, args.apply, args.include_docs, args.include_tests, args.download)
     return command_add(args)
 
 

@@ -36,6 +36,7 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 | [analyze_model_metadata.bat](models/analyze_model_metadata.bat) | Inspect model metadata into inventory. |
 | [report_model_languages.bat](models/report_model_languages.bat) | Offline language-coverage inventory. |
 | [check_model_updates.bat](models/check_model_updates.bat) | Compare catalog sources with Hugging Face; hint at newer releases. |
+| [update_models.bat](models/update_models.bat) | The same check, then fetch missing active files; existing files are skipped. |
 
 ## Tests
 
