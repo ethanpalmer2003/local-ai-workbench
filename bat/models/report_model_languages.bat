@@ -1,7 +1,5 @@
 @echo off
-setlocal
-pushd C:\AI
-"scripts\.venv\Scripts\python.exe" -m scripts.config.models.model_languages %*
-set "LANGUAGES_EXIT=%ERRORLEVEL%"
-popd
-exit /b %LANGUAGES_EXIT%
+set "RUN_TITLE=Model Languages"
+set "RUN_MODULE=scripts.config.models.model_languages"
+call "%~dp0..\_run.bat" %*
+exit /b %ERRORLEVEL%

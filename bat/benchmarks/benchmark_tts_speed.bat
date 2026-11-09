@@ -1,4 +1,5 @@
 @echo off
-cd /d C:\AI
-C:\AI\scripts\.venv\Scripts\python.exe -m scripts.benchmarks.tts_engines.resident %*
+set "RUN_TITLE=TTS Speed"
+set "RUN_MODULE=scripts.benchmarks.tts_engines.resident"
+call "%~dp0..\_run.bat" %*
 exit /b %ERRORLEVEL%

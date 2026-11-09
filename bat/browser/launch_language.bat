@@ -1,9 +1,5 @@
 @echo off
-setlocal
-pushd C:\AI
-title llama.cpp Language Practice
-"scripts\.venv\Scripts\python.exe" -m scripts.launchers.llamacpp.language_practice %*
-set "PRACTICE_EXIT=%ERRORLEVEL%"
-popd
-pause
-exit /b %PRACTICE_EXIT%
+set "RUN_TITLE=llama.cpp Language Practice"
+set "RUN_MODULE=scripts.launchers.llamacpp.language_practice"
+call "%~dp0..\_run.bat" %*
+exit /b %ERRORLEVEL%

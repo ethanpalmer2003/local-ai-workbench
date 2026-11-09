@@ -1,4 +1,5 @@
 @echo off
-cd /d C:\AI
-C:\AI\scripts\.venv\Scripts\python.exe -m scripts.benchmarks.asr.asr_resident_compare %*
+set "RUN_TITLE=ASR Comparison"
+set "RUN_MODULE=scripts.benchmarks.asr.asr_resident_compare"
+call "%~dp0..\_run.bat" %*
 exit /b %ERRORLEVEL%

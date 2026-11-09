@@ -1,6 +1,6 @@
 # Batch entry points
 
-Coding-agent entry points stay at the root. Browser, model, test, and benchmark batches are grouped by role; each launcher passes `%*` through to its Python module. Browser names state which HTML they open first: `launch_test*` is the shared `/test/` page, `launch_language*` is the shared `/practice` page, `launch_kobold*` is the KoboldCpp chat stack, and `launch_sdcpp` / `launch_comfyui` are each framework's own built-in UI. Naming rule: [folder rules](../.agents/FOLDERS.md).
+Coding-agent entry points stay at the root. Browser, model, test, and benchmark batches are grouped by role; each launcher passes `%*` through to its Python module. Every batch that only runs a module delegates to [_run.bat](_run.bat), which owns the venv path, working directory, title, pause and exit code. Browser names state which HTML they open first: `launch_test*` is the shared `/test/` page, `launch_language*` is the shared `/practice` page, `launch_kobold*` is the KoboldCpp chat stack, and `launch_sdcpp` / `launch_comfyui` are each framework's own built-in UI. Naming rule: [folder rules](../.agents/FOLDERS.md).
 
 ## Root
 
@@ -37,8 +37,6 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 | [update_models.bat](models/update_models.bat) | Newest releases and size-drift refreshes: download, replace references, retire old weights; `--dry-run` previews. |
 | [analyze_model_metadata.bat](models/analyze_model_metadata.bat) | Inspect model metadata into inventory. |
 | [report_model_languages.bat](models/report_model_languages.bat) | Offline language-coverage inventory. |
-| [check_model_updates.bat](models/check_model_updates.bat) | Compare catalog sources with Hugging Face; hint at newer releases. |
-| [update_models.bat](models/update_models.bat) | The same check, then fetch missing active files; existing files are skipped. |
 
 ## Tests
 

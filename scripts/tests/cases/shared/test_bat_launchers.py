@@ -13,10 +13,13 @@ from unittest.mock import patch
 from scripts.config import project_config as project_cfg
 
 MODULE = re.compile(r"python(?:\.exe)?[\"']?\s+-m\s+([A-Za-z_][\w.]*)", re.IGNORECASE)
+RUN_MODULE = re.compile(r'^set\s+"?RUN_MODULE=([A-Za-z_][\w.]*)"?', re.MULTILINE)
 
 # - Modules reached by a bat but not help-smoked, with the reason.
 SKIP_MODULES = {
     "scripts.tests.run": "runs through its __main__ block and has no main()",
+    "scripts.download.models.download_models": "delegates argument parsing to download_catalog",
+    "scripts.tools.stage_runner": "takes a module path and forwards the rest of the command",
     "scripts.launchers.llamacpp.language_practice": "delegates argument parsing to workspace.main",
     "scripts.launchers.kill_all_services": "no argparse; running it would stop services",
     "scripts.launchers.llamacpp.llamacpp_pi": "delegates argument parsing to llamacpp_coding.main",
@@ -24,6 +27,7 @@ SKIP_MODULES = {
 
 # - Bats with no `python -m` target (external CLI or another bootstrap script).
 SKIP_BATCHES = {
+    "bat/_run.bat": "shared runner; the module is supplied by the calling batch",
     "bat/resume_command_code_session.bat": "calls the framework-local cmdc shim",
     "bat/models/sync_python_env.bat": "runs uv sync against the project environment",
     "bat/browser/comfyui/comfyui_bootstrap.bat": "bootstraps ComfyUI's own python main.py",
@@ -37,7 +41,9 @@ def batch_modules(path) -> set[str]:
         if line.strip().lower().startswith(("rem ", "::")):
             continue
         lines.append(line)
-    return set(MODULE.findall("\n".join(lines)))
+    text = "\n".join(lines)
+    # - simple batches set RUN_MODULE for the shared runner; special ones call python -m directly
+    return set(MODULE.findall(text)) | set(RUN_MODULE.findall(text))
 
 
 class BatLaunchers(unittest.TestCase):
