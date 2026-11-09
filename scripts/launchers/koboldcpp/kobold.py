@@ -243,6 +243,9 @@ def apply_options(args: argparse.Namespace, parser: argparse.ArgumentParser) -> 
     """Fold the flags into service settings and return whether the LLM runs externally."""
     if args.practice_ui:
         cfg.KOBOLDCPP_SERVICE.streaming_ui_path = "/practice"
+        # - the practice page implies the practice model unless the caller names one
+        if not args.model:
+            cfg.KOBOLDCPP_SERVICE.model = cfg.LANGUAGE_PRACTICE.llm_model
     if args.model:
         cfg.KOBOLDCPP_SERVICE.model = args.model
     if args.speech_engine:
