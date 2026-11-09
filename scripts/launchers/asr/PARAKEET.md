@@ -2,12 +2,12 @@
 
 - Windows CPU/Vulkan release installs: `frameworks/asr/parakeetcpp/{cpu,vulkan}/`.
 - Initial download: official v0.6.1, advertised SHA256 verified. [Releases](https://github.com/mudler/parakeet.cpp/releases).
-- Models: `models/asr/parakeetcpp/{tdt_ctc-110m-q8_0.gguf,silero-vad-f16.gguf}`. [Source](https://huggingface.co/mudler/parakeet-cpp-gguf).
+- Models: the Parakeet and Silero VAD entries in the catalog, under `models/asr/parakeetcpp/`. [Source](https://huggingface.co/mudler/parakeet-cpp-gguf).
 - Profiles: default `110m` is English-only; `v3` is multilingual 0.6B Q8; `nemotron` is Nemotron 3.5 Q8. All weights are downloaded. CPU/Vulkan share model files; offline Silero segmentation is enabled.
 
 ```powershell
 C:/AI/bat/update_frameworks.bat --only asr/parakeetcpp
-C:/AI/bat/models/download_models.bat --model asr/parakeetcpp/parakeet-tdt-ctc-110m-q8_0 asr/parakeetcpp/silero-vad-f16 --download
+C:/AI/bat/models/download_models.bat --group asr --download
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.parakeetcpp.transcribe --input C:/AI/data/input/speech.wav
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.parakeetcpp.transcribe --profile v3 --input C:/AI/data/input/speech.wav
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.parakeetcpp.transcribe --profile nemotron --build cpu --stream --language en --input C:/AI/data/input/speech.wav

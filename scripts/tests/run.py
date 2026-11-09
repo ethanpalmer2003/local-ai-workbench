@@ -76,6 +76,7 @@ from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
 from scripts.tests.cases.shared.test_structure_docs import (
     MarkdownNameTests,
+    ModelNameTests,
     RootDocumentTests,
     ShortDocumentTests,
     WordCountTests,
@@ -117,6 +118,8 @@ if __name__ == "__main__":
                     ScanTests,
                     SuffixTests,
                     MarkdownNameTests,
+                    ModelNameTests,
+                    ModelNameTests,
                     RootDocumentTests,
                     ShortDocumentTests,
                     WordCountTests,

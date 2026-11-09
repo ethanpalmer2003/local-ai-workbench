@@ -21,6 +21,13 @@ RULE_WORDS = 300
 MARKDOWN_NAME_ALLOWED = frozenset({"README.md", "AGENTS.md", "SKILL.md"})
 # - only these sit at the workspace root; every other document lives under notes/
 ROOT_MARKDOWN_ALLOWED = frozenset({"README.md", "AGENTS.md"})
+# - the catalog documents itself, dated evidence keeps its instances, and native layouts name vendor files
+MODEL_NAME_ALLOWED = (
+    "scripts/config/models/",
+    "scripts/config/sdcpp/QUANTIZED.md",
+    "notes/reviews/",
+    "scripts/tests/notes/",
+)
 # - a document below this is a candidate for merging into its owner; reviewed, not failed
 SHORT_DOCUMENT_WORDS = 100
 # - review records state a dated decision, and the complexity ledger is generated
@@ -482,6 +489,30 @@ def root_document_issues() -> list[str]:
     ]
 
 
+def model_names_skipped(relative: str) -> bool:
+    """The catalog, dated evidence and native layouts may name an instance."""
+    return relative.startswith(MODEL_NAME_ALLOWED)
+
+
+def model_name_issues(files: list[Path]) -> list[str]:
+    """Model ids and weight filenames live in the catalog; a document names the role instead."""
+    terms = [model.label for model in model_cfg.MODELS]
+    terms.extend(Path(model.filename).name for model in model_cfg.MODELS if model.filename)
+    named = sorted((term for term in terms if len(term) >= 6), key=len, reverse=True)
+    issues = []
+    for path in files:
+        if path.suffix != ".md":
+            continue
+        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+        if model_names_skipped(relative):
+            continue
+        text = path.read_text(encoding="utf-8-sig")
+        found = next((term for term in named if term in text), None)
+        if found:
+            issues.append(f"{relative}: names a catalog model ({found}); name the role and link the catalog")
+    return issues
+
+
 def short_documents(files: list[Path]) -> list[tuple[int, str]]:
     """Documents too short to own a rule; listed for review, never failed."""
     short = []
@@ -505,6 +536,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.words:
         return print_word_counts(files)
     issues = configuration_issues() + physical_root_issues() + naming_issues() + root_document_issues()
+    issues += model_name_issues(files)
     for path in files:
         text = path.read_text(encoding="utf-8-sig")
         issues += owner_issues(path)
