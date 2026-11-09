@@ -95,7 +95,9 @@ class PointerTests(unittest.TestCase):
         folder.mkdir(parents=True, exist_ok=True)
         source, target = folder / "SOURCE.md", folder / "TARGET.md"
         source.write_text(
-            "# Source\n\n[Target](TARGET.md) and [web](https://example.com) and [code](../x.py).\n", encoding="utf-8"
+            "# Source\n\n[Target](TARGET.md) and [Target again](TARGET.md) and [web](https://example.com) "
+            "and [code](../x.py) and [evidence](../output/thing/REPORT.md).\n",
+            encoding="utf-8",
         )
         target.write_text("# Target\n\nNo outgoing links.\n", encoding="utf-8")
         try:
@@ -107,8 +109,10 @@ class PointerTests(unittest.TestCase):
         key = target.relative_to(BASE).as_posix()
         self.assertEqual(stats["external"], 1)
         self.assertEqual(stats["other"], 1)
-        self.assertEqual(stats["targets"][key], 1)
-        self.assertEqual(stats["sources"][source.relative_to(BASE).as_posix()], 1)
+        self.assertEqual(stats["targets"][key], 2)
+        self.assertEqual(stats["sources"][source.relative_to(BASE).as_posix()], 3)
+        self.assertIn((source.relative_to(BASE).as_posix(), key), stats["duplicates"])
+        self.assertEqual(len(stats["untracked"]), 1)
         self.assertIn(source.relative_to(BASE).as_posix(), stats["unlinked"])
 
 

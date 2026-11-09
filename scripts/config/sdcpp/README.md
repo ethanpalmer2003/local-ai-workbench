@@ -1,6 +1,6 @@
 # sd.cpp
 
-- `SDCPP_SERVICE` selects build and model; the current pairing and its evidence are in [TUNING.md](TUNING.md). One-launch overrides: `--build rocm|vulkan`, `--model-profile nova3d|nova3d-q4`.
+- `SDCPP_SERVICE` selects build and model; the current pairing and its evidence are in `TUNING.md`. One-launch overrides: `--build rocm|vulkan`, `--model-profile nova3d|nova3d-q4`.
 - Canonical installs: `frameworks/sdcpp/{rocm,vulkan}`. DLLs stay with the selected build; do not inject the unrelated SDK directory.
 - Both variants remain updated: `bat/update_frameworks.bat --only sdcpp`. ROCm runtime use is deferred, not removed.
 - Launch: `bat/browser/launch_sdcpp.bat`; it opens sd.cpp's built-in web UI at `/`. Server/proxy code lives in `launchers/sdcpp/`.

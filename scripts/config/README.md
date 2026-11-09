@@ -33,7 +33,6 @@ C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync_configs --only com
 
 ## Notes
 
-- [Generated files](notes/GENERATED-FILES.md)
 - [Images on demand](notes/IMAGE-ON-DEMAND.md)
 - [Language practice](notes/LANGUAGE-PRACTICE.md)
 - [Speech model languages](notes/MODEL-LANGUAGES.md)

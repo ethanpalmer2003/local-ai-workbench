@@ -330,18 +330,26 @@ def print_word_counts(files: list[Path]) -> int:
 MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 
 
+# - evidence and retired trees are not maintained documents, so a pointer into them will not survive a clone
+UNTRACKED_PARTS = frozenset({"output", "old", "retired", "trash"})
+
+
 def pointer_stats(files: list[Path]) -> dict[str, Any]:
-    """Where Markdown points: internal pointers per target and source, plus external and non-Markdown links."""
+    """Markdown pointers by source and target, with duplicates, self links, anchors and untracked targets."""
     sources: Counter[str] = Counter()
     targets: Counter[str] = Counter()
-    external = other = 0
+    pairs: Counter[tuple[str, str]] = Counter()
+    self_links = anchors = external = other = 0
+    untracked: set[str] = set()
     for path in files:
         if path.suffix != ".md":
             continue
         relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
         for match in MARKDOWN_LINK.finditer(path.read_text(encoding="utf-8-sig")):
-            target = unquote(match.group(1).strip("<>").split(" ")[0]).partition("#")[0]
+            raw = match.group(1).strip("<>").split(" ")[0]
+            target, _, _anchor = unquote(raw).partition("#")
             if not target:
+                anchors += 1
                 continue
             if re.match(r"^[a-z]+:", target, re.I):
                 external += 1
@@ -350,19 +358,29 @@ def pointer_stats(files: list[Path]) -> dict[str, Any]:
                 other += 1
                 continue
             destination = (path.parent / target).resolve()
+            if destination == path.resolve():
+                self_links += 1
+                continue
             key = (
                 destination.relative_to(project_cfg.BASE_DIR).as_posix()
                 if destination.is_relative_to(project_cfg.BASE_DIR)
                 else str(destination)
             )
+            if UNTRACKED_PARTS & set(Path(target).parts):
+                untracked.add(key)
             sources[relative] += 1
             targets[key] += 1
+            pairs[(relative, key)] += 1
     maintained = {path.relative_to(project_cfg.BASE_DIR).as_posix() for path in files if path.suffix == ".md"}
     return {
         "sources": sources,
         "targets": targets,
+        "duplicates": sorted((pair for pair, count in pairs.items() if count > 1), key=lambda pair: pair),
         "external": external,
         "other": other,
+        "self_links": self_links,
+        "anchors": anchors,
+        "untracked": sorted(untracked),
         "unlinked": sorted(maintained - set(targets)),
     }
 
@@ -374,6 +392,16 @@ def print_pointer_counts(files: list[Path]) -> int:
     sources: Counter[str] = stats["sources"]
     print(f"{sum(targets.values())} Markdown pointers from {len(sources)} documents to {len(targets)} targets")
     print(f"{stats['external']} external links; {stats['other']} links to other files")
+    print(
+        f"{stats['self_links']} self links; {stats['anchors']} same-document anchors; "
+        f"{len(stats['duplicates'])} documents link one target more than once"
+    )
+    for source, target in stats["duplicates"]:
+        print(f"  again  {source} -> {target}")
+    untracked: list[str] = stats["untracked"]
+    print(f"{len(untracked)} untracked target(s) linked (absent from a clone):")
+    for name in untracked:
+        print(f"       {name}")
     print("\nmost linked:")
     for name, count in targets.most_common(10):
         print(f"{count:5}  {name}")
