@@ -61,6 +61,12 @@ rather than silently compared. Recognition is scored on a pinned multilingual co
 character error rates, and synthesised speech is rejected when it cannot be the sentence it claims to
 be.
 
+## In progress
+
+Three lists, one job each: [TODO](notes/TODO.md) is local work that can start, [upstream
+fixes](notes/UPSTREAM.md) is what a vendor owes us and what is done about it, and [open
+questions](notes/OPEN-QUESTIONS.md) is decisions not yet made.
+
 ## Layout
 
 Launchers are in [bat/](bat). Project code, configuration, and setup instructions are documented in
