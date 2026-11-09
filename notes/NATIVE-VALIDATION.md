@@ -11,7 +11,7 @@ Current scope: brief Breeze/Ming TTS checks; Ming enabled in the HTML page. No f
 
 ## Brief Breeze result
 
-[Evidence](../scripts/tests/output/audiocpp/audiocpp_backend_compare/inconclusive/1793151441243880200/artifacts/summary.json): one warmup and one measured short English sentence per build; same Q4 model, seed and prompt; sequential device-zero runs.
+Evidence (../scripts/tests/output/audiocpp/audiocpp_backend_compare/inconclusive/1793151441243880200/artifacts/summary.json): one warmup and one measured short English sentence per build; same Q4 model, seed and prompt; sequential device-zero runs.
 
 | Backend | Request seconds | Audio seconds | RTF | Sampled process GPU MiB |
 | --- | ---: | ---: | ---: | ---: |
@@ -24,10 +24,10 @@ Current scope: brief Breeze/Ming TTS checks; Ming enabled in the HTML page. No f
 
 ## Setup and other completed checks
 
-- Ming synthesis passed on both releases: Vulkan 0.740 s / 2.10 s audio; ROCm 0.862 s / 2.20 s audio. [Short-run evidence](../scripts/tests/output/audiocpp/audiocpp_backend_compare/inconclusive/1793151713638444700/artifacts/summary.json). One sample each, no quality ranking.
-- Ming HTML catalog, voice cloning and SSE at 44100 Hz passed. [API evidence](../scripts/tests/output/audiocpp/ming_page_smoke/unreviewed/1793151979038233700/artifacts/report.md); actual browser completed with zero playback underruns. [Page screenshot](../scripts/tests/output/audiocpp/ming_page_smoke/unreviewed/1793151979038233700/artifacts/test-page.png).
-- The heavier audio checkpoint (9.97 GB) is downloaded and registered in both releases and the live test-page catalog; offline WAV controls enforced. [Loader/catalog evidence](../scripts/tests/output/audiocpp/audiocpp_backend_compare/unreviewed/1793152699675709000/artifacts/report.md). Heavy synthesis not run.
+- Ming synthesis passed on both releases: Vulkan 0.740 s / 2.10 s audio; ROCm 0.862 s / 2.20 s audio. Short-run evidence (../scripts/tests/output/audiocpp/audiocpp_backend_compare/inconclusive/1793151713638444700/artifacts/summary.json). One sample each, no quality ranking.
+- Ming HTML catalog, voice cloning and SSE at 44100 Hz passed. API evidence (../scripts/tests/output/audiocpp/ming_page_smoke/unreviewed/1793151979038233700/artifacts/report.md); actual browser completed with zero playback underruns. Page screenshot (../scripts/tests/output/audiocpp/ming_page_smoke/unreviewed/1793151979038233700/artifacts/test-page.png).
+- The heavier audio checkpoint (9.97 GB) is downloaded and registered in both releases and the live test-page catalog; offline WAV controls enforced. Loader/catalog evidence (../scripts/tests/output/audiocpp/audiocpp_backend_compare/unreviewed/1793152699675709000/artifacts/report.md). Heavy synthesis not run.
 - 284 model-free regressions pass; structure/docs, types and function-size checks pass.
-- Earlier [native batch](../scripts/tests/output/shared/quick_validation/unreviewed/1793150687847258100/artifacts/report.md) passed rebuilt Whisper, Whisper/Qwen practice API/chat, Gemma including 30 seconds, Kokoro and images.
-- Parakeet CPU/Vulkan/VAD [passed](../scripts/tests/output/asr/parakeetcpp/smoke/unreviewed/1793150513700310600/artifacts/report.md). Whisper b5454 rebuilt at relocated paths; previous installation preserved.
+- Earlier native batch (../scripts/tests/output/shared/quick_validation/unreviewed/1793150687847258100/artifacts/report.md) passed rebuilt Whisper, Whisper/Qwen practice API/chat, Gemma including 30 seconds, Kokoro and images.
+- Parakeet CPU/Vulkan/VAD passed (../scripts/tests/output/asr/parakeetcpp/smoke/unreviewed/1793150513700310600/artifacts/report.md). Whisper b5454 rebuilt at relocated paths; previous installation preserved.
 - Interrupted Drama work had finished before cancellation; evidence retained, no further runs. Browser/Handy, multilingual accuracy, active overlap and deeper comparisons remain in [TODO](TODO.md).

@@ -24,5 +24,5 @@
 - Disk I/O traces retained; aggregate system activity includes other applications and is not an SSD benchmark.
 - Which of these cases runs is owned by [TUNING](TUNING.md); original full-precision results remain in MEMORY.md.
 
-- [Raw run](../../tests/output/probes/sdcpp_memory_compare/unreviewed/1792993847694866300/artifacts/results.json).
-- [Detailed summaries](../../tests/output/probes/sdcpp_memory_compare/unreviewed/1792993847694866300/artifacts/summary.json).
+- Raw run (../../tests/output/probes/sdcpp_memory_compare/unreviewed/1792993847694866300/artifacts/results.json).
+- Detailed summaries (../../tests/output/probes/sdcpp_memory_compare/unreviewed/1792993847694866300/artifacts/summary.json).

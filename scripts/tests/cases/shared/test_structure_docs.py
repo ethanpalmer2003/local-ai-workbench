@@ -116,6 +116,33 @@ class PointerTests(unittest.TestCase):
         self.assertIn(source.relative_to(BASE).as_posix(), stats["unlinked"])
 
 
+class LinkTests(unittest.TestCase):
+    def _fixture(self, body: str) -> Path:
+        folder = BASE / "scripts/tests/output/link-fixture"
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / "LINKED.md"
+        path.write_text(body, encoding="utf-8")
+        return path
+
+    def test_a_link_into_an_untracked_path_is_reported(self):
+        path = self._fixture("# Linked\n\n[Report](../output/run/REPORT.md)\n")
+        try:
+            issues = structure_docs.markdown_issues(path, path.read_text(encoding="utf-8"))
+        finally:
+            path.unlink()
+            path.parent.rmdir()
+        self.assertTrue(any("untracked" in issue for issue in issues), issues)
+
+    def test_a_tracked_neighbour_link_resolves(self):
+        path = self._fixture("# Linked\n\n[Itself](LINKED.md)\n")
+        try:
+            issues = structure_docs.markdown_issues(path, path.read_text(encoding="utf-8"))
+        finally:
+            path.unlink()
+            path.parent.rmdir()
+        self.assertEqual(issues, [])
+
+
 class ModelNameTests(unittest.TestCase):
     def _fixture(self, text: str) -> Path:
         folder = BASE / "scripts/tests/output/model-name-fixture"

@@ -25,7 +25,7 @@
 - Not a fresh paired FP16 quality/speed comparison; quantization changes generated details. LoRA, img2img and other resolutions remain untested.
 - GPU capture: 100 ms; CPU/RAM/process-I/O/system-disk traces retained. Whole-adapter VRAM includes other allocations.
 - Execution: outside AppContainer, nonadministrator token; RAM/deadline guards and owned-server cleanup used.
-- Evidence: [full-size run](../../tests/output/probes/sdcpp_backend_compare/unreviewed/1792992877252850000), [smoke run](../../tests/output/probes/sdcpp_backend_compare/unreviewed/1792992784486540700).
+- Evidence: full-size run (../../tests/output/probes/sdcpp_backend_compare/unreviewed/1792992877252850000), smoke run (../../tests/output/probes/sdcpp_backend_compare/unreviewed/1792992784486540700).
 
 ## Offload / tiling
 

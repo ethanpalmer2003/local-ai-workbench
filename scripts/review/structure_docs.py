@@ -424,7 +424,8 @@ def markdown_issues(path: Path, text: str) -> list[str]:
         target, _, anchor = unquote(match.group(1).strip("<>")).partition("#")
         if re.match(r"^[a-z]+:", target, re.I):
             continue
-        if any(part in target.split("/") for part in ("output", "old", "retired", "trash")):
+        if UNTRACKED_PARTS & set(target.split("/")):
+            issues.append(f"{relative}: link into an untracked path {target}; cite the run without a link")
             continue
         destination = path.parent / target if target else path
         if not destination.exists():
@@ -633,6 +634,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[FAIL] {issue}")
     if len(issues) > MAX_REPORTED:
         print(f"[WARN] {len(issues) - MAX_REPORTED} further issues; output bounded at {MAX_REPORTED}")
+    for source, target in list(pointer_stats(files)["duplicates"])[:MAX_REPORTED]:
+        print(f"[WARN] repeated pointer: {source} -> {target}")
     print(f"[{'FAIL' if issues else 'OK'}] Structure/docs: {len(files)} files, {len(issues)} issues")
     return int(bool(issues))
 

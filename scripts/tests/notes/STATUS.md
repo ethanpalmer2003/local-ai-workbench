@@ -18,11 +18,11 @@
 
 - [Brief real-time screen](BRIEF-REALTIME-SCREEN.md): four TTS frameworks and both Gemma E4B runtimes with warmed timing; multilingual, playback and overlap unranked.
 
-- Language recognition defaults to Qwen3-ASR 1.7B through llama.cpp: lowest pooled error on every language over 80 pinned clips. Whisper Vulkan is the measured faster alternate and replaces AudioCpp Nemotron, which failed Japanese. [Report](output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
+- Language recognition defaults to Qwen3-ASR 1.7B through llama.cpp: lowest pooled error on every language over 80 pinned clips. Whisper Vulkan is the measured faster alternate and replaces AudioCpp Nemotron, which failed Japanese. Report (output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
 
-- Four-arm comparison (practice, practice+Whisper, Lemonade, KoboldCpp) on the same Gemma weights and 80 clips: KoboldCpp starts fastest but streams in coarser chunks, so its time to first token is comparable and its chunk rate is not; Qwen3-ASR ranks first on all four languages. [Report](output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
+- Four-arm comparison (practice, practice+Whisper, Lemonade, KoboldCpp) on the same Gemma weights and 80 clips: KoboldCpp starts fastest but streams in coarser chunks, so its time to first token is comparable and its chunk rate is not; Qwen3-ASR ranks first on all four languages. Report (output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
 
-- KoboldCpp internal speech is English-only despite accepting the same Kokoro voice ids: its Kokoro GGUF carries English voice families only, so the Japanese sentence returned an empty WAV and the Spanish and French rows used a fallback voice. None of those rows may be ranked. [Report](output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
+- KoboldCpp internal speech is English-only despite accepting the same Kokoro voice ids: its Kokoro GGUF carries English voice families only, so the Japanese sentence returned an empty WAV and the Spanish and French rows used a fallback voice. None of those rows may be ranked. Report (output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json).
 
 - Pending work lives in [TODO](../../../notes/TODO.md). Path and type checks do not establish native runtime correctness.
 

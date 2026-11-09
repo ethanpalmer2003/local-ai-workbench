@@ -51,6 +51,6 @@ Its process-inclusive results are [historical evidence](../../../../notes/asr/AS
 not resident latency. Existing resource/smoke probes remain useful functional checks.
 
 Initial resident validation: all eleven adapters passed one clip and one measured
-request on 2026-10-28, in bounded subsets. This verifies persistent operation, not quality or reliable comparative speed. [Evidence](../../output/asr/shared/resident_compare/unreviewed/1793214073218879900/artifacts/report.json).
+request on 2026-10-28, in bounded subsets. This verifies persistent operation, not quality or reliable comparative speed. Evidence (../../output/asr/shared/resident_compare/unreviewed/1793214073218879900/artifacts/report.json).
 
 [Additional three-profile checks](../../notes/asr/ASR-EXTRA-PROFILES.md) pass. All resident comparisons use complete clips; Nemotron's CPU streaming-file check is separate from its Vulkan offline HTTP timing.

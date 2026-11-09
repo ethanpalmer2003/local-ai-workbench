@@ -76,6 +76,7 @@ from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
 from scripts.tests.cases.shared.test_structure_docs import (
+    LinkTests,
     MarkdownNameTests,
     ModelNameTests,
     PointerTests,
@@ -120,6 +121,7 @@ if __name__ == "__main__":
                     SuffixTests,
                     MarkdownNameTests,
                     ModelNameTests,
+                    LinkTests,
                     PointerTests,
                     RoleTests,
                     RootDocumentTests,

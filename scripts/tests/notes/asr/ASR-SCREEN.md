@@ -32,11 +32,11 @@ end-of-speech latency. Different conversions/defaults prevent attributing every
 gap to framework efficiency. Transcripts largely agree; practice/practise spelling
 contributes to the uniform error score. This clip cannot rank recognition quality.
 
-Evidence: [NeMo/speech/Parakeet](../../output/asr/shared/resident_compare/unreviewed/1793214073218879900/artifacts/report.json),
-[AudioCpp](../../output/asr/shared/resident_compare/unreviewed/1793214404021681000/artifacts/report.json),
-[Whisper/Kobold](../../output/asr/shared/resident_compare/unreviewed/1793214561388104300/artifacts/report.json),
-[Qwen/Gemma](../../output/asr/shared/resident_compare/unreviewed/1793214646925748200/artifacts/report.json),
-[Sherpa](../../output/asr/shared/resident_compare/unreviewed/1793214776131600300/artifacts/report.json).
+Evidence: NeMo/speech/Parakeet (../../output/asr/shared/resident_compare/unreviewed/1793214073218879900/artifacts/report.json),
+AudioCpp (../../output/asr/shared/resident_compare/unreviewed/1793214404021681000/artifacts/report.json),
+Whisper/Kobold (../../output/asr/shared/resident_compare/unreviewed/1793214561388104300/artifacts/report.json),
+Qwen/Gemma (../../output/asr/shared/resident_compare/unreviewed/1793214646925748200/artifacts/report.json),
+Sherpa (../../output/asr/shared/resident_compare/unreviewed/1793214776131600300/artifacts/report.json).
 
 ## Selection and next evidence
 

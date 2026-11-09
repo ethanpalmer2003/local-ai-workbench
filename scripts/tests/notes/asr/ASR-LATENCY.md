@@ -37,8 +37,8 @@ adapter is still needed. No Parakeet latency value is invented.
 
 ## Evidence and reuse
 
-- [AudioCpp/NeMo screen](../../output/asr/shared/latency/unreviewed/1793234224629034500/artifacts/report.json).
-- [Corrected Qwen manual/VAD screen](../../output/asr/shared/latency/unreviewed/1793234392776741400/artifacts/report.json).
+- AudioCpp/NeMo screen (../../output/asr/shared/latency/unreviewed/1793234224629034500/artifacts/report.json).
+- Corrected Qwen manual/VAD screen (../../output/asr/shared/latency/unreviewed/1793234392776741400/artifacts/report.json).
 - The initial VAD screen crossed the clip/padding boundary inside one packet;
   its finalization anchor is superseded by the corrected screen above.
 - `python -m scripts.tests.cases.asr.shared.latency`; `--engines speechcpp` selects
