@@ -160,6 +160,24 @@ class LinkTests(unittest.TestCase):
                     path.parent.rmdir()
                 self.assertTrue(issues, name)
 
+    def test_a_documented_module_must_exist(self):
+        path = self._fixture("# Linked\n\nRun `python -m scripts.review.gone` first.\n")
+        try:
+            issues = docs.markdown_issues(path, path.read_text(encoding="utf-8"))
+        finally:
+            path.unlink()
+            path.parent.rmdir()
+        self.assertTrue(any("missing module" in issue for issue in issues), issues)
+
+    def test_a_documented_module_that_exists_is_clean(self):
+        path = self._fixture("# Linked\n\nRun `python -m scripts.review.docs` first.\n")
+        try:
+            issues = docs.markdown_issues(path, path.read_text(encoding="utf-8"))
+        finally:
+            path.unlink()
+            path.parent.rmdir()
+        self.assertEqual(issues, [])
+
 
 class ModelNameTests(unittest.TestCase):
     def _fixture(self, text: str) -> Path:

@@ -309,6 +309,17 @@ def _batch_reference_issues(relative: str, text: str) -> list[str]:
     return issues
 
 
+def _module_reference_issues(relative: str, text: str) -> list[str]:
+    """A documented `python -m scripts.<module>` must name a module that exists."""
+    issues = []
+    for match in re.finditer(r"python -m (scripts(?:\.[A-Za-z_0-9]+)+)", text):
+        module = match.group(1)
+        target = project_cfg.BASE_DIR / module.replace(".", "/")
+        if not target.with_suffix(".py").is_file() and not target.is_dir():
+            issues.append(f"{relative}: names a missing module {module}")
+    return issues
+
+
 def markdown_issues(path: Path, text: str) -> list[str]:
     issues = []
     relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
@@ -319,6 +330,7 @@ def markdown_issues(path: Path, text: str) -> list[str]:
     issues.extend(_markdown_hygiene(relative, text))
     issues.extend(_link_issues(path, relative, text))
     issues.extend(_batch_reference_issues(relative, text))
+    issues.extend(_module_reference_issues(relative, text))
     return issues
 
 
