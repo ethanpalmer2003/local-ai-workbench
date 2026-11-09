@@ -7,7 +7,7 @@
 
 ## Commands
 
-- `python -m scripts.review.structure` checks keys, paths, imports, links and Markdown budgets.
+- `python -m scripts.review.structure_docs` checks keys, paths, imports, links and Markdown budgets.
 - `basedpyright --level error` catches type/name contracts; syntax compilation alone is not enough. Run from `C:/AI` with the project environment and a normal-token invocation, or dependency discovery reports false missing imports.
 - `python -m scripts.review` or `scripts/review/check_repo.bat` adds types, inventory and the depth/length audit. Existing audit findings stay visible and are not type failures.
 - Import smoke checks must not start a suite, model, GPU workload or service.
@@ -26,5 +26,5 @@
 - Trace startup, readiness, requests, cleanup and process ownership; check error propagation and external API contracts.
 - Check component keys, directory roles/types and config prefixes against [folder rules](FOLDERS.md); judge sparse-folder audit findings by ownership.
 - Check a move or rename against [folder rules](FOLDERS.md); preserve sessions, shared assets and evidence.
-- `scripts/review/frontend.py` checks asset paths, DOM ids and injected settings keys.
+- `scripts/review/frontend_wiring.py` checks asset paths, DOM ids and injected settings keys.
 - Report findings, checks run and remaining limits.
