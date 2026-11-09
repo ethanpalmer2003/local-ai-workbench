@@ -1,7 +1,7 @@
 # Upstream drafts: Kokoro speech in Lemonade and KoboldCpp
 
 Written 2026-11-08 from the four-arm comparison run on this machine, an RX 7800 XT under Windows.
-Both texts are ready to file and name no personal data.
+Both were filed on 2026-11-08: [Lemonade #4111](https://github.com/lemonade-sdk/lemonade/issues/4111), [KoboldCpp #2591](https://github.com/LostRuins/koboldcpp/issues/2591). Neither text names personal data.
 
 ## Lemonade: Kokoro speaks the wrong language
 
