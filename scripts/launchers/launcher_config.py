@@ -111,7 +111,7 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
     ),
     "rocm-stock": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rocm/stock", extra_args={}),
     "vulkan": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "vulkan", extra_args={}),
-    "rocm-lemonade": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rocm/lemonade", extra_args={}),
+    "rocm-lemonade": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_ROCM_LEMONADE_DIR, extra_args={}),
     "rocm-rdna": LlamacppStartupBuild(  # went from 34 to 41t/s with adaptive mtp over 4k tokens (swift15), has other issues potentially
         bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rdna/build/bin", extra_args={}
     ),

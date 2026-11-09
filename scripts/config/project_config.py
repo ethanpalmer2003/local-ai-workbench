@@ -254,6 +254,7 @@ ASR_MODELS_DIR = component("asr").models_dir
 #   ACTIVE_LLAMACPP_BUILD) - single place deciding the active build
 # - Only the model dir is tracked here
 LLAMACPP_FRAMEWORK_DIR = component("llamacpp").framework_dir
+LLAMACPP_ROCM_LEMONADE_DIR = LLAMACPP_FRAMEWORK_DIR / "rocm/lemonade"
 LLAMACPP_SPEECH_UI_DIR = LLAMACPP_FRAMEWORK_DIR / "additions/speech-ui"
 HANDY_APP_DIR = component("asr/handy").framework_dir / "app"
 LLMS_MODELS_DIR = component("llamacpp").models_dir
