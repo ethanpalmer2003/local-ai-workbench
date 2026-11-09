@@ -3,13 +3,14 @@
 import argparse
 from pathlib import Path
 
-from scripts.config import project_config as project_cfg
 from scripts.config.models import MODELS as MODELS
 from scripts.config.models import ModelDownload as ModelDownload
 from scripts.download.models.hub_sources import parse_url
 
 
-def download_model(model: ModelDownload, range_download: bool = False, resume_file: Path | None = None) -> None:
+def download_model(
+    model: ModelDownload, mode: str = "stream", range_download: bool = False, resume_file: Path | None = None
+) -> None:
     if model.path.is_file() and model.path.stat().st_size > 0:
         print(f"[SKIP] Already present: {model.path}")
         return
@@ -22,27 +23,18 @@ def download_model(model: ModelDownload, range_download: bool = False, resume_fi
             raise ValueError("Range/resume mode is only configured for Hugging Face files")
         download_verified(model.url, model.path, model.sha256)
         return
-    from huggingface_hub import hf_hub_download
-
-    source = parse_url(model.url)
     print(f"{model.label} -> {model.path}")
     if range_download:
         from scripts.download.models.hub_transfer import download_ranges
 
-        download_ranges(source, model.path, resume_file)
+        download_ranges(parse_url(model.url), model.path, resume_file)
         return
-    model.path.parent.mkdir(parents=True, exist_ok=True)
-    downloaded = Path(
-        hf_hub_download(
-            repo_id=source.repo_id,
-            filename=source.filename,
-            revision=source.revision,
-            token=project_cfg.HF_TOKEN,
-            local_dir=str(model.path.parent),
-        )
-    )
-    if downloaded != model.path:
-        downloaded.replace(model.path)
+    from scripts.download.models import transfer
+
+    if mode == "stream":
+        transfer.download_stream(model)
+        return
+    transfer.download_hub(model)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -55,6 +47,12 @@ def _parser() -> argparse.ArgumentParser:
     groups = {part for model in MODELS for part in (model.group, model.group.split("/")[0])}
     parser.add_argument("--group", choices=sorted(groups))
     parser.add_argument("--download", action="store_true", help="Download selected entries; otherwise only list")
+    parser.add_argument(
+        "--mode",
+        choices=("stream", "hub"),
+        default="stream",
+        help="stream: plain HTTP ranges with resume (default); hub: the Hub client, cache and Xet aware",
+    )
     parser.add_argument(
         "--range-download",
         action="store_true",
@@ -89,9 +87,9 @@ def _print_models(models: list[ModelDownload]) -> None:
 def _start_downloads(models: list[ModelDownload], args: argparse.Namespace) -> None:
     for model in models:
         if args.range_download:
-            download_model(model, True, args.resume_file)
+            download_model(model, args.mode, True, args.resume_file)
         else:
-            download_model(model)
+            download_model(model, args.mode)
 
 
 def main(argv: list[str] | None = None) -> None:
