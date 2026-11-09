@@ -1,15 +1,12 @@
 """Model-free contracts for the additional ASR file adapters."""
 
-import subprocess
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from scripts.config import models as model_cfg
-from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers.asr.shared.file_cli import build_command, required_files
-from scripts.tests.cases.asr.shared.file_diagnostic import extract_text, sample
 from scripts.tests.cases.asr.shared.metrics import pooled_scores, unicode_errors
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.process_fixtures import running_process
@@ -99,24 +96,6 @@ class FileProfiles(unittest.TestCase):
         self.assertEqual(result["pooled_wer"], 0.01)
         self.assertEqual(result["samples"], 2)
 
-    def test_sherpa_recognition_json_on_stderr_is_preserved(self):
-        process = subprocess.CompletedProcess(
-            [], 0, stdout=b"Recognizer created\n", stderr=b'{"segment":0,"text":"Hello there"}\n'
-        )
-        with CasePaths(__file__).temporary_directory() as folder:
-            paths = RunPaths(Path(folder))
-            paths.create()
-            with patch("scripts.tests.cases.asr.shared.file_diagnostic.subprocess.run", return_value=process):
-                row = sample(
-                    "sherpa-onnx",
-                    "streaming",
-                    {"file": "sample.wav", "id": "test", "reference": "Hello there", "duration_seconds": 1},
-                    paths,
-                    1,
-                )
-        self.assertEqual(row["text"], "Hello there")
-        self.assertEqual(row["wer"], 0)
-
     def test_commands_use_explicit_local_weights_and_same_audio(self):
         audio = Path("C:/AI/data/input/example.wav")
         for engine, profile in ASR_FILE_PROFILES.items():
@@ -128,7 +107,7 @@ class FileProfiles(unittest.TestCase):
                 self.assertIn(str(model_cfg.path(profile.models[0])), " ".join(command))
 
     def test_modes_never_silently_fall_back(self):
-        for engine in ("funasr", "speechcpp"):
+        for engine in ("speechcpp",):
             with self.subTest(engine=engine), self.assertRaisesRegex(ValueError, "configured modes"):
                 build_command(engine, Path("sample.wav"), "streaming")
         self.assertIn("--stream", build_command("nemo-speechcpp", Path("sample.wav"), "streaming"))
@@ -143,29 +122,6 @@ class FileProfiles(unittest.TestCase):
             build_command("speechcpp", None)
         with self.assertRaisesRegex(ValueError, "cannot be combined"):
             build_command("speechcpp", Path("recording.wav"), "live")
-
-    def test_sherpa_has_one_shared_install_and_explicit_english_scope(self):
-        self.assertEqual(
-            project_cfg.component("asr/sherpa-onnx").framework_dir,
-            project_cfg.component("tts/sherpa-onnx").framework_dir,
-        )
-        with self.assertRaisesRegex(ValueError, "language"):
-            build_command("sherpa-onnx", Path("sample.wav"), language="fr")
-
-    def test_sherpa_partial_updates_do_not_duplicate_or_drop_segments(self):
-        with CasePaths(__file__).temporary_directory() as temporary:
-            text = extract_text(
-                "sherpa-onnx",
-                "\n".join(
-                    (
-                        '{"segment":0,"text":"Hello"}',
-                        '{"segment":0,"text":"Hello there"}',
-                        '{"segment":1,"text":"Goodbye"}',
-                    )
-                ),
-                Path(temporary) / "absent.txt",
-            )
-        self.assertEqual(text, "Hello there Goodbye")
 
     def test_unicode_scores_keep_non_latin_text_and_accents(self):
         self.assertEqual(unicode_errors("\u4f60\u597d", "\u4f60\u597d")["cer"], 0)

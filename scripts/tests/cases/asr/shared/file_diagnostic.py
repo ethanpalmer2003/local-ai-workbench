@@ -1,6 +1,5 @@
 """Functional CLI transcript probe; no loading-inclusive speed leaderboard."""
 
-import json
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -18,27 +17,13 @@ def extract_text(engine: str, stdout: str, destination: Path) -> str:
         return destination.read_text(encoding="utf-8").strip()
     if engine == "nemo-speechcpp" or engine.startswith("audiocpp-"):
         raise ValueError("Native CLI did not write the requested transcript file")
-    if engine == "sherpa-onnx":
-        texts: dict[int, str] = {}
-        for line in stdout.splitlines():
-            if not line.lstrip().startswith("{"):
-                continue
-            try:
-                item = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if isinstance(item, dict) and isinstance(item.get("text"), str):
-                texts[int(item.get("segment", 0))] = item["text"]
-        if not texts:
-            raise ValueError("No structured Sherpa transcript found; inspect the saved raw output")
-        return " ".join(texts[key].strip() for key in sorted(texts)).strip()
     return stdout.strip()
 
 
 def sample(engine: str, mode: str, clip: dict[str, Any], paths: RunPaths, timeout: float) -> dict[str, Any]:
     profile = ASR_FILE_PROFILES[engine]
     transcript_file = paths.artifacts / "transcript.txt"
-    language = "auto" if engine == "funasr" else clip.get("language", "auto")
+    language = clip.get("language", "auto")
     command = build_command(engine, Path(clip["file"]), mode, language, transcript_file)
     try:
         native, timing = measure_cold_process(
@@ -55,9 +40,6 @@ def sample(engine: str, mode: str, clip: dict[str, Any], paths: RunPaths, timeou
     if native.returncode:
         raise RuntimeError(f"CLI exit {native.returncode}; inspect {paths.logs}")
     transcript_stream = native.stdout.decode("utf-8", errors="replace")
-    if engine == "sherpa-onnx":
-        # The Windows streaming CLI writes recognition JSON alongside diagnostics on stderr.
-        transcript_stream += "\n" + native.stderr.decode("utf-8", errors="replace")
     text = extract_text(engine, transcript_stream, transcript_file)
     if not text:
         raise ValueError("Empty transcript")

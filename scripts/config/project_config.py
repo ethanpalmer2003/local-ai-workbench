@@ -141,7 +141,6 @@ COMPONENTS = {
         "asr/shared",
         "asr/nemo-speechcpp",
         "asr/speechcpp",
-        "asr/funasr",
         "audiocpp",
         "audiocpp/additions/espeak-ng",
         "audiocpp/additions/mecab",

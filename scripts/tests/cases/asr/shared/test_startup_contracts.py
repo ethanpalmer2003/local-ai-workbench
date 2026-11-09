@@ -80,8 +80,6 @@ class StartupContracts(unittest.TestCase):
     def test_isolated_sessions_never_replace_an_existing_listener(self):
         with CasePaths(__file__).temporary_directory() as folder:
             for name, (command, model) in profiles(19123).items():
-                if name == "sherpa-onnx":
-                    continue  # This adapter is in-process, not an HTTP server.
                 with (
                     self.subTest(engine=name),
                     patch(

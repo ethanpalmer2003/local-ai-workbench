@@ -179,11 +179,8 @@ class SharedRuntimeTests(unittest.TestCase):
             else:
                 self.assertIn(str(model_cfg.path(profile.models[0])), command)
             self.assertEqual(command[command.index("--port") + 1], "19123")
-        with self.assertRaisesRegex(ValueError, "No configured server"):
-            build_server_command("funasr", 19123)
         for name, (command, _) in profiles(19123).items():
-            if name != "sherpa-onnx":
-                self.assertEqual(command[command.index("--port") + 1], "19123")
+            self.assertEqual(command[command.index("--port") + 1], "19123")
 
     def test_multipart_binary_roundtrip_uses_independent_mime_parser(self):
         audio = b"\x00\xff\r\nRIFF\x80"

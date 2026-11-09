@@ -21,9 +21,9 @@ C:/AI/bat/benchmarks/benchmark_asr_compare.bat --run --samples 2 --clips 2
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.tests.cases.asr.shared.coverage
 ```
 
-Preview does not start native code. Default: all sixteen configured resident profiles: AudioCpp Cohere, NeMo and Ming;
+Preview does not start native code. Default: all fifteen configured resident profiles: AudioCpp Cohere, NeMo and Ming;
 speech.cpp; Parakeet CPU/Vulkan, v3 and Nemotron streaming; Whisper Vulkan and embedded Kobold Whisper;
-llama.cpp Qwen, Gemma and Granite; and Sherpa Zipformer. Cohere and Granite have brief saved checks
+llama.cpp Qwen, Gemma and Granite. Cohere and Granite have brief saved checks
 on two synthetic English clips, three repeats each; this does not establish multilingual/noisy quality.
 The original Parakeet CPU/Vulkan profiles use English 110M.
 `--engines` selects a subset; `--budget` bounds the whole inference sequence.
@@ -43,8 +43,7 @@ first-partial latency and multilingual/noisy accuracy remain separate checks.
 [Whisper/Kobold](../../../benchmarks/asr/whisper_embedded_compare.py) and
 [Gemma audio](../../../benchmarks/asr/gemma_audio_compare.py) now record the same lifecycle, but retain
 their existing orchestration and decoder controls. They have not been rerun after
-migration. CrispASR and FunASR still need resident adapters; Handy requires
-manual evaluation. Kobold Gemma uses the separate migrated runner. This is not
+migration. Handy requires manual evaluation. Kobold Gemma uses the separate migrated runner. This is not
 a complete quality or speed ranking.
 
 The old cold CLI runner and leaderboard were archived under `C:/AI/trash/benchmark-cleanup-2026-10-28/`. Functional transcript parsing remains in `file_diagnostic.py`.

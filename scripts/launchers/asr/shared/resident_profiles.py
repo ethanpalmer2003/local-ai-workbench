@@ -110,8 +110,6 @@ def profiles(port: int) -> dict[str, tuple[list[str], Path]]:
         command = backend.command()
         command[command.index("--port") + 1] = str(port)
         result[key] = (command, settings.model)
-    profile = ASR_FILE_PROFILES["sherpa-onnx"]
-    result["sherpa-onnx"] = ([str(profile.executable), "resident-c-api"], model_cfg.path(profile.models[0]))
     granite = list(result["llamacpp-qwen-1.7b"][0])
     granite[granite.index("-m") + 1] = str(model_cfg.path("asr/llamacpp/granite-speech-5.0-2b-q8_0"))
     granite[granite.index("--mmproj") + 1] = str(model_cfg.path("asr/llamacpp/granite-speech-5.0-2b-mmproj-f16"))

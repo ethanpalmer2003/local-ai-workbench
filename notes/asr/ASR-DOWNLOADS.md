@@ -6,9 +6,8 @@
 | --- | --- | --- |
 | NeMo-Speech.cpp | v0.2.0 | `asr/nemo-speechcpp/vulkan/bin/nemo-speech.exe` |
 | speech.cpp | v0.9.0 | `asr/speechcpp/vulkan/speech.exe` |
-| FunASR llama.cpp runtime | v1.4.16 | `asr/funasr/vulkan/llama-funasr-sensevoice.exe` |
 
-NeMo retains its vendor bin/lib layout. Other archives retain their runtime files beside the executable. No source build was needed. Sherpa remains installed once under `frameworks/tts/sherpa-onnx`; AudioCpp remains under its existing root because both also provide TTS.
+NeMo retains its vendor bin/lib layout. Other archives retain their runtime files beside the executable. No source build was needed. AudioCpp remains under its existing root because it also provides TTS.
 
 All advertised archive SHA256 hashes verified; executable paths and updater markers checked. CLI help/model-catalog inspection subsequently passed outside the sandbox: AppContainer=false, administrator=false. No inference or service was started. Each installation has `INSTALL.json`; installation evidence in `scripts/state/logs/asr/shared/framework-downloads-1793159220414877900.json`.
 
@@ -27,11 +26,9 @@ Required models and launch profiles are now installed: [file-engine commands](..
 | --- | --- |
 | NeMo-Speech.cpp | Official Nemotron 3.5 Q8_0, 742 MB; runtime-pinned revision |
 | speech.cpp | Packed Qwen3-ASR 0.6B Q8_0, 842 MB; Silero VAD |
-| FunASR | SenseVoiceSmall Q8, 254 MB; FSMN-VAD |
 | CrispASR | Reuses existing Whisper large-v3-turbo Q5_0; no new weights |
-| Sherpa | English streaming Zipformer INT8 encoder/joiner, FP32 decoder and tokens, 73 MB |
 | AudioCpp | Separate Nemotron 3.5 Q8_0 conversion, 931 MB; shared by Vulkan/ROCm |
 
 Model-free checks and subsequent user-authorized native file inference pass. The initial approval rejection preceded the user's explicit test authorization. [Forty-case comparison and limits](ASR-COMPARISON.md); microphone/resident latency and gateway/browser integration remain [pending](../TODO.md). The [comparison runner](../../scripts/benchmarks/asr/asr_resident_compare.py) previews by default and requires `--run` for inference.
 
-References: [NeMo model setup](https://github.com/NVIDIA/NeMo-Speech.cpp/blob/v0.2.0/README.md#quick-start), [speech.cpp models](https://github.com/nyosegawa/speech.cpp/blob/v0.9.0/docs/models.md), [FunASR GGUF](https://github.com/modelscope/FunASR/blob/v1.4.16/runtime/llama.cpp/README.md), [CrispASR](https://github.com/CrispStrobe/CrispASR), [AudioCpp ASR](https://github.com/0xShug0/audio.cpp/blob/main/docs/asr.md).
+References: [NeMo model setup](https://github.com/NVIDIA/NeMo-Speech.cpp/blob/v0.2.0/README.md#quick-start), [speech.cpp models](https://github.com/nyosegawa/speech.cpp/blob/v0.9.0/docs/models.md), [CrispASR](https://github.com/CrispStrobe/CrispASR), [AudioCpp ASR](https://github.com/0xShug0/audio.cpp/blob/main/docs/asr.md).

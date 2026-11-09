@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reviewed": "2026-10-28",
+  "reviewed": "2026-11-08",
   "scope": "Registered ASR/TTS checkpoints; conversions grouped. VAD, projectors, tokens and voices are not separate linguistic models. Listed coverage is not accuracy validation.",
   "language_names": {
     "en": "english",
@@ -840,56 +840,6 @@
         {
           "url": "https://huggingface.co/nvidia/parakeet-tdt_ctc-110m",
           "revision": "431a349f3051ab85c22b9b7a2741b5fe77065665"
-        }
-      ]
-    },
-    {
-      "distribution": "zipformer-en",
-      "name": "Sherpa streaming Zipformer EN",
-      "tasks": [
-        "asr"
-      ],
-      "model_ids": [
-        "asr/sherpa-onnx/zipformer-en/encoder",
-        "asr/sherpa-onnx/zipformer-en/decoder",
-        "asr/sherpa-onnx/zipformer-en/joiner"
-      ],
-      "languages": [
-        "en"
-      ],
-      "locales": [],
-      "dialects": [],
-      "notes": "Installed English checkpoint; other Sherpa languages require other models.",
-      "sources": [
-        {
-          "url": "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/zipformer-transducer-models.html",
-          "revision": null
-        }
-      ]
-    },
-    {
-      "distribution": "sensevoice-small",
-      "name": "SenseVoiceSmall",
-      "tasks": [
-        "asr"
-      ],
-      "model_ids": [
-        "asr/funasr/sensevoice-small-q8"
-      ],
-      "languages": [
-        "zh",
-        "en",
-        "ja",
-        "ko",
-        "yue"
-      ],
-      "locales": [],
-      "dialects": [],
-      "notes": "Mandarin, English, Japanese, Korean, Cantonese; multilingual is not a sixth language.",
-      "sources": [
-        {
-          "url": "https://huggingface.co/FunAudioLLM/SenseVoiceSmall",
-          "revision": "3847d57b6bdf2dd8875cb1508d2af43d80a16bf7"
         }
       ]
     },
