@@ -95,6 +95,19 @@ class RoleTests(unittest.TestCase):
         self.assertEqual(len(issues), 1, issues)
         self.assertIn("no document role", issues[0])
 
+    def test_three_caps_are_assigned_by_role(self):
+        cases = {
+            "AGENTS.md": 700,
+            "scripts/config/comfyui/README.md": 700,
+            "notes/TODO.md": 500,
+            "notes/reviews/STRUCTURE-REVIEW.md": 500,
+            "scripts/config/comfyui/TUNING.md": 500,
+            ".agents/CHECKS.md": 300,
+        }
+        for relative, cap in cases.items():
+            with self.subTest(relative=relative):
+                self.assertEqual(structure_docs.markdown_budget(relative), cap)
+
 
 class WordCountTests(unittest.TestCase):
     def test_a_document_over_its_budget_is_marked_over(self):

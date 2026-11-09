@@ -14,10 +14,16 @@ from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import framework_catalog as update_config
 from scripts.launchers import launcher_config as cfg
 
-GUIDE_WORDS = 500
-README_WORDS = 750
-AGENTS_WORDS = 450
-RULE_WORDS = 300
+# - three caps only; each document role picks one, so a new kind needs no new number
+WORD_TIERS = {"large": 700, "medium": 500, "small": 300}
+ROLE_TIERS = {
+    "root": "large",
+    "hub": "large",
+    "agent rule": "small",
+    "note": "medium",
+    "review record": "medium",
+    "component guide": "medium",
+}
 # - names tooling requires keep their spelling; every other Markdown basename is uppercase
 MARKDOWN_NAME_ALLOWED = frozenset({"README.md", "AGENTS.md", "SKILL.md"})
 # - only these sit at the workspace root; every other document lives under notes/
@@ -332,13 +338,9 @@ def prose_words(text: str) -> int:
     return len(cleaned.replace("|", " ").split())
 
 
-def markdown_budget(relative: str, path: Path) -> int:
-    """One cap per document role; a hub README carries tables, not policy."""
-    if relative == "AGENTS.md":
-        return AGENTS_WORDS
-    if relative.startswith(".agents/"):
-        return RULE_WORDS
-    return README_WORDS if path.name.lower() == "readme.md" else GUIDE_WORDS
+def markdown_budget(relative: str) -> int:
+    """One of three caps, chosen by the role the document's home gives it."""
+    return WORD_TIERS[ROLE_TIERS.get(document_role(relative) or "", "medium")]
 
 
 def short_candidate(relative: str, path: Path) -> bool:
@@ -360,7 +362,7 @@ def word_rows(files: list[Path]) -> list[tuple[int, int, str, str]]:
         if path.suffix != ".md":
             continue
         relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
-        budget = markdown_budget(relative, path)
+        budget = markdown_budget(relative)
         words = prose_words(path.read_text(encoding="utf-8-sig"))
         rows.append((words, budget, relative, word_marker(words, budget, relative, path)))
     return sorted(rows, reverse=True)
@@ -381,7 +383,7 @@ def print_word_counts(files: list[Path]) -> int:
 def markdown_issues(path: Path, text: str) -> list[str]:
     issues = []
     relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
-    budget = markdown_budget(relative, path)
+    budget = markdown_budget(relative)
     words = prose_words(text)
     if words > budget:
         issues.append(f"{relative}: {words} words exceeds {budget}; keep procedures in one owner guide")

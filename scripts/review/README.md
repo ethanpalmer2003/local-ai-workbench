@@ -25,14 +25,14 @@ Run a single check with `python -m scripts.review.structure_docs`, `python -m sc
 `structure_docs` gives every maintained document one role and rejects a home that role does not allow;
 `--roles` prints the counts.
 
-| Role | Home |
-| --- | --- |
-| root | repo root: `README.md`, `AGENTS.md` |
-| agent rule | `.agents/`, including skills |
-| hub | each folder's `README.md` |
-| note | `notes/`, including the running lists |
-| review record | `notes/reviews/` |
-| component guide | a component folder or `scripts/tests/notes/`, uppercase name; `TUNING.md` and the generated ledger included |
+| Role | Home | Cap |
+| --- | --- | --- |
+| root | repo root: `README.md`, `AGENTS.md` | large, 700 |
+| agent rule | `.agents/`, including skills | small, 300 |
+| hub | each folder's `README.md` | large, 700 |
+| note | `notes/`, including the running lists | medium, 500 |
+| review record | `notes/reviews/` | medium, 500 |
+| component guide | a component folder or `scripts/tests/notes/`, uppercase name; `TUNING.md` and the generated ledger included | medium, 500 |
 
 A document matching no role fails, so a new kind is a deliberate addition to `ROLE_RULES`.
 
