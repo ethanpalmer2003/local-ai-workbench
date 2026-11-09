@@ -34,10 +34,8 @@ Run a single check with `python -m scripts.review.structure_docs`, `python -m sc
 | review record | `notes/reviews/` |
 | note topic | `notes/` |
 | test note | `scripts/tests/notes/` |
-| generated report | `scripts/review/COMPLEXITY-DEBT.md` |
-| tuning | a component folder |
 | hub | each folder's `README.md` |
-| component guide | a component folder, uppercase name |
+| component guide | a component folder, uppercase name; `TUNING.md` and the generated ledger are kinds of it |
 
 A document matching no role fails, so a new kind is a deliberate addition to `ROLE_RULES`.
 
