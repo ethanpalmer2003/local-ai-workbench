@@ -5,7 +5,7 @@
 
 | Scope | Approximate total |
 | --- | --- |
-| Model-free default regressions | 5-15 seconds; suite has grown since earlier measurements |
+| Model-free default regressions | about 30 seconds; measured after the suite grew |
 | Focused report/silence fixtures | Under 5 seconds |
 | Pi LSP/codemode integration | 5-15 seconds; starts tool processes |
 | sd.cpp live workflow | 10-30 seconds |
