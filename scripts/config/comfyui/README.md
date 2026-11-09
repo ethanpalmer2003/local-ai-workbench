@@ -5,7 +5,7 @@
 - Models use typed directories under `data/videogen`, declared in [extra_model_paths.yaml](extra_model_paths.yaml) and the component map. Keep native node model fields/filenames unchanged.
 - Editable workflows/node code stay here. `python -m scripts.config.sync_configs --only comfyui --apply` copies owned files into the installation; preview/apply ownership is recorded under state.
 - Sync preserves replaced/removed managed files in trash, refuses missing source directories, and leaves unrelated nodes/user data intact. It does not install custom nodes or restart the server.
-- Startup syncs the tracked workflow/node copies, then loads the installed node under ComfyUI's own interpreter ([verify_node.py](verify_node.py)); a broken node stops the launch instead of failing mid-workflow. Native dependency/custom-node installation remains a separate fresh-machine task.
+- Startup syncs the tracked workflow/node copies, then loads the installed node under ComfyUI's own interpreter and checks that every node type the workflows queue has its provider installed ([verify_node.py](verify_node.py)); a broken node stops the launch instead of failing mid-workflow. Native dependency/custom-node installation remains a separate fresh-machine task.
 
 ## Required custom nodes
 
