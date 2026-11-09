@@ -122,17 +122,14 @@ def _apply_upgrade(action: Action) -> bool:
     return model_admin.command_replace(old, new, apply=True, include_docs=False) == 0
 
 
-def _apply_refresh(action: Action, limit: int | None = None) -> bool:
+def _apply_refresh(action: Action) -> bool:
     model = action.model
     if not model.url or not model.url.startswith("https://huggingface.co/"):
         tqdm.write(f"[SKIP] {model.label}: refresh is only implemented for Hub files")
         return True
     try:
-        part = transfer.fetch_part(model, action.expected, limit)
+        part = transfer.fetch(model, action.expected)
         size = part.stat().st_size
-        if limit is not None and size >= limit:
-            tqdm.write(f"[OK] Transfer check for {model.label}: {size} bytes, partial kept for the real run")
-            return True
         if model.path.is_file():
             model_admin.move_to_trash(model.path, str(time.time_ns()))
         transfer.commit(part, model.path)
@@ -147,7 +144,6 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only", nargs="+", help="update only these catalog labels")
     parser.add_argument("--dry-run", action="store_true", help="Show the plan without downloading or replacing")
-    parser.add_argument("--limit-bytes", type=int, help="Stop after this many bytes per refresh; connectivity check")
     return parser.parse_args(argv)
 
 
@@ -173,7 +169,7 @@ def main(argv: list[str] | None = None) -> int:
     with tqdm(total=len(actions), desc="models", ascii=True, unit="action") as bar:
         for action in actions:
             bar.set_postfix_str(action.kind)
-            ok = _apply_upgrade(action) if action.kind == "upgrade" else _apply_refresh(action, args.limit_bytes)
+            ok = _apply_upgrade(action) if action.kind == "upgrade" else _apply_refresh(action)
             bar.update(1)
             if not ok:
                 failed += 1
