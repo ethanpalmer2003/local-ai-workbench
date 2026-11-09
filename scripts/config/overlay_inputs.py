@@ -37,13 +37,17 @@ def model_overlay_path() -> Path:
 
 
 def voice_ids() -> tuple[str, ...]:
-    """Ids from the manifest, else the folders already present under the input tree."""
+    """Ids from the manifest, else the folders already present under the input tree.
+
+    A superseded id sorts last, so the first voice a picker offers is a current one.
+    """
     manifest = voice_sources_path()
     if manifest.is_file():
         payload = json.loads(manifest.read_text(encoding="utf-8"))
         voices = payload.get("voices") or {}
         if voices:
-            return tuple(sorted(voices))
+            superseded = superseded_voices()
+            return tuple(sorted(voices, key=lambda name: (name in superseded, name)))
     folder = voices_dir()
     if folder.is_dir():
         return tuple(sorted(path.name for path in folder.iterdir() if path.is_dir()))
