@@ -9,8 +9,7 @@ ranges live in `scripts/tests/shared/stage_times.py`.
 import argparse
 import os
 
-from scripts.tests.shared import stage_times
-from scripts.tools import stage_runner
+from scripts.tools import stage_runner, stage_times
 
 MODULES: dict[str, tuple[str, tuple[str, ...]]] = {
     # - ComfyUI is vendor-managed and updated by hand, so it stays out of the automatic preflight
@@ -64,7 +63,7 @@ def main(argv: list[str] | None = None) -> int:
             f"  {'total':<12} {sum(stage.typical for stage in stages):>4.0f} s when nothing is skipped and nothing updates"
         )
         return 0
-    results = stage_runner.run(stages, title="validate", verbose=args.verbose)
+    results = stage_runner.run(stages, title="validate", stream=args.verbose)
     return 0 if all(result.status != "failed" for result in results) else 1
 
 

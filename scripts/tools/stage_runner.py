@@ -21,6 +21,7 @@ from typing import Any
 from tqdm import tqdm
 
 from scripts.config import project_config as project_cfg
+from scripts.tools import stage_times
 
 STEP_RE = re.compile(r"^=== (.+) ===$")
 PROGRESS_RE = re.compile(r"^\[PROGRESS\] \S+ \[[#-]*\] (\d+)/(\d+)(?: (.*))?$")
@@ -74,12 +75,13 @@ def skipped(line: str) -> str | None:
     return match.group(1) if match else None
 
 
-def _consume(line: str, live: _Live, bar: Any, stage: Stage) -> None:
+def _consume(line: str, live: _Live, bar: Any, stage: Stage, show: bool = True) -> None:
     key = skipped(line)
     if key == stage.key:
         live.skipped = True
         live.fraction = 1.0
-        bar.write(line)
+        if show:
+            bar.write(line)
         return
     progress = parse_progress(line)
     if progress is not None:
@@ -91,7 +93,7 @@ def _consume(line: str, live: _Live, bar: Any, stage: Stage) -> None:
     if step:
         live.note = step.group(1).strip().lower()
         return
-    if SHOWN_RE.match(line):
+    if show and SHOWN_RE.match(line):
         bar.write(line)
 
 
@@ -122,7 +124,7 @@ def _tail(path: Path, count: int = 12) -> list[str]:
         return []
 
 
-def _run_stage(stage: Stage, log_path: Path, bar: Any, prefix: float, verbose: bool) -> Result:
+def _run_stage(stage: Stage, log_path: Path, bar: Any, prefix: float, stream: bool) -> Result:
     started = time.perf_counter()
     live = _Live()
     env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8", "AI_TEST_TITLE": stage.key}
@@ -150,10 +152,9 @@ def _run_stage(stage: Stage, log_path: Path, bar: Any, prefix: float, verbose: b
                 break
             if line:
                 log.write(line + "\n")
-                if verbose:
+                if stream and not PROGRESS_RE.match(line):
                     bar.write(line)
-                else:
-                    _consume(line, live, bar, stage)
+                _consume(line, live, bar, stage, show=not stream)
             elif process.poll() is not None:
                 # A surviving grandchild can hold the pipe open; stop once the output is drained.
                 deadline = deadline or time.perf_counter() + 2.0
@@ -199,8 +200,11 @@ def summary(results: list[Result], stages: tuple[Stage, ...]) -> None:
     print(f"{'total':<12} {'':<8} {spent:>7.1f} s  planned about {sum(s.typical for s in stages):.0f} s")
 
 
-def run(stages: tuple[Stage, ...], *, title: str = "stages", verbose: bool = False) -> list[Result]:
-    """Run every stage in order behind one bar and print a per-stage summary."""
+def run(stages: tuple[Stage, ...], *, title: str = "stages", stream: bool = False) -> list[Result]:
+    """Run every stage in order behind one bar and print a per-stage summary.
+
+    `stream` keeps every child line (progress lines excepted) instead of only the tagged ones.
+    """
     if not stages:
         return []
     total = sum(stage.typical for stage in stages)
@@ -210,7 +214,7 @@ def run(stages: tuple[Stage, ...], *, title: str = "stages", verbose: bool = Fal
     with tqdm(total=total, unit="s", ascii=True, desc=title, bar_format=BAR_FORMAT) as bar:
         prefix = 0.0
         for stage in stages:
-            result = _run_stage(stage, log_dir / f"{stage.key}.log", bar, prefix, verbose)
+            result = _run_stage(stage, log_dir / f"{stage.key}.log", bar, prefix, stream)
             bar.write(_describe(result, stage))
             results.append(result)
             prefix += stage.typical
@@ -219,3 +223,49 @@ def run(stages: tuple[Stage, ...], *, title: str = "stages", verbose: bool = Fal
     summary(results, stages)
     print(f"[LOG] {log_dir}")
     return results
+
+
+FLAGS = ("--stage-title", "--stage-known", "--stage-typical", "--stage-high")
+
+
+def _stage_from_argv(argv: list[str]) -> Stage:
+    """One-stage form: `MODULE [ARGS...] [--stage-known KEY | --stage-typical S --stage-high S]`."""
+    if not argv:
+        raise SystemExit("[FAIL] usage: python -m scripts.tools.stage_runner MODULE [ARGS...]")
+    module = argv[0]
+    title = module.rsplit(".", 1)[-1]
+    typical: float | None = None
+    high: float | None = None
+    child: list[str] = []
+    index = 1
+    while index < len(argv):
+        flag = argv[index]
+        if flag not in FLAGS:
+            child.append(flag)
+            index += 1
+            continue
+        if index + 1 >= len(argv):
+            raise SystemExit(f"[FAIL] {flag} needs a value")
+        value = argv[index + 1]
+        if flag == "--stage-title":
+            title = value
+        elif flag == "--stage-known":
+            title = value
+            typical, high = stage_times.typical(value), float(stage_times.high(value))
+        elif flag == "--stage-typical":
+            typical = float(value)
+        else:
+            high = float(value)
+        index += 2
+    return Stage(title, module, typical or 60.0, high or 600.0, tuple(child))
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Wrap one long command in the shared progress bar, keeping its output."""
+    stage = _stage_from_argv(sys.argv[1:] if argv is None else argv)
+    results = run((stage,), title=stage.key, stream=True)
+    return 0 if all(result.status != "failed" for result in results) else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

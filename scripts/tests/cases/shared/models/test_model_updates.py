@@ -9,7 +9,7 @@ from typing import Any, cast
 from unittest.mock import patch
 
 from scripts.config.models import ModelDownload, catalog
-from scripts.download.models import updates
+from scripts.download.models import update_models, updates
 
 
 class FakeHub:
@@ -87,6 +87,12 @@ class ModelUpdatesTests(unittest.TestCase):
     def test_an_entry_without_a_source_is_named(self) -> None:
         row = updates.check(_model(""), FakeHub({}))
         self.assertEqual(row.source, "no url")
+
+    def test_the_update_batch_checks_then_downloads_active_files(self) -> None:
+        stages = update_models.plan()
+        self.assertEqual([stage.key for stage in stages], ["models", "model-downloads"])
+        self.assertEqual(stages[1].arguments, ("--active", "--download"))
+        self.assertEqual(update_models.plan(("--verify",))[0].arguments, ("--verify",))
 
 
 class CatalogOverlayTests(unittest.TestCase):
