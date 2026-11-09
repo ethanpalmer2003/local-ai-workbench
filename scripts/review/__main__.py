@@ -5,7 +5,7 @@ import json
 import subprocess
 
 from scripts.config import project_config as project_cfg
-from scripts.review import frontend_wiring, inventory_code, model_references, package_audit, structure_docs, typography
+from scripts.review import docs, frontend_wiring, inventory_code, layout, model_references, package_audit, typography
 from scripts.review.public_audit import main as public_audit_main
 
 SPELL_EXCLUDED = (
@@ -90,8 +90,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.scrub:
         return public_audit_main(["--scrub"])
 
-    print("=== STRUCTURE AND DOCUMENTATION ===", flush=True)
-    structure_status = structure_docs.main([])
+    print("=== LAYOUT ===", flush=True)
+    layout_status = layout.main()
+
+    print("\n=== DOCUMENTATION ===", flush=True)
+    docs_status = docs.main([])
 
     print("\n=== MODEL REFERENCE DRIFT ===", flush=True)
     model_status = model_references.main()
@@ -144,7 +147,8 @@ def main(argv: list[str] | None = None) -> int:
     print("[OK] uv.lock matches pyproject" if not issues else f"[FAIL] {len(issues)} lock issue(s)")
     return int(
         bool(
-            structure_status
+            layout_status
+            or docs_status
             or model_status
             or frontend_status
             or type_status

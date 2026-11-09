@@ -9,7 +9,8 @@ C:/AI/scripts/review/check_repo.bat
 
 The runner executes these checks:
 
-- `structure_docs.py`: component/config ownership, path/link validity, maintained Markdown budgets, Markdown basename casing, and document roles.
+- `layout.py`: component/config ownership, install roots, folder naming, and batch references.
+- `docs.py`: Markdown placement, roles, budgets, basename casing, links and model-name policy.
 - `model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
 - `frontend_wiring.py`: front-end wiring: HTML/JS asset paths, DOM element ids and injected settings keys.
 - `basedpyright`: Python type errors.
@@ -18,7 +19,7 @@ The runner executes these checks:
 
 Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function complexity is gated by ruff at McCabe 10; the inventory lists the largest functions for context. Inventory excludes generated output, caches, model data, third-party installations and trash.
 
-Run a single check with `python -m scripts.review.structure_docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `structure_docs --words` prints every maintained document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers, repeats and unlinked documents. A link fails when it is absolute, uses a backslash, carries a space without angle brackets, points into an untracked path, or misses its target or heading; repeats are advisory. Document organization lives in [NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
+Run a single check with `python -m scripts.review.layout`, `python -m scripts.review.docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `docs --words` prints every maintained document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers, repeats and unlinked documents. A link fails when it is absolute, uses a backslash, carries a space without angle brackets, points into an untracked path, or misses its target or heading; repeats are advisory. Document organization lives in [NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
 
 ## Framework validation
 
