@@ -19,7 +19,7 @@
 | Kobold Gemma | `koboldcpp/gemma_audio.py` | Uses loaded Kobold chat model |
 | Parakeet CPU/Vulkan | [setup](PARAKEET.md), `PARAKEETCPP_ASR` | 110M file CLI; v3 gateway available |
 | Handy | [setup](HANDY.md) | Portable desktop dictation |
-| Additional ASR runtimes | [file engines](FILE-ENGINES.md) | NeMo, speech.cpp, CrispASR, FunASR, Sherpa and AudioCpp; required models downloaded |
+| Additional ASR runtimes | [file engines](FILE-ENGINES.md) | NeMo, speech.cpp and AudioCpp; required models downloaded |
 
 - `ASR_SERVICE` owns shared gateway selection/port. External ASR works with either chat consumer.
 - Installs/models use `asr/<framework>/`; shared Gemma weights and chat runtimes remain single assets.

@@ -4,7 +4,6 @@ import argparse
 import base64
 import functools
 import hashlib
-import importlib
 import json
 import time
 import urllib.error
@@ -212,10 +211,6 @@ def _engine_result(name, command, model, clips, args, run, deadline) -> dict[str
     try:
         if time.monotonic() >= deadline:
             raise TimeoutError("Whole-run budget exhausted; engine not omitted")
-        if name == "sherpa-onnx":
-            return importlib.import_module("scripts.tests.cases.asr.sherpa-onnx.resident").run_engine(
-                clips, args.samples, deadline
-            )
         return run_engine(name, command, model, clips, args.samples, run, args.port, deadline, args.resources)
     except Exception as error:
         return {"engine": name, "status": "failed", "error": str(error), "summary": summarize_requests([])}

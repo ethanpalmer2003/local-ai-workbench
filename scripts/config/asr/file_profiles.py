@@ -92,41 +92,6 @@ ASR_FILE_PROFILES = {
         streaming_kind="VAD-delimited Qwen utterances; not a native streaming Qwen model",
         server_arguments=("serve", "{model}", "--device", "gpu", "--threads", "4", "--port", "{port}"),
     ),
-    "funasr": FileAsrProfile(
-        "asr/funasr",
-        binary("asr/funasr", "vulkan/llama-funasr-sensevoice.exe"),
-        (
-            "-m",
-            weight("asr/funasr/sensevoice-small-q8"),
-            "-a",
-            "{input}",
-            "--backend",
-            "vulkan",
-            "--vad",
-            weight("asr/funasr/fsmn-vad"),
-        ),
-        ("asr/funasr/sensevoice-small-q8", "asr/funasr/fsmn-vad"),
-        {"offline": ()},
-        languages=("auto",),
-    ),
-    "sherpa-onnx": FileAsrProfile(
-        "asr/sherpa-onnx",
-        binary("asr/sherpa-onnx", "bin/sherpa-onnx.exe"),
-        (
-            "--encoder=" + weight("asr/sherpa-onnx/zipformer-en/encoder"),
-            "--decoder=" + weight("asr/sherpa-onnx/zipformer-en/decoder"),
-            "--joiner=" + weight("asr/sherpa-onnx/zipformer-en/joiner"),
-            "--tokens=" + weight("asr/sherpa-onnx/zipformer-en/tokens"),
-            "--num-threads=4",
-            "--provider=cpu",
-            "{input}",
-        ),
-        tuple("asr/sherpa-onnx/zipformer-en/" + part for part in ("encoder", "decoder", "joiner", "tokens")),
-        {"streaming": ()},
-        default_mode="streaming",
-        languages=("auto", "en", "en-us"),
-        streaming_kind="online Zipformer on recorded WAV; English only; file is not real-time paced",
-    ),
 }
 
 for variant, backend in (("vulkan", "vulkan"), ("rocm", "hip")):

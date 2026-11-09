@@ -26,8 +26,7 @@ learner accents or multilingual accuracy.
 | Gemma E4B audio | Lower priority: shares chat weights but is slow on the short screen; no incremental adapter. |
 | Ming Audio Tiny | Lower priority: slow with expert offload; no incremental adapter or quality benefit shown. |
 | Qwen3-ASR 1.7B | Not selected for conversation practice; selected for TTS voice-reference transcription. |
-| Parakeet 110M / installed Sherpa Zipformer | English-only references; Sherpa French streaming models remain separate candidates. |
-| SenseVoiceSmall / FunASR | Not a fit for required French/Spanish coverage. This does not reject other FunASR models. |
+| Parakeet 110M | English-only reference; the Sherpa ASR weights were retired on 2026-11-08. |
 | Handy | Dictation frontend, not a competing recognition model; manual workflow checks remain. |
 
 Promote alternatives only after matched learner recordings compare accuracy,
