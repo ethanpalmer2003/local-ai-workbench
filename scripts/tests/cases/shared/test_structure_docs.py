@@ -142,6 +142,24 @@ class LinkTests(unittest.TestCase):
             path.parent.rmdir()
         self.assertEqual(issues, [])
 
+    def test_link_format_must_be_relative_with_forward_slashes(self):
+        cases = {
+            "absolute": "[Notes](C:/AI/notes/TODO.md)",
+            "rooted": "[Notes](/notes/TODO.md)",
+            "backslash": "[Notes](..\\notes/TODO.md)",
+            "space": "[Notes](../notes/TO DO.md)",
+            "scheme": "[Notes](file:///C:/AI/notes/TODO.md)",
+        }
+        for name, link in cases.items():
+            with self.subTest(name=name):
+                path = self._fixture(f"# Linked\n\n{link}\n")
+                try:
+                    issues = structure_docs.markdown_issues(path, path.read_text(encoding="utf-8"))
+                finally:
+                    path.unlink()
+                    path.parent.rmdir()
+                self.assertTrue(issues, name)
+
 
 class ModelNameTests(unittest.TestCase):
     def _fixture(self, text: str) -> Path:
