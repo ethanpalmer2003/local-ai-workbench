@@ -78,6 +78,7 @@ from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
 from scripts.tests.cases.shared.test_structure_docs import (
     MarkdownNameTests,
     ModelNameTests,
+    RoleTests,
     RootDocumentTests,
     ShortDocumentTests,
     WordCountTests,
@@ -120,7 +121,7 @@ if __name__ == "__main__":
                     SuffixTests,
                     MarkdownNameTests,
                     ModelNameTests,
-                    ModelNameTests,
+                    RoleTests,
                     RootDocumentTests,
                     ShortDocumentTests,
                     WordCountTests,

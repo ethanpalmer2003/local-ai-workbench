@@ -62,6 +62,41 @@ class ShortDocumentTests(unittest.TestCase):
         self.assertFalse([relative for relative in listed if relative.startswith("notes/reviews/")])
 
 
+class RoleTests(unittest.TestCase):
+    def test_known_homes_claim_their_role(self):
+        cases = {
+            "AGENTS.md": "root",
+            ".agents/skills/docs-writing/SKILL.md": "agent skill",
+            ".agents/CHECKS.md": "agent rule",
+            "notes/TODO.md": "running list",
+            "notes/reviews/STRUCTURE-REVIEW.md": "review record",
+            "notes/ONBOARDING.md": "note topic",
+            "scripts/tests/notes/STATUS.md": "test note",
+            "scripts/review/COMPLEXITY-DEBT.md": "generated report",
+            "scripts/config/comfyui/TUNING.md": "tuning",
+            "scripts/config/comfyui/README.md": "hub",
+            "scripts/config/llamacpp/HRX.md": "component guide",
+        }
+        for relative, role in cases.items():
+            with self.subTest(relative=relative):
+                self.assertEqual(structure_docs.document_role(relative), role)
+
+    def test_a_running_list_beside_a_component_is_reported(self):
+        issues = structure_docs.role_issues([BASE / "scripts/config/TODO.md"])
+        self.assertEqual(len(issues), 1, issues)
+        self.assertIn("notes root", issues[0])
+
+    def test_a_tuning_document_outside_a_component_is_reported(self):
+        issues = structure_docs.role_issues([BASE / "notes/TUNING.md"])
+        self.assertEqual(len(issues), 1, issues)
+        self.assertIn("component folder", issues[0])
+
+    def test_a_document_with_no_known_role_is_reported(self):
+        issues = structure_docs.role_issues([BASE / "docs/UNCLASSIFIED.md"])
+        self.assertEqual(len(issues), 1, issues)
+        self.assertIn("no document role", issues[0])
+
+
 class WordCountTests(unittest.TestCase):
     def test_a_document_over_its_budget_is_marked_over(self):
         self.assertEqual(structure_docs.word_marker(600, 500, "notes/BIG.md", BASE / "notes/BIG.md"), "over")
