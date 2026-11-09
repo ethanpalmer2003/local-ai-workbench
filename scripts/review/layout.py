@@ -133,6 +133,7 @@ ROOT_BATCHES = frozenset(
         "build_frameworks.bat",
         "cleanup_state.bat",
         "manage_kill_ai_services.bat",
+        "manage_rocm_installs.bat",
         "launch_llamacpp_pi_agent.bat",
         "launch_strata_pi_agent.bat",
     }

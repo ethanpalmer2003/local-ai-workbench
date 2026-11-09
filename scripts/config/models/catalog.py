@@ -208,11 +208,18 @@ def entry_home(label: str) -> Path:
     return overlay_path()
 
 
+def _save_entries(entries: list[dict[str, Any]], target: Path) -> None:
+    if target == CATALOG_PATH:
+        save_catalog(entries)
+    else:
+        save_catalog(entries, target)
+
+
 def upsert_entry(entry: dict[str, Any], path: Path | None = None) -> Path:
     """Add or replace one entry in an explicit file, or in the file that already owns it."""
     target = path or entry_home(str(entry.get("label")))
     entries = [item for item in load_entries(target) if str(item.get("label")) != str(entry.get("label"))]
-    save_catalog([*entries, entry], target)
+    _save_entries([*entries, entry], target)
     return target
 
 
@@ -225,7 +232,7 @@ def remove_entry(label: str) -> Path | None:
     kept = [entry for entry in entries if str(entry.get("label")) != label]
     if len(kept) == len(entries):
         return None
-    save_catalog(kept, home)
+    _save_entries(kept, home)
     return home
 
 
