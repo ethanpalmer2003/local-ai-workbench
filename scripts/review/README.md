@@ -9,7 +9,7 @@ C:/AI/scripts/review/check_repo.bat
 
 The runner executes these checks:
 
-- `structure_docs.py`: component/config ownership, path/import/link validity, maintained Markdown budgets, Markdown basename casing, and document roles.
+- `structure_docs.py`: component/config ownership, path/link validity, maintained Markdown budgets, Markdown basename casing, and document roles.
 - `model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
 - `frontend_wiring.py`: front-end wiring: HTML/JS asset paths, DOM element ids and injected settings keys.
 - `basedpyright`: Python type errors.
