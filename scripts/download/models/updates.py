@@ -17,6 +17,7 @@ from scripts.config.models import ModelDownload as ModelDownload
 from scripts.download.models.hub_sources import parse_url
 
 RELEASE = re.compile(r"^(?P<stem>.+?)-v(?P<version>\d+(?:\.\d+)*)(?:-GGUF)?$")
+FILE_VERSION = re.compile(r"-v(\d+(?:\.\d+)*)(?=[-_.])", re.IGNORECASE)
 LIMIT = 30
 
 
@@ -24,6 +25,8 @@ class Hub(Protocol):
     def model_info(self, repo_id: str, *, revision: str | None = None, files_metadata: bool = False) -> Any: ...
 
     def list_models(self, *, search: str, limit: int) -> Any: ...
+
+    def list_repo_files(self, repo_id: str, *, revision: str | None = None) -> Any: ...
 
 
 @dataclass
@@ -47,24 +50,32 @@ def _release(repo_id: str) -> tuple[str, tuple[int, ...]] | None:
     return match.group("stem"), tuple(int(part) for part in match.group("version").split("."))
 
 
-def _newer(api: Hub, repo_id: str) -> str:
-    """The highest release version above the pinned one for the same family, if any."""
+def latest_release(api: Hub, repo_id: str) -> tuple[str, str] | None:
+    """The newest higher release repository for this family, as (repo_id, version)."""
     release = _release(repo_id)
     if release is None:
-        return ""
+        return None
     stem, current = release
     try:
         repos = list(api.list_models(search=stem, limit=LIMIT))
     except Exception:  # - a search failure only loses the hint, never a finding
-        return ""
+        return None
     best: tuple[tuple[int, ...], str] | None = None
     for repo in repos:
         other = _release(repo.id)
         if other is None or other[0] != stem or other[1] <= current:
             continue
         if best is None or other[1] > best[0]:
-            best = (other[1], ".".join(str(part) for part in other[1]))
-    return best[1] if best else ""
+            best = (other[1], repo.id)
+    if best is None:
+        return None
+    return best[1], ".".join(str(part) for part in best[0])
+
+
+def _newer(api: Hub, repo_id: str) -> str:
+    """The highest release version above the pinned one for the same family, if any."""
+    found = latest_release(api, repo_id)
+    return found[1] if found else ""
 
 
 def _installed(model: ModelDownload) -> int | None:

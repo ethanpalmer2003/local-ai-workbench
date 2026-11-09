@@ -14,6 +14,7 @@ python -m scripts.tools.model_admin where "llamacpp/Swift-1.5-Qwen3.8-27B-GSQ-RC
 python -m scripts.tools.model_admin add --category llms --group llamacpp --label "..." --filename "coding_models/..." --url "https://..." --in-use --apply --download
 python -m scripts.tools.model_admin remove "koboldcpp/TheDrummer_Snowpiercer-15B-v4-IQ4_XS" --apply
 python -m scripts.tools.model_admin replace "old/label" "new/label" --apply --download
+python -m scripts.download.models.update_models --dry-run
 python -m scripts.download.models.updates --only "koboldcpp/TheDrummer_Orion-26B-A4B-v1.1-IQ3_XXS"
 python -m scripts.download.models.model_sync
 ```

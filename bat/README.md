@@ -32,8 +32,9 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 
 | Batch | Purpose |
 | --- | --- |
-| [download_models.bat](models/download_models.bat) | Download/verify catalog models. |
+| [download_models.bat](models/download_models.bat) | Catalog download; with no arguments only the active files that are missing. |
 | [check_installed_models.bat](models/check_installed_models.bat) | Audit installed files against the catalog. |
+| [update_models.bat](models/update_models.bat) | Newest releases: download the newer file, replace references, retire old weights; `--dry-run` previews. |
 | [analyze_model_metadata.bat](models/analyze_model_metadata.bat) | Inspect model metadata into inventory. |
 | [report_model_languages.bat](models/report_model_languages.bat) | Offline language-coverage inventory. |
 | [check_model_updates.bat](models/check_model_updates.bat) | Compare catalog sources with Hugging Face; hint at newer releases. |

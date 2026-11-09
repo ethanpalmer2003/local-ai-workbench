@@ -57,11 +57,12 @@ def download_file(
     print("Done!")
 
 
-def main():
-    if any(arg in sys.argv[1:] for arg in ("--list", "--model", "--active", "--inactive", "--group", "--download")):
+def main(argv: list[str] | None = None):
+    arguments = sys.argv[1:] if argv is None else list(argv)
+    if any(arg in arguments for arg in ("--list", "--model", "--active", "--inactive", "--group", "--download")):
         from scripts.download.models import download_catalog as download
 
-        download.main(sys.argv[1:])
+        download.main(arguments)
         return
     parser = argparse.ArgumentParser(description="Download models/files from HuggingFace.")
     parser.add_argument("--repo", help="HuggingFace repo ID (e.g., Qwen/Qwen3-AUDIOCPP-12Hz-1.7B-CustomVoice)")
@@ -70,7 +71,7 @@ def main():
     parser.add_argument("--revision", help="Revision/branch (default: URL revision or main)")
     parser.add_argument("--local-dir", type=Path, help="Destination folder (default: huggingface/models)")
 
-    args = parser.parse_args()
+    args = parser.parse_args(arguments)
 
     if not args.repo and not args.url:
         parser.print_help()
