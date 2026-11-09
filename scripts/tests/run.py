@@ -86,6 +86,7 @@ from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
 from scripts.tests.cases.shared.test_typography import CheckTests, ScanTests, SuffixTests
+from scripts.tests.cases.shared.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
 from scripts.tests.cases.shared.workflows.test_kokoro_profiles import KokoroProfiles
 from scripts.tests.cases.shared.workflows.test_text_processing import TextProcessingTests
@@ -163,6 +164,7 @@ if __name__ == "__main__":
                     InputOverlayTests,
                     PolicyTests,
                     LiveStampTests,
+                    ValidatePlanTests,
                     PreflightTests,
                     PublicAuditTests,
                     KokoroProfiles,
