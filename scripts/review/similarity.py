@@ -202,7 +202,7 @@ def functions(path: Path, relative: str) -> list[dict[str, Any]]:
 
 def changed_sources(previous: dict[str, str], current: dict[str, str]) -> list[str]:
     """Documents whose content differs from the previous report, or that are new."""
-    return sorted(path for path, digest in current.items() if previous.get(path) != digest)
+    return provenance.changed_files(previous, current)
 
 
 def latest_report(mode: str) -> dict[str, Any] | None:
@@ -248,7 +248,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         paths = [item for item in maintained_files() if item.suffix.lower() == ".md"]
     chunker = functions if args.code else units
-    sources = {path.relative_to(project_cfg.BASE_DIR).as_posix(): provenance.content_digest(path) for path in paths}
+    sources = provenance.source_manifest(paths, project_cfg.BASE_DIR)
     previous = latest_report(mode) or {}
     recorded = previous.get("sources")
     changed = changed_sources(recorded or {}, sources)

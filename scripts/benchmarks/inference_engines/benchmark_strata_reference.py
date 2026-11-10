@@ -5,11 +5,10 @@ import json
 import secrets
 import statistics
 import time
-import urllib.request
 from pathlib import Path
 from typing import Any
 
-from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk, summarize_requests
+from scripts.benchmarks.coding_agents.shared.benchmark_requests import stream_chat
 from scripts.benchmarks.shared import preflight as preflight_check
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.launchers import launch_util
@@ -46,30 +45,7 @@ def request(connection: strata_pi.StrataConnection, messages: list[dict[str, str
         "stream": True,
         "stream_options": {"include_usage": True},
     }
-    query = urllib.request.Request(
-        connection.base_url + "/chat/completions",
-        json.dumps(body).encode(),
-        {"Content-Type": "application/json", "Authorization": "Bearer " + connection.api_key},
-    )
-    started = time.perf_counter()
-    record: dict[str, Any] = {"content": "", "finished": False}
-    with urllib.request.urlopen(query, timeout=900) as response:
-        for line in response:
-            if not line.startswith(b"data:"):
-                continue
-            payload = line[5:].strip()
-            if payload == b"[DONE]":
-                record["finished"] = True
-                break
-            chunk = json.loads(payload)
-            if chunk.get("error"):
-                raise RuntimeError(chunk["error"])
-            observe_chunk(record, chunk, time.perf_counter() - started)
-            for choice in chunk.get("choices", []):
-                record["content"] += choice.get("delta", {}).get("content") or ""
-    record["seconds"] = time.perf_counter() - started
-    record["accounting"] = summarize_requests([record])
-    return record
+    return stream_chat(connection, body, timeout=900)
 
 
 def prepare(source: strata_pi.StrataConnection, arm: RunPaths) -> strata_pi.StrataConnection:

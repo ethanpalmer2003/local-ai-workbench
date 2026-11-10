@@ -8,11 +8,10 @@ import statistics
 import subprocess
 import threading
 import time
-import urllib.request
 from pathlib import Path
 from typing import Any
 
-from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk, summarize_requests
+from scripts.benchmarks.coding_agents.shared.benchmark_requests import stream_chat
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.benchmarks.shared.vram import BenchmarkVram
@@ -110,32 +109,9 @@ def request(connection: strata_pi.StrataConnection, prompt: str, tokens: int, de
         "stream": True,
         "stream_options": {"include_usage": True},
     }
-    query = urllib.request.Request(
-        connection.base_url + "/chat/completions",
-        json.dumps(body).encode(),
-        {"Content-Type": "application/json", "Authorization": "Bearer " + connection.api_key},
+    return stream_chat(
+        connection, body, timeout=max(1, min(90, deadline - time.monotonic())), extra={"output_limit": tokens}
     )
-    started = time.perf_counter()
-    record: dict[str, Any] = {"content": "", "finished": False, "output_limit": tokens}
-    with urllib.request.urlopen(query, timeout=max(1, min(90, deadline - time.monotonic()))) as response:
-        for line in response:
-            if not line.startswith(b"data:"):
-                continue
-            payload = line[5:].strip()
-            if payload == b"[DONE]":
-                record["finished"] = True
-                break
-            chunk = json.loads(payload)
-            if chunk.get("error"):
-                raise RuntimeError(chunk["error"])
-            observe_chunk(record, chunk, time.perf_counter() - started)
-            for choice in chunk.get("choices", []):
-                record["content"] += choice.get("delta", {}).get("content") or ""
-                if choice.get("finish_reason"):
-                    record["finish_reason"] = choice["finish_reason"]
-    record["seconds"] = time.perf_counter() - started
-    record["accounting"] = summarize_requests([record])
-    return record
 
 
 def run_arm(
