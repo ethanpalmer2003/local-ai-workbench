@@ -4,13 +4,14 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 
 ## Unresolved
 
-- None. New questions land here until they are answered or deferred.
+- **Documentation similarity.** Measure duplicate or near-duplicate claims in the maintained Markdown. Open: which local embedding model (EmbeddingGemma-2 against Qwen3-Embedding-0.6B), which chunk unit (bullet, sentence, section), what cosine threshold, and whether a finding gates or only advises. The screen in the [TODO](TODO.md) answers the model and threshold; the gate decision waits for its false-positive rate.
+- **Code similarity.** Whether embeddings add anything to code that clone detection and review do not. Duplication is a smaller risk there than in prose, so this waits until the documentation screen shows the model separates real duplicates from ordinary repetition.
 
 ## Resolved, revisit if needed
 
 - **Hardware specs.** Machine numbers stay in the docs by decision; revisiting them is cheap but not planned.
 - **Lint strictness.** The gate stays at the [code rules](../.agents/CODE.md) limit with no inline suppressions and ruff clean repo-wide. Tightening further (`ARG`, `PL`) is worth revisiting only if a defect slips through.
-- **Embedding index over code and docs.** Declined for now: `grep` plus the owner rules answer the questions that azzfixture, an index needs its own refresh path and component key, and retrieval invites the paraphrased duplicates the one-owner rule prevents. Revisit if the document set grows past what reading a diff can hold.
+- **Embedding index over code and docs.** Declined for now: `grep` plus the owner rules answer the questions that azzfixture, an index needs its own refresh path and component key, and retrieval invites the paraphrased duplicates the one-owner rule prevents. Revisit if the document set grows past what reading a diff can hold. Duplicate detection is a different question, tracked under Unresolved.
 - **Capability matrix evidence.** Decided: producers record what each run used, so a row is judged rather than guessed, and the flagged rows are refreshed by reruns tracked in the [TODO](TODO.md). Revisit if a producer stops writing provenance.
 
 ## Deferred
