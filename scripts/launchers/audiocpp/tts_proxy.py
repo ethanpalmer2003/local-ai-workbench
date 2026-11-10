@@ -231,8 +231,7 @@ class _TtsProxyHandler(ProxyHandlerMixin):
         self.wfile.write(resp_body)
         self.wfile.flush()
 
-    # ----------------------------------------------------------
-    # Request handling
+    # --- Request handling ---
 
     def _forward(self, method: str):
         if method == "GET":

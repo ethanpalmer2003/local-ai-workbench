@@ -104,9 +104,7 @@ class Options:
     clips: int
 
 
-# ============================================================
-# SERVING
-# ============================================================
+# --- SERVING ---
 
 
 def _free_port() -> int:
@@ -363,9 +361,7 @@ def serve(backend: str, weights: Path, run: RunPaths) -> AbstractContextManager[
     return handlers[backend](weights, run)
 
 
-# ============================================================
-# CHAT LEG
-# ============================================================
+# --- CHAT LEG ---
 
 
 def _sse_json(line: bytes) -> dict[str, Any] | None:
@@ -471,9 +467,7 @@ def _chat_leg(served: Served, options: Options) -> dict[str, Any]:
     }
 
 
-# ============================================================
-# SPEECH LEG
-# ============================================================
+# --- SPEECH LEG ---
 
 
 def _checked(response: requests.Response, what: str) -> bytes:
@@ -564,9 +558,7 @@ def _tts_leg(served: Served, run: RunPaths) -> dict[str, Any]:
     }
 
 
-# ============================================================
-# RECOGNITION LEG
-# ============================================================
+# --- RECOGNITION LEG ---
 
 
 def _transcribe(served: Served, audio: bytes, language: str) -> tuple[str, float]:
@@ -638,9 +630,7 @@ def _asr_leg(served: Served, clips: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-# ============================================================
-# RUN AND REPORT
-# ============================================================
+# --- RUN AND REPORT ---
 
 
 def measure(
