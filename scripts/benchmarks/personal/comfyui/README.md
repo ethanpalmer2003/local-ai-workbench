@@ -19,6 +19,7 @@
 ## Focused settings screens
 
 - Screen at square-equivalent 480; validate promising candidates at 640 before changing general defaults. Ten-second 480 is optional/lower priority.
+- The 640 screen (5 s, 10 s, pinned memory) is written up in the dated record, [COMFYUI-VIDEO-2026-11-09](../../../../notes/reviews/COMFYUI-VIDEO-2026-11-09.md). No default changed from it.
 - Prior scaling found 1024/256 tiling increased total time at 640 by 84.6%; a small-resolution gain did not scale.
 - Prompt-cache warmness and GPU-monitor overhead are separate factors. Benchmark one change at a time; listening/appearance review is additional work.
 
