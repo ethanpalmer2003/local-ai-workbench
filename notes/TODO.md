@@ -6,7 +6,7 @@
 
 ## Code review
 
-- [ ] Review the remaining duplicate-check findings after the Strata request helper merge: the CLI shims, the nested context manager and the dynamic-VRAM pair were accepted as distinct owners. ~15 min
+- [ ] Re-run the code screen after the Strata request merge and confirm the remaining four pairs are still distinct owners. `python -m scripts.review.similarity --code`. ~10 min
 
 ## Documentation review
 
