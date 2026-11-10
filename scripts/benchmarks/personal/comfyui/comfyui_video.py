@@ -25,7 +25,7 @@ from scripts.launchers.runtime import gpu_memory
 MODELS = ("LTX-2.5-Distilled-Q3_K_M.gguf", "LTX25-distilled-DiT-Q3_K_M.gguf")
 ENCODERS = ("gemma4-12b-with-proj-ltx-2.5-Q2_K.gguf", "gemma4-12b-with-proj-ltx-2.5-Q4_K_M.gguf")
 PRESETS = ("user",)
-LAUNCH_CASES = ("baseline", "smart-on", "autotune-off", "triton-on", "dynamic-off")
+LAUNCH_CASES = ("baseline", "smart-on", "autotune-off", "triton-on", "dynamic-off", "pinned-on")
 
 
 def tile_cases(group: str) -> tuple[tuple[str, LTXWorkflowOverrides], ...]:
@@ -158,6 +158,10 @@ def isolated_launch_options(case: str) -> tuple[list[str], dict[str, str]]:
         flags[flags.index("--disable-triton-backend")] = "--enable-triton-backend"
     elif case == "dynamic-off":
         flags[flags.index("--enable-dynamic-vram")] = "--disable-dynamic-vram"
+    elif case == "pinned-on":
+        # - the wrapper disables pinned memory unconditionally; this case is the only way to compare it
+        if "--disable-pinned-memory" in flags:
+            flags.remove("--disable-pinned-memory")
     elif case != "baseline":
         raise ValueError(f"Unknown launch case: {case}")
     return flags, env
