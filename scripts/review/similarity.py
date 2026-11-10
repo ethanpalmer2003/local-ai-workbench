@@ -6,7 +6,6 @@ never edits a document. Run it as `python -m scripts.review.similarity`, not in 
 """
 
 import argparse
-import hashlib
 import json
 import re
 import time
@@ -17,6 +16,7 @@ from typing import Any
 
 import numpy as np
 
+from scripts.benchmarks.shared import provenance
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.launchers.embeddings import server
@@ -172,12 +172,21 @@ def findings(pairs: list[tuple[float, int, int]], units_: list[dict[str, Any]]) 
     return sorted(reported, key=lambda row: (-row["matches"], -row["best"]))
 
 
-def model_digest(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+def changed_sources(previous: dict[str, str], current: dict[str, str]) -> list[str]:
+    """Documents whose content differs from the previous report, or that are new."""
+    return sorted(path for path, digest in current.items() if previous.get(path) != digest)
+
+
+def latest_report() -> dict[str, Any] | None:
+    """The most recent duplicate report, so a run can say what moved since then."""
+    runs = sorted((project_cfg.GENERATED_DIR / "shared/similarity").glob("*/report.json"))
+    if not runs:
+        return None
+    try:
+        value = json.loads(runs[-1].read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return value if isinstance(value, dict) else None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -193,10 +202,19 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[FAIL] Embedding model missing: {model}. Download it with the model tooling.")
         return 1
     expected = next((row.sha256 for row in model_cfg.MODELS if row.label == LABEL), None)
-    digest = model_digest(model)
+    digest = provenance.content_digest(model)
     if expected and digest != expected:
         print(f"[FAIL] {LABEL} differs from the catalogued sha256; refusing to report.")
         return 1
+
+    documents = sorted(item for item in maintained_files() if item.suffix.lower() == ".md")
+    sources = {path.relative_to(project_cfg.BASE_DIR).as_posix(): provenance.content_digest(path) for path in documents}
+    previous = latest_report() or {}
+    recorded = previous.get("sources")
+    changed = changed_sources(recorded or {}, sources)
+    note = (
+        "no previous source record" if recorded is None else f"{len(changed)} document(s) changed since the last report"
+    )
 
     process = None
     if not args.no_server and not server.ready():
@@ -205,7 +223,7 @@ def main(argv: list[str] | None = None) -> int:
         base = server.url()
         started = time.perf_counter()
         parsed: list[dict[str, Any]] = []
-        for path in sorted(item for item in maintained_files() if item.suffix.lower() == ".md"):
+        for path in documents:
             parsed.extend(units(path, path.relative_to(project_cfg.BASE_DIR).as_posix()))
         vectors = embed([str(unit["text"]) for unit in parsed], base)
         found = findings(neighbours(vectors, args.threshold), parsed)
@@ -215,15 +233,18 @@ def main(argv: list[str] | None = None) -> int:
             "dimensions": int(vectors.shape[1]),
             "threshold": args.threshold,
             "units": len(parsed),
-            "documents": len({unit["doc"] for unit in parsed}),
+            "documents": len(documents),
             "seconds": round(time.perf_counter() - started, 1),
             "created": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "sources": sources,
+            "changed_since_last": changed,
             "findings": found,
         }
         folder = project_cfg.GENERATED_DIR / "shared/similarity" / str(time.time_ns())
         folder.mkdir(parents=True, exist_ok=True)
         (folder / "report.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         print(f"[OK] {payload['documents']} documents, {payload['units']} units, {len(found)} section pairs")
+        print(f"[INFO] {note}")
         for row in found[: args.top]:
             print(f"  {row['best']:.3f} matches={row['matches']} {row['a']} <-> {row['b']}")
         print(f"Report: {folder / 'report.json'}")

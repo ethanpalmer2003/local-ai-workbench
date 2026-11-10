@@ -66,6 +66,15 @@ def file_identity(label: str, path: Path) -> dict[str, Any]:
     }
 
 
+def content_digest(path: Path) -> str:
+    """SHA256 of a file's bytes: what a generated artifact must compare to notice a changed source."""
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def corpus_state(identity: dict[str, Any], root: Path | None) -> dict[str, Any]:
     """Corpus identity plus the downloaded-evidence file the fetcher writes beside the audio."""
     state = dict(identity)
