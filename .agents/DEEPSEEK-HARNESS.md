@@ -9,3 +9,4 @@
 - No multi-line Python through `pwsh -Command`: heredocs and quoting break, and a broken edit corrupts files silently. Run a scratch script from `scripts/state/`, or use the file-edit tool.
 - PowerShell flattens `@(@('a','b'))` to two strings, so the loop indexes characters. Use Python for pair lists.
 - A denial is a policy decision, not a retry prompt: escalate that exact operation once, then report the outcome.
+- Harness children run at Low integrity, so state or cache directories they write need a Low label or creation fails with access denied; `icacls <dir> /setintegritylevel (OI)(CI)Low` fixes it.

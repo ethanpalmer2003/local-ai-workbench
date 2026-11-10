@@ -22,9 +22,9 @@
 
 ### Unattended
 
-- [ ] Repair Strata file access: the framework updater cannot write its update lock under `scripts/state/strata/desktop/`, because those files were created by an administrator run; `strata repair-access` is the fix the app suggests. ~15 min
+- [ ] Retest the Strata 0.1.59 engine when its updater expands `{AI_ROOT}` in the test start; today it passes the placeholder literally, so the engine reports a missing tokenizer and the update declines. ~20 min
 - [ ] Retest llama.cpp coding on the ROCm build when a release newer than b1372 appears; b1372 is the newest and crashes on load. ~20 min
-- [ ] Retest the live suites after today's failures: the AudioCpp launcher cannot create its UI cache directory, llama.cpp crashes during memory fitting, and Kobold readiness timed out. Each needs a cause before the row can refresh. ~45 min
+- [ ] Retest Kobold readiness and the remaining live targets after the integrity-label fix; its launcher still timed out at 180 s. ~30 min
 - [ ] llama.cpp: medium/high-context speculation. Filled context at 32k is measured: cold prefill 505 tok/s with a 63.3 s TTFT, 48.5 tok/s decode warm and 39.0 tok/s cached at 12.8 GiB. Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). ~1-1.5 h
 - [ ] Rerun the capability rows so their recorded evidence is judged: 23 are flagged, and each run turns its row green or names what changed. `python -m scripts.tools.capability_matrix --check` lists them. ~1-2 h
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md). ~1.5-2 h
