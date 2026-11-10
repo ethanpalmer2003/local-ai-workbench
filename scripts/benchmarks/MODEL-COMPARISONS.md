@@ -11,7 +11,7 @@ C:/AI/scripts/.venv/Scripts/python.exe -m scripts.benchmarks.llamacpp.benchmark_
 
 - Native workload: live/opt-in. Refuse conflicting sessions, warm up, alternate order and separate startup/model loading from measurements.
 - Match hashes, tokenizer/template, context occupancy/capacity, sampling, KV type, FA, speculation, reasoning and token limits. Request count alone is insufficient.
-- Build comparisons run on the configured default model, so only the build changes: Breeze 2 for AudioCpp and `swift15` for llama.cpp coding builds. A runtime is compared on the workload it serves: Lemonade is a language-practice runtime and is measured with Gemma, not Swift. A non-default model such as Ming gets one check on the default build, never across every build.
+- Build comparisons run on the configured default model, so only the build changes: Breeze 2 for AudioCpp and `swift15` for llama.cpp coding builds. The llama.cpp coding builds are the ROCm builds taken from Lemonade's release assets; Lemonade's own server is a separate language-practice framework measured with Gemma. A non-default model such as Ming gets one check on the default build, never across every build.
 - Short-context evidence cannot establish filled-context performance. Reused prompts/cache conditions must be explicit.
 - Latest paired easy Pi task: both Strata Swift and 27B passed 8/8; timings and token totals are in [outcomes](../tests/notes/OUTCOMES.md).
 - Strata profile pair, screen not ranking: numbers, conditions and the older disagreeing table live in the dated record, [STRATA-PROFILES-2026-11-09](../../notes/reviews/STRATA-PROFILES-2026-11-09.md).
