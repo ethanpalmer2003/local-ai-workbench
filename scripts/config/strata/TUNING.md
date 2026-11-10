@@ -13,7 +13,10 @@ files themselves are owned by the [backend configuration](README.md).
   or many short turns in a warm session wants the decode profile. Cached prompt tokens cost neither arm,
   so reuse decides which side dominates.
 - Default is `decode.json`; how to switch profiles, and where they are loaded from, is in the
-  [backend configuration](README.md).
+  [backend configuration](README.md). `decode.json` carries `--resident-budget-gib 8` since 2026-11-09:
+  without a budget its auto expert cache committed the pack and the benchmark's 1 GiB RAM floor stopped the
+  arm. The budget makes the pair run, and the replay measured prefill ahead on both decode and prompt read
+  ([comparisons](../../benchmarks/MODEL-COMPARISONS.md)), so re-measure before preferring one profile.
 - Experimental RX 7800 XT / 32 GB alternative: [reference profile, tests and limits](REFERENCE.md).
 - Not measured: filled-context prefill beyond the screen above, speculation, and how the two profiles
   behave on a warm session with mixed read and generate. [TODO](../../../notes/TODO.md) owns the grids.
