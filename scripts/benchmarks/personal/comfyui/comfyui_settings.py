@@ -37,7 +37,7 @@ def setting_cases(group: str) -> list[tuple[str, list[str]]]:
     if group == "flags":
         return [
             (case, ["--launch-case", case])
-            for case in ("baseline", "smart-on", "autotune-off", "triton-on", "dynamic-off", "baseline")
+            for case in ("baseline", "smart-on", "autotune-off", "triton-on", "dynamic-off", "pinned-on", "baseline")
         ]
     if group == "spatial":
         return [

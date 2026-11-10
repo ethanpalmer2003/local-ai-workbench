@@ -13,6 +13,7 @@ from scripts.benchmarks.personal.comfyui.comfyui_video import (
     MODELS,
     check_ports,
     generate,
+    isolated_launch_options,
     launch_options,
     tile_cases,
 )
@@ -156,6 +157,12 @@ class WorkflowTests(unittest.TestCase):
         }
         set_video_decode(graph, "untiled")
         self.assertEqual(graph["20"], {"class_type": "VAEDecode", "inputs": {"samples": ["19", 0], "vae": ["4", 0]}})
+
+    def test_pinned_memory_case_lifts_only_that_flag(self) -> None:
+        flags, _ = isolated_launch_options("pinned-on")
+        self.assertNotIn("--disable-pinned-memory", flags)
+        baseline, _ = isolated_launch_options("baseline")
+        self.assertIn("--disable-pinned-memory", baseline)
 
     def test_commented_settings_defer_to_comfyui(self) -> None:
         with patch(
