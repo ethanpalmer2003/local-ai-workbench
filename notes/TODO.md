@@ -11,5 +11,5 @@
 - [ ] Measure multilingual/noisy accuracy and microphone latency: capture produced no transcript and no multilingual corpus is configured. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py). ~45-60 min
 - [ ] llama.cpp: medium/high-context speculation. Filled context at 32k is measured: cold prefill 505 tok/s with a 63.3 s TTFT, 48.5 tok/s decode warm and 39.0 tok/s cached at 12.8 GiB. Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). ~1-1.5 h
 - [ ] Rerun the capability rows so their recorded evidence is judged: 23 are flagged, and each run turns its row green or names what changed. `python -m scripts.tools.capability_matrix --check` lists them. ~1-2 h
-- [ ] Review the code duplicate findings: the first screen reports six function pairs, and each needs a decision on whether the body is duplicated or just similar scaffolding. ~30-45 min
+- [ ] Review the code duplicate findings: the first screen reports five function pairs, and each needs a decision on whether the body is duplicated or just similar scaffolding. ~30-45 min
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md). ~1.5-2 h
