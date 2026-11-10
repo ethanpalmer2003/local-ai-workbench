@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from scripts.benchmarks.coding_agents import strata_profiles as screen
+from scripts.benchmarks.coding_agents.shared import benchmark_requests
 from scripts.launchers.strata.strata_pi import StrataConnection
 from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.process_fixtures import running_process
@@ -46,7 +47,7 @@ class StrataProfileTests(unittest.TestCase):
             b"".join(b"data: " + json.dumps(row).encode() + b"\n\n" for row in chunks) + b"data: [DONE]\n"
         )
         connection = StrataConnection(Path("unused"), {"model_name": "swift"}, 1, "private-key")
-        with patch.object(screen.urllib.request, "urlopen", return_value=response):
+        with patch.object(benchmark_requests.urllib.request, "urlopen", return_value=response):
             record = screen.request(connection, "prompt", 128, time.monotonic() + 60)
         self.assertEqual(record["content"], "ok")
         self.assertTrue(record["accounting"]["usage_complete"])

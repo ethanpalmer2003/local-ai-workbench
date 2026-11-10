@@ -6,16 +6,15 @@
 
 ## Code review
 
-- [ ] Review the code duplicate findings: the first screen reports five function pairs, and each needs a decision on whether the body is duplicated or just similar scaffolding. ~30-45 min
-- [ ] Add a file-level staleness helper: a content digest per file with a manifest, so any generated artifact can say which sources changed instead of each check rolling its own comparison. [Provenance](../scripts/benchmarks/shared/provenance.py). ~30-45 min
+- [ ] Review the remaining duplicate-check findings after the Strata request helper merge: the CLI shims, the nested context manager and the dynamic-VRAM pair were accepted as distinct owners. ~15 min
 
 ## Documentation review
 
-- [ ] Revalidate the claims the duplicate report shows with disagreeing numbers: paired Pi timings, VAD final-text latency, the Kokoro screen summary, Strata against Avalon. ~30-45 min
-- [ ] Continue the duplicate cleanup past the review commands, TTS choice and port policy: Gemma limits, benchmark output paths, outcome definitions, GPU-peak caveats. ~45-60 min
+- [ ] Continue the duplicate cleanup past the review commands, TTS choice, port policy, Gemma limits and output paths: outcome definitions and GPU-peak caveats remain. ~30-45 min
 
 ## Needs a model run or device
 
+- [ ] Revalidate the claims the duplicate report shows with disagreeing numbers: paired Pi timings, VAD final-text latency, the Kokoro screen summary, Strata against Avalon. This needs the evidence re-read or the runs repeated. ~45-60 min
 - [ ] Validate Handy microphone selection, dictation and paste. `selected_microphone` is null and the last attempt captured 0 samples in 17 ms, so the device is the suspect; model, VAD and hotkey are configured. ~30-45 min
 - [ ] Finish live voice-practice checks on both chat consumers: pipelining, capture, playback and echo. Saved-PCM path passes; the browser mic returns audio requests but no transcript. [Scenario matrix](../scripts/launchers/asr/MULTIUSE-SCENARIOS.md). ~45-60 min
 - [ ] Measure multilingual/noisy accuracy and microphone latency: capture produced no transcript and no multilingual corpus is configured. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py). ~45-60 min

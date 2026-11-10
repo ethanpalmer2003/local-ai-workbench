@@ -109,6 +109,38 @@ def stream_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def stream_chat(
+    connection: Any, body: dict[str, Any], *, timeout: float, extra: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """One streaming chat completion, recorded the same way for every Strata benchmark."""
+    query = urllib.request.Request(
+        connection.base_url + "/chat/completions",
+        json.dumps(body).encode(),
+        {"Content-Type": "application/json", "Authorization": "Bearer " + connection.api_key},
+    )
+    started = time.perf_counter()
+    record: dict[str, Any] = {"content": "", "finished": False, **(extra or {})}
+    with urllib.request.urlopen(query, timeout=timeout) as response:
+        for line in response:
+            if not line.startswith(b"data:"):
+                continue
+            payload = line[5:].strip()
+            if payload == b"[DONE]":
+                record["finished"] = True
+                break
+            chunk = json.loads(payload)
+            if chunk.get("error"):
+                raise RuntimeError(chunk["error"])
+            observe_chunk(record, chunk, time.perf_counter() - started)
+            for choice in chunk.get("choices", []):
+                record["content"] += choice.get("delta", {}).get("content") or ""
+                if choice.get("finish_reason"):
+                    record["finish_reason"] = choice["finish_reason"]
+    record["seconds"] = time.perf_counter() - started
+    record["accounting"] = summarize_requests([record])
+    return record
+
+
 def summarize_requests(records: list[dict[str, Any]]) -> dict[str, Any]:
     complete = bool(records) and all(
         record.get("finished")

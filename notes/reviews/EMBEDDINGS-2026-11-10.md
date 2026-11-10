@@ -36,5 +36,13 @@ EmbeddingGemma-2 at 0.90 with the two-unit rule is the working setting, kept as 
 gate: a finding is a pair to review, never an edit. If the review load grows, narrow the band before
 dropping documents, because the real finds cross evidence and normative docs.
 
+## Code screen
+
+The same model over one function per chunk (1,607 functions, tests skipped) found five pairs at
+0.95. One was real duplication: both Strata benchmarks carried their own streaming request, now
+merged into `benchmark_requests.stream_chat`. The other four are distinct owners: two launcher CLI
+shims, a context-manager factory and its inner function, and the dynamic-VRAM adapter with its
+inverse.
+
 Evidence: `scripts/state/generated/shared/similarity/` (each run) and `data/embeddings/` (vectors, model
 digest, pairs). No default changed; nothing gates.

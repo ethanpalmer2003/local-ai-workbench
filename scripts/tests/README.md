@@ -6,7 +6,7 @@
 - `run.py` imports every test class explicitly and hands pytest node ids for exactly those classes: a new module stays outside the default suite until its class is registered, and live modules are never collected by accident. Ad-hoc run: `pytest scripts/tests/cases/<area> -q`.
 - Regression execution is pytest; the artifacts keep their existing shape (`report.md`, `timings.json`, `unittest.txt`). Model and install checks (what a GGUF, catalog entry or installed framework declares) sit behind `requires_model_check`: they skip in the default run and execute with `AI_MODEL_CHECKS=1`, after a download or framework update. Behaviour this repository owns stays in the default suite.
 - New test output mirrors source through `CasePaths`: `output/<component>/<case>/<outcome>/<run>/{logs,artifacts,temp}`. Media-generation areas (`sdcpp`, `comfyui`) nest under `output/personal/`; Kobold, AudioCpp, `tts_engines` and `asr` stay at the root because the same engines serve language practice. Historical results stay at their original paths.
-- Performance runners and new results live in [`scripts/benchmarks`](../benchmarks/README.md); downloaded upstream benchmark tools remain in `frameworks/benchmarks`.
+- Performance runners and new results live in [`scripts/benchmarks`](../benchmarks/README.md).
 
 | Purpose | Entry / guide |
 | --- | --- |

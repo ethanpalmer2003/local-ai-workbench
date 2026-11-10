@@ -75,6 +75,16 @@ def content_digest(path: Path) -> str:
     return digest.hexdigest()
 
 
+def source_manifest(paths: list[Path], root: Path) -> dict[str, str]:
+    """Content digest per file relative to `root`: the cache key a generated artifact compares."""
+    return {path.relative_to(root).as_posix(): content_digest(path) for path in paths}
+
+
+def changed_files(previous: dict[str, str], current: dict[str, str]) -> list[str]:
+    """Files whose content differs from a recorded manifest, or that are new."""
+    return sorted(path for path, digest in current.items() if previous.get(path) != digest)
+
+
 def corpus_state(identity: dict[str, Any], root: Path | None) -> dict[str, Any]:
     """Corpus identity plus the downloaded-evidence file the fetcher writes beside the audio."""
     state = dict(identity)
