@@ -11,13 +11,12 @@
 
 - [ ] Finish live voice-practice checks on both chat consumers: pipelining, microphone capture, playback and echo. Saved-PCM path passes on both; the browser mic returns audio requests but no transcript. [Scenario matrix](../scripts/launchers/asr/MULTIUSE-SCENARIOS.md).
 - [ ] Measure multilingual/noisy accuracy and microphone latency: capture produced no transcript and no multilingual corpus is configured. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py).
-- [ ] Gemma audio: one internal clip reaches the output limit under llama.cpp (KoboldCpp clean, WER 0). Shorten the clip or raise the token budget; the run records the failed clip instead of aborting.
-- [ ] Refresh the capability rows that have not rerun since provenance was added; the launcher and context rows are fresh.
+- [ ] Gemma audio: one internal clip reaches the output limit under llama.cpp (KoboldCpp clean, WER 0). Shorten the clip or raise the token budget; a failed clip is recorded, not fatal.
+- [ ] Refresh the capability rows that have not rerun since provenance; the launcher and context rows are fresh.
 - [ ] Kobold/Drama active-overlap baseline at the selected 40-layer/2048-context setup: no harness exists. The idle-only screen is retired, refuses to run without `--idle-residency`, and never overlapped generation, so this needs a measurement mode first. [Procedure](../scripts/tests/notes/audiocpp/AUDIOCPP-OPTIMIZATIONS.md).
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md).
-- [ ] llama.cpp: filled-context Vulkan/Lemonade comparison and medium/high-context speculation. Short-context speculation is measured (current profile 36.7 tok/s mean against 36.5 legacy, acceptance 69-88%); short-context decode is measured on Lemonade, and Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)).
-- [ ] Publish a dated report for the Strata profile pair. Prefill measures cleanly; the decode arm stops on the run's own 1 GiB RAM floor because its expert cache commits the pack, so it needs a resident budget.
-- [ ] ComfyUI: 640 measured for both encoders (5 s at 24 fps, 576x736, 14.4 GiB). Pinned memory compared: on is slower (124/129 s against 118/119 s) and uses more VRAM, so the default stays off. Remaining: longer clips, a dated report, appearance review, autotune/cache and monitor overhead.
+- [ ] llama.cpp: filled-context Vulkan/Lemonade comparison and medium/high-context speculation. Short-context speculation measures 36.7 tok/s mean against 36.5 legacy (acceptance 69-88%); short-context decode is measured on Lemonade, and Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)).
+- [ ] Publish a dated report for the Strata profile pair. Prefill measures cleanly; the decode arm stops on the run's own 1 GiB RAM floor because its expert cache commits the pack, so it needs a resident budget.- [ ] ComfyUI: 640 measured for both encoders (5 s at 24 fps, 576x736, 14.4 GiB). Pinned memory compared: on is slower (124/129 s against 118/119 s) and uses more VRAM, so the default stays off. Remaining: longer clips, a dated report, appearance review, autotune/cache and monitor overhead.
 
 ## Needs a device
 
