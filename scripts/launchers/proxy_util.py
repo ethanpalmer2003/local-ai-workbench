@@ -29,7 +29,6 @@ from scripts.launchers.proxy_restart import ProxyRestartController
 
 RequestScope = Callable[[str, str], AbstractContextManager[object]]
 
-# ============================================================
 
 _HOP_BY_HOP_REQUEST_HEADERS = ("host", "content-length", "connection")
 _HOP_BY_HOP_RESPONSE_HEADERS = ("content-length", "transfer-encoding", "connection")
@@ -96,8 +95,6 @@ def read_request_body(handler: BaseHTTPRequestHandler) -> bytes:
         raise ValueError("Content-Length must not be negative")
     return handler.rfile.read(length) if length else b""
 
-
-# ============================================================
 
 RELAY_CHUNK_BYTES = 8192
 
@@ -324,9 +321,6 @@ class ProxyHandlerMixin(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.send_header("Content-Length", "0")
         self.end_headers()
-
-
-# ============================================================
 
 
 class ExclusiveThreadingHTTPServer(ThreadingHTTPServer):

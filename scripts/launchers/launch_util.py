@@ -27,7 +27,6 @@ from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.runtime.gpu_memory import get_gpu_memory_snapshot, report_vram_usage_async
 
-# ============================================================
 # - Windows Job Object: kill-on-close backstop for SPLIT_DEPENDENT/MERGE launches -
 #   every process assigned to it dies the instant the launcher process exits,
 #   for ANY reason - normal exit, crash, or the terminal window being closed
@@ -38,7 +37,6 @@ from scripts.launchers.runtime.gpu_memory import get_gpu_memory_snapshot, report
 #   no cooperation from us required once assigned
 # - Child processes spawned by an assigned process (e.g. koboldcpp.exe spawned
 #   by the PowerShell tee wrapper) automatically join the same job
-# ============================================================
 
 _job_handle = None
 

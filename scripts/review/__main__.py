@@ -6,7 +6,16 @@ import subprocess
 import sys
 
 from scripts.config import project_config as project_cfg
-from scripts.review import docs, frontend_wiring, inventory_code, layout, model_references, package_audit, typography
+from scripts.review import (
+    comments,
+    docs,
+    frontend_wiring,
+    inventory_code,
+    layout,
+    model_references,
+    package_audit,
+    typography,
+)
 from scripts.review.public_audit import main as public_audit_main
 
 SPELL_EXCLUDED = (
@@ -165,6 +174,9 @@ def main(argv: list[str] | None = None) -> int:
     print("\n=== TYPOGRAPHIC PUNCTUATION ===", flush=True)
     dash_status = typography.main([])
 
+    print("\n=== COMMENTS ===", flush=True)
+    comment_status = comments.main([])
+
     print("\n=== SPELLING ===", flush=True)
     spelling_status = spelling_check()
     print("[OK] Spelling clean" if not spelling_status else "[FAIL] Spelling findings above")
@@ -200,6 +212,7 @@ def main(argv: list[str] | None = None) -> int:
             or type_status
             or inventory_status
             or dash_status
+            or comment_status
             or formatting_status
             or spelling_status
             or audit_status

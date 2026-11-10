@@ -19,6 +19,7 @@ The runner executes these checks:
 - `basedpyright`: Python type errors.
 - `inventory_code.py`: folder counts, sparse-folder warnings, 2-3-item merge candidates, Markdown/Python-module counts, file lines and function size for context; the gate is ruff's McCabe rule. Python-module counts exclude `__init__.py`; low counts are prompts to review, not automatic merge findings.
 - `typography.py`: ASCII punctuation only: em and en dashes, curly quotes, the ellipsis and no-break spaces are rejected in every tracked text file, quoted corpus references excepted. It gates, and the pre-commit hook runs the same module on staged files.
+- `comments.py`: TODO markers, banner rules and commented-out code are rejected; comments that explain why stay welcome.
 
 Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function complexity is gated by ruff at the limit in [code rules](../../.agents/CODE.md); the inventory lists the largest functions for context. Inventory excludes generated output, caches, model data, third-party installations and trash.
 
@@ -26,7 +27,7 @@ Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function comp
 
 `python -m scripts.review.similarity` is opt-in and needs a model: it starts the catalogued embedding model, embeds every bullet and sentence in the maintained Markdown, and lists section pairs that share at least two units (or one of 25+ words). Findings are pairs to review; the check never edits a document. `--threshold`, `--top` and `--strict` tune it, and `--no-server` reuses a running server. Tables, code fences and procedural lines are excluded so structural repetition does not dominate. Each report records a content digest per file, so the next run says how many files changed since it. Evidence: [embedding screen](../../notes/reviews/EMBEDDINGS-2026-11-10.md). Batches: [check_similarity.bat](../../bat/review/check_similarity.bat), [check_code_similarity.bat](../../bat/review/check_code_similarity.bat).
 
-`--code` switches to functions: one chunk per function or method (AST, bodies of 3+ lines), test modules skipped by default, threshold 0.95, and every pair above it is reported because one function is one unit. Code duplicates are weaker evidence than prose ones, so treat them as a reading list rather than a defect count.
+`--code` switches to functions: one chunk per function or method (AST, bodies of 3+ lines), tests skipped, threshold 0.95, every pair reported. Code duplicates are weaker evidence, so read them as a list rather than a defect count.
 
 Run a single check with `python -m scripts.review.layout`, `python -m scripts.review.docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `docs --words` prints every maintained document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers, repeats and unlinked documents. A link fails when it is absolute, uses a backslash, carries a space without angle brackets, points into an untracked path, or misses its target or heading; repeats are advisory. Add `--tests` to run the model-free suite after the gate. Document organization lives in [NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
 

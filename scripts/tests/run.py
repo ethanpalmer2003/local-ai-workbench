@@ -78,6 +78,7 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
 from scripts.tests.cases.shared.shared_contracts import SharedContracts
 from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
 from scripts.tests.cases.shared.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
+from scripts.tests.cases.shared.test_comments import CommentPolicyTests
 from scripts.tests.cases.shared.test_docs import (
     LinkTests,
     MarkdownNameTests,
@@ -165,6 +166,7 @@ if __name__ == "__main__":
                     InferenceEngines,
                     ModelAdminTests,
                     ConsentTests,
+                    CommentPolicyTests,
                     SimilarityUnitTests,
                     SimilarityFindingTests,
                     SimilaritySourceTests,

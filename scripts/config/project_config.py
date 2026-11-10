@@ -12,9 +12,7 @@ from pathlib import Path
 # - three levels up from scripts/config reaches the repository root
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# ============================================================
-# CORE PATHS
-# ============================================================
+# --- CORE PATHS ---
 
 DATA_DIR = BASE_DIR / "data"
 FRAMEWORKS_DIR = BASE_DIR / "frameworks"
@@ -35,9 +33,7 @@ CACHE_DIR = STATE_DIR / "cache"
 TEST_CASES_DIR = TESTS_DIR / "cases"
 TEST_OUTPUT_DIR = TESTS_DIR / "output"
 
-# ============================================================
-# ENVIRONMENT LOADING
-# ============================================================
+# --- ENVIRONMENT LOADING ---
 
 # - Load env vars at import time so all scripts can use config.HF_TOKEN
 try:
@@ -52,9 +48,7 @@ HF_TOKEN = os.environ.get("HF_TOKEN")
 KOBOLD_ADMIN_PASSWORD = os.environ.get("KOBOLD_ADMIN_PASSWORD") or ""
 
 
-# ============================================================
-# HUGGINGFACE CACHE
-# ============================================================
+# --- HUGGINGFACE CACHE ---
 
 HF_HOME_DIR = DATA_DIR / "huggingface"  # HF cache root (HF_HUB_DIR env var)
 HF_MODELS_DIR = HF_HOME_DIR / "models"  # Downloaded model files root
@@ -69,10 +63,8 @@ os.environ["HF_HUB_DIR"] = str(HF_HOME_DIR)
 os.environ["HF_HUB_CACHE"] = str(HF_HOME_DIR / "hub")
 
 
-# ============================================================
 # PER-FRAMEWORK PATHS
 # (model dirs, install dirs, and exe paths grouped together per framework)
-# ============================================================
 
 
 @dataclass(frozen=True)
@@ -274,9 +266,7 @@ SDCPP_VULKAN_DIR = SDCPP_FRAMEWORK_DIR / "vulkan"
 ROCM_SDK_BIN_DIR = DATA_DIR / "ROCm" / "therock-dist-windows-gfx110X-all-10.2.0a20260927" / "bin"
 
 
-# ============================================================
-# DIRECTORY INITIALIZATION
-# ============================================================
+# --- DIRECTORY INITIALIZATION ---
 
 
 def ensure_project_directories() -> None:

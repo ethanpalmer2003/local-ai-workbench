@@ -14,9 +14,7 @@ from scripts.config.coding_agents.pi import packages as pi_packages
 # - deliberate re-export: consumers read it as cfg.LLAMACPP_PROFILES
 from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_PROFILES as LLAMACPP_PROFILES
 
-# ============================================================
-# GENERIC PATHS AND LAUNCH SETTINGS
-# ============================================================
+# --- GENERIC PATHS AND LAUNCH SETTINGS ---
 
 
 VENV_PYTHON = project_cfg.SCRIPTS_DIR / ".venv" / "Scripts" / "python.exe"
@@ -76,9 +74,7 @@ class GenericStartupServiceSettings:
     warmup: bool = True
 
 
-# ============================================================
-# LLAMACPP SETTINGS
-# ============================================================
+# --- LLAMACPP SETTINGS ---
 
 
 @dataclass
@@ -294,9 +290,7 @@ class DeepseekStartupRequestClientSettings:
 DEEPSEEK_CLIENT = DeepseekStartupRequestClientSettings()
 
 
-# ============================================================
-# SHARED TTS REQUEST SETTINGS (AUDIOCPP, KOBOLD LITE, TEST UI)
-# ============================================================
+# --- SHARED TTS REQUEST SETTINGS (AUDIOCPP, KOBOLD LITE, TEST UI) ---
 
 
 class SharedTtsStreamingRequestTextMode(str, Enum):
@@ -332,9 +326,7 @@ class SharedTtsStreamingRequestSettings:
     stream_chunk_policy: SharedTtsStreamingRequestChunkPolicy | None = None
 
 
-# ============================================================
-# KOBOLDCPP SETTINGS
-# ============================================================
+# --- KOBOLDCPP SETTINGS ---
 
 
 class KoboldcppSpeechStartupEngine(str, Enum):
@@ -679,9 +671,7 @@ KOBOLDCPP_MODEL_KCPPS_OVERRIDES = {
 }
 
 
-# ============================================================
 # AUDIOCPP (AUDIOCPP TTS + STT) SETTINGS
-# ============================================================
 
 
 # --- core: applies in both "server" and "proxy" mode ---
@@ -804,9 +794,7 @@ SHARED_TTS_TEXT_CLEANUP = SharedTtsTextCleanupSettings()
 # - Uses the same clone reference as normal requests
 
 
-# ============================================================
 # SDCPP (image gen) SETTINGS
-# ============================================================
 
 
 # --- core: applies in both "server" and "proxy" mode ---
@@ -919,9 +907,7 @@ class SdcppProxyRequestPromptSettings:
 SDCPP_PROXY_PROMPT = SdcppProxyRequestPromptSettings()
 
 
-# ============================================================
-# LEMONADE SERVER SETTINGS
-# ============================================================
+# --- LEMONADE SERVER SETTINGS ---
 
 
 @dataclass(frozen=True)
@@ -943,9 +929,7 @@ class LemonadeStartupServiceSettings:
 LEMONADE_SERVICE = LemonadeStartupServiceSettings()
 
 
-# ============================================================
-# EMBEDDING SERVER SETTINGS
-# ============================================================
+# --- EMBEDDING SERVER SETTINGS ---
 
 
 @dataclass
