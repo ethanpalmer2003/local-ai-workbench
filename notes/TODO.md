@@ -9,7 +9,7 @@
 
 ## Needs a model run
 
-- [ ] Finish live voice-practice checks on both chat consumers: pipelining, microphone capture, playback and echo. Saved-PCM path passes on both; the browser mic returns audio requests but no transcript. [Scenario matrix](../scripts/launchers/asr/MULTIUSE-SCENARIOS.md).
+- [ ] Finish live voice-practice checks on both chat consumers: pipelining, capture, playback and echo. Saved-PCM path passes; the browser mic returns audio requests but no transcript. [Scenario matrix](../scripts/launchers/asr/MULTIUSE-SCENARIOS.md).
 - [ ] Measure multilingual/noisy accuracy and microphone latency: capture produced no transcript and no multilingual corpus is configured. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py).
 - [ ] Gemma audio: one internal clip reaches the output limit under llama.cpp (KoboldCpp clean, WER 0). Shorten the clip or raise the token budget; a failed clip is recorded, not fatal.
 - [ ] Refresh the capability rows that have not rerun since provenance; the launcher and context rows are fresh.
