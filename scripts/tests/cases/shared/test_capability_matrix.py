@@ -1,5 +1,7 @@
 """Capability matrix rows, freshness marks and headline extraction; no run evidence is created."""
 
+import contextlib
+import io
 import subprocess
 import tempfile
 import unittest
@@ -34,6 +36,10 @@ class FreshnessTests(unittest.TestCase):
 
     def test_a_run_that_recorded_no_provenance_cannot_be_checked(self):
         self.assertEqual(matrix.freshness({"status": "completed"}), "[WARN] unprovenanced")
+
+    def test_a_run_that_did_not_complete_is_not_current(self):
+        self.assertEqual(matrix.freshness({"status": "incomplete"}), "[WARN] last run incomplete")
+        self.assertEqual(matrix.freshness({"status": "failed"}), "[WARN] last run failed")
 
     def test_matching_provenance_is_current(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -101,6 +107,19 @@ class RenderTests(unittest.TestCase):
         row = matrix.Row("Work", "subject", None, None)
         text = matrix.render([row])
         self.assertIn("| Work | - | - | - | never run | - |", text)
+
+    def test_parked_work_is_marked_and_explained(self):
+        row = matrix.Row("Drama offload screen", "shared/drama3_offload", None, None)
+        text = matrix.render([row])
+        self.assertIn("| Drama offload screen | - | - | - | [defer] | - |", text)
+        self.assertIn("Deferred, no rerun planned: Drama offload screen (", text)
+
+    def test_parked_work_is_not_counted_as_a_rerun(self):
+        row = matrix.Row("Drama offload screen", "shared/drama3_offload", None, None)
+        printed = io.StringIO()
+        with patch.object(matrix, "rows", return_value=[row]), contextlib.redirect_stdout(printed):
+            self.assertEqual(matrix.main(["--check"]), 0)
+        self.assertIn("1 capabilities, 0 needing a rerun, 1 deferred", printed.getvalue())
 
 
 if __name__ == "__main__":
