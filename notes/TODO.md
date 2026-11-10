@@ -4,6 +4,16 @@
 - Entries do not authorize live tests, package changes or long runs. Upstream defects stay in [UPSTREAM](UPSTREAM.md), evidence in [STATUS](../scripts/tests/notes/STATUS.md).
 - Each entry ends with a rough duration, shortest first.
 
+## Code review
+
+- [ ] Review the code duplicate findings: the first screen reports five function pairs, and each needs a decision on whether the body is duplicated or just similar scaffolding. ~30-45 min
+- [ ] Add a file-level staleness helper: a content digest per file with a manifest, so any generated artifact can say which sources changed instead of each check rolling its own comparison. [Provenance](../scripts/benchmarks/shared/provenance.py). ~30-45 min
+
+## Documentation review
+
+- [ ] Revalidate the claims the duplicate report shows with disagreeing numbers: paired Pi timings, VAD final-text latency, the Kokoro screen summary, Strata against Avalon. ~30-45 min
+- [ ] Continue the duplicate cleanup past the review commands, TTS choice and port policy: Gemma limits, benchmark output paths, outcome definitions, GPU-peak caveats. ~45-60 min
+
 ## Needs a model run or device
 
 - [ ] Validate Handy microphone selection, dictation and paste. `selected_microphone` is null and the last attempt captured 0 samples in 17 ms, so the device is the suspect; model, VAD and hotkey are configured. ~30-45 min
@@ -11,8 +21,4 @@
 - [ ] Measure multilingual/noisy accuracy and microphone latency: capture produced no transcript and no multilingual corpus is configured. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py). ~45-60 min
 - [ ] llama.cpp: medium/high-context speculation. Filled context at 32k is measured: cold prefill 505 tok/s with a 63.3 s TTFT, 48.5 tok/s decode warm and 39.0 tok/s cached at 12.8 GiB. Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). ~1-1.5 h
 - [ ] Rerun the capability rows so their recorded evidence is judged: 23 are flagged, and each run turns its row green or names what changed. `python -m scripts.tools.capability_matrix --check` lists them. ~1-2 h
-- [ ] Review the code duplicate findings: the first screen reports five function pairs, and each needs a decision on whether the body is duplicated or just similar scaffolding. ~30-45 min
-- [ ] Revalidate the claims the duplicate report shows with disagreeing numbers: paired Pi timings, VAD final-text latency, the Kokoro screen summary, Strata against Avalon. ~30-45 min
-- [ ] Continue the duplicate cleanup past the review commands, TTS choice and port policy: Gemma limits, benchmark output paths, outcome definitions, GPU-peak caveats. ~45-60 min
-- [ ] Add a file-level staleness helper: a content digest per file with a manifest, so any generated artifact can say which sources changed instead of each check rolling its own comparison. [Provenance](../scripts/benchmarks/shared/provenance.py). ~30-45 min
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md). ~1.5-2 h
