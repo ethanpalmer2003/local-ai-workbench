@@ -6,6 +6,7 @@ import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any
 
 from scripts.benchmarks.shared import provenance
@@ -50,10 +51,12 @@ class RunReport:
     error: str | None = None
     provenance: dict[str, Any] = field(default_factory=dict)
 
-    def record_provenance(self, *, models: list[dict[str, Any]], frameworks: list[dict[str, Any]]) -> None:
+    def record_provenance(
+        self, *, models: list[dict[str, Any]], frameworks: list[dict[str, Any]], corpus: dict[str, Any] | None = None
+    ) -> None:
         """Stamp what this run used, so the capability matrix can judge it instead of guessing."""
         self.provenance = provenance.block(
-            subject=self.name, config=self.settings, frameworks=frameworks, models=models
+            subject=self.name, config=self.settings, frameworks=frameworks, models=models, corpus=corpus
         )
 
     def save(self, output: RunPaths) -> None:
@@ -94,6 +97,23 @@ def report_run(
             report.status = "completed"
     finally:
         report.save(output)
+
+
+def record_inputs(
+    report: RunReport,
+    *,
+    frameworks: tuple[str, ...] = (),
+    models: dict[str, str | Path] | None = None,
+    corpus: dict[str, Any] | None = None,
+) -> None:
+    """Stamp a run with the frameworks it started and the model files it read.
+    - a producer passes the component keys and paths it actually used; labels stay short
+    """
+    report.record_provenance(
+        models=[provenance.file_identity(label, Path(path)) for label, path in (models or {}).items()],
+        frameworks=[provenance.framework_state(key) for key in frameworks],
+        corpus=corpus,
+    )
 
 
 def context_category(tokens: int) -> str:

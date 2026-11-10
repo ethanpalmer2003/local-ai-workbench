@@ -9,6 +9,7 @@ from pathlib import Path
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import post_json
 from scripts.benchmarks.llamacpp.benchmark_ngram import CANDIDATES, Candidate
 from scripts.benchmarks.llamacpp.trial import require_free_session, running_server, speculation_config
+from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT, report_run
 from scripts.benchmarks.shared.timing import timed
@@ -57,10 +58,13 @@ def main() -> None:
     output = BenchmarkPaths(__file__).new_run()
     probe = project_cfg.BENCHMARK_TOOLS_DIR / "specspeed/specspeed.py"
     conf = LlamaConfig()
-    with report_run(output, "llamacpp/benchmark_specspeed", "low-context", reasoning=BENCHMARK_REASONING_EFFORT):
+    with report_run(
+        output, "llamacpp/benchmark_specspeed", "low-context", reasoning=BENCHMARK_REASONING_EFFORT
+    ) as report:
         print(f"[OUTPUT] {output.root}", flush=True)
         for candidate in CANDIDATES[:2]:
             run_candidate(output, probe, conf, candidate)
+        reporting.record_inputs(report, frameworks=("llamacpp",), models={"chat": conf.model})
 
 
 if __name__ == "__main__":

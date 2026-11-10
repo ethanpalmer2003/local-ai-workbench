@@ -8,6 +8,8 @@ import wave
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared import provenance
+from scripts.config.audiocpp import server as audio_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import chat_models, language_practice
@@ -83,10 +85,17 @@ def save_wav(path: Path, pcm: bytes) -> None:
         wav.writeframes(pcm)
 
 
+def audio_model_path() -> Path:
+    """The AudioCpp model file the proxy loads, from the server config it reads."""
+    server_config = audio_cfg.read(Path(cfg.AUDIOCPP_SERVER_ARGS["config"]))
+    return next(Path(model["path"]) for model in server_config["models"] if model["id"] == cfg.AUDIOCPP_SERVICE.model)
+
+
 def run(timeout: float, max_tokens: int) -> Path:
     if cfg.AUDIOCPP_SERVICE.model != cfg.AudiocppModel.BREEZE_TTS.value:
         raise RuntimeError("Select Breeze 2 as the AudioCpp proxy model before running this probe")
 
+    tts_model_path = audio_model_path()
     context = require_native_execution("Gemma/Breeze sequential benchmark")
     paths = CasePaths(__file__).new_run()
     print(json.dumps({"execution_context": context, "output": str(paths.root)}), flush=True)
@@ -199,6 +208,20 @@ def run(timeout: float, max_tokens: int) -> Path:
                 "status": report["status"],
                 "total_seconds": report["total_seconds"],
                 "reasoning": report.get("measurement", report.get("error", "Incomplete run")),
+                "provenance": provenance.block(
+                    subject=report["name"],
+                    config={
+                        "execution_context": report["execution_context"],
+                        "llm_model": report["llm_model"],
+                        "tts_model": report["tts_model"],
+                        "voice": report["voice"],
+                    },
+                    frameworks=[provenance.framework_state("llamacpp"), provenance.framework_state("audiocpp")],
+                    models=[
+                        provenance.file_identity("chat", Path(report["llm_model_path"])),
+                        provenance.file_identity("speech", tts_model_path),
+                    ],
+                ),
             }
         )
     return paths.artifacts

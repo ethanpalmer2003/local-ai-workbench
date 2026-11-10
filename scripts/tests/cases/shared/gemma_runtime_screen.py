@@ -3,9 +3,11 @@
 import hashlib
 import json
 import urllib.request
+from pathlib import Path
 from typing import Any
 
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
@@ -172,6 +174,12 @@ def main():
     report = {
         "execution_context": context,
         "results": results,
+        "provenance": provenance.block(
+            subject="shared/gemma_runtime_screen",
+            config={"execution_context": context},
+            frameworks=[provenance.framework_state("koboldcpp"), provenance.framework_state("llamacpp")],
+            models=[provenance.file_identity("chat", Path(cfg.GEMMA_AUDIO_ASR.model))],
+        ),
         "limits": "One warmup/two short prompts; thinking disabled, 192-token cap; templates/cache/runtime defaults may differ. No ASR/TTS overlap or quality ranking.",
     }
     (run.artifacts / "report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")

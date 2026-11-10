@@ -10,6 +10,7 @@ from typing import Any
 
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import post_json
 from scripts.benchmarks.llamacpp.trial import require_free_session, running_server, speculation_config
+from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import context_category, report_run
@@ -231,7 +232,9 @@ def main() -> None:
             "candidates": [candidate.name for candidate in selected],
         },
     }
-    with report_run(output, "llamacpp/benchmark_ngram", "mixed-context", reasoning="not applicable (raw completion)"):
+    with report_run(
+        output, "llamacpp/benchmark_ngram", "mixed-context", reasoning="not applicable (raw completion)"
+    ) as run_report:
         print(f"[OUTPUT] {output.root}", flush=True)
         started = time.perf_counter()
         try:
@@ -244,6 +247,7 @@ def main() -> None:
         finally:
             report["total_seconds"] = time.perf_counter() - started
             (output.artifacts / "results.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+        reporting.record_inputs(run_report, frameworks=("llamacpp",), models={"chat": conf.model})
 
 
 if __name__ == "__main__":

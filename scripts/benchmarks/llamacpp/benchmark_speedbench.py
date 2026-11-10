@@ -13,6 +13,7 @@ from typing import Any
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import post_json
 from scripts.benchmarks.llamacpp.benchmark_ngram import CANDIDATES, Candidate
 from scripts.benchmarks.llamacpp.trial import require_free_session, running_server, speculation_config
+from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT, report_run
@@ -152,7 +153,9 @@ def main() -> None:
         "reasoning_effort": BENCHMARK_REASONING_EFFORT,
     }
     evidence = build_evidence(args, samples, inputs, conf, selected, baseline)
-    with report_run(output, "llamacpp/benchmark_speedbench", "low-context", reasoning=str(inputs["reasoning_effort"])):
+    with report_run(
+        output, "llamacpp/benchmark_speedbench", "low-context", reasoning=str(inputs["reasoning_effort"])
+    ) as report:
         print(f"[OUTPUT] {output.root}", flush=True)
         started = time.perf_counter()
         previous_pair_seconds = 0.0
@@ -172,6 +175,7 @@ def main() -> None:
         evidence["comparison"] = compare(evidence, selected, baseline)
         (output.artifacts / "results.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
         print(f"[COMPARISON] {evidence['comparison']}", flush=True)
+        reporting.record_inputs(report, frameworks=("llamacpp",), models={"chat": conf.model})
 
 
 if __name__ == "__main__":

@@ -38,8 +38,11 @@ class FreshnessTests(unittest.TestCase):
         self.assertEqual(matrix.freshness({"status": "completed"}), "[WARN] unprovenanced")
 
     def test_a_run_that_did_not_complete_is_not_current(self):
-        self.assertEqual(matrix.freshness({"status": "incomplete"}), "[WARN] last run incomplete")
-        self.assertEqual(matrix.freshness({"status": "failed"}), "[WARN] last run failed")
+        for status in ("incomplete", "failed", "unreviewed"):
+            self.assertEqual(matrix.freshness({"status": status}), f"[WARN] last run {status}")
+
+    def test_a_passed_run_is_treated_as_completed(self):
+        self.assertEqual(matrix.freshness({"status": "passed"}), "[WARN] unprovenanced")
 
     def test_matching_provenance_is_current(self):
         with tempfile.TemporaryDirectory() as folder:

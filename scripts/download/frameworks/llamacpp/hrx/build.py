@@ -11,6 +11,7 @@ import sys
 import time
 from pathlib import Path
 
+from scripts.benchmarks.shared import provenance
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks.framework_catalog import hrx_tools
 from scripts.download.frameworks.llamacpp.hrx import prepare as prepare_hrx
@@ -199,6 +200,12 @@ def write_checkpoint_report(paths: RunPaths) -> None:
             "reasoning": "Six CPU-reference operators, normal/chunked tensors, exact code tokens/text, chat, installed binary hashes and generation passed. Previous runtime retained for rollback; ports clear. Validation covers short Swift requests at 8K/f16 KV; other models and larger contexts remain unverified.",
             "installed": installed,
             "previous_checkpoint": previous,
+            "provenance": provenance.block(
+                subject="HRX runtime update",
+                config={"previous_checkpoint": previous},
+                frameworks=[provenance.framework_state("llamacpp")],
+                models=[],
+            ),
         }
     )
 

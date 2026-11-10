@@ -11,6 +11,7 @@ from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import summarize_requests
 from scripts.benchmarks.shared.paths import BenchmarkPaths
 from scripts.benchmarks.shared.resident_http import ResidentHttp
@@ -29,6 +30,22 @@ def _file_sha256(path: Path) -> str:
     """Return the SHA-256 digest of a model or projector file."""
     with path.open("rb") as source:
         return hashlib.file_digest(source, "sha256").hexdigest()
+
+
+def _component(name: str) -> str:
+    """The installed component that owns one resident engine's files."""
+    for prefix, key in (
+        ("audiocpp-", "audiocpp"),
+        ("parakeetcpp-", "asr/parakeetcpp"),
+        ("whispercpp-", "asr/whispercpp"),
+        ("llamacpp-", "llamacpp"),
+        ("koboldcpp-", "koboldcpp"),
+        ("nemo-", "asr/nemo-speechcpp"),
+        ("speechcpp", "asr/speechcpp"),
+    ):
+        if name.startswith(prefix):
+            return key
+    raise ValueError(f"Unknown resident ASR engine: {name}")
 
 
 def _clip_audio(clip: dict[str, Any]) -> bytes:
@@ -239,6 +256,17 @@ def main():
         "language_override": args.language,
         "measurement_scope": "Isolated ASR; saved Kokoro clips; no parallel LLM/TTS inference. Resources sampled after readiness; startup memory not measured.",
     }
+    report["provenance"] = provenance.block(
+        subject="Resident ASR comparison",
+        config={
+            "engines": engines,
+            "group": args.group,
+            "language_override": args.language,
+            "measurement_scope": report["measurement_scope"],
+        },
+        frameworks=[provenance.framework_state(key) for key in sorted({_component(name) for name in engines})],
+        models=[provenance.file_identity(name, available[name][1]) for name in engines],
+    )
     from scripts.tests.cases.asr.shared.coverage import coverage
 
     report["coverage"] = coverage()

@@ -8,6 +8,7 @@ import threading
 import time
 from typing import Any
 
+from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.config import project_config as project_cfg
@@ -72,6 +73,9 @@ def main() -> None:
             "limits": "Synthetic English clips, cold CLI launches; startup/model load included. Sampled resource peaks.",
         },
     ) as report:
+        reporting.record_inputs(
+            report, frameworks=("asr/parakeetcpp",), models={"asr": settings.model, "vad": settings.vad_model}
+        )
         for build in ("cpu", "vulkan"):
             env = {**os.environ, "PARAKEET_DEVICE": "cpu" if build == "cpu" else settings.device}
             for index, vad in enumerate((False, True)):

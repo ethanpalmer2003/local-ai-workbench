@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import PropertyMock, patch
 
+from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.tests.shared.paths import CasePaths, Outcome, RunPaths
 from scripts.tests.shared.timing import timed
@@ -90,6 +91,23 @@ class Reporting(unittest.TestCase):
                 report.provenance = {"subject": "fixture", "models": [], "frameworks": []}
             payload = json.loads((output.artifacts / "report.json").read_text(encoding="utf-8"))
             self.assertEqual(payload["provenance"]["subject"], "fixture")
+
+    def test_recorded_inputs_name_the_frameworks_and_files_a_run_used(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            weight = Path(folder) / "weights.gguf"
+            weight.write_bytes(b"weights")
+            output = RunPaths(Path(folder) / "run")
+            output.create()
+            with (
+                patch.object(reporting.provenance, "framework_state", return_value={"key": "llamacpp"}),
+                patch.object(reporting.provenance, "workspace_state", return_value={"path": "workspace"}),
+                report_run(output, "fixture", "model-free") as report,
+            ):
+                reporting.record_inputs(report, frameworks=("llamacpp",), models={"chat": weight})
+            payload = json.loads((output.artifacts / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual(payload["provenance"]["frameworks"], [{"key": "llamacpp"}])
+            self.assertEqual(payload["provenance"]["models"][0]["label"], "chat")
+            self.assertTrue(payload["provenance"]["models"][0]["present"])
 
 
 if __name__ == "__main__":

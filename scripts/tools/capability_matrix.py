@@ -28,33 +28,29 @@ CAPABILITIES = (
     ("shared/live_frameworks", "Live launcher and proxy wiring"),
     ("shared/quick_validation", "Quick validation sweep"),
     ("shared/gemma_runtime_screen", "Gemma runtime screen"),
-    ("tts/shared/resident", "Resident speech comparison"),
-    ("tts/shared/speed", "Speech speed screen"),
+    ("tts_engines/resident", "Resident speech comparison"),
     ("audiocpp/vad_turns", "Silero VAD turns"),
     ("audiocpp/single_server_speech", "Single AudioCpp server speech"),
     ("audiocpp/audiocpp_streaming", "AudioCpp streaming"),
     ("audiocpp/audiocpp_backend_compare", "AudioCpp backend comparison"),
-    ("audiocpp/audio_comparison", "Audio framework comparison"),
     ("audiocpp/ming_page_smoke", "Ming page smoke"),
     ("asr/shared/practice_smoke", "Practice gateway smoke"),
-    ("asr/shared/resident_compare", "Resident ASR comparison"),
+    ("asr/asr_resident_compare", "Resident ASR comparison"),
     ("asr/shared/latency", "Paced ASR latency"),
     ("asr/shared/language_practice_whisper", "Practice Whisper recognition"),
-    ("asr/shared/cli_compare", "ASR CLI comparison"),
-    ("asr/shared/whisper_embedded_compare", "Embedded Whisper comparison"),
-    ("asr/shared/gemma_audio_compare", "Gemma audio comparison"),
+    ("asr/whisper_embedded_compare", "Embedded Whisper comparison"),
+    ("asr/gemma_audio_compare", "Gemma audio comparison"),
     ("asr/parakeetcpp/smoke", "Parakeet Vulkan smoke"),
     ("koboldcpp/kobold_embedded_compare", "Kobold embedded speech comparison"),
-    ("koboldcpp/kobold_lite_streaming", "Kobold Lite streaming"),
     ("koboldcpp/kobold_audiocpp_modes", "Kobold speech modes"),
-    ("koboldcpp/test_kobold_stack_vram", "Kobold stacked VRAM"),
+    ("koboldcpp/kobold_stack_vram", "Kobold stacked VRAM"),
     ("llamacpp/benchmark_specspeed", "Speculative decoding benchmark"),
     ("llamacpp/benchmark_context_stream", "Context stream benchmark"),
     ("llamacpp/benchmark_speedbench", "Speed benchmark"),
     ("llamacpp/benchmark_ngram", "N-gram benchmark"),
     ("llamacpp/benchmark_backends", "llama.cpp backend benchmark"),
     ("llamacpp/gemma_breeze", "Gemma with Breeze speech"),
-    ("llamacpp/hrx/test_hrx_build", "HRX build"),
+    ("probes/hrx_updates", "HRX build"),
     ("shared/drama3_offload", "Drama offload screen"),
     ("shared/framework_compare", "Language practice versus Lemonade"),
 )
@@ -163,7 +159,7 @@ def freshness(report: dict[str, Any] | None) -> str:
     if not report:
         return "never run"
     status = str(report.get("status") or "")
-    if status and status != "completed":
+    if status and status not in ("completed", "passed"):
         return f"[WARN] last run {status}"
     state = report.get("provenance")
     if not isinstance(state, dict):

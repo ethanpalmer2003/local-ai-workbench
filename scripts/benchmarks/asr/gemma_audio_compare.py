@@ -11,6 +11,7 @@ import time
 from types import SimpleNamespace
 from typing import Any
 
+from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
@@ -192,6 +193,11 @@ def main() -> None:
             paths.create()
             report.results.append(run_arm(engine, clips, paths, context, deadline))
             report.save(run)
+        reporting.record_inputs(
+            report,
+            frameworks=("llamacpp", "koboldcpp"),
+            models={"chat": cfg.GEMMA_AUDIO_ASR.model, "mmproj": cfg.GEMMA_AUDIO_ASR.mmproj},
+        )
         summary = {result["engine"]: summarize_results(result) for result in report.results}
         (run.artifacts / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
         print(json.dumps(summary), flush=True)

@@ -5,9 +5,11 @@ import json
 import statistics
 import time
 from dataclasses import replace
+from pathlib import Path
 from typing import Any
 
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import post_json, stop_server, wait_ready
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.config import project_config as project_cfg
@@ -24,7 +26,7 @@ def run_trial(
     prompts: dict[str, str],
     args: argparse.Namespace,
     port: int,
-) -> None:
+) -> Path:
     conf = LlamaConfig(
         profile_name="swift15-hrx", build_name=build, port=port, ini_overrides={"reasoning": "off", "fit": "off"}
     )
@@ -104,6 +106,7 @@ def run_trial(
             (paths.artifacts / "results.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
     finally:
         stop_server(process)
+    return conf.model
 
 
 def summarize_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
@@ -137,12 +140,13 @@ def main() -> None:
         "source": f"Read this Python launcher excerpt:\n{source}\nExplain its configuration precedence in plain English.\nAnswer:",
     }
     evidence: dict[str, Any] = {"settings": vars(args), "prompts": prompts, "trials": []}
+    model: Path | None = None
     start = time.monotonic()
     try:
         for round_index in range(args.rounds):
             order = ("rocm-lemonade", "hrx") if round_index % 2 == 0 else ("hrx", "rocm-lemonade")
             for build in order:
-                run_trial(evidence, paths, round_index, build, prompts, args, port)
+                model = run_trial(evidence, paths, round_index, build, prompts, args, port)
         summary = summarize_evidence(evidence)
         evidence["summary"] = summary
         evidence["code_matches"] = [
@@ -157,6 +161,12 @@ def main() -> None:
                 "reasoning": "Matched settings; alternating fresh servers; no blanket answer-quality grading",
                 "total_seconds": time.monotonic() - start,
                 "summary": summary,
+                "provenance": provenance.block(
+                    subject="llamacpp/benchmark_backends",
+                    config=evidence["settings"],
+                    frameworks=[provenance.framework_state("llamacpp")],
+                    models=[] if model is None else [provenance.file_identity("chat", model)],
+                ),
             }
         )
         print(json.dumps(summary, indent=2))
