@@ -1,7 +1,10 @@
 """Shared download, startup, and memory contracts; no downloads or model launches."""
 
+import hashlib
 import importlib
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -60,6 +63,29 @@ class SharedContracts(unittest.TestCase):
             self.assertEqual(get_tts_voices.import_xlsx_transcripts(Path("transcripts.xlsx"), files, mapping), 2)
         self.assertEqual(mapping, {"first": "existing", "second": "new second", "third": "new third"})
         workbook.close.assert_called_once()
+
+    def test_voice_download_records_the_build_and_digest_once(self):
+        url = "https://sounds.spriters-resource.com/media/assets/438/441097.zip?updated=1755551893"
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = get_tts_voices.CharacterWorkspace(Path(tmp), "voice")
+            workspace.generated.mkdir(parents=True)
+            workspace.archive.write_bytes(b"clips")
+            config = get_tts_voices.CharacterConfig(url=url)
+            self.assertTrue(get_tts_voices.record_source(config, workspace))
+            self.assertEqual(
+                json.loads(workspace.source_manifest.read_text(encoding="utf-8")),
+                {"url": url, "build": "1755551893", "sha256": hashlib.sha256(b"clips").hexdigest(), "bytes": 5},
+            )
+            self.assertFalse(get_tts_voices.record_source(config, workspace))
+
+    def test_voice_source_manifest_needs_a_fetched_archive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = get_tts_voices.CharacterWorkspace(Path(tmp), "manual")
+            manual = get_tts_voices.CharacterConfig(url=None)
+            fetched = get_tts_voices.CharacterConfig(url="https://example.test/clips.zip")
+            self.assertFalse(get_tts_voices.record_source(manual, workspace))
+            self.assertFalse(get_tts_voices.record_source(fetched, workspace))
+            self.assertFalse(workspace.source_manifest.exists())
 
     def test_url_preserves_encoded_revision_and_path_without_query(self):
         target = cli_download.parse_url(

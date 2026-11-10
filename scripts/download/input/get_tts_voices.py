@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import traceback
+import urllib.parse
 import urllib.request
 import zipfile
 from dataclasses import dataclass
@@ -100,6 +101,10 @@ class CharacterWorkspace:
     def archive(self) -> Path:
         return self.generated / f"{self.name}.zip"
 
+    @property
+    def source_manifest(self) -> Path:
+        return self.generated / "source.json"
+
     def wav_suffix(self, duration_target: DurationTarget | None, count: int) -> str:
         if count <= 0:
             raise ValueError(f"WAV count must be positive: {count}")
@@ -187,6 +192,39 @@ def save_json(path, data):
 
 def hash_data(data):
     return hashlib.sha256(json.dumps(data, ensure_ascii=False).encode()).hexdigest()
+
+
+def archive_digest(path):
+    """SHA256 of a fetched archive: the archives change in place, so the bytes are the build."""
+    digest = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def archive_build(url):
+    """The upstream build marker a library came from; soundspriters stamps `updated` into the url."""
+    values = urllib.parse.parse_qs(urllib.parse.urlparse(url).query).get("updated")
+    return values[0] if values else None
+
+
+def record_source(config, workspace):
+    """Write generated/source.json once per fetched archive: url, build marker and digest.
+    - nothing pins the archive bytes upstream, so the recorded digest is what a re-download can move
+    """
+    if not config.url or not workspace.archive.is_file() or workspace.source_manifest.is_file():
+        return False
+    save_json(
+        workspace.source_manifest,
+        {
+            "url": config.url,
+            "build": archive_build(config.url),
+            "sha256": archive_digest(workspace.archive),
+            "bytes": workspace.archive.stat().st_size,
+        },
+    )
+    return True
 
 
 def audio_id(path):
@@ -720,6 +758,7 @@ def ensure_sources(config: CharacterConfig, workspace: CharacterWorkspace) -> Pa
     for f in directory.rglob("*"):
         if f.is_file() and generated not in f.parents and f.suffix.lower() in (".ogg", ".wav", ".mp3"):
             print("DOWNLOAD MODE OFF (sources already present)")
+            record_source(config, workspace)
             return directory
 
     if not config.url:
@@ -729,6 +768,7 @@ def ensure_sources(config: CharacterConfig, workspace: CharacterWorkspace) -> Pa
     print("DOWNLOAD MODE ON")
     generated.mkdir(parents=True, exist_ok=True)
     download(config.url, workspace.archive)
+    record_source(config, workspace)
     target = directory / workspace.archive.stem
     target.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(workspace.archive) as z:

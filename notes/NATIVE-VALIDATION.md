@@ -30,4 +30,4 @@ Evidence (../scripts/tests/output/audiocpp/audiocpp_backend_compare/inconclusive
 - 284 model-free regressions pass; structure/docs, types and function-size checks pass.
 - Earlier native batch (../scripts/tests/output/shared/quick_validation/unreviewed/1793150687847258100/artifacts/report.md) passed rebuilt Whisper, Whisper/Qwen practice API/chat, Gemma including 30 seconds, Kokoro and images.
 - Parakeet CPU/Vulkan/VAD passed (../scripts/tests/output/asr/parakeetcpp/smoke/unreviewed/1793150513700310600/artifacts/report.md). Whisper b5454 rebuilt at relocated paths; previous installation preserved.
-- Interrupted Drama work had finished before cancellation; evidence retained, no further runs. Browser/Handy, multilingual accuracy, active overlap and deeper comparisons remain in [TODO](TODO.md).
+- Interrupted Drama work had finished before cancellation; evidence retained, no further runs. Active overlap stays deferred: a 15.9 GiB local TTS model plus generation is heavier than this setup carries, so the retired idle screen stays retired. Browser/Handy, multilingual accuracy and deeper comparisons remain in [TODO](TODO.md).
