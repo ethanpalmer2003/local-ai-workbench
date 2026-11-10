@@ -1,11 +1,13 @@
-"""Opt-in duplicate check over the maintained Markdown: needs the embedding server.
+"""Opt-in duplicate check over the maintained sources: needs the embedding server.
 
-It embeds every bullet or sentence, finds the nearest neighbours, and reports the section
-pairs that share at least two units (or one long unit). A finding is a pair to review; it
-never edits a document. Run it as `python -m scripts.review.similarity`, not in the gate.
+Documents mode embeds every bullet or sentence and reports section pairs that share at least
+two units (or one long unit). Code mode embeds one function per chunk and reports the pairs
+above a higher threshold. A finding is a pair to review; it never edits a file and does not
+gate. Run it as `python -m scripts.review.similarity [--code]`, not in the gate.
 """
 
 import argparse
+import ast
 import json
 import re
 import time
@@ -24,6 +26,10 @@ from scripts.review.sources import maintained_files
 
 LABEL = "embeddings/embeddinggemma-2-Q8_0"
 DEFAULT_THRESHOLD = 0.90
+CODE_THRESHOLD = 0.95
+CODE_MIN_LINES = 3
+CODE_MIN_CHARS = 60
+CODE_TEXT_LIMIT = 6000
 MIN_WORDS = 8
 LONG_UNIT_WORDS = 25
 BATCH = 24
@@ -147,7 +153,9 @@ def neighbours(vectors: np.ndarray, threshold: float, top: int = NEIGHBOURS) -> 
     return pairs
 
 
-def findings(pairs: list[tuple[float, int, int]], units_: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def findings(
+    pairs: list[tuple[float, int, int]], units_: list[dict[str, Any]], require_two: bool = True
+) -> list[dict[str, Any]]:
     """Group unit pairs into section pairs; one lucky sentence is not a finding."""
     grouped: dict[tuple[str, str], list[tuple[float, int, int]]] = defaultdict(list)
     for score, left, right in pairs:
@@ -157,7 +165,7 @@ def findings(pairs: list[tuple[float, int, int]], units_: list[dict[str, Any]]) 
     reported = []
     for key, items in grouped.items():
         longest = max(len(units_[item[1]]["text"].split()) for item in items)
-        if len(items) >= 2 or longest >= LONG_UNIT_WORDS:
+        if not require_two or len(items) >= 2 or longest >= LONG_UNIT_WORDS:
             score, left, right = max(items, key=lambda item: item[0])
             reported.append(
                 {
@@ -172,14 +180,34 @@ def findings(pairs: list[tuple[float, int, int]], units_: list[dict[str, Any]]) 
     return sorted(reported, key=lambda row: (-row["matches"], -row["best"]))
 
 
+def functions(path: Path, relative: str) -> list[dict[str, Any]]:
+    """One unit per function or method: the body is embedded verbatim, decorators dropped."""
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return []
+    found = []
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) or node.end_lineno is None:
+            continue
+        if node.end_lineno - node.lineno + 1 < CODE_MIN_LINES:
+            continue
+        segment = ast.get_source_segment(text, node) or ""
+        if len(segment) < CODE_MIN_CHARS:
+            continue
+        found.append({"doc": relative, "heading": node.name, "text": segment[:CODE_TEXT_LIMIT], "kind": "function"})
+    return found
+
+
 def changed_sources(previous: dict[str, str], current: dict[str, str]) -> list[str]:
     """Documents whose content differs from the previous report, or that are new."""
     return sorted(path for path, digest in current.items() if previous.get(path) != digest)
 
 
-def latest_report() -> dict[str, Any] | None:
-    """The most recent duplicate report, so a run can say what moved since then."""
-    runs = sorted((project_cfg.GENERATED_DIR / "shared/similarity").glob("*/report.json"))
+def latest_report(mode: str) -> dict[str, Any] | None:
+    """The most recent report of the same mode, so a run can say what moved since then."""
+    runs = sorted((project_cfg.GENERATED_DIR / "shared/similarity" / mode).glob("*/report.json"))
     if not runs:
         return None
     try:
@@ -191,12 +219,16 @@ def latest_report() -> dict[str, Any] | None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
+    parser.add_argument("--code", action="store_true", help="compare functions instead of Markdown prose")
+    parser.add_argument("--include-tests", action="store_true", help="with --code: also compare test modules")
+    parser.add_argument("--threshold", type=float, default=None, help="default 0.90 for prose, 0.95 for code")
     parser.add_argument("--top", type=int, default=20, help="findings to print")
     parser.add_argument("--strict", action="store_true", help="exit 1 when there is any finding")
     parser.add_argument("--no-server", action="store_true", help="use an already running embedding server")
     args = parser.parse_args(argv)
 
+    mode = "code" if args.code else "documents"
+    threshold = args.threshold if args.threshold is not None else (CODE_THRESHOLD if args.code else DEFAULT_THRESHOLD)
     model = model_cfg.path(LABEL)
     if not model.is_file():
         print(f"[FAIL] Embedding model missing: {model}. Download it with the model tooling.")
@@ -207,14 +239,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[FAIL] {LABEL} differs from the catalogued sha256; refusing to report.")
         return 1
 
-    documents = sorted(item for item in maintained_files() if item.suffix.lower() == ".md")
-    sources = {path.relative_to(project_cfg.BASE_DIR).as_posix(): provenance.content_digest(path) for path in documents}
-    previous = latest_report() or {}
+    if args.code:
+        paths = [
+            item
+            for item in maintained_files()
+            if item.suffix.lower() == ".py" and (args.include_tests or "/tests/" not in item.as_posix())
+        ]
+    else:
+        paths = [item for item in maintained_files() if item.suffix.lower() == ".md"]
+    chunker = functions if args.code else units
+    sources = {path.relative_to(project_cfg.BASE_DIR).as_posix(): provenance.content_digest(path) for path in paths}
+    previous = latest_report(mode) or {}
     recorded = previous.get("sources")
     changed = changed_sources(recorded or {}, sources)
-    note = (
-        "no previous source record" if recorded is None else f"{len(changed)} document(s) changed since the last report"
-    )
+    note = "no previous source record" if recorded is None else f"{len(changed)} file(s) changed since the last report"
 
     process = None
     if not args.no_server and not server.ready():
@@ -223,27 +261,29 @@ def main(argv: list[str] | None = None) -> int:
         base = server.url()
         started = time.perf_counter()
         parsed: list[dict[str, Any]] = []
-        for path in documents:
-            parsed.extend(units(path, path.relative_to(project_cfg.BASE_DIR).as_posix()))
+        for path in paths:
+            parsed.extend(chunker(path, path.relative_to(project_cfg.BASE_DIR).as_posix()))
         vectors = embed([str(unit["text"]) for unit in parsed], base)
-        found = findings(neighbours(vectors, args.threshold), parsed)
+        found = findings(neighbours(vectors, threshold), parsed, require_two=not args.code)
         payload = {
             "model": LABEL,
             "sha256": digest,
+            "mode": mode,
             "dimensions": int(vectors.shape[1]),
-            "threshold": args.threshold,
+            "threshold": threshold,
             "units": len(parsed),
-            "documents": len(documents),
+            "documents": len(paths),
             "seconds": round(time.perf_counter() - started, 1),
             "created": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "sources": sources,
             "changed_since_last": changed,
             "findings": found,
         }
-        folder = project_cfg.GENERATED_DIR / "shared/similarity" / str(time.time_ns())
+        folder = project_cfg.GENERATED_DIR / "shared/similarity" / mode / str(time.time_ns())
         folder.mkdir(parents=True, exist_ok=True)
         (folder / "report.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-        print(f"[OK] {payload['documents']} documents, {payload['units']} units, {len(found)} section pairs")
+        label = "functions" if args.code else "units"
+        print(f"[OK] {payload['documents']} files, {payload['units']} {label}, {len(found)} pairs")
         print(f"[INFO] {note}")
         for row in found[: args.top]:
             print(f"  {row['best']:.3f} matches={row['matches']} {row['a']} <-> {row['b']}")

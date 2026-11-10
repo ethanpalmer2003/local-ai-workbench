@@ -63,6 +63,31 @@ class SimilarityFindingTests(unittest.TestCase):
         self.assertEqual(len(similarity.findings([(0.95, 0, 2)], units)), 1)
 
 
+class SimilarityCodeTests(unittest.TestCase):
+    def _functions(self, source: str) -> list[dict[str, object]]:
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "module.py"
+            path.write_text(source, encoding="utf-8")
+            return similarity.functions(path, "module.py")
+
+    def test_a_function_is_one_unit_and_a_stub_is_skipped(self):
+        source = "def long_one(value):\n    total = sun = value + 1\n    return total + sun\n\ndef stub():\n    pass\n"
+        found = self._functions(source)
+        self.assertEqual([unit["heading"] for unit in found], ["long_one"])
+        self.assertEqual(found[0]["doc"], "module.py")
+
+    def test_an_unparsable_module_yields_nothing(self):
+        self.assertEqual(self._functions("def broken(:\n"), [])
+
+    def test_code_findings_do_not_need_two_matching_units(self):
+        units = [
+            {"doc": "a.py", "heading": "one", "text": "def one(): return 1", "kind": "function"},
+            {"doc": "b.py", "heading": "two", "text": "def two(): return 1", "kind": "function"},
+        ]
+        self.assertEqual(similarity.findings([(0.97, 0, 1)], units, require_two=False)[0]["best"], 0.97)
+        self.assertEqual(similarity.findings([(0.97, 0, 1)], units), [])
+
+
 class SimilaritySourceTests(unittest.TestCase):
     def test_a_changed_or_new_document_is_reported(self):
         previous = {"a.md": "one", "b.md": "two", "gone.md": "three"}
