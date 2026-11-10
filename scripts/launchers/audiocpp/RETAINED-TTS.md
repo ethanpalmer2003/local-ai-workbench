@@ -4,8 +4,7 @@ Owned by [AudioCpp](README.md), the selected TTS framework; these two stay insta
 
 [All speech-model language lists/counts](../../config/notes/MODEL-LANGUAGES.md).
 
-Retained alternatives; AudioCpp is the selected language-practice TTS framework.
-Further Piper/Sherpa TTS integration/comparisons are not planned. This does not
+Retained alternatives. Further Piper/Sherpa TTS integration/comparisons are not planned. This does not
 change Sherpa ASR coverage.
 
 Why selected: AudioCpp generated Kokoro faster than Sherpa and Kobold in the

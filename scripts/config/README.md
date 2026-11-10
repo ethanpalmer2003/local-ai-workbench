@@ -26,7 +26,7 @@ C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync_configs --only com
 - Personal inputs (voice clips, characters, tone prompts) are not in the repo: [local inputs](notes/INPUTS.md). Every default's owner, public and private: [defaults map](notes/DEFAULTS.md).
 - [Generated files](notes/GENERATED-FILES.md) records startup derivations and required native copies.
 - Historical configs/results are evidence, never editable defaults. Credentials stay out of Git/reports.
-- Layout/docs guards: `python -m scripts.review.layout`, `python -m scripts.review.docs`; full review: `python -m scripts.review` or `scripts/review/check_repo.bat`.
+- Layout/docs guards, the full review and their commands: [checks](../../.agents/CHECKS.md).
 
 - Model registry: edit [models/catalog.json](models/catalog.json); import the package API. `models/ids.py` is generated; category modules are compatibility wrappers. Storage group, task roles and runtime candidates are separate. Runtime candidates do not prove tested compatibility.
 - Inspect, add or retire a model: `python -m scripts.tools.model_admin where|add|remove|replace ...`; `--apply` edits `catalog.json`, regenerates `ids.py`, rewrites active references and moves weights to trash. Strata native configs remain a manual boundary.
