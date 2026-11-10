@@ -1,6 +1,6 @@
 # TODO
 
-- Work that will happen: the decision is made and the owner is linked. Open choices are listed under [Questions](#questions) below; settled decisions stay in [OPEN-QUESTIONS](OPEN-QUESTIONS.md).
+- Work that will happen: the decision is made and the owner is linked. Open choices are under [Questions](#questions); settled ones in [OPEN-QUESTIONS](OPEN-QUESTIONS.md).
 - Upstream defects and our responses: [UPSTREAM](UPSTREAM.md). Entries do not authorize live tests, package changes or long runs. [Status/evidence](../scripts/tests/notes/STATUS.md); procedures stay with their owner guides.
 
 ## Checks
@@ -20,11 +20,19 @@
 
 ## Needs a device
 
-- [ ] Validate Handy microphone selection, dictation and paste. `selected_microphone` is null (the default device) and the last attempt captured 0 samples in 17 ms, so the device is the suspect; the model, VAD and hotkey are configured.
+- [ ] Validate Handy microphone selection, dictation and paste. `selected_microphone` is null and the last attempt captured 0 samples in 17 ms, so the device is the suspect; model, VAD and hotkey are configured.
 
 ## Questions
 
+### Tuning
+
 - Strata decode profile: give it an explicit resident budget (8-10 GiB) and rerun the pair, or leave the tuning alone?
-- Kobold/Drama overlap: build the active-overlap harness (simultaneous generation, queueing, playback underruns), or keep it deferred?
+
+### Measurements
+
 - Gemma audio: shorten the clip that hits the output limit, or raise its token budget?
+
+### Tooling
+
+- Kobold/Drama overlap: build the active-overlap harness (simultaneous generation, queueing, playback underruns), or keep it deferred?
 - Capability matrix: rerun the 28 rows still unprovenanced, wiring each producer as it is touched, or keep the three fresh rows only?
