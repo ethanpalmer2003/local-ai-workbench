@@ -12,7 +12,7 @@ C:/AI/scripts/.venv/Scripts/python.exe -m scripts.benchmarks.llamacpp.benchmark_
 - Native workload: live/opt-in. Refuse conflicting sessions, warm up, alternate order and separate startup/model loading from measurements.
 - Match hashes, tokenizer/template, context occupancy/capacity, sampling, KV type, FA, speculation, reasoning and token limits. Request count alone is insufficient.
 - Short-context evidence cannot establish filled-context performance. Reused prompts/cache conditions must be explicit.
-- Latest paired easy Pi task: both Strata Swift and 27B passed 8/8; differing output token totals and startup/prefill dominated timings. No broad ranking.
+- Latest paired easy Pi task: both Strata Swift and 27B passed 8/8; timings and token totals are in [outcomes](../tests/notes/OUTCOMES.md).
 - Strata profile pair, screen not ranking: numbers, conditions and the older disagreeing table live in the dated record, [STRATA-PROFILES-2026-11-09](../../notes/reviews/STRATA-PROFILES-2026-11-09.md).
 - Strata vs Avalon, same IQ2_XS weights (2-5 samples, n-max 2): Strata decode 22.9 tok/s, prefill 110.5, TTFT 27.4 s; Avalon 27.6-34.1, prefill 61-65, TTFT 46-49 s. Variance is real (Avalon measured 22.4→34.1 across runs); no winner from one pair.
 - Strata CPU-expert residency is unavailable on this machine: `--resident-cpu-experts` needs the whole 24.90 GiB complement in RAM, but 24.35 GiB available minus the 8 GiB headroom (4 GiB in `--resident-experts`) allows ~16-20 GiB, so the engine exits rather than degrading. `--kv-grow` also fails: it maps the expert cache after KV allocates, and the 4.09 GiB mapping runs out of VRAM down to 0.97 GiB. The 22.9 baseline is Strata's best configuration here.
