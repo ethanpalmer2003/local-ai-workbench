@@ -12,7 +12,7 @@ Destructive and user-gated: start only when the user explicitly asks to publish 
 1. `C:/AI/scripts/.venv/Scripts/python.exe -m scripts.review.public_audit` must print `0 finding(s)`.
    A hit is fixed in the tree, never allow-listed to get past this step. Categories: `secrets`, `credentials`, `home-path`, `machine-path`, `private-word`, `private-input`, `large-file`, `ignored-tracked`.
 2. Confirm personal data lives outside git: [local inputs](../../../scripts/config/notes/INPUTS.md) covers voices, characters, tone prompts, `models.private.json` and `defaults.json`; `--history` also scans every commit, and a hit there needs the rewrite below.
-3. Back up history: `git bundle create C:/AI/trash/ai_launchers-<date>.bundle --all`.
+3. Back up history: `git bundle create C:/AI/trash/local-ai-workbench-<date>.bundle --all`.
 
 ## Rewrite and publish
 
