@@ -54,6 +54,7 @@ Live entries free their ports instead of refusing.
 
 - Formatting wrapper: [scripts/review/format_py.bat](../scripts/review/format_py.bat).
 - Repository review: [scripts/review/check_repo.bat](../scripts/review/check_repo.bat).
+- Markdown duplicates: [check_similarity.bat](review/check_similarity.bat); opt-in, starts the embedding model, reports pairs to review.
 
 ## Benchmarks
 

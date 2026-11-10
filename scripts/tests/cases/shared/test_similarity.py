@@ -63,5 +63,15 @@ class SimilarityFindingTests(unittest.TestCase):
         self.assertEqual(len(similarity.findings([(0.95, 0, 2)], units)), 1)
 
 
+class SimilaritySourceTests(unittest.TestCase):
+    def test_a_changed_or_new_document_is_reported(self):
+        previous = {"a.md": "one", "b.md": "two", "gone.md": "three"}
+        current = {"a.md": "one", "b.md": "changed", "c.md": "four"}
+        self.assertEqual(similarity.changed_sources(previous, current), ["b.md", "c.md"])
+
+    def test_an_unchanged_tree_reports_nothing(self):
+        self.assertEqual(similarity.changed_sources({"a.md": "one"}, {"a.md": "one"}), [])
+
+
 if __name__ == "__main__":
     unittest.main()
