@@ -2,12 +2,7 @@
 
 - Work that will happen: the decision is made and the owner is linked. Open choices are under [Questions](#questions); settled ones in [OPEN-QUESTIONS](OPEN-QUESTIONS.md).
 - Entries do not authorize live tests, package changes or long runs. Upstream defects stay in [UPSTREAM](UPSTREAM.md), evidence in [STATUS](../scripts/tests/notes/STATUS.md).
-- Groups follow what blocks the work; each entry ends with a rough duration, shortest first.
-
-## No model run
-
-- [ ] Publish the ComfyUI report: 640 measured at 5 s (14.4 GiB) and 10 s (241 frames, 231-244 s, 16.0 GiB near the card limit); pinned memory stays off. ~15 min
-- [ ] Publish the Strata profile-pair report: the replay measured prefill ahead on decode and prompt read, and the decode arm carries an 8 GiB resident budget. Write it as a screen, not a ranking. ~20 min
+- Each entry ends with a rough duration, shortest first.
 
 ## Needs a model run or device
 
