@@ -15,7 +15,7 @@
 - [ ] Refresh the capability rows that have not rerun since provenance; the launcher and context rows are fresh.
 - [ ] Kobold/Drama active-overlap baseline at the selected 40-layer/2048-context setup: no harness exists. The idle-only screen is retired, refuses to run without `--idle-residency`, and never overlapped generation, so this needs a measurement mode first. [Procedure](../scripts/tests/notes/audiocpp/AUDIOCPP-OPTIMIZATIONS.md).
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md).
-- [ ] llama.cpp: filled-context Vulkan/Lemonade comparison and medium/high-context speculation. Short-context speculation measures 36.7 tok/s mean against 36.5 legacy (acceptance 69-88%); short-context decode is measured on Lemonade, and Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)).
+- [ ] llama.cpp: medium/high-context speculation, plus a cold filled-context prefill number (the 32k sample reuses its cached prompt; decode is 39.0 tok/s at 12.8 GiB). Short-context decode is measured on Lemonade; Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)).
 - [ ] Publish a dated report for the Strata profile pair. Prefill measures cleanly; the decode arm stops on the run's own 1 GiB RAM floor because its expert cache commits the pack, so it needs a resident budget.- [ ] ComfyUI: 640 measured at 5 s (14.4 GiB) and 10 s (241 frames, 231-244 s, 16.0 GiB, near the card limit). Pinned memory tested: on is slower and uses more VRAM, so it stays off. Remaining: a dated report, appearance review, autotune/cache and monitor overhead.
 
 ## Needs a device
