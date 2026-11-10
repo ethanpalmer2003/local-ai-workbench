@@ -4,7 +4,8 @@ Target: Gemma E4B chat in llama.cpp or Kobold, selected ASR, AudioCpp TTS.
 Preferred architecture: one AudioCpp server for Nemotron ASR + Kokoro TTS.
 [Alternating/concurrent/paced checks pass](../../tests/notes/audiocpp/AUDIOCPP-SINGLE-SERVER.md);
 Practice gateways integrate Gemma; acoustic interruption remains pending.
-AudioCpp is the TTS choice; framework comparisons are closed. A loaded model
+Speech uses the selected AudioCpp framework ([why](../audiocpp/RETAINED-TTS.md)); framework comparisons are
+closed. A loaded model
 consumes memory even when idle. Loaded together, serving together and computing
 in parallel are different capabilities.
 

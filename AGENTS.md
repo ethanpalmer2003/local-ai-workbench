@@ -32,5 +32,5 @@
 
 ## Guides and checks
 - One owner per procedure, implementation or document; every other mention links to it with an example. Budgets and the review list: [notes conventions](.agents/NOTES-CONVENTIONS.md).
-- Run `python -m scripts.review.layout` and `python -m scripts.review.docs`, plus allowed import/type checks, after structural edits. Live, slow or paid checks are opt-in; model-free checks are the default.
+- Run the structure and docs checks plus allowed import/type checks after structural edits; commands and levels are in [checks](.agents/CHECKS.md). Live, slow or paid checks are opt-in; model-free checks are the default.
 - Detailed rules: [code](.agents/CODE.md), [checks](.agents/CHECKS.md), [skills](.agents/SKILLS.md).
