@@ -2,7 +2,7 @@
 
 ## Classification
 
-- `verified`: reviewed scoped result; `no-gain`: no justified change; `inconclusive`: insufficient/incomplete; `superseded`: corrected method replaced it; `unreviewed`: not reviewed. New runs default unreviewed.
+- Outcomes and their meanings: [execution and reporting](../EXECUTION-AND-REPORTING.md); new runs default unreviewed.
 - Historical artifacts retain their original settings/paths; completed evidence does not authorize reruns.
 
 ## Decisions and limits

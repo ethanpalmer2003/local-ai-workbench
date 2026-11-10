@@ -25,7 +25,7 @@
 
 ## Sampled VRAM
 
-- Shared GPU monitor records adapter/process/descendant memory when available; peaks are sampled lower bounds, not exact maxima.
+- Sampled peaks are lower bounds with missing counters left null; the shared monitor and its limits are owned by [execution and reporting](../../../tests/EXECUTION-AND-REPORTING.md).
 - Preserve execution token, counters unavailable/null values, CPU/RAM and stage labels.
 - Historical `tests/output/probes/comfyui_video/` was retired to trash; new results follow `benchmarks/output/comfyui/`.
 - [Estimates](../../../tests/notes/ESTIMATES.md), [TODO](../../../../notes/TODO.md). Additional quality/autotune/scaling checks remain deferred.
