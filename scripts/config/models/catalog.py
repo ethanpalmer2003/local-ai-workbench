@@ -14,7 +14,7 @@ from scripts.config import project_config as project_cfg
 
 from .types import ModelDownload
 
-CATEGORIES = ("llms", "asr", "tts", "images")
+CATEGORIES = ("llms", "asr", "tts", "images", "embeddings")
 CATALOG_PATH = project_cfg.CONFIG_DIR / "models" / "catalog.json"
 IDS_PATH = project_cfg.CONFIG_DIR / "models" / "ids.py"
 CATALOG_VERSION = 1

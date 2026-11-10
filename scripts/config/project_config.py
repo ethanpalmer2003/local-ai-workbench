@@ -183,6 +183,8 @@ COMPONENTS.update(
         "asr/audiocpp": ComponentPaths("asr/audiocpp", framework_override="audiocpp"),
         "asr/sherpa-onnx": ComponentPaths("asr/sherpa-onnx", framework_override="tts/sherpa-onnx"),
         "comfyui": ComponentPaths("comfyui", models_override="videogen"),
+        # - embedding weights serve the duplicate check, not a chat runtime
+        "embeddings": ComponentPaths("embeddings", models_override="huggingface/models/embeddings"),
         # - benchmark corpora are downloaded reference audio, not model weights
         "benchmarks": ComponentPaths("benchmarks", models_override="benchmarks"),
         "strata": ComponentPaths("strata", framework_override="Strata"),

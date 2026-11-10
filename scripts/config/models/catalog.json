@@ -772,6 +772,23 @@
       "roles": [],
       "runtimes": [],
       "source_page": null
+    },
+    {
+      "category": "embeddings",
+      "group": "embeddings",
+      "label": "embeddings/embeddinggemma-2-Q8_0",
+      "filename": "embeddinggemma-2-Q8_0.gguf",
+      "url": "https://huggingface.co/ggml-org/embeddinggemma-2-GGUF/resolve/main/embeddinggemma-2-Q8_0.gguf",
+      "in_use": true,
+      "notes": "Text embedding model for the documentation duplicate check; Q8_0, mean pooling, 768 dimensions.",
+      "sha256": "2188ac1deca4b77dffefd603c2776a9d76d9d74ec01841392982ebb840b09135",
+      "roles": [
+        "embedding"
+      ],
+      "runtimes": [
+        "llamacpp"
+      ],
+      "source_page": "https://huggingface.co/ggml-org/embeddinggemma-2-GGUF"
     }
   ]
 }

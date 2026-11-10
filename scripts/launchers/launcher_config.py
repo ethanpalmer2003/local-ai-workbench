@@ -941,3 +941,28 @@ class LemonadeStartupServiceSettings:
 
 
 LEMONADE_SERVICE = LemonadeStartupServiceSettings()
+
+
+# ============================================================
+# EMBEDDING SERVER SETTINGS
+# ============================================================
+
+
+@dataclass
+class EmbeddingsServerSettings:
+    """llama.cpp serving one embedding model, used by the documentation duplicate check."""
+
+    model: Path = model_cfg.path("embeddings/embeddinggemma-2-Q8_0")
+    port: int = 8791
+    context: int = 4096
+    batch: int = 4096
+    pooling: str = "mean"
+    build: str = "vulkan"
+    startup_timeout_s: float = 90.0
+
+    @property
+    def exe(self) -> Path:
+        return project_cfg.component("llamacpp").framework_dir / self.build / "llama-server.exe"
+
+
+EMBEDDINGS_SERVER = EmbeddingsServerSettings()
