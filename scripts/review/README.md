@@ -7,6 +7,8 @@ C:/AI/scripts/.venv/Scripts/python.exe -m scripts.review
 C:/AI/scripts/review/check_repo.bat
 ```
 
+The gate is repo-wide, so it asks the person at the terminal to confirm and types nothing by itself. An unattended run refuses; pass `--yes` only when the user asked for the full pass, as [validate](../tests/validate.py) does.
+
 The runner executes these checks:
 
 - `layout.py`: component/config ownership, install roots, folder naming, and batch references.

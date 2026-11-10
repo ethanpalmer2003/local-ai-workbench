@@ -94,6 +94,7 @@ from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_model_run import ModelRunTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
+from scripts.tests.cases.shared.test_review_gate import ConsentTests
 from scripts.tests.cases.shared.test_rocm_inventory import RocmInventoryTests
 from scripts.tests.cases.shared.test_stage_runner import StageRunnerTests
 from scripts.tests.cases.shared.test_toolchains import ToolchainTests
@@ -157,6 +158,7 @@ if __name__ == "__main__":
                     BatLaunchers,
                     InferenceEngines,
                     ModelAdminTests,
+                    ConsentTests,
                     AudioComparison,
                     WorkflowTests,
                     ExecutionTests,

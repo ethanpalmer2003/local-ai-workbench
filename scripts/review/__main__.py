@@ -3,6 +3,7 @@
 import argparse
 import json
 import subprocess
+import sys
 
 from scripts.config import project_config as project_cfg
 from scripts.review import docs, frontend_wiring, inventory_code, layout, model_references, package_audit, typography
@@ -88,6 +89,23 @@ def format_check() -> int:
     ).returncode
 
 
+def consents(given: bool) -> bool:
+    """The gate is repo-wide, so it asks the person at the terminal; an unattended run must say --yes.
+    - an agent or scheduled job has nobody to answer, so silence is a refusal, never consent
+    """
+    if given:
+        return True
+    if not sys.stdin.isatty():
+        print(
+            "[FAIL] The full review gate needs the user's agreement: a person must confirm it, "
+            "or pass --yes when they asked for it.",
+            flush=True,
+        )
+        return False
+    answer = input("Run the full review gate (repo-wide, no models)? Type yes to continue: ").strip().lower()
+    return answer == "yes"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-format-check", action="store_true", help="skip the ruff format comparison")
@@ -95,11 +113,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--prune", action="store_true", help="list installed packages nothing imports or declares")
     parser.add_argument("--remove", action="store_true", help="with --prune: uninstall those leftovers")
     parser.add_argument("--scrub", action="store_true", help="scan the tree and history for personal terms")
+    parser.add_argument("--yes", action="store_true", help="confirm the full gate; otherwise a person is asked")
     args = parser.parse_args(argv)
     if args.prune:
         return package_audit.main(remove=args.remove)
     if args.scrub:
         return public_audit_main(["--scrub"])
+    if not consents(args.yes):
+        return 1
 
     print("=== LAYOUT ===", flush=True)
     layout_status = layout.main()

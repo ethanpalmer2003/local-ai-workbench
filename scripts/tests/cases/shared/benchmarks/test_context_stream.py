@@ -1,15 +1,15 @@
 """Context stream benchmark: the token trace counts output tokens, not prompt progress."""
 
+import argparse
 import io
 import json
 import time
 import unittest
-from types import SimpleNamespace
 
 from scripts.benchmarks.llamacpp import benchmark_context_stream as stream
 
 
-def line(payload: dict) -> bytes:
+def line(payload: dict[str, object]) -> bytes:
     return b"data: " + json.dumps(payload).encode() + b"\n"
 
 
@@ -23,13 +23,15 @@ class ContextStreamTests(unittest.TestCase):
             line({"content": ",", "tokens": [789], "tokens_predicted": 3}),
             line({"stop": True, "tokens": [], "timings": {"predicted_n": 3}}),
         ]
-        args = SimpleNamespace(request_timeout=30.0)
+        args = argparse.Namespace(request_timeout=30.0)
         count, traced, content, final = stream._consume_stream(
             io.BytesIO(b"".join(events)), io.StringIO(), args, time.perf_counter() + 30, time.perf_counter()
         )
         self.assertEqual(count, 3)
         self.assertEqual([event["tokens"] for event in traced], [1, 2, 3])
         self.assertEqual("".join(content), "The answer,")
+        self.assertIsNotNone(final)
+        assert final is not None
         self.assertEqual(final["timings"]["predicted_n"], 3)
 
     def test_windows_are_built_from_the_streamed_token_marks(self):

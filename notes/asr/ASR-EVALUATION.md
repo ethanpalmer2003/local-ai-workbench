@@ -25,7 +25,7 @@ learner accents or multilingual accuracy.
 | Granite Speech 2B | Unranked: brief English resident check passes; multilingual/noisy quality and resources unmeasured. |
 | Qwen3-ASR 0.6B / speech.cpp | Keep: fast multilingual completed-turn option; quality versus Nemotron ungraded. |
 | Parakeet v3 0.6B | Keep: fast multilingual European-language comparator. Current practice path decodes completed VAD segments. |
-| Gemma E4B audio | Lower priority: shares chat weights but is slow on the short screen; no incremental adapter. |
+| Gemma E4B audio | Lower priority: shares chat weights but is slow on the short screen; no incremental adapter. The 512-token budget stays: it loops on a short utterance rather than the 30 s stress clip, so that clip is recorded as failed instead of extending the limit. |
 | Ming Audio Tiny | Lower priority: slow with expert offload; no incremental adapter or quality benefit shown. |
 | Qwen3-ASR 1.7B | Conversation practice and TTS reference transcription: best multilingual accuracy on the pinned corpus. |
 | Parakeet 110M | English-only reference; the Sherpa ASR weights were retired on 2026-11-08. |
