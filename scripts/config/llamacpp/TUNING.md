@@ -2,7 +2,7 @@
 
 - Owners: [profiles](../../launchers/llamacpp/llamacpp_profiles.py), [native INI](swift-q3.ini), [service/build selection](../../launchers/launcher_config.py).
 - Profile values override INI; the launcher supplies the selected model. Request sampling/reasoning may override startup defaults.
-- Coding default: `swift15`, Lemonade ROCm, 96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium.
+- Coding default: `swift15`, 96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium. Vulkan is the working runtime: the Lemonade build from 2026-11-09 crashes loading this model, so Lemonade is deferred and stays off the coding path ([upstream](../../../notes/UPSTREAM.md)).
 
 | Choice | Evidence / limitation |
 | --- | --- |

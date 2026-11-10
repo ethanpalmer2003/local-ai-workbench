@@ -1,7 +1,6 @@
 # Upstream issues and local patches
 
-Every upstream defect we answer, split by whether a local build is involved. Reports stay local drafts;
-nothing is posted upstream.
+Every upstream defect we answer, split by whether a local build is involved; reports stay local drafts.
 
 ## No rebuild
 
@@ -10,11 +9,11 @@ nothing is posted upstream.
 | KoboldCpp Lite | OpenAI speech arrives whole, so audio cannot play while the reply generates | Proxy patches the Lite page at request time; two reviewable variants, no pull request | [patch guide](../scripts/launchers/koboldcpp/patches/README.md), [proxies](../scripts/launchers/PROXIES.md) |
 | llama.cpp web UI | No workspace speech panel in the RDNA build | Two patches add the panel, built into a local UI directory | [UI patches](../scripts/launchers/llamacpp/patches/README.md) |
 | llama.cpp Vulkan | Freezes on the fourth 256-token generation | Long runs use the Lemonade build; [draft](reviews/LLAMACPP-VULKAN-2026-11-09.md) | [benchmarks](../scripts/benchmarks/llamacpp/README.md) |
+| llama.cpp Lemonade ROCm | 2026-11-09 build crashes on load; Vulkan loads the same weights | Marked not working and deferred; Lemonade serves language practice, not coding | [tuning](../scripts/config/llamacpp/TUNING.md) |
 | Parakeet.cpp | Vulkan streaming crashes | Streaming disabled; the CPU adapter carries paced capture; retest after an upstream fix | [guide](../scripts/launchers/asr/PARAKEET.md) |
-| AudioCpp Nemotron | Japanese streaming closes or resets despite `ja-JP` on the card | Candidate engine only; the practice profile uses another backend; retest after a build change | [evaluation](asr/ASR-EVALUATION.md) |
-| Strata | Not a defect: the comparison protocol comes from an upstream issue | The harness follows it so numbers compare | [tuning](../scripts/config/strata/TUNING.md) |
+| AudioCpp Nemotron | Japanese streaming closes or resets despite `ja-JP` | Candidate engine only; the practice profile uses another backend; retest after a build change | [evaluation](asr/ASR-EVALUATION.md) |
 | ComfyUI requirements | Plain `torch` would replace the ROCm build on update | Updater filters torch before installing | vendor updater |
-| rocm-sdk wheels | A DLL moves between core and devel packages; some gfx targets lack MIOpen and rocBLAS folders | Installer copies the DLL; launch skips absent paths | vendor installer, [bootstrap](../bat/browser/comfyui/comfyui_bootstrap.bat) |
+| rocm-sdk wheels | A DLL moves between core and devel packages; some targets lack MIOpen/rocBLAS | Installer copies the DLL; launch skips absent paths | vendor installer, [bootstrap](../bat/browser/comfyui/comfyui_bootstrap.bat) |
 | Triton with INT8-Fast-ROCM | The backend crashes the server with that node loaded | Backend stays off | [bootstrap](../bat/browser/comfyui/comfyui_bootstrap.bat) |
 | ROCm torch | Invalid kernel file error on one device | `HIP_VISIBLE_DEVICES` escape hatch stays commented | [bootstrap](../bat/browser/comfyui/comfyui_bootstrap.bat) |
 | sageattention wheel | Rebuilt wheels keep one version, so pip skips them | Updater force-reinstalls it | vendor updater |
