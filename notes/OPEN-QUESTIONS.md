@@ -4,8 +4,7 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 
 ## Unresolved
 
-- **Documentation similarity.** Measure duplicate or near-duplicate claims in the maintained Markdown. Settled: findings cover the whole set, including two sections of the same document, and a finding is a pair to review, never an automatic edit. Open: which local embedding model (EmbeddingGemma-2 against Qwen3-Embedding-0.6B), which chunk unit (bullet, sentence, section), what cosine threshold, and whether a finding ever gates. The screen in the [TODO](TODO.md) answers the model and threshold; the gate decision waits for its false-positive rate.
-- **Code similarity.** Whether embeddings add anything to code that clone detection and review do not. Duplication is a smaller risk there than in prose, so this waits until the documentation screen shows the model separates real duplicates from ordinary repetition.
+- **Code similarity.** Whether embeddings add anything to code that clone detection and review do not. Duplication is a smaller risk there than in prose, so this waits until the documentation check has run on the current tree.
 
 ## Resolved, revisit if needed
 
@@ -13,6 +12,7 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 - **Lint strictness.** The gate stays at the [code rules](../.agents/CODE.md) limit with no inline suppressions and ruff clean repo-wide. Tightening further (`ARG`, `PL`) is worth revisiting only if a defect slips through.
 - **Embedding index over code and docs.** Declined for now: `grep` plus the owner rules answer the questions that azzfixture, an index needs its own refresh path and component key, and retrieval invites the paraphrased duplicates the one-owner rule prevents. Revisit if the document set grows past what reading a diff can hold. Duplicate detection is a different question, tracked under Unresolved.
 - **Capability matrix evidence.** Decided: producers record what each run used, so a row is judged rather than guessed, and the flagged rows are refreshed by reruns tracked in the [TODO](TODO.md). Revisit if a producer stops writing provenance.
+- **Documentation similarity.** Decided: EmbeddingGemma-2 at 0.90 with the two-unit rule, run as an opt-in check that reports pairs for review and never edits or gates, covering the whole set including two sections of one document. The screen and the comparison against Qwen3-Embedding-0.6B are in the [record](reviews/EMBEDDINGS-2026-11-10.md).
 
 ## Deferred
 

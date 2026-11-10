@@ -22,6 +22,10 @@ The runner executes these checks:
 
 Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function complexity is gated by ruff at the limit in [code rules](../../.agents/CODE.md); the inventory lists the largest functions for context. Inventory excludes generated output, caches, model data, third-party installations and trash.
 
+## Duplicate check
+
+`python -m scripts.review.similarity` is opt-in and needs a model: it starts the catalogued embedding model, embeds every bullet and sentence in the maintained Markdown, and lists section pairs that share at least two units (or one of 25+ words). Findings are pairs to review; the check never edits a document. `--threshold`, `--top` and `--strict` tune it, and `--no-server` reuses a running server. Tables, code fences and procedural lines are excluded so structural repetition does not dominate. Evidence: [embedding screen](../../notes/reviews/EMBEDDINGS-2026-11-10.md).
+
 Run a single check with `python -m scripts.review.layout`, `python -m scripts.review.docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `docs --words` prints every maintained document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers, repeats and unlinked documents. A link fails when it is absolute, uses a backslash, carries a space without angle brackets, points into an untracked path, or misses its target or heading; repeats are advisory. Add `--tests` to run the model-free suite after the gate. Document organization lives in [NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
 
 ## Framework validation

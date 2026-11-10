@@ -96,6 +96,7 @@ from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
 from scripts.tests.cases.shared.test_review_gate import ConsentTests
 from scripts.tests.cases.shared.test_rocm_inventory import RocmInventoryTests
+from scripts.tests.cases.shared.test_similarity import SimilarityFindingTests, SimilarityUnitTests
 from scripts.tests.cases.shared.test_stage_runner import StageRunnerTests
 from scripts.tests.cases.shared.test_toolchains import ToolchainTests
 from scripts.tests.cases.shared.test_typography import CheckTests, ScanTests, SuffixTests
@@ -159,6 +160,8 @@ if __name__ == "__main__":
                     InferenceEngines,
                     ModelAdminTests,
                     ConsentTests,
+                    SimilarityUnitTests,
+                    SimilarityFindingTests,
                     AudioComparison,
                     WorkflowTests,
                     ExecutionTests,

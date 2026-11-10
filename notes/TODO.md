@@ -11,7 +11,5 @@
 - [ ] Measure multilingual/noisy accuracy and microphone latency: capture produced no transcript and no multilingual corpus is configured. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py). ~45-60 min
 - [ ] llama.cpp: medium/high-context speculation. Filled context at 32k is measured: cold prefill 505 tok/s with a 63.3 s TTFT, 48.5 tok/s decode warm and 39.0 tok/s cached at 12.8 GiB. Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). ~1-1.5 h
 - [ ] Rerun the capability rows so their recorded evidence is judged: 23 are flagged, and each run turns its row green or names what changed. `python -m scripts.tools.capability_matrix --check` lists them. ~1-2 h
-- [ ] Screen documentation similarity: embed the maintained Markdown with EmbeddingGemma-2, then Qwen3-Embedding-0.6B, and compare flagged pairs against the real duplicates. The chunk unit and threshold follow the [question](OPEN-QUESTIONS.md). ~1-1.5 h
-- [ ] Catalogue the winning embedding model with a url and sha256, then wire the duplicate report into the docs check as an opt-in advisory step: it lists pairs anywhere in the maintained Markdown, including inside one document, and never edits. ~45 min
-- [ ] Try the same screen on code once the documentation one settles; the model and chunk unit carry over. ~1-2 h
+- [ ] Try the duplicate check on code once the documentation one settles; the model and chunk unit carry over. ~1-2 h
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md). ~1.5-2 h
