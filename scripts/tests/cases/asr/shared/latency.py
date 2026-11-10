@@ -9,6 +9,7 @@ import subprocess
 import threading
 from typing import Any, TextIO
 
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.config import models as model_cfg
@@ -23,6 +24,14 @@ from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.launchers.shared.services.process import stop_owned
 from scripts.tests.cases.asr.shared.corpus import prepare_corpus
 from scripts.tests.shared.paths import CasePaths
+
+# - One paced replay per engine; automatic adds the speech.cpp VAD pass to the offline run
+ENGINES = (("audiocpp-vulkan", False), ("nemo-speechcpp", False), ("speechcpp", False), ("speechcpp", True))
+ENGINE_COMPONENTS = {
+    "audiocpp-vulkan": "audiocpp",
+    "nemo-speechcpp": "asr/nemo-speechcpp",
+    "speechcpp": "asr/speechcpp",
+}
 
 
 def _asr_transcript(event: dict[str, Any], timing: Any, transcript: str) -> str:
@@ -211,10 +220,20 @@ def main():
         "results": [],
         "limits": "One paced replay after warmup; clip-end anchor includes original trailing silence. No microphone/browser/LLM/TTS. Parakeet prebuilt exposes no paced-input adapter.",
     }
+    selected = [(engine, automatic) for engine, automatic in ENGINES if not args.engines or engine in args.engines]
+    models = {engine: model_cfg.path(ASR_FILE_PROFILES[engine].models[0]) for engine, _ in selected}
+    if any(engine == "speechcpp" and automatic for engine, automatic in selected):
+        models["speechcpp-vad"] = model_cfg.path("asr/speechcpp/silero-vad")
+    report["provenance"] = provenance.block(
+        subject="asr/shared/latency",
+        config={"engines": [engine for engine, _ in selected], "limits": report["limits"]},
+        frameworks=[
+            provenance.framework_state(key) for key in sorted({ENGINE_COMPONENTS[engine] for engine, _ in selected})
+        ],
+        models=[provenance.file_identity(label, path) for label, path in models.items()],
+    )
     print(f"[OUTPUT] {run.root}", flush=True)
-    for index, (engine, automatic) in enumerate(
-        (("audiocpp-vulkan", False), ("nemo-speechcpp", False), ("speechcpp", False), ("speechcpp", True))
-    ):
+    for index, (engine, automatic) in enumerate(ENGINES):
         if args.engines and engine not in args.engines:
             continue
         try:

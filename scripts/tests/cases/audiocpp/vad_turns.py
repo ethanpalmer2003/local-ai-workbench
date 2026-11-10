@@ -5,8 +5,10 @@ import json
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
+from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.config import project_config as project_cfg
@@ -107,6 +109,14 @@ def main():
     try:
         with server.lifecycle as lifecycle:
             lifecycle.prepare(server.start, combined=True)
+            models = {str(item["task"]): Path(item["path"]) for item in config["models"]}
+            models["vad"] = cfg.AUDIOCPP_VAD.model
+            report["provenance"] = provenance.block(
+                subject="audiocpp/vad_turns",
+                config=report["settings"],
+                frameworks=[provenance.framework_state("audiocpp")],
+                models=[provenance.file_identity(label, path) for label, path in models.items()],
+            )
             lifecycle.warmup(shared.tts)
             for name, samples, expected, speak in cases:
                 if args.cases and name not in args.cases:

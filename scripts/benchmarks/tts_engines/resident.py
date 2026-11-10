@@ -12,6 +12,7 @@ import wave
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle, summarize_requests
 from scripts.benchmarks.shared.paths import BenchmarkPaths
 from scripts.benchmarks.tts_engines.fixtures import TEXT, voice_assets
@@ -208,6 +209,17 @@ def main():
             except subprocess.TimeoutExpired:
                 failures.append(engine)
     (run.artifacts / "context.json").write_text(json.dumps(context, indent=2), encoding="utf-8")
+    # - The aggregate starts both workers without --profile, so both read the default lessac-medium voice.
+    report_path = run.artifacts / "report.json"
+    if report_path.is_file():
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+        payload["provenance"] = provenance.block(
+            subject=str(payload.get("name", "tts_engines/resident")),
+            config={"profile": "lessac-medium", "samples": args.samples, "execution_context": context},
+            frameworks=[provenance.framework_state("tts/piper"), provenance.framework_state("tts/sherpa-onnx")],
+            models=[provenance.file_identity("voice", voice_assets("lessac-medium")[0])],
+        )
+        report_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     print(f"[OUTPUT] {run.root}; failures={failures}")
     return int(bool(failures))
 

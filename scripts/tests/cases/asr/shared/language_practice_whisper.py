@@ -13,6 +13,7 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
@@ -174,6 +175,17 @@ def main() -> None:
                 thread.start()
                 lite = "http://127.0.0.1:18886"
                 _await_lite(lite, deadline)
+                reporting.record_inputs(
+                    report,
+                    frameworks=(
+                        "llamacpp" if args.transcription_engine == "qwen3-asr" else "asr/whispercpp",
+                        "koboldcpp",
+                    ),
+                    models={
+                        "asr": transcription.model(cfg.KOBOLDCPP_SERVICE.transcription_engine),
+                        "chat": cfg.GEMMA_AUDIO_ASR.model,
+                    },
+                )
                 native_caps = request("http://127.0.0.1:18885/api/extra/version")
                 proxy_caps = request(lite + "/api/extra/version")
                 assert native_caps["transcribe"] is False and proxy_caps["transcribe"] is True

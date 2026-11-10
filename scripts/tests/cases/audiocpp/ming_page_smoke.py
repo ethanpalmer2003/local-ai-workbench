@@ -4,7 +4,9 @@ import json
 import urllib.request
 import wave
 
+from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.reporting import report_run
+from scripts.config import models as model_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.tests.cases.audiocpp.audiocpp_transport import measure
@@ -26,6 +28,7 @@ def main() -> None:
         assert any(row["id"] == model and row["installed"] for row in defaults["models"])
         assert defaults["streaming"]["pcm_sample_rate"] == 44100
         assert defaults["instruction_option"] == "instruct"
+        reporting.record_inputs(report, frameworks=("audiocpp",), models={"tts": model_cfg.path(model)})
         (run.artifacts / "page-defaults.json").write_text(json.dumps(defaults, indent=2), encoding="utf-8")
         cfg.AUDIOCPP_SERVICE.model = model
         cfg.AUDIOCPP_SERVICE.streaming.pcm_sample_rate = 44100

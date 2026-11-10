@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.launchers import launcher_config as cfg
@@ -173,6 +174,19 @@ def _fetch_server_models(run: RunPaths) -> None:
         (run.artifacts / "server-models.json").write_bytes(response.read())
 
 
+def _tts_models(run: RunPaths) -> list[dict[str, Any]]:
+    """The speech weights the running server had configured, so the row can be judged later."""
+    try:
+        payload = json.loads((run.artifacts / "server-models.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    return [
+        provenance.file_identity(str(item.get("id", "tts")), Path(str(item["path"])))
+        for item in payload.get("data") or []
+        if isinstance(item, dict) and item.get("task") == "tts" and item.get("path")
+    ]
+
+
 def _start_lifecycle(
     args: argparse.Namespace, run: RunPaths, memory: BenchmarkVram, setup_seconds: float
 ) -> BenchmarkLifecycle:
@@ -305,7 +319,23 @@ def run_comparison(args: argparse.Namespace, run: RunPaths, memory: BenchmarkVra
         "elapsed": time.perf_counter() - started,
         "conditions": "Standalone TTS only; no LLM requests initiated. PCM assumed mono s16le 24 kHz. First-data excludes playback buffering. Buffer results are simulated from real arrivals. All profiles use the same text/seed for each matched comparison.",
     }
+    identity = provenance.block(
+        subject="audiocpp/audiocpp_streaming",
+        config={"profiles": list(profiles), "texts": list(texts), "budget_seconds": args.budget_seconds},
+        frameworks=[provenance.framework_state("audiocpp")],
+        models=_tts_models(run),
+    )
+    report["provenance"] = identity
     write_summary(run.artifacts, report)
+    run.write_report(
+        {
+            "name": "audiocpp/audiocpp_streaming",
+            "category": "audiocpp",
+            "status": "failed" if transport_failed else "completed",
+            "total_seconds": report["elapsed"],
+            "provenance": identity,
+        }
+    )
     print(json.dumps(report, indent=2))
     print(run.artifacts)
 

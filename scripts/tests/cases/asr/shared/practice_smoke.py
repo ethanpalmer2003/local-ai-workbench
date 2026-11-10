@@ -11,10 +11,12 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector, server
+from scripts.launchers.asr.shared import practice_models
 from scripts.launchers.audiocpp import asr
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.launchers.llamacpp.language_practice import chat_command, start_tts
@@ -26,6 +28,22 @@ from scripts.tests.cases.asr.shared.corpus import default_corpus
 from scripts.tests.shared.native_suites import refuse_existing_sessions
 from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.resources import monitor_process
+
+# - The installed component that owns each startup engine's files; the launcher catalog stays the path owner
+ENGINE_COMPONENTS = {
+    cfg.AsrStartupEngine.AUDIOCPP: "audiocpp",
+    cfg.AsrStartupEngine.COHERE: "audiocpp",
+    cfg.AsrStartupEngine.NEMO: "asr/nemo-speechcpp",
+    cfg.AsrStartupEngine.PARAKEET_STREAM: "asr/parakeetcpp",
+    cfg.AsrStartupEngine.PARAKEET_V3: "asr/parakeetcpp",
+    cfg.AsrStartupEngine.SPEECHCPP: "asr/speechcpp",
+    cfg.AsrStartupEngine.WHISPER_VULKAN: "asr/whispercpp",
+    cfg.AsrStartupEngine.QWEN3_ASR: "llamacpp",
+    cfg.AsrStartupEngine.GEMMA_AUDIO: "llamacpp",
+    cfg.AsrStartupEngine.GRANITE: "llamacpp",
+    cfg.AsrStartupEngine.GEMMA_KOBOLD: "koboldcpp",
+    cfg.AsrStartupEngine.EMBEDDED: "koboldcpp",
+}
 
 
 def post(base, path, body, binary=False):
@@ -242,6 +260,18 @@ def main():
         "runtimes": {},
         "engine": args.engine,
     }
+    report["provenance"] = provenance.block(
+        subject="Practice gateway smoke",
+        config={"engine": report["engine"], "runtimes": list(args.runtimes), "scope": report["scope"]},
+        frameworks=[
+            provenance.framework_state(key) for key in sorted({"audiocpp", ENGINE_COMPONENTS[engine], *args.runtimes})
+        ],
+        models=[
+            provenance.file_identity("chat", cfg.GEMMA_AUDIO_ASR.model),
+            provenance.file_identity("asr", selector.model(engine)),
+            provenance.file_identity("tts", Path(practice_models.tts_spec()["path"])),
+        ],
+    )
     samples, rate = decode_audio(Path(default_corpus()[0]["file"]))
     pcm = (mono_resample(samples, rate).clip(-1, 1) * 32767).astype("<i2").tobytes()
     pcm += bytes(64000)

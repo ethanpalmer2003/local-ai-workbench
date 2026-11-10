@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.benchmarks.shared.vram import BenchmarkVram
@@ -145,6 +146,13 @@ def exercise(run, server, upload, report, memory):
     try:
         with server.lifecycle as timer:
             timer.prepare(server.start, combined=True)
+            models = {str(item["task"]): Path(item["path"]) for item in report["config"]["models"]}
+            report["provenance"] = provenance.block(
+                subject="audiocpp/single_server_speech",
+                config=report["config"],
+                frameworks=[provenance.framework_state("audiocpp")],
+                models=[provenance.file_identity(label, path) for label, path in models.items()],
+            )
             assert server.process is not None
             memory.watch_backend("audio", [server.process.pid])
             watcher = threading.Thread(

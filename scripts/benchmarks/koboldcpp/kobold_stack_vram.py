@@ -17,6 +17,7 @@ from types import SimpleNamespace
 from typing import Any
 
 from scripts.benchmarks.shared import preflight as preflight_check
+from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.config.audiocpp import server as audio_cfg
 from scripts.launchers import launch_util
@@ -400,6 +401,20 @@ def run() -> None:
             raise RuntimeError("GPU counters unavailable; run from a normal host terminal")
         Thread(target=_ram_guard, args=(stop, started, minimum_free_ram_gib, owned, report), daemon=True).start()
         preflight()
+        models = {
+            "chat": cfg.kobold_chat_model_path() if llm_mode != "external" else external_llm.model_path(),
+            "speech": Path(audio_model["path"]),
+            "image": Path(str(cfg.SDCPP_SERVER_ARGS["m"])),
+        }
+        frameworks = ["koboldcpp", "audiocpp", "sdcpp"]
+        if llm_mode == "external":
+            frameworks.append("llamacpp")
+        report["provenance"] = provenance.block(
+            subject=report["name"],
+            config=settings,
+            frameworks=[provenance.framework_state(key) for key in frameworks],
+            models=[provenance.file_identity(label, path) for label, path in models.items()],
+        )
         _measure_sequence(paths, monitor, report, start_backend, resource_samples)
     except BaseException as error:
         report["status"] = "failed"

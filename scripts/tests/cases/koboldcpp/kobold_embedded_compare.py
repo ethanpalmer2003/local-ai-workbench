@@ -17,6 +17,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.benchmarks.shared.vram import BenchmarkVram
@@ -485,6 +486,21 @@ def main() -> None:
             if result["status"] != "completed":
                 report.status = "failed"
                 raise RuntimeError(result["error"])
+        inputs: dict[str, Path] = {}
+        frameworks = set()
+        for arm in args.arms:
+            if args.kind == "tts":
+                frameworks.add("koboldcpp" if arm == "internal" else "audiocpp")
+                model = cfg.KOKORO_TTS.koboldcpp_model if arm == "internal" else cfg.KOKORO_TTS.audiocpp_model
+                inputs["speech" if len(args.arms) == 1 else f"{arm}-speech"] = Path(model)
+            else:
+                frameworks.add("koboldcpp" if arm == "internal" else "sdcpp")
+                inputs["image"] = Path(cfg.SDCPP_MODELS["nova3d-q4"])
+        if args.with_chat:
+            frameworks.add("koboldcpp")
+            inputs["chat"] = Path(cfg.KOBOLDCPP_MODELS["llamacpp/gemma-4-E4B-it-Q4_0"])
+            inputs["whisper"] = Path(cfg.KOBOLDCPP_KCPPS_ARGS["whispermodel"])
+        reporting.record_inputs(report, frameworks=tuple(sorted(frameworks)), models=inputs)
     write_summary(run, args.kind)
 
 

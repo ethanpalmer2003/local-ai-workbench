@@ -15,6 +15,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
@@ -282,6 +283,7 @@ def main() -> None:
             report.save(run)
             if result["status"] != "completed":
                 raise RuntimeError(result["error"])
+        reporting.record_inputs(report, frameworks=("koboldcpp", "asr/whispercpp"), models={"whisper": MODEL})
         if len({result["engine"] for result in report.results}) > 1:
             summarize(run, clips, report.results)
 

@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared import provenance as shared_provenance
 from scripts.benchmarks.shared.vram import process_evidence, snapshot_dict
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
@@ -130,6 +131,12 @@ def loader_checks(profile: TtsProfile, backends: list[str]) -> int:
             "execution_context": require_native_execution("AudioCpp loader check"),
             "total_seconds": time.perf_counter() - started,
             "limits": "Family registration only; weights not loaded and no audio synthesized.",
+            "provenance": shared_provenance.block(
+                subject=profile.label + " loader check",
+                config={"backends": backends, "profile": profile.label},
+                frameworks=[shared_provenance.framework_state("audiocpp")],
+                models=[],
+            ),
         }
     )
     print(f"Report: {run.artifacts / 'report.md'}", flush=True)
@@ -567,6 +574,19 @@ def _write_report(run: RunPaths, result: dict[str, Any], complete: bool, report:
             "total_seconds": result["total_seconds"],
             "reasoning": result["reasoning"],
             "limitations": result["limitations"],
+            "provenance": shared_provenance.block(
+                subject=result["name"],
+                config={
+                    "case": result["case"],
+                    "options": result["options"],
+                    "text": result["text"],
+                    "selected_backends": result["selected_backends"],
+                    "warmups_per_backend": result["warmups_per_backend"],
+                    "measured_runs_per_backend": result["measured_runs_per_backend"],
+                },
+                frameworks=[shared_provenance.framework_state("audiocpp")],
+                models=[shared_provenance.file_identity("tts", Path(result["model"]))],
+            ),
         }
     )
     with (run.artifacts / "report.md").open("a", encoding="utf-8") as output:

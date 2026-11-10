@@ -12,6 +12,8 @@ import wave
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared import provenance
+from scripts.config.audiocpp import server as audio_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.tests.shared.backends import backend_sessions
@@ -222,6 +224,11 @@ def run(timeout: float, max_tokens: int, context: dict[str, Any]) -> Path:
                 flush=True,
             )
 
+    audio_model = next(
+        Path(model["path"])
+        for model in audio_cfg.read(Path(cfg.AUDIOCPP_SERVER_ARGS["config"]))["models"]
+        if model["id"] == cfg.AUDIOCPP_SERVICE.model
+    )
     report = {
         "name": "Kobold Rocinante reply delivered to Breeze through AudioCpp proxy",
         "execution_context": context,
@@ -229,6 +236,15 @@ def run(timeout: float, max_tokens: int, context: dict[str, Any]) -> Path:
         "audiocpp_model": cfg.AUDIOCPP_SERVICE.model,
         "voice": cfg.AUDIOCPP_SERVICE.voice,
         "playback_buffer_ms": 2000,
+        "provenance": provenance.block(
+            subject="Kobold to Breeze delivery modes",
+            config={"execution_context": context, "playback_buffer_ms": 2000},
+            frameworks=[provenance.framework_state("koboldcpp"), provenance.framework_state("audiocpp")],
+            models=[
+                provenance.file_identity("chat", Path(cfg.KOBOLDCPP_SERVICE.model)),
+                provenance.file_identity("speech", audio_model),
+            ],
+        ),
         "generation": {key: value for key, value in generated.items() if key != "text"},
         "warmup": {key: value for key, value in warmup.items() if key != "pcm" and key != "chunks"},
         "llm_generation_finished_before_tts": True,
