@@ -15,7 +15,7 @@ controller pre-roll 300 ms; native streaming settings use session-option scope.
 Final transcripts arrived **0.864 / 0.865 s after the native Silero speech-end
 timestamp**, including silence detection, frame scheduling and ASR completion.
 These are two samples, not percentiles. The marker is the detector's estimate,
-not human-labelled speech end. No explicit client commit was used to end speech;
+not human-labeled speech end. No explicit client commit was used to end speech;
 the controller closed the ASR upload only after the native VAD speech-end event.
 
 Native report (../../output/audiocpp/vad_turns/unreviewed/1793238226107251600/artifacts/report.json).

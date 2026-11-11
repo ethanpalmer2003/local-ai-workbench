@@ -20,7 +20,7 @@
         try { const value = await operation(); result = 'complete'; return value; }
         catch (error) {
             result = error?.name === 'AbortError'
-                ? 'cancelled'
+                ? 'canceled'
                 : `failed · ${error?.message || String(error)}`;
             throw error;
         }

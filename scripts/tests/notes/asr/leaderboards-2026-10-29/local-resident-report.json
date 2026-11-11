@@ -14,7 +14,7 @@
       "id": "internal-0",
       "source": "C:\\AI\\scripts\\tests\\output\\shared\\kobold_embedded_compare\\unreviewed\\1793231643344683600\\internal\\artifacts\\sample-0.wav",
       "file": "C:\\AI\\scripts\\tests\\output\\asr\\shared\\resident_compare\\unreviewed\\1793254500105109300\\artifacts\\clip-0.wav",
-      "reference": "Hello. Tell me about your day, and I will help you practise a natural conversation.",
+      "reference": "Hello. Tell me about your day, and I will help you practice a natural conversation.",
       "language": "en",
       "duration_seconds": 5.3,
       "sha256": "a98c4b3222299e25ddcdc67ec83103d51907aca875cb32666e2837a6e8abf715"

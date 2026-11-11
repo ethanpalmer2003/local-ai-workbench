@@ -216,7 +216,7 @@ class BenchmarkRelay:
         self.task = "warmup"
         self.lock = threading.Lock()
         self.active: dict[int, tuple[str, socket.socket]] = {}
-        self.cancelled: set[str] = set()
+        self.canceled: set[str] = set()
         self.server: ThreadingHTTPServer | None = None
         self.thread: threading.Thread | None = None
 
@@ -247,7 +247,7 @@ class BenchmarkRelay:
     def cancel_task(self, task: str | None = None) -> None:
         with self.lock:
             if task:
-                self.cancelled.add(task)
+                self.canceled.add(task)
             sockets = [connection for label, connection in self.active.values() if task is None or task == label]
         for connection in sockets:
             with suppress(OSError):  # The response may have closed after the snapshot.
@@ -368,9 +368,9 @@ class _BenchmarkRelayHandler(BaseHTTPRequestHandler):
                 raise ConnectionError("Backend socket is unavailable")
             with relay.lock:
                 relay.active[id(record)] = (record["task"], connection.sock)
-                cancelled = record["task"] in relay.cancelled
-            if cancelled:
-                raise ConnectionAbortedError("Task was cancelled")
+                canceled = record["task"] in relay.canceled
+            if canceled:
+                raise ConnectionAbortedError("Task was canceled")
             response = connection.getresponse()
             record["status"] = response.status
             self.send_response(response.status)

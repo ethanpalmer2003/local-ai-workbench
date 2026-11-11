@@ -8,7 +8,7 @@ assets/runtime failures. Isolated resources do not establish LLM/TTS coexistence
 capacity. Publisher RTFx remains separate from local speed.
 
 - [Streaming/VAD groups](../../../launchers/asr/CAPABILITIES.md); [evaluation](../../notes/asr/ASR-SCREEN.md).
-- ASR coexistence tests use Kokoro or another lightweight multilingual TTS, not Breeze/heavier speech models. [One-server evidence](../../notes/audiocpp/AUDIOCPP-SINGLE-SERVER.md); isolated ASR measurements remain labelled separately.
+- ASR coexistence tests use Kokoro or another lightweight multilingual TTS, not Breeze/heavier speech models. [One-server evidence](../../notes/audiocpp/AUDIOCPP-SINGLE-SERVER.md); isolated ASR measurements remain labeled separately.
 
 The [resident runner](../../../benchmarks/asr/asr_resident_compare.py) uses the domain-neutral
 [benchmark lifecycle](../../../benchmarks/README.md). Startup/loading, first inference,

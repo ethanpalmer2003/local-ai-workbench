@@ -35,7 +35,7 @@ class PublicAuditTests(unittest.TestCase):
         self.assertEqual(public_audit.scan_text("scripts/launchers/x.py", 'PATH = "{AI_ROOT}/data/x"', ()), [])
 
     def test_voice_terms_reach_into_file_names_but_not_prose(self):
-        text = "download/alpha_config.py and summazzfixture the result"
+        text = "download/alpha_config.py and summarize the result"
         findings = public_audit.scan_text("scripts/download/notes.py", text, ("alpha", "zzfixture"))
         self.assertEqual([finding.detail for finding in findings], ["alpha"])
 

@@ -38,7 +38,7 @@ Ranges are two samples, one per chat runtime, using the same synthetic English
 
 clip. Final timing includes silence detection and 128 ms upload/poll scheduling;
 
-the marker is Silero's estimate, not human-labelled speech end. All transcripts
+the marker is Silero's estimate, not human-labeled speech end. All transcripts
 
 agree in wording apart from punctuation. This cannot rank multilingual accuracy.
 

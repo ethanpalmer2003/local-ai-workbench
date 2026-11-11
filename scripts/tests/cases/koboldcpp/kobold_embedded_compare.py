@@ -33,7 +33,7 @@ from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 PORT = 18881
 TEXTS = (
-    "Hello. Tell me about your day, and I will help you practise a natural conversation.",
+    "Hello. Tell me about your day, and I will help you practice a natural conversation.",
     "Imagine that we are meeting at a small cafe. Please order a drink, ask about the menu, "
     "and tell me where you would like to sit. After you finish, I will suggest one useful correction.",
 )

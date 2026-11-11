@@ -238,7 +238,7 @@ def main(argv: list[str] | None = None) -> int:
     expected = next((row.sha256 for row in model_cfg.MODELS if row.label == LABEL), None)
     digest = provenance.content_digest(model)
     if expected and digest != expected:
-        print(f"[FAIL] {LABEL} differs from the catalogued sha256; refusing to report.")
+        print(f"[FAIL] {LABEL} differs from the cataloged sha256; refusing to report.")
         return 1
 
     if args.code:

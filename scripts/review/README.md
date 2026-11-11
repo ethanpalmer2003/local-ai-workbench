@@ -17,16 +17,17 @@ The runner executes these checks:
 - `model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
 - `frontend_wiring.py`: front-end wiring: HTML/JS asset paths, DOM element ids and injected settings keys.
 - `basedpyright`: Python type errors.
-- `inventory_code.py`: folder counts, sparse-folder warnings, merge candidates, module counts, file lines and function size for context; the gate is ruff's McCabe rule. Low counts are prompts to review, not findings.
-- `typography.py`: ASCII punctuation only: em and en dashes, curly quotes, the ellipsis and no-break spaces are rejected in every tracked text file, quoted corpus references excepted. The pre-commit hook runs the same module on staged files.
-- `comments.py`: TODO markers, banner rules and commented-out code are rejected; comments that explain why stay welcome.
+- `inventory_code.py`: folder counts, sparse-folder warnings, merge candidates, module counts, file lines and function size; the gate is ruff's McCabe rule. Low counts prompt review, not findings.
+- `typography.py`: ASCII punctuation only: em and en dashes, curly quotes, the ellipsis and no-break spaces are rejected in every tracked text file, quoted corpus references excepted. The pre-commit hook runs it on staged files.
+- `comments.py`: markers, banner rules and commented-out code are rejected; comments that explain why stay.
+- `spellings.py`: British spellings report the American form.
 - `network_timeouts.py`: every HTTP call passes `timeout=`; the ASR upload wrapper owns its own.
 
 Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function complexity is gated by ruff at the limit in [code rules](../../.agents/CODE.md); the inventory lists the largest functions. Inventory excludes generated output, caches, model data, installs and trash.
 
 ## Duplicate check
 
-`python -m scripts.review.similarity` is opt-in and needs a model: it starts the catalogued embedding model, embeds every bullet and sentence in the maintained Markdown, and lists section pairs that share at least two units (or one of 25+ words). Findings are pairs to review; the check never edits a document. `--threshold`, `--top` and `--strict` tune it, and `--no-server` reuses a running server. Tables, code fences and procedural lines are excluded so structural repetition does not dominate. Each report records a content digest per file, so the next run says how many files changed since it. Evidence: [embedding screen](../../notes/reviews/EMBEDDINGS-2026-11-10.md). Batches: [check_similarity.bat](../../bat/review/check_similarity.bat), [check_code_similarity.bat](../../bat/review/check_code_similarity.bat).
+`python -m scripts.review.similarity` is opt-in and needs a model: it starts the cataloged embedding model, embeds every bullet and sentence in the maintained Markdown, and lists section pairs that share at least two units (or one of 25+ words). Findings are pairs to review; the check never edits a document. `--threshold`, `--top` and `--strict` tune it, and `--no-server` reuses a running server. Tables, code fences and procedural lines are excluded so structural repetition does not dominate. Each report records a content digest per file, so the next run says how many files changed since it. Evidence: [embedding screen](../../notes/reviews/EMBEDDINGS-2026-11-10.md). Batches: [check_similarity.bat](../../bat/review/check_similarity.bat), [check_code_similarity.bat](../../bat/review/check_code_similarity.bat).
 
 `--code` switches to functions: one chunk per function or method (AST, bodies of 3+ lines), tests skipped, threshold 0.95, every pair reported. Code duplicates are weaker evidence, so read them as a list rather than a defect count.
 

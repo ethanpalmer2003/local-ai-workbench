@@ -98,7 +98,7 @@ function renderMeasurements() {
     $('measurement-rows').replaceChildren(...compactMeasurements().map(value => {
         const row = document.createElement('tr');
         if (String(value.result).includes('failed')) row.dataset.state = 'failed';
-        else if (value.result === 'cancelled') row.dataset.state = 'cancelled';
+        else if (value.result === 'canceled') row.dataset.state = 'canceled';
         for (const text of [value.stage, value.model || 'Not recorded', seconds(value.milliseconds), value.result]) {
             const cell = document.createElement('td'); cell.textContent = text; row.append(cell);
         }
@@ -423,7 +423,7 @@ function cancelTurn() {
     globalThis.SpeechDiagnostics?.stop(); $('audio').pause();
     globalThis.SpeechLifecycle?.release?.();
     pendingFrames = pendingFrames.map(() => new Float32Array(512));
-    status('Cancelling request and playback...');
+    status('Canceling request and playback...');
 }
 async function transcribe(blob) {
     if (busy) { status('Wait for the request to finish.'); return; }
@@ -435,7 +435,7 @@ async function transcribe(blob) {
         turnController.signal.throwIfAborted();
         if (typeof value.text !== 'string' || !value.text.trim()) throw new Error('No speech recognized. Try a clearer recording.');
         $('transcript').value = value.text; status('Transcript ready.'); complete = true;
-    } catch (error) { status(error.name === 'AbortError' ? 'Transcription cancelled.' : error.message); }
+    } catch (error) { status(error.name === 'AbortError' ? 'Transcription canceled.' : error.message); }
     finally { setBusy(false); globalThis.SpeechLifecycle?.refresh().catch(() => {}); }
     if (complete && $('auto-send').checked && ($('enable-llm').checked || $('speak').checked)) await sendMessage();
 }
@@ -487,7 +487,7 @@ async function replyTo(text, onText) {
     const next = [...messages, {role: 'user', content: text}];
     let partial = '', pendingSpeechWhitespace = '';
     const prompt = $('assistant-practice-toggle').checked
-        ? [{role: 'system', content: `Help me practise conversation in ${language === 'Detect automatically' ? 'the language I use' : language}. Use CEFR ${$('learning-level').value || 'A2'} vocabulary and grammar. Keep replies to one or two short sentences and ask one follow-up question. ${$('correct-language').checked ? 'Offer at most one brief correction when useful.' : 'Do not correct my language unless I ask.'}`}]
+        ? [{role: 'system', content: `Help me practice conversation in ${language === 'Detect automatically' ? 'the language I use' : language}. Use CEFR ${$('learning-level').value || 'A2'} vocabulary and grammar. Keep replies to one or two short sentences and ask one follow-up question. ${$('correct-language').checked ? 'Offer at most one brief correction when useful.' : 'Do not correct my language unless I ask.'}`}]
         : [];
     const reply = await measured('LLM reply', () => speechClient.chat({
             messages: [...prompt, ...next],
@@ -554,7 +554,7 @@ async function sendMessage() {
             turnController.signal.throwIfAborted();
         });
         status(recording ? 'Listening. Pause to finish your next turn.' : 'Ready.');
-    } catch (error) { turnController?.abort(); speechClient.stop(); status(error.name === 'AbortError' ? 'Response cancelled.' : error.message); }
+    } catch (error) { turnController?.abort(); speechClient.stop(); status(error.name === 'AbortError' ? 'Response canceled.' : error.message); }
     finally { setBusy(false); globalThis.SpeechLifecycle?.refresh().catch(() => {}); }
 }
 // The diagnostic form and keyboard use this controller; fixtures can invoke the same action directly.

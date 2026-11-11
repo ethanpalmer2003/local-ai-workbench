@@ -22,7 +22,7 @@ class SegmentStream:
         self.pcm = bytearray()
         self.events = queue.Queue()
         self.done = threading.Event()
-        self.cancelled = threading.Event()
+        self.canceled = threading.Event()
         self.worker = None
 
     def start(self):
@@ -53,7 +53,7 @@ class SegmentStream:
                 text = json.loads(data).get("text")
                 if not isinstance(text, str) or not text.strip():
                     raise RuntimeError("Recognizer returned no transcription text")
-                if not self.cancelled.is_set():
+                if not self.canceled.is_set():
                     self.events.put(
                         {
                             "type": "transcript.text.done",
@@ -62,7 +62,7 @@ class SegmentStream:
                         }
                     )
             except Exception as error:
-                if not self.cancelled.is_set():
+                if not self.canceled.is_set():
                     self.events.put({"type": "error", "error": str(error)})
             finally:
                 self.done.set()
@@ -72,6 +72,6 @@ class SegmentStream:
         self.worker.start()
 
     def close(self):
-        self.cancelled.set()
+        self.canceled.set()
         if self.worker and self.worker is not threading.current_thread():
             self.worker.join(timeout=1)

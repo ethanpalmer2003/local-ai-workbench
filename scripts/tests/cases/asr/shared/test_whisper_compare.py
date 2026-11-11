@@ -14,7 +14,7 @@ class WhisperCompareTests(unittest.TestCase):
         self.assertNotIn("-nfa", command("vulkan-fa"))
 
     def test_formatting_and_equivalent_spelling_are_not_recognition_errors(self):
-        result = word_errors("Let's practise at a caf\u00e9.", "LET'S practice at a cafe!")
+        result = word_errors("Let's practice at a caf\u00e9.", "LET'S practice at a cafe!")
         self.assertEqual(result, {"word_errors": 0, "reference_words": 5, "wer": 0.0})
 
     def test_insertions_deletions_and_substitutions_are_counted(self):

@@ -88,7 +88,7 @@ def voice_terms() -> tuple[str, ...]:
 
 
 def voice_patterns(words: tuple[str, ...]) -> str:
-    """Alphanumeric boundaries, so `chapter_config` matches but `Summazzfixture` does not."""
+    """Alphanumeric boundaries, so `chapter_config` matches but `Summarize` does not."""
     return "|".join(rf"(?<![A-Za-z0-9]){re.escape(word)}(?![A-Za-z0-9])" for word in words)
 
 

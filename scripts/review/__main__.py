@@ -15,6 +15,7 @@ from scripts.review import (
     model_references,
     network_timeouts,
     package_audit,
+    spellings,
     typography,
 )
 from scripts.review.public_audit import main as public_audit_main
@@ -181,6 +182,9 @@ def main(argv: list[str] | None = None) -> int:
     print("\n=== COMMENTS ===", flush=True)
     comment_status = comments.main([])
 
+    print("\n=== AMERICAN SPELLING ===", flush=True)
+    variant_status = spellings.main([])
+
     print("\n=== SPELLING ===", flush=True)
     spelling_status = spelling_check()
     print("[OK] Spelling clean" if not spelling_status else "[FAIL] Spelling findings above")
@@ -218,6 +222,7 @@ def main(argv: list[str] | None = None) -> int:
             or inventory_status
             or dash_status
             or comment_status
+            or variant_status
             or formatting_status
             or spelling_status
             or audit_status

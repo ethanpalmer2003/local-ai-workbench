@@ -21,5 +21,6 @@
 - Test notes group by component when several belong together.
 - Maintained non-test Markdown covers current behavior, decisions and pending work only.
 - Download definitions stay in Python catalogs; docs link to them.
+- American English throughout: `scripts/review/spellings.py` reports every British variant with its American form.
 - Evidence is cited, not linked: untracked run output stays a plain path, because a clone must not carry dead links.
 - Links are relative with forward slashes, angle-bracketed when a path holds a space, and an anchor must name a heading that exists.

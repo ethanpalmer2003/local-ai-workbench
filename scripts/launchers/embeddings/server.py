@@ -1,4 +1,4 @@
-"""Embedding server lifecycle: llama.cpp serving the catalogued embedding model.
+"""Embedding server lifecycle: llama.cpp serving the cataloged embedding model.
 
 One server serves the documentation duplicate check; the model and port come from
 `launcher_config.EMBEDDINGS_SERVER`, and an existing matching server is reused.

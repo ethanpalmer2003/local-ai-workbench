@@ -71,7 +71,7 @@ class HrxBuildTests(unittest.TestCase):
             paths = RunPaths(Path(folder))
             paths.create()
             with self.assertRaises(KeyboardInterrupt):
-                build_hrx.run_step("cancelled", ["unused"], paths)
+                build_hrx.run_step("canceled", ["unused"], paths)
             kill.assert_called_once_with(123)
 
 

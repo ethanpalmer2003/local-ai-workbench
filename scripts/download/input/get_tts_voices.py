@@ -313,7 +313,7 @@ def accumulate(candidates, durations, dur_mode, target, start_total=0.0):
 
 
 def norm_key(k):
-    """Normalise an audio id/filename stem: strips '[tag]' prefix and '.0b2' style suffixes."""
+    """Normalize an audio id/filename stem: strips '[tag]' prefix and '.0b2' style suffixes."""
     k = str(k).strip()
     m = re.match(r"^(?:\[[^\]]+\])?([0-9A-Fa-f]+)(?:\.[0-9A-Fa-f]+)?(?:[-_].*)?$", k)
     return (m[1] if m else k).lower()
@@ -365,7 +365,7 @@ def spell_numbers(s):
 
 
 def clean_text(s):
-    """Normalise a transcript for voice cloning: no filename underscores, plain punctuation,
+    """Normalize a transcript for voice cloning: no filename underscores, plain punctuation,
     no symbols/emoji/tags, collapsed repeats, digits spelled out. Stage directions like
     '(sniffs)' are kept here and handled by is_speech() instead."""
     s = str(s).replace("_", "").translate(_TYPO).replace("\u2026", "...")
@@ -1010,7 +1010,7 @@ def print_summary(results: list[PreparationResult]) -> None:
 
 
 def build_mapping(raw, files):
-    """Transcript map from raw subtitles.json data: normalised keys, cleaned text, gaps filled from filenames."""
+    """Transcript map from raw subtitles.json data: normalized keys, cleaned text, gaps filled from filenames."""
     mapping = {}
     for k, v in raw.items():
         key = norm_key(k)
@@ -1048,7 +1048,7 @@ def source_files(char):
 
 
 def cleanup_character(char, drop_orphans=False):
-    """Rewrite one character's subtitles.json cleanly: normalised keys, cleaned text, filename transcripts
+    """Rewrite one character's subtitles.json cleanly: normalized keys, cleaned text, filename transcripts
     filled in. Original is kept once as subtitles.json.bak. Orphans are kept unless drop_orphans."""
     workspace, config, files = source_files(char)
     result: dict[str, Any] = {
