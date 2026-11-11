@@ -39,6 +39,7 @@ from scripts.tests.cases.review.test_docs import (
 )
 from scripts.tests.cases.review.test_layout import PolicyTests
 from scripts.tests.cases.review.test_network_timeouts import NetworkTimeoutTests
+from scripts.tests.cases.review.test_overlay_access import OverlayAccessTests
 from scripts.tests.cases.review.test_public_audit import PublicAuditTests
 from scripts.tests.cases.review.test_review_gate import ConsentTests
 from scripts.tests.cases.review.test_similarity import (
@@ -211,6 +212,7 @@ if __name__ == "__main__":
                     ValidatePlanTests,
                     PreflightTests,
                     PublicAuditTests,
+                    OverlayAccessTests,
                     SpeechProfiles,
                     WorkflowDefaultsTests,
                     WhisperCompareTests,

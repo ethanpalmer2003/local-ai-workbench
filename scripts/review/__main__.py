@@ -14,6 +14,7 @@ from scripts.review import (
     layout,
     model_references,
     network_timeouts,
+    overlay_access,
     package_audit,
     spellings,
     typography,
@@ -148,6 +149,9 @@ def main(argv: list[str] | None = None) -> int:
     print("\n=== NETWORK TIMEOUTS ===", flush=True)
     timeout_status = network_timeouts.main([])
 
+    print("\n=== OVERLAY ACCESS ===", flush=True)
+    overlay_status = overlay_access.main([])
+
     print("\n=== LINT ===", flush=True)
     lint_status = lint_check()
     print("[OK] Lint clean" if not lint_status else "[FAIL] Lint findings above")
@@ -217,6 +221,7 @@ def main(argv: list[str] | None = None) -> int:
             or model_status
             or frontend_status
             or timeout_status
+            or overlay_status
             or lint_status
             or type_status
             or inventory_status
