@@ -30,9 +30,9 @@ class SpeechProfiles(unittest.TestCase):
 
     def test_practice_languages_are_listed_first(self):
         rows = practice_models.language_profiles()
-        self.assertEqual([row["code"] for row in rows[:4]], list(cfg.PRACTICE_LANGUAGES))
+        self.assertEqual([row["code"] for row in rows[:5]], list(cfg.PRACTICE_LANGUAGES))
         self.assertEqual(len(rows), 31)
-        self.assertEqual(rows[4]["code"], "ko")  # the model's own order takes over after the targets
+        self.assertEqual(rows[5]["code"], "ko")  # the model's own order takes over after the targets
 
     def test_existing_session_is_not_replaced(self):
         with (

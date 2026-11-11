@@ -378,8 +378,9 @@ PROFILE_REQUIREMENTS = {
     "coding": ProfileRequirements(TtsQualityClass.NONE, asr=False, agent=True, llm_role="coding"),
 }
 
-# - Speech output each framework can actually provide; Lemonade has kokoro only and no Breeze,
-#   which is why it is a language profile and never a character one.
+# - Speech output each framework can actually provide. Lemonade pins its own kokoro-v1 in the
+#   comparison; its catalog also lists MOSS TTS, including a voice-design variant, which no
+#   workflow here has exercised yet.
 FRAMEWORK_TTS_CLASSES = {
     "koboldcpp": TtsQualityClass.VOICE_DESIGN,
     "audiocpp": TtsQualityClass.VOICE_DESIGN,
@@ -438,9 +439,9 @@ DEFAULT_KOKORO_PACKAGE = "multilingual"
 # - Supertonic 3: one self-contained GGUF, 31 languages, preset voices M1-M5/F1-F5, no cloning.
 SUPERTONIC_MODEL = "audiocpp/supertonic-3-q8_0"
 
-# - The languages this workspace targets, matching the pinned corpus (en_us, es_419, fr_fr, ja_jp).
-#   Speech lists put these first and keep the model's own order for everything else.
-PRACTICE_LANGUAGES = ("en", "es", "fr", "ja")
+# - The languages this workspace targets. The pinned corpus covers en/es/fr/ja; German was added from
+#   live synthesis only. Speech lists put these first and keep the model's own order after them.
+PRACTICE_LANGUAGES = ("en", "es", "fr", "ja", "de")
 
 
 # - KOBOLD_CHAT: Rocinante chat, Breeze voice-design TTS through the AudioCpp proxy, no external ASR.

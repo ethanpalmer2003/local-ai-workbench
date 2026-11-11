@@ -1,7 +1,7 @@
 # Language practice
 
 - Chat: Gemma 4 E4B Q4_0. Default ASR: AudioCpp Nemotron (`audiocpp-nemotron`). Default TTS: Supertonic 3, voice `F1`, no cloning. These follow the `LANGUAGE_PRACTICE` workflow profile in [launcher_config.py](../../launchers/launcher_config.py).
-- Language lists put the pinned corpus languages first (`en`, `es`, `fr`, `ja`) and keep the model's own order after them.
+- Language lists put the target languages first (`en`, `es`, `fr`, `ja`, `de`) and keep the model's own order after them. The pinned corpus covers the first four; German has only live synthesis checks.
 - Canonical commands, implementations and limits: [ASR guide](../../launchers/asr/README.md).
 - Shared weights: Gemma main/projector under `models/llms/multilingual_models`; ASR-specific weights under `models/asr/<framework>`; Kokoro packages under `models/audiocpp`.
 
