@@ -16,6 +16,11 @@ from urllib.parse import urlsplit
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
 from scripts.benchmarks.shared.benchmark import BenchmarkContractError, BenchmarkLifecycle
 
+# - A socket timeout bounds one read, and every read resets it, so a stream that trickles forever
+#   would hold a run open. The deadline bounds the whole response instead.
+RELAY_SOCKET_TIMEOUT_SECONDS = 600
+RELAY_DEADLINE_SECONDS = 600
+
 
 def request_settings(body: dict[str, Any], endpoint: BenchmarkEndpoint, settings: dict[str, Any]) -> dict[str, Any]:
     requested = body.get("max_tokens", body.get("max_completion_tokens"))
@@ -360,9 +365,12 @@ class _BenchmarkRelayHandler(BaseHTTPRequestHandler):
     def _forward(self, request: _RelayRequest, body: dict[str, Any]) -> None:
         relay = type(self).relay
         record = request.record
+        deadline = request.started + RELAY_DEADLINE_SECONDS
         headers = {"Content-Type": "application/json", "Authorization": f"Bearer {relay.endpoint.api_key}"}
         url = urlsplit(relay.endpoint.base_url)
-        with closing(HTTPConnection(url.hostname or "127.0.0.1", url.port, timeout=600)) as connection:
+        with closing(
+            HTTPConnection(url.hostname or "127.0.0.1", url.port, timeout=RELAY_SOCKET_TIMEOUT_SECONDS)
+        ) as connection:
             connection.request("POST", url.path.rstrip("/") + "/chat/completions", json.dumps(body).encode(), headers)
             if connection.sock is None:
                 raise ConnectionError("Backend socket is unavailable")
@@ -380,19 +388,27 @@ class _BenchmarkRelayHandler(BaseHTTPRequestHandler):
             if response.status >= 400:
                 self.wfile.write(response.read())
                 return
-            self._write_payload(response, request, bool(body.get("stream")))
+            self._write_payload(response, request, bool(body.get("stream")), deadline)
         record["finished"] = not body.get("stream") or bool(record.get("stream_done"))
 
-    def _write_payload(self, response: Any, request: _RelayRequest, streaming: bool) -> None:
+    def _write_payload(self, response: Any, request: _RelayRequest, streaming: bool, deadline: float) -> None:
         if not streaming:
             content = response.read()
+            self._check_deadline(deadline)
             observe_chunk(request.record, json.loads(content), time.perf_counter() - request.started)
             self.wfile.write(content)
             return
-        self._stream_response(response, request.record, request.started, request.timing)
+        self._stream_response(response, request.record, request.started, deadline, request.timing)
 
-    def _stream_response(self, response: Any, record: dict[str, Any], started: float, timing: Any = None) -> None:
+    def _check_deadline(self, deadline: float) -> None:
+        if time.perf_counter() > deadline:
+            raise TimeoutError(f"Backend response exceeded the {RELAY_DEADLINE_SECONDS:.0f} s relay deadline")
+
+    def _stream_response(
+        self, response: Any, record: dict[str, Any], started: float, deadline: float, timing: Any = None
+    ) -> None:
         for line in response:
+            self._check_deadline(deadline)
             if line.startswith(b"data:"):
                 data = line[5:].strip()
                 if data and data != b"[DONE]":

@@ -3,7 +3,8 @@
 A request without one waits for the peer forever: a stopped service, a half-open socket or a
 proxy that never answers turns a bug into a hung run. The scan is source-level, so it needs no
 network and cannot be slow. Socket probes that already call `settimeout` are not HTTP calls and
-stay out of scope.
+stay out of scope. Raw `http.client` connections count too: without `timeout=` the connect and
+every later read wait forever, which is the same defect in a different wrapper.
 """
 
 import re
@@ -12,7 +13,12 @@ from pathlib import Path
 from scripts.review import MAX_REPORTED
 from scripts.review.sources import maintained_files
 
-CALL = re.compile(r"(?:urllib\.request\.)?urlopen\(|requests\.(?:get|post|put|patch|delete|head|request)\(|httpx\.")
+CALL = re.compile(
+    r"(?:urllib\.request\.)?urlopen\("
+    r"|requests\.(?:get|post|put|patch|delete|head|request)\("
+    r"|httpx\."
+    r"|(?:http\.client\.)?HTTPS?Connection\("
+)
 LOCAL_REQUESTS = re.compile(r"^from scripts\.[\w.]* import requests\b", re.MULTILINE)
 
 
