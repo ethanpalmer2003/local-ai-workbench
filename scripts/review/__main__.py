@@ -13,6 +13,7 @@ from scripts.review import (
     inventory_code,
     layout,
     model_references,
+    network_timeouts,
     package_audit,
     typography,
 )
@@ -143,6 +144,9 @@ def main(argv: list[str] | None = None) -> int:
     print("\n=== FRONT-END WIRING ===", flush=True)
     frontend_status = frontend_wiring.main()
 
+    print("\n=== NETWORK TIMEOUTS ===", flush=True)
+    timeout_status = network_timeouts.main([])
+
     print("\n=== LINT ===", flush=True)
     lint_status = lint_check()
     print("[OK] Lint clean" if not lint_status else "[FAIL] Lint findings above")
@@ -208,6 +212,7 @@ def main(argv: list[str] | None = None) -> int:
             or docs_status
             or model_status
             or frontend_status
+            or timeout_status
             or lint_status
             or type_status
             or inventory_status

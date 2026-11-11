@@ -94,6 +94,7 @@ from scripts.tests.cases.shared.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.test_low_integrity import LowIntegrityTests
 from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_model_run import ModelRunTests
+from scripts.tests.cases.shared.test_network_timeouts import NetworkTimeoutTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
 from scripts.tests.cases.shared.test_review_gate import ConsentTests
@@ -170,6 +171,7 @@ if __name__ == "__main__":
                     LowIntegrityTests,
                     ConsentTests,
                     CommentPolicyTests,
+                    NetworkTimeoutTests,
                     SimilarityUnitTests,
                     SimilarityFindingTests,
                     SimilaritySourceTests,

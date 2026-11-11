@@ -17,11 +17,12 @@ The runner executes these checks:
 - `model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
 - `frontend_wiring.py`: front-end wiring: HTML/JS asset paths, DOM element ids and injected settings keys.
 - `basedpyright`: Python type errors.
-- `inventory_code.py`: folder counts, sparse-folder warnings, 2-3-item merge candidates, Markdown/Python-module counts, file lines and function size for context; the gate is ruff's McCabe rule. Python-module counts exclude `__init__.py`; low counts are prompts to review, not automatic merge findings.
-- `typography.py`: ASCII punctuation only: em and en dashes, curly quotes, the ellipsis and no-break spaces are rejected in every tracked text file, quoted corpus references excepted. It gates, and the pre-commit hook runs the same module on staged files.
+- `inventory_code.py`: folder counts, sparse-folder warnings, merge candidates, module counts, file lines and function size for context; the gate is ruff's McCabe rule. Low counts are prompts to review, not findings.
+- `typography.py`: ASCII punctuation only: em and en dashes, curly quotes, the ellipsis and no-break spaces are rejected in every tracked text file, quoted corpus references excepted. The pre-commit hook runs the same module on staged files.
 - `comments.py`: TODO markers, banner rules and commented-out code are rejected; comments that explain why stay welcome.
+- `network_timeouts.py`: every HTTP call passes `timeout=`; the ASR upload wrapper owns its own.
 
-Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function complexity is gated by ruff at the limit in [code rules](../../.agents/CODE.md); the inventory lists the largest functions for context. Inventory excludes generated output, caches, model data, third-party installations and trash.
+Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function complexity is gated by ruff at the limit in [code rules](../../.agents/CODE.md); the inventory lists the largest functions for context. Inventory excludes generated output, caches, model data, installs and trash.
 
 ## Duplicate check
 
