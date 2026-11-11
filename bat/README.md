@@ -9,6 +9,7 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 | [update_frameworks.bat](update_frameworks.bat) | Check/apply framework updates (`--check-only`, `--only KEY`, `--category`). |
 | [manage_kill_ai_services.bat](manage_kill_ai_services.bat) | Stop C:\AI-owned listeners; `--non-agents` keeps coding agents, llama.cpp and Strata running. |
 | [manage_rocm_installs.bat](manage_rocm_installs.bat) | List ROCm installs with size, version and project references; read-only. |
+| [manage_low_integrity.bat](manage_low_integrity.bat) | Check the workspace for the Low integrity label; `--fix` restores Medium. |
 | [launch_llamacpp_pi_agent.bat](launch_llamacpp_pi_agent.bat) | llama.cpp coding agent, default Pi; `--client little-coder`, `ohmypi`, `nanocoder`, or `none`. |
 | [launch_strata_pi_agent.bat](launch_strata_pi_agent.bat) | Strata coding agent with Pi. |
 
