@@ -3,8 +3,9 @@
 /frameworks/
 /trash/
 /scripts/benchmarks/output/
-# Editor state stays local.
+# Editor state and scratch drafts stay local.
 /.zed/
+/.scratch/
 
 
 # Test and editor artifacts stay local.
