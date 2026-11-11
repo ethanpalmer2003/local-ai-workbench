@@ -76,7 +76,8 @@ def is_text(path: str) -> bool:
 def tracked_text_files(root: Path) -> list[str]:
     """Every tracked file whose content is text we write."""
     result = subprocess.run(["git", "-C", str(root), "ls-files"], capture_output=True, text=True, check=True)
-    return [path for path in result.stdout.splitlines() if path and is_text(path)]
+    # - a deletion is still in the index until it is committed; skip files the tree no longer has
+    return [path for path in result.stdout.splitlines() if path and is_text(path) and (root / path).is_file()]
 
 
 def check(root: Path, paths: list[str]) -> int:

@@ -217,22 +217,39 @@ PLACEMENT_NAMES: dict[Path, frozenset[str]] = {
 PLACEMENT_SUFFIXES: dict[Path, frozenset[str]] = {
     project_cfg.BASE_DIR / "notes": frozenset({".md"}),
     project_cfg.BASE_DIR / ".agents": frozenset({".md"}),
-    project_cfg.CONFIG_DIR: frozenset({".py", ".md", ".json"}),
-    project_cfg.SCRIPTS_DIR / "launchers": frozenset({".py", ".md"}),
+}
+
+# - role trees apply to every folder inside them, not only their root
+PLACEMENT_ROOTS: dict[Path, frozenset[str]] = {
+    project_cfg.CONFIG_DIR: frozenset(
+        {".py", ".md", ".json", ".patch", ".jinja", ".ini", ".txt", ".ts", ".yaml", ".kcpps"}
+    ),
+    project_cfg.SCRIPTS_DIR / "launchers": frozenset({".py", ".md", ".js", ".patch", ".diff", ".mjs"}),
     project_cfg.SCRIPTS_DIR / "tools": frozenset({".py", ".md", ".ps1"}),
     project_cfg.SCRIPTS_DIR / "review": frozenset({".py", ".md", ".bat"}),
     project_cfg.SCRIPTS_DIR / "download": frozenset({".py", ".md"}),
+    project_cfg.BAT_DIR: frozenset({".bat", ".md"}),
 }
 
 
+def _folder_label(folder: Path) -> str:
+    if folder == project_cfg.BASE_DIR:
+        return "the workspace root"
+    return folder.relative_to(project_cfg.BASE_DIR).as_posix()
+
+
 def _placement_issues(path: Path) -> list[str] | None:
-    """A high-level folder accepts only the files that belong to its role."""
+    """A folder accepts only the files its role allows, at any depth below that role."""
+    label = _folder_label(path.parent)
     names = PLACEMENT_NAMES.get(path.parent)
     if names is not None and path.name not in names:
-        return [f"File has no place in {path.parent.name}: {path.name}"]
+        return [f"File has no place in {label}: {path.name}"]
     suffixes = PLACEMENT_SUFFIXES.get(path.parent)
     if suffixes is not None and path.suffix not in suffixes:
-        return [f"File has no place in {path.parent.name}: {path.name}"]
+        return [f"File has no place in {label}: {path.name}"]
+    for root, allowed in PLACEMENT_ROOTS.items():
+        if path.is_relative_to(root) and path.suffix not in allowed:
+            return [f"File has no place in {label}: {path.name}"]
     return None
 
 
@@ -339,6 +356,21 @@ def policy_limit_issues() -> list[str]:
     if int(stated.group(1)) != int(limit):
         return [f"CODE.md states McCabe {stated.group(1)} but pyproject configures {limit}"]
     return []
+
+
+def empty_shell_issues() -> list[str]:
+    """A package that holds nothing but an empty __init__.py is a placeholder, not an owner."""
+    issues: list[str] = []
+    for folder in sorted({path.parent for path in tracked_files()}):
+        if not folder.is_dir():
+            continue
+        entries = [entry for entry in folder.iterdir() if entry.is_file()]
+        subfolders = [entry for entry in folder.iterdir() if entry.is_dir() and entry.name != "__pycache__"]
+        if subfolders or not entries:
+            continue
+        if all(entry.name == "__init__.py" and entry.stat().st_size == 0 for entry in entries):
+            issues.append(f"Empty package shell: {_folder_label(folder)}")
+    return issues
 
 
 def placement_issues() -> list[str]:
