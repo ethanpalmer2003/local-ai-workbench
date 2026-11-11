@@ -10,14 +10,12 @@
 
 ## Documentation review
 
-- [ ] Delete or reset the protected cache folder `scripts/state/cache/asr/shared/install-crispasr-*`: it refuses a label change and blocks a recursive cache repair. ~5 min
 - [ ] Re-run the documentation screen and review what it still reports; the enumerated pairs from the first pass are fixed. `python -m scripts.review.similarity`. ~15-20 min
 
 ## Needs a model run or device
 
 ### Requires user input
 
-- [ ] Update the Strata engine to 0.1.59 through the app; 0.1.57 is installed and 0.1.59 is offered. ~15 min
 - [ ] Validate Handy microphone selection, dictation and paste. `selected_microphone` is null and the last attempt captured 0 samples in 17 ms, so the device is the suspect; model, VAD and hotkey are configured. ~30-45 min
 - [ ] Finish live voice-practice checks on both chat consumers: pipelining, capture, playback and echo. Saved-PCM path passes; the browser mic returns audio requests but no transcript. [Scenario matrix](../scripts/launchers/asr/MULTIUSE-SCENARIOS.md). ~45-60 min
 - [ ] Measure multilingual/noisy accuracy and microphone latency: capture produced no transcript and no multilingual corpus is configured. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py). ~45-60 min
