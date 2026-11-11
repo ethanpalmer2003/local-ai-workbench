@@ -22,7 +22,17 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["basedpyright", "codespell", "coverage", "deptry", "pip-audit", "pre-commit", "pytest", "ruff"]
+dev = [
+    "basedpyright",
+    "codespell",
+    "coverage",
+    "deptry",
+    "pip-audit",
+    "pre-commit",
+    "pytest",
+    "pytest-timeout>=2.4.0",
+    "ruff",
+]
 
 [tool.uv]
 # - this repository is a tree of scripts, not an installable package
@@ -31,6 +41,11 @@ package = false
 default-groups = []
 # - the interpreter lives in scripts/.venv, so uv must not create ./.venv:
 #   set UV_PROJECT_ENVIRONMENT=C:/AI/scripts/.venv before any uv sync/lock command
+
+[tool.pytest.ini_options]
+# - a hung socket or probe fails one test instead of the whole run; the model-free suite is seconds
+timeout = 60
+timeout_method = "thread"
 
 [tool.pyright]
 # - the repository root is the parent of the scripts package (imports are scripts.*)
