@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.file_util import archive_path
+from scripts.config.trash import archive_path
 
 
 @dataclass(frozen=True)

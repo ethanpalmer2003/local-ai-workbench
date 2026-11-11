@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from scripts.config import overlay_inputs as inputs
-from scripts.file_util import archive_path
+from scripts.config.trash import archive_path
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.llamacpp import qwen3_asr
 from scripts.launchers.shared.services.process import stop_owned

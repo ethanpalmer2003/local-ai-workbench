@@ -16,19 +16,16 @@ synthesis and recognition), whisper.cpp, Parakeet.cpp, SD.cpp and ComfyUI.
 
 Frameworks are measured individually, and in the combined workflows a real capability requires:
 
-- Language practice: an inference engine, speech synthesis and recognition behind one gateway, so
-  chat, spoken output and transcripts are all part of the same session.
-- Coding: an agent harness in front of an inference engine, where the harness decides how the model
-  is driven and the engine decides how fast it answers.
+- Language practice: chat, speech synthesis and recognition behind one gateway.
+- Coding: an agent harness in front of an inference engine.
 
-Each workflow states what a framework must provide before it is considered at all, so a stack that
-cannot meet the requirement is refused up front rather than discovered at runtime.
+Each workflow states its requirements up front, and a stack that cannot meet them is refused at launch.
 
 ## Tuning for this device
 
-Not every framework has a rival to measure against, and some comparisons answer a question inside one
-framework: ROCm against Vulkan, context and offload settings, quantisation and batch size measure AMD
-performance for a fixed workload, not one framework against another.
+Some comparisons stay inside one framework: ROCm against Vulkan, context and offload settings,
+quantisation and batch size. These measure hardware performance for a fixed workload, not one
+framework against another.
 
 - There is a `TUNING.md` for each tuned component, stating what is in use, the evidence behind it and
   what stays unmeasured: [ComfyUI](scripts/config/comfyui/TUNING.md), [SD.cpp](scripts/config/sdcpp/TUNING.md),
@@ -55,11 +52,10 @@ C:\AI\bat\browser\comfyui\launch_comfyui.bat
 C:\AI\scripts\.venv\Scripts\python.exe -m scripts.tools.capability_matrix
 ```
 
-Long runs record provenance (workspace and framework commits, weight identity, effective settings,
-corpus revision and manifest hash), so a later run can tell what changed, and a stale result is marked
-rather than silently compared. Recognition is scored on a pinned multilingual corpus with word and
-character error rates, and synthesised speech is rejected when it cannot be the sentence it claims to
-be.
+Long runs record provenance: workspace and framework commits, weight identity, effective settings,
+corpus revision and manifest hash. A result whose inputs changed is marked stale rather than compared.
+Recognition is scored on a pinned multilingual corpus with word and character error rates;
+synthesised speech is checked against the requested text.
 
 ## In progress
 

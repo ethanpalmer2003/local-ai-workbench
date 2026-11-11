@@ -1,12 +1,12 @@
 # Local AI workspace
 
 - Component paths: [project_config.py](config/project_config.py); runtime settings: [launcher_config.py](launchers/launcher_config.py).
-- Use one component key wherever a component owns files; matching keys do not require empty mirror folders. [folder rules](../.agents/FOLDERS.md).
+- Use one component key wherever files belong to one component; matching keys do not require empty mirror folders. [folder rules](../.agents/FOLDERS.md).
 - New machine: [onboarding](../notes/ONBOARDING.md). Pending work: [TODO](../notes/TODO.md); open questions: [OPEN-QUESTIONS](../notes/OPEN-QUESTIONS.md).
 - Routine batch entry points: [bat/README.md](../bat/README.md).
 - Two browser pages exist: the shared `/test/` page and the practice page. A manual tool or check becomes a control there, not a new entry point.
 
-| Task | Owner guide |
+| Task | Guide |
 | --- | --- |
 | Coding with llama.cpp | [guide](launchers/llamacpp/README.md) |
 | Strata with Pi | [guide](launchers/strata/README.md) |

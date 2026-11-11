@@ -8,9 +8,9 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from scripts.config import project_config as project_cfg
+from scripts.config.trash import archive_path
 from scripts.download.frameworks.llamacpp import rdna_build as llamacpp_rdna_build
 from scripts.download.input import get_tts_voices, split_from_csv
-from scripts.file_util import archive_path
 from scripts.launchers import launch_util
 from scripts.launchers.launch_util import assign_process_to_job
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig, LlamaMonitor
