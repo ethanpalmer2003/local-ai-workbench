@@ -1,6 +1,6 @@
 # Upstream issues and local patches
 
-Every upstream defect we answer, split by whether a local build is involved; reports stay local drafts.
+Every upstream defect with a recorded local response, split by whether a local build is involved; reports stay local.
 
 ## No rebuild
 
@@ -18,8 +18,8 @@ Every upstream defect we answer, split by whether a local build is involved; rep
 | ROCm torch | Invalid kernel file error on one device | `HIP_VISIBLE_DEVICES` escape hatch stays commented | [bootstrap](../bat/browser/comfyui/comfyui_bootstrap.bat) |
 | sageattention wheel | Rebuilt wheels keep one version, so pip skips them | Updater force-reinstalls it | vendor updater |
 
-The ComfyUI install is a self-updating clone we never edit; owned files and the node check are in its
-[configuration](../scripts/config/comfyui/README.md). Partner and API nodes are off as policy, not a defect.
+The ComfyUI install is a self-updating clone that is not edited locally; owned files and the node check are in its
+[configuration](../scripts/config/comfyui/README.md). Partner and API nodes stay off as policy.
 
 ## Rebuild, implemented
 

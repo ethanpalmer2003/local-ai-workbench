@@ -3,3 +3,6 @@
 /frameworks/
 /trash/
 /scripts/benchmarks/output/
+# Editor state stays local.
+/.zed/
+

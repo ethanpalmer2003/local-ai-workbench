@@ -6,7 +6,7 @@ the same capability, and tuning a framework for this hardware, an RX 7800 XT wit
 
 ## Purpose
 
-Local AI arrives as a set of frameworks that each own their config, ports, weights and quirks. Both
+Local AI arrives as a set of frameworks that each carry their own config, ports, weights and quirks. Both
 jobs need more than a working install: one canonical key per component, readiness checks that mean the
 same thing everywhere, provenance recorded beside every measurement, and results that say what changed
 since the last run. This repository provides that for llama.cpp, KoboldCpp, Lemonade, AudioCpp (speech
@@ -30,8 +30,8 @@ Not every framework has a rival to measure against, and some comparisons answer 
 framework: ROCm against Vulkan, context and offload settings, quantisation and batch size measure AMD
 performance for a fixed workload, not one framework against another.
 
-- Each tuned component owns a `TUNING.md` stating what is in use, the evidence behind it and what stays
-  unmeasured: [ComfyUI](scripts/config/comfyui/TUNING.md), [SD.cpp](scripts/config/sdcpp/TUNING.md),
+- There is a `TUNING.md` for each tuned component, stating what is in use, the evidence behind it and
+  what stays unmeasured: [ComfyUI](scripts/config/comfyui/TUNING.md), [SD.cpp](scripts/config/sdcpp/TUNING.md),
   [llama.cpp](scripts/config/llamacpp/TUNING.md), [Strata](scripts/config/strata/TUNING.md).
 - Tuning evidence is recorded like comparison evidence: provenance plus a measured pair, because a
   single run cannot show that a change helped.
@@ -63,9 +63,9 @@ be.
 
 ## In progress
 
-Three lists, one job each: [TODO](notes/TODO.md) is local work that can start, [upstream
-fixes](notes/UPSTREAM.md) is what a vendor owes us and what is done about it, and [open
-questions](notes/OPEN-QUESTIONS.md) is decisions not yet made.
+The working lists are [TODO](notes/TODO.md) for local work that can start, [upstream
+fixes](notes/UPSTREAM.md) for potential issues in existing frameworks found during limited testing,
+and [open questions](notes/OPEN-QUESTIONS.md) for decisions not yet made.
 
 ## Layout
 
