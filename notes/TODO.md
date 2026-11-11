@@ -19,7 +19,9 @@
 ### Unattended
 
 - [ ] Retest llama.cpp coding on the ROCm build when a release newer than b1372 appears; b1372 is the newest and crashes on load. ~20 min
+- [ ] Rerun the llama.cpp profile screen so the prefill column exists for the current profiles and builds; every saved table predates it. [Tuning](../scripts/config/llamacpp/TUNING.md). ~20-30 min
 - [ ] Retest Kobold readiness and the remaining live targets after the integrity-label fix; its launcher still timed out at 180 s. ~30 min
+- [ ] Run the coding-engine benchmark on llama.cpp and Strata for the first comparable prefill, decode and TTFT rows: `--engine llamacpp --profile swift15`, then `--engine endpoint` against a running Strata. It starts servers itself and needs free ports. ~30-45 min
 - [ ] llama.cpp: medium/high-context speculation. Filled context at 32k is measured: cold prefill 505 tok/s with a 63.3 s TTFT, 48.5 tok/s decode warm and 39.0 tok/s cached at 12.8 GiB. Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). ~1-1.5 h
 - [ ] Rerun the capability rows so their recorded evidence is judged: 23 are flagged, and each run turns its row green or names what changed. `python -m scripts.tools.capability_matrix --check` lists them. ~1-2 h
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md). ~1.5-2 h

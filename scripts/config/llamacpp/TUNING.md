@@ -9,6 +9,7 @@
 | MTP depth 2 | Rotated 2/3/4 trials averaged 37.16/35.87/35.42 tok/s; depth 2 shortest aggregate request time. Short English/code scope, not a universal optimum |
 | Ngram 24/48/64 | Two paired source-copy tasks: decode +18.9%, request time +4.3%; four fresh-generation rounds showed no meaningful penalty, not formal equivalence |
 | Q8 K/V | Lower memory than f16; answer-quality loss and Q4 KV not evaluated |
+| Prefill measured | The profile runner now sends one cold request per prompt: `prompt_per_second` is reported next to decode, with `cache_n` showing reuse. The 32K filled-context run measured 505 tok/s cold prefill and a 63.3 s TTFT |
 | GPU layers 99 | Working full-offload request/cap, not an actual layer count or sweep result |
 | Flash Attention | Operational compatibility established; isolated speed/quality effect not measured |
 | One slot | Interactive workload/context choice; no universal ngram restriction implied |

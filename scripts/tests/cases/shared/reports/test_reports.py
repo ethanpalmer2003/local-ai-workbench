@@ -71,8 +71,13 @@ class ReportOutputs(unittest.TestCase):
                     benchmark,
                     "run_profile",
                     return_value=(
-                        {"code": [benchmark.Sample(16, 1.0, 16.0, 32)]},
-                        {"resident": {}, "peak_process_used_mb": None, "peak_total_used_mb": None},
+                        {"code": [benchmark.Sample(16, 1.0, 16.0, 32, 0.4, 0)]},
+                        {
+                            "resident": {},
+                            "peak_process_used_mb": None,
+                            "peak_total_used_mb": None,
+                            "prefill_samples": {"code": benchmark.Sample(32, 1.0, 16.0, 32, 0.4, 0)},
+                        },
                     ),
                 ) as run,
                 patch.object(benchmark, "output", output),

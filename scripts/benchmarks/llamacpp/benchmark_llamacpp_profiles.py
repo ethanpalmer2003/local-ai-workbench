@@ -1,11 +1,13 @@
-"""Quick, meaningful tokens-per-second benchmark for configured llama.cpp profiles.
+"""Tokens-per-second and prefill benchmark for configured llama.cpp profiles.
 
 - Run from C:/AI: `python -m scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles`
-- Per profile: launch server once, send untimed warmup request, then time
-  several *decode-only* requests per test prompt
-- Uses llama.cpp's own `timings.predicted_per_second` from the native
-  /completion endpoint
-  - Prompt processing, network latency, server startup never leak into numbers
+- Per profile: launch server once, then per prompt send one cold request whose
+  prompt is processed from scratch (that request measures prefill), then time
+  several decode requests that reuse the prompt cache
+- Uses llama.cpp's own `timings` from the native /completion endpoint:
+  `prompt_per_second` for prefill, `predicted_per_second` for decode, and
+  `cache_n` to show how much of the prompt was reused rather than re-read
+- Prefill dominates a coding agent's first turn, so it is reported next to decode
 - Multiple repeats matter for speculative decoding (MTP)
   - Throughput depends on how often drafts get accepted, which varies with
     the sampled text
@@ -43,8 +45,8 @@ from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
 
 # - Two short, fixed prompts covering the two workloads these profiles
 #   actually get used for (general chat/reasoning vs. coding)
-# - Kept short on purpose: we only care about decode speed, not prompt
-#   processing speed, and a short prompt keeps the whole sweep quick
+# - Short on purpose: the cold request still measures a real prefill, and a
+#   short prompt keeps the whole sweep quick
 output = RunPaths(BenchmarkPaths(__file__).output)
 
 DEFAULT_PROMPTS: dict[str, str] = {
@@ -87,6 +89,11 @@ class Sample:
     tokens_per_second: float
     prompt_tokens: int = 0  # - actual context depth the server processed
     prompt_seconds: float = 0.0
+    cached_tokens: int = 0  # - prompt tokens reused instead of re-read
+
+    @property
+    def prompt_tokens_per_second(self) -> float:
+        return self.prompt_tokens / self.prompt_seconds if self.prompt_seconds > 0 else 0.0
 
 
 def post_json(url: str, payload: Mapping[str, object], timeout: float) -> dict[str, Any]:
@@ -116,11 +123,12 @@ def stop_server(process: subprocess.Popen[bytes]) -> None:
 
 
 def completion_request(base_url: str, prompt: str, n_predict: int, timeout: float, cache_prompt: bool = True) -> Sample:
-    """Send one /completion request and time decode only, via server-reported timings.
+    """Send one /completion request and read both rates from server-reported timings.
 
-    - Prefers timings.predicted_n / predicted_ms from the response
-    - cache_prompt=False forces a fresh prompt processing, so timings.prompt_n
-      reports the true context depth (used by --ctx-fill)
+    - timed from `timings.prompt_ms` and `timings.predicted_ms`, so network
+      latency and server startup never leak into either number
+    - cache_prompt=False forces a fresh prompt processing, which is the prefill
+      measurement; cache_prompt=True reports `cache_n` for the reused prefix
     """
     payload = {
         "prompt": prompt,
@@ -142,6 +150,7 @@ def completion_request(base_url: str, prompt: str, n_predict: int, timeout: floa
         tokens / seconds,
         int(timings.get("prompt_n") or 0),
         float(timings.get("prompt_ms") or 0) / 1000.0,
+        int(timings.get("cache_n") or 0),
     )
 
 
@@ -186,6 +195,7 @@ def run_profile(
     )
 
     results: dict[str, list[Sample]] = {}
+    prefill: dict[str, Sample] = {}
     monitor = GpuMemoryMonitor(process.pid, output.logs / f"vram-{build_name or 'active'}-{profile_name}.jsonl")
     monitor.stage = "startup"
     warmup_seconds = {}
@@ -197,14 +207,18 @@ def run_profile(
             lifecycle = BenchmarkLifecycle(lambda: f"{process.pid}:{profile_name}" if process.poll() is None else "")
             lifecycle.adopt_prepared(startup_seconds)
             filler = build_filler(ctx_fill)
-            use_cache = not ctx_fill
             for label, prompt in prompts.items():
                 full_prompt = filler + prompt
                 monitor.stage = f"warmup-{label}"
                 warmup_started = time.perf_counter()
+                cold: list[Sample] = []
+                # - cache_prompt=False: the warmup is also the prefill measurement
                 lifecycle.warmup(
-                    lambda: completion_request(base_url, full_prompt, warmup_tokens, request_timeout, use_cache)
+                    lambda: cold.append(
+                        completion_request(base_url, full_prompt, warmup_tokens, request_timeout, False)
+                    )
                 )
+                prefill[label] = cold[0]
                 warmup_seconds[label] = time.perf_counter() - warmup_started
                 monitor.stage = f"resident-{label}"
                 resident[label] = snapshot_dict(process.pid)
@@ -212,7 +226,7 @@ def run_profile(
                 for index in range(repeats):
                     monitor.stage = f"request-{label}-{index + 1}"
                     sample, _ = lifecycle.measure(
-                        lambda: completion_request(base_url, full_prompt, max_tokens, request_timeout, use_cache)
+                        lambda: completion_request(base_url, full_prompt, max_tokens, request_timeout, True)
                     )
                     results[label].append(sample)
     finally:
@@ -229,6 +243,7 @@ def run_profile(
         "trace": str(monitor.log_path),
         "execution_context": context,
         "request_samples": {name: [asdict(sample) for sample in samples] for name, samples in results.items()},
+        "prefill_samples": {name: asdict(sample) for name, sample in prefill.items()},
         "limitations": "Sampled dedicated-memory counters; peaks may be missed. Per-process allocations can exceed adapter physical usage. Counter polling may affect CPU load.",
     }
     (output.artifacts / f"metrics-{build_name or 'active'}-{profile_name}.json").write_text(
@@ -382,6 +397,7 @@ def decode_profile(
     run_label: str,
     profile_name: str,
     results: dict[str, list[Sample]],
+    prefill: dict[str, Sample],
     memory: dict[str, Any],
     summary_lines: list[str],
 ) -> list[dict[str, str]]:
@@ -404,10 +420,12 @@ def decode_profile(
     all_samples: list[Sample] = []
     for label, samples in results.items():
         all_samples.extend(samples)
+        cold = prefill[label]
         avg_seconds = statistics.mean(s.seconds for s in samples)
         line = (
             f"{run_label}\t{label}\t{samples[0].tokens}\t"
-            f"{samples[0].prompt_tokens}\t{avg_seconds:.1f}\t{summarize(samples)}"
+            f"{cold.prompt_tokens}\t{cold.prompt_tokens_per_second:.1f}\t"
+            f"{summarize(samples)}"
         )
         summary_lines.append(line)
         print(line, flush=True)
@@ -416,16 +434,22 @@ def decode_profile(
                 **meta,
                 "prompt": label,
                 "tokens": str(samples[0].tokens),
-                "ctx_depth": str(samples[0].prompt_tokens),
-                "avg_s": f"{avg_seconds:.1f}",
-                "tok_s": summarize(samples),
+                "ctx_depth": str(cold.prompt_tokens),
+                "prefill_tok_s": f"{cold.prompt_tokens_per_second:.1f}",
+                "prefill_s": f"{cold.prompt_seconds:.2f}",
+                "decode_avg_s": f"{avg_seconds:.1f}",
+                "decode_tok_s": summarize(samples),
+                "cached_tokens": str(statistics.median(s.cached_tokens for s in samples)),
             }
         )
     if len(results) > 1:
         avg_seconds = statistics.mean(s.seconds for s in all_samples)
+        cold_tokens = sum(prefill[label].prompt_tokens for label in results)
+        cold_seconds = sum(prefill[label].prompt_seconds for label in results)
         line = (
             f"{run_label}\toverall\t{all_samples[0].tokens}\t"
-            f"{all_samples[0].prompt_tokens}\t{avg_seconds:.1f}\t{summarize(all_samples)}"
+            f"{cold_tokens}\t{cold_tokens / cold_seconds if cold_seconds else 0.0:.1f}\t"
+            f"{summarize(all_samples)}"
         )
         summary_lines.append(line)
         print(line, flush=True)
@@ -434,9 +458,12 @@ def decode_profile(
                 **meta,
                 "prompt": "overall",
                 "tokens": str(all_samples[0].tokens),
-                "ctx_depth": str(all_samples[0].prompt_tokens),
-                "avg_s": f"{avg_seconds:.1f}",
-                "tok_s": summarize(all_samples),
+                "ctx_depth": str(cold_tokens),
+                "prefill_tok_s": f"{cold_tokens / cold_seconds:.1f}" if cold_seconds else "",
+                "prefill_s": f"{cold_seconds:.2f}",
+                "decode_avg_s": f"{avg_seconds:.1f}",
+                "decode_tok_s": summarize(all_samples),
+                "cached_tokens": str(statistics.median(s.cached_tokens for s in all_samples)),
             }
         )
     return csv_rows
@@ -445,7 +472,7 @@ def decode_profile(
 def run_decode(
     args: argparse.Namespace, builds: list[str | None], prompts: dict[str, str], summary_lines: list[str]
 ) -> tuple[bool, list[dict[str, str]]]:
-    summary_lines.append("build/profile\tprompt\ttokens\tctx_depth\tavg_s\ttok/s")
+    summary_lines.append("build/profile\tprompt\ttokens\tctx_depth\tprefill_tok/s\tdecode_tok/s")
     print(summary_lines[-1])
     failed = False
     csv_rows: list[dict[str, str]] = []
@@ -465,7 +492,9 @@ def run_decode(
                     build_name,
                     args.ctx_fill,
                 )
-                csv_rows += decode_profile(build_name, run_label, profile_name, results, memory, summary_lines)
+                csv_rows += decode_profile(
+                    build_name, run_label, profile_name, results, memory["prefill_samples"], memory, summary_lines
+                )
             except Exception as error:
                 failed = True
                 line = f"{run_label}\tERROR\t{error}"
@@ -495,8 +524,11 @@ def write_csv(output: RunPaths, csv_rows: list[dict[str, str]]) -> None:
         "prompt",
         "tokens",
         "ctx_depth",
-        "avg_s",
-        "tok_s",
+        "prefill_tok_s",
+        "prefill_s",
+        "decode_avg_s",
+        "decode_tok_s",
+        "cached_tokens",
         "vram_resident_process_mib",
         "vram_peak_process_mib",
         "vram_peak_adapter_mib",

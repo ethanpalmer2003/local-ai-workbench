@@ -1,6 +1,7 @@
 # Model/profile comparisons
 
 - llama.cpp profile runner: `scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles`; Strata runner: `scripts.benchmarks.coding_agents.strata_profiles`.
+- One coding corpus across engines: `scripts.benchmarks.inference_engines.benchmark_coding_engines` runs cold and warm requests per task and reports cold prefill, warm prefill, decode, TTFT and draft acceptance from each server's own timings. `--engine llamacpp` starts a profile; `--engine endpoint` dials any OpenAI-compatible server ([scope](inference_engines/README.md)).
 - Strata vs Avalon on identical Strata IQ2_XS weights: `scripts.benchmarks.inference_engines.benchmark_strata_avalon` (Strata keeps MTP/cache; Avalon cannot use either on this quant).
 - The cross-engine build sweep was retired to `C:/AI/trash/retired-llm-inference-sweep`; hipfire and TabbyAPI/ExLlamaV3 skip on Windows and need non-GGUF weights, so Swift IQ3_XXS numbers stay llama.cpp-only.
 - Current default profile: `swift15`; `swift15-mtp-notemplate` remains selectable. Historical `swift15-mtp` labels are not current profile IDs.
