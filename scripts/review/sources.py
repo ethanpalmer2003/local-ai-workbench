@@ -1,10 +1,21 @@
 """The files a check reads: maintained Python, Markdown and batch sources."""
 
+import subprocess
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 
 EXCLUDED = {".git", ".venv", "node_modules", "__pycache__", "state", "output", "old", "retired", "comfyui-archive"}
+
+
+def tracked_files() -> list[Path]:
+    """Every file Git tracks, whatever its type; placement rules read this list."""
+    result = subprocess.run(
+        ["git", "ls-files", "-z"], cwd=project_cfg.BASE_DIR, capture_output=True, check=False, text=True
+    )
+    if result.returncode:
+        return []
+    return [project_cfg.BASE_DIR / name for name in result.stdout.split("\0") if name]
 
 
 def maintained_files() -> list[Path]:

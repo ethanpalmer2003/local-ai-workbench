@@ -10,7 +10,7 @@ from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import framework_catalog as update_config
 from scripts.launchers import launcher_config as cfg
 from scripts.review import MAX_REPORTED
-from scripts.review.sources import maintained_files
+from scripts.review.sources import maintained_files, tracked_files
 
 
 def _component_key_issues() -> list[str]:
@@ -197,23 +197,49 @@ def _owner_issue(path: Path) -> list[str]:
     return []
 
 
-SCRIPTS_ROOT_MODULES = frozenset({"__init__.py"})
+PLACEMENT_NAMES: dict[Path, frozenset[str]] = {
+    project_cfg.BASE_DIR: frozenset(
+        {
+            "README.md",
+            "AGENTS.md",
+            ".gitignore",
+            ".gitattributes",
+            ".codespell-ignore.txt",
+            ".pre-commit-config.yaml",
+            "pyproject.toml",
+            "uv.lock",
+        }
+    ),
+    project_cfg.SCRIPTS_DIR: frozenset({"__init__.py", "README.md", "AGENTS.md", ".env", ".gitignore"}),
+    project_cfg.BAT_DIR: frozenset(ROOT_BATCHES | {"README.md", "_run.bat"}),
+}
+
+PLACEMENT_SUFFIXES: dict[Path, frozenset[str]] = {
+    project_cfg.BASE_DIR / "notes": frozenset({".md"}),
+    project_cfg.BASE_DIR / ".agents": frozenset({".md"}),
+    project_cfg.CONFIG_DIR: frozenset({".py", ".md", ".json"}),
+    project_cfg.SCRIPTS_DIR / "launchers": frozenset({".py", ".md"}),
+    project_cfg.SCRIPTS_DIR / "tools": frozenset({".py", ".md", ".ps1"}),
+    project_cfg.SCRIPTS_DIR / "review": frozenset({".py", ".md", ".bat"}),
+    project_cfg.SCRIPTS_DIR / "download": frozenset({".py", ".md"}),
+}
 
 
-def _root_module_issues(path: Path) -> list[str] | None:
-    """A module directly in scripts/ has no owning component folder."""
-    if not (path.parent == project_cfg.SCRIPTS_DIR and path.suffix == ".py"):
-        return None
-    return [] if path.name in SCRIPTS_ROOT_MODULES else [f"Unexpected script root module: {path.name}"]
+def _placement_issues(path: Path) -> list[str] | None:
+    """A high-level folder accepts only the files that belong to its role."""
+    names = PLACEMENT_NAMES.get(path.parent)
+    if names is not None and path.name not in names:
+        return [f"File has no place in {path.parent.name}: {path.name}"]
+    suffixes = PLACEMENT_SUFFIXES.get(path.parent)
+    if suffixes is not None and path.suffix not in suffixes:
+        return [f"File has no place in {path.parent.name}: {path.name}"]
+    return None
 
 
 def owner_issues(path: Path) -> list[str]:
     root_batch = _root_batch_issues(path)
-    root_module = _root_module_issues(path)
     if root_batch is not None:
         return root_batch
-    if root_module is not None:
-        return root_module
     if _exempt_area(path):
         return []
     return _owner_issue(path)
@@ -315,9 +341,21 @@ def policy_limit_issues() -> list[str]:
     return []
 
 
+def placement_issues() -> list[str]:
+    """Every tracked file directly inside a high-level folder, whatever its type."""
+
+    issues: list[str] = []
+    for entry in tracked_files():
+        if entry.parent in PLACEMENT_NAMES or entry.parent in PLACEMENT_SUFFIXES:
+            issues += _placement_issues(entry) or []
+    return issues
+
+
 def main() -> int:
     files = maintained_files()
-    issues = configuration_issues() + physical_root_issues() + naming_issues() + policy_limit_issues()
+    issues = (
+        configuration_issues() + physical_root_issues() + naming_issues() + policy_limit_issues() + placement_issues()
+    )
     for path in files:
         issues += owner_issues(path)
         if path.suffix == ".bat":

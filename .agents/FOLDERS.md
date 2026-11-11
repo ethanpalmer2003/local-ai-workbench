@@ -19,13 +19,14 @@
 
 ## Naming and grouping
 
+- The layout check audits file types in the root, `scripts/` role roots, `bat/`, `notes/` and `.agents/`.
 - Settings: component first; `_SERVICE`, `_CLIENT` and `_ASR` state the role; `_DIR` binds a `Path` and `_BIN_DIR` an executable, converted at external boundaries.
-- Group by purpose, not count; native adapters stay with their owner. Avoid empty placeholders and one-item shells; keep a small folder that carries ownership, native layout or output identity. Audit counts are prompts, not orders.
-- A name states its scope: a folder says the workload or engine, an entry point says what it runs, a browser launcher says the page it opens, and a document uses an uppercase common noun. Widen the behavior rather than narrowing the name; `tests` is test code only and vendor scripts keep their names.
+- Group by purpose, not count; native adapters stay with their owner. Keep a small folder that carries ownership, native layout or output identity; audit counts are prompts, not orders.
+- A name states its scope: a folder says the workload or engine, an entry point says what it runs, and a document uses an uppercase common noun. Widen the behavior rather than narrowing the name; `tests` is test code only and vendor scripts keep their names.
 - Historical results and logs keep their paths; `CasePaths` mirrors sources without empty parallel folders.
 - Exceptions are explicit in `COMPONENTS`/`MODEL_ALIASES`: shared llama.cpp/Kobold installs, native app casing, ComfyUI typed storage. Preserve portable data, junctions, shared weights and vendor archive internals.
 
 ## Moves
 
-- A move updates every consumer in the same change: imports, settings, catalogs, native preferences, batches and docs. Keep existing sessions and evidence.
+- A move updates every consumer in the same change: imports, settings, catalogs, native preferences, batches and docs; keep sessions and evidence.
 - Guard: the layout check; full review and commands: [checks](CHECKS.md).
