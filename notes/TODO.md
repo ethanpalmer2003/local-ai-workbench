@@ -7,7 +7,6 @@
 ## Reliability
 
 - [ ] Extend the timeout check to raw `http.client` connections: `benchmark_requests` sets 600 s on its streaming connection and a background thread can still hold a run open with nothing verifying either bound. ~30 min
-- [ ] Give the model-free suite a per-test deadline. One unpatched health probe reached a real startup wait on 2026-11-10 and cost 12m39s across 8 subtests; the [startup fixture](../scripts/tests/shared/backend_fixtures.py) now truncates readiness waits to 0.05 s, but a probe that hangs inside a socket still has no deadline. Choice needed: `pytest-timeout` dependency or an alarm in the [harness runner](../scripts/tests/run.py). ~1 h
 
 ## Needs a model run or device
 
