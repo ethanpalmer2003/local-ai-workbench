@@ -489,19 +489,14 @@ class FrameworkUpdates(unittest.TestCase):
             log = next(Path(folder).rglob("*.log")).read_text()
             self.assertIn("Status: SOURCE UP TO DATE", log)
 
-    def test_strata_components_are_grouped_individually_and_schedule_one_update(self):
+    def test_strata_is_a_manual_check_with_no_scheduled_update(self):
         tool = next(tool for tool in cfg.TOOLS if tool.name == "strata")
-        report = {
-            "engine": {"status": "available", "installed": {"version": "1"}, "offered": {"version": "2"}},
-            "control": {"status": "current", "installed": "3", "offered": "3"},
-            "app": {"status": "current", "installed": "4", "offered": "4"},
-        }
         summary = updater.UpdateSummary()
-        with patch.object(strata_updates, "process", return_value=report):
+        with patch.object(strata_updates, "process") as native:
             self.assertTrue(updater.process_tool(tool, Path("unused"), True, summary))
-        self.assertEqual(summary.available, ["strata :: engine: 1 -> 2 (available)"])
-        self.assertEqual(len(summary.current), 2)
-        self.assertEqual(summary.apply_keys, {"strata"})
+        native.assert_not_called()
+        self.assertEqual(summary.manual_check, ["strata"])
+        self.assertEqual(summary.apply_keys, set())
 
     def test_pi_package_installation_is_deferred_until_after_all_checks(self):
         from scripts.download.frameworks.coding_agents.pi import packages as pi_packages
@@ -541,11 +536,11 @@ class FrameworkUpdates(unittest.TestCase):
         self.assertEqual(run.call_count, 2)
         self.assertFalse(any("pull" in call.args[0] for call in run.call_args_list))
 
-    def test_strata_apply_uses_native_component_updates_not_installer_execution(self):
-        tool = next(tool for tool in cfg.TOOLS if tool.name == "strata")
-        with patch.object(strata_updates, "process") as native:
-            self.assertTrue(updater.process_tool(tool, Path("unused"), False))
-        native.assert_called_once_with(project_cfg.FRAMEWORKS_DIR / "strata", False)
+    def test_strata_update_command_hands_over_a_materialized_config(self):
+        command = strata_updates.update_command(project_cfg.FRAMEWORKS_DIR / "strata", True)
+        config = Path(command[command.index("--model-config") + 1])
+        self.assertTrue(config.is_file())
+        self.assertNotIn("{AI_ROOT}", config.read_text(encoding="utf-8"))
 
     def test_legacy_audiocpp_asset_is_recognized(self):
         tool = next(tool for tool in cfg.TOOLS if tool.name == "audiocpp/additions/rocm/7.1-old")

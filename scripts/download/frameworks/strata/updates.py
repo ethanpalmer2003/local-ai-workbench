@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from scripts.config import paths
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks.update_shared import UpdateError
 from scripts.launchers import launcher_config as cfg
@@ -27,7 +28,8 @@ def update_command(destination: Path, check_only: bool) -> list[str]:
         "--components-dir",
         str(project_cfg.STATE_DIR / "strata/desktop/components"),
         "--model-config",
-        str(cfg.STRATA_SERVICE.config_path),
+        # - the tracked config carries {AI_ROOT}; Strata's test start needs real paths
+        str(paths.materialize(cfg.STRATA_SERVICE.config_path, folder="strata")),
     ]
     if check_only:
         command.extend(["--check", "--output", "json"])
