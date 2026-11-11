@@ -72,6 +72,7 @@ class ReportOutputs(unittest.TestCase):
                     "run_profile",
                     return_value=(
                         {"code": [benchmark.Sample(16, 1.0, 16.0, 32, 0.4, 0)]},
+                        {"code": benchmark.Sample(32, 1.0, 16.0, 32, 0.4, 0)},
                         {
                             "resident": {},
                             "peak_process_used_mb": None,
