@@ -113,19 +113,27 @@ def tts_spec(key: str | None = None) -> dict[str, Any]:
     raise KeyError(f"Unknown AudioCpp TTS model: {key}")
 
 
+def ordered_languages(codes: list[str]) -> list[str]:
+    """Target languages first, then the order the model declares; the sort is stable."""
+    targets = cfg.PRACTICE_LANGUAGES
+    return sorted(codes, key=lambda code: targets.index(code) if code in targets else len(targets))
+
+
 def language_profiles():
     spec = tts_spec()
     if spec["family"] == "kokoro_tts":
         from scripts.launchers.audiocpp.kokoro import language_profiles as profiles
 
-        return profiles(models.path(tts_id()))
+        rows = profiles(models.path(tts_id()))
+        order = ordered_languages([row["code"] for row in rows])
+        return sorted(rows, key=lambda row: order.index(row["code"]))
     from scripts.config.models import model_languages
 
     entry = next(entry for entry in model_languages.read_catalog()["models"] if tts_id() in entry["model_ids"])
     voice = cfg.TTS_FAMILY_DEFAULT_VOICE.get(spec["family"], cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value)
     return [
         {"code": code, "locale": code, "voice": voice, "available": True, "unavailable_reason": ""}
-        for code in entry["languages"] or []
+        for code in ordered_languages(entry["languages"] or [])
     ]
 
 

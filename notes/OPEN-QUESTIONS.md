@@ -6,14 +6,28 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 
 - **Nothing is waiting on a decision.** A question returns here when its answer needs a choice rather than work.
 
+## Superseded
+
+A replacement is measured and clearly ahead, while the older option still works and stays installed.
+An entry leaves this list when that option is retired or the evidence stops holding, so an entry
+here means "waiting to be dropped", not "undecided".
+
+- **Kokoro as the practice voice.** Supertonic 3 is ahead on request time, load time, VRAM and
+  language count ([timings](../scripts/tests/notes/SUPERTONIC-TTS-SCREEN.md)). Kokoro stays because
+  the Lemonade leg serves only its own `kokoro-v1`, it is the AudioCpp comparison baseline, and
+  native Kobold speech still loads the Kokoro GGUF.
+- **Piper and Sherpa TTS.** Retained alternatives with further work not planned
+  ([note](../scripts/launchers/audiocpp/RETAINED-TTS.md)); they survive only for the resident
+  benchmark.
+
 ## Resolved, revisit if needed
 
-- **Code similarity.** Decided: run the 0.95 code screen as an opt-in check. It found two near-identical ASR `start` functions and a loader switch that converted only the UNet node, so it earns its place beside clone detection. Remaining pairs are convention-level.
+- **Code similarity.** The 0.95 screen runs opt-in; it caught two near-identical ASR `start` functions and a loader switch that converted only the UNet node.
 - **Hardware specs.** Machine numbers stay in the docs by decision; revisiting them is cheap but not planned.
-- **Lint strictness.** The gate stays at the [code rules](../.agents/CODE.md) limit with no inline suppressions and ruff clean repo-wide. Tightening further (`ARG`, `PL`) is worth revisiting only if a defect slips through.
-- **Embedding index over code and docs.** Declined for now: `grep` plus the owner rules answer the questions that azzfixture, an index needs its own refresh path and component key, and retrieval invites the paraphrased duplicates the one-owner rule prevents. Revisit if the document set grows past what reading a diff can hold.
-- **Capability matrix evidence.** Decided: producers record what each run used, so a row is judged rather than guessed, and the flagged rows are refreshed by reruns tracked in the [TODO](TODO.md). Revisit if a producer stops writing provenance.
-- **Documentation similarity.** Decided: EmbeddingGemma-2 at 0.90 with the two-unit rule, run as an opt-in check that reports pairs for review and never edits or gates, covering the whole set including two sections of one document. The rerun over the current tree reports 40 pairs, all pointers, hub summaries, dated evidence or method statements. The screen and the Qwen3-Embedding-0.6B comparison are in the [record](reviews/EMBEDDINGS-2026-11-10.md).
+- **Lint strictness.** The gate stays at the [code rules](../.agents/CODE.md) limit with no inline suppressions and ruff clean repo-wide. Tightening (`ARG`, `PL`) is worth it only if a defect slips through.
+- **Embedding index over code and docs.** Declined for now: `grep` plus the owner rules answer what azzfixtures, and an index needs its own refresh path. Revisit if the document set outgrows a diff.
+- **Capability matrix evidence.** Producers record what each run used, so a row is judged rather than guessed; flagged rows are refreshed through the [TODO](TODO.md) reruns.
+- **Documentation similarity.** EmbeddingGemma-2 at 0.90 with the two-unit rule, opt-in and report-only. The current tree reports 40 pairs, all pointers, dated evidence or method statements. [Record](reviews/EMBEDDINGS-2026-11-10.md).
 
 ## Deferred
 
@@ -26,4 +40,4 @@ Windows is the only supported host, so anything that needs another operating sys
 
 ### Visibility
 
-- **Visibility.** Both repositories stay private for now. A repository that was ever public is treated as leaked, so publishing remains the last step if it ever happens, not a decision that expires.
+- **Repositories.** This repository is public since 2026-11-11; the overlay holding `data/input/` stays private.

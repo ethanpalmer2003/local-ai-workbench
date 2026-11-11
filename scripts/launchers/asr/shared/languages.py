@@ -45,15 +45,15 @@ def capabilities(engine) -> dict[str, Any]:
     return {
         "asr": {
             "model": entry["name"] if entry else path.name if path else engine.value,
-            "languages": describe(supported),
+            "languages": describe(practice_models.ordered_languages(sorted(supported)) if supported else supported),
             "coverage_known": supported is not None,
-            "ready_languages": sorted(ready),
+            "ready_languages": practice_models.ordered_languages(sorted(ready)),
             "coverage_tiers": tiers,
             "notes": entry["notes"] if entry else "Complete coverage not verified.",
         },
         "tts": {
             "model": selected_tts["label"],
-            "languages": describe(sorted({row["code"] for row in profiles})),
+            "languages": describe(list(dict.fromkeys(row["code"] for row in profiles))),
             "profiles": profiles,
             "default_language": selected_tts["default_language"],
             "notes": "Voices/languages declared by installed model. Pronunciation quality is not validated by this list.",
