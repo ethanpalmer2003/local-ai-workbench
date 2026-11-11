@@ -22,7 +22,6 @@
 
 ### Unattended
 
-- [ ] Strata desktop GUI fails with WebView2 `0x800700AA` "resource in use": a reinstall, a reboot and a profile override all failed, and the app exits before writing a log. Use the CLI and `bat/launch_strata_pi_agent.bat` until it is resolved; send the dialog log to Strata when one appears. ~30 min
 - [ ] Retest llama.cpp coding on the ROCm build when a release newer than b1372 appears; b1372 is the newest and crashes on load. ~20 min
 - [ ] Retest Kobold readiness and the remaining live targets after the integrity-label fix; its launcher still timed out at 180 s. ~30 min
 - [ ] llama.cpp: medium/high-context speculation. Filled context at 32k is measured: cold prefill 505 tok/s with a 63.3 s TTFT, 48.5 tok/s decode warm and 39.0 tok/s cached at 12.8 GiB. Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). ~1-1.5 h
