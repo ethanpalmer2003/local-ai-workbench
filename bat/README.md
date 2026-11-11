@@ -26,7 +26,6 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 | [launch_kobold_no_model.bat](browser/launch_kobold_no_model.bat) | Same stack on llama.cpp: Lite proxy and TTS chain, no local model. |
 | [launch_sdcpp.bat](browser/launch_sdcpp.bat) | sd.cpp's own image-generation UI at `/`. |
 | [launch_comfyui.bat](browser/comfyui/launch_comfyui.bat) | ComfyUI's own UI with default attention/VRAM settings. |
-| [launch_strata.bat](browser/launch_strata.bat) | Strata desktop app; keeps its WebView2 profile under workspace state because the default path fails to create here. |
 | [comfyui_bootstrap.bat](browser/comfyui/comfyui_bootstrap.bat) | Shared ComfyUI bootstrap (not a UI launcher). |
 
 ## Models
