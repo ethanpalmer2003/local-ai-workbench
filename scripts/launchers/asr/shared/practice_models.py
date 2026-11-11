@@ -62,6 +62,7 @@ def tts_models() -> list[dict[str, Any]]:
         "breeze_tts": "Breeze TTS 2: voice design",
         "ming3_tts": "Ming 3.0 TTS 0.5B",
         "fish_drama3": "Drama 3: heavy/offloaded",
+        "supertonic": "Supertonic 3: 31 languages, preset voices",
     }
     for spec in native_specs:
         model = _catalog_model(spec)
@@ -121,14 +122,9 @@ def language_profiles():
     from scripts.config.models import model_languages
 
     entry = next(entry for entry in model_languages.read_catalog()["models"] if tts_id() in entry["model_ids"])
+    voice = cfg.TTS_FAMILY_DEFAULT_VOICE.get(spec["family"], cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value)
     return [
-        {
-            "code": code,
-            "locale": code,
-            "voice": cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value,
-            "available": True,
-            "unavailable_reason": "",
-        }
+        {"code": code, "locale": code, "voice": voice, "available": True, "unavailable_reason": ""}
         for code in entry["languages"] or []
     ]
 
@@ -158,7 +154,14 @@ def speech_body(payload: dict[str, object]) -> dict[str, object]:
     from scripts.launchers.audiocpp import audiocpp_catalog
     from scripts.launchers.audiocpp.audiocpp_proxy import _transform
 
-    if audiocpp_catalog.supports_clone(spec["id"]):
+    if spec["family"] == "supertonic":
+        # - Preset voices live in request options; the language comes from the text, so no locale field.
+        payload.pop("voice", None)
+        options = payload.setdefault("options", {})
+        if not isinstance(options, dict):
+            raise ValueError("Speech options must be an object")
+        options.setdefault("voice_id", cfg.SUPERTONIC_TTS.voice)
+    elif audiocpp_catalog.supports_clone(spec["id"]):
         payload.setdefault("voice", cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value)
     else:
         payload.pop("voice", None)

@@ -110,7 +110,7 @@ from scripts.tests.cases.shared.test_strata_profile import StrataProfileLinkTest
 from scripts.tests.cases.shared.test_toolchains import ToolchainTests
 from scripts.tests.cases.shared.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
-from scripts.tests.cases.shared.workflows.test_kokoro_profiles import KokoroProfiles
+from scripts.tests.cases.shared.workflows.test_speech_profiles import SpeechProfiles
 from scripts.tests.cases.shared.workflows.test_text_processing import TextProcessingTests
 from scripts.tests.cases.shared.workflows.test_workflow_defaults import WorkflowDefaultsTests
 from scripts.tests.cases.strata.test_strata_pi import StrataPiTests
@@ -211,7 +211,7 @@ if __name__ == "__main__":
                     ValidatePlanTests,
                     PreflightTests,
                     PublicAuditTests,
-                    KokoroProfiles,
+                    SpeechProfiles,
                     WorkflowDefaultsTests,
                     WhisperCompareTests,
                     FileProfiles,

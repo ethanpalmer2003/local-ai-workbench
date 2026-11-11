@@ -53,6 +53,16 @@
       "default_request_options": {"language": "en", "voice_id": "US_James", "seed": 42}
     },
     {
+      "id": "audiocpp/supertonic-3-q8_0",
+      "family": "supertonic",
+      "path": "{AI_ROOT}/data/huggingface/models/audiocpp/supertonic-3-q8_0.gguf",
+      "task": "tts",
+      "mode": "streaming",
+      "default_request_options": {
+        "voice_id": "F1"
+      }
+    },
+    {
       "id": "audiocpp/fish-drama3-q2",
       "family": "fish_drama3",
       "path": "{AI_ROOT}/data/huggingface/models/audiocpp/drama-3-backbone-8bit-experts-Q2_K.gguf",

@@ -63,7 +63,17 @@ def language_profiles(model_path: Path | None = None) -> list[dict[str, Any]]:
     return rows
 
 
-def audio_command(port: int, config_path: Path | None = None, *, backend: str = "cpu") -> list[str]:
+def audio_command(
+    port: int, config_path: Path | None = None, *, backend: str = "cpu", spec: dict[str, object] | None = None
+) -> list[str]:
+    """Start AudioCpp for one TTS model; Kokoro's package is the default when no spec is given."""
+    selected = spec or {
+        "id": cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package],
+        "family": "kokoro_tts",
+        "path": str(cfg.KOKORO_TTS.audiocpp_model),
+        "task": "tts",
+        "mode": "streaming",
+    }
     path = config_path or project_cfg.component("audiocpp").generated_dir / (
         f"kokoro-{port}.json" if backend == "cpu" else f"kokoro-{backend}-{port}.json"
     )
@@ -73,25 +83,11 @@ def audio_command(port: int, config_path: Path | None = None, *, backend: str = 
         "backend": backend,
         "threads": cfg.KOKORO_TTS.threads,
         "lazy_load": True,
-        "models": [
-            {
-                "id": cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package],
-                "family": "kokoro_tts",
-                "path": str(cfg.KOKORO_TTS.audiocpp_model),
-                "task": "tts",
-                "mode": "streaming",
-            }
-        ],
+        "models": [selected],
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
-    return [
-        str(project_cfg.AUDIOCPP_SERVER_EXE),
-        "--config",
-        str(path),
-        "--model",
-        cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package],
-    ]
+    return [str(project_cfg.AUDIOCPP_SERVER_EXE), "--config", str(path), "--model", str(selected["id"])]
 
 
 def audio_environment() -> dict[str, str]:

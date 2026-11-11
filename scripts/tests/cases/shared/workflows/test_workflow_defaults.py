@@ -24,17 +24,18 @@ class WorkflowDefaultsTests(unittest.TestCase):
         self.assertEqual(cfg.AUDIOCPP_SERVICE.voice, cfg.KOBOLD_CHAT.tts_voice)
         self.assertEqual(cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value, cfg.KOBOLD_CHAT.tts_voice)
 
-    def test_language_practice_profile_owns_the_gemma_kokoro_and_asr_defaults(self):
+    def test_language_practice_profile_owns_the_gemma_supertonic_and_asr_defaults(self):
         self.assertEqual(cfg.LANGUAGE_PRACTICE.framework, "llamacpp")
         self.assertFalse(cfg.LANGUAGE_PRACTICE.clone_voice)
         self.assertEqual(cfg.ASR_SERVICE.engine, cfg.LANGUAGE_PRACTICE.asr_engine)
         self.assertEqual(chat_models.default_id(), cfg.LANGUAGE_PRACTICE.llm_model)
         with patch.object(practice_models, "active_tts_id", None):
             self.assertEqual(practice_models.tts_id(), cfg.LANGUAGE_PRACTICE.tts_model)
-        self.assertEqual(cfg.KOKORO_TTS.voice, cfg.LANGUAGE_PRACTICE.tts_voice)
-        self.assertEqual(cfg.LANGUAGE_PRACTICE.tts_model, cfg.KOKORO_TTS_PACKAGES[cfg.DEFAULT_KOKORO_PACKAGE])
+        self.assertEqual(cfg.SUPERTONIC_TTS.voice, cfg.LANGUAGE_PRACTICE.tts_voice)
+        self.assertEqual(cfg.LANGUAGE_PRACTICE.tts_model, cfg.SUPERTONIC_MODEL)
+        self.assertEqual(practice_models.tts_spec()["family"], "supertonic")
         self.assertEqual(cfg.GEMMA_AUDIO_ASR.model, models.path(cfg.LANGUAGE_PRACTICE.llm_model))
-        self.assertEqual(cfg.KOKORO_TTS.audiocpp_model, models.path(cfg.LANGUAGE_PRACTICE.tts_model))
+        self.assertEqual(models.path(cfg.LANGUAGE_PRACTICE.tts_model).name, "supertonic-3-q8_0.gguf")
 
     def test_derived_defaults_read_the_profile_rather_than_each_other(self):
         with patch.object(cfg, "LANGUAGE_PRACTICE", replace(cfg.LANGUAGE_PRACTICE, llm_model="elsewhere/chat")):

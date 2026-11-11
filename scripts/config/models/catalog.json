@@ -503,6 +503,19 @@
     {
       "category": "tts",
       "group": "audiocpp",
+      "label": "audiocpp/supertonic-3-q8_0",
+      "filename": "supertonic-3-q8_0.gguf",
+      "url": "https://huggingface.co/koboldcpp/tts/resolve/main/audiocpp/supertonic-3-q8_0.gguf",
+      "in_use": true,
+      "notes": "Supertonic 3, one self-contained GGUF with its text config and voice styles embedded: 31 languages and ten preset voices (M1-M5, F1-F5). Shared with KoboldCpp, which serves the same file through its audio.cpp port.",
+      "sha256": "9edd05cf92feab49c6b29721d14c86566459dca7f4a6eeb99306372cdce03697",
+      "roles": [],
+      "runtimes": [],
+      "source_page": "https://huggingface.co/Supertone/supertonic"
+    },
+    {
+      "category": "tts",
+      "group": "audiocpp",
       "label": "audiocpp/kokoro-v1_0",
       "filename": "kokoro-v1_0.pth",
       "url": "https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/kokoro-v1_0.pth",

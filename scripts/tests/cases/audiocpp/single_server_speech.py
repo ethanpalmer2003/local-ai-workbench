@@ -46,16 +46,19 @@ def assert_resident(value):
 
 
 def tts(timing=None):
-    body = {
-        "model": cfg.LANGUAGE_PRACTICE.tts_model,
-        "voice": "af_heart",
-        "input": TEXT,
-        "stream": True,
-        "stream_format": "audio",
-        "response_format": "pcm",
-        "speed": 1,
-        "options": {"language": "en-us", "seed": 42},
-    }
+    from scripts.launchers.asr.shared.practice_models import speech_body
+
+    body = speech_body(
+        {
+            "model": cfg.LANGUAGE_PRACTICE.tts_model,
+            "input": TEXT,
+            "stream": True,
+            "stream_format": "audio",
+            "response_format": "pcm",
+            "speed": 1,
+            "options": {"seed": 42},
+        }
+    )
     request = urllib.request.Request(
         f"http://127.0.0.1:{PORT}/v1/audio/speech", json.dumps(body).encode(), {"Content-Type": "application/json"}
     )

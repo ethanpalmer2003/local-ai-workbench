@@ -25,6 +25,9 @@ instead of copying counts into Markdown:
   is not counted as one.
 - Unverified counts stay marked unverified rather than filled in by inference.
 
-Practice exposes only English/Spanish/French Kokoro voices. Sherpa Kokoro has only
-the English lexicon installed; Kobold's conversion is verified only for English.
-Upstream Kokoro coverage does not prove every installed frontend supports it.
+Practice defaults to Supertonic 3, which lists 31 languages and ten preset voices; the
+language follows the request text, so no per-language frontend assets are installed.
+Kokoro remains a comparison option: practice exposes only its English/Spanish/French
+voices, Sherpa Kokoro has only the English lexicon installed, and Kobold's conversion
+is verified only for English. Upstream Kokoro coverage does not prove every installed
+frontend supports it.

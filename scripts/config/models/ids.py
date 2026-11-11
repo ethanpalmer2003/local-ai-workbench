@@ -33,6 +33,7 @@ class ModelId(StrEnum):
     AUDIOCPP_MING3_TTS_0_5B_Q8_0 = "audiocpp/ming3-tts-0.5b-q8_0"
     AUDIOCPP_NEMOTRON_3_5_Q8_0 = "audiocpp/nemotron-3.5-q8_0"
     AUDIOCPP_SILERO_VAD = "audiocpp/silero-vad"
+    AUDIOCPP_SUPERTONIC_3_Q8_0 = "audiocpp/supertonic-3-q8_0"
     COMFYUI_LTX25_DISTILLED_DIT_Q3_K_M = "comfyui/LTX25-distilled-DiT-Q3_K_M"
     COMFYUI_GEMMA4_12B_WITH_PROJ_LTX_2_5_Q2_K = "comfyui/gemma4-12b-with-proj-ltx-2.5-Q2_K"
     COMFYUI_GEMMA4_12B_WITH_PROJ_LTX_2_5_Q4_K_M = "comfyui/gemma4-12b-with-proj-ltx-2.5-Q4_K_M"

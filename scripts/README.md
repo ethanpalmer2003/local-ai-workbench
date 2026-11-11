@@ -11,7 +11,7 @@
 | --- | --- |
 | Coding with llama.cpp | [guide](launchers/llamacpp/README.md) |
 | Strata with Pi | [guide](launchers/strata/README.md) |
-| Audio / Kokoro | [guide](launchers/audiocpp/README.md) |
+| Audio / TTS | [guide](launchers/audiocpp/README.md) |
 | Sherpa / Piper | [TTS guide](launchers/audiocpp/RETAINED-TTS.md); official Windows CPU frameworks |
 | Koboldcpp + speech/images | [shared GPU](config/notes/SHARED-GPU.md), [swapping](config/notes/IMAGE-ON-DEMAND.md) |
 | Ports / proxies | [proxy principle](launchers/PROXIES.md) |

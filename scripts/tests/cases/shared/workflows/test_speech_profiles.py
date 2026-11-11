@@ -9,16 +9,24 @@ from unittest.mock import patch
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr.shared import practice_models
 from scripts.launchers.koboldcpp import kobold, kobold_lite, kokoro
 from scripts.tests.shared.paths import CasePaths
 
 
-class KokoroProfiles(unittest.TestCase):
+class SpeechProfiles(unittest.TestCase):
     def test_multilingual_default_retains_compact_package_option(self):
         self.assertEqual(cfg.KOKORO_TTS.audiocpp_package, "multilingual")
         self.assertEqual(cfg.KOKORO_TTS.audiocpp_model.name, "kokoro-82m-multilingual-q8_0.gguf")
         self.assertEqual(replace(cfg.KOKORO_TTS, audiocpp_package="small").audiocpp_model.name, "kokoro-82m-q8_0.gguf")
         self.assertEqual(kokoro.audio_environment()["AUDIOCPP_MECAB_LIBRARY"], str(cfg.KOKORO_TTS.mecab_library))
+
+    def test_practice_default_is_supertonic_with_a_preset_voice(self):
+        spec = practice_models.tts_spec()
+        self.assertEqual(spec["family"], "supertonic")
+        self.assertEqual(spec["id"], cfg.SUPERTONIC_MODEL)
+        self.assertEqual(cfg.LANGUAGE_PRACTICE.tts_voice, cfg.SUPERTONIC_TTS.voice)
+        self.assertEqual(cfg.tts_class_for(cfg.SUPERTONIC_MODEL).value, "fast-multilingual")
 
     def test_existing_session_is_not_replaced(self):
         with (
@@ -33,12 +41,13 @@ class KokoroProfiles(unittest.TestCase):
     def test_internal_model_is_cpu_and_keeps_whisper(self):
         with patch.object(cfg.KOBOLDCPP_SERVICE, "speech_engine", cfg.KoboldcppSpeechStartupEngine.KOKORO_INTERNAL):
             command = kobold.server_command("shared")
-        self.assertEqual(command[command.index("--ttsmodel") + 1], str(cfg.KOKORO_TTS.koboldcpp_model))
+        self.assertEqual(command[command.index("--ttsmodel") + 1], str(practice_models.tts_spec()["path"]))
         self.assertEqual(command[command.index("--ttsthreads") + 1], str(cfg.KOKORO_TTS.threads))
         self.assertIn("--whispermodel", command)
         self.assertNotIn("--ttsgpu", command)
 
     def test_external_config_selects_cpu_without_other_models(self):
+        spec = practice_models.tts_spec()
         with (
             CasePaths(__file__).temporary_directory() as folder,
             patch.object(project_cfg, "GENERATED_DIR", Path(folder)),
@@ -47,11 +56,9 @@ class KokoroProfiles(unittest.TestCase):
             config = json.loads(Path(command[command.index("--config") + 1]).read_text())
         self.assertEqual(config["backend"], "cpu")
         self.assertEqual(config["threads"], cfg.KOKORO_TTS.threads)
-        self.assertEqual(
-            [model["id"] for model in config["models"]], [cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package]]
-        )
-        self.assertEqual(config["models"][0]["path"], str(cfg.KOKORO_TTS.audiocpp_model))
-        self.assertEqual(command[-2:], ["--model", cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package]])
+        self.assertEqual([model["id"] for model in config["models"]], [spec["id"]])
+        self.assertEqual(config["models"][0]["path"], spec["path"])
+        self.assertEqual(command[-2:], ["--model", spec["id"]])
 
     def test_speech_provider_routes_to_selected_engine(self):
         def serve(handler, *_args):
@@ -65,6 +72,7 @@ class KokoroProfiles(unittest.TestCase):
         ).encode()
         for engine in (
             cfg.KoboldcppSpeechStartupEngine.KOKORO_INTERNAL,
+            cfg.KoboldcppSpeechStartupEngine.AUDIOCPP,
             cfg.KoboldcppSpeechStartupEngine.KOKORO_AUDIOCPP,
         ):
             with (
@@ -79,14 +87,31 @@ class KokoroProfiles(unittest.TestCase):
                 body = json.loads(relay.call_args.args[4])
                 port = cfg.KOBOLDCPP_KCPPS_ARGS["port"] if kokoro.internal() else cfg.AUDIOCPP_SERVICE.internal_port
                 self.assertEqual(target, f"http://127.0.0.1:{port}/v1/audio/speech")
-                self.assertEqual(body["voice"], cfg.KOKORO_TTS.voice)
-                self.assertEqual(body["model"], cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package])
+                self.assertEqual(body["model"], cfg.SUPERTONIC_MODEL)
+                self.assertEqual(body["options"]["voice_id"], cfg.SUPERTONIC_TTS.voice)
+                self.assertNotIn("voice", body)
                 self.assertNotIn("voice_ref", body)
                 if kokoro.internal():
                     self.assertFalse(body["stream"])
                     self.assertEqual(body["response_format"], "wav")
                 else:
                     self.assertTrue(body["stream"])
+
+    def test_kokoro_request_keeps_its_voice_and_language(self):
+        kokoro_spec = {
+            "id": cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package],
+            "family": "kokoro_tts",
+            "path": str(cfg.KOKORO_TTS.audiocpp_model),
+            "task": "tts",
+            "mode": "streaming",
+        }
+        stale = json.dumps({"input": "Bonjour", "voice": "af_heart", "voice_ref": "stale.wav"}).encode()
+        with patch.object(practice_models, "tts_spec", return_value=kokoro_spec):
+            body = json.loads(kokoro.speech_body(stale))
+        self.assertEqual(body["voice"], cfg.KOKORO_TTS.voice)
+        self.assertEqual(body["options"]["language"], cfg.KOKORO_TTS.language)
+        self.assertNotIn("voice_id", body["options"])
+        self.assertNotIn("voice_ref", body)
 
     def test_invalid_speech_json_is_rejected_before_relay(self):
         with self.assertRaises(ValueError):
