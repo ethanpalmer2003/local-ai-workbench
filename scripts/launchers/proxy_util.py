@@ -29,6 +29,10 @@ from scripts.launchers.proxy_restart import ProxyRestartController
 
 RequestScope = Callable[[str, str], AbstractContextManager[object]]
 
+# - A streaming reply binds each read; a long generation keeps the socket busy, so the bound is idle time
+STREAM_TIMEOUT = 300
+RELAY_TIMEOUT = 120
+
 
 _HOP_BY_HOP_REQUEST_HEADERS = ("host", "content-length", "connection")
 _HOP_BY_HOP_RESPONSE_HEADERS = ("content-length", "transfer-encoding", "connection")
@@ -235,7 +239,7 @@ def relay_stream(
     request = urllib.request.Request(url, data=body or None, method=method, headers=dict(headers))
     start = time.perf_counter()
     try:
-        response = urllib.request.urlopen(request)
+        response = urllib.request.urlopen(request, timeout=STREAM_TIMEOUT)
     except urllib.error.URLError as error:
         forward_upstream_error(handler, tag, error)
         return None
@@ -426,7 +430,7 @@ class _JsonProxyHandler(ProxyHandlerMixin):
             headers=build_forward_headers(self.headers, body),
         )
         try:
-            with urllib.request.urlopen(req) as resp:
+            with urllib.request.urlopen(req, timeout=RELAY_TIMEOUT) as resp:
                 resp_body = resp.read()
                 if self.on_response and raw_request is not None:
                     self._notify_response(resp_body, raw_request)

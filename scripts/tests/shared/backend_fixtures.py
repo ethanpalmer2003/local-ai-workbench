@@ -11,7 +11,16 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.shared.services import native
+from scripts.launchers.shared.services.process import wait_ready as real_wait_ready
 from scripts.tests.shared.process_fixtures import running_process
+
+# - A fixture fake never becomes healthy; truncating the wait turns an unpatched probe into a fast
+#   TimeoutError instead of a real two-minute startup wait
+FIXTURE_READY_TIMEOUT = 0.05
+
+
+def _bounded_wait_ready(process, ready, timeout, **kwargs):
+    return real_wait_ready(process, ready, min(timeout, FIXTURE_READY_TIMEOUT), **kwargs)
 
 
 @dataclass
@@ -43,6 +52,7 @@ def startup_fixture(adapter: Any, settings_key: str, root: Path) -> Iterator[Sta
                 stack.enter_context(patch.object(type(current), key, PropertyMock(return_value=path)))
         stack.enter_context(patch.object(project_cfg, "LOGS_DIR", root))
         stack.enter_context(patch.object(native.launch_util, "llama_server_running", return_value=False))
+        stack.enter_context(patch.object(native, "wait_ready", _bounded_wait_ready))
         launch = stack.enter_context(patch.object(native.launch_util, "launch_process", return_value=worker))
         stop = stack.enter_context(patch.object(native.launch_util, "kill_process_tree"))
         occupied = stack.enter_context(patch.object(native.launch_util, "port_listening", return_value=False))

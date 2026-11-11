@@ -1,5 +1,6 @@
 """The same safety contracts run against every reusable ASR server adapter."""
 
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -76,6 +77,18 @@ class StartupContracts(unittest.TestCase):
                         adapter.start()
                     fixture.stop.assert_not_called()
                     fixture.worker.wait.assert_called_once_with(timeout=15)
+
+    def test_an_unpatched_health_probe_ends_quickly(self):
+        with (
+            CasePaths(__file__).temporary_directory() as folder,
+            startup_fixture(whisper, "WHISPERCPP_ASR", Path(folder)) as fixture,
+        ):
+            fixture.ready.side_effect = None
+            fixture.ready.return_value = False
+            started = time.monotonic()
+            with self.assertRaises(TimeoutError):
+                whisper.start()
+            self.assertLess(time.monotonic() - started, 5)
 
     def test_isolated_sessions_never_replace_an_existing_listener(self):
         with CasePaths(__file__).temporary_directory() as folder:

@@ -36,6 +36,9 @@ from scripts.launchers.proxy_util import (
 
 Payload = dict[str, object]
 
+# - Synthesis of a long reply can outlast a normal request; the bound is an idle wait, not total time
+UPSTREAM_TIMEOUT = 300
+
 
 def _test_asset(path: str) -> tuple[bytes, str] | None:
     ui_root = project_cfg.TESTS_DIR / "ui"
@@ -219,7 +222,7 @@ class _TtsProxyHandler(ProxyHandlerMixin):
             headers=build_forward_headers(self.headers, body),
         )
         upstream_start = time.perf_counter()
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=UPSTREAM_TIMEOUT) as resp:
             ttfb = time.perf_counter() - upstream_start
             resp_body = resp.read()
         return resp, resp_body, time.perf_counter() - upstream_start, ttfb

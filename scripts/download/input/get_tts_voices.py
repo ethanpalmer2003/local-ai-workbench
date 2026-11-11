@@ -29,6 +29,9 @@ PERSONAS = ["Default", "English", "ENG"]
 
 DEFAULT_DUR_TARGET = 30
 
+# - Audio files stream for minutes, so the bound is a stalled connection rather than total transfer time
+DOWNLOAD_TIMEOUT = 60
+
 
 @dataclass(frozen=True)
 class DurationTarget:
@@ -461,7 +464,7 @@ def load_map(cache, files, durations, excluded):
 
 def download(url, path):
     req = urllib.request.Request(url, headers={"User-Agent": "audiocpp-preparer"})
-    with urllib.request.urlopen(req) as r, path.open("wb") as f:
+    with urllib.request.urlopen(req, timeout=DOWNLOAD_TIMEOUT) as r, path.open("wb") as f:
         shutil.copyfileobj(r, f)
 
 
