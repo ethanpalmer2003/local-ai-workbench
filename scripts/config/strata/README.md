@@ -18,8 +18,15 @@
 
 ## App-managed data
 
-- Current install (0.2.13): the app keeps its own tree under `%LOCALAPPDATA%\Strata\` (`components`, `install`, `logs`, `procs`, `runtime`, `tuning`) and its WebView profile under `%LOCALAPPDATA%\ai.strata.desktop\EBWebView`. Agent settings live in `%USERPROFILE%\.strata`.
-- Workspace state: `scripts/state/strata/` holds the engine and console logs the profiles point at; its `desktop/` copy is from before the reinstall and is not read by the current app.
-- The relocation junctions and `relocation.json` from the earlier workspace relocation are no longer present: reinstalling 0.2.13 recreated real folders in the profile. Re-establishing them is not planned; treat the profile paths as authoritative.
-- Model weights stay under `C:/AI/data/`; binaries under `C:/AI/frameworks/`; app-updated engine components are the ones inside the profile tree.
-- Historical relocation verification (../../tests/output/regression/strata_relocation/unreviewed/1792964068994666100/artifacts/verification.json) describes the pre-reinstall layout only.
+The app's profile tree is relocated into this workspace with NTFS directory junctions, so one copy exists:
+
+| Profile path | Real folder under `C:/AI/scripts/state/strata/` |
+| --- | --- |
+| `%LOCALAPPDATA%/Strata` | `desktop/` (components, runtime, logs, tuning, install) |
+| `%LOCALAPPDATA%/ai.strata.desktop` | `webview/` (WebView2 profile) |
+
+- Agent settings stay in `%USERPROFILE%/.strata`; sessions and host preferences in `home/`; terminal profiles in `terminal/`.
+- Record: `relocation.json` in this folder, written when the junctions were recreated after the 0.2.13 reinstall replaced the originals.
+- Keep the junctions and their targets; an installer may replace a junction, so recheck after a major update and repeat the move plus `mklink /J` if the app wrote a real folder again.
+- Model weights stay under `C:/AI/data/`; binaries under `C:/AI/frameworks/`; the app updates its engine components inside the relocated `desktop/`.
+- An older workspace copy made before the reinstall is retired to trash; the table above is the only live mapping.
