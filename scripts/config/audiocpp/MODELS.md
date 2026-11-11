@@ -12,8 +12,8 @@ same entries.
 | `ming3_tts`, `ming3_audio` | Named voices such as `US_James`; the heavier checkpoint is Complete WAV only. |
 | `fish_drama3` | Heavy, CPU-expert offload; streaming. |
 
-Supertonic, Ming and Drama play at 44100 Hz. Lemonade serves only its own `kokoro-v1`
-speech entry, so Supertonic stays on AudioCpp and KoboldCpp.
+Supertonic, Ming and Drama play at 44100 Hz. Lemonade cannot load audio.cpp GGUFs: its own catalog
+serves `kokoro-v1` plus MOSS TTS entries, so Supertonic stays on AudioCpp and KoboldCpp.
 
 Supertonic voices: `M1`, `M2`, `M3`, `M4`, `M5`, `F1`, `F2`, `F3`, `F4`, `F5`. `F1` is
 the practice default; change `SUPERTONIC_TTS.voice` and the `default_request_options`

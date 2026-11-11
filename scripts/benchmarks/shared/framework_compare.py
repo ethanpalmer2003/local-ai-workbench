@@ -71,7 +71,8 @@ KOBOLD_ARM_MODEL = cfg.LANGUAGE_PRACTICE.llm_model
 KOBOLD_STARTUP_TIMEOUT_S = 240
 LEGS = ("chat", "tts", "asr")
 # - Ports are taken from the OS per run: a stack left in TIME_WAIT must not fail the next run
-# - Lemonade names these by its own catalog: kokoro-v1 for speech, whisper.cpp models for recognition
+# - Lemonade names these by its own catalog: kokoro-v1 for speech, whisper.cpp models for recognition.
+#   Its catalog also lists MOSS TTS entries, which this comparison does not exercise.
 LEMONADE_TTS_MODEL = "kokoro-v1"
 LEMONADE_ASR_MODEL = "Whisper-Large-v3-Turbo"
 DEFAULT_WEIGHTS = model_cfg.path(cfg.LANGUAGE_PRACTICE.llm_model)
