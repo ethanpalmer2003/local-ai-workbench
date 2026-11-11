@@ -5,6 +5,7 @@ DSH `workspace-write` stamps an inheritable Low mandatory label on the workspace
 - Confirm: `icacls <path>` shows `Mandatory Label\Low Mandatory Level:(OI)(CI)(NW)`.
 - Repair, after closing every DSH session on that tree: `icacls <dir> /setintegritylevel "(OI)(CI)Medium" /T /C`. `/reset` cannot clear a label.
 - Restore the root first; a subtree left Low breaks every normal app. Only when *existing* subdirectories are unwritable while new ones work is the fix the opposite one: `icacls <workspace> /setintegritylevel "(OI)(CI)L" /T`.
-- Script: [fix_low_integrity.ps1](../scripts/tools/fix_low_integrity.ps1) (Check or Fix).
+- Wrapper: [manage_low_integrity.bat](../bat/manage_low_integrity.bat) checks by default, `--fix` repairs. It covers the root and `frameworks`, `scripts`, `bat`, `.agents`, `notes`, `trash`; models under `data` are skipped because nothing there launches.
 - This workspace is a whole workbench with executables and models, so keep DSH on **full access** for `C:\AI`; never use the home directory, a drive root or the DSH install directory as a `workspace-write` workspace.
+- When a restricted session has touched `C:\AI`: close it, run the wrapper with `--fix`, then launch the app again. Do not leave a subtree Low to satisfy one sandboxed child; that breaks every normal launch.
 - Community write-up: <https://dsh-plugin.org/tutorials/fix-windows-sandbox-low-integrity-label>.

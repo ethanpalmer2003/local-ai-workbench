@@ -91,6 +91,7 @@ from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
 from scripts.tests.cases.shared.test_inputs_overlay import InputOverlayTests
 from scripts.tests.cases.shared.test_layout import PolicyTests
 from scripts.tests.cases.shared.test_live_stamp import LiveStampTests
+from scripts.tests.cases.shared.test_low_integrity import LowIntegrityTests
 from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_model_run import ModelRunTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
@@ -165,6 +166,7 @@ if __name__ == "__main__":
                     BatLaunchers,
                     InferenceEngines,
                     ModelAdminTests,
+                    LowIntegrityTests,
                     ConsentTests,
                     CommentPolicyTests,
                     SimilarityUnitTests,
