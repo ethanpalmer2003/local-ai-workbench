@@ -9,7 +9,7 @@ from scripts.tests.shared.process_fixtures import running_process
 
 class BackendSessions(unittest.TestCase):
     def test_live_workflow_refuses_existing_listener_before_spawning(self):
-        from scripts.tests.cases.shared import live_frameworks
+        from scripts.tests.cases.suites import live_frameworks
 
         with (
             patch.object(live_frameworks.launch_util, "_listening_pids", return_value=[("8888", 42)]),

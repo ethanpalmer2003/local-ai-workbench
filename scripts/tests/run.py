@@ -28,7 +28,26 @@ from scripts.tests.cases.llamacpp.test_speech_ui import SpeechUiTests
 from scripts.tests.cases.personal.comfyui.test_comfyui_video import ExecutionTests, WorkflowTests
 from scripts.tests.cases.personal.comfyui.test_ltx_prompt_cache import PromptCacheTests
 from scripts.tests.cases.personal.comfyui.test_verify_node import ProviderTests, VerifyNodeTests
-from scripts.tests.cases.shared import frameworks_smoke
+from scripts.tests.cases.review.test_comments import CommentPolicyTests
+from scripts.tests.cases.review.test_docs import (
+    LinkTests,
+    MarkdownNameTests,
+    ModelNameTests,
+    PointerTests,
+    RoleTests,
+    RootDocumentTests,
+)
+from scripts.tests.cases.review.test_layout import PolicyTests
+from scripts.tests.cases.review.test_network_timeouts import NetworkTimeoutTests
+from scripts.tests.cases.review.test_public_audit import PublicAuditTests
+from scripts.tests.cases.review.test_review_gate import ConsentTests
+from scripts.tests.cases.review.test_similarity import (
+    SimilarityCodeTests,
+    SimilarityFindingTests,
+    SimilaritySourceTests,
+    SimilarityUnitTests,
+)
+from scripts.tests.cases.review.test_typography import CheckTests, ScanTests, SuffixTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
 from scripts.tests.cases.shared.benchmarks.test_context_stream import ContextStreamTests
@@ -49,7 +68,6 @@ from scripts.tests.cases.shared.benchmarks.test_provenance import (
     FileIdentityTests,
     WorkspaceTests,
 )
-from scripts.tests.cases.shared.framework_updates import FrameworkUpdates
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
 from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
 from scripts.tests.cases.shared.models.test_model_languages import ModelLanguages
@@ -75,40 +93,19 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
     SharedRuntimeTests,
     SweepMessageTests,
 )
-from scripts.tests.cases.shared.shared_contracts import SharedContracts
 from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
 from scripts.tests.cases.shared.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
-from scripts.tests.cases.shared.test_comments import CommentPolicyTests
-from scripts.tests.cases.shared.test_docs import (
-    LinkTests,
-    MarkdownNameTests,
-    ModelNameTests,
-    PointerTests,
-    RoleTests,
-    RootDocumentTests,
-)
 from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
 from scripts.tests.cases.shared.test_inputs_overlay import InputOverlayTests
-from scripts.tests.cases.shared.test_layout import PolicyTests
 from scripts.tests.cases.shared.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.test_low_integrity import LowIntegrityTests
 from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_model_run import ModelRunTests
-from scripts.tests.cases.shared.test_network_timeouts import NetworkTimeoutTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
-from scripts.tests.cases.shared.test_public_audit import PublicAuditTests
-from scripts.tests.cases.shared.test_review_gate import ConsentTests
 from scripts.tests.cases.shared.test_rocm_inventory import RocmInventoryTests
-from scripts.tests.cases.shared.test_similarity import (
-    SimilarityCodeTests,
-    SimilarityFindingTests,
-    SimilaritySourceTests,
-    SimilarityUnitTests,
-)
 from scripts.tests.cases.shared.test_stage_runner import StageRunnerTests
 from scripts.tests.cases.shared.test_strata_profile import StrataProfileLinkTests
 from scripts.tests.cases.shared.test_toolchains import ToolchainTests
-from scripts.tests.cases.shared.test_typography import CheckTests, ScanTests, SuffixTests
 from scripts.tests.cases.shared.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
 from scripts.tests.cases.shared.workflows.test_kokoro_profiles import KokoroProfiles
@@ -116,6 +113,9 @@ from scripts.tests.cases.shared.workflows.test_text_processing import TextProces
 from scripts.tests.cases.shared.workflows.test_workflow_defaults import WorkflowDefaultsTests
 from scripts.tests.cases.strata.test_strata_pi import StrataPiTests
 from scripts.tests.cases.strata.test_strata_profiles import StrataProfileTests
+from scripts.tests.cases.suites import frameworks_smoke
+from scripts.tests.cases.suites.framework_updates import FrameworkUpdates
+from scripts.tests.cases.suites.shared_contracts import SharedContracts
 from scripts.tests.shared.timing import timed
 
 if __name__ == "__main__":

@@ -34,8 +34,8 @@ from scripts.launchers.koboldcpp import kobold
 from scripts.launchers.llamacpp import llamacpp, llamacpp_coding, llamacpp_dsh, llamacpp_littlecoder
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
-from scripts.tests.cases.shared import live_frameworks, quick_validation
-from scripts.tests.cases.shared.launcher_behaviors import LauncherBehaviors
+from scripts.tests.cases.suites import live_frameworks, quick_validation
+from scripts.tests.cases.suites.launcher_behaviors import LauncherBehaviors
 from scripts.tests.shared.http_server import request, server
 from scripts.tests.shared.media_fixtures import PNG, wav_fixture
 from scripts.tests.shared.model_checks import requires_model_check

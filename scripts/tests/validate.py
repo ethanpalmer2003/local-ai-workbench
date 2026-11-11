@@ -17,8 +17,8 @@ MODULES: dict[str, tuple[str, tuple[str, ...]]] = {
     "models": ("scripts.download.models.updates", ()),
     "gate": ("scripts.review", ("--yes",)),
     "suite": ("scripts.tests.run", ()),
-    "launchers": ("scripts.tests.cases.shared.live_frameworks", ()),
-    "backends": ("scripts.tests.cases.shared.quick_validation", ()),
+    "launchers": ("scripts.tests.cases.suites.live_frameworks", ()),
+    "backends": ("scripts.tests.cases.suites.quick_validation", ()),
 }
 ALL_KEYS = ("frameworks", "models", "gate", "suite", "launchers", "backends")
 DEFAULT_KEYS = tuple(key for key in ALL_KEYS if key != "models")

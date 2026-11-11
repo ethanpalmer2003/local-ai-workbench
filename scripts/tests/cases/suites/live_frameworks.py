@@ -332,7 +332,7 @@ def _worker_command(framework: str, ini_overrides: dict[str, str] | None) -> lis
     overrides = [
         argument for key, value in (ini_overrides or {}).items() for argument in ("--ini-set", f"{key}={value}")
     ]
-    return [sys.executable, "-m", "scripts.tests.cases.shared.frameworks_smoke", "--worker", framework, *overrides]
+    return [sys.executable, "-m", "scripts.tests.cases.suites.frameworks_smoke", "--worker", framework, *overrides]
 
 
 def _ready_url(framework: str, ports: list[int]) -> str:

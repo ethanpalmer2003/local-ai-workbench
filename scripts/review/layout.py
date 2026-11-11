@@ -182,8 +182,7 @@ def _owner_issue(path: Path) -> list[str]:
         if root == project_cfg.SCRIPTS_DIR / "benchmarks":
             return []
         parts = path.relative_to(root).parts
-        if root == project_cfg.TEST_CASES_DIR and parts[0] == "personal":
-            # - personal media/chat areas keep their own group folder
+        if root == project_cfg.TEST_CASES_DIR and parts[0] in TEST_GROUPS:
             return []
         if len(parts) == 1:
             # - routine batches may sit directly under an operation folder (flattened layout)
@@ -208,6 +207,8 @@ def owner_issues(path: Path) -> list[str]:
 
 
 AREA_ROOTS = (project_cfg.TEST_CASES_DIR, project_cfg.SCRIPTS_DIR / "benchmarks")
+# - test areas group by purpose rather than by component: personal media, repository review, suite entry points
+TEST_GROUPS = {"personal", "review", "suites"}
 VAGUE_AREAS = {"llm", "speech", "tts", "misc", "stuff", "temp", "utils", "data", "models", "tests"}
 VAGUE_ANYWHERE = {"misc", "stuff", "temp", "tmp", "utils", "other", "new", "old"}
 NAME_SKIP = {
