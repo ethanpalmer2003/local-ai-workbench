@@ -73,8 +73,8 @@ class PublicAuditTests(unittest.TestCase):
 
     def test_voice_terms_ignore_short_ids_that_collide_with_words(self):
         with (
-            patch.object(public_audit.inputs, "voice_ids", return_value=("ab", "alpha")),
-            patch.object(public_audit.inputs, "character_cards", return_value={}),
+            patch.object(public_audit.local_overlay, "voice_ids", return_value=("ab", "alpha")),
+            patch.object(public_audit.local_overlay, "character_cards", return_value={}),
         ):
             self.assertEqual(public_audit.voice_terms(), ("alpha",))
 

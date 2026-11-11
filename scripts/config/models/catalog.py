@@ -9,7 +9,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from scripts.config import overlay_inputs as inputs
+from scripts.config import local_overlay
 from scripts.config import project_config as project_cfg
 
 from .types import ModelDownload
@@ -114,9 +114,9 @@ def _build(payload: dict[str, Any]) -> tuple[ModelDownload, ...]:
 @lru_cache(maxsize=8)
 def _load(path: str, overlay: bool) -> tuple[ModelDownload, ...]:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
-    if overlay and Path(path) == CATALOG_PATH.resolve() and inputs.model_overlay_path().is_file():
+    if overlay and Path(path) == CATALOG_PATH.resolve() and local_overlay.model_overlay_path().is_file():
         # - personal entries stay in the input overlay, never in the tracked catalog
-        extra = json.loads(inputs.model_overlay_path().read_text(encoding="utf-8")).get("models") or []
+        extra = json.loads(local_overlay.model_overlay_path().read_text(encoding="utf-8")).get("models") or []
         payload["models"] = [*payload.get("models", []), *extra]
     return _build(payload)
 
@@ -198,11 +198,11 @@ def load_entries(path: Path | None = None) -> list[dict[str, Any]]:
 
 def overlay_path() -> Path:
     """The input overlay that carries local entries; absent when no overlay checkout exists."""
-    return inputs.model_overlay_path()
+    return local_overlay.model_overlay_path()
 
 
 def entry_home(label: str) -> Path:
-    """The file that lists this label: the tracked catalog first, otherwise the overlay."""
+    """The file that lists this label: the tracked catalog first, otherwise the input overlay."""
     if any(str(entry.get("label")) == label for entry in load_entries()):
         return CATALOG_PATH
     return overlay_path()

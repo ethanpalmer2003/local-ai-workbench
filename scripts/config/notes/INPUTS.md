@@ -1,8 +1,18 @@
-# Local inputs
+# Local overlay
 
-Personal audio and prompt inputs live outside the repository. Code stays here; the files it consumes live in the overlay.
+Files this repository reads from outside git. Code stays here; the files it consumes live in the
+overlay. One module owns every path: [local_overlay.py](../local_overlay.py), imported as `overlay`.
+Nothing else reads `AI_INPUT_DIR`, `AI_VOICES_DIR` or `data/input` directly, so `grep -rn local_overlay`
+lists every consumer.
 
-- Location: `data/input/` by default, or the path in `AI_INPUT_DIR`. Loader: [inputs.py](../overlay_inputs.py).
+| Group | Functions |
+| --- | --- |
+| Roots and paths | `input_dir`, `voices_dir`, `voice_dir`, `kobold_dir`, `prompts_dir`, `voice_sources_path`, `overrides_path`, `model_overlay_path` |
+| Voice manifest | `voice_ids`, `superseded_voices`, `default_voice` |
+| Text assets | `character_cards`, `tone_prompt` |
+| Defaults | `overrides`, `setting` |
+
+- Location: `data/input/` by default, or the path in `AI_INPUT_DIR`.
 - Layout: `voice_sources.json` (voice ids, chosen default, download sources), `kobold/` (character cards and saved scenarios), `prompts/` (tone instructions).
 - Clips are assets, not overlay config: `data/voices/<id>/` by default, or `AI_VOICES_DIR`; like weights they are downloaded, so a backup of the overlay stays small.
 - Absent overlay: voice cloning reports nothing available, the voice pipeline has no entries, and launchers still start. No code change is needed to take the inputs out or put them back.

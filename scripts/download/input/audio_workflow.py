@@ -1,13 +1,13 @@
 """Shared paths and tuning values for the custom voice-recording workflow.
 
-- Paths derive from the input overlay ([overlay_inputs.py](../../config/overlay_inputs.py)); no per-character constants live here
+- Paths derive from the input overlay ([local_overlay.py](../../config/local_overlay.py)); no per-character constants live here
 - Silence/tuning values are consumed by split_from_csv.py and tune_silence.py
 """
 
 from dataclasses import dataclass
 from pathlib import Path
 
-from scripts.config import overlay_inputs as inputs
+from scripts.config import local_overlay
 
 SILENCE_NOISE_DB = -35.0
 SILENCE_MIN_DUR = 0.35
@@ -31,7 +31,7 @@ class SourcePaths:
 
 def source_paths(voice: str) -> SourcePaths:
     """One recording workflow's paths under `<input>/audio/<voice>/source`."""
-    source_dir = inputs.voice_dir(voice) / "source"
+    source_dir = local_overlay.voice_dir(voice) / "source"
     media = sorted(path for path in source_dir.glob("*") if path.suffix.lower() in AUDIO_SUFFIXES)
     if not media:
         raise FileNotFoundError(f"No source recording for voice {voice!r} in {source_dir}")

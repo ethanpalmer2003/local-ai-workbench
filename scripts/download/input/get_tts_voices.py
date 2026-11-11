@@ -16,7 +16,7 @@ from itertools import chain
 from pathlib import Path
 from typing import Any, Literal
 
-from scripts.config import overlay_inputs as inputs
+from scripts.config import local_overlay
 from scripts.config.trash import archive_path
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.llamacpp import qwen3_asr
@@ -156,7 +156,7 @@ class PreparationResult:
 
 def load_character_configs() -> dict[str, CharacterConfig]:
     """Voice sources live outside the repo: they describe third-party recordings, not engine code."""
-    manifest = inputs.voice_sources_path()
+    manifest = local_overlay.voice_sources_path()
     if not manifest.is_file():
         return {}
     payload = json.loads(manifest.read_text(encoding="utf-8"))

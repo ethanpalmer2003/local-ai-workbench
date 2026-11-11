@@ -4,8 +4,8 @@ from enum import Enum
 from pathlib import Path
 from typing import cast
 
+from scripts.config import local_overlay
 from scripts.config import models as model_cfg
-from scripts.config import overlay_inputs as inputs
 from scripts.config import paths as config_paths
 from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audio_cfg
@@ -447,13 +447,13 @@ PRACTICE_LANGUAGES = ("en", "es", "fr", "ja", "de")
 # - KOBOLD_CHAT: Rocinante chat, Breeze voice-design TTS through the AudioCpp proxy, no external ASR.
 #   Design needs no reference clip, so the default voice comes from the tone instruction.
 # - A voice id from the overlay's defaults.json enables cloning; without one, Breeze uses its own default.
-_CHAT_TTS_VOICE: str = inputs.setting("chat.tts.voice", inputs.default_voice())
+_CHAT_TTS_VOICE: str = local_overlay.setting("chat.tts.voice", local_overlay.default_voice())
 KOBOLD_CHAT = SpeechWorkflowDefaults(
     profile="character",
     framework="koboldcpp",
     asr_engine=None,
-    llm_model=inputs.setting("chat.llm", "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS"),
-    tts_model=inputs.setting("chat.tts.model", "audiocpp/breeze-tts-2-q4_0"),
+    llm_model=local_overlay.setting("chat.llm", "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS"),
+    tts_model=local_overlay.setting("chat.tts.model", "audiocpp/breeze-tts-2-q4_0"),
     tts_voice=_CHAT_TTS_VOICE,
     clone_voice=bool(_CHAT_TTS_VOICE),
 )
@@ -719,7 +719,7 @@ class AudiocppModel(str, Enum):
 BREEZE_MODELS = frozenset({AudiocppModel.BREEZE_TTS.value, AudiocppModel.BREEZE_DESIGN.value})
 
 
-# - Voice ids come from the local input overlay (`scripts/config/overlay_inputs.py`); the repo ships none.
+# - Voice ids come from the local overlay (`scripts/config/local_overlay.py`); the repo ships none.
 #   A VoiceId keeps the old `.value` call sites working now that the enum is gone.
 class VoiceId(str):
     @property
@@ -756,9 +756,9 @@ AUDIOCPP_SERVICE = AudiocppStartupRequestServiceSettings(
 AUDIOCPP_SERVER_ARGS: dict[str, str] = {"config": str(audio_cfg.CONFIG_PATH)}
 
 AUDIOCPP_PROXY_ACCEPTED_MODELS = tuple(model.value for model in AudiocppModel)
-AUDIOCPP_PROXY_CLONE_VOICES: tuple[str, ...] = inputs.voice_ids()
+AUDIOCPP_PROXY_CLONE_VOICES: tuple[str, ...] = local_overlay.voice_ids()
 
-AUDIOCPP_INPUT_DIR = project_cfg.VOICES_DIR  # voice samples for AUDIOCPP
+AUDIOCPP_INPUT_DIR = local_overlay.voices_dir()  # voice samples; the accessor honours AI_VOICES_DIR
 
 # --- proxy only: model presets ---
 
@@ -922,11 +922,13 @@ class SdcppProxyRequestPromptSettings:
     )
 
     # - Fallback subject when the request carries no prompt; the overlay may replace it
-    default_inner_prompt: str = inputs.setting("image.prompt", "a person standing outdoors in soft daylight, full body")
+    default_inner_prompt: str = local_overlay.setting(
+        "image.prompt", "a person standing outdoors in soft daylight, full body"
+    )
 
     # - Comma-joined lora tags prepended to every prompt, e.g. SdcppProxyRequestLora("style", 0.6).tag()
     #   Personal LoRAs live in the overlay; the repository default selects none.
-    lora_selections: str = inputs.setting("image.loras", "")
+    lora_selections: str = local_overlay.setting("image.loras", "")
 
     def build(self, inner_prompt: str | None = None) -> str:
         inner = inner_prompt or self.default_inner_prompt

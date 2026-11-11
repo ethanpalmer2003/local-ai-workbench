@@ -15,7 +15,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from scripts.config import overlay_inputs as inputs
+from scripts.config import local_overlay
 from scripts.config import project_config as project_cfg
 from scripts.review import typography
 
@@ -86,8 +86,8 @@ def tracked_files(root: Path) -> list[str]:
 
 def voice_terms() -> tuple[str, ...]:
     """Ids longer than MIN_VOICE_ID; shorter ones collide with ordinary words."""
-    ids = {value for value in inputs.voice_ids() if len(value) >= MIN_VOICE_ID}
-    ids.update(stem for stem in inputs.character_cards() if len(stem) >= MIN_VOICE_ID)
+    ids = {value for value in local_overlay.voice_ids() if len(value) >= MIN_VOICE_ID}
+    ids.update(stem for stem in local_overlay.character_cards() if len(stem) >= MIN_VOICE_ID)
     return tuple(sorted(ids))
 
 
@@ -98,7 +98,7 @@ def voice_patterns(words: tuple[str, ...]) -> str:
 
 def local_words() -> tuple[str, ...]:
     """Vocabulary supplied by the overlay's defaults.json; nothing personal is committed here."""
-    configured = inputs.setting(LOCAL_WORDS_SETTING, inputs.setting(LEGACY_WORDS_SETTING, []))
+    configured = local_overlay.setting(LOCAL_WORDS_SETTING, local_overlay.setting(LEGACY_WORDS_SETTING, []))
     return tuple(str(word) for word in configured if str(word).strip())
 
 
