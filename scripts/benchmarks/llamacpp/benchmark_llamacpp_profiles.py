@@ -164,7 +164,7 @@ def run_profile(
     request_timeout: float,
     build_name: str | None = None,
     ctx_fill: int = 0,
-) -> tuple[dict[str, list[Sample]], dict[str, Any]]:
+) -> tuple[dict[str, list[Sample]], dict[str, Sample], dict[str, Any]]:
     context = require_native_execution("llama.cpp benchmark")
     from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 
@@ -249,7 +249,7 @@ def run_profile(
     (output.artifacts / f"metrics-{build_name or 'active'}-{profile_name}.json").write_text(
         json.dumps(metrics, indent=2) + "\n", encoding="utf-8"
     )
-    return results, metrics
+    return results, prefill, metrics
 
 
 def profile_meta(profile_name: str, build_name: str | None) -> dict[str, str]:
@@ -481,7 +481,7 @@ def run_decode(
             run_label = f"{build_name or cfg.LLAMACPP_ACTIVE_BUILD}/{profile_name}"
             print(f"{run_label}\t-\tstarting", flush=True)
             try:
-                results, memory = run_profile(
+                results, prefill, memory = run_profile(
                     profile_name,
                     prompts,
                     args.max_tokens,
@@ -492,9 +492,7 @@ def run_decode(
                     build_name,
                     args.ctx_fill,
                 )
-                csv_rows += decode_profile(
-                    build_name, run_label, profile_name, results, memory["prefill_samples"], memory, summary_lines
-                )
+                csv_rows += decode_profile(build_name, run_label, profile_name, results, prefill, memory, summary_lines)
             except Exception as error:
                 failed = True
                 line = f"{run_label}\tERROR\t{error}"

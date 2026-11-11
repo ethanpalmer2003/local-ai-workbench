@@ -17,4 +17,5 @@
 - Legacy ngram 32/4/8 remains a named profile. Do not combine unrelated screens into a stronger claim.
 - Optional `swift15-8k`: short greedy screen rose from 38.02 to 57.26 tok/s versus 96K capacity, with identical 64-token outputs. Use only when complete prompt/history/output fits; filled-context/everyday-sampling performance remains unverified.
 - Screens recorded 2026-10-04: MTP evidence (../../tests/output/llamacpp/benchmark_speedbench/verified/1791093433528713400/artifacts/comparison.md), copy evidence (../../tests/output/llamacpp/benchmark_ngram/no-gain/1791087672992167800/artifacts/comparison.md).
+- Profile screen 2026-11-11, b1372, short built-in prompts: cold prefill 43.4 tok/s over a 39-token prompt and decode 63.6 tok/s for `swift15`; 48.8 and 25.5 for `swift15-mtp-notemplate`. One run, code prompt spread is wide. Output: ../../benchmarks/output/llamacpp/benchmark_llamacpp_profiles/unreviewed/1794440590360444400/artifacts/llama-benchmark-summary-20261111-174436.txt
 - [HRX limits](HRX.md), [model benchmarks](../../benchmarks/MODEL-COMPARISONS.md), [pending grids](../../../notes/TODO.md).
