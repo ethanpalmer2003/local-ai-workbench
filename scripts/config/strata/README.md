@@ -9,39 +9,17 @@
 - Model paths/load/memory settings: edit `decode.json`; restart the backend.
 - Engine/console logs: `scripts/state/strata/`.
 - Shared source: desktop and Pi use this same file; no config synchronization or regeneration.
-- Desktop folder preference: `scripts/state/strata/home/data/native-host.json`, `installDir`.
+- Desktop folder preference: app-managed under the profile tree above; the state copy is historical.
 - Desktop re-reads this folder on launch; an open desktop must restart.
 - Desktop discovery copies it as `strata-<model-id>.json`; these sources keep role names.
 - Original desktop profile and prior preference: preserved in `C:/AI/trash/`.
 - Shared edits: apply when each backend next starts; an already-loaded model keeps its current settings.
 - Backend-only Pi launch: rejects nonempty inherited MCP servers.
-- Relocation: update both `STRATA.config_path` and the desktop folder preference.
 
 ## App-managed data
 
-| Content | Physical location under C:/AI/scripts/state/strata/ |
-| --- | --- |
-| Sessions, host preferences, uploads | `home/` |
-| App settings, managed components, runtime, logs, tuning | `desktop/` |
-| Terminal profiles | `terminal/` |
-| Desktop WebView directory | `webview/` |
-| Relocation record | `relocation.json` |
-
-## Compatibility paths
-
-| Old path | Redirects to under state/strata/ |
-| --- | --- |
-| `%USERPROFILE%/.strata` | `home/` |
-| `%LOCALAPPDATA%/Strata` | `desktop/` |
-| `%APPDATA%/Strata` | `terminal/` |
-| `%LOCALAPPDATA%/ai.strata.desktop` | `webview/` |
-
-- Old paths: NTFS directory junctions; one physical copy inside `C:/AI`.
-- Existing shortcuts and normal settings updates: follow the junctions.
-- Keep the junctions and their targets; targets contain the real data.
-- Future installers: could replace a junction or introduce another storage path; recheck after major updates.
-- Model weights: under `C:/AI/data/`.
-- Application binaries: remain under `C:/AI/frameworks/`; app-updated components under `desktop/components/`.
-- Verification: junction identity, native profiles/runtime/component paths, shared config pointer and model discovery passed.
-- Verification record (../../tests/output/regression/strata_relocation/unreviewed/1792964068994666100/artifacts/verification.json).
-- Desktop UI/model startup: not exercised during relocation.
+- Current install (0.2.13): the app keeps its own tree under `%LOCALAPPDATA%\Strata\` (`components`, `install`, `logs`, `procs`, `runtime`, `tuning`) and its WebView profile under `%LOCALAPPDATA%\ai.strata.desktop\EBWebView`. Agent settings live in `%USERPROFILE%\.strata`.
+- Workspace state: `scripts/state/strata/` holds the engine and console logs the profiles point at; its `desktop/` copy is from before the reinstall and is not read by the current app.
+- The relocation junctions and `relocation.json` from the earlier workspace relocation are no longer present: reinstalling 0.2.13 recreated real folders in the profile. Re-establishing them is not planned; treat the profile paths as authoritative.
+- Model weights stay under `C:/AI/data/`; binaries under `C:/AI/frameworks/`; app-updated engine components are the ones inside the profile tree.
+- Historical relocation verification (../../tests/output/regression/strata_relocation/unreviewed/1792964068994666100/artifacts/verification.json) describes the pre-reinstall layout only.
