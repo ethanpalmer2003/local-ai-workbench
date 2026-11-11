@@ -50,6 +50,7 @@ from scripts.tests.cases.review.test_similarity import (
 from scripts.tests.cases.review.test_typography import CheckTests, ScanTests, SuffixTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
+from scripts.tests.cases.shared.benchmarks.test_coding_engines import CodingEngineSummaryTests
 from scripts.tests.cases.shared.benchmarks.test_context_stream import ContextStreamTests
 from scripts.tests.cases.shared.benchmarks.test_framework_compare import (
     AlternateArmTests,
@@ -216,6 +217,7 @@ if __name__ == "__main__":
                     QwenAsrProfiles,
                     GemmaAudioTests,
                     ModelSyncTests,
+                    CodingEngineSummaryTests,
                     ContextStreamTests,
                     FrameworkUpdates,
                     ReportOutputs,
