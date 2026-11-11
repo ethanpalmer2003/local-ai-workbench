@@ -47,7 +47,9 @@ C:/AI/scripts/.venv/Scripts/python.exe -m scripts.tests.cases.audiocpp.audiocpp_
   preserved or refused.
 - A single sentence is a compatibility screen, not a quality or ranking benchmark.
 - Supertonic synthesized English, French and Japanese on the Vulkan backend in a one-request
-  check; no benchmark run has recorded its timings yet.
+  check. Its first timing pair against Kokoro is recorded in
+  [the TTS screen](../../tests/notes/SUPERTONIC-TTS-SCREEN.md): RTF 0.027 against 0.033, 481 MiB
+  against 694 MiB peak process VRAM.
 
 Editable native model and session options: [server.json](server.json). Model guides:
 [TTS](https://github.com/0xShug0/audio.cpp/blob/v0.9.4/docs/models/ming3_tts.md),
