@@ -1,36 +1,18 @@
 # AI workspace
 
-A Windows-first workbench for local AI frameworks: installation, weights, configuration, launch and
-recorded evidence per engine. Two jobs run through it: comparing frameworks that offer similar
-capabilities, and tuning a framework for AMD hardware, an RX 7800 XT with 16 GB VRAM and 32 GB DDR5 RAM.
+A Windows-first workbench for local AI frameworks: installation, weights, configuration, launching and
+recorded evidence per engine. It serves two jobs: comparing frameworks that offer similar capabilities,
+and tuning single frameworks for one AMD device, an RX 7800 XT with 16 GB VRAM and 32 GB DDR5 RAM.
 
-## Purpose
+## What the workspace adds
 
-Local AI frameworks each carry their own config, ports, weights and quirks. This repo evaluates AMD
-performance across frameworks and builds (Vulkan against ROCm) and compares similar functionality in
-several frameworks (TTS in the Lemonade server, KoboldCpp and AudioCpp). It adds one canonical key per
-component, readiness checks that mean the same thing everywhere, provenance beside every measurement,
-and a marker for results whose inputs changed.
+Each framework is third-party and keeps its own configuration, ports and weight paths. Four conventions
+make them comparable:
 
-## Comparing frameworks
-
-Frameworks are measured alone and in the combined workflows that replicate real use:
-
-- Language practice: a multilingual LLM, TTS and ASR behind one gateway.
-- Coding: a quantized LLM, a tuned inference engine and an agent harness.
-
-A workflow states what a framework must provide, and a stack that cannot meet it is refused at launch.
-
-## Tuning for this device
-
-Some comparisons stay inside one framework: ROCm against Vulkan, context and offload settings,
-quantization and batch size. These measure hardware for a fixed workload, not one framework against
-another.
-
-- There is a `TUNING.md` for each tuned component, stating what is in use, the evidence behind it and
-  what stays unmeasured: [ComfyUI](scripts/config/comfyui/TUNING.md), [SD.cpp](scripts/config/sdcpp/TUNING.md),
-  [llama.cpp](scripts/config/llamacpp/TUNING.md), [Strata](scripts/config/strata/TUNING.md).
-- Tuning evidence follows the comparison rule: provenance plus a measured pair.
+- One canonical key per component, used across configuration, catalogs, tests and batches.
+- Readiness checks with the same meaning for every engine.
+- Provenance stored beside each measurement.
+- Results whose inputs changed are marked stale rather than compared.
 
 ## Examples
 
@@ -48,17 +30,26 @@ bat/benchmarks/benchmark_framework_compare.bat
 
 # ComfyUI with its tuned attention and VRAM settings
 bat/browser/comfyui/launch_comfyui.bat
-
-# Refresh the last-run evidence table for the long opt-in checks
-scripts/.venv/Scripts/python.exe -m scripts.tools.capability_matrix
 ```
+
+## Comparing and tuning
+
+Frameworks are measured alone and in combined workflows that replicate real use: a multilingual LLM
+with speech and recognition behind one gateway, or a quantized LLM with a tuned inference engine and an
+agent harness. A workflow states what a framework must provide, and a stack that cannot meet it is
+refused at launch. Similar functions are compared across frameworks, for example TTS in Lemonade,
+KoboldCpp and AudioCpp.
+
+Tuning keeps the workload fixed and changes one variable for this device: ROCm against Vulkan builds,
+context and offload settings, quantization and batch size. Applied to llama.cpp, Strata, ComfyUI and
+SD.cpp. Both jobs follow the same evidence rule.
 
 ## Evidence
 
 A long run records the workspace and framework commits, weight identity, effective settings, corpus
-revision and manifest hash; a changed input marks the result stale instead of comparing it. Recognition
-is scored on a pinned multilingual corpus with word and character error rates, and synthesized speech
-is checked against the requested text.
+revision and manifest hash. Recognition is scored on a pinned multilingual corpus with word and
+character error rates, and synthesized speech is checked against the requested text. Methods are in
+[scripts/benchmarks/README.md](scripts/benchmarks/README.md).
 
 ## In progress
 
@@ -70,5 +61,5 @@ not yet made.
 
 Launchers are in [bat/](bat); code, configuration and setup in [scripts/](scripts/README.md); notes in
 [notes/](notes/); working rules in [AGENTS.md](AGENTS.md) and [.agents/](.agents/). The `data/`,
-`frameworks/` and `trash/` folders stay out of Git; see [onboarding](notes/ONBOARDING.md) to recreate
-the installations.
+`frameworks/` and `trash/` folders are not tracked by Git; see [onboarding](notes/ONBOARDING.md) to
+recreate the installations.

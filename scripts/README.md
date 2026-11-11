@@ -4,6 +4,7 @@
 - Use one component key wherever files belong to one component; matching keys do not require empty mirror folders. [folder rules](../.agents/FOLDERS.md).
 - New machine: [onboarding](../notes/ONBOARDING.md). Pending work: [TODO](../notes/TODO.md); open questions: [OPEN-QUESTIONS](../notes/OPEN-QUESTIONS.md).
 - Routine batch entry points: [bat/README.md](../bat/README.md).
+- Optional: `bat/tests/refresh_capability_matrix.bat` rewrites the last-run table for the long opt-in checks. It is a reference view, not a required step.
 - Two browser pages exist: the shared `/test/` page and the practice page. A manual tool or check becomes a control there, not a new entry point.
 
 | Task | Guide |
