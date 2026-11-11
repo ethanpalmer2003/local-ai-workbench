@@ -18,6 +18,8 @@
 
 ### Unattended
 
+- [ ] Compare the practice stack with Lemonade on one of its MOSS TTS entries instead of `kokoro-v1`; that removes the Lemonade leg as a reason to keep Kokoro installed. Needs the Lemonade model download first. ~30-45 min
+- [ ] Decide whether Lemonade qualifies as a voice-design framework now that `MOSS-VoiceGen` is in its catalog; allowing it for the character profile needs a test, not just the label. ~20-30 min
 - [ ] Retest llama.cpp coding on the ROCm build when a release newer than b1372 appears; b1372 is the newest and crashes on load. ~20 min
 - [ ] Rerun the llama.cpp profile screen so the prefill column exists for the current profiles and builds; every saved table predates it. [Tuning](../scripts/config/llamacpp/TUNING.md). ~20-30 min
 - [ ] Retest Kobold readiness and the remaining live targets after the integrity-label fix; its launcher still timed out at 180 s. ~30 min

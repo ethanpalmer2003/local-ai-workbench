@@ -666,7 +666,7 @@ KOBOLDCPP_KCPPS_ARGS = {
 KOBOLDCPP_PORT: int = cast(int, KOBOLDCPP_KCPPS_ARGS["port"])
 
 # - KoboldCpp chat allowlist, in the canonical registry-label namespace; paths come from the registry.
-#   The character weights sit in the private overlay, so a clone without it keeps the tracked model.
+#   Configured weights can come from the overlay, so a clone without it keeps the tracked model.
 KOBOLDCPP_CHAT_LABELS = (
     "llamacpp/gemma-4-E4B-it-Q4_0",
     "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS",
