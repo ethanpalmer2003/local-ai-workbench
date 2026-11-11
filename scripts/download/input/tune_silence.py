@@ -11,7 +11,7 @@ import argparse
 import re
 import subprocess
 
-from scripts.config import overlay_inputs as inputs
+from scripts.config import local_overlay
 from scripts.download.input.audio_workflow import MIN_DUR_VALUES, NOISE_DB_VALUES, source_paths
 
 
@@ -28,7 +28,7 @@ def detect_silences(mp3_path, noise_db, min_dur):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--voice", default=inputs.default_voice())
+    parser.add_argument("--voice", default=local_overlay.default_voice())
     args = parser.parse_args()
     paths = source_paths(args.voice)
 

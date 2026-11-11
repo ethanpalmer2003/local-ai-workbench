@@ -98,8 +98,8 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
 from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
 from scripts.tests.cases.shared.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
 from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
-from scripts.tests.cases.shared.test_inputs_overlay import InputOverlayTests
 from scripts.tests.cases.shared.test_live_stamp import LiveStampTests
+from scripts.tests.cases.shared.test_local_overlay import LocalOverlayTests
 from scripts.tests.cases.shared.test_low_integrity import LowIntegrityTests
 from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_model_run import ModelRunTests
@@ -201,7 +201,7 @@ if __name__ == "__main__":
                     UpdateModelsTests,
                     TransferTests,
                     DownloadModelsTests,
-                    InputOverlayTests,
+                    LocalOverlayTests,
                     PolicyTests,
                     LiveStampTests,
                     RocmInventoryTests,

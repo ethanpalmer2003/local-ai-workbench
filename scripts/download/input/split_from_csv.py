@@ -25,7 +25,7 @@ import json
 import re
 import subprocess
 
-from scripts.config import overlay_inputs as inputs
+from scripts.config import local_overlay
 from scripts.download.input.audio_workflow import MAX_MERGED_DUR, SILENCE_MIN_DUR, SILENCE_NOISE_DB, source_paths
 
 
@@ -124,7 +124,7 @@ def merge_rows(rows, silences, max_dur=MAX_MERGED_DUR):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--voice", default=inputs.default_voice(), help="voice id under the input overlay")
+    parser.add_argument("--voice", default=local_overlay.default_voice(), help="voice id under the input overlay")
     args = parser.parse_args()
     paths = source_paths(args.voice)
     paths.out_dir.mkdir(parents=True, exist_ok=True)

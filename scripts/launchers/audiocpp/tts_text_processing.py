@@ -10,7 +10,7 @@ import re
 from dataclasses import dataclass, field
 from enum import Enum
 
-from scripts.config import overlay_inputs as inputs
+from scripts.config import local_overlay
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.shared.media import text_processing
 
@@ -18,10 +18,10 @@ from scripts.launchers.shared.media import text_processing
 @dataclass
 class BreezeToneSettings:
     tags_enabled: bool = True
-    default_enabled: bool = inputs.setting(
-        "chat.tts.instruction_enabled", bool(inputs.setting("chat.tts.instruction", ""))
+    default_enabled: bool = local_overlay.setting(
+        "chat.tts.instruction_enabled", bool(local_overlay.setting("chat.tts.instruction", ""))
     )
-    default_instruction: str = inputs.setting("chat.tts.instruction", "")
+    default_instruction: str = local_overlay.setting("chat.tts.instruction", "")
     guidance_scale: float = 1.0
 
     tag_pattern: str = r"\[(?:Tone|Mood|Instruction|Voice):\s*([^\]]+)\]"

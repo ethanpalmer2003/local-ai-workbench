@@ -7,6 +7,7 @@
 ## Reliability
 
 - [ ] Extend the timeout check to raw `http.client` connections: `benchmark_requests` sets 600 s on its streaming connection and a background thread can still hold a run open with nothing verifying either bound. ~30 min
+- [ ] Add a review check that only `local_overlay.py` reads `AI_INPUT_DIR`, `AI_VOICES_DIR` or `data/input`. ~20 min
 
 ## Needs a model run or device
 

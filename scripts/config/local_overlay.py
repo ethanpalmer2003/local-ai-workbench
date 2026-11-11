@@ -1,4 +1,4 @@
-"""Local input overlay: personal voice references, characters and prompts live outside the repo."""
+"""Local overlay: every file this repo reads from outside git, reached through this one module."""
 
 import json
 import os

@@ -4,8 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from scripts.config import overlay_inputs as inputs
-from scripts.config import paths
+from scripts.config import local_overlay, paths
 from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server
 from scripts.config.coding_agents.pi import packages
@@ -32,10 +31,10 @@ def comfyui_files() -> dict[Path, bytes]:
         target / "extra_model_paths.yaml": paths.load_text(source / "extra_model_paths.yaml").encode("utf-8"),
         installed_node(): (source / NODE_SOURCE).read_bytes(),
     }
-    prompt = inputs.setting("video.prompt", "") or None
-    negative = inputs.setting("video.negative", "") or None
-    prompt_append = inputs.setting("video.prompt_append", "") or None
-    negative_append = inputs.setting("video.negative_append", "") or None
+    prompt = local_overlay.setting("video.prompt", "") or None
+    negative = local_overlay.setting("video.negative", "") or None
+    prompt_append = local_overlay.setting("video.prompt_append", "") or None
+    negative_append = local_overlay.setting("video.negative_append", "") or None
     workflows = {}
     for path in (source / "workflows").glob("*.json"):
         content = path.read_bytes()
