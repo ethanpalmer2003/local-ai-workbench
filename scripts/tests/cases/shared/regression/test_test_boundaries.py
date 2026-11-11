@@ -148,7 +148,7 @@ class TestBoundaries(unittest.TestCase):
         start_file.assert_not_called()
 
     def test_dsh_availability_checks_the_asar_archive(self):
-        from scripts.tests.cases.shared import live_frameworks
+        from scripts.tests.cases.suites import live_frameworks
 
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
@@ -163,7 +163,7 @@ class TestBoundaries(unittest.TestCase):
                 self.assertFalse(live_frameworks.target_available("dsh-headless")[0])
 
     def test_audiocpp_probe_requests_complete_wav(self):
-        from scripts.tests.cases.shared import live_frameworks
+        from scripts.tests.cases.suites import live_frameworks
 
         self.assertIs(live_frameworks.audiocpp_payload()["stream"], False)
 
@@ -181,7 +181,7 @@ class TestBoundaries(unittest.TestCase):
         self.assertIn("2/2 audiocpp", text)
 
     def test_native_suite_dispatch(self):
-        from scripts.tests.cases.shared import frameworks_smoke as owner
+        from scripts.tests.cases.suites import frameworks_smoke as owner
 
         with (
             patch.object(owner.live_frameworks, "run_live", return_value=True) as live,
@@ -196,7 +196,7 @@ class TestBoundaries(unittest.TestCase):
             live.assert_not_called()
 
     def test_native_targets_are_disjoint(self):
-        from scripts.tests.cases.shared import live_frameworks, quick_validation
+        from scripts.tests.cases.suites import live_frameworks, quick_validation
 
         self.assertEqual(set(live_frameworks.LAUNCHER_TARGETS) & set(quick_validation.PROBES), set())
         self.assertNotIn("audiocpp", quick_validation.PROBES)

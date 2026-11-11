@@ -62,7 +62,7 @@ ALLOWLIST = {
 }
 
 # - the audit and its fixtures hold every pattern by construction
-SELF_REFERENTIAL = {"scripts/review/public_audit.py", "scripts/tests/cases/shared/test_public_audit.py"}
+SELF_REFERENTIAL = {"scripts/review/public_audit.py", "scripts/tests/cases/review/test_public_audit.py"}
 
 
 @dataclass(frozen=True)
