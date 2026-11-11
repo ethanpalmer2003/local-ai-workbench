@@ -59,7 +59,7 @@ def benchmark_tools() -> tuple[ToolSpec, ...]:
 
 
 TOOLS = [
-    ToolSpec("strata", "", ReleaseType.STRATA),
+    ToolSpec("strata", "", ReleaseType.MANUAL),
     # - Avalon is an unmodified llama.cpp fork cloned and compiled by hand with cmake.
     #   The catalog records the upstream so the install is covered; a newer commit is
     #   fast-forwarded, then reported as still needing a build, never as merged patches.

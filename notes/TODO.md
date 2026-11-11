@@ -22,7 +22,6 @@
 
 ### Unattended
 
-- [ ] Retest the Strata 0.1.59 engine when its updater expands `{AI_ROOT}` in the test start; today it passes the placeholder literally, so the engine reports a missing tokenizer and the update declines. ~20 min
 - [ ] Retest llama.cpp coding on the ROCm build when a release newer than b1372 appears; b1372 is the newest and crashes on load. ~20 min
 - [ ] Retest Kobold readiness and the remaining live targets after the integrity-label fix; its launcher still timed out at 180 s. ~30 min
 - [ ] llama.cpp: medium/high-context speculation. Filled context at 32k is measured: cold prefill 505 tok/s with a 63.3 s TTFT, 48.5 tok/s decode warm and 39.0 tok/s cached at 12.8 GiB. Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). ~1-1.5 h
