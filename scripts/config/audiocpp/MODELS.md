@@ -15,6 +15,16 @@ same entries.
 Supertonic, Ming and Drama play at 44100 Hz. Lemonade serves only its own `kokoro-v1`
 speech entry, so Supertonic stays on AudioCpp and KoboldCpp.
 
+Supertonic voices: `M1`, `M2`, `M3`, `M4`, `M5`, `F1`, `F2`, `F3`, `F4`, `F5`. `F1` is
+the practice default; change `SUPERTONIC_TTS.voice` and the `default_request_options`
+voice in [server.json](server.json) together, then restart the speech server.
+
+KoboldCpp 1.124.2 serves the same GGUF natively through `--ttsmodel`; it ports a subset of
+the audio.cpp families, so files are interchangeable and options are not. Its speech
+endpoint reads the top-level `voice` and ignores `options.voice_id`, while AudioCpp accepts
+either. The launcher therefore sends `voice` to native KoboldCpp and `options.voice_id`
+through the AudioCpp proxy, which strips `voice` for preset-voice models.
+
 ## Test page
 
 - Start `bat/browser/launch_test.bat`; the TTS model selector lists the configured families.

@@ -88,13 +88,16 @@ class SpeechProfiles(unittest.TestCase):
                 port = cfg.KOBOLDCPP_KCPPS_ARGS["port"] if kokoro.internal() else cfg.AUDIOCPP_SERVICE.internal_port
                 self.assertEqual(target, f"http://127.0.0.1:{port}/v1/audio/speech")
                 self.assertEqual(body["model"], cfg.SUPERTONIC_MODEL)
-                self.assertEqual(body["options"]["voice_id"], cfg.SUPERTONIC_TTS.voice)
-                self.assertNotIn("voice", body)
                 self.assertNotIn("voice_ref", body)
                 if kokoro.internal():
+                    # - Native KoboldCpp reads the top-level voice and ignores the request option.
+                    self.assertEqual(body["voice"], cfg.SUPERTONIC_TTS.voice)
+                    self.assertNotIn("voice_id", body.get("options", {}))
                     self.assertFalse(body["stream"])
                     self.assertEqual(body["response_format"], "wav")
                 else:
+                    self.assertEqual(body["options"]["voice_id"], cfg.SUPERTONIC_TTS.voice)
+                    self.assertNotIn("voice", body)
                     self.assertTrue(body["stream"])
 
     def test_kokoro_request_keeps_its_voice_and_language(self):

@@ -47,10 +47,16 @@ def speech_body(body: bytes) -> bytes:
         payload.pop(key, None)
     options = payload.setdefault("options", {})
     if family() == "supertonic":
-        # - Preset voices are request options and the language comes from the text, so no voice field.
+        # - Preset voices and the language from the text, no locale field.
+        # - Native KoboldCpp reads the top-level voice; AudioCpp accepts either, and the proxy
+        #   strips voice for non-clone models, so the external route keeps the request option.
         payload.pop("voice", None)
         if isinstance(options, dict):
-            options.setdefault("voice_id", cfg.SUPERTONIC_TTS.voice)
+            options.pop("voice_id", None)
+        if internal():
+            payload["voice"] = cfg.SUPERTONIC_TTS.voice
+        elif isinstance(options, dict):
+            options["voice_id"] = cfg.SUPERTONIC_TTS.voice
     else:
         payload.setdefault("voice", cfg.KOKORO_TTS.voice)
         if isinstance(options, dict):
