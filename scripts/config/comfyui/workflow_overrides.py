@@ -223,12 +223,8 @@ class LTXWorkflowOverrides:
 
     @staticmethod
     def _apply_dynamic_vram(graph: dict[str, Any], dynamic_vram: bool | None) -> None:
-        if dynamic_vram is False:
-            adapt_loaders(graph, ["--disable-dynamic-vram"])
-        elif dynamic_vram is True:
-            for node in graph.values():
-                if node["class_type"] == "UnetLoaderGGUF":
-                    node["class_type"] = "UnetLoaderGGUFDynamicVRAM"
+        if dynamic_vram is not None:
+            set_dynamic_vram(graph, dynamic_vram)
 
     def apply(self, graph: dict[str, Any], controls: dict[str, int]) -> None:
         for name in CONTROL_NAMES:
@@ -356,10 +352,19 @@ def set_video_decode(graph: dict[str, Any], mode: str) -> None:
                     node["inputs"].setdefault(name, value)
 
 
-def adapt_loaders(graph: dict[str, Any], flags: list[str]) -> None:
-    if "--disable-dynamic-vram" in flags:
-        for node in graph.values():
-            if node["class_type"] == "UnetLoaderGGUFDynamicVRAM":
-                node["class_type"] = "UnetLoaderGGUF"
-            elif node["class_type"] == "CLIPLoaderGGUFDynamicVRAM":
-                node["class_type"] = "CLIPLoaderGGUF"
+DYNAMIC_SUFFIX = "DynamicVRAM"
+GGUF_LOADERS = (
+    "UnetLoaderGGUF",
+    "CLIPLoaderGGUF",
+    "DualCLIPLoaderGGUF",
+    "TripleCLIPLoaderGGUF",
+    "QuadrupleCLIPLoaderGGUF",
+)
+
+
+def set_dynamic_vram(graph: dict[str, Any], enabled: bool) -> None:
+    """Switch every GGUF loader node to its DynamicVRAM variant, or back to the plain one."""
+    for node in graph.values():
+        base = node["class_type"].removesuffix(DYNAMIC_SUFFIX)
+        if base in GGUF_LOADERS:
+            node["class_type"] = base + (DYNAMIC_SUFFIX if enabled else "")

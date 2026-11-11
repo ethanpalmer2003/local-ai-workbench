@@ -5,69 +5,31 @@ import re
 import subprocess
 from typing import Any
 
-from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr.llamacpp.llama_audio import LlamaAudioBackend
 from scripts.launchers.asr.shared import requests
-from scripts.launchers.shared.services import native
+
+BACKEND = LlamaAudioBackend(cfg.QWEN3_ASR, alias="qwen3-asr", label="Qwen ASR", device=cfg.QWEN3_ASR.device)
 
 
 def url() -> str:
-    return f"http://127.0.0.1:{cfg.QWEN3_ASR.port}"
+    return BACKEND.url()
 
 
 def ready() -> bool:
-    return launch_util.backend_ready(url() + "/health")
+    return BACKEND.ready()
 
 
 def command() -> list[str]:
-    settings = cfg.QWEN3_ASR
-    return [
-        str(settings.exe),
-        "-m",
-        str(settings.model),
-        "--mmproj",
-        str(settings.mmproj),
-        "--host",
-        "127.0.0.1",
-        "--port",
-        str(settings.port),
-        "--alias",
-        "qwen3-asr",
-        "--device",
-        settings.device,
-        "-ngl",
-        "999",
-        "-fa",
-        "on",
-        "-c",
-        str(settings.context_size),
-        "-np",
-        "1",
-        "-t",
-        str(settings.threads),
-        "-n",
-        str(settings.max_tokens),
-        "--jinja",
-    ]
+    return BACKEND.command()
 
 
 def matching_server() -> bool:
-    return native.matches(command())
+    return BACKEND.matching_server()
 
 
 def start() -> subprocess.Popen[Any] | None:
-    if launch_util.llama_server_running():
-        print("Existing chat llama.cpp session retained; Qwen ASR uses its own port")
-    settings = cfg.QWEN3_ASR
-    return native.start_server(
-        command(),
-        (settings.exe, settings.model, settings.mmproj),
-        settings.port,
-        "Qwen ASR",
-        ready,
-        matching_server,
-        component_key="asr/llamacpp",
-    )
+    return BACKEND.start(ready, matching_server)
 
 
 def clean_transcript(text: str) -> str:

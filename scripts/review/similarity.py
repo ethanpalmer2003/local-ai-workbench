@@ -160,7 +160,9 @@ def findings(
     grouped: dict[tuple[str, str], list[tuple[float, int, int]]] = defaultdict(list)
     for score, left, right in pairs:
         first, second = units_[left], units_[right]
-        key = tuple(sorted((f"{first['doc']} :: {first['heading']}", f"{second['doc']} :: {second['heading']}")))
+        left_key = f"{first['doc']} :: {first['heading']}"
+        right_key = f"{second['doc']} :: {second['heading']}"
+        key = (left_key, right_key) if left_key <= right_key else (right_key, left_key)
         grouped[key].append((score, left, right))
     reported = []
     for key, items in grouped.items():

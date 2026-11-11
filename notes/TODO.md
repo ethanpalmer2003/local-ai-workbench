@@ -4,14 +4,6 @@
 - Entries do not authorize live tests, package changes or long runs. Upstream defects stay in [UPSTREAM](UPSTREAM.md), evidence in [STATUS](../scripts/tests/notes/STATUS.md).
 - Each entry ends with a rough duration, shortest first.
 
-## Code review
-
-- [ ] Re-run the code screen after the Strata request merge and confirm the remaining four pairs are still distinct owners. `python -m scripts.review.similarity --code`. ~10 min
-
-## Documentation review
-
-- [ ] Re-run the documentation screen and review what it still reports; the enumerated pairs from the first pass are fixed. `python -m scripts.review.similarity`. ~15-20 min
-
 ## Needs a model run or device
 
 ### Requires user input

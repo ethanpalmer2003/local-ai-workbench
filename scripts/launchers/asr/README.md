@@ -23,7 +23,7 @@
 
 - `ASR_SERVICE` owns shared gateway selection/port. External ASR works with either chat consumer.
 - Installs/models use `asr/<framework>/`; shared Gemma weights and chat runtimes remain single assets.
-- `shared/turns.py` owns VAD/pre-roll; `segment_stream.py` adapts resident completed-turn decoders. Native startup uses `launchers/shared/services/native.py`.
+- `shared/turns.py` owns VAD/pre-roll; `segment_stream.py` adapts resident completed-turn decoders. Native startup uses `launchers/shared/services/native.py`; `llamacpp/llama_audio.py` owns the shared llama.cpp audio-server command and startup.
 
 ## Launch
 
