@@ -30,3 +30,4 @@ The app's profile tree is relocated into this workspace with NTFS directory junc
 - Keep the junctions and their targets; an installer may replace a junction, so recheck after a major update and repeat the move plus `mklink /J` if the app wrote a real folder again.
 - Model weights stay under `C:/AI/data/`; binaries under `C:/AI/frameworks/`; the app updates its engine components inside the relocated `desktop/`.
 - An older workspace copy made before the reinstall is retired to trash; the table above is the only live mapping.
+- After a full installer: [manage_strata_profile.bat](../../../bat/manage_strata_profile.bat) checks the junctions and `--fix` relocates a profile folder the installer recreated.

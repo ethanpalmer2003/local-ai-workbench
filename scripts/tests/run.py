@@ -105,6 +105,7 @@ from scripts.tests.cases.shared.test_similarity import (
     SimilarityUnitTests,
 )
 from scripts.tests.cases.shared.test_stage_runner import StageRunnerTests
+from scripts.tests.cases.shared.test_strata_profile import StrataProfileLinkTests
 from scripts.tests.cases.shared.test_toolchains import ToolchainTests
 from scripts.tests.cases.shared.test_typography import CheckTests, ScanTests, SuffixTests
 from scripts.tests.cases.shared.test_validate import ValidatePlanTests
@@ -173,6 +174,7 @@ if __name__ == "__main__":
                     SimilarityFindingTests,
                     SimilaritySourceTests,
                     SimilarityCodeTests,
+                    StrataProfileLinkTests,
                     AudioComparison,
                     WorkflowTests,
                     ExecutionTests,

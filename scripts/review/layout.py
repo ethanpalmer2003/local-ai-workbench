@@ -135,6 +135,7 @@ ROOT_BATCHES = frozenset(
         "manage_kill_ai_services.bat",
         "manage_rocm_installs.bat",
         "manage_low_integrity.bat",
+        "manage_strata_profile.bat",
         "_run.bat",
         "launch_llamacpp_pi_agent.bat",
         "launch_strata_pi_agent.bat",
