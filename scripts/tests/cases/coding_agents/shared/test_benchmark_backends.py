@@ -45,7 +45,7 @@ class BenchmarkBackendsTests(unittest.TestCase):
                 self.assertIn("--no-lens-context", command)
             self.assertEqual((source / "settings.json").read_text(), original)
 
-    def test_strata_config_is_private_and_preserves_memory_options(self):
+    def test_strata_config_withholds_credentials_and_preserves_memory_options(self):
         with CasePaths(__file__).temporary_directory() as folder:
             output = RunPaths(Path(folder))
             output.create()
