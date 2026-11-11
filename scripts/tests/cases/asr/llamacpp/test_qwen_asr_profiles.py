@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector as transcription
+from scripts.launchers.asr.llamacpp import gemma_audio, llama_audio
 from scripts.launchers.asr.llamacpp import qwen3_asr as qwen_asr
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.tests.shared.http_fixtures import json_response
@@ -32,12 +33,20 @@ class QwenAsrProfiles(unittest.TestCase):
         self.assertEqual(command[command.index("-fa") + 1], "on")
         self.assertNotEqual(cfg.QWEN3_ASR.port, cfg.KOBOLDCPP_KCPPS_ARGS["port"])
 
+    def test_audio_backends_share_one_start_contract(self):
+        for backend in (gemma_audio.BACKEND, qwen_asr.BACKEND):
+            self.assertIsInstance(backend, llama_audio.LlamaAudioBackend)
+        self.assertEqual((gemma_audio.BACKEND.alias, gemma_audio.BACKEND.label), ("gemma-audio", "Gemma audio"))
+        self.assertEqual((qwen_asr.BACKEND.alias, qwen_asr.BACKEND.label), ("qwen3-asr", "Qwen ASR"))
+        self.assertEqual(gemma_audio.command()[gemma_audio.command().index("--alias") + 1], "gemma-audio")
+        self.assertEqual(qwen_asr.command()[qwen_asr.command().index("--alias") + 1], "qwen3-asr")
+
     def test_running_chat_session_preserved_and_matching_asr_reused(self):
         with (
-            patch.object(qwen_asr.launch_util, "llama_server_running", return_value=True),
-            patch.object(qwen_asr, "ready", return_value=True),
-            patch.object(qwen_asr, "matching_server", return_value=True),
-            patch.object(qwen_asr.launch_util, "launch_process") as launch,
+            patch.object(llama_audio.launch_util, "llama_server_running", return_value=True),
+            patch.object(qwen_asr.BACKEND, "ready", return_value=True),
+            patch.object(qwen_asr.BACKEND, "matching_server", return_value=True),
+            patch.object(llama_audio.launch_util, "launch_process") as launch,
         ):
             self.assertIsNone(qwen_asr.start())
         launch.assert_not_called()

@@ -4,15 +4,16 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 
 ## Unresolved
 
-- **Code similarity.** Whether embeddings add anything to code that clone detection and review do not. Duplication is a smaller risk there than in prose, so this waits until the documentation check has run on the current tree.
+- **Nothing is waiting on a decision.** A question returns here when its answer needs a choice rather than work.
 
 ## Resolved, revisit if needed
 
+- **Code similarity.** Decided: run the 0.95 code screen as an opt-in check. It found two near-identical ASR `start` functions and a loader switch that converted only the UNet node, so it earns its place beside clone detection. Remaining pairs are convention-level.
 - **Hardware specs.** Machine numbers stay in the docs by decision; revisiting them is cheap but not planned.
 - **Lint strictness.** The gate stays at the [code rules](../.agents/CODE.md) limit with no inline suppressions and ruff clean repo-wide. Tightening further (`ARG`, `PL`) is worth revisiting only if a defect slips through.
-- **Embedding index over code and docs.** Declined for now: `grep` plus the owner rules answer the questions that azzfixture, an index needs its own refresh path and component key, and retrieval invites the paraphrased duplicates the one-owner rule prevents. Revisit if the document set grows past what reading a diff can hold. Duplicate detection is a different question, tracked under Unresolved.
+- **Embedding index over code and docs.** Declined for now: `grep` plus the owner rules answer the questions that azzfixture, an index needs its own refresh path and component key, and retrieval invites the paraphrased duplicates the one-owner rule prevents. Revisit if the document set grows past what reading a diff can hold.
 - **Capability matrix evidence.** Decided: producers record what each run used, so a row is judged rather than guessed, and the flagged rows are refreshed by reruns tracked in the [TODO](TODO.md). Revisit if a producer stops writing provenance.
-- **Documentation similarity.** Decided: EmbeddingGemma-2 at 0.90 with the two-unit rule, run as an opt-in check that reports pairs for review and never edits or gates, covering the whole set including two sections of one document. The screen and the comparison against Qwen3-Embedding-0.6B are in the [record](reviews/EMBEDDINGS-2026-11-10.md).
+- **Documentation similarity.** Decided: EmbeddingGemma-2 at 0.90 with the two-unit rule, run as an opt-in check that reports pairs for review and never edits or gates, covering the whole set including two sections of one document. The rerun over the current tree reports 40 pairs, all pointers, hub summaries, dated evidence or method statements. The screen and the Qwen3-Embedding-0.6B comparison are in the [record](reviews/EMBEDDINGS-2026-11-10.md).
 
 ## Deferred
 

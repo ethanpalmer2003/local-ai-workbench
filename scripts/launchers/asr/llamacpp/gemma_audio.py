@@ -5,69 +5,31 @@ import json
 import subprocess
 from typing import Any
 
-from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr.llamacpp.llama_audio import LlamaAudioBackend
 from scripts.launchers.asr.shared import requests
-from scripts.launchers.shared.services import native
+
+BACKEND = LlamaAudioBackend(cfg.GEMMA_AUDIO_ASR, alias="gemma-audio", label="Gemma audio", device="Vulkan0")
 
 
 def url() -> str:
-    return f"http://127.0.0.1:{cfg.GEMMA_AUDIO_ASR.port}"
+    return BACKEND.url()
 
 
 def ready() -> bool:
-    return launch_util.backend_ready(url() + "/health")
+    return BACKEND.ready()
 
 
 def command() -> list[str]:
-    settings = cfg.GEMMA_AUDIO_ASR
-    return [
-        str(settings.exe),
-        "-m",
-        str(settings.model),
-        "--mmproj",
-        str(settings.mmproj),
-        "--host",
-        "127.0.0.1",
-        "--port",
-        str(settings.port),
-        "--alias",
-        "gemma-audio",
-        "--device",
-        "Vulkan0",
-        "-ngl",
-        "999",
-        "-fa",
-        "on",
-        "-c",
-        str(settings.context_size),
-        "-np",
-        "1",
-        "-t",
-        str(settings.threads),
-        "-n",
-        str(settings.max_tokens),
-        "--jinja",
-    ]
+    return BACKEND.command()
 
 
 def matching_server() -> bool:
-    return native.matches(command())
+    return BACKEND.matching_server()
 
 
 def start() -> subprocess.Popen[Any] | None:
-    if launch_util.llama_server_running():
-        print("Existing llama.cpp chat session retained; Gemma audio uses its configured port")
-    settings = cfg.GEMMA_AUDIO_ASR
-    return native.start_server(
-        command(),
-        (settings.exe, settings.model, settings.mmproj),
-        settings.port,
-        "Gemma audio",
-        ready,
-        matching_server,
-        component_key="asr/llamacpp",
-    )
+    return BACKEND.start(ready, matching_server)
 
 
 def prepare_audio(audio: bytes) -> tuple[str, float]:

@@ -23,7 +23,7 @@ from scripts.config.comfyui.workflow_overrides import (
     LTXWorkflowOverrides,
     VAEDecode,
     VideoVAE,
-    adapt_loaders,
+    set_dynamic_vram,
     set_video_decode,
     workflow,
 )
@@ -137,16 +137,21 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(effective["temporal_tile"], 128)
         self.assertEqual(effective["temporal_overlap"], 32)
         self.assertEqual(graph["2"]["class_type"], "UnetLoaderGGUFDynamicVRAM")
-        self.assertEqual(graph["35"]["class_type"], "CLIPLoaderGGUF")
+        self.assertEqual(graph["35"]["class_type"], "CLIPLoaderGGUFDynamicVRAM")
         self.assertEqual(graph["20"]["class_type"], "VAEDecodeTiled")
 
     def test_dynamic_off_uses_regular_gguf_loaders(self) -> None:
         graph: dict[str, Any] = {
-            "2": {"class_type": "UnetLoaderGGUFDynamicVRAM", "inputs": {"unet_name": "model.gguf"}}
+            "2": {"class_type": "UnetLoaderGGUFDynamicVRAM", "inputs": {"unet_name": "model.gguf"}},
+            "35": {"class_type": "DualCLIPLoaderGGUFDynamicVRAM", "inputs": {}},
         }
-        adapt_loaders(graph, ["--disable-dynamic-vram"])
+        set_dynamic_vram(graph, False)
         self.assertEqual(graph["2"]["class_type"], "UnetLoaderGGUF")
         self.assertEqual(graph["2"]["inputs"]["unet_name"], "model.gguf")
+        self.assertEqual(graph["35"]["class_type"], "DualCLIPLoaderGGUF")
+        set_dynamic_vram(graph, True)
+        self.assertEqual(graph["2"]["class_type"], "UnetLoaderGGUFDynamicVRAM")
+        self.assertEqual(graph["35"]["class_type"], "DualCLIPLoaderGGUFDynamicVRAM")
 
     def test_untiled_decode_drops_tiling_inputs(self) -> None:
         graph = {

@@ -29,6 +29,8 @@ low (Jaccard about 0.16 at every threshold), so the model choice changes what is
 - Qwen is quieter at equal threshold and misses findings Gemma reports, so it stays a cross-check at
   0.95 rather than the primary model.
 - Thresholds do not carry between models: Qwen sits lower overall, so its band is not Gemma's.
+- Rerun over the tree after the Strata work: 123 documents, 1,467 units, 40 pairs, each a pointer, a hub
+  summary, dated evidence or a method statement rather than a second owner.
 
 ## If this holds
 
@@ -38,11 +40,11 @@ dropping documents, because the real finds cross evidence and normative docs.
 
 ## Code screen
 
-The same model over one function per chunk (1,607 functions, tests skipped) found five pairs at
-0.95. One was real duplication: both Strata benchmarks carried their own streaming request, now
-merged into `benchmark_requests.stream_chat`. The other four are distinct owners: two launcher CLI
-shims, a context-manager factory and its inner function, and the dynamic-VRAM adapter with its
-inverse.
+The same model over one function per chunk (1,623 functions, tests skipped) finds four pairs at 0.95 after
+the Strata merge. Two were real: identical ASR `start` functions, now one
+`llama_audio.LlamaAudioBackend`, and a dynamic-VRAM switch that converted only the UNet loader, now one
+mapping over every GGUF loader. The other two are distinct owners: two launcher CLI shims and a
+context-manager factory with its inner function.
 
 Evidence: `scripts/state/generated/shared/similarity/` (each run) and `data/embeddings/` (vectors, model
 digest, pairs). No default changed; nothing gates.

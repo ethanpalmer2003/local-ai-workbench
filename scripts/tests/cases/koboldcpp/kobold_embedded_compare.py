@@ -486,7 +486,7 @@ def main() -> None:
             if result["status"] != "completed":
                 report.status = "failed"
                 raise RuntimeError(result["error"])
-        inputs: dict[str, Path] = {}
+        inputs: dict[str, str | Path] = {}
         frameworks = set()
         for arm in args.arms:
             if args.kind == "tts":
@@ -499,7 +499,7 @@ def main() -> None:
         if args.with_chat:
             frameworks.add("koboldcpp")
             inputs["chat"] = Path(cfg.KOBOLDCPP_MODELS["llamacpp/gemma-4-E4B-it-Q4_0"])
-            inputs["whisper"] = Path(cfg.KOBOLDCPP_KCPPS_ARGS["whispermodel"])
+            inputs["whisper"] = Path(str(cfg.KOBOLDCPP_KCPPS_ARGS["whispermodel"]))
         reporting.record_inputs(report, frameworks=tuple(sorted(frameworks)), models=inputs)
     write_summary(run, args.kind)
 
