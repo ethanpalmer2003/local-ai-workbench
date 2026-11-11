@@ -1,4 +1,4 @@
-"""Brief Breeze 2 or Ming 3.0 TTS checks across AudioCpp release builds."""
+"""Brief Breeze 2, Ming 3.0, Kokoro or Supertonic TTS checks across AudioCpp release builds."""
 
 import argparse
 import csv
@@ -21,6 +21,7 @@ from scripts.benchmarks.shared.vram import process_evidence, snapshot_dict
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
+from scripts.launchers.audiocpp.kokoro import audio_environment
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
 from scripts.tests.shared.paths import CasePaths, Outcome, RunPaths
@@ -37,11 +38,30 @@ class TtsProfile:
     family: str
     seed: int
     options: dict[str, str]
+    voice: str = ""
 
 
 PROFILES = {
     "breeze2": TtsProfile(
         "breeze-q4-test", "Breeze TTS 2 Q4_0", model_cfg.path("audiocpp/breeze-tts-2-q4_0"), "breeze_tts", 123, {}
+    ),
+    "supertonic": TtsProfile(
+        "supertonic-test",
+        "Supertonic 3 Q8_0",
+        model_cfg.path("audiocpp/supertonic-3-q8_0"),
+        "supertonic",
+        1234,
+        {"voice_id": "F1"},
+        voice="F1",
+    ),
+    "kokoro": TtsProfile(
+        "kokoro-test",
+        "Kokoro 82M multilingual Q8_0",
+        model_cfg.path("audiocpp/kokoro-audiocpp-multilingual-q8_0"),
+        "kokoro_tts",
+        1234,
+        {"language": "en-us"},
+        voice="af_heart",
     ),
     "ming3-tts": TtsProfile(
         "ming3-tts-test",
@@ -171,6 +191,8 @@ def make_config(backend: str, path: Path, profile: TtsProfile = PROFILES["breeze
 def generate(port: int, wav_path: Path, profile: TtsProfile, text: str, timeout: float) -> dict[str, Any]:
     options = {**profile.options, "seed": str(profile.seed)}
     payload = {"model": profile.key, "input": text, "response_format": "wav", "options": options}
+    if profile.voice:
+        payload["voice"] = profile.voice
     request = urllib.request.Request(
         f"http://127.0.0.1:{port}/v1/audio/speech",
         data=json.dumps(payload).encode("utf-8"),
@@ -227,9 +249,8 @@ def run_backend(
     make_config(SERVER_BACKENDS[backend], config, profile)
     log_path = run_root / "logs" / f"server-{backend}.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    env = None
+    env = audio_environment()
     if backend != "vulkan":
-        env = os.environ.copy()
         runtime_dirs = [str(exe.parent)]
         runtime = ROCM_RUNTIME_DIRS.get(backend)
         if runtime is not None:

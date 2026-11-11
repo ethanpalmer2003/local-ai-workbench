@@ -12,6 +12,7 @@
 
 ### Requires user input
 
+- [ ] Listen to Supertonic 3 and Kokoro on the same sentence and confirm the replacement voice: the timing pair is recorded, but no listening check has run. [Timings](../scripts/tests/notes/SUPERTONIC-TTS-SCREEN.md). ~5 min
 - [ ] Validate Handy microphone selection, dictation and paste. `selected_microphone` is null and the last attempt captured 0 samples in 17 ms, so the device is the suspect; model, VAD and hotkey are configured. ~30-45 min
 - [ ] Finish live voice-practice checks on both chat consumers: pipelining, capture, playback and echo. Saved-PCM path passes; the browser mic returns audio requests but no transcript. [Scenario matrix](../scripts/launchers/asr/MULTIUSE-SCENARIOS.md). ~45-60 min
 - [ ] Measure multilingual/noisy accuracy and microphone latency: capture produced no transcript and no multilingual corpus is configured. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py). ~45-60 min
@@ -19,7 +20,6 @@
 ### Unattended
 
 - [ ] Retest llama.cpp coding on the ROCm build when a release newer than b1372 appears; b1372 is the newest and crashes on load. ~20 min
-- [ ] Record Supertonic 3 speech timings and compare them with Kokoro: the resident TTS benchmark only defines Kokoro/Piper/Sherpa profiles, so add a Supertonic profile first. ~20 min
 - [ ] Rerun the llama.cpp profile screen so the prefill column exists for the current profiles and builds; every saved table predates it. [Tuning](../scripts/config/llamacpp/TUNING.md). ~20-30 min
 - [ ] Retest Kobold readiness and the remaining live targets after the integrity-label fix; its launcher still timed out at 180 s. ~30 min
 - [ ] Run the coding-engine benchmark on llama.cpp and Strata for the first comparable prefill, decode and TTFT rows: `--engine llamacpp --profile swift15`, then `--engine endpoint` against a running Strata. It starts servers itself and needs free ports. ~30-45 min
