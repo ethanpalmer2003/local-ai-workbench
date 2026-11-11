@@ -1,19 +1,10 @@
-# Electron apps crashing from a Low integrity label
+# Low integrity labels breaking apps in the workspace
 
-DSH-adjacent Electron apps (DeepSeek Harness, VS Code forks, any Electron shell) can exit immediately with `-2147483645` (`0x80000003`) when their install folder carries a **Low** mandatory integrity label.
+DSH `workspace-write` stamps an inheritable Low mandatory label on the workspace root and its whole tree, and it stays on disk after the session, a permission change or a restart. Windows uses an image's label to set a process's integrity, so programs started from a Low file run Low and cannot write Medium locations: blank shortcut icons, "publisher could not be verified", Electron crashes (`0x80000003`), WebView2 `0x800700AA`, and `Access is denied` on a permissive DACL.
 
-- Cause: a process at Medium integrity may not write to a Low-labelled object, and Electron's own process launch inherits the label, so the app aborts at startup. The DACL looks permissive while the label still refuses the write.
-- Confirm: `icacls <path>` shows a `Mandatory Label\Low Mandatory Level` line. A healthy install shows `Medium`.
-- Repair: [fix_low_integrity.ps1](../scripts/tools/fix_low_integrity.ps1) scans for the label and runs `icacls <path> /setintegritylevel M`, recursing with `(OI)(CI)M` for folders. `-Mode Check` only reports.
-
-```powershell
-scripts\tools\fix_low_integrity.ps1 -Paths C:\AI\frameworks
-scripts\tools\fix_low_integrity.ps1 -Paths C:\AI -Mode Fix
-```
-
-Agent consequences:
-
-- The same label shows up as `[sandbox: file access denied]`-style failures or raw `Access is denied` on files whose DACL grants full control. Treat a permissive DACL plus a denied write as a label problem, not a permission-profile problem.
-- It affects moves and deletions, not only writes, so "move it to trash" fails with the same error.
-- Repair the label, then repeat the failed operation once; do not widen sandbox or approval settings to work around it.
-- A Low label on the workspace root (`C:\AI`) propagates to everything created beneath it and is the usual cause: apps write nothing, WebView2 and child-process launches fail with access denied or `0x800700AA`. Restore the root first, then the subtrees the app uses; setting a subtree to Low to satisfy one sandboxed child breaks every normal app.
+- Confirm: `icacls <path>` shows `Mandatory Label\Low Mandatory Level:(OI)(CI)(NW)`.
+- Repair, after closing every DSH session on that tree: `icacls <dir> /setintegritylevel "(OI)(CI)Medium" /T /C`. `/reset` cannot clear a label.
+- Restore the root first; a subtree left Low breaks every normal app. Only when *existing* subdirectories are unwritable while new ones work is the fix the opposite one: `icacls <workspace> /setintegritylevel "(OI)(CI)L" /T`.
+- Script: [fix_low_integrity.ps1](../scripts/tools/fix_low_integrity.ps1) (Check or Fix).
+- This workspace is a whole workbench with executables and models, so keep DSH on **full access** for `C:\AI`; never use the home directory, a drive root or the DSH install directory as a `workspace-write` workspace.
+- Community write-up: <https://dsh-plugin.org/tutorials/fix-windows-sandbox-low-integrity-label>.
