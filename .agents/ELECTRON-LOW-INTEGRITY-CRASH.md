@@ -16,3 +16,4 @@ Agent consequences:
 - The same label shows up as `[sandbox: file access denied]`-style failures or raw `Access is denied` on files whose DACL grants full control. Treat a permissive DACL plus a denied write as a label problem, not a permission-profile problem.
 - It affects moves and deletions, not only writes, so "move it to trash" fails with the same error.
 - Repair the label, then repeat the failed operation once; do not widen sandbox or approval settings to work around it.
+- A Low label on the workspace root (`C:\AI`) propagates to everything created beneath it and is the usual cause: apps write nothing, WebView2 and child-process launches fail with access denied or `0x800700AA`. Restore the root first, then the subtrees the app uses; setting a subtree to Low to satisfy one sandboxed child breaks every normal app.
