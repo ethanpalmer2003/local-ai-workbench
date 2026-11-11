@@ -10,10 +10,12 @@
 
 ## Clarify before acting
 - Ask at once when the request is ambiguous or assumes an invented detail; never guess intent to keep moving.
+- Do not ask permission to use a standard tool. Prefer a maintained dependency over a local substitute: add it, say what it was, and continue.
+- When a problem needs the user's judgment, put it in [TODO](notes/TODO.md) with the options and start the next independent item instead of waiting.
 
 ## Work and permissions
 - Routine reads, Git status/diff/log, static checks and task-owned runs under five minutes are allowed.
-- Get approval for package changes, pushes, deletion, persistent services and runs over five minutes; prior approval covers the agreed task and retries.
+- Get approval for framework installs, model downloads, deletion, persistent services and runs over five minutes; prior approval covers the agreed task and retries. Dev-group tools and dependency-group additions need no approval. Pushes to this repository's own branches are routine once a part is finished.
 - Never create or edit issues, pull requests or discussions outside this account; upstream reports stay local drafts.
 - Respect explicit test deferrals. Never infer permission for live tests from a TODO or saved result.
 - Fix a defect in code already being touched, then and there. Record a larger unrelated fix as a TODO entry.
