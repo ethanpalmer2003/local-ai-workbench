@@ -114,11 +114,46 @@ VARIANTS: dict[str, str] = {
     "utilised": "utilized",
     "visualise": "visualize",
     "visualised": "visualized",
+    "characterisation": "characterization",
+    "characterisations": "characterizations",
+    "customisation": "customization",
+    "finalisation": "finalization",
+    "generalisations": "generalizations",
+    "generalise": "generalize",
+    "globalise": "globalize",
+    "initialisation": "initialization",
+    "initialisations": "initializations",
+    "legalise": "legalize",
+    "localisation": "localization",
+    "localise": "localize",
+    "maximisation": "maximization",
+    "minimisation": "minimization",
+    "mobilisation": "mobilization",
+    "normalisation": "normalization",
+    "organisation": "organization",
+    "organisations": "organizations",
+    "populazzfixture": "popularize",
+    "prioritisation": "prioritization",
+    "randomise": "randomize",
+    "realisation": "realization",
+    "specialise": "specialize",
+    "stabilisation": "stabilization",
+    "standardisation": "standardization",
+    "synthesise": "synthesize",
+    "synthesised": "synthesized",
+    "synthesises": "synthesizes",
+    "synthesising": "synthesizing",
+    "tokenisation": "tokenization",
+    "tolezzfixture": "tolerize",
+    "utilisation": "utilization",
+    "visualisation": "visualization",
     "whilst": "while",
     "worshipped": "worshiped",
 }
 PATTERN = re.compile(r"\b(" + "|".join(sorted(VARIANTS, key=len, reverse=True)) + r")\b", re.IGNORECASE)
 CORPUS_FILE = "scripts/config/benchmarks/language_corpus.json"
+# - the checker and its fixtures quote British forms on purpose
+SELF_REFERENTIAL = {"scripts/review/spellings.py", "scripts/tests/cases/review/test_spellings.py"}
 REFERENCE_VALUE = re.compile(r'("reference"\s*:\s*")([^"\\]*(?:\\.[^"\\]*)*)(")')
 TEXT_SUFFIXES = {
     ".py",
@@ -176,7 +211,11 @@ def is_text(path: str) -> bool:
 def tracked_text_files(root: Path) -> list[str]:
     result = subprocess.run(["git", "-C", str(root), "ls-files"], capture_output=True, text=True, check=True)
     # - a deletion is still in the index until it is committed; skip files the tree no longer has
-    return [path for path in result.stdout.splitlines() if path and is_text(path) and (root / path).is_file()]
+    return [
+        path
+        for path in result.stdout.splitlines()
+        if path and is_text(path) and path not in SELF_REFERENTIAL and (root / path).is_file()
+    ]
 
 
 def check(root: Path, paths: list[str]) -> int:
