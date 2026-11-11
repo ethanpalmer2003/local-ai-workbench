@@ -17,6 +17,6 @@
 - Recreate derived configs on launch; edit the owner source, never generated output.
 - Native AudioCpp JSON owns model modes/session defaults. Python owns service selection, proxy/playback defaults and explicit shared overrides.
 - ComfyUI sync changes owned files only; removed managed workflows are retired, missing source aborts. Preview/apply: `python -m scripts.config.sync_configs`.
-- Strata keeps its own app data in the user profile; the workspace holds only its logs ([locations](../strata/README.md)).
+- Strata relocates its profile folders into `scripts/state/strata/` with junctions ([locations](../strata/README.md)).
 - Generated configs may contain local credentials; keep them outside Git and shared reports.
 - Preserve saved historical configs/logs. Future paths derive from the canonical component map.
