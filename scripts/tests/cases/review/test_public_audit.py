@@ -10,25 +10,25 @@ from scripts.tests.shared.paths import CasePaths
 
 
 class PublicAuditTests(unittest.TestCase):
-    def test_secret_home_path_and_private_words_are_reported(self):
+    def test_secret_home_path_and_local_words_are_reported(self):
         # - the fixture uses an invented token: a real term here would itself be the leak
         text = "key github_pat_abcdefghijklmnopqrstuvwxyz01 home C:\\Users\\someone\\x note zzfixture\n"
-        with patch.object(public_audit, "private_words", return_value=("zzfixture",)):
+        with patch.object(public_audit, "local_words", return_value=("zzfixture",)):
             findings = public_audit.scan_text("scripts/config/example.json", text, ())
         categories = {finding.category for finding in findings}
-        self.assertEqual(categories, {"secrets", "home-path", "private-word"})
+        self.assertEqual(categories, {"secrets", "home-path", "ocabulary"})
 
     def test_self_referential_files_are_still_screened_for_vocabulary(self):
         with (
             CasePaths(__file__).temporary_directory() as folder,
             patch.object(public_audit, "tracked_files", return_value=["scripts/review/public_audit.py"]),
-            patch.object(public_audit, "private_words", return_value=("zzfixture",)),
+            patch.object(public_audit, "local_words", return_value=("zzfixture",)),
         ):
             target = Path(folder) / "scripts" / "review" / "public_audit.py"
             target.parent.mkdir(parents=True)
             target.write_text("# zzfixture\n", encoding="utf-8")
             findings = public_audit.audit(Path(folder))
-        self.assertEqual([finding.category for finding in findings], ["private-word"])
+        self.assertEqual([finding.category for finding in findings], ["ocabulary"])
 
     def test_history_scan_uses_a_dialect_that_can_match(self):
         # - POSIX ERE rejects the vocabulary lookarounds, and a refusal once read as "clean"
@@ -41,7 +41,7 @@ class PublicAuditTests(unittest.TestCase):
             subprocess.run([*git, "commit", "-q", "-m", "fixture"], check=True, capture_output=True)
             with (
                 patch.object(public_audit, "voice_terms", return_value=()),
-                patch.object(public_audit, "private_words", return_value=("zzfixture",)),
+                patch.object(public_audit, "local_words", return_value=("zzfixture",)),
             ):
                 findings = public_audit.history_findings(root)
         self.assertEqual([finding.path for finding in findings], ["notes.md"])
@@ -52,7 +52,7 @@ class PublicAuditTests(unittest.TestCase):
         self.assertEqual([finding.category for finding in config_hit], ["machine-path"])
         self.assertEqual(doc_hit, [])
 
-    def test_private_voice_ids_are_matched_as_whole_words(self):
+    def test_local_voice_ids_are_matched_as_whole_words(self):
         findings = public_audit.scan_text(
             "scripts/config/example.json", "voice alpha, model bravo", ("alpha", "charlie")
         )

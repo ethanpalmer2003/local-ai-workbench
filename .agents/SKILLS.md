@@ -11,5 +11,5 @@
 | --- | --- |
 | [deepseek-harness](skills/deepseek-harness/SKILL.md) | tool call denied, path write/delete fails, piped child fails, shell edit corrupted a file |
 | [docs-writing](skills/docs-writing/SKILL.md) | create, edit or delete Markdown; a fact seems to need a new doc; structure flags links or budgets |
-| [publish-repo](skills/publish-repo/SKILL.md) | make the repo public, rewrite history, split private inputs |
+| [publish-repo](skills/publish-repo/SKILL.md) | make the repo public, rewrite history, move local inputs out |
 | [strata-tuning](skills/strata-tuning/SKILL.md) | make Strata faster, choose a profile, compare decode/prefill |

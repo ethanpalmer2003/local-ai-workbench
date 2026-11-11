@@ -9,7 +9,7 @@ from scripts.config import project_config as project_cfg
 
 
 def input_dir() -> Path:
-    """Root of the local overlay; AI_INPUT_DIR lets a private checkout supply the same tree."""
+    """Root of the local overlay; AI_INPUT_DIR lets another checkout supply the same tree."""
     return Path(os.environ.get("AI_INPUT_DIR") or project_cfg.INPUT_DIR)
 
 
@@ -33,7 +33,7 @@ def voice_sources_path() -> Path:
 
 def model_overlay_path() -> Path:
     """Extra model catalog entries: character LoRAs and other personal weights."""
-    return input_dir() / "models.private.json"
+    return input_dir() / "models.overlay.json"
 
 
 def voice_ids() -> tuple[str, ...]:

@@ -77,11 +77,11 @@ for (const file of ['speech_tools.js', 'speech_client.js']) {
     assert.equal(requests.at(-1)[1].headers['Content-Type'], 'application/octet-stream');
     const text = context.SpeechAssistantText;
     const stream = value => new Response(value, {headers: {'Content-Type': 'text/event-stream'}});
-    const original = stream('data: {"choices":[{"delta":{"reasoning_content":"private reasoning"}}]}\n\n'
+    const original = stream('data: {"choices":[{"delta":{"reasoning_content":"hidden reasoning"}}]}\n\n'
         + 'data: {"choices":[{"delta":{"content":"Bonjour"}}]}\n\n'
         + 'data: {"choices":[{"delta":{"content":" !"},"finish_reason":"stop"}]}\n\n');
     assert.equal(await text(original.clone()), 'Bonjour !');
-    assert.match(await original.text(), /private reasoning/, 'Native UI response remains intact');
+    assert.match(await original.text(), /hidden reasoning/, 'Native UI response remains intact');
     await assert.rejects(text(stream('data: {"choices":[{"delta":{"content":"partial"}}]}\n\n')), /before completion/);
     await assert.rejects(text(stream('data: {"error":{"message":"failed"}}\n\n')), /failed/);
     const abort = new AbortController(); abort.abort();

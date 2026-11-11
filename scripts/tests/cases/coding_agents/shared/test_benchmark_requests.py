@@ -42,7 +42,7 @@ class BenchmarkRequestsTests(unittest.TestCase):
                     disconnected.set()
 
         with server(Upstream) as url:
-            endpoint = BenchmarkEndpoint("strata", "swift", url + "/v1", "private-key")
+            endpoint = BenchmarkEndpoint("strata", "swift", url + "/v1", "test-key")
             with BenchmarkRelay(endpoint, SETTINGS) as relay:
                 relay.task = "canceled"
                 client = threading.Thread(
@@ -174,7 +174,7 @@ class BenchmarkRequestsTests(unittest.TestCase):
                 self.wfile.write(wire)
 
         with server(Upstream) as url:
-            endpoint = BenchmarkEndpoint("strata", "swift", url + "/v1", "private-key")
+            endpoint = BenchmarkEndpoint("strata", "swift", url + "/v1", "test-key")
             lifecycle = BenchmarkLifecycle(lambda: url + ":fixture-model")
             lifecycle.prepare(lambda: None, reused=True)
             lifecycle.warmup(lambda: None)
@@ -186,10 +186,10 @@ class BenchmarkRequestsTests(unittest.TestCase):
                 )
                 records = relay.task_records("pi/proverb/1")
         self.assertEqual((status, content), (200, wire))
-        self.assertEqual(received[0][0], "Bearer private-key")
+        self.assertEqual(received[0][0], "Bearer test-key")
         self.assertEqual(summarize_requests(records)["total_tokens"], 120)
         self.assertIsNotNone(records[0]["first_token_seconds"])
-        self.assertNotIn("private-key", json.dumps(records))
+        self.assertNotIn("test-key", json.dumps(records))
         self.assertEqual(records[0]["native_timings"]["predicted_n"], 20)
         timing = records[0]["benchmark"]["requests"][0]
         self.assertEqual(timing["status"], "completed")

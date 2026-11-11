@@ -2,7 +2,7 @@
 
 - Reports only; exits 1 when anything is found, so it can gate a release
 - Categories: secrets, personal home paths, machine paths in native configs,
-  private vocabulary, character/voice inputs, typographic punctuation, large files,
+  local vocabulary, input names, typographic punctuation, large files,
   tracked ignored paths
 - Allow-list entries state why a hit is expected; keep it short and specific
 """
@@ -54,7 +54,9 @@ CREDENTIALS = re.compile(
 HOME_PATHS = re.compile(r"C:[\\/]+Users[\\/]+[A-Za-z0-9_.-]+|/Users/[A-Za-z0-9_.-]+")
 MACHINE_PATHS = re.compile(r"C:[\\/]+AI[\\/]+")
 # - the vocabulary itself is personal, so it lives in the overlay; this file names no term
-PRIVATE_WORDS_SETTING = "review.private_words"
+LOCAL_WORDS_SETTING = "review.local_words"
+# - the older key is still read so an existing overlay keeps working
+LEGACY_WORDS_SETTING = "review.private_words"
 
 # - prefix -> why the hit is expected; keep this list short and specific
 ALLOWLIST = {
@@ -94,9 +96,9 @@ def voice_patterns(words: tuple[str, ...]) -> str:
     return "|".join(rf"(?<![A-Za-z0-9]){re.escape(word)}(?![A-Za-z0-9])" for word in words)
 
 
-def private_words() -> tuple[str, ...]:
+def local_words() -> tuple[str, ...]:
     """Vocabulary supplied by the overlay's defaults.json; nothing personal is committed here."""
-    configured = inputs.setting(PRIVATE_WORDS_SETTING, [])
+    configured = inputs.setting(LOCAL_WORDS_SETTING, inputs.setting(LEGACY_WORDS_SETTING, []))
     return tuple(str(word) for word in configured if str(word).strip())
 
 
@@ -130,12 +132,10 @@ def _path_findings(path: str, text: str) -> list[Finding]:
 
 def _word_findings(path: str, text: str, words: tuple[str, ...]) -> list[Finding]:
     findings = [
-        Finding("private-word", path, word)
-        for word in private_words()
-        if re.search(voice_patterns((word,)), text, re.I)
+        Finding("ocabulary", path, word) for word in local_words() if re.search(voice_patterns((word,)), text, re.I)
     ]
     findings.extend(
-        Finding("private-input", path, word) for word in words if re.search(voice_patterns((word,)), text, re.I)
+        Finding("input-name", path, word) for word in words if re.search(voice_patterns((word,)), text, re.I)
     )
     return findings
 
@@ -195,8 +195,8 @@ def _git_grep(root: Path, pattern: str, revs: list[str]) -> subprocess.Completed
 def history_findings(root: Path, extra_terms: tuple[str, ...] = ()) -> list[Finding]:
     """Paths that carried an audited pattern in any commit; only a rewrite removes them."""
     vocabulary = [voice_patterns(voice_terms()), *[voice_patterns((term,)) for term in extra_terms]]
-    if private_words():
-        vocabulary.append(voice_patterns(private_words()))
+    if local_words():
+        vocabulary.append(voice_patterns(local_words()))
     pattern = "|".join([SECRETS.pattern, HOME_PATHS.pattern, *vocabulary])
     revs = subprocess.run(
         ["git", "-C", str(root), "rev-list", "--all"], capture_output=True, text=True, check=True

@@ -4,7 +4,7 @@
 newer file can be named unambiguously, and refreshes files whose size no longer matches the Hub. A
 refresh is still a model download: the version and file name did not change, so the pinned file is
 fetched again. Both paths use `scripts.download.models.transfer`, so an interrupted transfer resumes.
-Upgrades write to the catalog file that owns the old label, so private entries stay in the overlay.
+Upgrades write to the catalog file that owns the old label, so overlay entries stay in the overlay.
 `--dry-run` shows the plan without downloading or replacing anything.
 """
 
