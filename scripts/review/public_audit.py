@@ -63,6 +63,8 @@ ALLOWLIST = {
 
 # - the audit and its fixtures hold every pattern by construction
 SELF_REFERENTIAL = {"scripts/review/public_audit.py", "scripts/tests/cases/review/test_public_audit.py"}
+# - history sees these files under the paths they had then, so the file name is the stable key
+SELF_REFERENTIAL_NAMES = {Path(path).name for path in SELF_REFERENTIAL}
 
 
 @dataclass(frozen=True)
@@ -202,10 +204,20 @@ def history_findings(root: Path, extra_terms: tuple[str, ...] = ()) -> list[Find
     if not revs:
         return []
     seen: dict[str, str] = {}
-    # - the audit's own files are included: a real term in a fixture still shipped in history
+
+    def allowlisted(path: str) -> bool:
+        return any(path.startswith(prefix) for prefix in ALLOWLIST)
+
     for line in _git_grep(root, pattern, revs).stdout.splitlines():
         rev, _, path = line.partition(":")
-        if any(path.startswith(prefix) for prefix in ALLOWLIST):
+        # - the audit's own files are screened for vocabulary only, as in the tree scan: their
+        #   fixtures carry invented secrets and home paths on purpose
+        if allowlisted(path) or Path(path).name in SELF_REFERENTIAL_NAMES:
+            continue
+        seen.setdefault(path, rev[:7])
+    for line in _git_grep(root, "|".join(vocabulary), revs).stdout.splitlines():
+        rev, _, path = line.partition(":")
+        if allowlisted(path) or Path(path).name not in SELF_REFERENTIAL_NAMES:
             continue
         seen.setdefault(path, rev[:7])
     return [Finding("history", path, f"still in commit {rev}") for path, rev in sorted(seen.items())]
