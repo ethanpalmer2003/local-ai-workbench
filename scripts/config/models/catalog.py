@@ -115,7 +115,7 @@ def _build(payload: dict[str, Any]) -> tuple[ModelDownload, ...]:
 def _load(path: str, overlay: bool) -> tuple[ModelDownload, ...]:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     if overlay and Path(path) == CATALOG_PATH.resolve() and inputs.model_overlay_path().is_file():
-        # - personal entries (character LoRAs, private weights) live in the input overlay
+        # - personal entries stay in the input overlay, never in the tracked catalog
         extra = json.loads(inputs.model_overlay_path().read_text(encoding="utf-8")).get("models") or []
         payload["models"] = [*payload.get("models", []), *extra]
     return _build(payload)

@@ -155,7 +155,15 @@ def audit(root: Path) -> list[Finding]:
         if path.split("/")[0] in IGNORED_ROOTS or any(path.startswith(prefix) for prefix in IGNORED_ROOTS):
             findings.append(Finding("ignored-tracked", path, "path belongs to an ignored folder"))
             continue
-        if path in SELF_REFERENTIAL or any(path.startswith(prefix) for prefix in ALLOWLIST):
+        if path in SELF_REFERENTIAL:
+            # - these files hold every pattern by construction, so only vocabulary is screened:
+            #   a real term in a fixture would otherwise ship unnoticed
+            full = root / path
+            if full.is_file():
+                text = full.read_text(encoding="utf-8", errors="replace")
+                findings.extend(_word_findings(path, text, words))
+            continue
+        if any(path.startswith(prefix) for prefix in ALLOWLIST):
             continue
         full = root / path
         if not full.is_file():
@@ -170,6 +178,18 @@ def audit(root: Path) -> list[Finding]:
     return findings
 
 
+def _git_grep(root: Path, pattern: str, revs: list[str]) -> subprocess.CompletedProcess[str]:
+    """`git grep` over every revision; a refused pattern is an error, never an empty result."""
+    # - the vocabulary uses lookarounds, which POSIX ERE cannot express and git rejects with
+    #   exit 128; -P selects PCRE, and a refusal must not read as "history is clean"
+    result = subprocess.run(
+        ["git", "-C", str(root), "grep", "-I", "-l", "-i", "-P", pattern, *revs], capture_output=True, text=True
+    )
+    if result.returncode not in (0, 1):
+        raise RuntimeError(f"git grep refused the history pattern: {result.stderr.strip()[:300]}")
+    return result
+
+
 def history_findings(root: Path, extra_terms: tuple[str, ...] = ()) -> list[Finding]:
     """Paths that carried an audited pattern in any commit; only a rewrite removes them."""
     vocabulary = [voice_patterns(voice_terms()), *[voice_patterns((term,)) for term in extra_terms]]
@@ -181,13 +201,11 @@ def history_findings(root: Path, extra_terms: tuple[str, ...] = ()) -> list[Find
     ).stdout.split()
     if not revs:
         return []
-    result = subprocess.run(
-        ["git", "-C", str(root), "grep", "-I", "-l", "-i", "-E", pattern, *revs], capture_output=True, text=True
-    )
     seen: dict[str, str] = {}
-    for line in result.stdout.splitlines():
+    # - the audit's own files are included: a real term in a fixture still shipped in history
+    for line in _git_grep(root, pattern, revs).stdout.splitlines():
         rev, _, path = line.partition(":")
-        if path in SELF_REFERENTIAL or any(path.startswith(prefix) for prefix in ALLOWLIST):
+        if any(path.startswith(prefix) for prefix in ALLOWLIST):
             continue
         seen.setdefault(path, rev[:7])
     return [Finding("history", path, f"still in commit {rev}") for path, rev in sorted(seen.items())]
