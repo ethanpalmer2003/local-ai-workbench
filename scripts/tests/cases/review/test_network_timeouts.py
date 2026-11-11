@@ -14,6 +14,15 @@ class NetworkTimeoutTests(unittest.TestCase):
             path.write_text(body, encoding="utf-8")
             return network_timeouts.issues(path)
 
+    def test_a_bare_raw_connection_is_rejected(self):
+        body = "from http.client import HTTPConnection\nconnection = HTTPConnection('127.0.0.1', 80)\n"
+        found = self._issues(body)
+        self.assertTrue(any("without a timeout" in issue for issue in found))
+
+    def test_raw_connections_accept_a_timeout(self):
+        body = "import http.client\nconnection = http.client.HTTPSConnection('example.test', 443, timeout=30)\n"
+        self.assertEqual(self._issues(body), [])
+
     def test_a_bare_urlopen_is_rejected(self):
         found = self._issues("import urllib.request\nurllib.request.urlopen(request)\n")
         self.assertTrue(any("without a timeout" in issue for issue in found))

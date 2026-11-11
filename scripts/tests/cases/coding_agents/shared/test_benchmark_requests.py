@@ -1,10 +1,13 @@
 """Usage accounting and streaming relay regressions; no model or GPU required."""
 
+import io
 import json
 import threading
+import time
 import unittest
 from http.server import BaseHTTPRequestHandler
 
+from scripts.benchmarks.coding_agents.shared import benchmark_requests
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import (
     BenchmarkRelay,
@@ -194,6 +197,14 @@ class BenchmarkRequestsTests(unittest.TestCase):
         timing = records[0]["benchmark"]["requests"][0]
         self.assertEqual(timing["status"], "completed")
         self.assertIn("first_output", timing["marks_seconds"])
+
+    def test_a_stream_that_outlives_the_deadline_is_aborted(self):
+        # - a trickling backend resets the socket timeout on every read; the deadline still ends it
+        handler = object.__new__(benchmark_requests._BenchmarkRelayHandler)
+        handler.wfile = io.BytesIO()
+        started = time.perf_counter()
+        with self.assertRaises(TimeoutError):
+            handler._stream_response([b"data: {}\n"], {}, started, started - 1)
 
 
 if __name__ == "__main__":
