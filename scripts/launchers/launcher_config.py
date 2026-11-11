@@ -332,6 +332,8 @@ class SharedTtsStreamingRequestSettings:
 class KoboldcppSpeechStartupEngine(str, Enum):
     CONFIGURED = "configured"
     KOKORO_INTERNAL = "kokoro-internal"
+    # - Any AudioCpp model, including Supertonic; the old name stays for saved commands.
+    AUDIOCPP = "audiocpp"
     KOKORO_AUDIOCPP = "kokoro-audiocpp"
 
 
@@ -390,7 +392,7 @@ def tts_class_for(model: str) -> TtsQualityClass:
     """The speech class a TTS model provides, read from its catalog label."""
     if "breeze" in model:
         return TtsQualityClass.VOICE_DESIGN
-    if "kokoro" in model:
+    if "kokoro" in model or "supertonic" in model:
         return TtsQualityClass.FAST_MULTILINGUAL
     return TtsQualityClass.NONE
 
@@ -433,6 +435,9 @@ KOKORO_TTS_PACKAGES = {
 }
 DEFAULT_KOKORO_PACKAGE = "multilingual"
 
+# - Supertonic 3: one self-contained GGUF, 31 languages, preset voices M1-M5/F1-F5, no cloning.
+SUPERTONIC_MODEL = "audiocpp/supertonic-3-q8_0"
+
 
 # - KOBOLD_CHAT: Rocinante chat, Breeze voice-design TTS through the AudioCpp proxy, no external ASR.
 #   Design needs no reference clip, so the default voice comes from the tone instruction.
@@ -447,7 +452,7 @@ KOBOLD_CHAT = SpeechWorkflowDefaults(
     tts_voice=_CHAT_TTS_VOICE,
     clone_voice=bool(_CHAT_TTS_VOICE),
 )
-# - Language practice: Gemma chat, Kokoro TTS without cloning, Qwen3-ASR recognition.
+# - Language practice: Gemma chat, Supertonic TTS without cloning, Qwen3-ASR recognition.
 #   Qwen reads all four practice languages with the lowest pooled error on the pinned corpus;
 #   Whisper Vulkan stays the faster alternate. AudioCpp Nemotron misheard English and could not
 #   transcribe Japanese at all (notes/TODO.md records that engine's failure).
@@ -456,8 +461,8 @@ LANGUAGE_PRACTICE = SpeechWorkflowDefaults(
     framework="llamacpp",
     asr_engine=AsrStartupEngine.QWEN3_ASR,
     llm_model="llamacpp/gemma-4-E4B-it-Q4_0",
-    tts_model=KOKORO_TTS_PACKAGES[DEFAULT_KOKORO_PACKAGE],
-    tts_voice="af_heart",
+    tts_model=SUPERTONIC_MODEL,
+    tts_voice="F1",
     clone_voice=False,
 )
 
@@ -573,7 +578,8 @@ LLAMACPP_PRACTICE = LlamacppLanguagePracticeStartupSettings()
 class SharedKokoroStartupRequestSettings:
     koboldcpp_model: Path = model_cfg.path("audiocpp/kokoro-kobold-q4")
     audiocpp_package: str = DEFAULT_KOKORO_PACKAGE  # 'small' retains the compact package.
-    voice: str = LANGUAGE_PRACTICE.tts_voice
+    # - Kokoro's own default; the practice stack now defaults to a Supertonic preset and must not move it.
+    voice: str = "af_heart"
     language: str = "en-us"
     threads: int = 5
     espeak_dir: Path = project_cfg.component("audiocpp/additions/espeak-ng").framework_dir / "eSpeak NG"
@@ -585,6 +591,22 @@ class SharedKokoroStartupRequestSettings:
 
 
 KOKORO_TTS = SharedKokoroStartupRequestSettings()
+
+
+@dataclass(frozen=True)
+class SharedSupertonicStartupRequestSettings:
+    """Request defaults for the preset-voice Supertonic family; there is no cloning path."""
+
+    voice: str = LANGUAGE_PRACTICE.tts_voice
+    steps: int = 8
+    speed: float = 1.05
+
+
+SUPERTONIC_TTS = SharedSupertonicStartupRequestSettings()
+
+# - Each TTS family takes its own request fields: Kokoro negotiates a locale frontend per request,
+#   while Supertonic reads the language from the text and takes only a preset voice id.
+TTS_FAMILY_DEFAULT_VOICE = {"kokoro_tts": KOKORO_TTS.voice, "supertonic": SUPERTONIC_TTS.voice}
 
 
 @dataclass(frozen=True)
@@ -685,6 +707,7 @@ class AudiocppModel(str, Enum):
     BREEZE_DESIGN = "audiocpp/breeze-tts-2-q4_0-design"
     MING3_TTS = "audiocpp/ming3-tts-0.5b-q8_0"
     MING3_AUDIO = "audiocpp/ming3-audio-tiny-q4_k"
+    SUPERTONIC_3 = SUPERTONIC_MODEL
 
 
 # - Both entries load the same weights; only the default task differs.
@@ -767,6 +790,7 @@ AUDIOCPP_PROXY_MODEL_PRESETS = {
         streaming_supported=False,
         instruction_option=None,
     ),
+    AudiocppModel.SUPERTONIC_3: AudiocppProxyRequestModelPreset(pcm_sample_rate=44100, playback_buffer_ms=1000),
 }
 
 

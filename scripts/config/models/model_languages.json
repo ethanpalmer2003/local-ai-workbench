@@ -1164,6 +1164,94 @@
       ]
     },
     {
+      "distribution": "supertonic-3",
+      "name": "Supertonic 3",
+      "practice_default_language": "en",
+      "tasks": [
+        "tts"
+      ],
+      "model_ids": [
+        "audiocpp/supertonic-3-q8_0"
+      ],
+      "languages": [
+        "en",
+        "ko",
+        "ja",
+        "ar",
+        "bg",
+        "cs",
+        "da",
+        "de",
+        "el",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "hi",
+        "hr",
+        "hu",
+        "id",
+        "it",
+        "lt",
+        "lv",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "ru",
+        "sk",
+        "sl",
+        "sv",
+        "tr",
+        "uk",
+        "vi"
+      ],
+      "locales": [
+        "en",
+        "ko",
+        "ja",
+        "ar",
+        "bg",
+        "cs",
+        "da",
+        "de",
+        "el",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "hi",
+        "hr",
+        "hu",
+        "id",
+        "it",
+        "lt",
+        "lv",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "ru",
+        "sk",
+        "sl",
+        "sv",
+        "tr",
+        "uk",
+        "vi"
+      ],
+      "dialects": [],
+      "notes": "31 languages and ten preset voices, taken from the installed GGUF's AudioCpp model spec. One self-contained file with its text config and voice styles embedded; no per-language frontend assets are installed separately, and the language follows the request text. Local pronunciation quality is not verified.",
+      "sources": [
+        {
+          "url": "https://huggingface.co/Supertone/supertonic"
+        },
+        {
+          "url": "https://huggingface.co/koboldcpp/tts/tree/main/audiocpp",
+          "kind": "GGUF conversion used by AudioCpp and KoboldCpp"
+        }
+      ]
+    },
+    {
       "locales": [],
       "dialects": [],
       "tasks": [

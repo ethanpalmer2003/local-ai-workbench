@@ -1,18 +1,27 @@
 # Audio models
 
-Both are downloaded under `C:/AI/data/huggingface/models/audiocpp/`. AudioCpp v0.9.3 Vulkan and official ROCm register both families.
+Model files live under `data/huggingface/models/audiocpp/`; the installed AudioCpp build
+registers every family listed in [server.json](server.json). Ids, download sizes and output
+modes are owned by the [model catalog](../models/catalog.json), and `server.json` loads the
+same entries.
 
-Ids, download sizes and output modes are owned by the [model catalog](../models/catalog.json); `server.json` loads the same entries. In short: a small TTS/cloning checkpoint with streaming and instruction control, and a much heavier audio understanding/generation checkpoint that also covers ASR and speech-to-speech.
+| Family | Use |
+| --- | --- |
+| `supertonic` | Practice default. 31 languages, preset voices `M1`-`M5`/`F1`-`F5`, no cloning, streaming. One self-contained GGUF. |
+| `breeze_tts` | Voice cloning plus instruction-driven design; streaming. |
+| `ming3_tts`, `ming3_audio` | Named voices such as `US_James`; the heavier checkpoint is Complete WAV only. |
+| `fish_drama3` | Heavy, CPU-expert offload; streaming. |
 
-The heavier checkpoint quantizes mainly its Thinker experts; that does not proportionally shrink TTS-only runtime memory.
+Supertonic, Ming and Drama play at 44100 Hz. Lemonade serves only its own `kokoro-v1`
+speech entry, so Supertonic stays on AudioCpp and KoboldCpp.
 
 ## Test page
 
-- Start `bat/browser/launch_test.bat`; choose either model from the TTS model selector.
-- Existing character voices use reference cloning; playback is 44100 Hz.
-- The TTS checkpoint supports Streaming PCM and Complete WAV; Instruction sends native `instruct`.
-- The heavier checkpoint defaults to Complete WAV. Streaming and unsupported voice-instruction controls are disabled; explicit streaming requests are rejected before inference.
-- The launcher default is unchanged. Models load lazily; selecting a dropdown does not synthesize speech.
+- Start `bat/browser/launch_test.bat`; the TTS model selector lists the configured families.
+- Existing character voices use reference cloning.
+- Streaming and Complete WAV are both available except where a family rejects streaming.
+- Instruction maps to the native field each family takes (`instruction` or `instruct`).
+- Models load lazily; selecting a dropdown does not synthesize speech.
 
 ## Brief checks
 
@@ -22,9 +31,16 @@ C:/AI/scripts/.venv/Scripts/python.exe -m scripts.tests.cases.audiocpp.audiocpp_
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case ming3-audio --backend vulkan
 ```
 
-- Omit `--backend` to check both official builds sequentially. Default: one short warmup and one measured request, English named voice `US_James`. TTS seed 1895; heavier-model seed 42. `--text`, `--samples`, `--timeout` are available.
-- Generated smoke configs contain only the selected model. Existing services on test ports are preserved/refused.
-- The TTS checkpoint passed synthesis on Vulkan/ROCm; page cloning/SSE/browser playback also passed. The heavier checkpoint's loader registration and live native/proxy catalog are verified; its synthesis has not run. [Evidence](../../../notes/NATIVE-VALIDATION.md).
-- A single sentence is a compatibility screen, not a quality/ranking benchmark. ASR/speech-to-speech are available natively but are not wired into this TTS page.
+- Omit `--backend` to check both official builds sequentially. Default: one short warmup and one
+  measured request. `--text`, `--samples`, `--timeout` are available.
+- Generated smoke configs contain only the selected model. Existing services on test ports are
+  preserved or refused.
+- A single sentence is a compatibility screen, not a quality or ranking benchmark.
+- Supertonic synthesized English, French and Japanese on the Vulkan backend in a one-request
+  check; no benchmark run has recorded its timings yet.
 
-Editable native model and session options: [server.json](server.json). Sources/options: [TTS model guide](https://github.com/0xShug0/audio.cpp/blob/v0.9.3/docs/models/ming3_tts.md), [heavier model guide](https://github.com/0xShug0/audio.cpp/blob/v0.9.3/docs/models/ming3_audio.md). Pinned download identities stay in [model catalog](../models/catalog.json); bulk restore remains opt-in.
+Editable native model and session options: [server.json](server.json). Model guides:
+[TTS](https://github.com/0xShug0/audio.cpp/blob/v0.9.4/docs/models/ming3_tts.md),
+[heavier](https://github.com/0xShug0/audio.cpp/blob/v0.9.4/docs/models/ming3_audio.md).
+Pinned download identities stay in the [model catalog](../models/catalog.json); bulk restore
+remains opt-in.

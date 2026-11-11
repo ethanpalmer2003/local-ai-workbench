@@ -77,7 +77,7 @@ def test_defaults() -> dict[str, object]:
 
     plan = tts_plan()
     spec = practice_models.tts_spec()
-    voice = cfg.KOKORO_TTS.voice if spec["family"] == "kokoro_tts" else cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value
+    voice = cfg.TTS_FAMILY_DEFAULT_VOICE.get(str(spec["family"]), cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value)
     service = replace(cfg.AUDIOCPP_SERVICE, model=spec["id"], voice=voice)
     result = audiocpp_catalog.runtime_defaults(service, specs=[spec])
     result.update(

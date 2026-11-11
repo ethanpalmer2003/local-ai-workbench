@@ -170,19 +170,49 @@ def configured_models() -> list[dict[str, object]]:
             {
                 "id": spec["id"],
                 "installed": path.is_file(),
-                "clone": spec["id"] != cfg.AudiocppModel.BREEZE_DESIGN.value,
+                # - Builtin-voice families take preset ids, so they never need a clone reference.
+                "clone": spec["id"] != cfg.AudiocppModel.BREEZE_DESIGN.value
+                and spec.get("family") not in cfg.TTS_FAMILY_DEFAULT_VOICE,
             }
         )
     return models
 
 
-def voice_data(model: str, spec: dict[str, Any] | None) -> dict[str, object]:
-    if spec and spec.get("family") == "kokoro_tts":
-        from scripts.launchers.audiocpp.kokoro import available_voices
+def packaged_spec(path: Path) -> dict[str, Any]:
+    """The AudioCpp model spec embedded in an installed GGUF."""
+    return json.loads(read_metadata(path).get("audiocpp.model_spec.json", "{}"))
 
+
+def builtin_voices(path: Path) -> list[dict[str, object]]:
+    """Voice presets declared by the GGUF: the UI list, else a voice_id request enum."""
+    spec = packaged_spec(path)
+    voices = spec.get("ui", {}).get("builtin_voices", [])
+    if not voices:
+        voices = next(
+            (
+                entry.get("values", [])
+                for entry in spec.get("options", {}).get("request", [])
+                if entry.get("name") == "voice_id"
+            ),
+            [],
+        )
+    return [{"id": voice, "available": True} for voice in voices]
+
+
+def voice_data(model: str, spec: dict[str, Any] | None) -> dict[str, object]:
+    if spec and spec.get("family") in cfg.TTS_FAMILY_DEFAULT_VOICE:
         path = Path(spec["path"])
-        voices = available_voices(path) if path.is_file() else []
-        return {"voice_mode": "builtin", "voices": voices, "default_voice": cfg.KOKORO_TTS.voice}
+        if spec["family"] == "kokoro_tts":
+            from scripts.launchers.audiocpp.kokoro import available_voices
+
+            voices = available_voices(path) if path.is_file() else []
+        else:
+            voices = builtin_voices(path) if path.is_file() else []
+        return {
+            "voice_mode": "builtin",
+            "voices": voices,
+            "default_voice": cfg.TTS_FAMILY_DEFAULT_VOICE[spec["family"]],
+        }
     clone = next((row["clone"] for row in configured_models() if row["id"] == model), False)
     if clone:
         return {
