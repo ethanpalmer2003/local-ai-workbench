@@ -6,7 +6,7 @@
 
 ## Reliability
 
-- [ ] Extend the timeout check to raw `http.client` connections: `benchmark_requests` sets 600 s on its streaming connection and a background thread can still hold a run open with nothing verifying either bound. ~30 min
+- [ ] Nothing is waiting here. A defect that outlives its fix goes back on this list with the check that would have caught it.
 
 ## Needs a model run or device
 
