@@ -28,6 +28,12 @@ class SpeechProfiles(unittest.TestCase):
         self.assertEqual(cfg.LANGUAGE_PRACTICE.tts_voice, cfg.SUPERTONIC_TTS.voice)
         self.assertEqual(cfg.tts_class_for(cfg.SUPERTONIC_MODEL).value, "fast-multilingual")
 
+    def test_practice_languages_are_listed_first(self):
+        rows = practice_models.language_profiles()
+        self.assertEqual([row["code"] for row in rows[:4]], list(cfg.PRACTICE_LANGUAGES))
+        self.assertEqual(len(rows), 31)
+        self.assertEqual(rows[4]["code"], "ko")  # the model's own order takes over after the targets
+
     def test_existing_session_is_not_replaced(self):
         with (
             patch.object(cfg.KOBOLDCPP_SERVICE, "speech_engine", cfg.KoboldcppSpeechStartupEngine.CONFIGURED),

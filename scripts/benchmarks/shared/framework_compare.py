@@ -1,7 +1,7 @@
 """Compare the language-practice stack with Lemonade on chat, speech and recognition.
 
 Each backend is started and stopped in turn so one stack holds the GPU at a time. Practice means
-this repository's language profile: llama.cpp chat, AudioCpp Kokoro speech and Qwen3-ASR recognition
+this repository's language profile: llama.cpp chat, AudioCpp Supertonic speech and Qwen3-ASR recognition
 behind the practice gateway. Lemonade answers the same three legs on its own port with its kokoro and
 whisper.cpp backends. KoboldCpp answers them from one process: its own chat on the same weights, its
 built-in Kokoro speech and its embedded whisper. A leg a stack cannot serve is recorded as
@@ -54,7 +54,8 @@ PROMPTS = (
     "Describe a quiet scouting mission near an enemy facility with a teammate.",
     "Explain why a small local model can still be useful for practicing a language.",
 )
-# - One sentence per language the practice profile speaks; both stacks are asked for the same voice
+# - One sentence per language the practice profile speaks. Lemonade and Kobold ask for the Kokoro
+#   voice; the practice arm uses the preset of whichever TTS model it serves.
 TTS_TEXTS = (
     ("en", "en-us", "af_heart", "Good morning. I would like a ticket to the city center, please."),
     ("es", "es", "ef_dora", "Buenos días. Quisiera un billete para el centro de la ciudad, por favor."),
@@ -518,11 +519,22 @@ def _speech_issues(
     return issues
 
 
+def _practice_voice(fallback: str) -> str:
+    """Kokoro voice ids only apply when the practice stack serves Kokoro; a preset voice wins otherwise."""
+    from scripts.launchers.asr.shared import practice_models
+
+    spec = practice_models.tts_spec()
+    if spec["family"] == "kokoro_tts":
+        return fallback
+    return str(cfg.TTS_FAMILY_DEFAULT_VOICE.get(spec["family"], fallback))
+
+
 def _tts_row(served: Served, run: RunPaths, text: tuple[str, str, str, str]) -> dict[str, Any]:
     language, locale, voice, sentence = text
-    row: dict[str, Any] = {"language": language, "locale": locale, "voice": voice, "characters": len(sentence)}
+    request_voice = _practice_voice(voice) if served.backend == "practice" else voice
+    row: dict[str, Any] = {"language": language, "locale": locale, "voice": request_voice, "characters": len(sentence)}
     try:
-        data, seconds = _speech(served, sentence, voice, locale)
+        data, seconds = _speech(served, sentence, request_voice, locale)
     except (requests.RequestException, RuntimeError, ValueError) as error:
         return {**row, "status": "unavailable", "reason": str(error)}
     path = run.artifacts / f"{served.backend}-{language}.wav"

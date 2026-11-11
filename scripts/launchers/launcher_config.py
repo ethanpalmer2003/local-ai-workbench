@@ -438,6 +438,10 @@ DEFAULT_KOKORO_PACKAGE = "multilingual"
 # - Supertonic 3: one self-contained GGUF, 31 languages, preset voices M1-M5/F1-F5, no cloning.
 SUPERTONIC_MODEL = "audiocpp/supertonic-3-q8_0"
 
+# - The languages this workspace targets, matching the pinned corpus (en_us, es_419, fr_fr, ja_jp).
+#   Speech lists put these first and keep the model's own order for everything else.
+PRACTICE_LANGUAGES = ("en", "es", "fr", "ja")
+
 
 # - KOBOLD_CHAT: Rocinante chat, Breeze voice-design TTS through the AudioCpp proxy, no external ASR.
 #   Design needs no reference clip, so the default voice comes from the tone instruction.
