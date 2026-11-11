@@ -33,5 +33,5 @@
 - `scripts/tests/{cases,ui}/<component>/`: test sources/assets. New results mirror cases under `tests/output/`; historical output stays in place.
 - `scripts/benchmarks/<area>/`: performance runners and shared measurement support. New results go under `benchmarks/output/`; historical test output stays in place.
 - `scripts/state/<component>/`: app state; `{logs,cache,generated}/<component>/`: future runtime artifacts.
-- `bat/`: routine launchers only (index: [bat/README.md](../bat/README.md)); use the project interpreter from `C:/AI`.
+- `bat/`: routine launchers only (index: [bat/README.md](../bat/README.md)); use the project interpreter from the checkout root.
 - Native layouts/shared weights are explicit exceptions in `COMPONENTS`; preserve vendor files, app preferences and evidence.

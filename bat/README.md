@@ -7,7 +7,7 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 | Batch | Purpose |
 | --- | --- |
 | [update_frameworks.bat](update_frameworks.bat) | Check/apply framework updates (`--check-only`, `--only KEY`, `--category`). |
-| [manage_kill_ai_services.bat](manage_kill_ai_services.bat) | Stop C:\AI-owned listeners; `--non-agents` keeps coding agents, llama.cpp and Strata running. |
+| [manage_kill_ai_services.bat](manage_kill_ai_services.bat) | Stop workspace-owned listeners; `--non-agents` keeps coding agents, llama.cpp and Strata running. |
 | [manage_rocm_installs.bat](manage_rocm_installs.bat) | List ROCm installs with size, version and project references; read-only. |
 | [manage_low_integrity.bat](manage_low_integrity.bat) | Check the workspace for the Low integrity label; `--fix` restores Medium. |
 | [manage_strata_profile.bat](manage_strata_profile.bat) | Check Strata's profile junctions into state; `--fix` relocates a profile an installer recreated. |
@@ -49,6 +49,7 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 | [test_live_backends.bat](tests/test_live_backends.bat) | Live backend probes: every model loads and answers; `--only` narrows it. |
 | [test_live_all.bat](tests/test_live_all.bat) | Both native suites: launchers first, then every backend probe. |
 | [test_full.bat](tests/test_full.bat) | Everything in one progress bar: gate, model-free suite and both live suites, skipping unchanged ones. |
+| [refresh_capability_matrix.bat](tests/refresh_capability_matrix.bat) | Last-run evidence table for the long opt-in checks; `--check` fails on stale rows. |
 
 Live entries free their ports instead of refusing.
 

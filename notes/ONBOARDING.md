@@ -1,14 +1,14 @@
 # New-machine setup
 
-- Workspace: `C:/AI`; interpreter/environment: `scripts/.venv`, managed with uv. Dependencies: declared in [pyproject.toml](../pyproject.toml), resolved in `uv.lock`; [sync_python_env.bat](../bat/models/sync_python_env.bat) runs `uv sync --frozen --group dev` against that venv. Package installs require approval.
+- Workspace root: the checkout root (`AI_ROOT` below); interpreter/environment: `scripts/.venv`, managed with uv. Dependencies: declared in [pyproject.toml](../pyproject.toml), resolved in `uv.lock`; [sync_python_env.bat](../bat/models/sync_python_env.bat) runs `uv sync --frozen --group dev` against that venv. Package installs require approval.
 - CPU torch/torchaudio use the PyTorch CPU index. Native framework packages and model downloads are separate from Python dependencies.
 - Secrets: `scripts/.env`; HF home: `data/huggingface`. Never copy credentials into source/docs.
 - Canonical component/native-layout map: [project_config.py](../scripts/config/project_config.py); [configuration ownership](../scripts/config/README.md).
 
 ```powershell
-C:/AI/bat/update_frameworks.bat --check-only
-C:/AI/bat/models/download_models.bat --active --list
-C:/AI/bat/models/check_installed_models.bat
+bat/update_frameworks.bat --check-only
+bat/models/download_models.bat --active --list
+bat/models/check_installed_models.bat
 ```
 
 - Review the plan before updates/downloads. `in_use` controls restore coverage, not launcher model choice; disabled/manual entries remain separate.

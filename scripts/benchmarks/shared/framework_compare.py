@@ -873,7 +873,7 @@ def main(argv: list[str] | None = None) -> int:
         "name": "language practice comparison",
         "category": "model-free wiring; live native run",
         "status": _status(results, options),
-        "reasoning": "One stack at a time on the same weights. Chat streams, speech synthesises one sentence per "
+        "reasoning": "One stack at a time on the same weights. Chat streams, speech synthesizes one sentence per "
         "language, recognition scores the pinned corpus clips by pooled word and character error rate.",
         "provenance": provenance.block(
             subject="language practice versus Lemonade and KoboldCpp",
