@@ -48,7 +48,7 @@ Measured on this machine; only the last two open a model or service. When to run
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
 | `frontend_wiring.py` | HTML/JS asset targets resolve, queried DOM ids exist, injected settings keys are both emitted and provided |
 | `inventory_code.py` | inventory, file/function size, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
-| `public_audit.py` | secrets, credentials, home/machine paths, private words/inputs, large files, ignored-but-tracked |
+| `public_audit.py` | secrets, credentials, home/machine paths, vocabulary and input names, large files, ignored-but-tracked |
 | `audit_timing.py` | which benchmark runners use the shared timing contract |
 | `package_audit.py` | leftovers no import or manifest declares; `--prune [--remove]`; `uv lock --check` |
 | `coverage.py`, `pip-audit` | coverage; advisories run inside the gate (network, unreachable feed is a warning) |

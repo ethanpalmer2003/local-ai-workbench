@@ -297,7 +297,7 @@ class DownloadModelsTests(unittest.TestCase):
 class CatalogOverlayTests(unittest.TestCase):
     def _files(self, folder: Path) -> tuple[Path, Path]:
         public = folder / "catalog.json"
-        overlay = folder / "models.private.json"
+        overlay = folder / "models.overlay.json"
         public.write_text(json.dumps({"version": 1, "models": []}), encoding="utf-8")
         overlay.write_text(json.dumps({"version": 1, "models": []}), encoding="utf-8")
         return public, overlay
@@ -326,15 +326,15 @@ class CatalogOverlayTests(unittest.TestCase):
                 patch.object(catalog, "overlay_path", return_value=overlay),
                 patch.object(catalog, "clear_cache"),
             ):
-                catalog.upsert_entry(self._entry("koboldcpp/private"), overlay)
-                self.assertEqual(catalog.entry_home("koboldcpp/private"), overlay)
+                catalog.upsert_entry(self._entry("koboldcpp/overlay"), overlay)
+                self.assertEqual(catalog.entry_home("koboldcpp/overlay"), overlay)
                 catalog.upsert_entry(self._entry("llamacpp/public"), public)
                 self.assertEqual(catalog.entry_home("llamacpp/public"), public)
                 # - an unknown label defaults to the overlay, which is where personal entries live
                 catalog.upsert_entry(self._entry("koboldcpp/second"))
                 self.assertEqual(catalog.entry_home("koboldcpp/second"), overlay)
-                self.assertEqual(catalog.remove_entry("koboldcpp/private"), overlay)
-                self.assertIsNone(catalog.remove_entry("koboldcpp/private"))
+                self.assertEqual(catalog.remove_entry("koboldcpp/overlay"), overlay)
+                self.assertIsNone(catalog.remove_entry("koboldcpp/overlay"))
             self.assertEqual(
                 [entry["label"] for entry in json.loads(overlay.read_text(encoding="utf-8"))["models"]],
                 ["koboldcpp/second"],

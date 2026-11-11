@@ -40,4 +40,4 @@ Windows is the only supported host, so anything that needs another operating sys
 
 ### Visibility
 
-- **Repositories.** This repository is public since 2026-11-11; the overlay holding `data/input/` stays private.
+- **Repositories.** This repository is public since 2026-11-11; the overlay under `data/input/` stays out of git.

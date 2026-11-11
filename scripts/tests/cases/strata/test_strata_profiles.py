@@ -46,7 +46,7 @@ class StrataProfileTests(unittest.TestCase):
         response = io.BytesIO(
             b"".join(b"data: " + json.dumps(row).encode() + b"\n\n" for row in chunks) + b"data: [DONE]\n"
         )
-        connection = StrataConnection(Path("unused"), {"model_name": "swift"}, 1, "private-key")
+        connection = StrataConnection(Path("unused"), {"model_name": "swift"}, 1, "test-key")
         with patch.object(benchmark_requests.urllib.request, "urlopen", return_value=response):
             record = screen.request(connection, "prompt", 128, time.monotonic() + 60)
         self.assertEqual(record["content"], "ok")
@@ -54,4 +54,4 @@ class StrataProfileTests(unittest.TestCase):
         self.assertEqual(record["accounting"]["total_tokens"], 11)
         self.assertEqual(record["native_timings"]["predicted_per_second"], 35)
         self.assertIsNotNone(record["first_token_seconds"])
-        self.assertNotIn("private-key", json.dumps(record))
+        self.assertNotIn("test-key", json.dumps(record))

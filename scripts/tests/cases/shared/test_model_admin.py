@@ -29,7 +29,7 @@ class ModelAdminTests(unittest.TestCase):
         self.assertEqual(model_admin.catalog.CATALOG_PATH.name, "catalog.json")
         self.assertIn(self.swift, model_admin.entry_json(model))
         self.assertTrue(model_admin.catalog.ids_match())
-        # - ids.py covers the tracked catalog; MODELS also merges the private input overlay
+        # - ids.py covers the tracked catalog; MODELS also merges the input overlay
         public = model_admin.catalog.load_catalog(overlay=False)
         self.assertEqual({str(item) for item in model_cfg.ModelId}, {item.label for item in public})
         self.assertTrue({item.label for item in public} <= {item.label for item in model_cfg.MODELS})

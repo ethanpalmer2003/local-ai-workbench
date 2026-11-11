@@ -447,9 +447,7 @@ def main(argv: list[str] | None = None) -> int:
     add.add_argument("--runtimes", nargs="+")
     add.add_argument("--source-page")
     add.add_argument("--apply", action="store_true")
-    add.add_argument(
-        "--overlay", action="store_true", help="Append to the private input overlay instead of the catalog"
-    )
+    add.add_argument("--overlay", action="store_true", help="Append to the input overlay instead of the catalog")
     add.add_argument("--download", action="store_true", help="Download after adding")
     args = parser.parse_args(argv)
     if args.command in ("status", "where"):

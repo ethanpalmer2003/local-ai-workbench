@@ -122,7 +122,7 @@ def _load(path: str, overlay: bool) -> tuple[ModelDownload, ...]:
 
 
 def load_catalog(path: Path | None = None, overlay: bool = True) -> tuple[ModelDownload, ...]:
-    """MODELS includes the private overlay; the tracked ids.py is generated with overlay=False."""
+    """MODELS includes the input overlay; the tracked ids.py is generated with overlay=False."""
     return _load(str((path or CATALOG_PATH).resolve()), overlay)
 
 
@@ -197,12 +197,12 @@ def load_entries(path: Path | None = None) -> list[dict[str, Any]]:
 
 
 def overlay_path() -> Path:
-    """The private overlay that carries personal entries; absent when no private checkout exists."""
+    """The input overlay that carries local entries; absent when no overlay checkout exists."""
     return inputs.model_overlay_path()
 
 
 def entry_home(label: str) -> Path:
-    """The file that lists this label: the tracked catalog first, otherwise the private overlay."""
+    """The file that lists this label: the tracked catalog first, otherwise the overlay."""
     if any(str(entry.get("label")) == label for entry in load_entries()):
         return CATALOG_PATH
     return overlay_path()
@@ -280,7 +280,7 @@ def render_ids(models: tuple[ModelDownload, ...] | None = None) -> str:
 
 
 def write_ids(models: tuple[ModelDownload, ...] | None = None, path: Path | None = None) -> None:
-    # - ids.py is tracked, so it must never carry private overlay entries
+    # - ids.py is tracked, so it must never carry overlay entries
     models = models if models is not None else load_catalog(overlay=False)
 
     target = path or IDS_PATH

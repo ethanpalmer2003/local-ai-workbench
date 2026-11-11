@@ -23,7 +23,7 @@ C:/AI/scripts/.venv/Scripts/python.exe -m scripts.config.sync_configs --only com
 
 - Preview is read-only. Apply manages owned ComfyUI copies, preserving replaced files in trash; it does not install packages or restart servers.
 - Pi package/extension synchronization is separate and may install/remove packages.
-- Personal inputs are not in the repo: [local inputs](notes/INPUTS.md). Every default's owner, public and private: [defaults map](notes/DEFAULTS.md).
+- Personal inputs are not in the repo: [local inputs](notes/INPUTS.md). Every default's owner and override: [defaults map](notes/DEFAULTS.md).
 - [Generated files](notes/GENERATED-FILES.md) records startup derivations and required native copies.
 - Historical configs/results are evidence, never editable defaults. Credentials stay out of Git/reports.
 - Layout/docs guards, the full review and their commands: [checks](../../.agents/CHECKS.md).

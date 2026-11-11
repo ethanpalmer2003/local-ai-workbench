@@ -682,7 +682,7 @@ KOBOLDCPP_MODELS = {
 
 
 def kobold_chat_model_label() -> str:
-    """The configured chat model, or the first allowed one when the private weights are absent."""
+    """The configured chat model, or the first allowed one when the overlay weights are absent."""
     return KOBOLDCPP_SERVICE.model if KOBOLDCPP_SERVICE.model in KOBOLDCPP_MODELS else next(iter(KOBOLDCPP_MODELS))
 
 
