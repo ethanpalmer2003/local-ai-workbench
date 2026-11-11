@@ -6,3 +6,7 @@
 # Editor state stays local.
 /.zed/
 
+
+# Test and editor artifacts stay local.
+/.coverage
+*.lnk

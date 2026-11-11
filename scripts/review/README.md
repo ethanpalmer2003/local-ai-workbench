@@ -11,7 +11,7 @@ The gate is repo-wide, so it asks the person at the terminal to confirm and type
 
 The runner executes these checks:
 
-- `layout.py`: component/config ownership, install roots, folder naming, and batch references.
+- `layout.py`: component/config ownership, install roots, folder naming, high-level file placement, and batch references.
 - `docs.py`: Markdown placement, roles, budgets, basename casing, links and model-name policy.
 - `ruff check`: the configured lint set, including the [McCabe limit](../../.agents/CODE.md).
 - `model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
@@ -22,7 +22,7 @@ The runner executes these checks:
 - `comments.py`: TODO markers, banner rules and commented-out code are rejected; comments that explain why stay welcome.
 - `network_timeouts.py`: every HTTP call passes `timeout=`; the ASR upload wrapper owns its own.
 
-Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function complexity is gated by ruff at the limit in [code rules](../../.agents/CODE.md); the inventory lists the largest functions for context. Inventory excludes generated output, caches, model data, installs and trash.
+Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function complexity is gated by ruff at the limit in [code rules](../../.agents/CODE.md); the inventory lists the largest functions. Inventory excludes generated output, caches, model data, installs and trash.
 
 ## Duplicate check
 
@@ -30,7 +30,7 @@ Reports go to `scripts/state/generated/shared/code_review/<run>/`. Function comp
 
 `--code` switches to functions: one chunk per function or method (AST, bodies of 3+ lines), tests skipped, threshold 0.95, every pair reported. Code duplicates are weaker evidence, so read them as a list rather than a defect count.
 
-Run a single check with `python -m scripts.review.layout`, `python -m scripts.review.docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `docs --words` prints every maintained document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers, repeats and unlinked documents. A link fails when it is absolute, uses a backslash, carries a space without angle brackets, points into an untracked path, or misses its target or heading; repeats are advisory. Add `--tests` to run the model-free suite after the gate. Document organization lives in [NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
+Run a single check with `python -m scripts.review.layout`, `python -m scripts.review.docs`, `python -m scripts.review.model_references`, `python -m scripts.review.frontend_wiring`, or `python -m scripts.review.inventory_code`. `docs --words` prints every document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers, repeats and unlinked documents. A link fails when it is absolute, uses a backslash, carries a space without angle brackets, points into an untracked path, or misses its target or heading; repeats are advisory. Add `--tests` to run the model-free suite after the gate. Document organization lives in [NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
 
 ## Framework validation
 
