@@ -164,13 +164,13 @@ def audit_models(
         return any(path.is_relative_to(root) for root in roots.values())
 
     expected: dict[Path, list[str]] = defaultdict(list)
-    catalogued = set()
+    cataloged = set()
     runtime = set()
     for reference in references:
         path = reference.path.resolve()
         if not in_roots(path):
             continue
-        catalogued.add(path)
+        cataloged.add(path)
         if not reference.source.startswith("download catalog:"):
             runtime.add(path)
         if reference.required:
@@ -179,13 +179,13 @@ def audit_models(
     text = "\n".join(file.read_text(encoding="utf-8-sig").lower() for file in sources)
     tokens = re.findall(r"[^\s\"'<>:=,;{}\[\]()]+\.(?:gguf|safetensors|ckpt|pt|pth|onnx|bin)(?![\w.-])", text)
     names = {Path(token.replace("\\", "/")).name for token in tokens}
-    unreferenced = sorted(str(path) for path in installed - catalogued if path.name.lower() not in names)
+    unreferenced = sorted(str(path) for path in installed - cataloged if path.name.lower() not in names)
     return ModelSyncReport(
         roots={group: str(path) for group, path in roots.items()},
         installed_count=len(installed),
         missing={str(path): sorted(set(owners)) for path, owners in sorted(expected.items()) if not path.is_file()},
         unreferenced=unreferenced,
-        catalog_only=sorted(str(path) for path in (installed & catalogued) - runtime),
+        catalog_only=sorted(str(path) for path in (installed & cataloged) - runtime),
         unavailable_roots=[str(path) for path in roots.values() if not path.is_dir()],
     )
 
@@ -218,7 +218,7 @@ def main(argv: list[str] | None = None) -> None:
         print(
             f"[{'OK' if report.in_sync else 'WARN'}] {report.installed_count} model files checked; "
             f"{len(report.missing)} missing, {len(report.unreferenced)} unreferenced, "
-            f"{len(report.catalog_only)} catalogued without a runtime registration."
+            f"{len(report.catalog_only)} cataloged without a runtime registration."
         )
         for path in report.unavailable_roots:
             print(f"[WARN] Model folder unavailable: {path}")
@@ -228,7 +228,7 @@ def main(argv: list[str] | None = None) -> None:
             print(f"[WARN] Unreferenced: {path}")
         if args.catalog_only:
             for path in report.catalog_only:
-                print(f"[OK] Catalogued, no runtime registration: {path}")
+                print(f"[OK] Cataloged, no runtime registration: {path}")
     raise SystemExit(0 if report.in_sync else 1)
 
 

@@ -27,7 +27,7 @@ first partial **1.19 s**, final **357 ms after clip end**.
 The clip contains approximately **478 ms of trailing quiet**. Using its last
 sample above amplitude 0.01 as an explicitly approximate speech-end marker,
 the final arrives about **834 ms after speech ends**. The full transcript matches
-the manual case. This heuristic marker is not human-labelled ground truth.
+the manual case. This heuristic marker is not human-labeled ground truth.
 Measured clip pacing: 5.302 s manual, 5.312 s automatic for 5.300 s of input.
 
 AudioCpp/NeMo automatic-VAD turn timing was not measured. Parakeet's prebuilt CLI

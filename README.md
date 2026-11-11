@@ -1,33 +1,25 @@
 # AI workspace
 
 A Windows-first workbench for local AI frameworks: installation, weights, configuration, launch and
-recorded evidence per engine. Two jobs run through it on one machine: comparing frameworks that offer
-the same capability, and tuning a framework for this hardware, an RX 7800 XT with 16 GB.
+recorded evidence per engine. Comparing frameworks that offer the similar capabilities, and tuning a framework for AMD hardware: RX 7800 XT (16GB VRAM), and 32GB DDR5 RAM.
 
 ## Purpose
 
-Local AI arrives as a set of frameworks that each carry their own config, ports, weights and quirks. Both
-jobs need more than a working install: one canonical key per component, readiness checks that mean the
-same thing everywhere, provenance recorded beside every measurement, and results that say what changed
-since the last run. This repository provides that for llama.cpp, KoboldCpp, Lemonade, AudioCpp (speech
-synthesis and recognition), whisper.cpp, Parakeet.cpp, SD.cpp and ComfyUI.
+Local AI frameworks each carry their own config, ports, weights and quirks. This repo aims to evaluate AMD performance on a variety of frameworks and builds (e.g. vulkan vs rocm) and compare similar functionality found in multiple frameworks (e.g. tts performance in lemonade server vs koboldcpp vs audiocpp).
 
 ## Comparing frameworks
 
-Frameworks are measured individually, and in the combined workflows a real capability requires:
-
-- Language practice: chat, speech synthesis and recognition behind one gateway.
-- Coding: an agent harness in front of an inference engine.
-
-Each workflow states its requirements up front, and a stack that cannot meet them is refused at launch.
+Frameworks are measured individually, and in the combined workflows to replicate real usage:
+- Language practice: inference engines and models for a multilingual llm, tts, and asr.
+- Coding: heavy quantitized llm, performance optimized inference engine, agent harness
 
 ## Tuning for this device
 
 Some comparisons stay inside one framework: ROCm against Vulkan, context and offload settings,
-quantisation and batch size. These measure hardware performance for a fixed workload, not one
+quantization and batch size. These measure hardware performance for a fixed workload, not one
 framework against another.
 
-- There is a `TUNING.md` for each tuned component, stating what is in use, the evidence behind it and
+- `TUNING.md` for each component states what is in use, the evidence behind it and
   what stays unmeasured: [ComfyUI](scripts/config/comfyui/TUNING.md), [SD.cpp](scripts/config/sdcpp/TUNING.md),
   [llama.cpp](scripts/config/llamacpp/TUNING.md), [Strata](scripts/config/strata/TUNING.md).
 - Tuning evidence is recorded like comparison evidence: provenance plus a measured pair, because a

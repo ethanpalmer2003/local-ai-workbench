@@ -1,4 +1,4 @@
-"""Capability-aware delivery plans; VAD segmentation is not labelled true streaming."""
+"""Capability-aware delivery plans; VAD segmentation is not labeled true streaming."""
 
 import json
 

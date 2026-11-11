@@ -65,7 +65,7 @@ def prompt_reuse(log_file: Path, engine: str) -> dict[str, Any]:
 
 
 TURNS = [
-    "Summazzfixture what these helper functions have in common.",
+    "Summarize what these helper functions have in common.",
     "Which of them would you rewrite for clarity, and why?",
     "Add a short docstring to the pattern they share.",
     "What edge cases would break that shared pattern?",

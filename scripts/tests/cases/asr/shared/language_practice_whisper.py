@@ -110,7 +110,7 @@ def _chat(lite: str, transcripts: list[dict[str, Any]]) -> Any:
                 "messages": [
                     {
                         "role": "user",
-                        "content": "Practise English with me. Give one short friendly reply to: "
+                        "content": "Practice English with me. Give one short friendly reply to: "
                         + str(transcripts[0]["text"]),
                     }
                 ],

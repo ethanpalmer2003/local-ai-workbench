@@ -12,7 +12,7 @@ Each sample starts a fresh CLI and loads weights. An initial one-clip screen pre
 
 Coverage is six frameworks/seven build profiles, not the entire installed ASR collection. Parakeet and several existing runtime paths were absent. The [selection/coverage audit](ASR-EVALUATION.md) identifies missing models and the required resident-model benchmark.
 
-Every configuration has the same pooled literal WER, 4%. The short clip differs in `practise`/`practice`; the longer clip has `cafe` versus `caf`/`calf`. Two clean synthetic clips cannot rank real-world or multilingual accuracy.
+Every configuration has the same pooled literal WER, 4%. The short clip differs in `practice`/`practice`; the longer clip has `cafe` versus `caf`/`calf`. Two clean synthetic clips cannot rank real-world or multilingual accuracy.
 
 Sherpa's first screen recognized speech but failed extraction: this Windows CLI writes its recognition JSON to stderr. The parser now reads that stream; all repeated Sherpa cases pass. Initial failed evidence remains under run `1793160718443868800`. Model-free tests cover this stderr path and weighted error aggregation.
 

@@ -31,4 +31,4 @@ Intentional Python/Node/Git integration tests declare `@fixture_processes()`;
 review their commands and descendants, since child interpreters do not inherit the guard.
 Explicit live entry points run outside that boundary. This is not a security sandbox.
 Test counts may fall when duplicated tests become a matrix; retain every distinct
-contract and use labelled subtests to identify the adapter/scenario that failed.
+contract and use labeled subtests to identify the adapter/scenario that failed.

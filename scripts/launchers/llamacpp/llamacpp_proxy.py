@@ -155,7 +155,7 @@ class Handler(ProxyHandlerMixin):
                 TAG,
             )
         except (BrokenPipeError, ConnectionResetError):
-            # - the caller hung up mid-stream (a cancelled request); there is
+            # - the caller hung up mid-stream (a canceled request); there is
             #   nothing to report and this connection cannot be reused
             self.close_connection = True
         finally:

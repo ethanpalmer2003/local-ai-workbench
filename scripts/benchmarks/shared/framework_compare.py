@@ -52,13 +52,13 @@ from scripts.tests.cases.asr.shared.metrics import pooled_scores, unicode_errors
 WARMUP_PROMPT = "Say hello in one short sentence."
 PROMPTS = (
     "Describe a quiet scouting mission near an enemy facility with a teammate.",
-    "Explain why a small local model can still be useful for practising a language.",
+    "Explain why a small local model can still be useful for practicing a language.",
 )
 # - One sentence per language the practice profile speaks; both stacks are asked for the same voice
 TTS_TEXTS = (
-    ("en", "en-us", "af_heart", "Good morning. I would like a ticket to the city centre, please."),
+    ("en", "en-us", "af_heart", "Good morning. I would like a ticket to the city center, please."),
     ("es", "es", "ef_dora", "Buenos días. Quisiera un billete para el centro de la ciudad, por favor."),
-    ("fr", "fr-fr", "ff_siwis", "Bonjour. Je voudrais un billet pour le centre-ville, s'il vous plaît."),
+    ("fr", "fr-fr", "ff_siwis", "Bonjour. Je voudrais un billet pour le center-ville, s'il vous plaît."),
     ("ja", "ja", "jf_alpha", "おはようございます。市内中心部までの切符をお願いします。"),
 )
 # - "whisper" is the practice stack with its other installed recogniser, kept as a third arm so

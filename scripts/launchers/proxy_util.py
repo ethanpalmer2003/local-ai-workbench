@@ -273,7 +273,7 @@ def relay_stream(
         if disconnected.is_set():
             handler.close_connection = True
             stats["disconnected"] = 1
-            print(f"[{tag}] client cancelled; upstream request closed")
+            print(f"[{tag}] client canceled; upstream request closed")
 
         if counter:
             stats["audio_bytes"] = counter.audio_bytes

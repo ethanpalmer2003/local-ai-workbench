@@ -29,7 +29,7 @@ from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 PORT = 18991
-TEXT = "Hello. Tell me about your day, and I will help you practise a natural conversation."
+TEXT = "Hello. Tell me about your day, and I will help you practice a natural conversation."
 
 
 def inventory():

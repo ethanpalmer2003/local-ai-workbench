@@ -26,13 +26,13 @@ class ModelSyncTests(unittest.TestCase):
             root = Path(folder)
             installed = root / "models"
             installed.mkdir()
-            for name in ("used.gguf", "catalogued.gguf", "unknown.gguf", "source-only.safetensors"):
+            for name in ("used.gguf", "cataloged.gguf", "unknown.gguf", "source-only.safetensors"):
                 (installed / name).write_bytes(b"model")
             source = root / "config.py"
             source.write_text('MODEL = "source-only.safetensors"\nOTHER = "prefix-unknown.gguf"\n', encoding="utf-8")
             references = [
                 ModelReference(installed / "used.gguf", "runtime"),
-                ModelReference(installed / "catalogued.gguf", "download catalog:optional", False),
+                ModelReference(installed / "cataloged.gguf", "download catalog:optional", False),
                 ModelReference(installed / "missing.gguf", "runtime"),
                 ModelReference(installed / "not-downloaded.gguf", "download catalog:candidate", False),
             ]
@@ -40,7 +40,7 @@ class ModelSyncTests(unittest.TestCase):
             self.assertEqual(report.installed_count, 4)
             self.assertEqual(report.missing, {str(installed / "missing.gguf"): ["runtime"]})
             self.assertEqual(report.unreferenced, [str(installed / "unknown.gguf")])
-            self.assertEqual(report.catalog_only, [str(installed / "catalogued.gguf")])
+            self.assertEqual(report.catalog_only, [str(installed / "cataloged.gguf")])
             self.assertFalse(report.in_sync)
 
     def test_cache_metadata_and_other_groups_do_not_create_false_positives(self):

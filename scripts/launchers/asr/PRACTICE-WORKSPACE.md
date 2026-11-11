@@ -21,7 +21,7 @@ Model selection, residency and saved UI state: [PRACTICE-MODELS.md](PRACTICE-MOD
 - Collapsed initially, newest first. Each row captures the actual model identity;
   switching models never relabels history. Unknown older identities say Not recorded.
 - Server rows separate startup/readiness, explicit AudioCpp loading, requests and
-  unload. Inseparable startup/loading is labelled combined; unknown splits stay null.
+  unload. Inseparable startup/loading is labeled combined; unknown splits stay null.
   Browser wall times include transfer/cold startup; live-turn time includes capture/VAD.
 - Dated JSONL evidence in `scripts/state/logs/asr/shared/practice-lifecycle-*.jsonl`
   includes model, PID, ownership and execution context. These diagnostics do not

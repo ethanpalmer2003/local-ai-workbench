@@ -86,7 +86,7 @@
   function cancel() {
     token++;
     controller?.abort();
-    setStatus('Cancelled.');
+    setStatus('Canceled.');
   }
   document.getElementById('comparison-stop').onclick = cancel;
   document.getElementById('comparison-clear').onclick = () => {
@@ -134,7 +134,7 @@
       job.card.append(audio, download);
       job.state.textContent = `Ready · ${((performance.now() - started) / 1000).toFixed(2)}s · ${(blob.size / 1024).toFixed(0)} KiB`;
     } catch (error) {
-      job.state.textContent = error.name === 'AbortError' ? 'Cancelled' : `Failed: ${error.message}`;
+      job.state.textContent = error.name === 'AbortError' ? 'Canceled' : `Failed: ${error.message}`;
     } finally { controllers.delete(activeController); controller = undefined; }
   }
   async function execute(jobs, config, text, batchToken, epoch) {
@@ -145,7 +145,7 @@
         status.textContent = `Generating ${++finished}/${jobs.length}: ${job.voice} · ${job.model}`;
         await generate(job, config, text);
       }
-      for (const job of jobs) if (job.state.textContent === 'Queued') job.state.textContent = 'Cancelled';
+      for (const job of jobs) if (job.state.textContent === 'Queued') job.state.textContent = 'Canceled';
       if (batchToken === token) status.textContent = epoch === generation ? `Done · ${finished} WAVs` : 'Stopped.';
     } finally { run.disabled = false; }
   }

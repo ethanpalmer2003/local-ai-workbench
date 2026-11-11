@@ -205,7 +205,7 @@ def config_argv(args: argparse.Namespace) -> list[str]:
 
 
 def config_given(args: argparse.Namespace) -> bool:
-    """True when the caller configured a server an already-running one cannot honour"""
+    """True when the caller configured a server an already-running one cannot honor"""
     return bool(config_argv(args))
 
 

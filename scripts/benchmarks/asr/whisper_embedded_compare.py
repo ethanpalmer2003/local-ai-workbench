@@ -202,7 +202,7 @@ def summarize(run: RunPaths, clips: list[dict[str, Any]], results: list[dict[str
         "",
         "- Identical turbo Q5_0 model and prepared 16 kHz mono PCM16 inputs; Vulkan device 0, four decoder threads, English, greedy decoding, no translation/VAD/timestamps. Flash attention is off except in vulkan-fa.",
         "- One warmup per clip in each block; startup and warmups excluded from measured medians. Exact block order is recorded in report.json; OS/driver caches are not flushed.",
-        "- WER normalizes case, punctuation, accents and practise/practice spelling. Repeats are latency samples, not independent accuracy examples.",
+        "- WER normalizes case, punctuation, accents and practice/practice spelling. Repeats are latency samples, not independent accuracy examples.",
         "- Four clean synthetic English clips are a compatibility/latency screen, not an accent/noise/multilingual quality benchmark.",
         "- Server API wall time includes each engine's input handling; JSON/base64 versus multipart differs. Embedded and standalone source revisions differ.",
         "- CPU/RAM/adapter VRAM are sampled; desktop use is included in adapter totals. No LLM/TTS is loaded during this isolated ASR test.",

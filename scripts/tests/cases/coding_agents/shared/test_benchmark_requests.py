@@ -44,7 +44,7 @@ class BenchmarkRequestsTests(unittest.TestCase):
         with server(Upstream) as url:
             endpoint = BenchmarkEndpoint("strata", "swift", url + "/v1", "private-key")
             with BenchmarkRelay(endpoint, SETTINGS) as relay:
-                relay.task = "cancelled"
+                relay.task = "canceled"
                 client = threading.Thread(
                     target=request,
                     args=(relay.client_endpoint().base_url + "/chat/completions", {"stream": True}),
@@ -52,10 +52,10 @@ class BenchmarkRequestsTests(unittest.TestCase):
                 )
                 client.start()
                 self.assertTrue(entered.wait(timeout=3))
-                relay.cancel_task("cancelled")
+                relay.cancel_task("canceled")
                 client.join(timeout=3)
                 self.assertFalse(client.is_alive())
-                self.assertFalse(summarize_requests(relay.task_records("cancelled"))["usage_complete"])
+                self.assertFalse(summarize_requests(relay.task_records("canceled"))["usage_complete"])
                 self.assertTrue(disconnected.is_set())
 
     def test_every_backend_gets_common_limits_and_strata_mcp_is_disabled(self):

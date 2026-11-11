@@ -17,7 +17,7 @@ Title: Kokoro TTS ignores the requested language, so French and Japanese come ou
   other dictionaries. The G2P data is present, so the language and style given in the request are not
   reaching the backend.
 - Ask: forward the request language to `-l` and the requested voice to `-s`, or reject a language the
-  selected voice cannot speak. Expected behaviour for the calls above is French speech through
+  selected voice cannot speak. Expected behavior for the calls above is French speech through
   `ff_siwis` and Japanese through `jf_alpha`.
 
 ## KoboldCpp: Kokoro is English-only
@@ -30,7 +30,7 @@ Title: Kokoro TTS returns an empty WAV for Japanese and falls back to English el
   phonemizer data, so no non-English language has a grapheme-to-phoneme path. The English fallback is
   the expected consequence.
 - Ask: either document Kokoro as English-only and reject other languages, or add the missing
-  phonemizers. The reference behaviour is AudioCpp's Kokoro, which speaks French and Spanish correctly
+  phonemizers. The reference behavior is AudioCpp's Kokoro, which speaks French and Spanish correctly
   with the same weights.
 
 ## Evidence

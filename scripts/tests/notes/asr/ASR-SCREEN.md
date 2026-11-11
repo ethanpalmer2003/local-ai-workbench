@@ -29,7 +29,7 @@ Sherpa uses in-process C API. Runs were sequential subsets, not randomized pairs
 
 These are unpaced completed-file requests, not streaming first-partial or
 end-of-speech latency. Different conversions/defaults prevent attributing every
-gap to framework efficiency. Transcripts largely agree; practice/practise spelling
+gap to framework efficiency. Transcripts largely agree; practice/practice spelling
 contributes to the uniform error score. This clip cannot rank recognition quality.
 
 Evidence: NeMo/speech/Parakeet (../../output/asr/shared/resident_compare/unreviewed/1793214073218879900/artifacts/report.json),

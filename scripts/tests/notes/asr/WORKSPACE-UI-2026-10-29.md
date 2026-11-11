@@ -13,7 +13,7 @@ Status: verified functional smoke, not a performance ranking.
 - Both live checks ended with all model stages unloaded.
 - Evidence: `scripts/state/logs/asr/shared/practice-lifecycle-1793300817654949200.jsonl`.
 - 33 focused regressions pass, including the actual HTTP entry point, shared
-  residency, level/correction prompts, transcript review, cancelled replies and
+  residency, level/correction prompts, transcript review, canceled replies and
   microphone permission arriving after capture cancellation. The lifecycle JS
   loads alongside the workflow JS in browser fixtures.
 - Native browser Send also passed with A2/corrections enabled: "Hello! That is

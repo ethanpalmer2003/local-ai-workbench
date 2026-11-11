@@ -21,7 +21,7 @@ def words(text: str) -> list[str]:
     normalized = "".join(
         char for char in unicodedata.normalize("NFKD", text.lower()) if not unicodedata.combining(char)
     )
-    return ["practice" if word == "practise" else word for word in re.findall(r"[a-z0-9]+(?:'[a-z]+)?", normalized)]
+    return ["practice" if word == "practice" else word for word in re.findall(r"[a-z0-9]+(?:'[a-z]+)?", normalized)]
 
 
 def word_errors(reference: str, hypothesis: str) -> dict[str, Any]:
