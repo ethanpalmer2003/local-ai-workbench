@@ -25,6 +25,15 @@ Both arms serve the same Strata Swift IQ2_XS weights with the `strata_profiles` 
 | KV cache | `int8` | `q8_0`/`q8_0` | matched. |
 | Prompt cache | on, parking refused | `--cache-ram 1024`, else off | Strata logged `0 reused + 3025 read` every sample: the 271 MiB snapshot plus the 2560 MiB floor exceeded the ~264 MiB free. Avalon defaults `--cache-ram` to 0 when the model exceeds RAM. |
 
+## Measured
+
+| Date | Engine | Cold prefill | Warm prefill | Decode | TTFT | Draft acceptance |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-11 | llama.cpp `rocm-lemonade` b1372, profile `swift15` | 119.8 tok/s (3046-token prompt, 38.1 s) | 113.2 tok/s | 45.5 tok/s | 0.141 s | 0.856 |
+
+- One run, four coding tasks, three warm samples each: `scripts/benchmarks/output/inference_engines/benchmark_coding_engines/unreviewed/1794441020487629300/artifacts/summary.txt`.
+- The Strata arm did not run here: its engine exits with "cannot create the refill stream" after the expert load, and with the vision section it fails earlier with `WinError 5` spawning the image encoder. Both happen under this harness; run the endpoint arm from a normal terminal.
+
 ## Metric scope
 
 Both arms report native server `timings`: prefill tok/s, decode tok/s and TTFT, plus parsed prompt-cache reuse per arm. HTTP request time is not decode throughput, and this is a paired screen, not a ranking. Every run records startup, warmup, samples, settings, failures and logs under `scripts/benchmarks/output/llm/`.
