@@ -27,6 +27,8 @@ Both models stream after the first request. Supertonic produced 44,100 Hz audio,
 
 - Startup time comes from the health endpoint, which answers before lazy loading; the warmup column
   carries the real model load.
-- One English sentence, three samples, no listening comparison. Audio duration differs because the two
-  models read at different rates, so RTF is the comparable figure.
+- One English sentence, three samples. Audio duration differs because the two models read at different
+  rates, so RTF is the comparable figure.
+- Listening comparison done: both samples were acceptable and sounded similar, so no preference decided
+  the replacement. Both are female presets (`F1`, `af_heart`).
 - Peak VRAM is a lower bound from process counters on a shared adapter.

@@ -12,7 +12,6 @@
 
 ### Requires user input
 
-- [ ] Listen to Supertonic 3 and Kokoro on the same sentence and confirm the replacement voice: the timing pair is recorded, but no listening check has run. [Timings](../scripts/tests/notes/SUPERTONIC-TTS-SCREEN.md). ~5 min
 - [ ] Validate Handy microphone selection, dictation and paste. `selected_microphone` is null and the last attempt captured 0 samples in 17 ms, so the device is the suspect; model, VAD and hotkey are configured. ~30-45 min
 - [ ] Finish live voice-practice checks on both chat consumers: pipelining, capture, playback and echo. Saved-PCM path passes; the browser mic returns audio requests but no transcript. [Scenario matrix](../scripts/launchers/asr/MULTIUSE-SCENARIOS.md). ~45-60 min
 - [ ] Measure multilingual/noisy accuracy and microphone latency: capture produced no transcript and no multilingual corpus is configured. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/tests/cases/asr/shared/coverage.py). ~45-60 min
