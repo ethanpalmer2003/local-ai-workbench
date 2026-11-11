@@ -10,7 +10,7 @@ from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server
 from scripts.config.coding_agents.pi import packages
 from scripts.config.comfyui import workflow_overrides
-from scripts.file_util import archive_path
+from scripts.config.trash import archive_path
 
 NODE_NAME = "ltx-prompt-cache"
 NODE_SOURCE = "ltx_prompt_cache.py"

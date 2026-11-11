@@ -22,9 +22,9 @@ if TYPE_CHECKING:
     import psutil
 
 from scripts.config import project_config as project_cfg
+from scripts.config.trash import archive_path
 from scripts.download.frameworks import github
 from scripts.download.frameworks import update_types as cfg
-from scripts.file_util import archive_path
 
 MARKER_NAME = ".release_published_at"
 ASSET_MARKER_NAME = ".release_asset"

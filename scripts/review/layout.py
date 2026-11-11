@@ -197,10 +197,23 @@ def _owner_issue(path: Path) -> list[str]:
     return []
 
 
+SCRIPTS_ROOT_MODULES = frozenset({"__init__.py"})
+
+
+def _root_module_issues(path: Path) -> list[str] | None:
+    """A module directly in scripts/ has no owning component folder."""
+    if not (path.parent == project_cfg.SCRIPTS_DIR and path.suffix == ".py"):
+        return None
+    return [] if path.name in SCRIPTS_ROOT_MODULES else [f"Unexpected script root module: {path.name}"]
+
+
 def owner_issues(path: Path) -> list[str]:
     root_batch = _root_batch_issues(path)
+    root_module = _root_module_issues(path)
     if root_batch is not None:
         return root_batch
+    if root_module is not None:
+        return root_module
     if _exempt_area(path):
         return []
     return _owner_issue(path)

@@ -1,6 +1,6 @@
 # Markdown
 
-- This page owns document organization: a document's role decides its home and word cap, and the gate rejects a home the role forbids. `--roles` prints the counts.
+- This page covers document organization: a document's role decides its home and word cap, and the gate rejects a home the role forbids. `--roles` prints the counts.
 
 | Role | Home | Cap |
 | --- | --- | --- |
@@ -16,8 +16,8 @@
 - Prefer documenting in the code: a name or comment that states the rule beats a paragraph.
 - One owner per thing: a procedure, choice or fact is stated once, and every other mention links to it.
 - Describe capability and the command to run, not instances. Model ids, defaults, counts and versions stay in config and catalogs.
-- A component with measured settings owns `TUNING.md`; its README links the page instead of repeating it.
-- `TODO.md` owns pending work; completed evidence belongs in test status/results.
+- A component with measured settings has a `TUNING.md`; its README links the page instead of repeating it.
+- `TODO.md` holds pending work; completed evidence belongs in test status/results.
 - Test notes group by component when several belong together.
 - Maintained non-test Markdown covers current behavior, decisions and pending work only.
 - Download definitions stay in Python catalogs; docs link to them.

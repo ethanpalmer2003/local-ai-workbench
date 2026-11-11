@@ -7,8 +7,8 @@ import subprocess
 
 from scripts.config import project_config as project_cfg
 from scripts.config.coding_agents.pi import packages
+from scripts.config.trash import archive_path
 from scripts.download.frameworks.npm import command as npm_command
-from scripts.file_util import archive_path
 
 
 def installed_packages() -> set[str]:

@@ -1,3 +1,5 @@
+"""Move a workspace path into trash instead of deleting it."""
+
 import shutil
 import time
 from pathlib import Path
@@ -6,6 +8,7 @@ from scripts.config import project_config as project_cfg
 
 
 def archive_path(path: Path, root: Path) -> None:
+    """Archive one path under `root` into `trash/`, refusing anything outside that root."""
     path = path.resolve()
     path.relative_to(root.resolve())
     if path == root.resolve():

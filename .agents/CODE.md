@@ -1,6 +1,6 @@
 # Code
 
-- Direct flow; a helper owns reused behavior, a class owns state, settings or policy.
+- Direct flow; a helper carries reused behavior, a class carries state, settings or policy.
 - Functions stay at McCabe complexity 10 or below; extract by responsibility. Preserve unexpected tracebacks.
 - Keep lifecycle (`Startup`, `Request`, `StartupRequest`) and scope (`Generic`, `Shared`) explicit in settings classes.
 - Preserve external keys, flags and IDs. Fix a contract at its source instead of a cast or suppression.
