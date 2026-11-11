@@ -4,6 +4,7 @@ WebView2's default profile path fails to create on this machine (`0x800700AA`), 
 launched with an explicit profile it can write. Reuse an already running app.
 """
 
+import argparse
 import os
 import subprocess
 
@@ -16,7 +17,9 @@ def profile_dir():
     return folder
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.parse_args(argv)
     exe = project_cfg.component("strata").framework_dir / "strata-desktop.exe"
     if not exe.is_file():
         print(f"[FAIL] Strata desktop is not installed: {exe}")
