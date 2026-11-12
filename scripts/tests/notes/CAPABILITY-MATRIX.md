@@ -16,8 +16,8 @@ Only long opt-in work appears. `[WARN] stale` keeps the recorded numbers and nam
 | AudioCpp backend comparison | 2026-11-11 | completed | 13 s | [OK] | report (../output/audiocpp/audiocpp_backend_compare/inconclusive/1794435968852288400/artifacts/report.json) |
 | Ming page smoke | 2026-10-28 | completed | 5 s | [WARN] unprovenanced | report (../output/audiocpp/ming_page_smoke/unreviewed/1793151979038233700/artifacts/report.json) |
 | Practice gateway smoke | 2026-11-10 | completed | 40 s | [OK] | report (../output/asr/shared/practice_smoke/unreviewed/1794351216709335600/artifacts/report.json) |
-| Resident ASR comparison | 2026-11-08 | - | - | [WARN] unprovenanced | report (../../benchmarks/output/asr/asr_resident_compare/unreviewed/1794104455720894700/artifacts/report.json) |
-| Paced ASR latency | 2026-10-29 | - | - | [WARN] unprovenanced | report (../output/asr/shared/latency/unreviewed/1793234392776741400/artifacts/report.json) |
+| Resident ASR comparison | 2026-11-12 | - | - | [OK] | report (../../benchmarks/output/asr/asr_resident_compare/unreviewed/1794444323519240600/artifacts/report.json) |
+| Paced ASR latency | 2026-11-12 | - | - | [OK] | report (../output/asr/shared/latency/unreviewed/1794444435528586300/artifacts/report.json) |
 | Practice Whisper recognition | 2026-11-10 | completed | 14 s | [OK] | report (../output/asr/shared/language_practice_whisper/unreviewed/1794351315955030500/artifacts/report.json) |
 | Embedded Whisper comparison | 2026-11-10 | completed | 17 s | [OK] | report (../../benchmarks/output/asr/whisper_embedded_compare/unreviewed/1794351278128277800/artifacts/report.json) |
 | Gemma audio comparison | 2026-11-10 | completed | 64 s | [OK] | report (../../benchmarks/output/asr/gemma_audio_compare/unreviewed/1794351332836985600/artifacts/report.json) |

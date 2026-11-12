@@ -7,6 +7,8 @@
 ## Reliability
 
 - [ ] Nothing is waiting here. A defect that outlives its fix goes back on this list with the check that would have caught it.
+- [ ] Optional: mark a capability row stale when its own producer changed. Runs already record `provenance.workspace`, but `freshness()` compares only builds, weights and the corpus, so editing a benchmark leaves its old numbers fresh. Fingerprint the producer module rather than the whole workspace, which would invalidate all 28 rows on every commit. ~30 min
+- [ ] Give probe capabilities a strict wall-clock deadline. A hung engine currently holds a probe for its full request timeout (240-600 s) before the row fails; probes are expected to be quick, and a 60-90 s ceiling would surface the failure while it is still worth diagnosing. ~20 min
 
 ## Needs a model run or device
 
