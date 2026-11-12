@@ -34,7 +34,7 @@ Is an alternative better than the default?
 | Resident speech comparison | probe | 2026-11-12 | completed | - | [OK] | report (../../benchmarks/output/tts_engines/resident/unreviewed/1794450046473369400/artifacts/report.json) |
 | AudioCpp backend comparison | probe | 2026-11-12 | completed | 21 s | [OK] | report (../output/audiocpp/audiocpp_backend_compare/inconclusive/1794448807011598500/artifacts/report.json) |
 | Ming page smoke | smoke | 2026-11-12 | completed | 8 s | [OK] | report (../output/audiocpp/ming_page_smoke/unreviewed/1794449521522386700/artifacts/report.json) |
-| Resident ASR comparison | probe | 2026-11-12 | - | - | [OK] | report (../../benchmarks/output/asr/asr_resident_compare/unreviewed/1794444323519240600/artifacts/report.json) |
+| Resident ASR comparison | probe | 2026-11-12 | - | - | [OK] | report (../../benchmarks/output/asr/asr_resident_compare/unreviewed/1794452685957371600/artifacts/report.json) |
 | Practice Whisper recognition | probe | 2026-11-12 | completed | 15 s | [OK] | report (../output/asr/shared/language_practice_whisper/unreviewed/1794448603234647200/artifacts/report.json) |
 | Embedded Whisper comparison | probe | 2026-11-12 | completed | 24 s | [OK] | report (../../benchmarks/output/asr/whisper_embedded_compare/unreviewed/1794448554903429400/artifacts/report.json) |
 | Gemma audio comparison | probe | 2026-11-12 | completed | 72 s | [OK] | report (../../benchmarks/output/asr/gemma_audio_compare/unreviewed/1794448621016870500/artifacts/report.json) |

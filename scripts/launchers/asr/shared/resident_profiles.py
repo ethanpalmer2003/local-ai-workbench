@@ -101,12 +101,11 @@ def profiles(port: int) -> dict[str, tuple[list[str], Path]]:
         )
     for key, engine in (("whispercpp-vulkan-fa", "vulkan-fa"), ("koboldcpp-whisper", "internal")):
         result[key] = (whisper_command(engine, port), whisper_model())
-    from scripts.launchers.asr.llamacpp import gemma_audio, qwen3_asr
+    from scripts.launchers.asr.llamacpp import qwen3_asr
 
-    for key, backend, settings in (
-        ("llamacpp-qwen-1.7b", qwen3_asr, cfg.QWEN3_ASR),
-        ("llamacpp-gemma-audio", gemma_audio, cfg.GEMMA_AUDIO_ASR),
-    ):
+    # - Gemma audio measured 2.53 s against Qwen's 0.19 s and has its own capability row, so it is
+    #   not re-measured here
+    for key, backend, settings in (("llamacpp-qwen-1.7b", qwen3_asr, cfg.QWEN3_ASR),):
         command = backend.command()
         command[command.index("--port") + 1] = str(port)
         result[key] = (command, settings.model)
