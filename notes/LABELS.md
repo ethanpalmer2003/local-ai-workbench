@@ -13,7 +13,8 @@ instead of restating it; a new family edits this table and its owner together.
 | Tool group | `transcription`, `embeddings` | Which model serves a non-user-facing helper | `TOOL_DEFAULTS` in the same file |
 | Media group | `image`, `video` | Which checkpoint or workflow carries a generation profile | `MEDIA_DEFAULTS` in the same file |
 | Delivery mode | `streaming`, `chunked`, `whole` | How text arrives: incremental, per segment, or once | [speech_delivery.py](../scripts/config/shared/speech_delivery.py) |
-| Speech class | `none`, `fast-multilingual`, `voice-design` | What a TTS weight file declares it can serve | `speech_class` in [catalog.json](../scripts/config/models/catalog.json) |
+| Speech class | `none`, `fast-multilingual`, `voice-design` | The floor a profile needs; what a TTS weight file declares it can serve | `speech_class` in [catalog.json](../scripts/config/models/catalog.json) |
+| Speech mode | `preset`, `clone`, `design` | How a TTS weight file takes its voice | `speech_modes` in the same entries |
 | Run outcome | `verified`, `no-gain`, `inconclusive`, `superseded`, `unreviewed` | Whether a saved run counts as a decision | [paths.py](../scripts/benchmarks/shared/paths.py), [conventions](../scripts/tests/EXECUTION-AND-REPORTING.md) |
 | Test readiness | `resident-validated`, `unreviewed`, `disabled`, `manual`, `migrated-not-rerun` | What evidence an ASR profile has | [coverage.py](../scripts/tests/cases/asr/shared/coverage.py) |
 | Test runner | `resident_compare`, `file_diagnostic`, comparison modules, `none` | Which harness would test a profile | same |
