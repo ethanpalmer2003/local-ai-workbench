@@ -1,6 +1,6 @@
 # Markdown
 
-- This page covers document organization: a document's role decides its home and word cap, and the gate rejects a home the role forbids. `--roles` prints the counts.
+- A document's role decides its home and word cap, and the gate rejects a home the role forbids. `--roles` prints the counts.
 
 | Role | Home | Cap |
 | --- | --- | --- |
@@ -14,15 +14,16 @@
 | component guide | a component folder or `scripts/tests/notes/`, uppercase name | medium, 500 |
 
 - A document that matches no role fails, so a new kind edits this table rather than adding a rule.
-- Uppercase basenames except `README.md`, `AGENTS.md`, `SKILL.md` and other tool-required names.
-- Prefer documenting in the code: a name or comment that states the rule beats a paragraph.
-- One owner per thing: a procedure, choice or fact is stated once, and every other mention links to it.
-- Describe capability and the command, not instances: model ids, counts and versions stay in config.
-- A component with measured settings has a `TUNING.md`; its README links the page instead of repeating it.
+- A page is generated only when it derives from evidence; a list already in a data file is not reprinted.
+- Uppercase basenames except tool-required names such as `README.md`, `AGENTS.md` and `SKILL.md`.
+- Prefer the code: a name or comment that states the rule beats prose.
+- One owner per thing: state a procedure, choice or fact once, then link it.
+- Describe capability and the command, not instances: ids, counts and versions stay in config.
+- A component with measured settings has a `TUNING.md` its README links instead of repeating.
 - `TODO.md` holds pending work; completed evidence belongs in test status/results.
-- Test notes group by component when several belong together.
-- Maintained non-test Markdown covers current behavior, decisions and pending work only.
-- Download definitions stay in Python catalogs; docs link to them.
-- American English throughout: `scripts/review/spellings.py` reports every British variant with its American form.
-- Evidence is cited, not linked: untracked run output stays a plain path, because a clone must not carry dead links.
-- Links are relative with forward slashes, angle-bracketed when a path holds a space, and an anchor must name a heading that exists.
+- Test notes group by component when they belong together.
+- Maintained Markdown covers current behavior, decisions and pending work only.
+- Download definitions stay in Python catalogs; docs link them.
+- American English throughout: `scripts/review/spellings.py` reports every British variant with the American form.
+- Evidence is cited, not linked: untracked run output stays a plain path, so a clone has no dead links.
+- Links are relative with forward slashes, angle-bracketed for a path with a space, and an anchor must name a real heading.

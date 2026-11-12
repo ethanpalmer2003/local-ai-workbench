@@ -18,6 +18,7 @@ from typing import Any
 
 from scripts.benchmarks.shared import language_corpus, provenance
 from scripts.config import project_config as project_cfg
+from scripts.config.shared import deferred as parked
 
 OUTPUT = Path(__file__).resolve().parent.parent / "tests/notes/CAPABILITY-MATRIX.md"
 REPORT = "artifacts/report.json"
@@ -119,13 +120,6 @@ SECTION = {
     "shared/framework_compare": "alternatives",
 }
 DEFAULT_SECTION = "defaults"
-
-
-DEFERRED = {
-    "shared/drama3_offload": "the 15.9 GiB local TTS model is heavier than this setup carries",
-    "probes/hrx_updates": "HRX work is paused by the user; the build and its update probe stay out of the rerun set",
-    "llamacpp/benchmark_backends": "its comparison arm is the paused HRX build, so the row cannot be judged while HRX is parked",
-}
 
 
 @dataclass(frozen=True)
@@ -230,7 +224,8 @@ def section(subject: str) -> str:
 
 def deferred(subject: str) -> str | None:
     """Why a parked capability is not judged; None for work that is expected to run."""
-    return DEFERRED.get(subject)
+    entry = parked.for_subject(subject)
+    return entry.reason if entry else None
 
 
 def freshness(report: dict[str, Any] | None) -> str:

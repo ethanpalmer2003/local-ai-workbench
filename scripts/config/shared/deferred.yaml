@@ -1,0 +1,48 @@
+# What is parked, why it cannot start, and what would unpark it. A capability row names the same
+# thing by its subject, so the matrix reads its reason here instead of keeping a second list.
+- thing: Fish Audio Drama 3, and every comparison of it
+  kind: model
+  subject: shared/drama3_offload
+  reason: the 15.9 GiB local TTS model is heavier than this setup carries
+  revisit: a larger-memory target or a smaller conversion exists
+  source: scripts/tools/capability_matrix.py, scripts/benchmarks/audit_timing.py
+- thing: HRX llama.cpp
+  kind: build
+  revisit: upstream slows down, or a paired screen comes back
+  source: notes/UPSTREAM.md
+- thing: HRX build capability row
+  kind: row
+  subject: probes/hrx_updates
+  reason: HRX work is paused by the user; the build and its update probe stay out of the rerun set
+  revisit: HRX returns
+  source: scripts/tools/capability_matrix.py
+- thing: llama.cpp backend benchmark
+  kind: row
+  subject: llamacpp/benchmark_backends
+  reason: its comparison arm is the paused HRX build, so the row cannot be judged while HRX is parked
+  revisit: HRX returns
+  source: scripts/tools/capability_matrix.py
+- thing: Avalon
+  kind: framework
+  revisit: it earns another look
+  source: scripts/download/frameworks/shared/other_updates.py
+- thing: ExLlama family (hipfire, TabbyAPI)
+  kind: framework
+  revisit: a Linux host with ROCm and EXL2/EXL3 exists
+  source: notes/OPEN-QUESTIONS.md
+- thing: Medium/high-context grids
+  kind: work
+  revisit: Vulkan long generations work
+  source: notes/TODO.md, notes/reviews/LLAMACPP-VULKAN-2026-11-09.md
+- thing: sdcpp ROCm runtime
+  kind: runtime
+  revisit: the ROCm runtime is validated
+  source: scripts/config/sdcpp/README.md
+- thing: ComfyUI autotune, quality and scaling
+  kind: work
+  revisit: a measured reason appears
+  source: scripts/benchmarks/personal/comfyui/README.md
+- thing: ASR test execution, Handy and Kobold coverage
+  kind: work
+  revisit: an explicit instruction
+  source: scripts/tests/cases/asr/README.md
