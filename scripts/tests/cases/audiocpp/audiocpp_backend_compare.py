@@ -332,7 +332,9 @@ def run_backend(
     }
 
 
-DEFAULT_BACKENDS = ("vulkan", "rocm-release")
+# - Vulkan is the shipped backend: three screens measured RTF 0.34-0.39 against 0.42-0.47 on the ROCm
+#   release, so that arm runs only when asked with --backend rocm-release
+DEFAULT_BACKENDS = ("vulkan",)
 LIMITATIONS = (
     "Offline generation only; one short prompt with the recorded sample count per backend. "
     "The backends produced different audio durations despite the same seed, so this is a short throughput screen, "

@@ -88,6 +88,39 @@ CATEGORY = {
 DEFAULT_CATEGORY = "probe"
 
 
+# - which question the row answers: does the shipped default still work, or is an alternative better
+SECTION = {
+    "shared/live_frameworks": "defaults",
+    "suites/gemma_runtime_screen": "defaults",
+    "audiocpp/vad_turns": "defaults",
+    "audiocpp/single_server_speech": "defaults",
+    "audiocpp/audiocpp_streaming": "defaults",
+    "asr/shared/practice_smoke": "defaults",
+    "asr/shared/latency": "defaults",
+    "koboldcpp/kobold_audiocpp_modes": "defaults",
+    "koboldcpp/kobold_stack_vram": "defaults",
+    "llamacpp/benchmark_specspeed": "defaults",
+    "llamacpp/benchmark_context_stream": "defaults",
+    "llamacpp/benchmark_ngram": "defaults",
+    "llamacpp/gemma_breeze": "defaults",
+    "tts_engines/resident": "alternatives",
+    "audiocpp/audiocpp_backend_compare": "alternatives",
+    "audiocpp/ming_page_smoke": "alternatives",
+    "asr/asr_resident_compare": "alternatives",
+    "asr/shared/language_practice_whisper": "alternatives",
+    "asr/whisper_embedded_compare": "alternatives",
+    "asr/gemma_audio_compare": "alternatives",
+    "asr/parakeetcpp/smoke": "alternatives",
+    "koboldcpp/kobold_embedded_compare": "alternatives",
+    "llamacpp/benchmark_speedbench": "alternatives",
+    "llamacpp/benchmark_backends": "alternatives",
+    "probes/hrx_updates": "alternatives",
+    "shared/drama3_offload": "alternatives",
+    "shared/framework_compare": "alternatives",
+}
+DEFAULT_SECTION = "defaults"
+
+
 DEFERRED = {
     "shared/drama3_offload": "the 15.9 GiB local TTS model is heavier than this setup carries",
     "probes/hrx_updates": "HRX work is paused by the user; the build and its update probe stay out of the rerun set",
@@ -190,6 +223,11 @@ def category(subject: str) -> str:
     return CATEGORY.get(subject, DEFAULT_CATEGORY)
 
 
+def section(subject: str) -> str:
+    """Whether the row tests the shipped default or an alternative."""
+    return SECTION.get(subject, DEFAULT_SECTION)
+
+
 def deferred(subject: str) -> str | None:
     """Why a parked capability is not judged; None for work that is expected to run."""
     return DEFERRED.get(subject)
@@ -246,6 +284,11 @@ def _status(report: dict[str, Any] | None) -> str:
     return str(value) if value else "-"
 
 
+# - one table per section, same columns
+HEADER = "| Work | Category | Last run | Status | Result | Freshness | Evidence |"
+HEADER_RULE = "| --- | --- | --- | --- | --- | --- | --- |"
+
+
 def render(rows_: list[Row]) -> str:
     lines = [
         "# Capability matrix",
@@ -254,15 +297,21 @@ def render(rows_: list[Row]) -> str:
         "Only long opt-in work appears. `[WARN] stale` keeps the recorded numbers and names what changed;",
         "`[defer]` marks work parked on purpose, which is not a rerun candidate.",
         "",
-        "| Work | Category | Last run | Status | Result | Freshness | Evidence |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
     ]
-    for row in rows_:
-        mark = "[defer]" if deferred(row.subject) else freshness(row.report)
-        lines.append(
-            f"| {row.label} | {category(row.subject)} | {_when(row, row.report)} | {_status(row.report)} | "
-            f"{_headline(row.report)} | {mark} | {_evidence_link(row)} |"
-        )
+    for name, question in (
+        ("defaults", "Does the shipped default still work?"),
+        ("alternatives", "Is an alternative better than the default?"),
+    ):
+        selected = [row for row in rows_ if section(row.subject) == name]
+        if not selected:
+            continue
+        lines += ["", f"## {name.title()} testing", "", question, "", HEADER, HEADER_RULE]
+        for row in selected:
+            mark = "[defer]" if deferred(row.subject) else freshness(row.report)
+            lines.append(
+                f"| {row.label} | {category(row.subject)} | {_when(row, row.report)} | {_status(row.report)} | "
+                f"{_headline(row.report)} | {mark} | {_evidence_link(row)} |"
+            )
     parked = [f"{row.label} ({deferred(row.subject)})" for row in rows_ if deferred(row.subject)]
     if parked:
         lines += ["", "Deferred, no rerun planned: " + "; ".join(parked) + "."]
