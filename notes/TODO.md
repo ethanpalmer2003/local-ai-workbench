@@ -19,6 +19,7 @@
 
 ### Unattended
 
+- [ ] Judge the Q2_K and Q4_K_M encoder pair on quality: both clips were saved and only timing was written up, so watch the two and record which one keeps. [Screen](reviews/COMFYUI-VIDEO-2026-11-09.md). ~15 min
 - [ ] Compare the practice stack with Lemonade on one of its MOSS TTS entries instead of `kokoro-v1`; that removes the Lemonade leg as a reason to keep Kokoro installed. Needs the Lemonade model download first. ~30-45 min
 - [ ] Decide whether Lemonade qualifies as a voice-design framework now that `MOSS-VoiceGen` is in its catalog; allowing it for the character profile needs a test, not just the label. ~20-30 min
 - [ ] Retest llama.cpp coding on the ROCm build when a release newer than b1373 appears; b1373 aborts at startup with device -1, and b1372 is installed again. ~20 min

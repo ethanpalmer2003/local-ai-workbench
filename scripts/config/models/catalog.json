@@ -660,18 +660,6 @@
     {
       "category": "images",
       "group": "comfyui",
-      "label": "comfyui/minimax_h3_fl2v_turbo_4step_v1.0_768p_comfyui_resized_avg_rank_21_bf16",
-      "filename": "lora/minimax_h3_fl2v_turbo_4step_v1.0_768p_comfyui_resized_avg_rank_21_bf16.safetensors",
-      "url": null,
-      "in_use": false,
-      "notes": "Exact original source not recorded.",
-      "sha256": null,
-      "roles": [],
-      "source_page": null
-    },
-    {
-      "category": "images",
-      "group": "comfyui",
       "label": "comfyui/LTX25-distilled-DiT-Q3_K_M",
       "filename": "unet/LTX25-distilled-DiT-Q3_K_M.gguf",
       "url": "https://huggingface.co/joeygambino/LTX-2.5-Quantized/blob/main/LTX25-distilled-DiT-Q3_K_M.gguf",
@@ -701,18 +689,6 @@
       "url": "https://huggingface.co/Lightricks/LTX-2.5/blob/main/vae/ltx-2.5-video-vae-bf16.safetensors",
       "in_use": true,
       "notes": "",
-      "sha256": null,
-      "roles": [],
-      "source_page": null
-    },
-    {
-      "category": "images",
-      "group": "comfyui",
-      "label": "comfyui/ltx-2.5-video-vae-conv-bf16",
-      "filename": "vae/ltx-2.5-video-vae-conv-bf16.safetensors",
-      "url": "https://huggingface.co/Lightricks/LTX-2.5/blob/main/vae/ltx-2.5-video-vae-conv-bf16.safetensors",
-      "in_use": true,
-      "notes": "Recorded revision 49b093a39c19169a8a81721dcc541e07e945232f; 1452269922 bytes; SHA-256 685b06ee3d9b2039647698fc4ea33175112462fc374e2777312c907897dfce8d. Conv VAE experiments are retired on this PC.",
       "sha256": null,
       "roles": [],
       "source_page": null

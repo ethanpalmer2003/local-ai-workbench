@@ -172,7 +172,6 @@ def patch_graph_prompts(
 class VideoVAE(StrEnum):
     SAVED = "saved"
     DIFFUSION = "diffusion"
-    CONV = "conv"
 
 
 class VAEDecode(StrEnum):
@@ -206,11 +205,7 @@ class LTXWorkflowOverrides:
     def video_vae_filename(self) -> str | None:
         if self.video_vae == VideoVAE.SAVED:
             return None
-        return (
-            "ltx-2.5-video-vae-conv-bf16.safetensors"
-            if self.video_vae == VideoVAE.CONV
-            else "ltx-2.5-video-vae-bf16.safetensors"
-        )
+        return "ltx-2.5-video-vae-bf16.safetensors"
 
     def _apply_loaders(self, graph: dict[str, Any]) -> None:
         for node in graph.values():
