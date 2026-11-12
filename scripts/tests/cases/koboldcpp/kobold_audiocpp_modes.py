@@ -241,7 +241,7 @@ def run(timeout: float, max_tokens: int, context: dict[str, Any]) -> Path:
             config={"execution_context": context, "playback_buffer_ms": 2000},
             frameworks=[provenance.framework_state("koboldcpp"), provenance.framework_state("audiocpp")],
             models=[
-                provenance.file_identity("chat", Path(cfg.KOBOLDCPP_SERVICE.model)),
+                provenance.file_identity("chat", cfg.kobold_chat_model_path()),
                 provenance.file_identity("speech", audio_model),
             ],
         ),
@@ -279,6 +279,8 @@ def run(timeout: float, max_tokens: int, context: dict[str, Any]) -> Path:
             "status": "completed",
             "total_seconds": time.perf_counter() - started,
             "reasoning": "Same generated reply tested through three proxy delivery modes; browser playback remains unverified.",
+            "execution_context": context,
+            "provenance": report["provenance"],
         }
     )
     return paths.artifacts

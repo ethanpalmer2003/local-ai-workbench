@@ -31,6 +31,8 @@ here means "waiting to be dropped", not "undecided".
 
 ## Deferred
 
+One index of everything parked: [DEFERRED](DEFERRED.md).
+
 ### OS limits
 
 Windows is the only supported host, so anything that needs another operating system waits here rather than in the TODO, where it would sit as work that cannot start.
