@@ -317,7 +317,10 @@
       "roles": [],
       "runtimes": [],
       "source_page": null,
-      "speech_class": "fast-multilingual"
+      "speech_class": "fast-multilingual",
+      "speech_modes": [
+        "preset"
+      ]
     },
     {
       "category": "tts",
@@ -383,7 +386,10 @@
       "roles": [],
       "runtimes": [],
       "source_page": null,
-      "speech_class": "none"
+      "speech_class": "none",
+      "speech_modes": [
+        "preset"
+      ]
     },
     {
       "category": "tts",
@@ -423,7 +429,10 @@
       "roles": [],
       "runtimes": [],
       "source_page": null,
-      "speech_class": "none"
+      "speech_class": "none",
+      "speech_modes": [
+        "preset"
+      ]
     },
     {
       "category": "tts",
@@ -476,7 +485,10 @@
       "roles": [],
       "runtimes": [],
       "source_page": null,
-      "speech_class": "fast-multilingual"
+      "speech_class": "fast-multilingual",
+      "speech_modes": [
+        "preset"
+      ]
     },
     {
       "category": "tts",
@@ -490,7 +502,10 @@
       "roles": [],
       "runtimes": [],
       "source_page": null,
-      "speech_class": "fast-multilingual"
+      "speech_class": "fast-multilingual",
+      "speech_modes": [
+        "preset"
+      ]
     },
     {
       "category": "tts",
@@ -504,7 +519,10 @@
       "roles": [],
       "runtimes": [],
       "source_page": null,
-      "speech_class": "fast-multilingual"
+      "speech_class": "fast-multilingual",
+      "speech_modes": [
+        "preset"
+      ]
     },
     {
       "category": "tts",
@@ -518,7 +536,10 @@
       "roles": [],
       "runtimes": [],
       "source_page": "https://huggingface.co/Supertone/supertonic",
-      "speech_class": "fast-multilingual"
+      "speech_class": "fast-multilingual",
+      "speech_modes": [
+        "preset"
+      ]
     },
     {
       "category": "tts",
@@ -532,7 +553,10 @@
       "roles": [],
       "runtimes": [],
       "source_page": null,
-      "speech_class": "fast-multilingual"
+      "speech_class": "fast-multilingual",
+      "speech_modes": [
+        "preset"
+      ]
     },
     {
       "category": "tts",
@@ -585,7 +609,10 @@
       "roles": [],
       "runtimes": [],
       "source_page": null,
-      "speech_class": "fast-multilingual"
+      "speech_class": "fast-multilingual",
+      "speech_modes": [
+        "preset"
+      ]
     },
     {
       "category": "tts",
@@ -599,7 +626,10 @@
       "roles": [],
       "runtimes": [],
       "source_page": null,
-      "speech_class": "fast-multilingual"
+      "speech_class": "fast-multilingual",
+      "speech_modes": [
+        "clone"
+      ]
     },
     {
       "category": "tts",
@@ -613,7 +643,11 @@
       "roles": [],
       "runtimes": [],
       "source_page": null,
-      "speech_class": "voice-design"
+      "speech_class": "voice-design",
+      "speech_modes": [
+        "clone",
+        "design"
+      ]
     },
     {
       "category": "images",
