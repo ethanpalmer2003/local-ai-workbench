@@ -34,14 +34,10 @@ def audio_config(engine: str) -> dict[str, Any]:
         "task": "asr",
         "mode": "offline",
     }
-    if profile.audio_family == "ming3_audio":
-        model["session_options"] = {
-            "ming3_audio.disk_experts": True,
-            "ming3_audio.pin_experts": False,
-            "ming3_audio.expert_cache_size": 8,
-            "ming3_audio.disk_expert_read_threads": 4,
-        }
-        model["default_request_options"] = {"max_tokens": 96, "enable_thinking": False}
+    if profile.session_options:
+        model["session_options"] = dict(profile.session_options)
+    if profile.request_options:
+        model["default_request_options"] = dict(profile.request_options)
     return {
         "host": "127.0.0.1",
         "backend": "hip" if engine.endswith("rocm") else "vulkan",

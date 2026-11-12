@@ -802,6 +802,19 @@
         "llamacpp"
       ],
       "source_page": "https://huggingface.co/ggml-org/embeddinggemma-2-GGUF"
+    },
+    {
+      "category": "asr",
+      "group": "asr/audiocpp",
+      "label": "asr/audiocpp/qwen3-asr-1.7b-q8_0",
+      "filename": "qwen3-asr-1.7b-q8_0.gguf",
+      "url": "https://huggingface.co/audio-cpp/audio.cpp-gguf/resolve/73ce4162f6cce370dd533c6782b772135c1b2a8e/Qwen3-ASR-1.7B-GGUF/qwen3-asr-1.7b-q8_0.gguf",
+      "in_use": false,
+      "notes": "AudioCpp conversion of Qwen3-ASR 1.7B: one self-contained GGUF with embedded config, unlike the llama.cpp weights + mmproj pair.",
+      "sha256": "3bc2462eca3a3a8f56abcd860d0943ffdc0546547dde55a9d08589607d6f3936",
+      "roles": [],
+      "runtimes": [],
+      "source_page": null
     }
   ]
 }

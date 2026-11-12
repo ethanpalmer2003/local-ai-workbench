@@ -708,7 +708,8 @@
         "asr"
       ],
       "model_ids": [
-        "asr/llamacpp/qwen3-asr-1.7b-q8_0"
+        "asr/llamacpp/qwen3-asr-1.7b-q8_0",
+        "asr/audiocpp/qwen3-asr-1.7b-q8_0"
       ],
       "languages": [
         "zh",
