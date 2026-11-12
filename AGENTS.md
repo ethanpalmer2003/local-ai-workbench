@@ -25,6 +25,7 @@
 
 ## Structure and safety
 - Reuse one canonical component key wherever that component owns files; identity stays consistent across config, catalogs, tests and batches. Paths come from `project_config.component()`.
+- Change, move or remove a model through `python -m scripts.tools.model_admin` (`where`, `replace`, `remove`): it edits the owning catalog, regenerates `ids.py`, rewrites references and trashes the weights. Hand-editing a catalog misses the last two. [Tools](scripts/tools/README.md).
 - [Folder rules](.agents/FOLDERS.md) own typed bindings, naming and the move checklist. Preserve model identity and shared assets through a move.
 - Preserve nonempty data by moving it to `C:/AI/trash`; direct deletion is for empty files/directories only. Verify resolved move/delete paths stay within the intended workspace.
 - Preserve existing work and evidence. `.gitignore` entries cover whole folders.
