@@ -7,27 +7,27 @@ Only long opt-in work appears. `[WARN] stale` keeps the recorded numbers and nam
 | Work | Last run | Status | Result | Freshness | Evidence |
 | --- | --- | --- | --- | --- | --- |
 | Live launcher and proxy wiring | 2026-11-10 | completed | 13 s | [OK] | report (../output/shared/live_frameworks/unreviewed/1794354726910208000/artifacts/report.json) |
-| Quick validation sweep | 2026-11-10 | failed | 225 s | [WARN] last run failed | report (../output/shared/quick_validation/unreviewed/1794351259014415800/artifacts/report.json) |
-| Gemma runtime screen | 2026-10-28 | - | - | [WARN] unprovenanced | report (../output/shared/gemma_runtime_screen/unreviewed/1793231834278361100/artifacts/report.json) |
+| Quick validation sweep | 2026-11-12 | completed | 302 s | [OK] | report (../output/suites/quick_validation/unreviewed/1794448526838098900/artifacts/report.json) |
+| Gemma runtime screen | 2026-11-12 | - | - | [OK] | report (../output/suites/gemma_runtime_screen/unreviewed/1794447366979245600/artifacts/report.json) |
 | Resident speech comparison | - | - | - | never run | - |
 | Silero VAD turns | 2026-11-12 | completed | - | [OK] | report (../output/audiocpp/vad_turns/unreviewed/1794445645261693400/artifacts/report.json) |
 | Single AudioCpp server speech | 2026-11-12 | completed | - | [OK] | report (../output/audiocpp/single_server_speech/unreviewed/1794445669079681300/artifacts/report.json) |
 | AudioCpp streaming | 2026-11-12 | completed | 182 s | [OK] | report (../output/audiocpp/audiocpp_streaming/unreviewed/1794445688187145700/artifacts/report.json) |
-| AudioCpp backend comparison | 2026-11-11 | completed | 13 s | [OK] | report (../output/audiocpp/audiocpp_backend_compare/inconclusive/1794435968852288400/artifacts/report.json) |
+| AudioCpp backend comparison | 2026-11-12 | completed | 21 s | [OK] | report (../output/audiocpp/audiocpp_backend_compare/inconclusive/1794448807011598500/artifacts/report.json) |
 | Ming page smoke | 2026-11-12 | failed | 2 s | [WARN] last run failed | report (../output/audiocpp/ming_page_smoke/unreviewed/1794446431978111600/artifacts/report.json) |
 | Practice gateway smoke | 2026-11-10 | completed | 40 s | [OK] | report (../output/asr/shared/practice_smoke/unreviewed/1794351216709335600/artifacts/report.json) |
 | Resident ASR comparison | 2026-11-12 | - | - | [OK] | report (../../benchmarks/output/asr/asr_resident_compare/unreviewed/1794444323519240600/artifacts/report.json) |
 | Paced ASR latency | 2026-11-12 | - | - | [OK] | report (../output/asr/shared/latency/unreviewed/1794444435528586300/artifacts/report.json) |
-| Practice Whisper recognition | 2026-11-10 | completed | 14 s | [OK] | report (../output/asr/shared/language_practice_whisper/unreviewed/1794351315955030500/artifacts/report.json) |
-| Embedded Whisper comparison | 2026-11-10 | completed | 17 s | [OK] | report (../../benchmarks/output/asr/whisper_embedded_compare/unreviewed/1794351278128277800/artifacts/report.json) |
-| Gemma audio comparison | 2026-11-10 | completed | 64 s | [OK] | report (../../benchmarks/output/asr/gemma_audio_compare/unreviewed/1794351332836985600/artifacts/report.json) |
-| Parakeet Vulkan smoke | 2026-11-10 | completed | 17 s | [OK] | report (../output/asr/parakeetcpp/smoke/unreviewed/1794351259505796000/artifacts/report.json) |
-| Kobold embedded speech comparison | 2026-11-10 | completed | 44 s | [OK] | report (../output/koboldcpp/kobold_embedded_compare/unreviewed/1794351427274116800/artifacts/report.json) |
+| Practice Whisper recognition | 2026-11-12 | completed | 15 s | [OK] | report (../output/asr/shared/language_practice_whisper/unreviewed/1794448603234647200/artifacts/report.json) |
+| Embedded Whisper comparison | 2026-11-12 | completed | 24 s | [OK] | report (../../benchmarks/output/asr/whisper_embedded_compare/unreviewed/1794448554903429400/artifacts/report.json) |
+| Gemma audio comparison | 2026-11-12 | completed | 72 s | [OK] | report (../../benchmarks/output/asr/gemma_audio_compare/unreviewed/1794448621016870500/artifacts/report.json) |
+| Parakeet Vulkan smoke | 2026-11-12 | completed | 26 s | [OK] | report (../output/asr/parakeetcpp/smoke/unreviewed/1794448527478985500/artifacts/report.json) |
+| Kobold embedded speech comparison | 2026-11-12 | completed | 52 s | [OK] | report (../output/koboldcpp/kobold_embedded_compare/unreviewed/1794448754179222500/artifacts/report.json) |
 | Kobold speech modes | 2026-11-12 | completed | 72 s | [OK] | report (../output/koboldcpp/kobold_audiocpp_modes/unreviewed/1794446797528993200/artifacts/report.json) |
 | Kobold stacked VRAM | 2026-11-12 | passed | 167 s | [OK] | report (../../benchmarks/output/koboldcpp/kobold_stack_vram/unreviewed/1794446249040548000/artifacts/report.json) |
 | Speculative decoding benchmark | 2026-11-12 | completed | 72 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_specspeed/unreviewed/1794442124305395400/artifacts/report.json) |
 | Context stream benchmark | 2026-11-12 | completed | 73 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794443399610811700/artifacts/report.json) |
-| Speed benchmark | 2026-10-04 | completed | 518 s | [WARN] unprovenanced | report (../output/llamacpp/benchmark_speedbench/verified/1791093433528713400/artifacts/report.json) |
+| Speed benchmark | 2026-11-12 | completed | 505 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_speedbench/unreviewed/1794447475746582600/artifacts/report.json) |
 | N-gram benchmark | 2026-11-12 | completed | 216 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_ngram/unreviewed/1794442198726696500/artifacts/report.json) |
 | llama.cpp backend benchmark | 2026-11-12 | unreviewed | - | [defer] | report (../../benchmarks/output/llamacpp/benchmark_backends/unreviewed/1794442694238268800/artifacts/report.json) |
 | Gemma with Breeze speech | 2026-11-12 | completed | 65 s | [OK] | report (../output/llamacpp/gemma_breeze/unreviewed/1794446128468734800/artifacts/report.json) |
