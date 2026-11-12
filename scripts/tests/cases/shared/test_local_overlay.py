@@ -46,13 +46,8 @@ class LocalOverlayTests(unittest.TestCase):
     def test_defaults_file_replaces_code_defaults_and_ignores_bad_values(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
-            (root / "defaults.json").write_text(
-                json.dumps(
-                    {
-                        "chat": {"tts": {"voice": "chosen", "clone_voice": "not-a-bool"}},
-                        "image": {"loras": "<lora:style:0.6>"},
-                    }
-                ),
+            (root / "defaults.yaml").write_text(
+                'chat:\n  tts:\n    voice: chosen\n    clone_voice: not-a-bool\nimage:\n  loras: "<lora:style:0.6>"\n',
                 encoding="utf-8",
             )
             with patch.dict(local_overlay.os.environ, {"AI_INPUT_DIR": str(root)}):
@@ -62,18 +57,17 @@ class LocalOverlayTests(unittest.TestCase):
                 self.assertEqual(local_overlay.setting("chat.tts.model", "repo-model"), "repo-model")
                 self.assertIs(local_overlay.setting("chat.tts.clone_voice", False), False)
                 self.assertEqual(local_overlay.setting("chat.tts.instruction", "none"), "none")
-            (root / "defaults.json").write_text("{not json", encoding="utf-8")
+            (root / "defaults.yaml").write_text("chat: [unclosed\n", encoding="utf-8")
             with patch.dict(local_overlay.os.environ, {"AI_INPUT_DIR": str(root)}):
                 self.assertEqual(local_overlay.setting("chat.tts.voice", "repo-default"), "repo-default")
 
     def test_comments_are_allowed_and_strings_keep_their_slashes(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
-            (root / "defaults.json").write_text(
-                "{\n  // a commented example stays out of effect\n"
-                '  // "chat": {"tts": {"instruction": "unused"}},\n'
-                '  "image": {"loras": "<lora:style:0.6>"},\n'
-                '  "chat": {"llm": "http://example/model"}\n}\n',
+            (root / "defaults.yaml").write_text(
+                "# a commented example stays out of effect\n"
+                "# chat:\n#   tts:\n#     instruction: unused\n"
+                'image:\n  loras: "<lora:style:0.6>"\nchat:\n  llm: http://example/model\n',
                 encoding="utf-8",
             )
             with patch.dict(local_overlay.os.environ, {"AI_INPUT_DIR": str(root)}):

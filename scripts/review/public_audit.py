@@ -97,7 +97,7 @@ def voice_patterns(words: tuple[str, ...]) -> str:
 
 
 def local_words() -> tuple[str, ...]:
-    """Vocabulary supplied by the overlay's defaults.json; nothing personal is committed here."""
+    """Vocabulary supplied by the overlay's defaults.yaml; nothing personal is committed here."""
     configured = local_overlay.setting(LOCAL_WORDS_SETTING, local_overlay.setting(LEGACY_WORDS_SETTING, []))
     return tuple(str(word) for word in configured if str(word).strip())
 

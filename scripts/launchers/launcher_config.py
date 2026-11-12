@@ -470,7 +470,7 @@ PRACTICE_LANGUAGES = ("en", "es", "fr", "ja", "de")
 
 # - KOBOLD_CHAT: Rocinante chat, Breeze voice-design TTS through the AudioCpp proxy, no external ASR.
 #   Design needs no reference clip, so the default voice comes from the tone instruction.
-# - A voice id from the overlay's defaults.json enables cloning; without one, Breeze uses its own default.
+# - A voice id from the overlay's defaults.yaml enables cloning; without one, Breeze uses its own default.
 # - `chat.image` in that file attaches image generation to this stack without editing code.
 IMAGE_MODES = ("off", "with", "on-demand")
 _CHAT_TTS_VOICE: str = local_overlay.setting("chat.tts.voice", local_overlay.default_voice())

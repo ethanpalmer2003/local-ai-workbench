@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 from typing import cast
 
+import yaml
+
 from scripts.config import project_config as project_cfg
 
 
@@ -103,7 +105,7 @@ def tone_prompt() -> str | None:
 
 def overrides_path() -> Path:
     """Optional overlay file that replaces code-owned defaults with personal ones."""
-    return input_dir() / "defaults.json"
+    return input_dir() / "defaults.yaml"
 
 
 def overrides() -> dict[str, object]:
@@ -111,42 +113,14 @@ def overrides() -> dict[str, object]:
     if not path.is_file():
         return {}
     try:
-        payload = json.loads(_without_comments(path.read_text(encoding="utf-8")))
-    except (OSError, ValueError):
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
         return {}
     return payload if isinstance(payload, dict) else {}
 
 
-def _without_comments(text: str) -> str:
-    """Drop `//` comments outside strings so the overlay file can document itself."""
-    out: list[str] = []
-    in_string = False
-    escaped = False
-    index = 0
-    while index < len(text):
-        char = text[index]
-        if in_string:
-            out.append(char)
-            escaped = char == "\\" and not escaped
-            if char == '"' and not escaped:
-                in_string = False
-            elif char != "\\":
-                escaped = False
-        elif char == '"':
-            in_string = True
-            out.append(char)
-        elif text.startswith("//", index):
-            while index < len(text) and text[index] not in "\r\n":
-                index += 1
-            continue
-        else:
-            out.append(char)
-        index += 1
-    return "".join(out)
-
-
 def setting[T](key: str, fallback: T) -> T:
-    """Dotted lookup in the overlay's defaults.json, e.g. setting("tts.voice", "").
+    """Dotted lookup in the overlay's defaults.yaml, e.g. setting("chat.tts.voice", "").
 
     A missing key, a wrong container type or a value of the wrong type keeps the
     repository default, so the overlay can never break a launcher.

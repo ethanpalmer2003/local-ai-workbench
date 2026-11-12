@@ -13,7 +13,7 @@ Every default has one owner in the repository; the input overlay overrides only 
 | ComfyUI paths and workflows | [comfyui/](../comfyui/README.md) | `video.prompt`, `video.negative` |
 | Roots, component keys | [project_config.py](../project_config.py) | none |
 
-- A personal value goes in the overlay's `defaults.json`; absence means the tracked default applies, so the same file works on any machine.
+- A personal value goes in the overlay's `defaults.yaml`; absence means the tracked default applies, so the same file works on any machine.
 - A flag (`--model`, `--with-image`, `--config`) overrides one launch and never becomes configuration.
 - Native JSON is edited directly; Python selects catalog ids and does not mirror native fields.
 
