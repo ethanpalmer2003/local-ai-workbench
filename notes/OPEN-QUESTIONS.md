@@ -10,6 +10,10 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
   because no framework states a profile floor. Unaudited: `roles`, `in_use`, and AudioCpp options
   copied from packaged specs. Ask whether the framework can answer a field in place and whether the
   copy can disagree; settle one per review.
+- **Catalog format.** [catalog.json](../scripts/config/models/catalog.json) is JSON although a person
+  edits it through `model_admin`: ordered writes keep diffs stable, and every entry is validated on
+  save. YAML would allow a comment beside each entry at the cost of rewriting the writer and the
+  ordered-diff property. Convert only if entry comments are wanted more than stable diffs.
 
 ## Superseded
 
