@@ -4,9 +4,11 @@ import unittest
 
 from scripts.benchmarks.shared.paths import Outcome
 from scripts.config import models
+from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.config.models import catalog
 from scripts.config.shared import speech_delivery
+from scripts.config.shared.deferred import DeferredKind
 from scripts.launchers import launcher_config as cfg
 from scripts.tests.cases.asr.shared.coverage import coverage
 from scripts.tests.shared.model_checks import requires_model_check
@@ -111,6 +113,17 @@ class LabelVocabularyTests(unittest.TestCase):
         catalog = model_languages.read_catalog()
         keys = {key for row in catalog["models"] for key in (row.get("coverage_tiers") or {})}
         self.assertLessEqual(keys, TIERS)
+
+    def test_deferred_rows_use_a_declared_kind(self):
+        page = project_cfg.BASE_DIR / "notes" / "DEFERRED.md"
+        rows = [
+            [cell.strip() for cell in line.strip().strip("|").split("|")]
+            for line in page.read_text(encoding="utf-8").splitlines()
+            if line.startswith("| ")
+        ]
+        kinds = {row[1] for row in rows if row[1] not in ("Kind", "---")}
+        self.assertTrue(kinds)
+        self.assertLessEqual(kinds, {item.value for item in DeferredKind})
 
 
 def _adapter_only() -> set[str]:
