@@ -56,6 +56,40 @@ CAPABILITIES = (
 )
 
 # - Work parked on purpose: the row stays so the page says why it is not judged, and a rerun is not expected
+# - how much work one row is, which decides the runner budget: smoke 90 s, probe 300 s, benchmark 900 s
+CATEGORY = {
+    "shared/live_frameworks": "probe",
+    "suites/quick_validation": "benchmark",
+    "suites/gemma_runtime_screen": "smoke",
+    "tts_engines/resident": "probe",
+    "audiocpp/vad_turns": "probe",
+    "audiocpp/single_server_speech": "probe",
+    "audiocpp/audiocpp_streaming": "probe",
+    "audiocpp/audiocpp_backend_compare": "probe",
+    "audiocpp/ming_page_smoke": "smoke",
+    "asr/shared/practice_smoke": "probe",
+    "asr/asr_resident_compare": "probe",
+    "asr/shared/latency": "probe",
+    "asr/shared/language_practice_whisper": "probe",
+    "asr/whisper_embedded_compare": "probe",
+    "asr/gemma_audio_compare": "probe",
+    "asr/parakeetcpp/smoke": "smoke",
+    "koboldcpp/kobold_embedded_compare": "probe",
+    "koboldcpp/kobold_audiocpp_modes": "smoke",
+    "koboldcpp/kobold_stack_vram": "probe",
+    "llamacpp/benchmark_specspeed": "smoke",
+    "llamacpp/benchmark_context_stream": "smoke",
+    "llamacpp/benchmark_speedbench": "benchmark",
+    "llamacpp/benchmark_ngram": "benchmark",
+    "llamacpp/benchmark_backends": "probe",
+    "llamacpp/gemma_breeze": "probe",
+    "probes/hrx_updates": "probe",
+    "shared/drama3_offload": "benchmark",
+    "shared/framework_compare": "benchmark",
+}
+DEFAULT_CATEGORY = "probe"
+
+
 DEFERRED = {
     "shared/drama3_offload": "the 15.9 GiB local TTS model is heavier than this setup carries",
     "probes/hrx_updates": "HRX work is paused by the user; the build and its update probe stay out of the rerun set",
@@ -153,6 +187,11 @@ def _framework_moved(report_framework: dict[str, Any]) -> str | None:
     return None
 
 
+def category(subject: str) -> str:
+    """How much work one capability is, used for its runner budget."""
+    return CATEGORY.get(subject, DEFAULT_CATEGORY)
+
+
 def deferred(subject: str) -> str | None:
     """Why a parked capability is not judged; None for work that is expected to run."""
     return DEFERRED.get(subject)
@@ -217,14 +256,14 @@ def render(rows_: list[Row]) -> str:
         "Only long opt-in work appears. `[WARN] stale` keeps the recorded numbers and names what changed;",
         "`[defer]` marks work parked on purpose, which is not a rerun candidate.",
         "",
-        "| Work | Last run | Status | Result | Freshness | Evidence |",
-        "| --- | --- | --- | --- | --- | --- |",
+        "| Work | Category | Last run | Status | Result | Freshness | Evidence |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     for row in rows_:
         mark = "[defer]" if deferred(row.subject) else freshness(row.report)
         lines.append(
-            f"| {row.label} | {_when(row, row.report)} | {_status(row.report)} | {_headline(row.report)} | "
-            f"{mark} | {_evidence_link(row)} |"
+            f"| {row.label} | {category(row.subject)} | {_when(row, row.report)} | {_status(row.report)} | "
+            f"{_headline(row.report)} | {mark} | {_evidence_link(row)} |"
         )
     parked = [f"{row.label} ({deferred(row.subject)})" for row in rows_ if deferred(row.subject)]
     if parked:
