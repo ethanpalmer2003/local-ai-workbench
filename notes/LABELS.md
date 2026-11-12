@@ -19,7 +19,7 @@ instead of restating it; a new family edits this table and its owner together.
 | Test runner | `resident_compare`, `file_diagnostic`, comparison modules, `none` | Which harness would test a profile | same |
 | Language tier | `transcription_ready`, `broad_coverage`, `adaptation_required` | Which languages a checkpoint handles well | [model_languages.json](../scripts/config/models/model_languages.json) |
 | Catalog role | `chat`, `coding`, `embedding`, `multilingual`, `projector` | What a weight file is for | [catalog.json](../scripts/config/models/catalog.json) |
-| Document role | root, hub, agent rule, running list, note, review record, component guide | Home and word cap of a page | [NOTES-CONVENTIONS.md](../.agents/NOTES-CONVENTIONS.md) |
+| Document role | root, hub, agent rule, running list, generated page, note, review record, component guide | Home and word cap of a page | [NOTES-CONVENTIONS.md](../.agents/NOTES-CONVENTIONS.md) |
 
 - A budget class is not a suite: capability rows are long opt-in work with recorded evidence, while
   every test belongs to a suite by what it is allowed to start.
