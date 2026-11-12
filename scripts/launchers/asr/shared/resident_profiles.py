@@ -22,7 +22,7 @@ def build_server_command(engine: str, port: int) -> list[str]:
     ]
 
 
-def audio_config(engine: str) -> dict[str, Any]:
+def audio_config(engine: str, mode: str = "offline") -> dict[str, Any]:
     """ASR-only generated config; never mutate the user's TTS server selection."""
     profile = ASR_FILE_PROFILES[engine]
     if not profile.audio_family:
@@ -32,12 +32,15 @@ def audio_config(engine: str) -> dict[str, Any]:
         "family": profile.audio_family,
         "path": str(model_cfg.path(profile.models[0])),
         "task": "asr",
-        "mode": "offline",
+        "mode": mode,
     }
     if profile.session_options:
         model["session_options"] = dict(profile.session_options)
-    if profile.request_options:
-        model["default_request_options"] = dict(profile.request_options)
+    request = dict(profile.request_options or {})
+    if mode == "streaming":
+        request.update(profile.streaming_request_options or {})
+    if request:
+        model["default_request_options"] = request
     return {
         "host": "127.0.0.1",
         "backend": "hip" if engine.endswith("rocm") else "vulkan",

@@ -18,8 +18,7 @@ from scripts.launchers.shared.transport.streaming_http import StreamingPost
 
 
 def speech_config(port: int):
-    config = audio_config("audiocpp-vulkan")
-    config["models"][0]["mode"] = "streaming"
+    config = audio_config("audiocpp-vulkan", mode="streaming")
     config.update(lazy_load=False, max_loaded_models=2, idle_unload_ms=0, threads=5, port=port)
     from scripts.launchers.asr.shared.practice_models import tts_spec
 

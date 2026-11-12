@@ -70,6 +70,11 @@ class FileProfiles(unittest.TestCase):
         self.assertEqual(qwen["models"][0]["family"], "qwen3_asr")
         self.assertTrue(qwen["models"][0]["session_options"]["packed_projections"])
         self.assertEqual(qwen["models"][0]["session_options"]["kv_cache_type"], "f16")
+        self.assertEqual(qwen["models"][0]["mode"], "offline")
+        self.assertNotIn("default_request_options", qwen["models"][0])
+        streaming = audio_config("audiocpp-qwen3", mode="streaming")["models"][0]
+        self.assertEqual(streaming["mode"], "streaming")
+        self.assertEqual(streaming["default_request_options"]["audio_chunk_duration_sec"], 3)
         self.assertIn("--session-option", build_command("audiocpp-qwen3", audio))
         self.assertIn("enable_thinking=false", build_command("audiocpp-ming-audio-tiny", audio))
         self.assertTrue(audio_config("audiocpp-ming-audio-tiny")["models"][0]["default_request_options"])
