@@ -92,6 +92,25 @@ class LabelVocabularyTests(unittest.TestCase):
             # - the framework's own spec is the authority the UI reads for preset vs clone
             self.assertIsInstance(audiocpp_catalog.packaged_spec(model.path), dict)
 
+    def test_catalog_roles_mark_what_their_consumer_reads(self):
+        # - only "chat" drives behavior today: the practice page's chat picker
+        chat = [row for row in models.MODELS if "chat" in row.roles]
+        self.assertTrue(chat)
+        for row in chat:
+            with self.subTest(model=row.label):
+                self.assertTrue(row.filename and row.filename.endswith(".gguf"), row.label)
+                self.assertNotIn("projector", row.roles)
+        self.assertFalse(
+            [row.label for row in models.MODELS if "projector" in row.roles and "mmproj" not in (row.filename or "")]
+        )
+        self.assertEqual(
+            {row.label for row in models.MODELS if "embedding" in row.roles}, {"embeddings/embeddinggemma-2-Q8_0"}
+        )
+        self.assertEqual(
+            {row.label for row in models.MODELS if "coding" in row.roles},
+            {"llamacpp/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp"},
+        )
+
     def test_delivery_and_speech_classes_keep_their_full_vocabulary(self):
         self.assertEqual(speech_delivery.MODES, ("streaming", "chunked", "whole"))
         self.assertLessEqual(set(speech_delivery.ASR_STREAMING), set(speech_delivery.ASR_CHUNKED))

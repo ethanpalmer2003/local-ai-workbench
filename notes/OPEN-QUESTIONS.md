@@ -14,12 +14,12 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
     disagreement is a stale index rather than two authored truths; or
   - one query per page load, acceptable only for a single model's detail view.
   The index looks right for lists, the query for detail. Either way the key is the catalog label and
-  the values reuse one vocabulary, so a stored copy and a live read cannot disagree on names. Judge
-  remaining copies one at a time: the AudioCpp session and request options copied from packaged specs,
-  and `model_languages.json` against what a checkpoint's card declares. The two threads meet only for
-  capability: `roles` and `in_use` are intent, so an index never answers them, while the option copies
-  are capability settled by reading the packaged spec when a model loads, which is one metadata read
-  rather than a cache.
+  the values reuse one vocabulary, so a stored copy and a live read cannot disagree on names. The two
+  threads meet only for capability: `roles` and `in_use` are intent, so an index never answers them,
+  while the AudioCpp option values are choices, not copies - the packaged spec declares the option
+  names and this repository picks the values, so there is nothing to delete there.
+  `model_languages.json` against what a checkpoint's card declares is the one candidate left; a live
+  read costs about 60 ms per GGUF, so an index waits for a page that lists across models.
 
 ## Superseded
 
