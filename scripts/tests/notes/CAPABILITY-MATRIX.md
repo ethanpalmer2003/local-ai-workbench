@@ -14,7 +14,7 @@ Only long opt-in work appears. `[WARN] stale` keeps the recorded numbers and nam
 | Single AudioCpp server speech | 2026-11-12 | completed | - | [OK] | report (../output/audiocpp/single_server_speech/unreviewed/1794445669079681300/artifacts/report.json) |
 | AudioCpp streaming | 2026-11-12 | completed | 182 s | [OK] | report (../output/audiocpp/audiocpp_streaming/unreviewed/1794445688187145700/artifacts/report.json) |
 | AudioCpp backend comparison | 2026-11-12 | completed | 21 s | [OK] | report (../output/audiocpp/audiocpp_backend_compare/inconclusive/1794448807011598500/artifacts/report.json) |
-| Ming page smoke | 2026-11-12 | failed | 2 s | [WARN] last run failed | report (../output/audiocpp/ming_page_smoke/unreviewed/1794446431978111600/artifacts/report.json) |
+| Ming page smoke | 2026-11-12 | completed | 8 s | [OK] | report (../output/audiocpp/ming_page_smoke/unreviewed/1794449521522386700/artifacts/report.json) |
 | Practice gateway smoke | 2026-11-10 | completed | 40 s | [OK] | report (../output/asr/shared/practice_smoke/unreviewed/1794351216709335600/artifacts/report.json) |
 | Resident ASR comparison | 2026-11-12 | - | - | [OK] | report (../../benchmarks/output/asr/asr_resident_compare/unreviewed/1794444323519240600/artifacts/report.json) |
 | Paced ASR latency | 2026-11-12 | - | - | [OK] | report (../output/asr/shared/latency/unreviewed/1794444435528586300/artifacts/report.json) |
@@ -33,6 +33,6 @@ Only long opt-in work appears. `[WARN] stale` keeps the recorded numbers and nam
 | Gemma with Breeze speech | 2026-11-12 | completed | 65 s | [OK] | report (../output/llamacpp/gemma_breeze/unreviewed/1794446128468734800/artifacts/report.json) |
 | HRX build | - | passed | - | [defer] | report (../output/probes/hrx_updates/verified/20261015-rebuild/artifacts/report.json) |
 | Drama offload screen | 2026-10-28 | completed | 107 s | [defer] | report (../output/shared/drama3_offload/unreviewed/1793151003911821700/artifacts/report.json) |
-| Language practice versus Lemonade | 2026-11-08 | passed | practice TTFT 0.06 s; lemonade TTFT 0.08 s; kobold TTFT 0.40 s | [WARN] stale: corpus manifest changed | report (../../benchmarks/output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json) |
+| Language practice versus Lemonade | 2026-11-12 | passed | practice TTFT 0.07 s; lemonade TTFT 0.08 s; kobold TTFT 0.39 s | [OK] | report (../../benchmarks/output/shared/framework_compare/unreviewed/1794449538297774600/artifacts/report.json) |
 
 Deferred, no rerun planned: llama.cpp backend benchmark (its comparison arm is the paused HRX build, so the row cannot be judged while HRX is parked); HRX build (HRX work is paused by the user; the build and its update probe stay out of the rerun set); Drama offload screen (the 15.9 GiB local TTS model is heavier than this setup carries).
