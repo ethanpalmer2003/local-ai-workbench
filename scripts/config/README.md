@@ -17,8 +17,8 @@
 - Source edits require restarting affected consumers; preserve existing sessions until authorized to restart.
 
 ```powershell
-C:/AI/.venv/Scripts/python.exe -m scripts.config.sync_configs
-C:/AI/.venv/Scripts/python.exe -m scripts.config.sync_configs --only comfyui --apply
+python -m scripts.config.sync_configs
+python -m scripts.config.sync_configs --only comfyui --apply
 ```
 
 - Preview is read-only. Apply manages owned ComfyUI copies, preserving replaced files in trash; it does not install packages or restart servers.

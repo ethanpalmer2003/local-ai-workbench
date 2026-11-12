@@ -32,7 +32,7 @@ compute threads. One active native stream is allowed; overlap returns 429.
 Reproduce with installed Visual Studio/CMake/Ninja:
 
 ```powershell
-C:/AI/.venv/Scripts/python.exe -m scripts.download.frameworks.asr.parakeetcpp
+python -m scripts.download.frameworks.asr.parakeetcpp
 ```
 
 The build records its source commit, options, logs and execution context in

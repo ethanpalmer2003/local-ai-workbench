@@ -25,7 +25,7 @@ Per-component install and update specifics are in [UPDATES-COMPONENTS.md](UPDATE
 All three HRX repositories are disabled in routine updates. Even `--only llamacpp/additions/hrx` skips them; re-enable their `in_use` fields in `llamacpp/updates.py` before requesting source updates. Existing checkouts and manual builds remain available.
 
 ```powershell
-C:/AI/.venv/Scripts/python.exe -m scripts.download.frameworks.llamacpp.hrx.build --merge --install
+python -m scripts.download.frameworks.llamacpp.hrx.build --merge --install
 ```
 
 - Source update: clean checkouts fast-forward; dirty/local commits require review/merge. Preserve patches under `state/llamacpp/hrx/source-patches/`.

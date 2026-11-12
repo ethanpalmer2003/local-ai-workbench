@@ -41,9 +41,9 @@ release, so the ROCm arm runs only when asked with `--backend rocm-release`.
 ## Brief checks
 
 ```powershell
-C:/AI/.venv/Scripts/python.exe -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case ming3-tts
-C:/AI/.venv/Scripts/python.exe -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case ming3-audio --loaders-only
-C:/AI/.venv/Scripts/python.exe -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case ming3-audio --backend vulkan
+python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case ming3-tts
+python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case ming3-audio --loaders-only
+python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case ming3-audio --backend vulkan
 ```
 
 - Omit `--backend` to check both official builds sequentially. Default: one short warmup and one
