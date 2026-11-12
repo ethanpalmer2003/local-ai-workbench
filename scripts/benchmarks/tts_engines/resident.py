@@ -213,6 +213,8 @@ def main():
     report_path = run.artifacts / "report.json"
     if report_path.is_file():
         payload = json.loads(report_path.read_text(encoding="utf-8"))
+        # - the outcome folder says unreviewed; the matrix judges the recorded status instead
+        payload["status"] = "failed" if failures else "completed"
         payload["provenance"] = provenance.block(
             subject=str(payload.get("name", "tts_engines/resident")),
             config={"profile": "lessac-medium", "samples": args.samples, "execution_context": context},

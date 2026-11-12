@@ -9,7 +9,7 @@ Only long opt-in work appears. `[WARN] stale` keeps the recorded numbers and nam
 | Live launcher and proxy wiring | 2026-11-10 | completed | 13 s | [OK] | report (../output/shared/live_frameworks/unreviewed/1794354726910208000/artifacts/report.json) |
 | Quick validation sweep | 2026-11-12 | completed | 302 s | [OK] | report (../output/suites/quick_validation/unreviewed/1794448526838098900/artifacts/report.json) |
 | Gemma runtime screen | 2026-11-12 | - | - | [OK] | report (../output/suites/gemma_runtime_screen/unreviewed/1794447366979245600/artifacts/report.json) |
-| Resident speech comparison | - | - | - | never run | - |
+| Resident speech comparison | 2026-11-12 | completed | - | [OK] | report (../../benchmarks/output/tts_engines/resident/unreviewed/1794450046473369400/artifacts/report.json) |
 | Silero VAD turns | 2026-11-12 | completed | - | [OK] | report (../output/audiocpp/vad_turns/unreviewed/1794445645261693400/artifacts/report.json) |
 | Single AudioCpp server speech | 2026-11-12 | completed | - | [OK] | report (../output/audiocpp/single_server_speech/unreviewed/1794445669079681300/artifacts/report.json) |
 | AudioCpp streaming | 2026-11-12 | completed | 182 s | [OK] | report (../output/audiocpp/audiocpp_streaming/unreviewed/1794445688187145700/artifacts/report.json) |
