@@ -19,6 +19,7 @@ ROLE_TIERS = {
     "root": "large",
     "hub": "large",
     "agent rule": "small",
+    "code rules": "medium",
     "running list": "long",
     "generated page": "long",
     "note": "medium",
@@ -48,6 +49,7 @@ RUNNING_LIST_PATHS = (
 )
 ROLE_RULES = (
     ("root", r"(?:README|AGENTS)\.md"),
+    ("code rules", r"\.agents/CODE\.md"),
     ("agent rule", r".*AGENTS\.md|\.agents/.*\.md"),
     ("review record", r"notes/reviews/.*\.md"),
     ("generated page", r"scripts/(?:config|tests)/notes/[A-Z][A-Z0-9-]*-MATRIX\.md"),
