@@ -20,7 +20,7 @@ lists every consumer.
 - `models.overlay.yaml` holds extra model catalog entries and merges into the catalog when present. The tracked `catalog.json` and generated `ids.py` never carry them.
 - `defaults.yaml` is where personal selection happens: `chat.llm`, `chat.tts.model`, `chat.tts.voice`, `chat.tts.instruction`, `image.prompt`, `image.loras`, and the `video.*` pair: `video.prompt`/`video.negative` replace the workflow text, `video.prompt_append`/`video.negative_append` add to it. Chat keys belong to the chat stack that is always started; `image.*` only affects the optional image proxy. A missing key, wrong type or malformed file keeps the repository default; comments are ordinary YAML.
 - Flags exist for one-off runs and automation (`--model`, `--with-image`, `--config`); they override one launch and never become the configuration. Service policy, ports and paths stay code-owned in both cases.
-- Never add these files to git. `data/` is ignored, so the overlay can live directly in the working tree.
+- Never add these files to git; `data/` is ignored.
 
 ## Voice ids
 
