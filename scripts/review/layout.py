@@ -373,6 +373,18 @@ def empty_shell_issues() -> list[str]:
     return issues
 
 
+def state_issues() -> list[str]:
+    """Runtime state keeps folders; a loose script or output dump belongs in a run folder or trash."""
+    issues: list[str] = []
+    for root in (project_cfg.STATE_DIR, project_cfg.STATE_DIR / "cache"):
+        if not root.is_dir():
+            continue
+        for entry in sorted(root.iterdir()):
+            if entry.is_file():
+                issues.append(f"Loose file in state: {_folder_label(entry)}")
+    return issues
+
+
 def placement_issues() -> list[str]:
     """Every tracked file directly inside a high-level folder, whatever its type."""
 
@@ -386,7 +398,12 @@ def placement_issues() -> list[str]:
 def main() -> int:
     files = maintained_files()
     issues = (
-        configuration_issues() + physical_root_issues() + naming_issues() + policy_limit_issues() + placement_issues()
+        configuration_issues()
+        + physical_root_issues()
+        + naming_issues()
+        + policy_limit_issues()
+        + placement_issues()
+        + state_issues()
     )
     for path in files:
         issues += owner_issues(path)
