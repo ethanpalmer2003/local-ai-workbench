@@ -1,7 +1,6 @@
 # Folders
 
-- Keys and native-layout overrides: `COMPONENTS` in `scripts/config/project_config.py`. Reuse a key where ownership matches; mirror folders are unnecessary.
-- Resolve paths through `project_cfg.component()` and catalog helpers.
+- Keys and native-layout overrides: `COMPONENTS` in `scripts/config/project_config.py`; reuse a key where ownership matches, since a mirror folder has no owner.
 
 | Role | Root + component key |
 | --- | --- |

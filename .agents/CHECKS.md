@@ -2,7 +2,7 @@
 
 ## Environment
 
-- Interpreter `C:/AI/.venv/Scripts/python.exe`; use uv, never pip. If the user uv cache is restricted, set `UV_CACHE_DIR=C:/AI/scripts/state/cache/shared/uv`.
+- Interpreter `C:/AI/.venv/Scripts/python.exe`. If the uv cache is restricted, set `UV_CACHE_DIR=C:/AI/scripts/state/cache/shared/uv`.
 - Dependencies are declared in `pyproject.toml`, locked in `uv.lock`; CPU torch/torchaudio use the PyTorch CPU index; package changes need approval.
 
 ## Commands
@@ -25,6 +25,5 @@
 - Read the latest [checkpoint](../notes/reviews/README.md); focus on changed contracts.
 - Trace startup, readiness, requests, cleanup and process ownership; check error propagation.
 - Check component keys, directory roles/types and config prefixes against [folder rules](FOLDERS.md); judge sparse-folder audit findings by ownership.
-- Check a move or rename against [folder rules](FOLDERS.md); preserve sessions, shared assets and evidence.
 - `scripts/review/frontend_wiring.py` checks asset paths, DOM ids and injected settings keys.
 - Report findings, checks run and remaining limits.
