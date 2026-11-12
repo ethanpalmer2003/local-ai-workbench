@@ -29,27 +29,10 @@ class LabelVocabularyTests(unittest.TestCase):
         self.assertFalse(set(capability_matrix.DEFERRED) - subjects)
         self.assertEqual(set(probe_runner.CATEGORY_SECONDS), BUDGET_CLASSES)
 
-    def test_profiles_are_declared_and_their_defaults_name_a_catalog_model(self):
-        stacks = (cfg.KOBOLD_CHAT, cfg.LANGUAGE_PRACTICE)
-        for stack in stacks:
-            self.assertIn(stack.profile, cfg.PROFILE_REQUIREMENTS)
-        labels = {model.label for model in models.MODELS}
-        self.assertEqual(set(cfg.TOOL_DEFAULTS), {"transcription", "embeddings"})
-        self.assertEqual(set(cfg.MEDIA_DEFAULTS), {"image", "video"})
-        for name, row in {**cfg.TOOL_DEFAULTS, **cfg.MEDIA_DEFAULTS}.items():
-            with self.subTest(default=name):
-                if row.model is not None:
-                    self.assertIn(row.model, labels)
-        # - Tool members live inside the tool profile; a media entry is its own profile.
-        for name in cfg.MEDIA_DEFAULTS:
-            self.assertIn(name, cfg.PROFILE_REQUIREMENTS)
-        self.assertTrue(set(cfg.TOOL_DEFAULTS).isdisjoint(cfg.PROFILE_REQUIREMENTS))
-        transcription, embeddings = (cfg.TOOL_DEFAULTS["transcription"].model, cfg.TOOL_DEFAULTS["embeddings"].model)
-        assert transcription is not None and embeddings is not None
-        self.assertEqual(models.path(transcription), cfg.QWEN3_ASR.model)
-        self.assertEqual(models.path(embeddings), cfg.EMBEDDINGS_SERVER.model)
-        self.assertIsNone(cfg.MEDIA_DEFAULTS["video"].model)
-        self.assertIn("workflows/", cfg.MEDIA_DEFAULTS["video"].owner)
+    def test_profiles_are_declared_by_the_stacks_that_run_them(self):
+        for stack in (cfg.KOBOLD_CHAT, cfg.LANGUAGE_PRACTICE):
+            with self.subTest(stack=stack.profile):
+                self.assertIn(stack.profile, cfg.PROFILE_REQUIREMENTS)
         self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.QWEN3_ASR)
 
     def test_profile_requirements_match_the_defaults_they_claim(self):
@@ -58,11 +41,6 @@ class LabelVocabularyTests(unittest.TestCase):
         recognition = {name for name, row in cfg.PROFILE_REQUIREMENTS.items() if row.asr}
         self.assertEqual(recognition, {"language", "tool"})
         self.assertIsNotNone(cfg.LANGUAGE_PRACTICE.asr_engine)
-        self.assertIn("transcription", cfg.TOOL_DEFAULTS)
-        roles = {"mid", "lightweight", "coding", "none"}
-        for name, row in cfg.PROFILE_REQUIREMENTS.items():
-            with self.subTest(profile=name):
-                self.assertIn(row.llm_role, roles)
         for stack in (cfg.KOBOLD_CHAT, cfg.LANGUAGE_PRACTICE):
             with self.subTest(stack=stack.profile):
                 self.assertTrue(cfg.model_fits_profile(stack.profile, stack.tts_model))

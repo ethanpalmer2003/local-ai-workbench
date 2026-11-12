@@ -365,42 +365,20 @@ class ProfileRequirements:
     tts: SpeechClass
     asr: bool
     agent: bool
-    llm_role: str
 
 
 # - The six profiles this repository runs. The character profile needs voice-design speech, language needs
 #   ASR plus fast multilingual speech, coding needs an agent in front of the inference engine, tool covers the
 #   non-user-facing helpers, and the media profiles carry image and video generation.
 PROFILE_REQUIREMENTS = {
-    "character": ProfileRequirements(SpeechClass.VOICE_DESIGN, asr=False, agent=False, llm_role="mid"),
-    "language": ProfileRequirements(SpeechClass.FAST_MULTILINGUAL, asr=True, agent=False, llm_role="lightweight"),
-    "coding": ProfileRequirements(SpeechClass.NONE, asr=False, agent=True, llm_role="coding"),
-    "tool": ProfileRequirements(SpeechClass.NONE, asr=True, agent=False, llm_role="none"),
-    "image": ProfileRequirements(SpeechClass.NONE, asr=False, agent=False, llm_role="none"),
-    "video": ProfileRequirements(SpeechClass.NONE, asr=False, agent=False, llm_role="none"),
+    "character": ProfileRequirements(SpeechClass.VOICE_DESIGN, asr=False, agent=False),
+    "language": ProfileRequirements(SpeechClass.FAST_MULTILINGUAL, asr=True, agent=False),
+    "coding": ProfileRequirements(SpeechClass.NONE, asr=False, agent=True),
+    "tool": ProfileRequirements(SpeechClass.NONE, asr=True, agent=False),
+    "image": ProfileRequirements(SpeechClass.NONE, asr=False, agent=False),
+    "video": ProfileRequirements(SpeechClass.NONE, asr=False, agent=False),
 }
 
-
-@dataclass(frozen=True)
-class ProfileDefault:
-    """One default a profile carries: its catalog model when a single file is it, and the module that runs it."""
-
-    model: str | None
-    owner: str
-
-
-# - The tool profile's members, keyed by the tool. Nothing here has a workspace page; each row names the
-#   module that runs it.
-TOOL_DEFAULTS = {
-    "transcription": ProfileDefault("asr/llamacpp/qwen3-asr-1.7b-q8_0", "ASR_SERVICE gateway"),
-    "embeddings": ProfileDefault("embeddings/embeddinggemma-2-Q8_0", "EMBEDDINGS_SERVER"),
-}
-
-# - The media profiles. Video names its workflow because ComfyUI reads models from the graph, not one path.
-MEDIA_DEFAULTS = {
-    "image": ProfileDefault("sdcpp/nova3DCGXL_ilV90_q4_K", "SDCPP_SERVICE"),
-    "video": ProfileDefault(None, "config/comfyui/workflows/video_ltx2_5_i2v_fast480.json"),
-}
 
 # - Speech output each framework can actually provide. Lemonade pins its own kokoro-v1 in the
 #   comparison; its catalog also lists MOSS TTS, including a voice-design variant, which no
