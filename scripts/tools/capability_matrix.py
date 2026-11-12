@@ -26,7 +26,6 @@ ROOTS = (project_cfg.TEST_OUTPUT_DIR, project_cfg.SCRIPTS_DIR / "benchmarks/outp
 # - Long opt-in work: subject under scripts/tests/output, then the label a reader recognizes
 CAPABILITIES = (
     ("shared/live_frameworks", "Live launcher and proxy wiring"),
-    ("suites/quick_validation", "Quick validation sweep"),
     ("suites/gemma_runtime_screen", "Gemma runtime screen"),
     ("tts_engines/resident", "Resident speech comparison"),
     ("audiocpp/vad_turns", "Silero VAD turns"),
@@ -59,7 +58,6 @@ CAPABILITIES = (
 # - how much work one row is, which decides the runner budget: smoke 90 s, probe 300 s, benchmark 900 s
 CATEGORY = {
     "shared/live_frameworks": "probe",
-    "suites/quick_validation": "benchmark",
     "suites/gemma_runtime_screen": "smoke",
     "tts_engines/resident": "probe",
     "audiocpp/vad_turns": "probe",

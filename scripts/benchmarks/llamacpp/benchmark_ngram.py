@@ -38,14 +38,14 @@ class Candidate:
         }
 
 
+# - Three candidates remain: the shipped profile, the legacy settings and the no-ngram anchor, which
+#   is what a regression would show up in. Dropped after measurement rather than re-run each sweep:
+#   amd-deep12 (2x slower generation, no rewrite gain), dense-short (lost on rewrite), amd-min24 (the
+#   bare defaults) and amd-mtp1 (faster, rejected for its accuracy trade, not a speed question).
 CANDIDATES = (
     Candidate("current", minimum=48),
     Candidate("legacy", lookup=32, minimum=4, maximum=8),
     Candidate("mtp-only", speculation="draft-mtp"),
-    Candidate("amd-mtp1", speculation="draft-mtp", mtp=1),
-    Candidate("dense-short", minimum=16, maximum=32),
-    Candidate("amd-min24"),
-    Candidate("amd-deep12", mtp=12),
 )
 
 
