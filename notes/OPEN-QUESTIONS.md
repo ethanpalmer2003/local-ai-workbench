@@ -7,11 +7,16 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 - **Where we store what a framework already reports.** The rule is to use the framework's answer
   rather than keep a copy ([code](../.agents/CODE.md)). Applied: `speech_modes` went, because AudioCpp's
   spec answers preset versus clone, and `runtimes` went, because a GGUF loads in both. Kept:
-  `speech_class`, since no framework states a profile floor. Candidates still holding a copy:
-  `roles` and `in_use` in the catalog; the AudioCpp session and request options copied from packaged
-  specs; the model name, family and language fields in files that mirror AudioCpp model specs; and
-  `model_languages.json` against what a checkpoint's card declares. Judge one at a time: can the
-  framework answer it at the point of use, and can our copy disagree?
+  `speech_class`, since no framework states a profile floor; `roles` and `in_use` state intent, which
+  no model reports. The open part is selection: listing every clone-capable model should not mean
+  querying each framework at request time. Two answers:
+  - a disposable index keyed by catalog label, rebuilt when framework or model metadata changes, so a
+    disagreement is a stale index rather than two authored truths; or
+  - one query per page load, acceptable only for a single model's detail view.
+  The index looks right for lists, the query for detail. Either way the key is the catalog label and
+  the values reuse one vocabulary, so a stored copy and a live read cannot disagree on names. Judge
+  remaining copies one at a time: the AudioCpp session and request options copied from packaged specs,
+  and `model_languages.json` against what a checkpoint's card declares.
 
 ## Superseded
 
