@@ -120,5 +120,25 @@ class BlockTests(unittest.TestCase):
         self.assertNotEqual(first, provenance.digest({"a": 1, "b": 3}))
 
 
+class ProducerTests(unittest.TestCase):
+    def test_the_block_names_the_script_that_produced_the_run(self):
+        with patch.object(provenance.subprocess, "run", side_effect=fake_git):
+            block = provenance.block(subject="example", config={}, frameworks=[], models=[])
+        recorded = Path(__file__).resolve().relative_to(project_config.BASE_DIR).as_posix()
+        self.assertEqual(list(block["producer"]), [recorded])
+
+    def test_a_matching_producer_is_not_reported(self):
+        path = Path(project_config.BASE_DIR) / "scripts/tools/capability_matrix.py"
+        recorded = provenance.source_manifest([path], Path(project_config.BASE_DIR))
+        self.assertEqual(provenance.changed_manifest(recorded), [])
+
+    def test_a_changed_or_removed_producer_is_reported(self):
+        self.assertEqual(
+            provenance.changed_manifest({"scripts/tools/capability_matrix.py": "0" * 64}),
+            ["scripts/tools/capability_matrix.py"],
+        )
+        self.assertEqual(provenance.changed_manifest({"scripts/gone.py": "0" * 64}), ["scripts/gone.py"])
+
+
 if __name__ == "__main__":
     unittest.main()

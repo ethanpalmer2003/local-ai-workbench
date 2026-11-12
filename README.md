@@ -46,8 +46,8 @@ SD.cpp. Both jobs follow the same evidence rule.
 
 ## Evidence
 
-A long run records the workspace and framework commits, weight identity, effective settings, corpus
-revision and manifest hash. Recognition is scored on a pinned multilingual corpus with word and
+A long run records the workspace and framework commits, the digest of the script that produced it,
+weight identity, effective settings, corpus revision and manifest hash. Recognition is scored on a pinned multilingual corpus with word and
 character error rates, and synthesized speech is checked against the requested text. Methods are in
 [scripts/benchmarks/README.md](scripts/benchmarks/README.md).
 

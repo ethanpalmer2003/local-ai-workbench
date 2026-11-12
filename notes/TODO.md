@@ -7,7 +7,6 @@
 ## Reliability
 
 - [ ] Nothing is waiting here. A defect that outlives its fix goes back on this list with the check that would have caught it.
-- [ ] Optional: mark a row stale when its producer changed; `freshness()` compares builds, weights and corpus only. Fingerprint the producer. ~30 min
 
 ## Needs a model run or device
 

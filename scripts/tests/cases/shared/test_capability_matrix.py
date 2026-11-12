@@ -72,6 +72,20 @@ class FreshnessTests(unittest.TestCase):
         block["corpus"] = {**language_corpus.identity(), "manifest_sha256": "0" * 64}
         self.assertIn("corpus manifest changed", matrix.freshness({"provenance": block}))
 
+    def test_a_changed_producer_makes_the_row_stale_and_names_it(self):
+        block = provenanced()
+        block["producer"] = {"scripts/tools/capability_matrix.py": "0" * 64}
+        self.assertEqual(
+            matrix.freshness({"provenance": block}),
+            "[WARN] stale: producer changed: scripts/tools/capability_matrix.py",
+        )
+
+    def test_a_matching_producer_leaves_the_row_current(self):
+        producer = matrix.project_cfg.BASE_DIR / "scripts/tools/capability_matrix.py"
+        block = provenanced()
+        block["producer"] = matrix.provenance.source_manifest([producer], matrix.project_cfg.BASE_DIR)
+        self.assertEqual(matrix.freshness({"provenance": block}), "[OK]")
+
 
 class HeadlineTests(unittest.TestCase):
     def test_a_language_run_shows_chat_ttft_per_backend(self):
