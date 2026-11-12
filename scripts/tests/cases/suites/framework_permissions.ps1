@@ -26,7 +26,7 @@ for name in ('llamacpp', 'pi', 'littlecoder', 'ohmypi'):
     except OSError as error:
         print(name, 'Python:', error)
 '@
-& C:/AI/scripts/.venv/Scripts/python.exe -c $python
+& C:/AI/.venv/Scripts/python.exe -c $python
 
 $javascript = @'
 const fs = require('fs');

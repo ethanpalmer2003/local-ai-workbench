@@ -21,9 +21,9 @@ Hardware ceiling: RX 7800 XT 16 GB, 31 GiB RAM. Any claim needs a measured pair,
 
 ```powershell
 # issue #3695 protocol: warm decode runs, cold prompt read, cache reuse
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.benchmarks.inference_engines.benchmark_strata_reference --strata-config <a> --strata-config <b>
+C:/AI/.venv/Scripts/python.exe -m scripts.benchmarks.inference_engines.benchmark_strata_reference --strata-config <a> --strata-config <b>
 # agent wall time, matched prompts
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.benchmarks.coding_agents.shared.benchmark_agents --backends strata --tasks proverb --repeats 1 --strata-config <a>
+C:/AI/.venv/Scripts/python.exe -m scripts.benchmarks.coding_agents.shared.benchmark_agents --backends strata --tasks proverb --repeats 1 --strata-config <a>
 ```
 
 Both run the shared preflight and free their own ports.

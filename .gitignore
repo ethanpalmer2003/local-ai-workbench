@@ -2,6 +2,7 @@
 /data/
 /frameworks/
 /trash/
+/.venv/
 /scripts/benchmarks/output/
 # Editor state and scratch drafts stay local.
 /.zed/

@@ -16,7 +16,7 @@
 - Preview changes with `--dry-run` before applying them. Run from `C:/AI`:
 
 ```powershell
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.tools.rewrite_imports --root scripts --dry-run --move old.module=new.module
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.tools.rewrite_imports --root scripts --move old.module=new.module
+C:/AI/.venv/Scripts/python.exe -m scripts.tools.rewrite_imports --root scripts --dry-run --move old.module=new.module
+C:/AI/.venv/Scripts/python.exe -m scripts.tools.rewrite_imports --root scripts --move old.module=new.module
 ```
 

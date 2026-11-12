@@ -16,7 +16,7 @@ defaults and limitations.
 From `C:/AI`, regenerate the minimal patch:
 
 ```powershell
-scripts/.venv/Scripts/python.exe -m scripts.launchers.koboldcpp.kobold_lite --variant pr --export-diff C:/AI/scripts/launchers/koboldcpp/patches/lite-oai-audio-streaming.diff
+.venv/Scripts/python.exe -m scripts.launchers.koboldcpp.kobold_lite --variant pr --export-diff C:/AI/scripts/launchers/koboldcpp/patches/lite-oai-audio-streaming.diff
 ```
 
 Use `--variant local` with

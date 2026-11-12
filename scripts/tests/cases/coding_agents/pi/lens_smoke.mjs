@@ -12,12 +12,12 @@ const workspace = join(output.temp, "workspace");
 const agentDir = join(output.temp, "agent");
 await mkdir(workspace, { recursive: true });
 await mkdir(agentDir, { recursive: true });
-const manifest = JSON.parse(execFileSync(join(root, "scripts/.venv/Scripts/python.exe"),
+const manifest = JSON.parse(execFileSync(join(root, ".venv/Scripts/python.exe"),
   ["-m", "scripts.config.coding_agents.pi.packages"], { cwd: root, encoding: "utf8" }));
 for (const extension of manifest.extensions.filter(item => item.enabled !== false)) {
   for (const [name, value] of Object.entries(extension.environment || {})) {
     process.env[name] = value.replaceAll("{config_dir}", join(root, "scripts/config"))
-      .replaceAll("{state_dir}", join(output.temp, "state")).replaceAll("{venv}", join(root, "scripts/.venv"))
+      .replaceAll("{state_dir}", join(output.temp, "state")).replaceAll("{venv}", join(root, ".venv"))
       .replaceAll("{path_separator}", delimiter).replaceAll("{PATH}", process.env.PATH || "");
   }
 

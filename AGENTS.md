@@ -20,7 +20,7 @@
 - Respect explicit test deferrals. Never infer permission for live tests from a TODO or saved result.
 - Fix a defect in code already being touched, then and there. Record a larger unrelated fix as a TODO entry.
 - Each invocation uses its current tool policy; earlier outside-sandbox approval does not change later defaults.
-- Before native/GPU work, servers or process discovery, state execution context; check the token with `C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.runtime.execution_context` and record it with benchmark evidence.
+- Before native/GPU work, servers or process discovery, state execution context; check the token with `C:/AI/.venv/Scripts/python.exe -m scripts.launchers.runtime.execution_context` and record it with benchmark evidence.
 - Before manual llama-server startup, check `launch_util.llama_server_running()`. Manage only processes a run started and never stop an unrelated session. Port policy: [shared launcher helpers](scripts/launchers/shared/README.md).
 
 ## Structure and safety
@@ -28,7 +28,7 @@
 - [Folder rules](.agents/FOLDERS.md) own typed bindings, naming and the move checklist. Preserve model identity and shared assets through a move.
 - Preserve nonempty data by moving it to `C:/AI/trash`; direct deletion is for empty files/directories only. Verify resolved move/delete paths stay within the intended workspace.
 - Preserve existing work and evidence. `.gitignore` entries cover whole folders.
-- Use uv and `C:/AI/scripts/.venv`; secrets are in `scripts/.env`, Hugging Face data in `data/huggingface/`.
+- Use uv and `C:/AI/.venv`; secrets are in `scripts/.env`, Hugging Face data in `data/huggingface/`.
 - Codex under [.agents/CODEX-HARNESS.md](.agents/CODEX-HARNESS.md): a command refusal is a hard stop; report what must be allowed.
 - Running under DeepSeek Harness: [.agents/DEEPSEEK-HARNESS.md](.agents/DEEPSEEK-HARNESS.md) covers its permissions, sandbox denials and the settled workarounds.
 

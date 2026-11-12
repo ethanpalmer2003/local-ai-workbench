@@ -19,7 +19,7 @@ def install_wheel(asset: shared.Asset, destination: Path, temporary: Path, exe_n
     from importlib.metadata import distributions
 
     staged = shared.staging_directory(temporary, prefix="piper-")
-    python = project_cfg.SCRIPTS_DIR / ".venv/Scripts/python.exe"
+    python = project_cfg.VENV_DIR / "Scripts" / "python.exe"
     subprocess.run(
         [
             uv,

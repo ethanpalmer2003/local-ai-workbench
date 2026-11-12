@@ -5,19 +5,19 @@ repos:
     hooks:
       - id: ruff-check
         name: ruff check
-        entry: scripts/.venv/Scripts/ruff.exe check --fix --config pyproject.toml
+        entry: .venv/Scripts/ruff.exe check --fix --config pyproject.toml
         language: system
         pass_filenames: false
         files: \.pyi?$
       - id: ruff-format
         name: ruff format
-        entry: scripts/.venv/Scripts/ruff.exe format --config pyproject.toml
+        entry: .venv/Scripts/ruff.exe format --config pyproject.toml
         language: system
         pass_filenames: false
         files: \.pyi?$
       - id: codespell
         name: codespell
-        entry: scripts/.venv/Scripts/codespell.exe
+        entry: .venv/Scripts/codespell.exe
         language: system
         pass_filenames: true
         types_or: [python, markdown]
@@ -25,7 +25,7 @@ repos:
         args: ["--ignore-words=.codespell-ignore.txt"]
       - id: ascii-punctuation
         name: ASCII punctuation only
-        entry: scripts/.venv/Scripts/python.exe -m scripts.review.typography
+        entry: .venv/Scripts/python.exe -m scripts.review.typography
         language: system
         pass_filenames: true
         types: [text]

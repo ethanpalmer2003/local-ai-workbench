@@ -103,7 +103,7 @@ def variables(inherited: dict[str, str]) -> dict[str, str]:
     return {
         "config_dir": project_cfg.CONFIG_DIR.as_posix(),
         "state_dir": project_cfg.STATE_DIR.as_posix(),
-        "venv": (project_cfg.SCRIPTS_DIR / ".venv").as_posix(),
+        "venv": project_cfg.VENV_DIR.as_posix(),
         "path_separator": os.pathsep,
         "PATH": inherited.get("PATH", ""),
     }

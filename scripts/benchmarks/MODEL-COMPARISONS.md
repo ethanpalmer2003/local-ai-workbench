@@ -7,7 +7,7 @@
 - Current default profile: `swift15`; `swift15-mtp-notemplate` remains selectable. Historical `swift15-mtp` labels are not current profile IDs.
 
 ```powershell
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles --builds vulkan rocm-lemonade --profiles swift15-8k --prompt-set prose --max-tokens 64 --warmup-tokens 64 --repeats 3
+C:/AI/.venv/Scripts/python.exe -m scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles --builds vulkan rocm-lemonade --profiles swift15-8k --prompt-set prose --max-tokens 64 --warmup-tokens 64 --repeats 3
 ```
 
 - Native workload: live/opt-in. Refuse conflicting sessions, warm up, alternate order and separate startup/model loading from measurements.

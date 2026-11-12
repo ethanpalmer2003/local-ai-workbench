@@ -8,8 +8,8 @@
 C:/AI/bat/benchmarks/benchmark_strata_avalon.bat
 C:/AI/bat/benchmarks/benchmark_strata_avalon.bat --engines strata --samples 5
 C:/AI/bat/benchmarks/benchmark_strata_avalon.bat --conversation --strata-resident-experts
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.benchmarks.inference_engines.benchmark_coding_engines --engine llamacpp --profile swift15
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.benchmarks.inference_engines.benchmark_coding_engines --engine endpoint --endpoint http://127.0.0.1:8080 --model swift-iq2_xs
+C:/AI/.venv/Scripts/python.exe -m scripts.benchmarks.inference_engines.benchmark_coding_engines --engine llamacpp --profile swift15
+C:/AI/.venv/Scripts/python.exe -m scripts.benchmarks.inference_engines.benchmark_coding_engines --engine endpoint --endpoint http://127.0.0.1:8080 --model swift-iq2_xs
 ```
 
 Both arms serve the same Strata Swift IQ2_XS weights with the `strata_profiles` contract (long Python prefix, 128 tokens, temperature 0, seed 42, reasoning off), so decode, prefill and TTFT medians share one native scope. The first sample per arm is discarded (`--warmup-samples`) because it pays the cold expert pages. Arms run sequentially; whatever holds a chosen port is stopped first, so a run never waits on a session. `--draft-n-max` sets Avalon's MTP depth; `--strata-resident-experts` and `--strata-cache-floor-mib` alter the Strata arm only.

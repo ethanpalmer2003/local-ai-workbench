@@ -5,10 +5,10 @@ setlocal enabledelayedexpansion
 :: Install location (script can live anywhere)
 :: ============================================================
 pushd "C:\AI"
-for /f "delims=" %%I in ('scripts\.venv\Scripts\python.exe -c "from scripts.config import project_config as p; print(p.COMFYUI_ROCM_DIR)"') do set "COMFYUI_ROCM_DIR=%%I"
-for /f "delims=" %%I in ('scripts\.venv\Scripts\python.exe -c "from scripts.config import project_config as p; print(p.OUTPUT_DIR)"') do set "COMFYUI_OUTPUT_DIR=%%I"
-for /f "delims=" %%I in ('scripts\.venv\Scripts\python.exe -c "from scripts.config import sync_configs as s; print(s.installed_node())"') do set "COMFYUI_NODE_FILE=%%I"
-scripts\.venv\Scripts\python.exe -m scripts.config.sync_configs --only comfyui --apply
+for /f "delims=" %%I in ('.venv\Scripts\python.exe -c "from scripts.config import project_config as p; print(p.COMFYUI_ROCM_DIR)"') do set "COMFYUI_ROCM_DIR=%%I"
+for /f "delims=" %%I in ('.venv\Scripts\python.exe -c "from scripts.config import project_config as p; print(p.OUTPUT_DIR)"') do set "COMFYUI_OUTPUT_DIR=%%I"
+for /f "delims=" %%I in ('.venv\Scripts\python.exe -c "from scripts.config import sync_configs as s; print(s.installed_node())"') do set "COMFYUI_NODE_FILE=%%I"
+.venv\Scripts\python.exe -m scripts.config.sync_configs --only comfyui --apply
 if errorlevel 1 (
     echo [FAIL] ComfyUI configuration sync failed. Startup stopped.
     popd

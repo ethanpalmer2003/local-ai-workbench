@@ -2,7 +2,7 @@
 
 ## Environment
 
-- Interpreter `C:/AI/scripts/.venv/Scripts/python.exe`; use uv, never pip. If the user uv cache is restricted, set `UV_CACHE_DIR=C:/AI/scripts/state/cache/shared/uv`.
+- Interpreter `C:/AI/.venv/Scripts/python.exe`; use uv, never pip. If the user uv cache is restricted, set `UV_CACHE_DIR=C:/AI/scripts/state/cache/shared/uv`.
 - Dependencies are declared in `pyproject.toml`, locked in `uv.lock`; CPU torch/torchaudio use the PyTorch CPU index; package changes need approval.
 
 ## Commands
