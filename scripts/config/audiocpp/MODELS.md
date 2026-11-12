@@ -25,6 +25,11 @@ endpoint reads the top-level `voice` and ignores `options.voice_id`, while Audio
 either. The launcher therefore sends `voice` to native KoboldCpp and `options.voice_id`
 through the AudioCpp proxy, which strips `voice` for preset-voice models.
 
+## Backends
+
+Vulkan is the shipped backend: three screens put it at RTF 0.34-0.39 against 0.42-0.47 on the ROCm
+release, so the ROCm arm runs only when asked with `--backend rocm-release`.
+
 ## Test page
 
 - Start `bat/browser/launch_test.bat`; the TTS model selector lists the configured families.
