@@ -50,6 +50,13 @@ Windows is the only supported host, so anything that needs another operating sys
 - **ExLlama-family engines.** hipfire and TabbyAPI with ExLlamaV3 need a Linux host with ROCm and EXL2/EXL3 weights rather than GGUF; the Windows sweep behind them was retired to `C:/AI/trash/retired-llm-inference-sweep`, and no model was downloaded for it. Validating them, including an MQ4/EXL3 conversion of the Swift checkpoint, waits on that host.
 - **Nothing else is known to be blocked.** A test or launcher that names a platform limit adds the entry here with its evidence.
 
+### Model availability
+
+- **Speech-to-speech models.** Not tested, and no open-weight candidate is known: the
+  [comparison](https://artificialanalysis.ai/speech-to-speech) covers hosted systems, while a local candidate
+  would have to fit the practice flow. Revisit when one appears; the practice stack speaks from text, so
+  this would change the pipeline rather than a setting.
+
 ### Visibility
 
 - **Repositories.** This repository is public since 2026-11-11; the overlay under `data/input/` stays out of git.
