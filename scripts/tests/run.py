@@ -70,6 +70,7 @@ from scripts.tests.cases.shared.benchmarks.test_provenance import (
     BlockTests,
     CorpusTests,
     FileIdentityTests,
+    ProducerTests,
     WorkspaceTests,
 )
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
@@ -147,6 +148,7 @@ if __name__ == "__main__":
                     FileIdentityTests,
                     CorpusTests,
                     BlockTests,
+                    ProducerTests,
                     FreshnessTests,
                     HeadlineTests,
                     RenderTests,

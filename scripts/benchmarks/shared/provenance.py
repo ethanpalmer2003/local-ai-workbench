@@ -10,12 +10,15 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers.runtime.execution_context import execution_context
+
+SHARED_DIR = Path(__file__).resolve().parent
 
 
 def git_state(path: Path) -> dict[str, Any]:
@@ -85,6 +88,32 @@ def changed_files(previous: dict[str, str], current: dict[str, str]) -> list[str
     return sorted(path for path, digest in current.items() if previous.get(path) != digest)
 
 
+def producer_state() -> dict[str, str]:
+    """Digest of the script that produced a number: the nearest caller outside the shared helpers.
+
+    A run calls in from its own module, so the file a reader would have to change to change the
+    number is found without every producer passing its own path.
+    """
+    frame = sys._getframe(1)
+    while frame is not None:
+        path = Path(str(frame.f_globals.get("__file__") or ""))
+        if path.suffix == ".py" and path.is_file():
+            resolved = path.resolve()
+            if resolved.is_relative_to(project_cfg.BASE_DIR) and SHARED_DIR not in resolved.parents:
+                return source_manifest([resolved], project_cfg.BASE_DIR)
+        frame = frame.f_back
+    return {}
+
+
+def changed_manifest(recorded: dict[str, str]) -> list[str]:
+    """Recorded source files whose content differs now, or that have since been removed."""
+    return sorted(
+        name
+        for name, digest in recorded.items()
+        if not (project_cfg.BASE_DIR / name).is_file() or content_digest(project_cfg.BASE_DIR / name) != digest
+    )
+
+
 def corpus_state(identity: dict[str, Any], root: Path | None) -> dict[str, Any]:
     """Corpus identity plus the downloaded-evidence file the fetcher writes beside the audio."""
     state = dict(identity)
@@ -107,6 +136,7 @@ def block(
         "recorded_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "execution_context": dict(execution_context()),
         "workspace": workspace_state(),
+        "producer": producer_state(),
         "frameworks": frameworks,
         "models": models,
         "config": config,

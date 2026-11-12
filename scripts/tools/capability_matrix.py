@@ -2,8 +2,8 @@
 
 Only work worth scheduling appears: the live suites and benchmarks that start native services and
 take minutes. Each row keeps the numbers the last run recorded, links its evidence, and is marked
-stale when the build, weights or corpus it recorded no longer match what is installed. A check that
-never ran is listed as never run instead of being hidden.
+stale when the build, weights, corpus or producing script it recorded no longer match what is
+installed. A check that never ran is listed as never run instead of being hidden.
 """
 
 from __future__ import annotations
@@ -229,7 +229,7 @@ def deferred(subject: str) -> str | None:
 
 
 def freshness(report: dict[str, Any] | None) -> str:
-    """Whether the recorded build, weights and corpus still describe this workspace."""
+    """Whether the recorded build, weights, corpus and producing scripts still describe this workspace."""
     if not report:
         return "never run"
     status = str(report.get("status") or "")
@@ -244,6 +244,9 @@ def freshness(report: dict[str, Any] | None) -> str:
         for framework in state.get("frameworks") or []
         if isinstance(framework, dict) and (reason := _framework_moved(framework))
     )
+    producer = state.get("producer")
+    if isinstance(producer, dict):
+        reasons.extend(f"producer changed: {name}" for name in provenance.changed_manifest(producer))
     corpus = state.get("corpus")
     if isinstance(corpus, dict):
         current = language_corpus.identity()
