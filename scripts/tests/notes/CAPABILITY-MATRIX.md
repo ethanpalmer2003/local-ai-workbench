@@ -6,33 +6,33 @@ Only long opt-in work appears. `[WARN] stale` keeps the recorded numbers and nam
 
 | Work | Last run | Status | Result | Freshness | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| Live launcher and proxy wiring | 2026-11-09 | completed | 204 s | [OK] | report (../output/shared/live_frameworks/unreviewed/1794266496816455200/artifacts/report.json) |
-| Quick validation sweep | 2026-11-09 | completed | 242 s | [OK] | report (../output/shared/quick_validation/unreviewed/1794267977347966900/artifacts/report.json) |
+| Live launcher and proxy wiring | 2026-11-10 | completed | 13 s | [OK] | report (../output/shared/live_frameworks/unreviewed/1794354726910208000/artifacts/report.json) |
+| Quick validation sweep | 2026-11-10 | failed | 225 s | [WARN] last run failed | report (../output/shared/quick_validation/unreviewed/1794351259014415800/artifacts/report.json) |
 | Gemma runtime screen | 2026-10-28 | - | - | [WARN] unprovenanced | report (../output/shared/gemma_runtime_screen/unreviewed/1793231834278361100/artifacts/report.json) |
 | Resident speech comparison | - | - | - | never run | - |
 | Silero VAD turns | 2026-10-29 | completed | - | [WARN] unprovenanced | report (../output/audiocpp/vad_turns/unreviewed/1793238226107251600/artifacts/report.json) |
 | Single AudioCpp server speech | 2026-10-29 | completed | - | [WARN] unprovenanced | report (../output/audiocpp/single_server_speech/unreviewed/1793236264505744900/artifacts/report.json) |
 | AudioCpp streaming | 2026-11-01 | unreviewed | - | [WARN] last run unreviewed | report (../output/audiocpp/audiocpp_streaming/unreviewed/1793567191146977100/artifacts/report.json) |
-| AudioCpp backend comparison | 2026-11-09 | completed | 16 s | [WARN] unprovenanced | report (../output/audiocpp/audiocpp_backend_compare/inconclusive/1794268202627670200/artifacts/report.json) |
+| AudioCpp backend comparison | 2026-11-11 | completed | 13 s | [OK] | report (../output/audiocpp/audiocpp_backend_compare/inconclusive/1794435968852288400/artifacts/report.json) |
 | Ming page smoke | 2026-10-28 | completed | 5 s | [WARN] unprovenanced | report (../output/audiocpp/ming_page_smoke/unreviewed/1793151979038233700/artifacts/report.json) |
-| Practice gateway smoke | 2026-11-09 | completed | 37 s | [WARN] unprovenanced | report (../output/asr/shared/practice_smoke/unreviewed/1794266662919904800/artifacts/report.json) |
+| Practice gateway smoke | 2026-11-10 | completed | 40 s | [OK] | report (../output/asr/shared/practice_smoke/unreviewed/1794351216709335600/artifacts/report.json) |
 | Resident ASR comparison | 2026-11-08 | - | - | [WARN] unprovenanced | report (../../benchmarks/output/asr/asr_resident_compare/unreviewed/1794104455720894700/artifacts/report.json) |
 | Paced ASR latency | 2026-10-29 | - | - | [WARN] unprovenanced | report (../output/asr/shared/latency/unreviewed/1793234392776741400/artifacts/report.json) |
-| Practice Whisper recognition | 2026-11-09 | completed | 13 s | [WARN] unprovenanced | report (../output/asr/shared/language_practice_whisper/unreviewed/1794268036137104500/artifacts/report.json) |
-| Embedded Whisper comparison | 2026-11-09 | completed | 17 s | [WARN] unprovenanced | report (../../benchmarks/output/asr/whisper_embedded_compare/unreviewed/1794267996603642500/artifacts/report.json) |
-| Gemma audio comparison | 2026-11-09 | completed | 63 s | [WARN] unprovenanced | report (../../benchmarks/output/asr/gemma_audio_compare/unreviewed/1794268051803404800/artifacts/report.json) |
-| Parakeet Vulkan smoke | 2026-11-09 | completed | 17 s | [WARN] unprovenanced | report (../output/asr/parakeetcpp/smoke/unreviewed/1794267977843406300/artifacts/report.json) |
-| Kobold embedded speech comparison | 2026-11-09 | completed | 43 s | [WARN] unprovenanced | report (../output/koboldcpp/kobold_embedded_compare/unreviewed/1794268159202617100/artifacts/report.json) |
+| Practice Whisper recognition | 2026-11-10 | completed | 14 s | [OK] | report (../output/asr/shared/language_practice_whisper/unreviewed/1794351315955030500/artifacts/report.json) |
+| Embedded Whisper comparison | 2026-11-10 | completed | 17 s | [OK] | report (../../benchmarks/output/asr/whisper_embedded_compare/unreviewed/1794351278128277800/artifacts/report.json) |
+| Gemma audio comparison | 2026-11-10 | completed | 64 s | [OK] | report (../../benchmarks/output/asr/gemma_audio_compare/unreviewed/1794351332836985600/artifacts/report.json) |
+| Parakeet Vulkan smoke | 2026-11-10 | completed | 17 s | [OK] | report (../output/asr/parakeetcpp/smoke/unreviewed/1794351259505796000/artifacts/report.json) |
+| Kobold embedded speech comparison | 2026-11-10 | completed | 44 s | [OK] | report (../output/koboldcpp/kobold_embedded_compare/unreviewed/1794351427274116800/artifacts/report.json) |
 | Kobold speech modes | 2026-11-01 | completed | 82 s | [WARN] unprovenanced | report (../output/koboldcpp/kobold_audiocpp_modes/unreviewed/1793567892804776000/artifacts/report.json) |
 | Kobold stacked VRAM | 2026-11-06 | passed | 165 s | [WARN] unprovenanced | report (../../benchmarks/output/koboldcpp/kobold_stack_vram/unreviewed/1793949341566510000/artifacts/report.json) |
-| Speculative decoding benchmark | 2026-11-10 | completed | 63 s | [WARN] unprovenanced | report (../../benchmarks/output/llamacpp/benchmark_specspeed/unreviewed/1794269536659774300/artifacts/report.json) |
-| Context stream benchmark | 2026-11-10 | incomplete | 7 s | [WARN] last run incomplete | report (../../benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794270438001425200/artifacts/report.json) |
+| Speculative decoding benchmark | 2026-11-12 | completed | 72 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_specspeed/unreviewed/1794442124305395400/artifacts/report.json) |
+| Context stream benchmark | 2026-11-12 | completed | 73 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794443399610811700/artifacts/report.json) |
 | Speed benchmark | 2026-10-04 | completed | 518 s | [WARN] unprovenanced | report (../output/llamacpp/benchmark_speedbench/verified/1791093433528713400/artifacts/report.json) |
-| N-gram benchmark | 2026-10-04 | completed | 88 s | [WARN] unprovenanced | report (../output/llamacpp/benchmark_ngram/no-gain/1791087672992167800/artifacts/report.json) |
-| llama.cpp backend benchmark | 2026-10-10 | unreviewed | - | [WARN] last run unreviewed | report (../output/llamacpp/benchmark_backends/unreviewed/1791614205669862400/artifacts/report.json) |
+| N-gram benchmark | 2026-11-12 | completed | 216 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_ngram/unreviewed/1794442198726696500/artifacts/report.json) |
+| llama.cpp backend benchmark | 2026-11-12 | unreviewed | - | [defer] | report (../../benchmarks/output/llamacpp/benchmark_backends/unreviewed/1794442694238268800/artifacts/report.json) |
 | Gemma with Breeze speech | 2026-11-01 | completed | 56 s | [WARN] unprovenanced | report (../output/llamacpp/gemma_breeze/unreviewed/1793568210170472700/artifacts/report.json) |
-| HRX build | - | passed | - | [WARN] unprovenanced | report (../output/probes/hrx_updates/verified/20261015-rebuild/artifacts/report.json) |
+| HRX build | - | passed | - | [defer] | report (../output/probes/hrx_updates/verified/20261015-rebuild/artifacts/report.json) |
 | Drama offload screen | 2026-10-28 | completed | 107 s | [defer] | report (../output/shared/drama3_offload/unreviewed/1793151003911821700/artifacts/report.json) |
-| Language practice versus Lemonade | 2026-11-08 | passed | practice TTFT 0.06 s; lemonade TTFT 0.08 s; kobold TTFT 0.40 s | [OK] | report (../../benchmarks/output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json) |
+| Language practice versus Lemonade | 2026-11-08 | passed | practice TTFT 0.06 s; lemonade TTFT 0.08 s; kobold TTFT 0.40 s | [WARN] stale: corpus manifest changed | report (../../benchmarks/output/shared/framework_compare/unreviewed/1794123067862277200/artifacts/report.json) |
 
-Deferred, no rerun planned: Drama offload screen (the 15.9 GiB local TTS model is heavier than this setup carries).
+Deferred, no rerun planned: llama.cpp backend benchmark (its comparison arm is the paused HRX build, so the row cannot be judged while HRX is parked); HRX build (HRX work is paused by the user; the build and its update probe stay out of the rerun set); Drama offload screen (the 15.9 GiB local TTS model is heavier than this setup carries).
