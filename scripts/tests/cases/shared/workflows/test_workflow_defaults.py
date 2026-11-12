@@ -21,7 +21,8 @@ class WorkflowDefaultsTests(unittest.TestCase):
         self.assertEqual(cfg.KOBOLD_CHAT.tts_model, cfg.AUDIOCPP_SERVICE.model)
         self.assertIn(cfg.KOBOLD_CHAT.tts_model, cfg.BREEZE_MODELS)
         self.assertEqual(cfg.KOBOLDCPP_SERVICE.model, cfg.KOBOLD_CHAT.llm_model)
-        self.assertEqual(cfg.KOBOLDCPP_SERVICE.transcription_engine, cfg.AsrStartupEngine.EMBEDDED)
+        # - the character chat never transcribes, so its stack starts with no engine and no Whisper
+        self.assertIsNone(cfg.KOBOLDCPP_SERVICE.transcription_engine)
         self.assertEqual(cfg.AUDIOCPP_SERVICE.voice, cfg.KOBOLD_CHAT.tts_voice)
         self.assertEqual(cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value, cfg.KOBOLD_CHAT.tts_voice)
 

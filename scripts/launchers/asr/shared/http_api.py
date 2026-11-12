@@ -31,7 +31,7 @@ def transcribe(handler, body: bytes, engine: cfg.AsrStartupEngine) -> None:
 def static_get(
     handler,
     path: str,
-    engine: cfg.AsrStartupEngine,
+    engine: cfg.AsrStartupEngine | None,
     chat_runtime: str,
     on_demand: bool = False,
     llm_model: str | None = None,
@@ -45,28 +45,27 @@ def static_get(
         send_bytes(handler, 200, json.dumps(test_defaults()).encode(), "application/json")
         return True
     if path == "/asr/status":
-        ready = on_demand or (selector.backend(engine).ready() if selector.external(engine) else True)
-        send_bytes(
-            handler,
-            200,
-            json.dumps(
-                {
-                    "engine": engine.value,
-                    "ready": ready,
-                    "chat_runtime": chat_runtime,
-                    "test_url": "/test/",
-                    "on_demand": on_demand,
-                    "llm_model": llm_model or (cfg.GEMMA_AUDIO_ASR.model.name if on_demand else None),
-                    "chat_ui_url": chat_ui_url
-                    or f"http://127.0.0.1:{cfg.GEMMA_AUDIO_ASR.port if engine == cfg.AsrStartupEngine.GEMMA_AUDIO else cfg.LLAMACPP_PRACTICE.internal_port}/",
-                    "automatic_turns": live.supported(engine),
-                    "delivery": delivery_plan,
-                    "workspace_pid": os.getpid() if on_demand else None,
-                    "languages": languages.capabilities(engine),
-                }
-            ).encode(),
-            "application/json",
-        )
+        status: dict[str, object] = {
+            "engine": engine.value if engine is not None else "off",
+            "ready": False,
+            "chat_runtime": chat_runtime,
+            "test_url": "/test/",
+            "on_demand": on_demand,
+            "llm_model": llm_model or (cfg.GEMMA_AUDIO_ASR.model.name if on_demand else None),
+            "chat_ui_url": chat_ui_url
+            or f"http://127.0.0.1:{cfg.GEMMA_AUDIO_ASR.port if engine == cfg.AsrStartupEngine.GEMMA_AUDIO else cfg.LLAMACPP_PRACTICE.internal_port}/",
+            "automatic_turns": False,
+            "delivery": delivery_plan,
+            "workspace_pid": os.getpid() if on_demand else None,
+            "languages": {},
+        }
+        if engine is not None:
+            status.update(
+                ready=on_demand or (selector.backend(engine).ready() if selector.external(engine) else True),
+                automatic_turns=live.supported(engine),
+                languages=languages.capabilities(engine),
+            )
+        send_bytes(handler, 200, json.dumps(status).encode(), "application/json")
         return True
     return False
 

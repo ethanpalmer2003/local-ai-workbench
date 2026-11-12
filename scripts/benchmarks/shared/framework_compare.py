@@ -342,7 +342,7 @@ def _serve_koboldcpp(weights: Path, run: RunPaths) -> Iterator[Served]:
                     "exe": str(cfg.KOBOLDCPP_SERVICE.exe),
                     "weights": str(model_cfg.path(settings.model)),
                     "speech_engine": settings.speech_engine.value,
-                    "transcription_engine": settings.transcription_engine.value,
+                    "transcription_engine": getattr(settings.transcription_engine, "value", "off"),
                     "tts_model": str(cfg.KOKORO_TTS.koboldcpp_model),
                     "whisper_model": str(arguments["whispermodel"]),
                     "comparison_weights": str(weights),

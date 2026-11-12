@@ -634,7 +634,9 @@ class KoboldcppStartupServiceSettings:
     config: Path = project_cfg.component("koboldcpp").config_dir / "kobold_external_stack.kcpps"
     model: str = KOBOLD_CHAT.llm_model
     speech_engine: KoboldcppSpeechStartupEngine = KoboldcppSpeechStartupEngine.CONFIGURED
-    transcription_engine: AsrStartupEngine = KOBOLD_CHAT.asr_engine or AsrStartupEngine.EMBEDDED
+    # - None is no transcription at all: the character chat never transcribes, so the built-in
+    #   Whisper weight stays unloaded until a launcher asks for an engine.
+    transcription_engine: AsrStartupEngine | None = KOBOLD_CHAT.asr_engine
     streaming_ui: bool = True
     streaming_ui_port: int = 5001
     streaming_ui_host: str = "0.0.0.0"
