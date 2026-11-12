@@ -66,7 +66,7 @@ class WorkflowTests(unittest.TestCase):
             for _, command in plan:
                 self.assertIn("--dry-run", command)
                 self.assertEqual(command[command.index("--video-vae") + 1], "diffusion")
-                self.assertEqual(command[command.index("--model") + 1], "2")
+                self.assertEqual(command[command.index("--model") + 1], "1")
                 self.assertEqual(command[command.index("--encoder") + 1], "1")
         stability = setting_cases("stability")
         self.assertEqual(["--no-vram-monitor" in options for _, options in stability], [False, True, True, False])
@@ -123,7 +123,7 @@ class WorkflowTests(unittest.TestCase):
     def test_vae_and_loader_choices_do_not_mutate_saved_workflow(self) -> None:
         saved = json.loads((project_cfg.CONFIG_DIR / "comfyui/workflows/video_ltx2_5_i2v_default.json").read_text())
         original = json.dumps(saved)
-        settings = LTXWorkflowOverrides(dynamic_vram=False, video_vae=VideoVAE.CONV, vae_decode=VAEDecode.UNTILED)
+        settings = LTXWorkflowOverrides(dynamic_vram=False, video_vae=VideoVAE.DIFFUSION, vae_decode=VAEDecode.UNTILED)
         graph = workflow(saved, settings)
         self.assertEqual(graph["2"]["class_type"], "UnetLoaderGGUF")
         self.assertEqual(graph["4"]["inputs"]["vae_name"], settings.video_vae_filename)

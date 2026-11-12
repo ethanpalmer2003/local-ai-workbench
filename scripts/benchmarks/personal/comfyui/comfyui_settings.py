@@ -65,7 +65,7 @@ def commands(group: str, repeat: int, reverse: bool, dry_run: bool) -> list[tupl
         "--preset",
         "user",
         "--model",
-        "2",
+        "1",
         "--encoder",
         "1",
         "--repeat",

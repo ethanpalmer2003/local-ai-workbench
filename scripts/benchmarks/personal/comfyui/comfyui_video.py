@@ -18,12 +18,16 @@ from typing import Any
 from scripts.benchmarks.shared.benchmark import workflow_timing
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run, write_results
+from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.config.comfyui.workflow_overrides import LTXWorkflowOverrides, VAEDecode, VideoVAE, workflow
 from scripts.launchers.runtime import gpu_memory
 
-MODELS = ("LTX-2.5-Distilled-Q3_K_M.gguf", "LTX25-distilled-DiT-Q3_K_M.gguf")
-ENCODERS = ("gemma4-12b-with-proj-ltx-2.5-Q2_K.gguf", "gemma4-12b-with-proj-ltx-2.5-Q4_K_M.gguf")
+MODELS = (model_cfg.path("comfyui/LTX25-distilled-DiT-Q3_K_M").name,)
+ENCODERS = (
+    model_cfg.path("comfyui/gemma4-12b-with-proj-ltx-2.5-Q2_K").name,
+    model_cfg.path("comfyui/gemma4-12b-with-proj-ltx-2.5-Q4_K_M").name,
+)
 PRESETS = ("user",)
 LAUNCH_CASES = ("baseline", "smart-on", "autotune-off", "triton-on", "dynamic-off", "pinned-on")
 
@@ -652,24 +656,22 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--fps", type=int, help="Override FPS for conditioning, audio and saved video")
     parser.add_argument("--resolution", type=int, help="Square-equivalent resolution, e.g. 480 -> 230400 target pixels")
     parser.add_argument("--preset", choices=("all", *PRESETS), default="all")
-    parser.add_argument("--model", choices=("all", "1", "2"), default="all")
+    parser.add_argument("--model", choices=("all", "1"), default="all")
     parser.add_argument("--encoder", choices=("all", "1", "2"), default="all")
     parser.add_argument("--repeat", type=int, help="Clips per fresh process (default: 1; validation: 2)")
     parser.add_argument("--vae-decode", choices=("saved", "tiled", "untiled"), default="saved")
-    parser.add_argument("--video-vae", choices=("saved", "diffusion", "conv"), default="saved")
+    parser.add_argument("--video-vae", choices=("saved", "diffusion"), default="saved")
     parser.add_argument("--spatial-tile", type=int, help="Override spatial tile size")
     parser.add_argument("--spatial-overlap", type=int, help="Override spatial overlap")
     parser.add_argument("--temporal-tile", type=int, help="Override temporal tile size")
     parser.add_argument("--temporal-overlap", type=int, help="Override temporal overlap")
     parser.add_argument(
-        "--validate-findings",
-        action="store_true",
-        help="Three-case 1111/0111/0000 comparison; default model 2, encoder 1",
+        "--validate-findings", action="store_true", help="Three-case 1111/0111/0000 comparison; encoder 1"
     )
     parser.add_argument(
         "--compare-workflows",
         action="store_true",
-        help="Original versus default at fixed 0111; default model 2, encoder 1, two clips each",
+        help="Original versus default at fixed 0111; encoder 1, two clips each",
     )
     parser.add_argument(
         "--tile-sweep",
@@ -701,13 +703,13 @@ WORKLOAD_ARGUMENTS = (
 def _resolve_tile_sweep(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if args.validate_findings or args.compare_workflows:
         parser.error("tile sweep cannot be combined with launcher/workflow comparisons")
-    if args.video_vae == "conv" or args.vae_decode == "untiled":
+    if args.vae_decode == "untiled":
         parser.error("tile sweep uses only the original VAE with tiled decoding")
     if any(getattr(args, name) is not None for name in WORKLOAD_ARGUMENTS):
         parser.error("tile sweep defines its own workloads and tiles; omit workload/tile overrides")
-    if args.model not in {"all", "2"} or args.encoder not in {"all", "1"}:
-        parser.error("tile sweep fixes model 2 and encoder 1")
-    args.model, args.encoder, args.preset = "2", "1", "user"
+    if args.model not in {"all", "1"} or args.encoder not in {"all", "1"}:
+        parser.error("tile sweep fixes model 1 and encoder 1")
+    args.model, args.encoder, args.preset = "1", "1", "user"
     args.video_vae, args.vae_decode = "diffusion", "tiled"
 
 
@@ -720,7 +722,7 @@ def _pin_single_model(args: argparse.Namespace) -> None:
     if not (args.validate_findings or args.compare_workflows):
         return
     if args.model == "all":
-        args.model = "2"
+        args.model = "1"
     if args.encoder == "all":
         args.encoder = "1"
 
