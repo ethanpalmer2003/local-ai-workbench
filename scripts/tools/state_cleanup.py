@@ -32,12 +32,12 @@ def _remove(path: Path) -> None:
         path.unlink(missing_ok=True)
 
 
-def prune(pattern: str, root: Path, cutoff: float, dry_run: bool) -> tuple[int, int]:
+def prune(pattern: str, root: Path, cutoff: float, dry_run: bool, recursive: bool = True) -> tuple[int, int]:
     """Remove entries under `root` matching `pattern` whose mtime is older than `cutoff`."""
     if not root.is_dir():
         return 0, 0
     count = freed = 0
-    for path in root.rglob(pattern):
+    for path in root.rglob(pattern) if recursive else root.glob(pattern):
         try:
             if path.stat().st_mtime >= cutoff:
                 continue
@@ -54,10 +54,11 @@ def prune(pattern: str, root: Path, cutoff: float, dry_run: bool) -> tuple[int, 
     return count, freed
 
 
-def prune_generated(days: int, log_days: int, dry_run: bool) -> list[str]:
+def prune_generated(days: int, log_days: int, cache_days: int, dry_run: bool) -> list[str]:
     now = time.time()
     cutoff = now - days * 86400
     log_cutoff = now - log_days * 86400
+    cache_cutoff = now - cache_days * 86400
     downloads = project_cfg.STATE_DIR / "downloads"
     report: list[str] = []
     for label, pattern, root, when in (
@@ -69,6 +70,12 @@ def prune_generated(days: int, log_days: int, dry_run: bool) -> list[str]:
         count, freed = prune(pattern, root, when, dry_run)
         if count:
             report.append(f"{label}: {count} item(s), {freed / 1e6:.1f} MB")
+    # - the framework fills this model cache on demand, so its hashed folders are the unit and a
+    #   re-download is the cost; the longer window keeps a repeated comparison warm
+    cache_root = cfg.LAUNCH.temp_dir / "audiocpp-gguf"
+    count, freed = prune("*", cache_root, cache_cutoff, dry_run, recursive=False)
+    if count:
+        report.append(f"old AudioCpp support-model caches: {count} item(s), {freed / 1e6:.1f} MB")
     return report
 
 
@@ -76,9 +83,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--days", type=int, default=7, help="Age before temp/download leftovers are pruned.")
     parser.add_argument("--log-days", type=int, default=30, help="Age before run logs are pruned.")
+    parser.add_argument(
+        "--cache-days", type=int, default=30, help="Age before AudioCpp support-model caches are pruned."
+    )
     parser.add_argument("--dry-run", action="store_true", help="Report what would be removed.")
     args = parser.parse_args()
-    report = prune_generated(args.days, args.log_days, args.dry_run)
+    report = prune_generated(args.days, args.log_days, args.cache_days, args.dry_run)
     if not report:
         print("[OK] Nothing to prune")
         return 0
