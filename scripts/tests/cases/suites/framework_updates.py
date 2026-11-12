@@ -489,13 +489,35 @@ class FrameworkUpdates(unittest.TestCase):
             log = next(Path(folder).rglob("*.log")).read_text()
             self.assertIn("Status: SOURCE UP TO DATE", log)
 
-    def test_strata_is_a_manual_check_with_no_scheduled_update(self):
+    def test_strata_reports_current_parts_without_a_manual_notice(self):
         tool = next(tool for tool in cfg.TOOLS if tool.name == "strata")
         summary = updater.UpdateSummary()
-        with patch.object(strata_updates, "process") as native:
+        report = {
+            "engine": {"installed": "0.1.59", "offered": "0.1.59", "status": "current"},
+            "control": {"installed": "0.1.51", "offered": None, "status": "not-in-feed"},
+            "app": {"installed": "0.2.13", "offered": "0.2.13", "status": "current"},
+        }
+        with patch.object(strata_updates, "process", return_value=report) as native:
             self.assertTrue(updater.process_tool(tool, Path("unused"), True, summary))
-        native.assert_not_called()
-        self.assertEqual(summary.manual_check, ["strata"])
+        native.assert_called_once()
+        self.assertEqual(summary.manual_check, [])
+        self.assertEqual(len(summary.current), 1)
+        self.assertTrue(summary.current[0].startswith("strata"))
+        self.assertEqual(summary.apply_keys, set())
+
+    def test_strata_reports_a_manual_notice_only_when_a_part_is_newer(self):
+        tool = next(tool for tool in cfg.TOOLS if tool.name == "strata")
+        summary = updater.UpdateSummary()
+        report = {
+            "engine": {"installed": "0.1.50", "offered": "0.1.59", "status": "available"},
+            "control": {"installed": "0.1.51", "offered": None, "status": "not-in-feed"},
+            "app": {"installed": "0.2.13", "offered": "0.2.13", "status": "current"},
+        }
+        with patch.object(strata_updates, "process", return_value=report):
+            self.assertTrue(updater.process_tool(tool, Path("unused"), True, summary))
+        self.assertEqual(summary.current, [])
+        self.assertEqual(len(summary.manual_check), 1)
+        self.assertIn("0.1.59", summary.manual_check[0])
         self.assertEqual(summary.apply_keys, set())
 
     def test_pi_package_installation_is_deferred_until_after_all_checks(self):

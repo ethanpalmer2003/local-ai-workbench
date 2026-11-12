@@ -59,7 +59,8 @@ def benchmark_tools() -> tuple[ToolSpec, ...]:
 
 
 TOOLS = [
-    ToolSpec("strata", "", ReleaseType.MANUAL),
+    # - Strata reports its own engine, control and app versions; only a newer part is a manual update
+    ToolSpec("strata", "", ReleaseType.STRATA),
     # - Avalon is an unmodified llama.cpp fork cloned and compiled by hand with cmake.
     #   The catalog records the upstream so the install is covered; a newer commit is
     #   fast-forwarded, then reported as still needing a build, never as merged patches.
@@ -277,21 +278,20 @@ def process_bat(
     _launch_updater(exe, dest_dir)
 
 
+STRATA_STATUS_GROUPS = {"current": "current", "not-in-feed": "current", "none-installed": "current"}
+
+
 def process_strata(tool: ToolSpec, dest_dir: Path, check_only: bool, summary: shared.UpdateSummary | None) -> None:
     from scripts.download.frameworks.strata import updates as strata_updates
 
     report = strata_updates.process(dest_dir, check_only)
-    if summary is not None and report is not None:
-        for part in ("engine", "control", "app"):
-            status = report[part]["status"]
-            group = (
-                "available"
-                if status in ("available", "install")
-                else "current"
-                if status == "current"
-                else "manual_check"
-            )
-            summary.record(tool, group, strata_updates.describe(part, report[part]))
+    if summary is None or report is None:
+        return
+    parts = ("engine", "control", "app")
+    # - a part the feed never publishes is current: nothing is offered, so nothing needs a person
+    groups = {STRATA_STATUS_GROUPS.get(report[part]["status"], "manual_check") for part in parts}
+    detail = "; ".join(strata_updates.describe(part, report[part]) for part in parts)
+    summary.record(tool, "manual_check" if "manual_check" in groups else "current", detail)
 
 
 def installed_desktop_version(tool: ToolSpec, dest_dir: Path) -> str | None:
