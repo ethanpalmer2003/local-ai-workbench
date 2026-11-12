@@ -454,6 +454,8 @@ class SpeechWorkflowDefaults:
     tts_model: str
     tts_voice: str
     clone_voice: bool
+    # - Image generation this stack starts with: off, with (loaded alongside) or on-demand (swapped in)
+    image: str = "off"
 
 
 # - A default may be replaced from the overlay, so the profile requirement is checked where a
@@ -478,7 +480,10 @@ PRACTICE_LANGUAGES = ("en", "es", "fr", "ja", "de")
 # - KOBOLD_CHAT: Rocinante chat, Breeze voice-design TTS through the AudioCpp proxy, no external ASR.
 #   Design needs no reference clip, so the default voice comes from the tone instruction.
 # - A voice id from the overlay's defaults.json enables cloning; without one, Breeze uses its own default.
+# - `chat.image` in that file attaches image generation to this stack without editing code.
+IMAGE_MODES = ("off", "with", "on-demand")
 _CHAT_TTS_VOICE: str = local_overlay.setting("chat.tts.voice", local_overlay.default_voice())
+_CHAT_IMAGE: str = local_overlay.setting("chat.image", "off")
 KOBOLD_CHAT = SpeechWorkflowDefaults(
     profile="character",
     framework="koboldcpp",
@@ -487,6 +492,7 @@ KOBOLD_CHAT = SpeechWorkflowDefaults(
     tts_model=local_overlay.setting("chat.tts.model", "audiocpp/breeze-tts-2-q4_0"),
     tts_voice=_CHAT_TTS_VOICE,
     clone_voice=bool(_CHAT_TTS_VOICE),
+    image=_CHAT_IMAGE if _CHAT_IMAGE in IMAGE_MODES else "off",
 )
 # - Language practice: Gemma chat, Supertonic TTS without cloning, and Qwen3-ASR served by AudioCpp.
 #   The practice page needs automatic microphone turns and interim captions, which only a streaming

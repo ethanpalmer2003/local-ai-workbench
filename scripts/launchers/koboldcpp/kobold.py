@@ -225,7 +225,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--speech-engine", choices=[engine.value for engine in cfg.KoboldcppSpeechStartupEngine])
     parser.add_argument("--practice-ui", action="store_true", help="Open the common language-practice interface")
     parser.add_argument("--transcription-engine", choices=[engine.value for engine in cfg.AsrStartupEngine])
-    parser.add_argument("--with-image", action="store_true", help="Include sd.cpp using the shared GPU profile")
+    parser.add_argument(
+        "--with-image",
+        action="store_true",
+        default=cfg.KOBOLD_CHAT.image == "with",
+        help="Include sd.cpp using the shared GPU profile (default from the overlay's chat.image)",
+    )
     parser.add_argument("--usage-profile", choices=("standalone", "shared"), default="shared")
     parser.add_argument(
         "--llm",
@@ -234,7 +239,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="external: KoboldCpp runs without weights and llama.cpp serves the model",
     )
     parser.add_argument(
-        "--image-on-demand", action="store_true", help="Keep Kobold loaded; swap TTS/Nova through native APIs"
+        "--image-on-demand",
+        action="store_true",
+        default=cfg.KOBOLD_CHAT.image == "on-demand",
+        help="Keep Kobold loaded; swap TTS/Nova through native APIs (default from the overlay's chat.image)",
+    )
+    parser.add_argument(
+        "--no-image", action="store_true", help="Start without image generation whatever the overlay says"
     )
     return parser
 
@@ -336,9 +347,16 @@ def supervise(processes: list[tuple[str, subprocess.Popen[Any]]]) -> None:
                 raise RuntimeError("llama.cpp server stopped; close this session and relaunch")
 
 
+def fold_image_flags(args: argparse.Namespace) -> None:
+    """--no-image clears whatever the overlay default or another flag selected."""
+    if args.no_image:
+        args.with_image = args.image_on_demand = False
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
+    fold_image_flags(args)
     external = apply_options(args, parser)
     if args.image_on_demand:
         from scripts.launchers.runtime.image_on_demand import run
