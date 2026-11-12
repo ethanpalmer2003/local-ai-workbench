@@ -7,7 +7,7 @@ C:/AI/bat/update_frameworks.bat --only asr
 ```
 
 - Entry: [update_frameworks.py](update_frameworks.py); [framework_catalog.py](framework_catalog.py) composes catalogs and handlers. Shared download, verification and replacement logic lives in [update_shared.py](update_shared.py); [update_types.py](update_types.py) owns catalog types.
-- Categories: `llamacpp` -> [llamacpp/updates.py](llamacpp/updates.py); `speech` (TTS/AudioCpp) -> [audiocpp/updates.py](audiocpp/updates.py) and [tts/updates.py](tts/updates.py); `other` -> [shared/other_updates.py](shared/other_updates.py). ASR entries live in [asr/updates.py](asr/updates.py). Keep component handlers in their folder; root modules compose catalogs and shared machinery. Component keys resolve install paths through `framework_install_dir()`.
+- Categories: `llamacpp` -> [llamacpp/updates.py](llamacpp/updates.py); `speech` -> [audiocpp/updates.py](audiocpp/updates.py) and [tts/updates.py](tts/updates.py); `other` -> [shared/other_updates.py](shared/other_updates.py). ASR entries live in [asr/updates.py](asr/updates.py). Component keys resolve install paths through `framework_install_dir()`.
 - Check selected active entries first, print categories/status, then apply. `--category` and `--only KEY` combine; `--only` includes children. Disabled entries remain skipped. Omit `--check-only` to install/update.
 - After the catalog passes, a `=== TOOLCHAINS ===` section checks npm, uv and pip themselves against their registries and updates only the ones behind; it is skipped for `--only` and `--category` runs. Logic: [toolchains.py](toolchains.py).
 - Output nests category, then update kind, then status. Kinds, ordered in [update_types.py](update_types.py): git fast-forward, github release, npm package, app installer, vendor script, git snapshot, pip wheel, local build, manual. A component spanning two kinds is expanded, not repeated. A current entry shows its version only, with no status suffix.
@@ -32,6 +32,5 @@ python -m scripts.download.frameworks.llamacpp.hrx.build --merge --install
 - Build: merge/build/validate/install with rollback; omit `--install` for staged candidate. `--validate-only` reuses build output. Runtime checks are live work, not ordinary static verification.
 - Restore checkpoints with `scripts.download.frameworks.llamacpp.hrx.prepare`; [evidence/limits](../../config/llamacpp/HRX.md).
 - AMD ROCm nightly index: https://nightly.repo.amd.com/rocm/core/tarball/ ; no automatic SDK install.
-- Windows access failures -> check token/integrity before retrying outside sandbox; earlier approval does not relax later runs.
 
 ASR-only catalog: [asr/updates.py](asr/updates.py), selected with `--category asr` or `--only asr`. NeMo-Speech.cpp, speech.cpp, CrispASR and FunASR use official stable Windows Vulkan releases under `frameworks/asr/<runtime>/vulkan/`. Shared AudioCpp/Sherpa installations retain one owner instead of duplicate ASR installs. [Installed versions and limits](../../../notes/asr/ASR-DOWNLOADS.md).
