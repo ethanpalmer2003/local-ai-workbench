@@ -32,24 +32,11 @@ Evidence (../../output/asr/asr_resident_compare/unreviewed/1794453879199198100/a
 
 ## Streaming
 
-| Engine | First text | Final after speech end |
-| --- | ---: | ---: |
-| AudioCpp Nemotron 3.5 | 0.99 s | 0.05 s |
-| speech.cpp Qwen 0.6B, VAD | 1.19 s | 0.39 s |
-| speech.cpp Qwen 0.6B | 1.36 s | 0.06 s |
-| AudioCpp Qwen3-ASR, 3 s windows | 3.22 s | 0.10 s |
-| llama.cpp Qwen3-ASR (default) | no partials | 0.18 s |
+Paced numbers and the realtime-endpoint behavior live in [paced ASR latency](ASR-LATENCY.md), the owner
+of every streaming measurement. Two consequences belong here:
 
-Evidence (../../output/asr/shared/latency/unreviewed/1794455126476096900/artifacts/report.json).
-
-- llama.cpp upgrades `ws://host/v1/realtime`, then refuses the first `session.update` with "The current
-  model does not support realtime transcription", so text arrives only after the utterance ends.
-- AudioCpp streams it only when `audio_chunk_duration_sec` sits in the model config; its 30 s default
-  never closes, and the same value as a live-route query parameter is ignored.
-- Window width trades latency against word boundaries: 2 s windows reach 2.21 s but split "practice a
-  natural." / "conversation."; 3 s windows reach a clause boundary at 3.22 s and are kept.
-- Language practice therefore runs `audiocpp-qwen3` while the transcription gateway keeps `qwen3-asr`.
-  Nemotron is faster but misheard English and could not transcribe Japanese; NeMo exits at startup.
+- Language practice runs `audiocpp-qwen3` because it is the only measured streaming option here;
+  Nemotron is faster but misheard English and could not transcribe Japanese, and NeMo exits at startup.
 - Fixed windows rewrite punctuation at each boundary: the gateway smoke reads "help you. Practice a
   natural conversation". One-shot files keep llama.cpp's unbroken sentence.
 
