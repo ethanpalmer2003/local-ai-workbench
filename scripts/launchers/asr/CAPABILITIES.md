@@ -9,6 +9,7 @@ Profile counts, streaming/VAD terminology and pacing status: see
 | Selected profile(s) | Recognition group | VAD support / local state |
 | --- | --- | --- |
 | AudioCpp Vulkan/ROCm | Stateful streaming; multilingual | [Silero turn controller](../audiocpp/ASR-VAD.md) connected/tested with Vulkan; ROCm VAD path untested |
+| AudioCpp Qwen3-ASR | Fixed-window streaming with partial results; 31 languages | Silero practice turns plus 3 s decode windows; first caption 3.2 s into speech, final 0.10 s after it |
 | NeMo-Speech.cpp | Stateful streaming; multilingual | Shared Silero practice controller connected; runtime endpointing set to 10 s so Silero owns the 700 ms turn end |
 | speech.cpp | VAD-delimited live utterances; multilingual | Silero in native live mode; shared automatic practice turns use completed-segment decoding |
 | Whisper Vulkan/FA | Offline; upstream windowed live example | Shared Silero automatic practice turns; native server VAD remains off |

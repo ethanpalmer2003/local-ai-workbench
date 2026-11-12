@@ -8,13 +8,14 @@
 
 | Backend | Code / settings | Scope |
 | --- | --- | --- |
-| AudioCpp Nemotron + Silero | `audiocpp/asr.py`, `AUDIOCPP_VAD` | Default practice ASR; shares the practice TTS server |
+| AudioCpp Nemotron + Silero | `audiocpp/asr.py`, `AUDIOCPP_VAD` | Streaming alternative; shares the practice TTS server |
+| AudioCpp Qwen3-ASR 1.7B | `audiocpp/asr_qwen3.py`, `AUDIOCPP_VAD` | Default practice ASR; streaming partials from 3 s windows; shares the practice TTS server |
 | NeMo Nemotron Vulkan | `NEMO_SPEECHCPP_ASR` | Stateful streaming, shared Silero turns |
 | Parakeet Nemotron CPU | `PARAKEETCPP_STREAM_ASR` | Stateful C API streaming; [setup](NEMOTRON-STREAMING.md) |
 | speech.cpp Qwen 0.6B | `SPEECHCPP_ASR` | Automatic Silero turns, resident Vulkan decoder |
 | Whisper Vulkan + Flash Attention | `whispercpp/server.py`, `WHISPERCPP_ASR` | Automatic Silero turns |
 | Parakeet v3 Vulkan | `PARAKEETCPP_V3_ASR` | Automatic Silero turns, automatic language detection |
-| Qwen3-ASR | `llamacpp/qwen3_asr.py`, `QWEN3_ASR` | llama.cpp ASR service |
+| Qwen3-ASR | `llamacpp/qwen3_asr.py`, `QWEN3_ASR` | llama.cpp ASR service; one-shot files and voice-reference transcripts |
 | Gemma audio | `llamacpp/gemma_audio.py`, `GEMMA_AUDIO_ASR` | Prompted audio chat, shared weights |
 | Kobold Gemma | `koboldcpp/gemma_audio.py` | Uses loaded Kobold chat model |
 | Parakeet CPU/Vulkan | [setup](PARAKEET.md), `PARAKEETCPP_ASR` | 110M file CLI; v3 gateway available |
@@ -33,8 +34,8 @@ C:/AI/bat/browser/launch_language.bat
 C:/AI/bat/browser/launch_test_asr.bat
 ```
 
-- Select alternatives with `--transcription-engine` (streaming: `nemo-nemotron`, `parakeetcpp-nemotron-cpu`; completed-turn: `speechcpp-qwen-0.6b`, `whisper-vulkan`, `parakeetcpp-v3`); Kokoro stays Vulkan; the configured engine comes from `ASR_SERVICE`.
+- Select alternatives with `--transcription-engine` (streaming: `audiocpp-nemotron`, `audiocpp-qwen3`, `nemo-nemotron`, `parakeetcpp-nemotron-cpu`; completed-turn: `speechcpp-qwen-0.6b`, `whisper-vulkan`, `parakeetcpp-v3`); Kokoro stays Vulkan; the practice page defaults to `audiocpp-qwen3`, while `ASR_SERVICE` keeps `qwen3-asr` for one-shot transcription.
 - Kobold Gemma audio profile shares its loaded model; standalone Gemma ASR plus Kobold chat loads two instances. Direct llama.cpp Gemma can share one server for chat/audio.
-- Common `/practice` page: automatic microphone turns with the default backend, WAV upload, transcript editing, Gemma chat and Supertonic playback. NeMo, Parakeet CPU Nemotron, Qwen 0.6B, Whisper and Parakeet v3 support automatic turns. `--practice-ui` selects it for Kobold.
+- Common `/practice` page: automatic microphone turns with the default backend, WAV upload, transcript editing, Gemma chat and Supertonic playback. AudioCpp Nemotron and Qwen3, NeMo, Parakeet CPU Nemotron, Qwen 0.6B, Whisper and Parakeet v3 support automatic turns. `--practice-ui` selects it for Kobold.
 - External API, language options and service limits: [ASR language options, external API and limits](README-LANGUAGES-API-LIMITS.md).
 - [Test organization](../../tests/cases/asr/README.md), [implementation and deferred work](../../../notes/asr/ASR-IMPLEMENTATION.md). No new inference/testing authorized by this guide.

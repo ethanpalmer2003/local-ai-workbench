@@ -32,6 +32,7 @@ from scripts.tests.shared.resources import monitor_process
 # - The installed component that owns each startup engine's files; the launcher catalog stays the path owner
 ENGINE_COMPONENTS = {
     cfg.AsrStartupEngine.AUDIOCPP: "audiocpp",
+    cfg.AsrStartupEngine.QWEN3_AUDIOCPP: "audiocpp",
     cfg.AsrStartupEngine.COHERE: "audiocpp",
     cfg.AsrStartupEngine.NEMO: "asr/nemo-speechcpp",
     cfg.AsrStartupEngine.PARAKEET_STREAM: "asr/parakeetcpp",
@@ -66,7 +67,7 @@ def _gateway_thread(runtime, engine, proxy_port, chat_port, on_server, errors) -
                     proxy_port,
                     f"http://127.0.0.1:{chat_port}",
                     asr.url()
-                    if engine == cfg.AsrStartupEngine.AUDIOCPP
+                    if engine in cfg.AUDIOCPP_ASR_ENGINES
                     else f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}",
                     on_server,
                 )
@@ -240,6 +241,7 @@ def main():
         "--engine",
         choices=(
             "audiocpp-nemotron",
+            "audiocpp-qwen3",
             "nemo-nemotron",
             "parakeetcpp-nemotron-cpu",
             "speechcpp-qwen-0.6b",
@@ -281,7 +283,7 @@ def main():
 
     def start_speech():
         nonlocal process
-        process = asr.start() if engine == cfg.AsrStartupEngine.AUDIOCPP else start_tts()
+        process = selector.backend(engine).start() if engine in cfg.AUDIOCPP_ASR_ENGINES else start_tts()
 
     speech_timer = BenchmarkLifecycle(
         lambda: str(process.pid) if process else "reused-matching-server",
@@ -317,30 +319,27 @@ def main():
             speech_timer.prepare(start_speech, combined=True)
             speech_url = (
                 asr.url()
-                if engine == cfg.AsrStartupEngine.AUDIOCPP
+                if engine in cfg.AUDIOCPP_ASR_ENGINES
                 else f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}"
             )
             speech_timer.warmup(
                 lambda: post(
                     speech_url,
                     "/v1/audio/speech",
-                    {
-                        "model": cfg.LANGUAGE_PRACTICE.tts_model,
-                        "input": "Hello.",
-                        "voice": "af_heart",
-                        "response_format": "wav",
-                        "stream": False,
-                    },
+                    # - The gateway normalizes voice fields per TTS family; the smoke uses the same call
+                    practice_models.speech_body(
+                        {"model": cfg.LANGUAGE_PRACTICE.tts_model, "input": "Hello.", "response_format": "wav"}
+                    ),
                 )
             )
-            if engine != cfg.AsrStartupEngine.AUDIOCPP:
+            if engine not in cfg.AUDIOCPP_ASR_ENGINES:
                 asr_timer.prepare(start_asr, combined=True)
             from scripts.launchers.shared.transport.multipart import audio_upload
 
             upload = audio_upload(
                 Path(default_corpus()[0]["file"]).read_bytes(), {"language": "en", "response_format": "json"}
             )
-            recognizer_timer = speech_timer if engine == cfg.AsrStartupEngine.AUDIOCPP else asr_timer
+            recognizer_timer = speech_timer if engine in cfg.AUDIOCPP_ASR_ENGINES else asr_timer
             recognizer_timer.warmup(lambda: selector.backend(engine).transcribe(*upload))
             target = asr_process or process
             module = (

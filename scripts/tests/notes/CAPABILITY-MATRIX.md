@@ -16,7 +16,7 @@ Does the shipped default still work?
 | Silero VAD turns | probe | 2026-11-12 | completed | - | [OK] | report (../output/audiocpp/vad_turns/unreviewed/1794445645261693400/artifacts/report.json) |
 | Single AudioCpp server speech | probe | 2026-11-12 | completed | - | [OK] | report (../output/audiocpp/single_server_speech/unreviewed/1794445669079681300/artifacts/report.json) |
 | AudioCpp streaming | probe | 2026-11-12 | completed | 182 s | [OK] | report (../output/audiocpp/audiocpp_streaming/unreviewed/1794445688187145700/artifacts/report.json) |
-| Practice gateway smoke | probe | 2026-11-10 | completed | 40 s | [OK] | report (../output/asr/shared/practice_smoke/unreviewed/1794351216709335600/artifacts/report.json) |
+| Practice gateway smoke | probe | 2026-11-12 | completed | 31 s | [OK] | report (../output/asr/shared/practice_smoke/unreviewed/1794456283836457700/artifacts/report.json) |
 | Paced ASR latency | probe | 2026-11-12 | - | - | [OK] | report (../output/asr/shared/latency/unreviewed/1794455126476096900/artifacts/report.json) |
 | Kobold speech modes | smoke | 2026-11-12 | completed | 72 s | [OK] | report (../output/koboldcpp/kobold_audiocpp_modes/unreviewed/1794446797528993200/artifacts/report.json) |
 | Kobold stacked VRAM | probe | 2026-11-12 | passed | 167 s | [OK] | report (../../benchmarks/output/koboldcpp/kobold_stack_vram/unreviewed/1794446249040548000/artifacts/report.json) |
