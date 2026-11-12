@@ -15,10 +15,10 @@ from scripts.config import project_config as project_cfg
 from .types import ModelDownload
 
 CATEGORIES = ("llms", "asr", "tts", "images", "embeddings")
-# - What a TTS model can serve: no special speech need, fast multilingual speech, or voice design
+# - What a TTS model can serve: no special speech need, fast multilingual speech, or voice design.
+#   Voice modes (preset, clone, design) stay with the framework and model metadata that already
+#   declare them; the catalog only states the profile floor.
 SPEECH_CLASSES = ("none", "fast-multilingual", "voice-design")
-# - How a TTS model takes its voice: built-in presets, a reference clip, or a written description
-SPEECH_MODES = ("preset", "clone", "design")
 CATALOG_PATH = project_cfg.CONFIG_DIR / "models" / "catalog.json"
 IDS_PATH = project_cfg.CONFIG_DIR / "models" / "ids.py"
 CATALOG_VERSION = 1
@@ -84,11 +84,6 @@ def _entry(raw: dict[str, Any], labels: set[str], destinations: set[str]) -> Mod
     speech_class = raw.get("speech_class")
     if speech_class is not None and (speech_class not in SPEECH_CLASSES or category != "tts"):
         raise ValueError(f"Invalid speech class for {label}: {speech_class}")
-    speech_modes = raw.get("speech_modes") or []
-    if not isinstance(speech_modes, list) or set(speech_modes) - set(SPEECH_MODES):
-        raise ValueError(f"Invalid speech modes for {label}: {speech_modes}")
-    if speech_modes and category != "tts":
-        raise ValueError(f"Speech modes belong to TTS entries only: {label}")
     labels.add(label)
     destinations.add(destination)
     return ModelDownload(
@@ -105,7 +100,6 @@ def _entry(raw: dict[str, Any], labels: set[str], destinations: set[str]) -> Mod
         filename,
         category,
         str(speech_class) if speech_class else None,
-        tuple(str(item) for item in speech_modes),
     )
 
 
@@ -202,7 +196,6 @@ def entry_dict(model: ModelDownload) -> dict[str, Any]:
         "runtimes": list(model.runtimes),
         "source_page": model.source_page,
         "speech_class": model.speech_class,
-        "speech_modes": list(model.speech_modes),
     }
     return entry
 

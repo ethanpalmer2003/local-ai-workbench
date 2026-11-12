@@ -21,7 +21,6 @@ class ModelDownload:
     filename: str | None = None  # Destination relative to the component's models_dir.
     category: str = ""  # Catalog module key: llms/asr/tts/images.
     speech_class: str | None = None  # Declared TTS capability: none, fast-multilingual or voice-design.
-    speech_modes: tuple[str, ...] = ()  # Declared voice sources: preset, clone, design.
 
     @property
     def path(self) -> Path:
