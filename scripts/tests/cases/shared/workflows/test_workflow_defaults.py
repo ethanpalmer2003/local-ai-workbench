@@ -15,7 +15,8 @@ class WorkflowDefaultsTests(unittest.TestCase):
         # - the overlay may replace the model, voice and instruction; the wiring must not change
         self.assertEqual(cfg.KOBOLD_CHAT.framework, "koboldcpp")
         self.assertIsNone(cfg.KOBOLD_CHAT.asr_engine)
-        self.assertEqual(cfg.KOBOLD_CHAT.clone_voice, bool(cfg.KOBOLD_CHAT.tts_voice))
+        # - the proxy derives its default voice from this stack; a resolved clip reference means cloning
+        self.assertEqual(cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value, cfg.KOBOLD_CHAT.tts_voice)
         self.assertTrue(cfg.KOBOLD_CHAT.llm_model.startswith("koboldcpp/"))
         self.assertEqual(cfg.KOBOLD_CHAT.tts_model, cfg.AUDIOCPP_SERVICE.model)
         self.assertIn(cfg.KOBOLD_CHAT.tts_model, cfg.BREEZE_MODELS)
@@ -26,7 +27,6 @@ class WorkflowDefaultsTests(unittest.TestCase):
 
     def test_language_practice_profile_owns_the_gemma_supertonic_and_asr_defaults(self):
         self.assertEqual(cfg.LANGUAGE_PRACTICE.framework, "llamacpp")
-        self.assertFalse(cfg.LANGUAGE_PRACTICE.clone_voice)
         # - Practice needs microphone turns and captions, so it streams from AudioCpp; the shared
         #   transcription gateway keeps llama.cpp, whose one-shot request is faster on the same model.
         self.assertEqual(cfg.LANGUAGE_PRACTICE.asr_engine, cfg.AsrStartupEngine.QWEN3_AUDIOCPP)
