@@ -148,10 +148,16 @@ def streaming_assets(variant: str) -> tuple[Path, ...]:
 
 
 def external_script(endpoint: str, model: str) -> str:
-    """Point Lite's OpenAI-compatible provider at our own llama.cpp server on first load."""
+    """Point Lite's OpenAI-compatible provider at our llama.cpp server unless a stored choice exists.
+
+    Seeding only an absent key matters: Lite keeps settings in localStorage per origin, so an
+    unconditional write would undo a provider the user picked on every page load.
+    """
     values = {"custom_oai_endpoint": endpoint, "custom_oai_key": "noop", "custom_oai_model": model}
     assignments = "".join(
-        f"localStorage.setItem('kaihordewebui_{key}',{json.dumps(value)});" for key, value in values.items()
+        f"if(localStorage.getItem('kaihordewebui_{key}')===null)"
+        f"localStorage.setItem('kaihordewebui_{key}',{json.dumps(value)});"
+        for key, value in values.items()
     )
     return f"<script>try{{{assignments}}}catch(e){{}}</script>"
 

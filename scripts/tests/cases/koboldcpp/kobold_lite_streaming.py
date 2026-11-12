@@ -125,6 +125,9 @@ class StreamingPatch(unittest.TestCase):
         self.assertIn("kaihordewebui_custom_oai_endpoint", script)
         self.assertIn("http://127.0.0.1:9931/v1", script)
         self.assertIn("kaihordewebui_custom_oai_model", script)
+        # - a stored provider choice must survive: every write is guarded by a null check
+        self.assertEqual(script.count("localStorage.setItem"), 3)
+        self.assertEqual(script.count("===null)"), 3)
 
 
 if __name__ == "__main__":
