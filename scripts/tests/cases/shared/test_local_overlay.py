@@ -1,9 +1,10 @@
 """The input overlay supplies voices, characters and prompts, and stays optional."""
 
-import json
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+
+import yaml
 
 from scripts.config import local_overlay
 from scripts.tests.shared.paths import CasePaths
@@ -13,8 +14,8 @@ class LocalOverlayTests(unittest.TestCase):
     def test_manifest_supplies_voice_ids_and_its_chosen_default(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
-            (root / "voice_sources.json").write_text(
-                json.dumps({"default": "second", "voices": {"second": {}, "first": {}}}), encoding="utf-8"
+            (root / "voice_sources.yaml").write_text(
+                "default: second\nvoices:\n  second: {}\n  first: {}\n", encoding="utf-8"
             )
             with patch.dict(local_overlay.os.environ, {"AI_INPUT_DIR": str(root)}):
                 self.assertEqual(local_overlay.voice_ids(), ("first", "second"))
@@ -76,8 +77,8 @@ class LocalOverlayTests(unittest.TestCase):
                 self.assertEqual(local_overlay.setting("chat.tts.instruction", "none"), "none")
 
     def test_the_tracked_example_manifest_carries_placeholders_only(self):
-        example = Path(local_overlay.__file__).with_name("voice_sources.example.json")
-        payload = json.loads(example.read_text(encoding="utf-8"))
+        example = Path(local_overlay.__file__).with_name("voice_sources.example.yaml")
+        payload = yaml.safe_load(example.read_text(encoding="utf-8"))
         self.assertTrue(payload["voices"])
         for name, entry in payload["voices"].items():
             self.assertTrue(name.startswith("<"), name)
@@ -92,18 +93,13 @@ class LocalOverlayTests(unittest.TestCase):
     def test_superseded_voices_name_their_replacement_and_stay_listed(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
-            (root / "voice_sources.json").write_text(
-                json.dumps(
-                    {
-                        "default": "current",
-                        "voices": {
-                            "current": {},
-                            "old": {"superseded_by": "current"},
-                            "self": {"superseded_by": "self"},
-                            "nonsense": {"superseded_by": ""},
-                        },
-                    }
-                ),
+            (root / "voice_sources.yaml").write_text(
+                "default: current\n"
+                "voices:\n"
+                "  current: {}\n"
+                "  old:\n    superseded_by: current\n"
+                "  self:\n    superseded_by: self\n"
+                "  nonsense:\n    superseded_by: ''\n",
                 encoding="utf-8",
             )
             with patch.dict(local_overlay.os.environ, {"AI_INPUT_DIR": str(root)}):

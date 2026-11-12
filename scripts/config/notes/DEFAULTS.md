@@ -9,7 +9,7 @@ Every default has one owner in the repository; the input overlay overrides only 
 | Image prompt, negative, sampler, size, seed, LoRAs | `SDCPP_PROXY_PROMPT` and `SDCPP_REQUEST_DEFAULTS` in [launcher_config.py](../../launchers/launcher_config.py) | `image.prompt`, `image.loras` |
 | AudioCpp native models and session options | [audiocpp/server.json](../audiocpp/server.json) | none |
 | Strata profile | [strata/](../strata/README.md) | none |
-| Model identity, sources, restore selection | [models/catalog.json](../models/catalog.json) | `models.overlay.json` |
+| Model identity, sources, restore selection | [models/catalog.json](../models/catalog.json) | `models.overlay.yaml` |
 | ComfyUI paths and workflows | [comfyui/](../comfyui/README.md) | `video.prompt`, `video.negative` |
 | Roots, component keys | [project_config.py](../project_config.py) | none |
 

@@ -16,6 +16,8 @@ from itertools import chain
 from pathlib import Path
 from typing import Any, Literal
 
+import yaml
+
 from scripts.config import local_overlay
 from scripts.config.trash import archive_path
 from scripts.launchers import launcher_config as cfg
@@ -159,7 +161,7 @@ def load_character_configs() -> dict[str, CharacterConfig]:
     manifest = local_overlay.voice_sources_path()
     if not manifest.is_file():
         return {}
-    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
     configs: dict[str, CharacterConfig] = {}
     for name, entry in (payload.get("voices") or {}).items():
         configs[name] = CharacterConfig(

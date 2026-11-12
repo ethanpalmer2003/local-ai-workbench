@@ -1,9 +1,8 @@
 """Local overlay: every file this repo reads from outside git, reached through this one module."""
 
-import json
 import os
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import yaml
 
@@ -30,12 +29,18 @@ def prompts_dir() -> Path:
 
 def voice_sources_path() -> Path:
     """Manifest of downloadable voice sources; absent means no voice pipeline entries."""
-    return input_dir() / "voice_sources.json"
+    return input_dir() / "voice_sources.yaml"
 
 
 def model_overlay_path() -> Path:
     """Extra model catalog entries: character LoRAs and other personal weights."""
-    return input_dir() / "models.overlay.json"
+    return input_dir() / "models.overlay.yaml"
+
+
+def _manifest(path: Path) -> dict[str, Any]:
+    """One hand-authored overlay manifest; YAML so the file can carry comments."""
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return payload if isinstance(payload, dict) else {}
 
 
 def voice_ids() -> tuple[str, ...]:
@@ -45,7 +50,7 @@ def voice_ids() -> tuple[str, ...]:
     """
     manifest = voice_sources_path()
     if manifest.is_file():
-        payload = json.loads(manifest.read_text(encoding="utf-8"))
+        payload = _manifest(manifest)
         voices = payload.get("voices") or {}
         if voices:
             superseded = superseded_voices()
@@ -61,7 +66,7 @@ def superseded_voices() -> dict[str, str]:
     manifest = voice_sources_path()
     if not manifest.is_file():
         return {}
-    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload = _manifest(manifest)
     pairs: dict[str, str] = {}
     for name, entry in (payload.get("voices") or {}).items():
         replacement = entry.get("superseded_by") if isinstance(entry, dict) else None
@@ -74,7 +79,7 @@ def default_voice() -> str:
     """The manifest's chosen default, else the first discovered id, else empty."""
     manifest = voice_sources_path()
     if manifest.is_file():
-        payload = json.loads(manifest.read_text(encoding="utf-8"))
+        payload = _manifest(manifest)
         chosen = str(payload.get("default") or "")
         if chosen and (not payload.get("voices") or chosen in payload["voices"]):
             return chosen

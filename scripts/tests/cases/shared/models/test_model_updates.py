@@ -8,6 +8,8 @@ from types import SimpleNamespace
 from typing import Any, cast
 from unittest.mock import patch
 
+import yaml
+
 from scripts.config.models import ModelDownload, catalog
 from scripts.download.models import download_models, transfer, update_models, updates
 
@@ -297,9 +299,9 @@ class DownloadModelsTests(unittest.TestCase):
 class CatalogOverlayTests(unittest.TestCase):
     def _files(self, folder: Path) -> tuple[Path, Path]:
         public = folder / "catalog.json"
-        overlay = folder / "models.overlay.json"
+        overlay = folder / "models.overlay.yaml"
         public.write_text(json.dumps({"version": 1, "models": []}), encoding="utf-8")
-        overlay.write_text(json.dumps({"version": 1, "models": []}), encoding="utf-8")
+        overlay.write_text("version: 1\nmodels: []\n", encoding="utf-8")
         return public, overlay
 
     def _entry(self, label: str) -> dict[str, Any]:
@@ -314,7 +316,6 @@ class CatalogOverlayTests(unittest.TestCase):
             "notes": "",
             "sha256": None,
             "roles": [],
-            "runtimes": [],
             "source_page": None,
         }
 
@@ -336,7 +337,7 @@ class CatalogOverlayTests(unittest.TestCase):
                 self.assertEqual(catalog.remove_entry("koboldcpp/overlay"), overlay)
                 self.assertIsNone(catalog.remove_entry("koboldcpp/overlay"))
             self.assertEqual(
-                [entry["label"] for entry in json.loads(overlay.read_text(encoding="utf-8"))["models"]],
+                [entry["label"] for entry in yaml.safe_load(overlay.read_text(encoding="utf-8"))["models"]],
                 ["koboldcpp/second"],
             )
             self.assertEqual(
