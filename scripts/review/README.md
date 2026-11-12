@@ -28,9 +28,8 @@ Reports go to `scripts/state/generated/shared/code_review/<run>/`. Complexity is
 
 ## Duplicate check
 
-`python -m scripts.review.similarity` is opt-in and needs a model: it starts the cataloged embedding model, embeds every bullet and sentence in the maintained Markdown, and lists section pairs that share at least two units (or one of 25+ words). Findings are pairs to review; the check never edits a document. `--threshold`, `--top` and `--strict` tune it, and `--no-server` reuses a running server. Tables, code fences and procedural lines are excluded. Each report records a content digest per file, so the next run says how many files changed since it. Evidence: [embedding screen](../../notes/reviews/EMBEDDINGS-2026-11-10.md). Batches: [check_similarity.bat](../../bat/review/check_similarity.bat), [check_code_similarity.bat](../../bat/review/check_code_similarity.bat).
-
-`--code` switches to functions: one chunk per function or method (AST, bodies of 3+ lines), tests skipped, threshold 0.95, every pair reported. Code duplicates are weaker evidence, so read them as a list rather than a defect count.
+The optional embedding check and its code mode: [similarity](SIMILARITY.md). Front-end wiring: [frontend
+wiring](FRONTEND-WIRING.md). Both are part of the gate above.
 
 Each check runs alone, for example `python -m scripts.review.layout`. `docs --words` prints every document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers, repeats and unlinked documents. A link fails when it is absolute, uses a backslash, carries a space without angle brackets, points into an untracked path, or misses its target or heading; repeats are advisory. Add `--tests` to run the model-free suite after the gate. Document organization lives in [NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
 
@@ -47,13 +46,5 @@ component:
 | Live preflight | [benchmarks/shared/preflight.py](../benchmarks/shared/preflight.py) | benchmark run |
 
 A framework without a startup validator makes its launcher fail on missing paths instead.
-
-## Front-end wiring (`frontend_wiring.py`)
-
-Static and literal-only; it never executes the pages.
-
-- Asset paths: HTML `<script src>`/`<link href>` and JS `path.join`/`path.resolve` calls. A base variable derived from `__dirname`, and loop variables bound to a literal array, are resolved; computed or templated paths are skipped rather than guessed. Because the page is served at a shallow URL (`/test/`), an HTML reference also resolves once its leading `../` segments are stripped and matched under `scripts/`.
-- DOM ids: ids an inline script reads via `getElementById`/`querySelector('#id')` must be defined in the same HTML; external scripts are not scanned.
-- Settings keys: each row of `SETTINGS_CONTRACTS` pairs a launcher's injected `window.<object>` with its reader scripts and test fixture. Reads the launcher never emits, or (ignoring `||`/`??` fallbacks) the fixture never provides, are reported. Add a row per injected settings object.
 
 Format the whole repository with `scripts/review/format_py.bat`. Lint and format share one scope: repository root, Python files only, with `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and generated `ids.py` excluded. The gate compares formatting too; `--no-format-check` skips it. Tool inventory: [TOOLS.md](TOOLS.md).

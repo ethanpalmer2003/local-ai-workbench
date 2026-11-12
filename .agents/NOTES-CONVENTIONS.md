@@ -6,8 +6,7 @@
 | --- | --- | --- |
 | root | repo root: `README.md`, `AGENTS.md` | large, 700 |
 | hub | each folder's `README.md` | large, 700 |
-| agent rule | `.agents/`, including skills | small, 300 |
-| code rules | `.agents/CODE.md` | medium, 500 |
+| agent rule | `.agents/`, including skills | medium, 500 |
 | running list | index and status pages under `notes/` and `scripts/tests/notes/`; the rules name them | long, 1000 |
 | generated page | output of a tool, such as a matrix | long, 1000 |
 | note | `notes/`, except the running lists | medium, 500 |
