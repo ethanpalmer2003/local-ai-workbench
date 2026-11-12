@@ -15,15 +15,11 @@ a row here and a constant beside its owner, and the
 | Family | Applies to | Decides | Owner |
 | --- | --- | --- | --- |
 | Budget class | capability rows | Runner budget: seconds a row may take | [capability_matrix.py](../scripts/tools/capability_matrix.py) |
-| Capability section | capability rows | Whether a row checks the shipped default or a challenger | same |
-| Deferred | capability rows and parked work | Why a row is not judged and gets no rerun | same, indexed by [DEFERRED](DEFERRED.md) |
-| Deferred kind | parked work | What kind of thing is parked, so a revisit condition makes sense | [DEFERRED](DEFERRED.md) |
+| Deferred | anything parked: a model, a framework, a build, a row, a runtime, a piece of work | Why it cannot start and what would unpark it | [DEFERRED](DEFERRED.md), with the rerun decision in the capability rows |
 | Suite | every test | Whether it may start a process or load weights | [test suite](../scripts/tests/README.md) |
 | Workflow profile | defaults and benchmarks | Which speech, inference and media parts a framework must provide | `PROFILE_REQUIREMENTS` in [launcher_config.py](../scripts/launchers/launcher_config.py) |
-| Tool group | non-user-facing helpers | Which model serves transcription or embeddings | `TOOL_DEFAULTS` in the same file |
-| Media group | image and video | Which checkpoint or workflow carries a generation profile | `MEDIA_DEFAULTS` in the same file |
 | Delivery mode | speech clients | How text arrives: incremental, per segment, or once | [speech_delivery.py](../scripts/config/shared/speech_delivery.py) |
-| Speech class | TTS weights and profiles | The speech floor a profile needs and a model declares | `speech_class` in [catalog.json](../scripts/config/models/catalog.json) |
+| Speech class | TTS weights and profiles | The speech floor a profile needs and a model declares | `SpeechClass` in [catalog.py](../scripts/config/models/catalog.py) |
 | Run outcome | saved run folders | Whether the evidence counts as a decision | [paths.py](../scripts/benchmarks/shared/paths.py) |
 | Test readiness | ASR profiles | What evidence a profile has | [coverage.py](../scripts/tests/cases/asr/shared/coverage.py) |
 | Test runner | ASR profiles | Which harness would test it | same |
@@ -35,6 +31,8 @@ a row here and a constant beside its owner, and the
 
 - **Folder.** The placement question above, with no vocabulary: [folder rules](../.agents/FOLDERS.md) decide
   what may sit where, and a path has one meaning.
+- **Row fields.** A capability row's `section` and its deferral reason are fields of one owner's table;
+  only the deferral concept is a family, because the parked-work page lists the same things.
 - **Check level.** The gate's stages and their levels are a list, but they run in one order and read
   from one owner: [checks](../.agents/CHECKS.md).
 - **Run status** (`completed`, `failed`, `passed`). Each writer sets its own today, so there is no
