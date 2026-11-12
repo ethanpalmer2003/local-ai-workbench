@@ -5,7 +5,7 @@
 
 ## Concise output
 - Short bullets; state each essential detail once. Explain only non-obvious behavior, decisions or required action.
-- Close each reply with compact `#### Decisions` (one list of choices made and one-line answers) and `#### Questions` headings where applicable.
+- Close each reply with compact `#### Decisions` (one list of choices made and one-line answers) and `#### Questions` headings where applicable. Never ask whether there is anything else; ask only when a real choice blocks the work.
 - Use text-safe `[OK]`, `[WARN]`, `[FAIL]`, `->`; bound searches and report truncation.
 
 ## Clarify before acting
