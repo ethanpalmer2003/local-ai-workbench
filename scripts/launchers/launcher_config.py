@@ -430,17 +430,9 @@ def tts_class_for(model: str) -> TtsQualityClass:
 
 
 def model_fits_profile(profile: str, tts_model: str) -> bool:
-    """True when the TTS model meets the profile's speech requirement."""
+    """True when the TTS model meets the profile's speech requirement; the vocabulary test is the caller."""
     required = PROFILE_REQUIREMENTS[profile].tts
     return required is TtsQualityClass.NONE or tts_class_for(tts_model) is required
-
-
-def require_profile_fit(profile: str, tts_model: str) -> None:
-    """Refuse a stack the profile cannot be served by, instead of discovering it at runtime."""
-    if not model_fits_profile(profile, tts_model):
-        required = PROFILE_REQUIREMENTS[profile].tts
-        provided = tts_class_for(tts_model)
-        raise ValueError(f"{tts_model} provides {provided.value} speech; the {profile} profile needs {required.value}")
 
 
 @dataclass(frozen=True)
@@ -457,8 +449,8 @@ class SpeechWorkflowDefaults:
     image: str = "off"
 
 
-# - A default may be replaced from the overlay, so the profile requirement is checked where a framework is
-#   selected for a profile (require_profile_fit), not on every dataclass change.
+# - A default may be replaced from the overlay, so the shipped stacks are checked against their profile's
+#   speech requirement by the label vocabulary test, not on every dataclass change.
 
 
 # - Kokoro TTS packages: the selected package is the single source of the practice TTS default.
