@@ -16,7 +16,10 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
   The index looks right for lists, the query for detail. Either way the key is the catalog label and
   the values reuse one vocabulary, so a stored copy and a live read cannot disagree on names. Judge
   remaining copies one at a time: the AudioCpp session and request options copied from packaged specs,
-  and `model_languages.json` against what a checkpoint's card declares.
+  and `model_languages.json` against what a checkpoint's card declares. The two threads meet only for
+  capability: `roles` and `in_use` are intent, so an index never answers them, while the option copies
+  are capability settled by reading the packaged spec when a model loads, which is one metadata read
+  rather than a cache.
 
 ## Superseded
 
