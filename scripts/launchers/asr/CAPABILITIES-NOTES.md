@@ -2,10 +2,10 @@
 
 Counts, terminology and status that support the [ASR capabilities](CAPABILITIES.md) profile table.
 
-19 tracked profiles; 14 resident adapters. CPU/GPU variants are profiles, not
-different recognition models. This groups the selected models, not every model
-each framework can run. [Coverage ledger](../../tests/cases/asr/shared/coverage.py)
-owns test readiness; [screen results](../../tests/notes/asr/ASR-SCREEN.md) own measurements.
+Each installed engine or model variant is one profile. CPU/GPU variants are profiles, not different
+recognition models. This groups the selected models, not every model each framework can run; the
+[coverage ledger](../../tests/cases/asr/shared/coverage.py) enumerates them and owns test readiness,
+while [screen results](../../tests/notes/asr/ASR-SCREEN.md) own measurements.
 
 Streaming means stateful incremental recognition. Windowed/live utterance decoding
 is different. VAD detects speech/silence; endpointing decides when a turn ends.
