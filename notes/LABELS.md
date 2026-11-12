@@ -5,11 +5,12 @@ instead of restating it; a new family edits this table and its owner together.
 
 | Family | Values | Decides | Owner |
 | --- | --- | --- | --- |
-| Capability category | `smoke`, `probe`, `benchmark` | Runner budget for one row: 90, 300 or 900 s | [capability_matrix.py](../scripts/tools/capability_matrix.py) |
+| Budget class | `smoke`, `probe`, `benchmark` | Runner budget for one row: 90, 300 or 900 s | [capability_matrix.py](../scripts/tools/capability_matrix.py) |
 | Capability section | `defaults`, `alternatives` | Whether a row checks the shipped default or a challenger | same |
 | Deferred | one reason per parked row | Why a row is not judged and gets no rerun | same, indexed by [DEFERRED](DEFERRED.md) |
 | Suite | model-free, `launchers`, `backends` | Whether a test may start a process or load weights | [README](../scripts/tests/README.md) |
-| Workflow profile | `character`, `language`, `coding` | Which speech and inference parts a framework must provide | `PROFILE_REQUIREMENTS` in [launcher_config.py](../scripts/launchers/launcher_config.py) |
+| Workflow profile | `character`, `language`, `coding`, `tool` | Which speech and inference parts a framework must provide | `PROFILE_REQUIREMENTS` in [launcher_config.py](../scripts/launchers/launcher_config.py) |
+| Tool group | `transcription`, `embeddings` | Which model serves a non-user-facing helper | `TOOL_DEFAULTS` in the same file |
 | Delivery mode | `streaming`, `chunked`, `whole` | How text arrives: incremental, per segment, or once | [speech_delivery.py](../scripts/config/shared/speech_delivery.py) |
 | Speech class | `none`, `fast-multilingual`, `voice-design` | What a TTS model provides to a profile | `TtsQualityClass` in launcher_config.py |
 | Run outcome | `verified`, `no-gain`, `inconclusive`, `superseded`, `unreviewed` | Whether a saved run counts as a decision | [paths.py](../scripts/benchmarks/shared/paths.py), [conventions](../scripts/tests/EXECUTION-AND-REPORTING.md) |
@@ -19,9 +20,8 @@ instead of restating it; a new family edits this table and its owner together.
 | Catalog role | `chat`, `coding`, `embedding`, `multilingual`, `projector` | What a weight file is for | [catalog.json](../scripts/config/models/catalog.json) |
 | Document role | root, hub, agent rule, note, review record, component guide | Home and word cap of a page | [NOTES-CONVENTIONS.md](../.agents/NOTES-CONVENTIONS.md) |
 
-- A category is not a suite: capability rows are long opt-in work with recorded evidence, while every
-  test belongs to a suite by what it is allowed to start.
+- A budget class is not a suite: capability rows are long opt-in work with recorded evidence, while
+  every test belongs to a suite by what it is allowed to start.
 - A profile requirement is not a default: requirements say what a framework must offer, the two
-  `SpeechWorkflowDefaults` stacks say which models this workspace ships.
-- Unmodelled so far: the transcription-only stack (`ASR_SERVICE` plus the voice-reference transcriber)
-  is a context with defaults but no profile entry, and it is the only one.
+  `SpeechWorkflowDefaults` stacks say which models this workspace ships, and the tool group carries the
+  helpers nothing user-facing drives.

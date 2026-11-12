@@ -100,6 +100,7 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
 from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
 from scripts.tests.cases.shared.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
 from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
+from scripts.tests.cases.shared.test_label_vocabulary import LabelVocabularyTests
 from scripts.tests.cases.shared.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.test_local_overlay import LocalOverlayTests
 from scripts.tests.cases.shared.test_low_integrity import LowIntegrityTests
@@ -204,6 +205,7 @@ if __name__ == "__main__":
                     TransferTests,
                     DownloadModelsTests,
                     LocalOverlayTests,
+                    LabelVocabularyTests,
                     PolicyTests,
                     LiveStampTests,
                     RocmInventoryTests,

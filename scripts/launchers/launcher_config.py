@@ -375,12 +375,30 @@ class ProfileRequirements:
     llm_role: str
 
 
-# - The three profiles this repository runs. The character profile needs voice-design speech, language needs ASR plus
-#   fast multilingual speech, and coding needs an agent in front of the inference engine.
+# - The four profiles this repository runs. The character profile needs voice-design speech, language needs
+#   ASR plus fast multilingual speech, coding needs an agent in front of the inference engine, and tool
+#   covers the non-user-facing helpers: transcription and embeddings.
 PROFILE_REQUIREMENTS = {
     "character": ProfileRequirements(TtsQualityClass.VOICE_DESIGN, asr=False, agent=False, llm_role="mid"),
     "language": ProfileRequirements(TtsQualityClass.FAST_MULTILINGUAL, asr=True, agent=False, llm_role="lightweight"),
     "coding": ProfileRequirements(TtsQualityClass.NONE, asr=False, agent=True, llm_role="coding"),
+    "tool": ProfileRequirements(TtsQualityClass.NONE, asr=True, agent=False, llm_role="none"),
+}
+
+
+@dataclass(frozen=True)
+class ToolDefault:
+    """One non-user-facing helper: the catalog model its tool profile serves it with."""
+
+    role: str
+    model: str
+    owner: str
+
+
+# - The tool profile's members. Nothing here has a workspace page; each row names the module that runs it.
+TOOL_DEFAULTS = {
+    "transcription": ToolDefault("asr", "asr/llamacpp/qwen3-asr-1.7b-q8_0", "ASR_SERVICE gateway"),
+    "embeddings": ToolDefault("embedding", "embeddings/embeddinggemma-2-Q8_0", "EMBEDDINGS_SERVER"),
 }
 
 # - Speech output each framework can actually provide. Lemonade pins its own kokoro-v1 in the
