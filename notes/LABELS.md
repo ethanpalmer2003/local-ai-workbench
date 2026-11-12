@@ -23,6 +23,9 @@ instead of restating it; a new family edits this table and its owner together.
 
 - A budget class is not a suite: capability rows are long opt-in work with recorded evidence, while
   every test belongs to a suite by what it is allowed to start.
+- A profile requires what its page cannot run without. The character stack may attach image generation
+  (`--with-image` or `--image-on-demand`), but sd.cpp starts disabled, so that leg is optional and the
+  image profile stays separate.
 - A profile requirement is not a default: requirements say what a framework must offer, the two
   `SpeechWorkflowDefaults` stacks say which models this workspace ships, and the tool group carries the
   helpers nothing user-facing drives.
