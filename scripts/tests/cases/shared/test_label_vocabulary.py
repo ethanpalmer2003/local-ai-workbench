@@ -65,6 +65,21 @@ class LabelVocabularyTests(unittest.TestCase):
             with self.subTest(stack=stack.profile):
                 self.assertTrue(cfg.model_fits_profile(stack.profile, stack.tts_model))
 
+    def test_tts_weights_declare_the_speech_class_the_profile_check_reads(self):
+        from scripts.config.models import catalog
+
+        weights = (".gguf", ".onnx", ".pth", ".safetensors")
+        for model in models.models_for("tts"):
+            with self.subTest(model=model.label):
+                if model.filename is not None and model.filename.endswith(weights):
+                    self.assertIn(model.speech_class, catalog.SPEECH_CLASSES)
+                else:
+                    self.assertIsNone(model.speech_class)
+        self.assertEqual(cfg.tts_class_for("audiocpp/breeze-tts-2-q4_0"), cfg.TtsQualityClass.VOICE_DESIGN)
+        self.assertEqual(cfg.tts_class_for("audiocpp/supertonic-3-q8_0"), cfg.TtsQualityClass.FAST_MULTILINGUAL)
+        self.assertEqual(cfg.tts_class_for("tts/piper/lessac-medium/model"), cfg.TtsQualityClass.NONE)
+        self.assertEqual(cfg.tts_class_for("unknown/model"), cfg.TtsQualityClass.NONE)
+
     def test_delivery_and_speech_classes_keep_their_full_vocabulary(self):
         self.assertEqual(speech_delivery.MODES, ("streaming", "chunked", "whole"))
         self.assertLessEqual(set(speech_delivery.ASR_STREAMING), set(speech_delivery.ASR_CHUNKED))

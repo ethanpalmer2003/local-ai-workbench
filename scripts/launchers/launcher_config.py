@@ -421,12 +421,12 @@ FRAMEWORK_TTS_CLASSES = {
 
 
 def tts_class_for(model: str) -> TtsQualityClass:
-    """The speech class a TTS model provides, read from its catalog label."""
-    if "breeze" in model:
-        return TtsQualityClass.VOICE_DESIGN
-    if "kokoro" in model or "supertonic" in model:
-        return TtsQualityClass.FAST_MULTILINGUAL
-    return TtsQualityClass.NONE
+    """The speech class a TTS model declares in its catalog entry; assets and unknown labels claim none."""
+    try:
+        declared = model_cfg.get(model).speech_class
+    except KeyError:
+        declared = None
+    return TtsQualityClass(declared) if declared else TtsQualityClass.NONE
 
 
 def model_fits_profile(profile: str, tts_model: str) -> bool:

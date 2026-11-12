@@ -15,6 +15,8 @@ from scripts.config import project_config as project_cfg
 from .types import ModelDownload
 
 CATEGORIES = ("llms", "asr", "tts", "images", "embeddings")
+# - What a TTS model can serve: no special speech need, fast multilingual speech, or voice design
+SPEECH_CLASSES = ("none", "fast-multilingual", "voice-design")
 CATALOG_PATH = project_cfg.CONFIG_DIR / "models" / "catalog.json"
 IDS_PATH = project_cfg.CONFIG_DIR / "models" / "ids.py"
 CATALOG_VERSION = 1
@@ -77,6 +79,9 @@ def _entry(raw: dict[str, Any], labels: set[str], destinations: set[str]) -> Mod
         raise ValueError(f"Duplicate model label: {label}")
     filename, destination = _destination(group, label, raw, destinations)
     url, in_use, sha256, roles, runtimes = _download_fields(raw, label)
+    speech_class = raw.get("speech_class")
+    if speech_class is not None and (speech_class not in SPEECH_CLASSES or category != "tts"):
+        raise ValueError(f"Invalid speech class for {label}: {speech_class}")
     labels.add(label)
     destinations.add(destination)
     return ModelDownload(
@@ -92,6 +97,7 @@ def _entry(raw: dict[str, Any], labels: set[str], destinations: set[str]) -> Mod
         str(raw["source_page"]) if raw.get("source_page") else None,
         filename,
         category,
+        str(speech_class) if speech_class else None,
     )
 
 
@@ -187,6 +193,7 @@ def entry_dict(model: ModelDownload) -> dict[str, Any]:
         "roles": list(model.roles),
         "runtimes": list(model.runtimes),
         "source_page": model.source_page,
+        "speech_class": model.speech_class,
     }
     return entry
 

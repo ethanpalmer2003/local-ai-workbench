@@ -316,7 +316,8 @@
       "sha256": null,
       "roles": [],
       "runtimes": [],
-      "source_page": null
+      "source_page": null,
+      "speech_class": "fast-multilingual"
     },
     {
       "category": "tts",
@@ -381,7 +382,8 @@
       "sha256": null,
       "roles": [],
       "runtimes": [],
-      "source_page": null
+      "source_page": null,
+      "speech_class": "none"
     },
     {
       "category": "tts",
@@ -420,7 +422,8 @@
       "sha256": null,
       "roles": [],
       "runtimes": [],
-      "source_page": null
+      "source_page": null,
+      "speech_class": "none"
     },
     {
       "category": "tts",
@@ -472,7 +475,8 @@
       "sha256": null,
       "roles": [],
       "runtimes": [],
-      "source_page": null
+      "source_page": null,
+      "speech_class": "fast-multilingual"
     },
     {
       "category": "tts",
@@ -485,7 +489,8 @@
       "sha256": null,
       "roles": [],
       "runtimes": [],
-      "source_page": null
+      "source_page": null,
+      "speech_class": "fast-multilingual"
     },
     {
       "category": "tts",
@@ -498,7 +503,8 @@
       "sha256": null,
       "roles": [],
       "runtimes": [],
-      "source_page": null
+      "source_page": null,
+      "speech_class": "fast-multilingual"
     },
     {
       "category": "tts",
@@ -511,7 +517,8 @@
       "sha256": "9edd05cf92feab49c6b29721d14c86566459dca7f4a6eeb99306372cdce03697",
       "roles": [],
       "runtimes": [],
-      "source_page": "https://huggingface.co/Supertone/supertonic"
+      "source_page": "https://huggingface.co/Supertone/supertonic",
+      "speech_class": "fast-multilingual"
     },
     {
       "category": "tts",
@@ -524,7 +531,8 @@
       "sha256": null,
       "roles": [],
       "runtimes": [],
-      "source_page": null
+      "source_page": null,
+      "speech_class": "fast-multilingual"
     },
     {
       "category": "tts",
@@ -576,7 +584,8 @@
       "sha256": null,
       "roles": [],
       "runtimes": [],
-      "source_page": null
+      "source_page": null,
+      "speech_class": "fast-multilingual"
     },
     {
       "category": "tts",
@@ -589,7 +598,8 @@
       "sha256": null,
       "roles": [],
       "runtimes": [],
-      "source_page": null
+      "source_page": null,
+      "speech_class": "fast-multilingual"
     },
     {
       "category": "tts",
@@ -602,7 +612,8 @@
       "sha256": null,
       "roles": [],
       "runtimes": [],
-      "source_page": null
+      "source_page": null,
+      "speech_class": "voice-design"
     },
     {
       "category": "images",
