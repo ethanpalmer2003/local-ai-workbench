@@ -55,7 +55,8 @@ class RunPaths:
             if seconds is not None
             else "unknown (not recorded)"
         )
-        (self.artifacts / "report.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+        # - default=str: a report may carry a Path from a caller's settings; the text is the record
+        (self.artifacts / "report.json").write_text(json.dumps(payload, indent=2, default=str) + "\n", encoding="utf-8")
         (self.artifacts / "report.md").write_text(
             f"# {payload['name']}\n\nCategory: {payload['category']}\n\nOutcome: {payload.get('outcome', 'unreviewed')}\n\n"
             f"Status: {payload['status']}\n\n"
