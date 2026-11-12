@@ -520,6 +520,19 @@ class FrameworkUpdates(unittest.TestCase):
         self.assertIn("0.1.59", summary.manual_check[0])
         self.assertEqual(summary.apply_keys, set())
 
+    def test_a_newer_strata_part_is_applied_only_with_the_opt_in(self):
+        tool = next(tool for tool in cfg.TOOLS if tool.name == "strata")
+        summary = updater.UpdateSummary(optional_apply={"strata"})
+        report = {
+            "engine": {"installed": "0.1.50", "offered": "0.1.59", "status": "available"},
+            "control": {"installed": "0.1.51", "offered": None, "status": "not-in-feed"},
+            "app": {"installed": "0.2.13", "offered": "0.2.13", "status": "current"},
+        }
+        with patch.object(strata_updates, "process", return_value=report):
+            self.assertTrue(updater.process_tool(tool, Path("unused"), True, summary))
+        self.assertEqual(summary.manual_check, [])
+        self.assertIn("strata", summary.apply_keys)
+
     def test_pi_package_installation_is_deferred_until_after_all_checks(self):
         from scripts.download.frameworks.coding_agents.pi import packages as pi_packages
 

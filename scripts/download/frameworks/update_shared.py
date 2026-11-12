@@ -66,6 +66,8 @@ class UpdateSummary:
     failures: list[str] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
     apply_keys: set[str] = field(default_factory=set)
+    # - tools that only update when their own opt-in flag asked for it, such as Strata
+    optional_apply: set[str] = field(default_factory=set)
     patch_sources: list[tuple[cfg.ToolSpec, Path, str]] = field(default_factory=list)
     categories: dict[str, str] = field(default_factory=dict)
     kinds: dict[str, str] = field(default_factory=dict)
