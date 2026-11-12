@@ -4,12 +4,14 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 
 ## Unresolved
 
-- **Which catalog fields mirror a framework.** [The rule](../.agents/CODE.md) forbids copying a fact a
-  framework already exposes. It removed `speech_modes` (AudioCpp's spec answers preset versus clone)
-  and `runtimes` (a GGUF loads in both; the one exception follows from the role). `speech_class` stays
-  because no framework states a profile floor. Unaudited: `roles`, `in_use`, and AudioCpp options
-  copied from packaged specs. Ask whether the framework can answer a field in place and whether the
-  copy can disagree; settle one per review.
+- **Where we store what a framework already reports.** The rule is to use the framework's answer
+  rather than keep a copy ([code](../.agents/CODE.md)). Applied: `speech_modes` went, because AudioCpp's
+  spec answers preset versus clone, and `runtimes` went, because a GGUF loads in both. Kept:
+  `speech_class`, since no framework states a profile floor. Candidates still holding a copy:
+  `roles` and `in_use` in the catalog; the AudioCpp session and request options copied from packaged
+  specs; the model name, family and language fields in files that mirror AudioCpp model specs; and
+  `model_languages.json` against what a checkpoint's card declares. Judge one at a time: can the
+  framework answer it at the point of use, and can our copy disagree?
 
 ## Superseded
 

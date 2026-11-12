@@ -10,7 +10,7 @@
 - Signatures and calls stay single-line up to 120 characters; pass-through arguments go last.
 - ASCII punctuation only: `scripts/review/typography.py` rejects dashes, curly quotes, ellipsis and no-break spaces.
 - Pick defaults from measured evidence and keep the caveats and context with them.
-- Do not copy a fact a framework or model already exposes; read it where used.
+- Use what the framework or model already reports instead of storing a copy of it.
 
 ## Imports and paths
 
