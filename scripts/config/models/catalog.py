@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -17,10 +18,18 @@ from scripts.config import project_config as project_cfg
 from .types import ModelDownload
 
 CATEGORIES = ("llms", "asr", "tts", "images", "embeddings")
-# - What a TTS model can serve: no special speech need, fast multilingual speech, or voice design.
-#   Voice modes (preset, clone, design) stay with the framework and model metadata that already
-#   declare them; the catalog only states the profile floor.
-SPEECH_CLASSES = ("none", "fast-multilingual", "voice-design")
+
+
+class SpeechClass(str, Enum):
+    """What a TTS model can serve: no special speech need, fast multilingual speech, or voice design."""
+
+    NONE = "none"
+    FAST_MULTILINGUAL = "fast-multilingual"
+    VOICE_DESIGN = "voice-design"
+
+
+# - The declared values a catalog entry may carry; the profile check compares against the same enum.
+SPEECH_CLASSES = tuple(item.value for item in SpeechClass)
 CATALOG_PATH = project_cfg.CONFIG_DIR / "models" / "catalog.json"
 IDS_PATH = project_cfg.CONFIG_DIR / "models" / "ids.py"
 CATALOG_VERSION = 1

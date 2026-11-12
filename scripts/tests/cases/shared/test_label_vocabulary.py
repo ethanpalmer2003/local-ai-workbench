@@ -5,6 +5,7 @@ import unittest
 from scripts.benchmarks.shared.paths import Outcome
 from scripts.config import models
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
+from scripts.config.models import catalog
 from scripts.config.shared import speech_delivery
 from scripts.launchers import launcher_config as cfg
 from scripts.tests.cases.asr.shared.coverage import coverage
@@ -67,8 +68,6 @@ class LabelVocabularyTests(unittest.TestCase):
                 self.assertTrue(cfg.model_fits_profile(stack.profile, stack.tts_model))
 
     def test_tts_weights_declare_the_speech_class_the_profile_check_reads(self):
-        from scripts.config.models import catalog
-
         weights = (".gguf", ".onnx", ".pth", ".safetensors")
         for model in models.models_for("tts"):
             with self.subTest(model=model.label):
@@ -76,10 +75,10 @@ class LabelVocabularyTests(unittest.TestCase):
                     self.assertIn(model.speech_class, catalog.SPEECH_CLASSES)
                 else:
                     self.assertIsNone(model.speech_class)
-        self.assertEqual(cfg.tts_class_for("audiocpp/breeze-tts-2-q4_0"), cfg.TtsQualityClass.VOICE_DESIGN)
-        self.assertEqual(cfg.tts_class_for("audiocpp/supertonic-3-q8_0"), cfg.TtsQualityClass.FAST_MULTILINGUAL)
-        self.assertEqual(cfg.tts_class_for("tts/piper/lessac-medium/model"), cfg.TtsQualityClass.NONE)
-        self.assertEqual(cfg.tts_class_for("unknown/model"), cfg.TtsQualityClass.NONE)
+        self.assertEqual(cfg.tts_class_for("audiocpp/breeze-tts-2-q4_0"), catalog.SpeechClass.VOICE_DESIGN)
+        self.assertEqual(cfg.tts_class_for("audiocpp/supertonic-3-q8_0"), catalog.SpeechClass.FAST_MULTILINGUAL)
+        self.assertEqual(cfg.tts_class_for("tts/piper/lessac-medium/model"), catalog.SpeechClass.NONE)
+        self.assertEqual(cfg.tts_class_for("unknown/model"), catalog.SpeechClass.NONE)
 
     @requires_model_check
     def test_voice_modes_stay_with_the_model_metadata(self):
@@ -114,7 +113,7 @@ class LabelVocabularyTests(unittest.TestCase):
     def test_delivery_and_speech_classes_keep_their_full_vocabulary(self):
         self.assertEqual(speech_delivery.MODES, ("streaming", "chunked", "whole"))
         self.assertLessEqual(set(speech_delivery.ASR_STREAMING), set(speech_delivery.ASR_CHUNKED))
-        self.assertEqual({item.value for item in cfg.TtsQualityClass}, {"none", "fast-multilingual", "voice-design"})
+        self.assertEqual({item.value for item in catalog.SpeechClass}, {"none", "fast-multilingual", "voice-design"})
 
     def test_run_outcomes_match_the_documented_set(self):
         self.assertEqual(
