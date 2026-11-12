@@ -48,10 +48,10 @@ class RoleTests(unittest.TestCase):
             "AGENTS.md": "root",
             ".agents/skills/docs-writing/SKILL.md": "agent rule",
             ".agents/CHECKS.md": "agent rule",
-            "notes/TODO.md": "note",
+            "notes/TODO.md": "running list",
             "notes/reviews/STRUCTURE-REVIEW.md": "review record",
-            "notes/ONBOARDING.md": "note",
-            "scripts/tests/notes/STATUS.md": "component guide",
+            "notes/ONBOARDING.md": "running list",
+            "scripts/tests/notes/STATUS.md": "running list",
             "scripts/config/comfyui/TUNING.md": "component guide",
             "scripts/config/comfyui/README.md": "hub",
             "scripts/config/llamacpp/HRX.md": "component guide",
@@ -75,11 +75,12 @@ class RoleTests(unittest.TestCase):
         self.assertEqual(len(issues), 1, issues)
         self.assertIn("no document role", issues[0])
 
-    def test_three_caps_are_assigned_by_role(self):
+    def test_four_caps_are_assigned_by_role(self):
         cases = {
             "AGENTS.md": 700,
             "scripts/config/comfyui/README.md": 700,
-            "notes/TODO.md": 500,
+            "notes/TODO.md": 1000,
+            "notes/OPEN-QUESTIONS.md": 1000,
             "notes/reviews/STRUCTURE-REVIEW.md": 500,
             "scripts/config/comfyui/TUNING.md": 500,
             ".agents/CHECKS.md": 300,

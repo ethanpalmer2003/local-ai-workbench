@@ -65,7 +65,6 @@ def _entry(old: ModelDownload, filename: str, repo: str) -> dict[str, Any]:
         "notes": old.notes,
         "sha256": None,
         "roles": list(old.roles),
-        "runtimes": list(old.runtimes),
         "source_page": old.source_page,
     }
 

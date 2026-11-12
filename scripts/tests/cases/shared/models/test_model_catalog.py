@@ -19,7 +19,7 @@ class ModelCatalogTests(unittest.TestCase):
         from scripts.config import models
         from scripts.launchers.llamacpp import chat_models
 
-        expected = {row.label for row in models.MODELS if "chat" in row.roles and "llamacpp" in row.runtimes}
+        expected = {row.label for row in models.MODELS if "chat" in row.roles}
         self.assertEqual({row["id"] for row in chat_models.catalog()}, expected)
         self.assertTrue(any(key.startswith("koboldcpp/") for key in expected))
         self.assertFalse(any("mmproj" in key.lower() for key in expected))
@@ -38,7 +38,6 @@ class ModelCatalogTests(unittest.TestCase):
         gemma = next(row for row in models.MODELS if row.label == "llamacpp/gemma-4-E4B-it-Q4_0")
         metadata = rows[str(gemma.path.resolve())]["registry"][0]
         self.assertEqual(metadata["roles"], list(gemma.roles))
-        self.assertEqual(metadata["runtimes"], list(gemma.runtimes))
 
     def test_https_assets_verify_before_publication_and_preserve_bad_download(self):
         from scripts.download.models.http_transfer import download_verified
