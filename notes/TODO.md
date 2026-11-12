@@ -7,8 +7,8 @@
 ## Reliability
 
 - [ ] Nothing is waiting here. A defect that outlives its fix goes back on this list with the check that would have caught it.
-- [ ] Optional: mark a capability row stale when its own producer changed. Runs already record `provenance.workspace`, but `freshness()` compares only builds, weights and the corpus, so editing a benchmark leaves its old numbers fresh. Fingerprint the producer module rather than the whole workspace, which would invalidate all 28 rows on every commit. ~30 min
-- [ ] Give probe capabilities a strict wall-clock deadline. A hung engine currently holds a probe for its full request timeout (240-600 s) before the row fails; probes are expected to be quick, and a 60-90 s ceiling would surface the failure while it is still worth diagnosing. ~20 min
+- [ ] Optional: mark a row stale when its producer changed; `freshness()` compares builds, weights and corpus only. Fingerprint the producer. ~30 min
+- [ ] Give probe capabilities a strict wall-clock deadline; a hung engine holds one for its full request timeout. ~20 min
 
 ## Needs a model run or device
 
@@ -25,6 +25,6 @@
 - [ ] Retest llama.cpp coding on the ROCm build when a release newer than b1373 appears; b1373 aborts at startup with device -1, and b1372 is installed again. ~20 min
 - [ ] Retest Kobold readiness and the remaining live targets after the integrity-label fix; its launcher still timed out at 180 s. ~30 min
 - [ ] Run the Strata arm of the coding-engine benchmark from a normal terminal: under this harness the engine exits with "cannot create the refill stream" after the expert load, and the vision encoder fails with `WinError 5`. The llama.cpp arm is recorded. ~30-45 min
-- [ ] llama.cpp: medium/high-context speculation. Filled context at 32k is measured: cold prefill 505 tok/s with a 63.3 s TTFT, 48.5 tok/s decode warm and 39.0 tok/s cached at 12.8 GiB. Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). ~1-1.5 h
-- [ ] Rerun the capability rows so their recorded evidence is judged: 23 are flagged, and each run turns its row green or names what changed. `python -m scripts.tools.capability_matrix --check` lists them. ~1-2 h
+- [ ] llama.cpp: medium/high-context speculation. Filled context at 32k is measured: cold prefill 505 tok/s with a 63.3 s TTFT, 48.5 tok/s decode warm at 12.8 GiB. Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). ~1-1.5 h
+- [ ] Rerun the capability rows so their recorded evidence is judged: 11 are flagged, and each run turns its row green or names what changed. `python -m scripts.tools.capability_matrix --check` lists them. ~1-2 h
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md). ~1.5-2 h
