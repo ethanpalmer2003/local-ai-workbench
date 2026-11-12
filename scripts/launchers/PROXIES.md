@@ -11,4 +11,5 @@
 | [llama.cpp](llamacpp/llamacpp_proxy.py) | 9931 | 9932 | Lazy model: answers `/health` and `/v1/models` from configuration, loads on the first real request, unloads after idle so the VRAM comes back |
 
 - llama.cpp needs a proxy only for that lazy load/unload lifecycle and for answering discovery before a model exists. Its native API already streams, so there is no preprocessing reason to stand one in front; run the server directly when the model should stay resident.
+- A client points at the public port, never the backend. KoboldCpp's Text to Speech panel, with OpenAI-compatible API server chosen, takes `http://127.0.0.1:8888/v1/audio/speech`, plain HTTP like every local port. That address serves a standalone AudioCpp server and the proxy alike, and through the proxy an unknown `model` or `voice` is replaced with the configured pair instead of failing.
 - Backends keep their own settings; the pair of ports lives on the owning `*_SERVICE` entry in [launcher_config.py](launcher_config.py).
