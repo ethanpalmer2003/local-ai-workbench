@@ -10,10 +10,6 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
   because no framework states a profile floor. Unaudited: `roles`, `in_use`, and AudioCpp options
   copied from packaged specs. Ask whether the framework can answer a field in place and whether the
   copy can disagree; settle one per review.
-- **Catalog format.** [catalog.json](../scripts/config/models/catalog.json) is JSON although a person
-  edits it through `model_admin`: ordered writes keep diffs stable, and every entry is validated on
-  save. YAML would allow a comment beside each entry at the cost of rewriting the writer and the
-  ordered-diff property. Convert only if entry comments are wanted more than stable diffs.
 
 ## Superseded
 
@@ -37,6 +33,7 @@ be dropped", not "undecided".
 - **Embedding index over code and docs.** Declined for now: `grep` plus the owner rules answer what arises, and an index needs its own refresh path. Revisit if the document set outgrows a diff.
 - **Capability matrix evidence.** Producers record what each run used, so a row is judged rather than guessed; flagged rows are refreshed through the [TODO](TODO.md) reruns.
 - **Documentation similarity.** EmbeddingGemma-2 at 0.90 with the two-unit rule, opt-in and report-only. The current tree reports 40 pairs, all pointers, dated evidence or method statements. [Record](reviews/EMBEDDINGS-2026-11-10.md).
+- **Catalog format.** [catalog.json](../scripts/config/models/catalog.json) stays JSON: it is edited through `model_admin`, ordered writes keep diffs stable, and validation runs on save. YAML would add only a comment beside each entry, which is not worth rewriting the writer. Revisit when entry comments matter more than stable diffs.
 
 ## Deferred
 
