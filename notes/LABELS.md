@@ -1,12 +1,15 @@
 # Labels
 
-Three things classify work here, and they answer different questions. A **folder** decides where a file
-may live. A document **role** decides a page's home and word cap. A **label** decides behavior: which
-budget a capability row gets, which harness may test a profile, whether a saved run counts as a
-decision. Only the last needs a vocabulary, and only because several files must agree on it.
+Organization answers two questions. **Where may this live?** is structure: a component key picks the folder
+and a [document role](../.agents/NOTES-CONVENTIONS.md) picks a page's home and word cap. **What does this
+mean to the code?** is a label: a closed set of values that a second file reads, so the two must agree.
 
-Each owner below holds the values; this page names the families and links them, so a value is edited in
-one place. A new family adds a row here and a constant beside its owner, and the
+A label is not defined by crossing folders. `Run outcome` stays inside one benchmark helper that every
+writer calls, and `catalog role` never leaves the catalog. What makes either a label is that a second
+reader would otherwise restate the values.
+
+Only a label needs a vocabulary, and only its values, because the owner below holds them. A new family adds
+a row here and a constant beside its owner, and the
 [vocabulary test](../scripts/tests/cases/shared/test_label_vocabulary.py) keeps both honest.
 
 | Family | Applies to | Decides | Owner |
@@ -30,7 +33,8 @@ one place. A new family adds a row here and a constant beside its owner, and the
 
 ## Not a label family
 
-- **Folder.** Structure, not vocabulary: [folder rules](../.agents/FOLDERS.md) decide what may sit where.
+- **Folder.** The placement question above, with no vocabulary: [folder rules](../.agents/FOLDERS.md) decide
+  what may sit where, and a path has one meaning.
 - **Check level.** The gate's stages and their levels are a list, but they run in one order and read
   from one owner: [checks](../.agents/CHECKS.md).
 - **Run status** (`completed`, `failed`, `passed`). Each writer sets its own today, so there is no
@@ -41,7 +45,7 @@ one place. A new family adds a row here and a constant beside its owner, and the
 - A budget class is not a suite: capability rows are opt-in work with recorded evidence, while every
   test belongs to a suite by what it is allowed to start.
 - A page carries a role, not a label list: the role follows from its folder and basename, so a second
-  per-file label set would repeat it.
+  per-file label set would repeat it. The role table is shared because the gate must reject a home.
 - A profile requirement is not a default: requirements say what a framework must offer, the shipped
   stacks say which models this workspace runs.
 - Values stay in code. A second machine-readable copy would drift from the constant that enforces it,

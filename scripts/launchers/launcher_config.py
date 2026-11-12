@@ -10,6 +10,7 @@ from scripts.config import paths as config_paths
 from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audio_cfg
 from scripts.config.coding_agents.pi import packages as pi_packages
+from scripts.config.models.catalog import SpeechClass
 
 # - deliberate re-export: consumers read it as cfg.LLAMACPP_PROFILES
 from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_PROFILES as LLAMACPP_PROFILES
@@ -357,34 +358,26 @@ class AsrStartupEngine(str, Enum):
 AUDIOCPP_ASR_ENGINES = (AsrStartupEngine.AUDIOCPP, AsrStartupEngine.QWEN3_AUDIOCPP)
 
 
-class TtsQualityClass(str, Enum):
-    """What a profile needs from speech output; a framework that cannot meet it is not an option."""
-
-    NONE = "none"
-    FAST_MULTILINGUAL = "fast-multilingual"
-    VOICE_DESIGN = "voice-design"
-
-
 @dataclass(frozen=True)
 class ProfileRequirements:
     """One workflow profile: the parts a framework must provide to be considered at all."""
 
-    tts: TtsQualityClass
+    tts: SpeechClass
     asr: bool
     agent: bool
     llm_role: str
 
 
-# - The five profiles this repository runs. The character profile needs voice-design speech, language needs
+# - The six profiles this repository runs. The character profile needs voice-design speech, language needs
 #   ASR plus fast multilingual speech, coding needs an agent in front of the inference engine, tool covers the
 #   non-user-facing helpers, and the media profiles carry image and video generation.
 PROFILE_REQUIREMENTS = {
-    "character": ProfileRequirements(TtsQualityClass.VOICE_DESIGN, asr=False, agent=False, llm_role="mid"),
-    "language": ProfileRequirements(TtsQualityClass.FAST_MULTILINGUAL, asr=True, agent=False, llm_role="lightweight"),
-    "coding": ProfileRequirements(TtsQualityClass.NONE, asr=False, agent=True, llm_role="coding"),
-    "tool": ProfileRequirements(TtsQualityClass.NONE, asr=True, agent=False, llm_role="none"),
-    "image": ProfileRequirements(TtsQualityClass.NONE, asr=False, agent=False, llm_role="none"),
-    "video": ProfileRequirements(TtsQualityClass.NONE, asr=False, agent=False, llm_role="none"),
+    "character": ProfileRequirements(SpeechClass.VOICE_DESIGN, asr=False, agent=False, llm_role="mid"),
+    "language": ProfileRequirements(SpeechClass.FAST_MULTILINGUAL, asr=True, agent=False, llm_role="lightweight"),
+    "coding": ProfileRequirements(SpeechClass.NONE, asr=False, agent=True, llm_role="coding"),
+    "tool": ProfileRequirements(SpeechClass.NONE, asr=True, agent=False, llm_role="none"),
+    "image": ProfileRequirements(SpeechClass.NONE, asr=False, agent=False, llm_role="none"),
+    "video": ProfileRequirements(SpeechClass.NONE, asr=False, agent=False, llm_role="none"),
 }
 
 
@@ -413,26 +406,26 @@ MEDIA_DEFAULTS = {
 #   comparison; its catalog also lists MOSS TTS, including a voice-design variant, which no
 #   workflow here has exercised yet.
 FRAMEWORK_TTS_CLASSES = {
-    "koboldcpp": TtsQualityClass.VOICE_DESIGN,
-    "audiocpp": TtsQualityClass.VOICE_DESIGN,
-    "lemonade_server": TtsQualityClass.FAST_MULTILINGUAL,
-    "llamacpp": TtsQualityClass.NONE,
+    "koboldcpp": SpeechClass.VOICE_DESIGN,
+    "audiocpp": SpeechClass.VOICE_DESIGN,
+    "lemonade_server": SpeechClass.FAST_MULTILINGUAL,
+    "llamacpp": SpeechClass.NONE,
 }
 
 
-def tts_class_for(model: str) -> TtsQualityClass:
+def tts_class_for(model: str) -> SpeechClass:
     """The speech class a TTS model declares in its catalog entry; assets and unknown labels claim none."""
     try:
         declared = model_cfg.get(model).speech_class
     except KeyError:
         declared = None
-    return TtsQualityClass(declared) if declared else TtsQualityClass.NONE
+    return SpeechClass(declared) if declared else SpeechClass.NONE
 
 
 def model_fits_profile(profile: str, tts_model: str) -> bool:
     """True when the TTS model meets the profile's speech requirement; the vocabulary test is the caller."""
     required = PROFILE_REQUIREMENTS[profile].tts
-    return required is TtsQualityClass.NONE or tts_class_for(tts_model) is required
+    return required is SpeechClass.NONE or tts_class_for(tts_model) is required
 
 
 @dataclass(frozen=True)
