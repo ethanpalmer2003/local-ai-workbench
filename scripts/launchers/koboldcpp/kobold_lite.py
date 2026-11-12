@@ -264,7 +264,7 @@ class _KoboldLiteHandler(ProxyHandlerMixin):
     sessions: ClassVar[Any] = None
 
     @property
-    def engine(self) -> cfg.AsrStartupEngine:
+    def engine(self) -> cfg.AsrStartupEngine | None:
         return cfg.KOBOLDCPP_SERVICE.transcription_engine
 
     def _forward(self, method: str) -> None:
@@ -322,12 +322,14 @@ class _KoboldLiteHandler(ProxyHandlerMixin):
             external_bridge.respond(self, self.external[0], path, body)
             return
         target = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}" if path == "/v1/audio/speech" else self.upstream
+        engine = self.engine
         if (
             method == "POST"
             and path in ("/api/extra/transcribe", "/v1/audio/transcriptions")
-            and transcription.external(self.engine)
+            and engine is not None
+            and transcription.external(engine)
         ):
-            http_api.transcribe(self, body, self.engine)
+            http_api.transcribe(self, body, engine)
             return
         if path == "/v1/audio/speech":
             prepared = self._speech_target(target, body)

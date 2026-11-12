@@ -44,12 +44,12 @@ class SpeechProfiles(unittest.TestCase):
             kobold.main(["--speech-engine", "kokoro-internal"])
         start.assert_not_called()
 
-    def test_internal_model_is_cpu_and_keeps_whisper(self):
+    def test_internal_model_is_cpu_and_leaves_transcription_to_the_stack(self):
         with patch.object(cfg.KOBOLDCPP_SERVICE, "speech_engine", cfg.KoboldcppSpeechStartupEngine.KOKORO_INTERNAL):
             command = kobold.server_command("shared")
         self.assertEqual(command[command.index("--ttsmodel") + 1], str(practice_models.tts_spec()["path"]))
         self.assertEqual(command[command.index("--ttsthreads") + 1], str(cfg.KOKORO_TTS.threads))
-        self.assertIn("--whispermodel", command)
+        self.assertNotIn("--whispermodel", command)
         self.assertNotIn("--ttsgpu", command)
 
     def test_external_config_selects_cpu_without_other_models(self):

@@ -253,9 +253,9 @@ class LaunchCommands(unittest.TestCase):
             self.assertEqual(command[command.index("--model") + 1], str(cfg.kobold_chat_model_path()))
             self.assertEqual(command[command.index("--port") + 1], str(cfg.KOBOLDCPP_KCPPS_ARGS["port"]))
             self.assertEqual(command[command.index("--usevulkan") + 1], "0")
-            self.assertEqual(
-                command[command.index("--whispermodel") + 1], str(cfg.KOBOLDCPP_KCPPS_ARGS["whispermodel"])
-            )
+            # - the character stack asks for no transcription, so the built-in Whisper weight stays off
+            self.assertNotIn("--whispermodel", command)
+            self.assertEqual(cfg.KOBOLDCPP_SERVICE.config.read_text(encoding="utf-8").count('"whispermodel": ""'), 1)
             self.assertNotIn("--cli", command)
             self.assertTrue((Path(folder) / "generated").exists())
         self.assertEqual(cfg.KOBOLDCPP_SERVICE.config.read_bytes(), original)
@@ -282,6 +282,16 @@ class LaunchCommands(unittest.TestCase):
                 for index, token in enumerate(command):
                     if token.startswith("--") and index + 1 < len(command):
                         self.assertNotEqual(command[index + 1], "", f"{token} has an empty value")
+
+    def test_kobold_without_a_transcription_engine_loads_no_whisper_model(self):
+        with patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", None):
+            command = kobold.server_command()
+        self.assertNotIn("--whispermodel", command)
+
+    def test_kobold_embedded_engine_keeps_the_built_in_whisper_model(self):
+        with patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", cfg.AsrStartupEngine.EMBEDDED):
+            command = kobold.server_command()
+        self.assertEqual(command[command.index("--whispermodel") + 1], str(cfg.KOBOLDCPP_KCPPS_ARGS["whispermodel"]))
 
     def test_kobold_opens_localhost_proxy_only_after_page_is_ready(self):
         with (
@@ -321,10 +331,7 @@ class LaunchCommands(unittest.TestCase):
                     command[command.index("--model") + 1],
                     str(project_cfg.LLMS_MULTILINGUAL_MODELS_DIR / "gemma-4-E4B-it-Q4_0.gguf"),
                 )
-                self.assertEqual(
-                    command[command.index("--whispermodel") + 1],
-                    str(project_cfg.component("asr/whispercpp").models_dir / "ggml-large-v3-turbo-q5_0.bin"),
-                )
+                self.assertNotIn("--whispermodel", command)
             self.assertEqual(path.read_text(), "{}")
 
     def test_spawn_environment_and_extra_args(self):

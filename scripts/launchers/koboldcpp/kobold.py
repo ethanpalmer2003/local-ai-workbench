@@ -44,8 +44,10 @@ def _service_config() -> dict[str, Any]:
 
 def _server_options(usage_profile: str) -> dict[str, Any]:
     options = {**cfg.KOBOLDCPP_KCPPS_ARGS, **model_overrides(usage_profile), **kokoro.model_options()}
-    if transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine):
-        # - None skips the flag so the config file's empty whispermodel disables the built-in model; "" emits an empty CLI argument the console wrapper drops
+    if cfg.KOBOLDCPP_SERVICE.transcription_engine != cfg.AsrStartupEngine.EMBEDDED:
+        # - Only the embedded engine loads Kobold's own Whisper model; every other setting either owns
+        #   its own process or turns transcription off, so the flag is dropped and the config's empty
+        #   whispermodel keeps the weight unloaded.
         options["whispermodel"] = None
     if cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.GEMMA_KOBOLD:
         if cfg.kobold_chat_model_path() != cfg.GEMMA_AUDIO_ASR.model:
@@ -126,10 +128,11 @@ def print_summary(log_path: Path, usage_profile: str = "standalone") -> None:
     print(f"Model:     {cfg.KOBOLDCPP_SERVICE.model}")
     print(f"GGUF:      {cfg.kobold_chat_model_path().name}")
     print(f"Context:   {cfg.KOBOLDCPP_KCPPS_ARGS['contextsize']}")
-    if transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine):
-        print(
-            f"STT:       {transcription.model(cfg.KOBOLDCPP_SERVICE.transcription_engine)} ({cfg.KOBOLDCPP_SERVICE.transcription_engine.value})"
-        )
+    engine = cfg.KOBOLDCPP_SERVICE.transcription_engine
+    if engine is None:
+        print("STT:       off")
+    elif transcription.external(engine):
+        print(f"STT:       {transcription.model(engine)} ({engine.value})")
     else:
         print(f"Whisper:   {cfg.KOBOLDCPP_KCPPS_ARGS['whispermodel']} (built-in)")
     print(f"Speech:    {cfg.KOBOLDCPP_SERVICE.speech_engine.value}")
@@ -296,12 +299,9 @@ def check_profile_ports() -> None:
 
 
 def start_lite_proxy(external: bool) -> subprocess.Popen[Any]:
-    proxy_args = [
-        "--speech-engine",
-        cfg.KOBOLDCPP_SERVICE.speech_engine.value,
-        "--transcription-engine",
-        cfg.KOBOLDCPP_SERVICE.transcription_engine.value,
-    ]
+    proxy_args = ["--speech-engine", cfg.KOBOLDCPP_SERVICE.speech_engine.value]
+    if cfg.KOBOLDCPP_SERVICE.transcription_engine is not None:
+        proxy_args += ["--transcription-engine", cfg.KOBOLDCPP_SERVICE.transcription_engine.value]
     if external:
         proxy_args += ["--external-endpoint", external_llm.base_url(), "--external-model", external_llm.ALIAS]
     return launch_module(

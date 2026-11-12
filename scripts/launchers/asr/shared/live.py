@@ -22,7 +22,7 @@ from scripts.launchers.proxy_util import read_request_body, send_bytes, send_jso
 
 
 class Sessions:
-    def __init__(self, engine: cfg.AsrStartupEngine = cfg.AsrStartupEngine.AUDIOCPP):
+    def __init__(self, engine: cfg.AsrStartupEngine | None = cfg.AsrStartupEngine.AUDIOCPP):
         self.engine = engine
         self.lock = threading.Lock()
         self.turns = None
@@ -67,6 +67,8 @@ class Sessions:
     def _start_session(self, body: bytes) -> dict[str, Any]:
         if self.turns:
             raise ValueError("Already listening; stop the other microphone session first")
+        if self.engine is None:
+            raise ValueError("Transcription is off for this stack")
         language = json.loads(body).get("language", "auto")
         from scripts.launchers.asr.shared.languages import capabilities
 
@@ -127,9 +129,12 @@ class Sessions:
                 raise ValueError("Audio must contain complete 512-sample PCM16 frames")
             return self._push(self.turns, body)
 
-    def route(self, handler, method: str, path: str, engine: cfg.AsrStartupEngine) -> bool:
+    def route(self, handler, method: str, path: str, engine: cfg.AsrStartupEngine | None) -> bool:
         if not path.startswith("/asr/live/"):
             return False
+        if engine is None:
+            send_json_error(handler, 400, "Transcription is off for this stack", "invalid_request_error")
+            return True
         if not supported(engine) or method != "POST":
             send_json_error(
                 handler, 400, "This recognizer does not have automatic turns; POST is required", "invalid_request_error"

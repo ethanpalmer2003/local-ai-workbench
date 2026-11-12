@@ -26,8 +26,9 @@ class TranscriptionBackend(Protocol):
     ) -> tuple[bytes, str]: ...
 
 
-def external(engine: cfg.AsrStartupEngine | None = None) -> bool:
-    return (engine or cfg.ASR_SERVICE.engine) != cfg.AsrStartupEngine.EMBEDDED
+def external(engine: cfg.AsrStartupEngine | None) -> bool:
+    """Whether a separate process transcribes; None means the stack has none, and embedded is Kobold's own."""
+    return engine is not None and engine != cfg.AsrStartupEngine.EMBEDDED
 
 
 def backend(engine: cfg.AsrStartupEngine | None = None) -> TranscriptionBackend:
