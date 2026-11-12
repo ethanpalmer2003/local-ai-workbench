@@ -15,10 +15,10 @@ All required weights are downloaded and pinned in [the model catalog](../../conf
 NeMo and AudioCpp require separate GGUF conversions. speech.cpp uses its packed ASR file, not llama.cpp's main/projector pair. The default backend is Vulkan, except the explicit AudioCpp ROCm profile. `audiocpp-qwen3` runs the same Qwen3-ASR 1.7B model as the llama.cpp default from AudioCpp's own single-file conversion; [the pair measurement](../../tests/notes/asr/QWEN3-FRAMEWORK-PAIR.md) keeps llama.cpp in front for recognition.
 
 ```powershell
-C:/AI/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli --list
-C:/AI/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli --engine nemo-speechcpp --input C:/AI/data/input/speech.wav --mode streaming
-C:/AI/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli --engine speechcpp --input C:/AI/data/input/speech.wav
-C:/AI/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli --engine audiocpp-vulkan --input C:/AI/data/input/speech.wav --mode streaming
+python -m scripts.launchers.asr.shared.file_cli --list
+python -m scripts.launchers.asr.shared.file_cli --engine nemo-speechcpp --input C:/AI/data/input/speech.wav --mode streaming
+python -m scripts.launchers.asr.shared.file_cli --engine speechcpp --input C:/AI/data/input/speech.wav
+python -m scripts.launchers.asr.shared.file_cli --engine audiocpp-vulkan --input C:/AI/data/input/speech.wav --mode streaming
 ```
 
 Use mono 16 kHz PCM16 WAV for common file comparisons. The Python entry also accepts `--engine audiocpp-rocm`. `--print-command` previews arguments without loading weights. `--output transcript.txt` is available for NeMo and AudioCpp; other CLIs write text to stdout. Existing output files are refused.

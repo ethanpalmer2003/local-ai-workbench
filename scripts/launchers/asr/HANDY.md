@@ -5,7 +5,7 @@
 - Uses its own libraries, not the standalone ASR executables. Model compatibility depends on its bundled engine; ONNX and GGUF packages differ.
 
 ```powershell
-C:/AI/.venv/Scripts/python.exe -m scripts.launchers.asr.handy.app
+python -m scripts.launchers.asr.handy.app
 C:/AI/bat/update_frameworks.bat --only asr/handy
 ```
 

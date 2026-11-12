@@ -18,7 +18,7 @@ unknown; no estimated loading cost is subtracted.
 ```powershell
 C:/AI/bat/benchmarks/benchmark_asr_compare.bat
 C:/AI/bat/benchmarks/benchmark_asr_compare.bat --run --samples 2 --clips 2
-C:/AI/.venv/Scripts/python.exe -m scripts.tests.cases.asr.shared.coverage
+python -m scripts.tests.cases.asr.shared.coverage
 ```
 
 Preview does not start native code. Default is every configured resident profile: AudioCpp Cohere, NeMo, Ming and Qwen3-ASR;
