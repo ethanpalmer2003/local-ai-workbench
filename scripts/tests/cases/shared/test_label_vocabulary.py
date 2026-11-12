@@ -81,35 +81,16 @@ class LabelVocabularyTests(unittest.TestCase):
         self.assertEqual(cfg.tts_class_for("tts/piper/lessac-medium/model"), cfg.TtsQualityClass.NONE)
         self.assertEqual(cfg.tts_class_for("unknown/model"), cfg.TtsQualityClass.NONE)
 
-    def test_tts_weights_declare_the_voice_modes_they_accept(self):
-        from scripts.config.models import catalog
-
-        weights = (".gguf", ".onnx", ".pth", ".safetensors")
-        for model in models.models_for("tts"):
-            with self.subTest(model=model.label):
-                if model.filename is not None and model.filename.endswith(weights):
-                    self.assertTrue(model.speech_modes, model.label)
-                    self.assertLessEqual(set(model.speech_modes), set(catalog.SPEECH_MODES))
-                else:
-                    self.assertEqual(model.speech_modes, ())
-        self.assertEqual(set(models.get("audiocpp/breeze-tts-2-q4_0").speech_modes), {"clone", "design"})
-        self.assertEqual(set(models.get("audiocpp/supertonic-3-q8_0").speech_modes), {"preset"})
-
     @requires_model_check
-    def test_declared_modes_match_the_installed_audiocpp_specs(self):
+    def test_voice_modes_stay_with_the_model_metadata(self):
         from scripts.launchers.audiocpp import audiocpp_catalog
 
         for model in models.models_for("tts"):
+            self.assertFalse(hasattr(model, "speech_modes"), model.label)
             if not model.label.startswith("audiocpp/") or model.path.suffix != ".gguf" or not model.path.is_file():
                 continue
-            spec = audiocpp_catalog.packaged_spec(model.path)
-            if not spec.get("family"):
-                continue
-            with self.subTest(model=model.label):
-                # - a spec with builtin voices is a preset model; one without takes a reference or instruction
-                preset = bool(audiocpp_catalog.builtin_voices(model.path))
-                self.assertEqual("preset" in model.speech_modes, preset)
-                self.assertEqual("clone" in model.speech_modes, not preset)
+            # - the framework's own spec is the authority the UI reads for preset vs clone
+            self.assertIsInstance(audiocpp_catalog.packaged_spec(model.path), dict)
 
     def test_delivery_and_speech_classes_keep_their_full_vocabulary(self):
         self.assertEqual(speech_delivery.MODES, ("streaming", "chunked", "whole"))
