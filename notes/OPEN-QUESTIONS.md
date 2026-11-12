@@ -18,8 +18,11 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
   threads meet only for capability: `roles` and `in_use` are intent, so an index never answers them,
   while the AudioCpp option values are choices, not copies - the packaged spec declares the option
   names and this repository picks the values, so there is nothing to delete there.
-  `model_languages.json` against what a checkpoint's card declares is the one candidate left; a live
-  read costs about 60 ms per GGUF, so an index waits for a page that lists across models.
+  `model_languages.json` is the last candidate and mostly not a copy: the llama.cpp, Whisper and
+  Parakeet GGUFs carry no language metadata, so the file is their only local source. Only its AudioCpp
+  entries duplicate a packaged spec's `languages` array. Leave it until a view lists languages across
+  models, and then read the AudioCpp entries from the spec and keep the file for the models that stay
+  silent. A live spec read costs about 60 ms per GGUF.
 
 ## Superseded
 
