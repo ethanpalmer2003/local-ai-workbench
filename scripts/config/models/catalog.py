@@ -9,6 +9,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from scripts.config import local_overlay
 from scripts.config import project_config as project_cfg
 
@@ -122,7 +124,8 @@ def _load(path: str, overlay: bool) -> tuple[ModelDownload, ...]:
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     if overlay and Path(path) == CATALOG_PATH.resolve() and local_overlay.model_overlay_path().is_file():
         # - personal entries stay in the input overlay, never in the tracked catalog
-        extra = json.loads(local_overlay.model_overlay_path().read_text(encoding="utf-8")).get("models") or []
+        payload_overlay = yaml.safe_load(local_overlay.model_overlay_path().read_text(encoding="utf-8"))
+        extra = (payload_overlay or {}).get("models") or []
         payload["models"] = [*payload.get("models", []), *extra]
     return _build(payload)
 
@@ -197,8 +200,15 @@ def entry_dict(model: ModelDownload) -> dict[str, Any]:
     return entry
 
 
+def _read(path: Path) -> dict[str, Any]:
+    """The tracked catalog is JSON; a hand-authored overlay file is YAML."""
+    text = path.read_text(encoding="utf-8")
+    payload = yaml.safe_load(text) if path.suffix in (".yaml", ".yml") else json.loads(text)
+    return payload if isinstance(payload, dict) else {}
+
+
 def load_entries(path: Path | None = None) -> list[dict[str, Any]]:
-    payload = json.loads((path or CATALOG_PATH).read_text(encoding="utf-8"))
+    payload = _read(path or CATALOG_PATH)
     return list(payload.get("models") or [])
 
 
@@ -251,7 +261,11 @@ def save_catalog(entries: list[dict[str, Any]], path: Path | None = None) -> Non
     payload = {"version": CATALOG_VERSION, "models": entries}
     _build(payload)  # validate before writing
     temporary = target.with_name(target.name + ".tmp")
-    temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    if target.suffix in (".yaml", ".yml"):
+        text = yaml.safe_dump(payload, sort_keys=False, default_flow_style=False, width=120, allow_unicode=True)
+    else:
+        text = json.dumps(payload, indent=2) + "\n"
+    temporary.write_text(text, encoding="utf-8")
     os.replace(temporary, target)
     clear_cache()
 

@@ -1,0 +1,15 @@
+# Placeholders only: copy this file into the overlay as voice_sources.yaml and fill in real ids.
+#
+# Each voice lists one or more sources. Keys the downloader reads:
+#   category, url, exclude, selected, count, selection, fallback, superseded_by, transcripts_xlsx
+default: <default-voice-id>
+voices:
+  <voice-id>:
+    category: <category>
+    url: https://example.invalid/voice-asset.zip
+    count: 1
+    selection: longestText
+    fallback: longestAudio
+    exclude: []
+    selected: []
+    superseded_by: null
