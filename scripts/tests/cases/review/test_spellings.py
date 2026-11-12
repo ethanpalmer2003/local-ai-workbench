@@ -14,7 +14,7 @@ class AmericanSpellingTests(unittest.TestCase):
         self.assertEqual(spellings.scan_text("doc.md", "Two quantisations.\n"), [(1, "quantisations", "quantizations")])
 
     def test_case_is_preserved(self):
-        for british, expected in (("Summazzfixture", "Summarize"), ("CANCELLED", "CANCELED"), ("practise", "practice")):
+        for british, expected in (("Summarise", "Summarize"), ("CANCELLED", "CANCELED"), ("practise", "practice")):
             with self.subTest(british=british):
                 match = spellings.PATTERN.match(british)
                 self.assertIsNotNone(match)
