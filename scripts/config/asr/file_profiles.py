@@ -25,6 +25,7 @@ class FileAsrProfile:
     mode_environments: dict[str, tuple[tuple[str, str], ...]] | None = None
     session_options: dict[str, object] | None = None
     request_options: dict[str, object] | None = None
+    streaming_request_options: dict[str, object] | None = None
 
 
 def weight(label: str) -> str:
@@ -201,6 +202,8 @@ ASR_FILE_PROFILES["audiocpp-qwen3"] = FileAsrProfile(
     server_executable=binary("audiocpp", "vulkan/audiocpp_server.exe"),
     audio_family="qwen3_asr",
     session_options=QWEN3_SESSION,
+    # - 3 s streaming windows are the first that keep a clause boundary intact; 2 s fragments sentences
+    streaming_request_options={"audio_chunk_duration_sec": 3},
 )
 
 for key, label, streaming in (

@@ -8,7 +8,7 @@ All required weights are downloaded and pinned in [the model catalog](../../conf
 | `speechcpp` | Packed Q8_0 ASR + Silero VAD | Offline, VAD-delimited live microphone |
 | `audiocpp-vulkan`, `audiocpp-rocm` | Q8_0 GGUF | Offline, stateful streaming WAV |
 | `audiocpp-ming-audio-tiny` | Existing Q4_K audio GGUF | Offline ASR; expert offload; auto language |
-| `audiocpp-qwen3` | Qwen3-ASR 1.7B Q8_0, AudioCpp conversion | Offline, stateful streaming WAV, 31 languages |
+| `audiocpp-qwen3` | Qwen3-ASR 1.7B Q8_0, AudioCpp conversion | Offline, paced streaming with 3 s windows, 31 languages |
 | `parakeetcpp-v3` | TDT encoder, Q8 | Vulkan offline, Silero VAD |
 | `parakeetcpp-nemotron-streaming` | Streaming encoder, Q8 | Vulkan offline/VAD; CPU streaming WAV |
 

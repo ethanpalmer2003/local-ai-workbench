@@ -26,11 +26,25 @@ from scripts.tests.cases.asr.shared.corpus import prepare_corpus
 from scripts.tests.shared.paths import CasePaths
 
 # - One paced replay per engine; automatic adds the speech.cpp VAD pass to the offline run
-ENGINES = (("audiocpp-vulkan", False), ("nemo-speechcpp", False), ("speechcpp", False), ("speechcpp", True))
+ENGINES = (
+    ("audiocpp-vulkan", False),
+    ("audiocpp-qwen3", False),
+    ("nemo-speechcpp", False),
+    ("speechcpp", False),
+    ("speechcpp", True),
+)
 ENGINE_COMPONENTS = {
     "audiocpp-vulkan": "audiocpp",
+    "audiocpp-qwen3": "audiocpp",
     "nemo-speechcpp": "asr/nemo-speechcpp",
     "speechcpp": "asr/speechcpp",
+}
+# - Paced-audio transport per engine; streaming request options come from the ASR profiles
+ENGINE_PROTOCOLS = {
+    "audiocpp-vulkan": "audio",
+    "audiocpp-qwen3": "audio",
+    "nemo-speechcpp": "nemo",
+    "speechcpp": "speech",
 }
 
 
@@ -107,13 +121,11 @@ class Client:
 
 def configuration(engine, automatic, clip, run, port):
     cmd, model = profiles(port)[engine]
-    protocol = {"audiocpp-vulkan": "audio", "nemo-speechcpp": "nemo", "speechcpp": "speech"}[engine]
+    protocol = ENGINE_PROTOCOLS[engine]
     rate = 24000 if protocol == "speech" else 16000
     if protocol == "audio":
         path = run.temp / "audio.json"
-        native = audio_config(engine)
-        native["models"][0]["mode"] = "streaming"
-        path.write_text(json.dumps(native), encoding="utf-8")
+        path.write_text(json.dumps(audio_config(engine, mode="streaming")), encoding="utf-8")
         cmd = [part.replace("{config}", str(path)) for part in cmd]
     if protocol == "speech" and automatic:
         cmd.insert(3, str(model_cfg.path("asr/speechcpp/silero-vad")))
@@ -209,7 +221,7 @@ def screen(engine, automatic, clip, run, port):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--engines", nargs="+", choices=("audiocpp-vulkan", "nemo-speechcpp", "speechcpp"))
+    parser.add_argument("--engines", nargs="+", choices=tuple(ENGINE_PROTOCOLS))
     args = parser.parse_args()
     context = dict(require_native_execution("Paced ASR latency screen"))
     run = CasePaths(__file__).new_run()
