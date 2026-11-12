@@ -15,7 +15,7 @@ a row here and a constant beside its owner, and the
 | Family | Applies to | Decides | Owner |
 | --- | --- | --- | --- |
 | Budget class | capability rows | Runner budget: seconds a row may take | [capability_matrix.py](../scripts/tools/capability_matrix.py) |
-| Deferred | anything parked: a model, a framework, a build, a row, a runtime, a piece of work | Why it cannot start, what kind of thing it is, and what would unpark it | `DeferredKind` in [deferred.py](../scripts/config/shared/deferred.py); the rows are in [DEFERRED](DEFERRED.md) |
+| Deferred | anything parked: a model, a framework, a build, a row, a runtime, a piece of work | Why it cannot start, what kind of thing it is, and what would unpark it | `DeferredKind` in [deferred.py](../scripts/config/shared/deferred.py); the records are in [deferred.yaml](../scripts/config/shared/deferred.yaml) |
 | Suite | every test | Whether it may start a process or load weights | [test suite](../scripts/tests/README.md) |
 | Workflow profile | defaults and benchmarks | Which speech, inference and media parts a framework must provide | `PROFILE_REQUIREMENTS` in [launcher_config.py](../scripts/launchers/launcher_config.py) |
 | Delivery mode | speech clients | How text arrives: incremental, per segment, or once | [speech_delivery.py](../scripts/config/shared/speech_delivery.py) |

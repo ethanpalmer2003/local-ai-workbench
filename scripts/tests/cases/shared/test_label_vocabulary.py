@@ -4,11 +4,10 @@ import unittest
 
 from scripts.benchmarks.shared.paths import Outcome
 from scripts.config import models
-from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.config.models import catalog
+from scripts.config.shared import deferred as parked
 from scripts.config.shared import speech_delivery
-from scripts.config.shared.deferred import DeferredKind
 from scripts.launchers import launcher_config as cfg
 from scripts.tests.cases.asr.shared.coverage import coverage
 from scripts.tests.shared.model_checks import requires_model_check
@@ -28,7 +27,7 @@ class LabelVocabularyTests(unittest.TestCase):
         self.assertLessEqual(set(capability_matrix.SECTION.values()), SECTIONS)
         self.assertEqual(set(capability_matrix.CATEGORY), subjects)
         self.assertEqual(set(capability_matrix.SECTION), subjects)
-        self.assertFalse(set(capability_matrix.DEFERRED) - subjects)
+        self.assertFalse({entry.subject for entry in parked.records() if entry.subject} - subjects)
         self.assertEqual(set(probe_runner.CATEGORY_SECONDS), BUDGET_CLASSES)
 
     def test_profiles_are_declared_by_the_stacks_that_run_them(self):
@@ -114,16 +113,14 @@ class LabelVocabularyTests(unittest.TestCase):
         keys = {key for row in catalog["models"] for key in (row.get("coverage_tiers") or {})}
         self.assertLessEqual(keys, TIERS)
 
-    def test_deferred_rows_use_a_declared_kind(self):
-        page = project_cfg.BASE_DIR / "notes" / "DEFERRED.md"
-        rows = [
-            [cell.strip() for cell in line.strip().strip("|").split("|")]
-            for line in page.read_text(encoding="utf-8").splitlines()
-            if line.startswith("| ")
-        ]
-        kinds = {row[1] for row in rows if row[1] not in ("Kind", "---")}
-        self.assertTrue(kinds)
-        self.assertLessEqual(kinds, {item.value for item in DeferredKind})
+    def test_parked_work_declares_a_kind_and_names_real_rows(self):
+        entries = parked.records()
+        self.assertTrue(entries)
+        self.assertLessEqual({entry.kind.value for entry in entries}, {item.value for item in parked.DeferredKind})
+        subjects = {subject for subject, _ in capability_matrix.CAPABILITIES}
+        named = {entry.subject for entry in entries if entry.subject}
+        self.assertLessEqual(named, subjects)
+        self.assertEqual({entry.subject for entry in entries if entry.reason}, named)
 
 
 def _adapter_only() -> set[str]:

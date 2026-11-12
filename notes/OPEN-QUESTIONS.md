@@ -50,7 +50,7 @@ be dropped", not "undecided".
 
 ## Deferred
 
-One index of everything parked: [DEFERRED](DEFERRED.md).
+One index of everything parked: [deferred.yaml](../scripts/config/shared/deferred.yaml).
 
 ### OS limits
 
