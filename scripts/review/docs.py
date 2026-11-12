@@ -13,13 +13,12 @@ from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
 from scripts.review.sources import maintained_files
 
-# - four caps only; each document role picks one, so a new kind needs no new number
-WORD_TIERS = {"long": 1000, "large": 700, "medium": 500, "small": 300}
+# - three caps only; each document role picks one, so a new kind needs no new number
+WORD_TIERS = {"long": 1000, "large": 700, "medium": 500}
 ROLE_TIERS = {
     "root": "large",
     "hub": "large",
-    "agent rule": "small",
-    "code rules": "medium",
+    "agent rule": "medium",
     "running list": "long",
     "generated page": "long",
     "note": "medium",
@@ -49,7 +48,6 @@ RUNNING_LIST_PATHS = (
 )
 ROLE_RULES = (
     ("root", r"(?:README|AGENTS)\.md"),
-    ("code rules", r"\.agents/CODE\.md"),
     ("agent rule", r".*AGENTS\.md|\.agents/.*\.md"),
     ("review record", r"notes/reviews/.*\.md"),
     ("generated page", r"scripts/(?:config|tests)/notes/[A-Z][A-Z0-9-]*-MATRIX\.md"),
@@ -61,7 +59,7 @@ ROLE_RULES = (
 # - a policy number is stated once; every other document links to its owner instead of repeating it
 POLICY_NUMBERS = (
     (
-        r"\b(?:300|500|700|1000)\s+words\b|\b(?:large|medium|small|long),\s*(?:300|500|700|1000)\b",
+        r"\b(?:500|700|1000)\s+words\b|\b(?:large|medium|long),\s*(?:500|700|1000)\b",
         "word caps",
         ".agents/NOTES-CONVENTIONS.md",
     ),

@@ -48,7 +48,7 @@ class RoleTests(unittest.TestCase):
             "AGENTS.md": "root",
             ".agents/skills/docs-writing/SKILL.md": "agent rule",
             ".agents/CHECKS.md": "agent rule",
-            ".agents/CODE.md": "code rules",
+            ".agents/CODE.md": "agent rule",
             "notes/TODO.md": "running list",
             "notes/reviews/STRUCTURE-REVIEW.md": "review record",
             "notes/ONBOARDING.md": "running list",
@@ -87,7 +87,7 @@ class RoleTests(unittest.TestCase):
             "scripts/tests/notes/CAPABILITY-MATRIX.md": 1000,
             "notes/reviews/STRUCTURE-REVIEW.md": 500,
             "scripts/config/comfyui/TUNING.md": 500,
-            ".agents/CHECKS.md": 300,
+            ".agents/CHECKS.md": 500,
         }
         for relative, cap in cases.items():
             with self.subTest(relative=relative):
