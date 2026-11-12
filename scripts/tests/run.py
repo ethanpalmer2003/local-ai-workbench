@@ -110,6 +110,7 @@ from scripts.tests.cases.shared.test_model_run import ModelRunTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
 from scripts.tests.cases.shared.test_rocm_inventory import RocmInventoryTests
 from scripts.tests.cases.shared.test_stage_runner import StageRunnerTests
+from scripts.tests.cases.shared.test_state_cleanup import StateCleanupTests
 from scripts.tests.cases.shared.test_strata_profile import StrataProfileLinkTests
 from scripts.tests.cases.shared.test_toolchains import ToolchainTests
 from scripts.tests.cases.shared.test_validate import ValidatePlanTests
@@ -214,6 +215,7 @@ if __name__ == "__main__":
                     LanguageMatrixTests,
                     RocmInventoryTests,
                     StageRunnerTests,
+                    StateCleanupTests,
                     ProbeRunnerTests,
                     ModelRunTests,
                     ToolchainTests,
