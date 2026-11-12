@@ -18,6 +18,7 @@ dependencies = [
     "requests",
     "scipy",
     "soundfile",
+    "tabulate>=0.10.0",
     "tqdm",
 ]
 
