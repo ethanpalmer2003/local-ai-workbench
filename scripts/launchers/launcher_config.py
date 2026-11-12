@@ -346,10 +346,15 @@ class AsrStartupEngine(str, Enum):
     EMBEDDED = "embedded"
     WHISPER_VULKAN = "whisper-vulkan"
     QWEN3_ASR = "qwen3-asr"
+    QWEN3_AUDIOCPP = "audiocpp-qwen3"
     GEMMA_AUDIO = "gemma-audio"
     GEMMA_KOBOLD = "gemma-kobold"
     COHERE = "audiocpp-cohere"
     GRANITE = "granite-audio"
+
+
+# - Engines whose recognizer runs inside the practice AudioCpp server beside TTS
+AUDIOCPP_ASR_ENGINES = (AsrStartupEngine.AUDIOCPP, AsrStartupEngine.QWEN3_AUDIOCPP)
 
 
 class TtsQualityClass(str, Enum):
@@ -457,14 +462,14 @@ KOBOLD_CHAT = SpeechWorkflowDefaults(
     tts_voice=_CHAT_TTS_VOICE,
     clone_voice=bool(_CHAT_TTS_VOICE),
 )
-# - Language practice: Gemma chat, Supertonic TTS without cloning, Qwen3-ASR recognition.
-#   Qwen reads all four practice languages with the lowest pooled error on the pinned corpus;
-#   Whisper Vulkan stays the faster alternate. AudioCpp Nemotron misheard English and could not
-#   transcribe Japanese at all (notes/TODO.md records that engine's failure).
+# - Language practice: Gemma chat, Supertonic TTS without cloning, and Qwen3-ASR served by AudioCpp.
+#   The practice page needs automatic microphone turns and interim captions, which only a streaming
+#   engine provides; AudioCpp's Qwen3 emits its first partial 3.2 s into speech and its final 0.10 s
+#   after the end. llama.cpp keeps the same model for one-shot transcription.
 LANGUAGE_PRACTICE = SpeechWorkflowDefaults(
     profile="language",
     framework="llamacpp",
-    asr_engine=AsrStartupEngine.QWEN3_ASR,
+    asr_engine=AsrStartupEngine.QWEN3_AUDIOCPP,
     llm_model="llamacpp/gemma-4-E4B-it-Q4_0",
     tts_model=SUPERTONIC_MODEL,
     tts_voice="F1",
@@ -474,7 +479,9 @@ LANGUAGE_PRACTICE = SpeechWorkflowDefaults(
 
 @dataclass
 class SharedAsrStartupServiceSettings:
-    engine: AsrStartupEngine = LANGUAGE_PRACTICE.asr_engine or AsrStartupEngine.AUDIOCPP
+    # - Transcription gateway: one-shot files and voice-reference transcripts stay on llama.cpp,
+    #   whose request is 1.8x faster than AudioCpp on the same model and needs no streaming.
+    engine: AsrStartupEngine = AsrStartupEngine.QWEN3_ASR
     host: str = "127.0.0.1"
     port: int = 8895
 

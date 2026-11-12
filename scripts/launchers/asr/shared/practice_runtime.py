@@ -39,7 +39,7 @@ class PracticeRuntime:
 
     def audio_service(self, shared: bool):
         config: dict[str, Any] = (
-            asr.speech_config(cfg.AUDIOCPP_VAD.server_port)
+            asr.speech_config(cfg.AUDIOCPP_VAD.server_port, self.controls.engine.value)
             if shared
             else {"backend": "vulkan", "threads": cfg.KOKORO_TTS.threads, "models": [practice_models.tts_spec()]}
         )
@@ -54,7 +54,7 @@ class PracticeRuntime:
 
     def build(self):
         engine = self.controls.engine
-        shared = engine == cfg.AsrStartupEngine.AUDIOCPP
+        shared = engine in cfg.AUDIOCPP_ASR_ENGINES
         gemma = self.shares_gemma()
         services = {
             "audio": self.audio_service(shared),
@@ -90,7 +90,7 @@ class PracticeRuntime:
     def speech_url(self):
         return (
             asr.url()
-            if self.controls.engine == cfg.AsrStartupEngine.AUDIOCPP
+            if self.controls.engine in cfg.AUDIOCPP_ASR_ENGINES
             else f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}"
         )
 

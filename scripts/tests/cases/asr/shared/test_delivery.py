@@ -35,6 +35,7 @@ class DeliveryTests(unittest.TestCase):
     def test_asr_does_not_confuse_vad_segments_with_streaming(self):
         with patch.object(speech_delivery, "overrides", return_value={}):
             self.assertEqual(delivery.asr_plan(cfg.AsrStartupEngine.AUDIOCPP)["mode"], "streaming")
+            self.assertEqual(delivery.asr_plan(cfg.AsrStartupEngine.QWEN3_AUDIOCPP)["mode"], "streaming")
             self.assertEqual(delivery.asr_plan(cfg.AsrStartupEngine.WHISPER_VULKAN)["mode"], "chunked")
             self.assertEqual(delivery.asr_plan(cfg.AsrStartupEngine.QWEN3_ASR)["mode"], "whole")
         with patch.object(speech_delivery, "overrides", return_value={"asr:audiocpp-nemotron": "whole"}):

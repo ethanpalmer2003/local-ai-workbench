@@ -10,7 +10,7 @@ from scripts.config import project_config as project_cfg
 # through, and a saved per-model override (state/shared/speech_delivery.json) replaces the default.
 MODES = ("streaming", "chunked", "whole")
 # True incremental streaming backends; ASR_CHUNKED adds VAD/segment backends that must never be called streaming.
-ASR_STREAMING = ("audiocpp-nemotron", "nemo-nemotron", "parakeetcpp-nemotron-cpu")
+ASR_STREAMING = ("audiocpp-nemotron", "audiocpp-qwen3", "nemo-nemotron", "parakeetcpp-nemotron-cpu")
 ASR_CHUNKED = (
     *ASR_STREAMING,
     "speechcpp-qwen-0.6b",

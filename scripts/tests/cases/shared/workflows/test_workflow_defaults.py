@@ -27,7 +27,10 @@ class WorkflowDefaultsTests(unittest.TestCase):
     def test_language_practice_profile_owns_the_gemma_supertonic_and_asr_defaults(self):
         self.assertEqual(cfg.LANGUAGE_PRACTICE.framework, "llamacpp")
         self.assertFalse(cfg.LANGUAGE_PRACTICE.clone_voice)
-        self.assertEqual(cfg.ASR_SERVICE.engine, cfg.LANGUAGE_PRACTICE.asr_engine)
+        # - Practice needs microphone turns and captions, so it streams from AudioCpp; the shared
+        #   transcription gateway keeps llama.cpp, whose one-shot request is faster on the same model.
+        self.assertEqual(cfg.LANGUAGE_PRACTICE.asr_engine, cfg.AsrStartupEngine.QWEN3_AUDIOCPP)
+        self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.QWEN3_ASR)
         self.assertEqual(chat_models.default_id(), cfg.LANGUAGE_PRACTICE.llm_model)
         with patch.object(practice_models, "active_tts_id", None):
             self.assertEqual(practice_models.tts_id(), cfg.LANGUAGE_PRACTICE.tts_model)

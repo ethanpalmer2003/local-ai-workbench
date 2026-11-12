@@ -78,7 +78,7 @@ class Sessions:
         streaming = speech_delivery.asr_plan(self.engine.value)["mode"] == "streaming"
         factory = (
             None
-            if streaming and self.engine in (cfg.AsrStartupEngine.AUDIOCPP, cfg.AsrStartupEngine.PARAKEET_STREAM)
+            if streaming and self.engine in cfg.AUDIOCPP_ASR_ENGINES + (cfg.AsrStartupEngine.PARAKEET_STREAM,)
             else lambda: SegmentStream(selector.backend(self.engine), language)
         )
         transport = self._nemo_transport(streaming, language)

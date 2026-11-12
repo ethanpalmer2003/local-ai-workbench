@@ -13,6 +13,7 @@ from scripts.launchers.asr.parakeetcpp.streaming_backend import CpuBackend
 from scripts.launchers.asr.shared.resident_backend import ResidentBackend
 from scripts.launchers.asr.whispercpp import server as whisper
 from scripts.launchers.audiocpp import asr as audio_asr
+from scripts.launchers.audiocpp import asr_qwen3
 
 
 class TranscriptionBackend(Protocol):
@@ -40,6 +41,7 @@ def backend(engine: cfg.AsrStartupEngine | None = None) -> TranscriptionBackend:
         cfg.AsrStartupEngine.PARAKEET_V3: ResidentBackend(cfg.PARAKEETCPP_V3_ASR),
         cfg.AsrStartupEngine.WHISPER_VULKAN: whisper,
         cfg.AsrStartupEngine.QWEN3_ASR: qwen_asr,
+        cfg.AsrStartupEngine.QWEN3_AUDIOCPP: asr_qwen3,
         cfg.AsrStartupEngine.GEMMA_AUDIO: gemma_audio,
         cfg.AsrStartupEngine.GEMMA_KOBOLD: gemma_kobold,
     }
@@ -57,6 +59,9 @@ def model(engine: cfg.AsrStartupEngine | None = None) -> Path:
         cfg.AsrStartupEngine.AUDIOCPP: Path(audio_asr.speech_config(cfg.AUDIOCPP_VAD.server_port)["models"][0]["path"]),
         cfg.AsrStartupEngine.WHISPER_VULKAN: cfg.WHISPERCPP_ASR.model,
         cfg.AsrStartupEngine.QWEN3_ASR: cfg.QWEN3_ASR.model,
+        cfg.AsrStartupEngine.QWEN3_AUDIOCPP: Path(
+            asr_qwen3.speech_config(cfg.AUDIOCPP_VAD.server_port)["models"][0]["path"]
+        ),
         cfg.AsrStartupEngine.GEMMA_AUDIO: cfg.GEMMA_AUDIO_ASR.model,
         cfg.AsrStartupEngine.GEMMA_KOBOLD: cfg.GEMMA_AUDIO_ASR.model,
     }[engine or cfg.ASR_SERVICE.engine]

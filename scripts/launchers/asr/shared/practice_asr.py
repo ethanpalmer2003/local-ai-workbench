@@ -21,6 +21,7 @@ def asr_models() -> list[dict[str, Any]]:
         cfg.AsrStartupEngine.SPEECHCPP: ("speech.cpp", "Qwen3-ASR 0.6B"),
         cfg.AsrStartupEngine.WHISPER_VULKAN: ("whisper.cpp", "Whisper large-v3-turbo Q5"),
         cfg.AsrStartupEngine.QWEN3_ASR: ("llama.cpp", "Qwen3-ASR 1.7B"),
+        cfg.AsrStartupEngine.QWEN3_AUDIOCPP: ("AudioCpp", "Qwen3-ASR 1.7B"),
         cfg.AsrStartupEngine.GEMMA_AUDIO: ("llama.cpp", "Gemma 4 E4B audio"),
     }
     for engine, (framework, label) in labels.items():

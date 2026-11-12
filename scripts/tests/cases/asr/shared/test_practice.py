@@ -11,12 +11,13 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+from scripts.config import models
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector, server
 from scripts.launchers.asr.shared import live
 from scripts.launchers.asr.shared.requests import parse
 from scripts.launchers.asr.shared.segment_stream import SegmentStream
-from scripts.launchers.audiocpp import asr
+from scripts.launchers.audiocpp import asr, asr_qwen3
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.process_fixtures import running_process
@@ -380,6 +381,15 @@ class PracticeTests(unittest.TestCase):
             self.assertTrue(selector.model(engine).suffix in (".gguf", ".bin"))
         self.assertFalse(live.supported(cfg.AsrStartupEngine.QWEN3_ASR))
 
+    def test_streaming_practice_engine_owns_the_audiocpp_server_beside_tts(self):
+        engine = cfg.AsrStartupEngine.QWEN3_AUDIOCPP
+        self.assertTrue(live.supported(engine))
+        self.assertEqual(selector.model(engine), Path(models.path("asr/audiocpp/qwen3-asr-1.7b-q8_0")))
+        config = asr_qwen3.speech_config(cfg.AUDIOCPP_VAD.server_port)
+        self.assertEqual(config["models"][0]["family"], "qwen3_asr")
+        self.assertEqual(config["models"][0]["mode"], "streaming")
+        self.assertEqual(config["models"][-1]["id"], cfg.LANGUAGE_PRACTICE.tts_model)
+
     @fixture_processes()
     def test_browser_capture_turn_and_reply_contract(self):
         for mode in ([], ["--asr"], ["--practice"], ["--cached"], ["--practice", "--cached"]):
@@ -494,7 +504,7 @@ class PracticeTests(unittest.TestCase):
             [model["id"] for model in config["models"]], ["benchmark-asr", cfg.LANGUAGE_PRACTICE.tts_model]
         )
         self.assertFalse(config["lazy_load"])
-        self.assertEqual(cfg.ASR_SERVICE.engine, cfg.LANGUAGE_PRACTICE.asr_engine)
+        self.assertEqual(cfg.LANGUAGE_PRACTICE.asr_engine, cfg.AsrStartupEngine.QWEN3_AUDIOCPP)
         self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.QWEN3_ASR)
 
 
