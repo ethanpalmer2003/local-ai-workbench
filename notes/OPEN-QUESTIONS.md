@@ -5,25 +5,7 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
 
 ## Unresolved
 
-- **Where we store what a framework already reports.** The rule is to use the framework's answer
-  rather than keep a copy ([code](../.agents/CODE.md)). Applied: `speech_modes` went, because AudioCpp's
-  spec answers preset versus clone, and `runtimes` went, because a GGUF loads in both. Kept:
-  `speech_class`, since no framework states a profile floor; `roles` and `in_use` state intent, which
-  no model reports. The open part is selection: listing every clone-capable model should not mean
-  querying each framework at request time. Two answers:
-  - a disposable index keyed by catalog label, rebuilt when framework or model metadata changes, so a
-    disagreement is a stale index rather than two authored truths; or
-  - one query per page load, acceptable only for a single model's detail view.
-  The index looks right for lists, the query for detail. Either way the key is the catalog label and
-  the values reuse one vocabulary, so a stored copy and a live read cannot disagree on names. The two
-  threads meet only for capability: `roles` and `in_use` are intent, so an index never answers them,
-  while the AudioCpp option values are choices, not copies - the packaged spec declares the option
-  names and this repository picks the values, so there is nothing to delete there.
-  `model_languages.json` is the last candidate and mostly not a copy: the llama.cpp, Whisper and
-  Parakeet GGUFs carry no language metadata, so the file is their only local source. Only its AudioCpp
-  entries duplicate a packaged spec's `languages` array. Leave it until a view lists languages across
-  models, and then read the AudioCpp entries from the spec and keep the file for the models that stay
-  silent. A live spec read costs about 60 ms per GGUF.
+- Nothing is unresolved. A decision that would change work is added here with its options.
 
 ## Superseded
 

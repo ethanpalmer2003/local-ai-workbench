@@ -32,6 +32,17 @@ class ModelLanguages(unittest.TestCase):
                 self.assertEqual(len(codes), len(set(codes)))
                 self.assertFalse({"auto", "multilingual"} & set(codes))
 
+    def test_an_installed_spec_agrees_with_the_stored_locale_list(self):
+        checked = []
+        for entry in model_languages.read_catalog()["models"]:
+            for model_id in entry["model_ids"]:
+                declared = model_languages.packaged_locales(model_id) if "audiocpp" in model_id else None
+                if declared and entry["locales"]:
+                    checked.append(entry["name"])
+                    self.assertEqual(set(entry["locales"]), set(declared), entry["name"])
+        if not checked:
+            self.skipTest("no AudioCpp weight with a packaged spec is installed")
+
     def test_locale_and_dialect_counts_are_not_inflated_language_counts(self):
         rows = {row["distribution"]: row for row in model_languages.select(model_languages.read_catalog())}
         nemo = rows["nemotron-3.5"]

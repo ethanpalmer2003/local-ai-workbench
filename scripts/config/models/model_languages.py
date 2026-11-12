@@ -1,4 +1,9 @@
-"""Offline language inventory for registered speech checkpoints; never loads a model."""
+"""Offline language inventory for registered speech checkpoints; never loads a model.
+
+The JSON beside this file is the declaration: what each registry publishes, plus the judgment no
+model reports (tiers, limits, sources). A packaged AudioCpp spec is authoritative for the weight it
+ships in, so an installed model's declared locales are compared against it instead of trusted.
+"""
 
 import argparse
 import json
@@ -13,6 +18,22 @@ def read_catalog():
 
 def normalized(code: str) -> str:
     return code.lower().replace("_", "-")
+
+
+def packaged_locales(model_id: str) -> list[str] | None:
+    """Locales a packaged AudioCpp spec declares; None when that weight is absent or carries no spec."""
+    from scripts.config import models as model_cfg
+    from scripts.config.models.gguf_metadata import inspect_metadata
+
+    model = next((item for item in model_cfg.MODELS if item.label == model_id), None)
+    if model is None or not model.path.is_file():
+        return None
+    try:
+        metadata = inspect_metadata(model.path)["metadata"]
+    except ValueError:
+        return None
+    spec = json.loads(metadata.get("audiocpp.model_spec.json", "{}"))
+    return [str(code) for code in spec.get("languages", [])] or None
 
 
 def select(catalog, *, task=None, model=None, language=None):
