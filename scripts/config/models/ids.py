@@ -6,6 +6,7 @@ from enum import StrEnum
 class ModelId(StrEnum):
     ASR_AUDIOCPP_COHERE_TRANSCRIBE_03_2026_Q8_0 = "asr/audiocpp/cohere-transcribe-03-2026-q8_0"
     ASR_AUDIOCPP_HIGGS_AUDIO_V3_STT_Q8_0 = "asr/audiocpp/higgs-audio-v3-stt-q8_0"
+    ASR_AUDIOCPP_QWEN3_ASR_1_7B_Q8_0 = "asr/audiocpp/qwen3-asr-1.7b-q8_0"
     ASR_LLAMACPP_GRANITE_SPEECH_5_0_2B_MMPROJ_F16 = "asr/llamacpp/granite-speech-5.0-2b-mmproj-f16"
     ASR_LLAMACPP_GRANITE_SPEECH_5_0_2B_Q8_0 = "asr/llamacpp/granite-speech-5.0-2b-q8_0"
     ASR_LLAMACPP_QWEN3_ASR_1_7B_MMPROJ_Q8_0 = "asr/llamacpp/qwen3-asr-1.7b-mmproj-q8_0"

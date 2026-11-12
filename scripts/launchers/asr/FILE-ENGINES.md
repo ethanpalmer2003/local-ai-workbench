@@ -8,10 +8,11 @@ All required weights are downloaded and pinned in [the model catalog](../../conf
 | `speechcpp` | Packed Q8_0 ASR + Silero VAD | Offline, VAD-delimited live microphone |
 | `audiocpp-vulkan`, `audiocpp-rocm` | Q8_0 GGUF | Offline, stateful streaming WAV |
 | `audiocpp-ming-audio-tiny` | Existing Q4_K audio GGUF | Offline ASR; expert offload; auto language |
+| `audiocpp-qwen3` | Qwen3-ASR 1.7B Q8_0, AudioCpp conversion | Offline, stateful streaming WAV, 31 languages |
 | `parakeetcpp-v3` | TDT encoder, Q8 | Vulkan offline, Silero VAD |
 | `parakeetcpp-nemotron-streaming` | Streaming encoder, Q8 | Vulkan offline/VAD; CPU streaming WAV |
 
-NeMo and AudioCpp require separate GGUF conversions. speech.cpp uses its packed ASR file, not llama.cpp's main/projector pair. The default backend is Vulkan, except the explicit AudioCpp ROCm profile.
+NeMo and AudioCpp require separate GGUF conversions. speech.cpp uses its packed ASR file, not llama.cpp's main/projector pair. The default backend is Vulkan, except the explicit AudioCpp ROCm profile. `audiocpp-qwen3` runs the same Qwen3-ASR 1.7B model as the llama.cpp default from AudioCpp's own single-file conversion; [the pair measurement](../../tests/notes/asr/QWEN3-FRAMEWORK-PAIR.md) keeps llama.cpp in front for recognition.
 
 ```powershell
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.shared.file_cli --list

@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.review import public_audit
+from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.paths import CasePaths
 
 
@@ -30,6 +31,7 @@ class PublicAuditTests(unittest.TestCase):
             findings = public_audit.audit(Path(folder))
         self.assertEqual([finding.category for finding in findings], ["ocabulary"])
 
+    @fixture_processes()
     def test_history_scan_uses_a_dialect_that_can_match(self):
         # - POSIX ERE rejects the vocabulary lookarounds, and a refusal once read as "clean"
         with CasePaths(__file__).temporary_directory() as folder:

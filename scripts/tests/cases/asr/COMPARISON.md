@@ -21,9 +21,10 @@ C:/AI/bat/benchmarks/benchmark_asr_compare.bat --run --samples 2 --clips 2
 C:/AI/scripts/.venv/Scripts/python.exe -m scripts.tests.cases.asr.shared.coverage
 ```
 
-Preview does not start native code. Default is every configured resident profile: AudioCpp Cohere, NeMo and Ming;
+Preview does not start native code. Default is every configured resident profile: AudioCpp Cohere, NeMo, Ming and Qwen3-ASR;
 speech.cpp; Parakeet CPU/Vulkan, v3 and Nemotron streaming; Whisper Vulkan and embedded Kobold Whisper;
-llama.cpp Qwen, Gemma and Granite. Cohere and Granite have brief saved checks
+llama.cpp Qwen, Gemma and Granite. Qwen3-ASR is measured once per framework; [the pair](../../notes/asr/QWEN3-FRAMEWORK-PAIR.md)
+keeps llama.cpp serving it. Cohere and Granite have brief saved checks
 on two synthetic English clips, three repeats each; this does not establish multilingual/noisy quality.
 The original Parakeet CPU/Vulkan profiles use English 110M.
 `--engines` selects a subset; `--budget` bounds the whole inference sequence.

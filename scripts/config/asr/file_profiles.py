@@ -23,6 +23,8 @@ class FileAsrProfile:
     audio_family: str | None = None
     mode_executables: dict[str, Path] | None = None
     mode_environments: dict[str, tuple[tuple[str, str], ...]] | None = None
+    session_options: dict[str, object] | None = None
+    request_options: dict[str, object] | None = None
 
 
 def weight(label: str) -> str:
@@ -31,6 +33,15 @@ def weight(label: str) -> str:
 
 def binary(component: str, relative: str) -> Path:
     return project_cfg.component(component).framework_dir / relative
+
+
+def options(flag: str, values: dict[str, object]) -> tuple[str, ...]:
+    """Render AudioCpp key/value CLI options from the same mapping the generated config uses."""
+
+    def text(value: object) -> str:
+        return str(value).lower() if isinstance(value, bool) else str(value)
+
+    return tuple(part for key, value in values.items() for part in (flag, f"{key}={text(value)}"))
 
 
 ASR_FILE_PROFILES = {
@@ -120,6 +131,14 @@ for variant, backend in (("vulkan", "vulkan"), ("rocm", "hip")):
         audio_family="nemotron_asr",
     )
 
+MING_SESSION: dict[str, object] = {
+    "ming3_audio.disk_experts": True,
+    "ming3_audio.pin_experts": False,
+    "ming3_audio.expert_cache_size": 8,
+    "ming3_audio.disk_expert_read_threads": 4,
+}
+MING_REQUEST: dict[str, object] = {"max_tokens": 96, "enable_thinking": False}
+
 ASR_FILE_PROFILES["audiocpp-ming-audio-tiny"] = FileAsrProfile(
     "audiocpp",
     binary("audiocpp", "vulkan/audiocpp_cli.exe"),
@@ -134,16 +153,8 @@ ASR_FILE_PROFILES["audiocpp-ming-audio-tiny"] = FileAsrProfile(
         "vulkan",
         "--audio",
         "{input}",
-        "--request-option",
-        "max_tokens=96",
-        "--request-option",
-        "enable_thinking=false",
-        "--session-option",
-        "ming3_audio.disk_experts=true",
-        "--session-option",
-        "ming3_audio.pin_experts=false",
-        "--session-option",
-        "ming3_audio.expert_cache_size=8",
+        *options("--request-option", MING_REQUEST),
+        *options("--session-option", MING_SESSION),
     ),
     ("audiocpp/ming3-audio-tiny-q4_k",),
     {"offline": ()},
@@ -152,6 +163,44 @@ ASR_FILE_PROFILES["audiocpp-ming-audio-tiny"] = FileAsrProfile(
     server_arguments=("--config", "{config}", "--port", "{port}", "--no-ui"),
     server_executable=binary("audiocpp", "vulkan/audiocpp_server.exe"),
     audio_family="ming3_audio",
+    session_options=MING_SESSION,
+    request_options=MING_REQUEST,
+)
+
+# AudioCpp's fastest Qwen session settings; the spec's cuda_perf preset is CUDA-gated, so the
+# equivalent Vulkan options are selected explicitly. Faster on both corpus clips with unchanged text.
+QWEN3_SESSION: dict[str, object] = {
+    "attention": "flash",
+    "packed_projections": True,
+    "kv_cache_type": "f16",
+    "kv_cache_alignment": 256,
+    "offline_batch_size": 2,
+}
+ASR_FILE_PROFILES["audiocpp-qwen3"] = FileAsrProfile(
+    "audiocpp",
+    binary("audiocpp", "vulkan/audiocpp_cli.exe"),
+    (
+        "--task",
+        "asr",
+        "--family",
+        "qwen3_asr",
+        "--model",
+        weight("asr/audiocpp/qwen3-asr-1.7b-q8_0"),
+        "--backend",
+        "vulkan",
+        "--audio",
+        "{input}",
+        "--language",
+        "{language}",
+        *options("--session-option", QWEN3_SESSION),
+    ),
+    ("asr/audiocpp/qwen3-asr-1.7b-q8_0",),
+    {"offline": (), "streaming": ("--mode", "streaming")},
+    streaming_kind="native streaming Qwen3 checkpoint; separate AudioCpp GGUF from the llama.cpp file",
+    server_arguments=("--config", "{config}", "--port", "{port}", "--no-ui"),
+    server_executable=binary("audiocpp", "vulkan/audiocpp_server.exe"),
+    audio_family="qwen3_asr",
+    session_options=QWEN3_SESSION,
 )
 
 for key, label, streaming in (
