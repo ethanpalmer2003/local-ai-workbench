@@ -11,25 +11,20 @@ import sys
 import time
 
 from scripts.config import project_config as project_cfg
+from scripts.tools.capability_matrix import CATEGORY as _CATEGORIES
 
-# - category -> whole-run budget in seconds; the category is what the module measures, not its folder
+# - category -> whole-run budget in seconds; the matrix owns which category a row is
 CATEGORY_SECONDS = {"smoke": 90, "probe": 300, "benchmark": 900}
 DEFAULT_CATEGORY = "probe"
 TIMEOUT_STATUS = 124
 
-# - one line per module the runner is expected to supervise
-MODULE_CATEGORY = {
-    "benchmark_specspeed": "smoke",
-    "benchmark_context_stream": "smoke",
-    "benchmark_backends": "probe",
-    "benchmark_ngram": "benchmark",
-    "benchmark_speedbench": "benchmark",
-}
+# - module names carry the same last segment as their capability subject
+_BY_MODULE = {subject.rsplit("/", 1)[-1]: category for subject, category in _CATEGORIES.items()}
 
 
 def category_for(module: str) -> str:
-    """The category of one module name, defaulting to a plain probe."""
-    return MODULE_CATEGORY.get(module.rsplit(".", 1)[-1], DEFAULT_CATEGORY)
+    """The matrix category of one module name, defaulting to a plain probe."""
+    return _BY_MODULE.get(module.rsplit(".", 1)[-1], DEFAULT_CATEGORY)
 
 
 def budget_for(module: str) -> int:

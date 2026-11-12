@@ -20,7 +20,7 @@ class ProbeRunnerTests(unittest.TestCase):
     def test_each_category_has_its_own_budget(self):
         self.assertEqual(probe_runner.category_for("scripts.benchmarks.llamacpp.benchmark_specspeed"), "smoke")
         self.assertEqual(probe_runner.category_for("scripts.benchmarks.llamacpp.benchmark_ngram"), "benchmark")
-        self.assertEqual(probe_runner.category_for("scripts.anything.else"), probe_runner.DEFAULT_CATEGORY)
+        self.assertEqual(probe_runner.category_for("scripts.anything.else"), "probe")
         self.assertLess(probe_runner.CATEGORY_SECONDS["smoke"], probe_runner.CATEGORY_SECONDS["benchmark"])
 
 
