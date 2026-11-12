@@ -7,6 +7,7 @@
 ## Reliability
 
 - [ ] Nothing is waiting here. A defect that outlives its fix goes back on this list with the check that would have caught it.
+- [ ] The no-model provider seed cannot work: `external_script` writes `kaihordewebui_*` keys, while Lite loads one `settings` record from the IndexedDB database `e_kaihordewebui_`. Either rewrite it to update that record once, or delete the seed and the `--external-endpoint` plumbing and let the page keep whatever provider is saved. ~30 min
 
 ## Needs a model run or device
 
