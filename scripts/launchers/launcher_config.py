@@ -453,7 +453,6 @@ class SpeechWorkflowDefaults:
     llm_model: str
     tts_model: str
     tts_voice: str
-    clone_voice: bool
     # - Image generation this stack starts with: off, with (loaded alongside) or on-demand (swapped in)
     image: str = "off"
 
@@ -491,7 +490,6 @@ KOBOLD_CHAT = SpeechWorkflowDefaults(
     llm_model=local_overlay.setting("chat.llm", "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS"),
     tts_model=local_overlay.setting("chat.tts.model", "audiocpp/breeze-tts-2-q4_0"),
     tts_voice=_CHAT_TTS_VOICE,
-    clone_voice=bool(_CHAT_TTS_VOICE),
     image=_CHAT_IMAGE if _CHAT_IMAGE in IMAGE_MODES else "off",
 )
 # - Language practice: Gemma chat, Supertonic TTS without cloning, and Qwen3-ASR served by AudioCpp.
@@ -505,7 +503,6 @@ LANGUAGE_PRACTICE = SpeechWorkflowDefaults(
     llm_model="llamacpp/gemma-4-E4B-it-Q4_0",
     tts_model=SUPERTONIC_MODEL,
     tts_voice="F1",
-    clone_voice=False,
 )
 
 

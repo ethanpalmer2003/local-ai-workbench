@@ -75,8 +75,7 @@ class DefaultPaths(unittest.TestCase):
         models = [model for model in config["models"] if model["id"] == cfg.AUDIOCPP_SERVICE.model]
         self.assertEqual(len(models), 1, "default audio model must exist in server.json")
         self.assertTrue(Path(models[0]["path"]).is_file(), models[0]["path"])
-        # - a configured default voice must resolve; with none, cloning stays off
-        self.assertEqual(cfg.KOBOLD_CHAT.clone_voice, bool(cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value))
+        # - a configured default voice must resolve to a clip reference; with none, cloning stays off
         reference = audiocpp_catalog.resolve_voice_ref(cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value)
         if cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value:
             self.assertIsNotNone(reference, "configured default voice has no reference clip")
@@ -718,7 +717,9 @@ class ProxyHTTP(unittest.TestCase):
         self.assertEqual(forwarded["model"], cfg.AUDIOCPP_SERVICE.model)
         # - an unknown clone id falls back to the configured default, which may be empty
         self.assertEqual(forwarded["voice"], cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value)
-        self.assertEqual("voice_ref" in forwarded, cfg.KOBOLD_CHAT.clone_voice)
+        self.assertEqual(
+            "voice_ref" in forwarded, bool(audiocpp_catalog.resolve_voice_ref(cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value))
+        )
 
     def test_audio_unicode_input_survives_logging_and_forwarding(self):
         text = "Hello, \u4e16\u754c."
@@ -793,7 +794,9 @@ class ProxyHTTP(unittest.TestCase):
         assert isinstance(options, dict)
         self.assertEqual(options["text_chunk_mode"], "tag_aware")
 
-        self.assertEqual("voice_ref" in payload, cfg.KOBOLD_CHAT.clone_voice)
+        self.assertEqual(
+            "voice_ref" in payload, bool(audiocpp_catalog.resolve_voice_ref(cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value))
+        )
 
     def test_vocal_event_toggle_is_independent_of_tones_and_audio_streaming(self):
         for streaming in (False, True):
