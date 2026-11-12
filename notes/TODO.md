@@ -19,6 +19,7 @@
 
 ### Unattended
 
+- [ ] Compare AudioCpp's own Qwen3-ASR family against the llama.cpp Qwen3-ASR arm: the installed AudioCpp spec lists `qwen3_asr` with the same 1.7B Q8_0 package, but nothing here has run it. It needs the AudioCpp-format GGUF and would answer which framework should serve the default recogniser. ~30-45 min
 - [ ] Compare the practice stack with Lemonade on one of its MOSS TTS entries instead of `kokoro-v1`; that removes the Lemonade leg as a reason to keep Kokoro installed. Needs the Lemonade model download first. ~30-45 min
 - [ ] Decide whether Lemonade qualifies as a voice-design framework now that `MOSS-VoiceGen` is in its catalog; allowing it for the character profile needs a test, not just the label. ~20-30 min
 - [ ] Retest llama.cpp coding on the ROCm build when a release newer than b1373 appears; b1373 aborts at startup with device -1, and b1372 is installed again. ~20 min
