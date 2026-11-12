@@ -1,9 +1,8 @@
-"""Run one probe module under a hard wall-clock deadline.
+"""Run a capability module under a hard wall-clock deadline, budgeted by category.
 
-A probe is expected to finish quickly, and its inner request timeouts only bound one read: an engine
-that accepts a request and never answers would otherwise hold the row for minutes. This runner is the
-supervisor - it kills the child at the deadline and reports `ProbeTimeout`, because a guard inside the
-child cannot preempt a blocking call on Windows.
+Capability rows are not all probes. A smoke check answers one request, a probe starts an engine and
+sends a few, and a benchmark measures many runs across profiles or builds. Each category gets its own
+budget, so a hung engine is killed quickly instead of waiting out its inner timeouts.
 """
 
 import argparse
@@ -13,20 +12,29 @@ import time
 
 from scripts.config import project_config as project_cfg
 
-# - whole-run budgets for the quick probe capabilities, in seconds
-BUDGETS = {
-    "benchmark_specspeed": 180,
-    "benchmark_ngram": 300,
-    "benchmark_context_stream": 300,
-    "benchmark_backends": 300,
-}
-DEFAULT_BUDGET = 180
+# - category -> whole-run budget in seconds; the category is what the module measures, not its folder
+CATEGORY_SECONDS = {"smoke": 90, "probe": 300, "benchmark": 900}
+DEFAULT_CATEGORY = "probe"
 TIMEOUT_STATUS = 124
+
+# - one line per module the runner is expected to supervise
+MODULE_CATEGORY = {
+    "benchmark_specspeed": "smoke",
+    "benchmark_context_stream": "smoke",
+    "benchmark_backends": "probe",
+    "benchmark_ngram": "benchmark",
+    "benchmark_speedbench": "benchmark",
+}
+
+
+def category_for(module: str) -> str:
+    """The category of one module name, defaulting to a plain probe."""
+    return MODULE_CATEGORY.get(module.rsplit(".", 1)[-1], DEFAULT_CATEGORY)
 
 
 def budget_for(module: str) -> int:
     """The whole-run budget for one probe module name."""
-    return BUDGETS.get(module.rsplit(".", 1)[-1], DEFAULT_BUDGET)
+    return CATEGORY_SECONDS[category_for(module)]
 
 
 def run(command: list[str], seconds: float) -> int:
@@ -53,9 +61,12 @@ def run_module(module: str, seconds: float) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("module", help="module to run, for example scripts.benchmarks.llamacpp.benchmark_ngram")
-    parser.add_argument("--deadline", type=float, help="whole-run budget in seconds (default: per-module)")
+    parser.add_argument("--category", choices=tuple(CATEGORY_SECONDS), help="override the module's category")
+    parser.add_argument("--deadline", type=float, help="whole-run budget in seconds, overriding the category")
     args = parser.parse_args(argv)
-    seconds = args.deadline if args.deadline is not None else budget_for(args.module)
+    category = args.category or category_for(args.module)
+    seconds = args.deadline if args.deadline is not None else CATEGORY_SECONDS[category]
+    print(f"[budget] {args.module} category={category} deadline={seconds:.0f}s", flush=True)
     return run_module(args.module, seconds)
 
 
