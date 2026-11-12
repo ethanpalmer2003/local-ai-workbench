@@ -291,7 +291,10 @@ def process_strata(tool: ToolSpec, dest_dir: Path, check_only: bool, summary: sh
     # - a part the feed never publishes is current: nothing is offered, so nothing needs a person
     groups = {STRATA_STATUS_GROUPS.get(report[part]["status"], "manual_check") for part in parts}
     detail = "; ".join(strata_updates.describe(part, report[part]) for part in parts)
-    summary.record(tool, "manual_check" if "manual_check" in groups else "current", detail)
+    newer = "manual_check" in groups
+    # - a newer part is a notice by default; --update-strata turns it into work for this run
+    group = "available" if newer and tool.name in summary.optional_apply else "manual_check" if newer else "current"
+    summary.record(tool, group, detail)
 
 
 def installed_desktop_version(tool: ToolSpec, dest_dir: Path) -> str | None:
