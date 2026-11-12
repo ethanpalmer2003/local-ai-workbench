@@ -1,5 +1,6 @@
 # What is parked, why it cannot start, and what would unpark it. A capability row names the same
 # thing by its subject, so the matrix reads its reason here instead of keeping a second list.
+# Table view: python -m scripts.tools.yaml_table scripts/config/shared/deferred.yaml
 - thing: Fish Audio Drama 3, and every comparison of it
   kind: model
   subject: shared/drama3_offload

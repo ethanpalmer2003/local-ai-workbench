@@ -113,6 +113,7 @@ from scripts.tests.cases.shared.test_stage_runner import StageRunnerTests
 from scripts.tests.cases.shared.test_strata_profile import StrataProfileLinkTests
 from scripts.tests.cases.shared.test_toolchains import ToolchainTests
 from scripts.tests.cases.shared.test_validate import ValidatePlanTests
+from scripts.tests.cases.shared.test_yaml_table import YamlTableTests
 from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
 from scripts.tests.cases.shared.workflows.test_speech_profiles import SpeechProfiles
 from scripts.tests.cases.shared.workflows.test_text_processing import TextProcessingTests
@@ -207,6 +208,7 @@ if __name__ == "__main__":
                     DownloadModelsTests,
                     LocalOverlayTests,
                     LabelVocabularyTests,
+                    YamlTableTests,
                     PolicyTests,
                     LiveStampTests,
                     LanguageMatrixTests,
