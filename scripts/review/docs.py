@@ -13,12 +13,13 @@ from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
 from scripts.review.sources import maintained_files
 
-# - three caps only; each document role picks one, so a new kind needs no new number
-WORD_TIERS = {"large": 700, "medium": 500, "small": 300}
+# - four caps only; each document role picks one, so a new kind needs no new number
+WORD_TIERS = {"long": 1000, "large": 700, "medium": 500, "small": 300}
 ROLE_TIERS = {
     "root": "large",
     "hub": "large",
     "agent rule": "small",
+    "running list": "long",
     "note": "medium",
     "review record": "medium",
     "component guide": "medium",
@@ -38,11 +39,17 @@ MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 # - evidence and retired trees are not maintained documents, so a pointer into them will not survive a clone
 UNTRACKED_PARTS = frozenset({"output", "old", "retired", "trash"})
 # - one home per role: the table is the whole taxonomy, so an unlisted kind fails instead of drifting in
-RUNNING_LISTS = frozenset({"TODO.md", "OPEN-QUESTIONS.md", "UPSTREAM.md"})
+RUNNING_LISTS = frozenset({"TODO.md", "OPEN-QUESTIONS.md", "UPSTREAM.md", "DEFERRED.md", "LABELS.md"})
+# - indexes that grow with every decision get the long cap; they are read for one row, not one rule
+RUNNING_LIST_PATHS = (
+    r"notes/(?:TODO|OPEN-QUESTIONS|UPSTREAM|DEFERRED|LABELS|NATIVE-VALIDATION|ONBOARDING)\.md",
+    r"scripts/tests/notes/(?:STATUS|STATUS-EVIDENCE|OUTCOMES|ESTIMATES)\.md",
+)
 ROLE_RULES = (
     ("root", r"(?:README|AGENTS)\.md"),
     ("agent rule", r".*AGENTS\.md|\.agents/.*\.md"),
     ("review record", r"notes/reviews/.*\.md"),
+    ("running list", "|".join(RUNNING_LIST_PATHS)),
     ("note", r"notes/.*\.md"),
     ("hub", r"^(?:[^/]+/)+README\.md$"),
     ("component guide", r"scripts/(?:[^/]+/)+[A-Z][A-Z0-9-]*\.md"),
@@ -50,7 +57,7 @@ ROLE_RULES = (
 # - a policy number is stated once; every other document links to its owner instead of repeating it
 POLICY_NUMBERS = (
     (
-        r"\b(?:300|500|700)\s+words\b|\b(?:large|medium|small),\s*(?:300|500|700)\b",
+        r"\b(?:300|500|700|1000)\s+words\b|\b(?:large|medium|small|long),\s*(?:300|500|700|1000)\b",
         "word caps",
         ".agents/NOTES-CONVENTIONS.md",
     ),
@@ -70,7 +77,7 @@ def policy_number_issues(relative: str, text: str) -> list[str]:
 def cap_table_issues() -> list[str]:
     """The caps the docs state must match the tiers the gate uses."""
     rules = (project_cfg.BASE_DIR / ".agents" / "NOTES-CONVENTIONS.md").read_text(encoding="utf-8-sig")
-    stated = {tier: int(number) for tier, number in re.findall(r"\|\s*(large|medium|small),\s*(\d+)\s*\|", rules)}
+    stated = {tier: int(number) for tier, number in re.findall(r"\|\s*(long|large|medium|small),\s*(\d+)\s*\|", rules)}
     issues = [
         f"NOTES-CONVENTIONS states {tier} {stated[tier]} words but the gate uses {WORD_TIERS[tier]}"
         for tier in WORD_TIERS

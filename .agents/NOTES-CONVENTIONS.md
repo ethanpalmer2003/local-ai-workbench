@@ -7,7 +7,8 @@
 | root | repo root: `README.md`, `AGENTS.md` | large, 700 |
 | hub | each folder's `README.md` | large, 700 |
 | agent rule | `.agents/`, including skills | small, 300 |
-| note | `notes/`, including the running lists | medium, 500 |
+| running list | the indexes and status pages: `notes/TODO.md`, `OPEN-QUESTIONS.md`, `UPSTREAM.md`, `DEFERRED.md`, `LABELS.md`, `NATIVE-VALIDATION.md`, `ONBOARDING.md`, and `scripts/tests/notes/STATUS.md`, `OUTCOMES.md`, `ESTIMATES.md` | long, 1000 |
+| note | `notes/`, except the running lists | medium, 500 |
 | review record | `notes/reviews/` | medium, 500 |
 | component guide | a component folder or `scripts/tests/notes/`, uppercase name | medium, 500 |
 

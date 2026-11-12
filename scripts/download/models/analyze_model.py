@@ -43,7 +43,6 @@ def discover(groups=None, paths=()):
                 "notes": model.notes,
                 "sha256": model.sha256,
                 "roles": list(model.roles),
-                "runtimes": list(model.runtimes),
             }
         )
     files = model_sync.installed_model_files(roots)

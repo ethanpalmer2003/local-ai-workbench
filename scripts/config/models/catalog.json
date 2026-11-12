@@ -14,10 +14,6 @@
         "chat",
         "multilingual"
       ],
-      "runtimes": [
-        "llamacpp",
-        "koboldcpp"
-      ],
       "source_page": null
     },
     {
@@ -32,10 +28,6 @@
       "roles": [
         "projector",
         "multilingual"
-      ],
-      "runtimes": [
-        "llamacpp",
-        "koboldcpp"
       ],
       "source_page": null
     },
@@ -52,10 +44,6 @@
         "chat",
         "coding"
       ],
-      "runtimes": [
-        "llamacpp",
-        "koboldcpp"
-      ],
       "source_page": null
     },
     {
@@ -68,7 +56,6 @@
       "notes": "High-ranking ASR shortlist; native conversion quality parity unverified.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -81,7 +68,6 @@
       "notes": "Official IBM conversion; requires matching audio projector and runtime support.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -94,7 +80,6 @@
       "notes": "Matching Granite 5.0 2B audio encoder; include in memory and disk accounting.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -107,7 +92,6 @@
       "notes": "Pinned Parakeet.cpp conversion; separate from NeMo/AudioCpp GGUF formats.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -120,7 +104,6 @@
       "notes": "Pinned Parakeet.cpp conversion; separate from NeMo/AudioCpp GGUF formats.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -133,7 +116,6 @@
       "notes": "Pinned runtime-specific ASR asset; shared by this component's launch profiles.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -146,7 +128,6 @@
       "notes": "Pinned runtime-specific ASR asset; shared by this component's launch profiles.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -159,7 +140,6 @@
       "notes": "Pinned runtime-specific ASR asset; shared by this component's launch profiles.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -172,7 +152,6 @@
       "notes": "Parakeet.cpp quick-start English hybrid TDT+CTC model; shared by its CPU and Vulkan builds.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -185,7 +164,6 @@
       "notes": "Separate Silero VAD GGUF for Parakeet.cpp speech segmentation; not a Whisper VAD package.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -198,7 +176,6 @@
       "notes": "Multilingual Whisper.cpp model; upstream lists it at 547 MiB.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -211,7 +188,6 @@
       "notes": "Optional llama.cpp ASR alternative; requires its matching Q8_0 audio projector.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -224,7 +200,6 @@
       "notes": "Audio encoder/projector for the Qwen3-ASR-1.7B Q8_0 llama.cpp alternative.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -237,7 +212,6 @@
       "notes": "Optional faster/smaller multilingual alternative; expect lower accuracy than large-v3-turbo.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -250,7 +224,6 @@
       "notes": "Optional lowest-latency multilingual alternative; expect lower accuracy than large-v3-turbo.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -263,7 +236,6 @@
       "notes": "",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -276,7 +248,6 @@
       "notes": "AudioCpp-native 16 kHz Silero weights; distinct from other engines' GGUF packages.",
       "sha256": "c59271c284ae9c8335d795d60e0bfdb71aaaceec578d9bd9ffc1b8153c319ea1",
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -289,7 +260,6 @@
       "notes": "Pinned runtime-specific ASR asset; shared by this component's launch profiles.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -302,7 +272,6 @@
       "notes": "Staged candidate: requires ming3_audio support. Optional session setting ming3_audio.disk_experts stages experts through a GPU cache; not Drama 3 CPU expert-layer execution. See config/audiocpp/MODELS.md.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -315,7 +284,6 @@
       "notes": "Pinned Kokoro v1.0 ONNX INT8 comparison asset; distinct conversion from AudioCpp Q8_0.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null,
       "speech_class": "fast-multilingual"
     },
@@ -329,7 +297,6 @@
       "notes": "Pinned Kokoro v1.0 ONNX INT8 comparison asset; distinct conversion from AudioCpp Q8_0.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -342,7 +309,6 @@
       "notes": "Pinned Kokoro v1.0 ONNX INT8 comparison asset; distinct conversion from AudioCpp Q8_0.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -355,7 +321,6 @@
       "notes": "Pinned Kokoro v1.0 ONNX INT8 comparison asset; distinct conversion from AudioCpp Q8_0.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -368,7 +333,6 @@
       "notes": "Pinned Kokoro v1.0 ONNX INT8 comparison asset; distinct conversion from AudioCpp Q8_0.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -381,7 +345,6 @@
       "notes": "Higher-quality English Lessac voice; not a multilingual model or a size-matched Kokoro equivalent.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null,
       "speech_class": "none"
     },
@@ -395,7 +358,6 @@
       "notes": "Higher-quality English Lessac voice; not a multilingual model or a size-matched Kokoro equivalent.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -408,7 +370,6 @@
       "notes": "Higher-quality English Lessac voice; not a multilingual model or a size-matched Kokoro equivalent.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -421,7 +382,6 @@
       "notes": "English Lessac medium ONNX voice; shared with Sherpa's Piper/VITS runner.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null,
       "speech_class": "none"
     },
@@ -435,7 +395,6 @@
       "notes": "Voice configuration shared by Piper and Sherpa.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -448,7 +407,6 @@
       "notes": "Phoneme tokens for Sherpa's Piper/VITS runner.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -461,7 +419,6 @@
       "notes": "English pronunciation lexicon required by Sherpa's Piper/VITS runner.",
       "sha256": "8b67ae549a465eee78f92ecb74644ad90c3c58ce65f19c68baf85878a10ef73a",
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -474,7 +431,6 @@
       "notes": "KoboldCpp's recommended native Kokoro package, including its phonemizer; separate from AudioCpp's GGUF format.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null,
       "speech_class": "fast-multilingual"
     },
@@ -488,7 +444,6 @@
       "notes": "Small AudioCpp Kokoro package retained as an option; lacks bundled Japanese UniDic resources.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null,
       "speech_class": "fast-multilingual"
     },
@@ -502,7 +457,6 @@
       "notes": "Default multilingual Kokoro with bundled UniDic/eSpeak resources and all voices; Japanese also requires the MeCab runtime DLL.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null,
       "speech_class": "fast-multilingual"
     },
@@ -516,7 +470,6 @@
       "notes": "Supertonic 3, one self-contained GGUF with its text config and voice styles embedded: 31 languages and ten preset voices (M1-M5, F1-F5). Shared with KoboldCpp, which serves the same file through its audio.cpp port.",
       "sha256": "9edd05cf92feab49c6b29721d14c86566459dca7f4a6eeb99306372cdce03697",
       "roles": [],
-      "runtimes": [],
       "source_page": "https://huggingface.co/Supertone/supertonic",
       "speech_class": "fast-multilingual"
     },
@@ -530,7 +483,6 @@
       "notes": "Optional Python Kokoro checkpoint; the native/external C++ profiles use their separate GGUF packages.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null,
       "speech_class": "fast-multilingual"
     },
@@ -544,7 +496,6 @@
       "notes": "Optional Python Kokoro American English voice style.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -557,7 +508,6 @@
       "notes": "Optional Python Kokoro Spanish voice style.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -570,7 +520,6 @@
       "notes": "Optional Python Kokoro French voice style.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -583,7 +532,6 @@
       "notes": "Staged candidate: requires ming3_tts support; standalone offline GGUF. See config/audiocpp/MODELS.md.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null,
       "speech_class": "fast-multilingual"
     },
@@ -597,7 +545,6 @@
       "notes": "Optional 15.88 GiB Q2_K experts model; requires an AudioCpp build with fish_drama3 support. For lower VRAM use fish_drama3.cpu_expert_layers to offload experts to host RAM.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null,
       "speech_class": "fast-multilingual"
     },
@@ -611,7 +558,6 @@
       "notes": "",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null,
       "speech_class": "voice-design"
     },
@@ -625,7 +571,6 @@
       "notes": "Optional override; bundled Nova checkpoints already include this component.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -638,7 +583,6 @@
       "notes": "Optional override; bundled Nova checkpoints already include this component.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -651,7 +595,6 @@
       "notes": "Exact original source not recorded.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -664,7 +607,6 @@
       "notes": "Exact original source not recorded.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -677,7 +619,6 @@
       "notes": "Optional override; bundled Nova checkpoints already include this component.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -690,7 +631,6 @@
       "notes": "",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -703,7 +643,6 @@
       "notes": "",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -716,7 +655,6 @@
       "notes": "",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -729,7 +667,6 @@
       "notes": "Exact original source not recorded.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -742,7 +679,6 @@
       "notes": "",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -755,7 +691,6 @@
       "notes": "",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -768,7 +703,6 @@
       "notes": "",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -781,7 +715,6 @@
       "notes": "Recorded revision 49b093a39c19169a8a81721dcc541e07e945232f; 1452269922 bytes; SHA-256 685b06ee3d9b2039647698fc4ea33175112462fc374e2777312c907897dfce8d. Conv VAE experiments are retired on this PC.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -794,7 +727,6 @@
       "notes": "Historical candidate; source and backend compatibility not verified.",
       "sha256": null,
       "roles": [],
-      "runtimes": [],
       "source_page": null
     },
     {
@@ -809,9 +741,6 @@
       "roles": [
         "embedding"
       ],
-      "runtimes": [
-        "llamacpp"
-      ],
       "source_page": "https://huggingface.co/ggml-org/embeddinggemma-2-GGUF"
     },
     {
@@ -824,7 +753,6 @@
       "notes": "AudioCpp conversion of Qwen3-ASR 1.7B: one self-contained GGUF with embedded config, unlike the llama.cpp weights + mmproj pair.",
       "sha256": "3bc2462eca3a3a8f56abcd860d0943ffdc0546547dde55a9d08589607d6f3936",
       "roles": [],
-      "runtimes": [],
       "source_page": null
     }
   ]

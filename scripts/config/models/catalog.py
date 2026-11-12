@@ -51,7 +51,7 @@ def _destination(group: str, label: str, raw: dict[str, Any], destinations: set[
     return str(filename), destination
 
 
-def _download_fields(raw: dict[str, Any], label: str) -> tuple[str | None, bool, str | None, list[Any], list[Any]]:
+def _download_fields(raw: dict[str, Any], label: str) -> tuple[str | None, bool, str | None, list[Any]]:
     url = raw.get("url")
     in_use = bool(raw.get("in_use", False))
     if in_use and not url:
@@ -60,10 +60,9 @@ def _download_fields(raw: dict[str, Any], label: str) -> tuple[str | None, bool,
     if sha256 is not None and not SHA256.match(str(sha256)):
         raise ValueError(f"Invalid SHA256 for {label}")
     roles = raw.get("roles") or []
-    runtimes = raw.get("runtimes") or []
-    if not isinstance(roles, list) or not isinstance(runtimes, list):
-        raise ValueError(f"Model roles/runtimes must be lists: {label}")
-    return (str(url) if url else None), in_use, (str(sha256) if sha256 else None), roles, runtimes
+    if not isinstance(roles, list):
+        raise ValueError(f"Model roles must be a list: {label}")
+    return (str(url) if url else None), in_use, (str(sha256) if sha256 else None), roles
 
 
 def _entry(raw: dict[str, Any], labels: set[str], destinations: set[str]) -> ModelDownload:
@@ -80,7 +79,7 @@ def _entry(raw: dict[str, Any], labels: set[str], destinations: set[str]) -> Mod
     if label in labels:
         raise ValueError(f"Duplicate model label: {label}")
     filename, destination = _destination(group, label, raw, destinations)
-    url, in_use, sha256, roles, runtimes = _download_fields(raw, label)
+    url, in_use, sha256, roles = _download_fields(raw, label)
     speech_class = raw.get("speech_class")
     if speech_class is not None and (speech_class not in SPEECH_CLASSES or category != "tts"):
         raise ValueError(f"Invalid speech class for {label}: {speech_class}")
@@ -94,8 +93,7 @@ def _entry(raw: dict[str, Any], labels: set[str], destinations: set[str]) -> Mod
         in_use,
         str(raw.get("notes") or ""),
         sha256,
-        tuple(str(item) for item in roles),
-        tuple(str(item) for item in runtimes),
+        tuple(dict.fromkeys(str(item) for item in roles)),
         str(raw["source_page"]) if raw.get("source_page") else None,
         filename,
         category,
@@ -193,7 +191,6 @@ def entry_dict(model: ModelDownload) -> dict[str, Any]:
         "notes": model.notes,
         "sha256": model.sha256,
         "roles": list(model.roles),
-        "runtimes": list(model.runtimes),
         "source_page": model.source_page,
         "speech_class": model.speech_class,
     }

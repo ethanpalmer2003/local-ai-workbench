@@ -184,7 +184,6 @@ def print_model(model: model_cfg.ModelDownload) -> None:
     print(f"Group    : {model.group}")
     print(f"Path     : {model.path} ({'installed' if model.path.is_file() else 'missing'})")
     print(f"Roles    : {', '.join(model.roles) or '-'}")
-    print(f"Runtimes : {', '.join(model.runtimes) or '-'}")
     print(f"Catalog  : {'required' if model.in_use else 'inactive'}")
     print("\nReferences:")
     for ref in refs:
@@ -387,7 +386,6 @@ def command_add(args: argparse.Namespace) -> int:
         "notes": args.notes,
         "sha256": args.sha256,
         "roles": list(args.roles or []),
-        "runtimes": list(args.runtimes or []),
         "source_page": args.source_page,
     }
     target = catalog.overlay_path() if args.overlay else catalog.CATALOG_PATH

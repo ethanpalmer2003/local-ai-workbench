@@ -19,7 +19,7 @@ def catalog():
             "reason": "" if row.path.is_file() else "Model file is not installed",
         }
         for row in models.MODELS
-        if "chat" in row.roles and cfg.LANGUAGE_PRACTICE.framework in row.runtimes
+        if "chat" in row.roles
     ]
 
 

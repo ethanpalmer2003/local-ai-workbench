@@ -5,16 +5,17 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 ## Unresolved
 
 - **Which catalog fields mirror a framework.** [The rule](../.agents/CODE.md) forbids copying a fact a
-  framework already exposes. It removed `speech_modes`, since AudioCpp's spec answers preset versus
-  clone; `speech_class` stays because no framework states a profile floor. Unaudited: `runtimes`,
-  `roles`, `in_use`, and AudioCpp options copied from packaged specs. Ask of each whether the
-  framework can answer it in place, and whether the copy can disagree; settle one per review.
+  framework already exposes. It removed `speech_modes` (AudioCpp's spec answers preset versus clone)
+  and `runtimes` (a GGUF loads in both; the one exception follows from the role). `speech_class` stays
+  because no framework states a profile floor. Unaudited: `roles`, `in_use`, and AudioCpp options
+  copied from packaged specs. Ask whether the framework can answer a field in place and whether the
+  copy can disagree; settle one per review.
 
 ## Superseded
 
-A replacement is measured and clearly ahead, while the older option still works and stays installed.
-An entry leaves this list when that option is retired or the evidence stops holding, so an entry
-here means "waiting to be dropped", not "undecided".
+A replacement is measured and clearly ahead while the older option still works and stays installed. An
+entry leaves when that option is retired or the evidence stops holding, so a row here means "waiting to
+be dropped", not "undecided".
 
 - **Kokoro as the practice voice.** Supertonic 3 is ahead on request time, load time, VRAM and
   language count ([timings](../scripts/tests/notes/SUPERTONIC-TTS-SCREEN.md)). Kokoro stays because

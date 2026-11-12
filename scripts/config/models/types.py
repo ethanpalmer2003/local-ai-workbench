@@ -16,7 +16,6 @@ class ModelDownload:
     notes: str = ""
     sha256: str | None = None
     roles: tuple[str, ...] = ()
-    runtimes: tuple[str, ...] = ()  # Candidate routing, not evidence of tested compatibility.
     source_page: str | None = None  # Provenance page; may not be a direct downloadable file.
     filename: str | None = None  # Destination relative to the component's models_dir.
     category: str = ""  # Catalog module key: llms/asr/tts/images.
