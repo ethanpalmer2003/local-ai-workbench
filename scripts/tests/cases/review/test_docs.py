@@ -48,6 +48,7 @@ class RoleTests(unittest.TestCase):
             "AGENTS.md": "root",
             ".agents/skills/docs-writing/SKILL.md": "agent rule",
             ".agents/CHECKS.md": "agent rule",
+            ".agents/CODE.md": "code rules",
             "notes/TODO.md": "running list",
             "notes/reviews/STRUCTURE-REVIEW.md": "review record",
             "notes/ONBOARDING.md": "running list",
