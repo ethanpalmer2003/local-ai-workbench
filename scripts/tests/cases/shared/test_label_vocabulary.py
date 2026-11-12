@@ -32,14 +32,23 @@ class LabelVocabularyTests(unittest.TestCase):
         for stack in stacks:
             self.assertIn(stack.profile, cfg.PROFILE_REQUIREMENTS)
         labels = {model.label for model in models.MODELS}
-        roles = {role for model in models.MODELS for role in (model.roles or [])}
         self.assertEqual(set(cfg.TOOL_DEFAULTS), {"transcription", "embeddings"})
-        for name, row in cfg.TOOL_DEFAULTS.items():
-            with self.subTest(tool=name):
-                self.assertIn(row.model, labels)
-                self.assertIn(row.role, roles | {"asr"})
-        self.assertEqual(models.path(cfg.TOOL_DEFAULTS["transcription"].model), cfg.QWEN3_ASR.model)
-        self.assertEqual(models.path(cfg.TOOL_DEFAULTS["embeddings"].model), cfg.EMBEDDINGS_SERVER.model)
+        self.assertEqual(set(cfg.MEDIA_DEFAULTS), {"image", "video"})
+        for name, row in {**cfg.TOOL_DEFAULTS, **cfg.MEDIA_DEFAULTS}.items():
+            with self.subTest(default=name):
+                self.assertEqual(row.name, name)
+                if row.model is not None:
+                    self.assertIn(row.model, labels)
+        # - Tool members live inside the tool profile; a media entry is its own profile.
+        for name in cfg.MEDIA_DEFAULTS:
+            self.assertIn(name, cfg.PROFILE_REQUIREMENTS)
+        self.assertTrue(set(cfg.TOOL_DEFAULTS).isdisjoint(cfg.PROFILE_REQUIREMENTS))
+        transcription, embeddings = (cfg.TOOL_DEFAULTS["transcription"].model, cfg.TOOL_DEFAULTS["embeddings"].model)
+        assert transcription is not None and embeddings is not None
+        self.assertEqual(models.path(transcription), cfg.QWEN3_ASR.model)
+        self.assertEqual(models.path(embeddings), cfg.EMBEDDINGS_SERVER.model)
+        self.assertIsNone(cfg.MEDIA_DEFAULTS["video"].model)
+        self.assertIn("workflows/", cfg.MEDIA_DEFAULTS["video"].owner)
         self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.QWEN3_ASR)
 
     def test_delivery_and_speech_classes_keep_their_full_vocabulary(self):

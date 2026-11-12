@@ -9,8 +9,9 @@ instead of restating it; a new family edits this table and its owner together.
 | Capability section | `defaults`, `alternatives` | Whether a row checks the shipped default or a challenger | same |
 | Deferred | one reason per parked row | Why a row is not judged and gets no rerun | same, indexed by [DEFERRED](DEFERRED.md) |
 | Suite | model-free, `launchers`, `backends` | Whether a test may start a process or load weights | [README](../scripts/tests/README.md) |
-| Workflow profile | `character`, `language`, `coding`, `tool` | Which speech and inference parts a framework must provide | `PROFILE_REQUIREMENTS` in [launcher_config.py](../scripts/launchers/launcher_config.py) |
+| Workflow profile | `character`, `language`, `coding`, `tool`, `image`, `video` | Which speech, inference and media parts a framework must provide | `PROFILE_REQUIREMENTS` in [launcher_config.py](../scripts/launchers/launcher_config.py) |
 | Tool group | `transcription`, `embeddings` | Which model serves a non-user-facing helper | `TOOL_DEFAULTS` in the same file |
+| Media group | `image`, `video` | Which checkpoint or workflow carries a generation profile | `MEDIA_DEFAULTS` in the same file |
 | Delivery mode | `streaming`, `chunked`, `whole` | How text arrives: incremental, per segment, or once | [speech_delivery.py](../scripts/config/shared/speech_delivery.py) |
 | Speech class | `none`, `fast-multilingual`, `voice-design` | What a TTS model provides to a profile | `TtsQualityClass` in launcher_config.py |
 | Run outcome | `verified`, `no-gain`, `inconclusive`, `superseded`, `unreviewed` | Whether a saved run counts as a decision | [paths.py](../scripts/benchmarks/shared/paths.py), [conventions](../scripts/tests/EXECUTION-AND-REPORTING.md) |
