@@ -392,21 +392,21 @@ PROFILE_REQUIREMENTS = {
 class ProfileDefault:
     """One default a profile carries: its catalog model when a single file is it, and the module that runs it."""
 
-    name: str
     model: str | None
     owner: str
 
 
-# - The tool profile's members. Nothing here has a workspace page; each row names the module that runs it.
+# - The tool profile's members, keyed by the tool. Nothing here has a workspace page; each row names the
+#   module that runs it.
 TOOL_DEFAULTS = {
-    "transcription": ProfileDefault("transcription", "asr/llamacpp/qwen3-asr-1.7b-q8_0", "ASR_SERVICE gateway"),
-    "embeddings": ProfileDefault("embeddings", "embeddings/embeddinggemma-2-Q8_0", "EMBEDDINGS_SERVER"),
+    "transcription": ProfileDefault("asr/llamacpp/qwen3-asr-1.7b-q8_0", "ASR_SERVICE gateway"),
+    "embeddings": ProfileDefault("embeddings/embeddinggemma-2-Q8_0", "EMBEDDINGS_SERVER"),
 }
 
 # - The media profiles. Video names its workflow because ComfyUI reads models from the graph, not one path.
 MEDIA_DEFAULTS = {
-    "image": ProfileDefault("image", "sdcpp/nova3DCGXL_ilV90_q4_K", "SDCPP_SERVICE"),
-    "video": ProfileDefault("video", None, "config/comfyui/workflows/video_ltx2_5_i2v_fast480.json"),
+    "image": ProfileDefault("sdcpp/nova3DCGXL_ilV90_q4_K", "SDCPP_SERVICE"),
+    "video": ProfileDefault(None, "config/comfyui/workflows/video_ltx2_5_i2v_fast480.json"),
 }
 
 # - Speech output each framework can actually provide. Lemonade pins its own kokoro-v1 in the
@@ -457,8 +457,8 @@ class SpeechWorkflowDefaults:
     image: str = "off"
 
 
-# - A default may be replaced from the overlay, so the profile requirement is checked where a
-#   framework is selected for a profile (require_profile_fit), not on every dataclass change.
+# - A default may be replaced from the overlay, so the profile requirement is checked where a framework is
+#   selected for a profile (require_profile_fit), not on every dataclass change.
 
 
 # - Kokoro TTS packages: the selected package is the single source of the practice TTS default.

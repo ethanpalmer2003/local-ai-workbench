@@ -36,7 +36,6 @@ class LabelVocabularyTests(unittest.TestCase):
         self.assertEqual(set(cfg.MEDIA_DEFAULTS), {"image", "video"})
         for name, row in {**cfg.TOOL_DEFAULTS, **cfg.MEDIA_DEFAULTS}.items():
             with self.subTest(default=name):
-                self.assertEqual(row.name, name)
                 if row.model is not None:
                     self.assertIn(row.model, labels)
         # - Tool members live inside the tool profile; a media entry is its own profile.
@@ -50,6 +49,21 @@ class LabelVocabularyTests(unittest.TestCase):
         self.assertIsNone(cfg.MEDIA_DEFAULTS["video"].model)
         self.assertIn("workflows/", cfg.MEDIA_DEFAULTS["video"].owner)
         self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.QWEN3_ASR)
+
+    def test_profile_requirements_match_the_defaults_they_claim(self):
+        agent_profiles = {name for name, row in cfg.PROFILE_REQUIREMENTS.items() if row.agent}
+        self.assertEqual(agent_profiles, {"coding"})
+        recognition = {name for name, row in cfg.PROFILE_REQUIREMENTS.items() if row.asr}
+        self.assertEqual(recognition, {"language", "tool"})
+        self.assertIsNotNone(cfg.LANGUAGE_PRACTICE.asr_engine)
+        self.assertIn("transcription", cfg.TOOL_DEFAULTS)
+        roles = {"mid", "lightweight", "coding", "none"}
+        for name, row in cfg.PROFILE_REQUIREMENTS.items():
+            with self.subTest(profile=name):
+                self.assertIn(row.llm_role, roles)
+        for stack in (cfg.KOBOLD_CHAT, cfg.LANGUAGE_PRACTICE):
+            with self.subTest(stack=stack.profile):
+                self.assertTrue(cfg.model_fits_profile(stack.profile, stack.tts_model))
 
     def test_delivery_and_speech_classes_keep_their_full_vocabulary(self):
         self.assertEqual(speech_delivery.MODES, ("streaming", "chunked", "whole"))
