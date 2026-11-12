@@ -24,6 +24,7 @@ from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.audiocpp.kokoro import audio_command as audiocpp_audio_command
 from scripts.launchers.koboldcpp import kokoro
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.sdcpp import server as sdcpp
@@ -72,7 +73,7 @@ def sample(kind: str, arm: str, index: int, paths: RunPaths, deadline: float) ->
         import soundfile as sf
 
         body: dict[str, Any] = {
-            "model": cfg.LANGUAGE_PRACTICE.tts_model,
+            "model": cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package],
             "input": TEXTS[max(index, 0) % len(TEXTS)],
             "voice": cfg.KOKORO_TTS.voice,
             "response_format": "wav",
@@ -162,7 +163,9 @@ def chat_command(port: int) -> list[str]:
 
 def command(kind: str, arm: str, paths: RunPaths, with_chat: bool = False) -> list[str]:
     if kind == "tts" and arm == "external":
-        return kokoro.audio_command(PORT, paths.temp / "kokoro.json")
+        # - the comparison arm is Kokoro, so start the Kokoro package explicitly rather than the
+        #   practice default, which is now another family
+        return audiocpp_audio_command(PORT, paths.temp / "kokoro.json")
     if arm == "internal":
         result = [str(cfg.KOBOLDCPP_SERVICE.exe), "--nomodel", "--host", "127.0.0.1", "--port", str(PORT)]
         if kind == "tts":
@@ -269,7 +272,7 @@ def conversation(arm: str, paths: RunPaths, deadline: float) -> dict[str, Any]:
     if not reply:
         raise ValueError("Gemma returned an empty reply")
     payload: dict[str, Any] = {
-        "model": cfg.LANGUAGE_PRACTICE.tts_model,
+        "model": cfg.KOKORO_TTS_PACKAGES[cfg.KOKORO_TTS.audiocpp_package],
         "input": reply,
         "voice": cfg.KOKORO_TTS.voice,
         "stream": False,

@@ -26,8 +26,8 @@ ROOTS = (project_cfg.TEST_OUTPUT_DIR, project_cfg.SCRIPTS_DIR / "benchmarks/outp
 # - Long opt-in work: subject under scripts/tests/output, then the label a reader recognizes
 CAPABILITIES = (
     ("shared/live_frameworks", "Live launcher and proxy wiring"),
-    ("shared/quick_validation", "Quick validation sweep"),
-    ("shared/gemma_runtime_screen", "Gemma runtime screen"),
+    ("suites/quick_validation", "Quick validation sweep"),
+    ("suites/gemma_runtime_screen", "Gemma runtime screen"),
     ("tts_engines/resident", "Resident speech comparison"),
     ("audiocpp/vad_turns", "Silero VAD turns"),
     ("audiocpp/single_server_speech", "Single AudioCpp server speech"),
