@@ -4,7 +4,11 @@ Decisions not yet made, grouped by area. Work that is already agreed lives in [T
 
 ## Unresolved
 
-- **Nothing is waiting on a decision.** A question returns here when its answer needs a choice rather than work.
+- **Which catalog fields mirror a framework.** [The rule](../.agents/CODE.md) forbids copying a fact a
+  framework already exposes. It removed `speech_modes`, since AudioCpp's spec answers preset versus
+  clone; `speech_class` stays because no framework states a profile floor. Unaudited: `runtimes`,
+  `roles`, `in_use`, and AudioCpp options copied from packaged specs. Ask of each whether the
+  framework can answer it in place, and whether the copy can disagree; settle one per review.
 
 ## Superseded
 
