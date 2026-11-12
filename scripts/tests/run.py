@@ -65,6 +65,7 @@ from scripts.tests.cases.shared.benchmarks.test_framework_compare import (
     SummaryTests,
 )
 from scripts.tests.cases.shared.benchmarks.test_language_corpus import CorpusManifestTests, ExtractionTests
+from scripts.tests.cases.shared.benchmarks.test_probe_runner import ProbeRunnerTests
 from scripts.tests.cases.shared.benchmarks.test_provenance import (
     BlockTests,
     CorpusTests,
@@ -207,6 +208,7 @@ if __name__ == "__main__":
                     LiveStampTests,
                     RocmInventoryTests,
                     StageRunnerTests,
+                    ProbeRunnerTests,
                     ModelRunTests,
                     ToolchainTests,
                     ValidatePlanTests,
