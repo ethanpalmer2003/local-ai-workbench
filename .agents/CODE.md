@@ -10,7 +10,7 @@
 - Signatures and calls stay single-line up to 120 characters; pass-through arguments go last.
 - ASCII punctuation only: `scripts/review/typography.py` rejects dashes, curly quotes, ellipsis and no-break spaces.
 - Pick defaults from measured evidence and keep the caveats and context with them.
-- Use what the framework or model already reports instead of storing a copy of it.
+- Use what the framework or model already reports instead of storing a copy of it. A tracked page keeps a declaration only because it must render with no weight installed, and a check compares that copy to the packaged spec.
 
 ## Imports and paths
 
