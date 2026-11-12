@@ -43,7 +43,7 @@ def _spelling_targets() -> list[str]:
 
 
 def spelling_check() -> int:
-    checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/codespell.exe"
+    checker = project_cfg.VENV_DIR / "Scripts" / "codespell.exe"
     targets = _spelling_targets()
     status = 0
     for start in range(0, len(targets), 80):
@@ -57,7 +57,7 @@ def spelling_check() -> int:
 
 def security_audit() -> tuple[int, str]:
     """Advisory count for the installed environment; an unreachable feed is a warning, not a defect."""
-    checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/pip-audit.exe"
+    checker = project_cfg.VENV_DIR / "Scripts" / "pip-audit.exe"
     result = subprocess.run(
         [str(checker), "--local", "--progress-spinner", "off", "--format", "json"],
         cwd=project_cfg.BASE_DIR,
@@ -77,13 +77,13 @@ def security_audit() -> tuple[int, str]:
 
 def declaration_check() -> int:
     """deptry: every import is covered by a declared dependency, and no declaration is unused."""
-    checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/deptry.exe"
+    checker = project_cfg.VENV_DIR / "Scripts" / "deptry.exe"
     return subprocess.run([str(checker), "scripts"], cwd=project_cfg.BASE_DIR, check=False).returncode
 
 
 def lint_check() -> int:
     """ruff lint: the configured rule set, including the McCabe limit."""
-    checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/ruff.exe"
+    checker = project_cfg.VENV_DIR / "Scripts" / "ruff.exe"
     return subprocess.run(
         [str(checker), "check", "--config", str(project_cfg.BASE_DIR / "pyproject.toml"), "."],
         cwd=project_cfg.BASE_DIR,
@@ -93,7 +93,7 @@ def lint_check() -> int:
 
 def format_check() -> int:
     """Formatting is optional: the codebase keeps hand-wrapped lines ruff format would join."""
-    checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/ruff.exe"
+    checker = project_cfg.VENV_DIR / "Scripts" / "ruff.exe"
     return subprocess.run(
         [str(checker), "format", "--check", "--config", str(project_cfg.BASE_DIR / "pyproject.toml"), "."],
         cwd=project_cfg.BASE_DIR,
@@ -157,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
     print("[OK] Lint clean" if not lint_status else "[FAIL] Lint findings above")
 
     print("\n=== TYPE CHECK ===", flush=True)
-    checker = project_cfg.SCRIPTS_DIR / ".venv/Scripts/basedpyright.exe"
+    checker = project_cfg.VENV_DIR / "Scripts" / "basedpyright.exe"
     try:
         type_status = subprocess.run(
             [str(checker), "--level", "error"], cwd=project_cfg.BASE_DIR, check=False
@@ -210,7 +210,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.tests:
         print("\n=== TEST SUITE ===", flush=True)
         tests_status = subprocess.run(
-            [str(project_cfg.SCRIPTS_DIR / ".venv/Scripts/python.exe"), "-m", "scripts.tests.run"],
+            [str(project_cfg.VENV_DIR / "Scripts" / "python.exe"), "-m", "scripts.tests.run"],
             cwd=project_cfg.BASE_DIR,
             check=False,
         ).returncode

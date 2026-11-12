@@ -8,9 +8,9 @@
 ```powershell
 C:/AI/bat/update_frameworks.bat --only asr/parakeetcpp
 C:/AI/bat/models/download_models.bat --group asr --download
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.parakeetcpp.transcribe --input C:/AI/data/input/speech.wav
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.parakeetcpp.transcribe --profile v3 --input C:/AI/data/input/speech.wav
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.launchers.asr.parakeetcpp.transcribe --profile nemotron --build cpu --stream --language en --input C:/AI/data/input/speech.wav
+C:/AI/.venv/Scripts/python.exe -m scripts.launchers.asr.parakeetcpp.transcribe --input C:/AI/data/input/speech.wav
+C:/AI/.venv/Scripts/python.exe -m scripts.launchers.asr.parakeetcpp.transcribe --profile v3 --input C:/AI/data/input/speech.wav
+C:/AI/.venv/Scripts/python.exe -m scripts.launchers.asr.parakeetcpp.transcribe --profile nemotron --build cpu --stream --language en --input C:/AI/data/input/speech.wav
 ```
 
 - CPU -> `--build cpu`; default Vulkan -> `Vulkan0`. Settings: `PARAKEETCPP_ASR`, four threads.

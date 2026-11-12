@@ -3,7 +3,7 @@
 Run the complete review from `C:/AI`:
 
 ```powershell
-C:/AI/scripts/.venv/Scripts/python.exe -m scripts.review
+C:/AI/.venv/Scripts/python.exe -m scripts.review
 C:/AI/scripts/review/check_repo.bat
 ```
 

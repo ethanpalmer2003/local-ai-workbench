@@ -6,6 +6,7 @@
 | Role | Root + component key |
 | --- | --- |
 | Install | `frameworks/` |
+| Environment | `.venv/` at the repo root, from `uv sync` |
 | Model | `data/huggingface/models/` |
 | Editable config | `scripts/config/`; model catalogs in `models/`, cross-component settings in `shared/`, shared guides in `notes/` |
 | Launcher | Component launchers live under `scripts/launchers/<component>/`; shared helpers are grouped by purpose under `shared/`; cross-backend readiness, diagnostics and GPU policy use `runtime/`; role-wide plumbing stays at the launcher root. |
@@ -19,10 +20,10 @@
 
 ## Naming and grouping
 
-- The layout check audits file types in the root, `scripts/` role roots, `bat/`, `notes/` and `.agents/`.
+- The layout check audits file types in the root and each role root.
 - Settings: component first; `_SERVICE`, `_CLIENT` and `_ASR` state the role; `_DIR` binds a `Path` and `_BIN_DIR` an executable, converted at external boundaries.
-- Group by purpose, not count; native adapters stay with their owner. Keep a small folder that carries ownership, native layout or output identity; audit counts are prompts, not orders.
-- A name states its scope: a folder says the workload or engine, an entry point says what it runs, and a document uses an uppercase common noun. Widen the behavior rather than narrowing the name; `tests` is test code only and vendor scripts keep their names.
+- Group by purpose, not count; adapters stay with their owner. Keep a small folder that carries ownership, native layout or output identity; counts are prompts, not orders.
+- A name states its scope: a folder says the workload or engine, an entry point says what it runs, and a document uses an uppercase common noun. Widen the behavior, not the name; `tests` is test code only and vendor scripts keep their names.
 - Historical results and logs keep their paths; `CasePaths` mirrors sources without empty parallel folders.
 - Exceptions are explicit in `COMPONENTS`/`MODEL_ALIASES`: shared llama.cpp/Kobold installs, native app casing, ComfyUI typed storage. Preserve portable data, junctions, shared weights and vendor archive internals.
 

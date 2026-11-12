@@ -18,6 +18,8 @@ DATA_DIR = BASE_DIR / "data"
 FRAMEWORKS_DIR = BASE_DIR / "frameworks"
 BENCHMARK_TOOLS_DIR = FRAMEWORKS_DIR / "benchmarks"
 SCRIPTS_DIR = BASE_DIR / "scripts"
+# - the one environment every command runs from; uv's default location, so no env var is needed
+VENV_DIR = BASE_DIR / ".venv"
 BAT_DIR = BASE_DIR / "bat"
 ENV_FILE = SCRIPTS_DIR / ".env"
 

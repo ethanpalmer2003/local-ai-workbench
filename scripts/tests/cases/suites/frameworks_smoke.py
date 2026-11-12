@@ -48,9 +48,9 @@ from scripts.tests.shared.timing import timed
 @requires_model_check
 class DefaultPaths(unittest.TestCase):
     def test_venv_and_lock(self):
-        if not (project_cfg.SCRIPTS_DIR / ".venv").is_dir():
+        if not project_cfg.VENV_DIR.is_dir():
             self.skipTest("this checkout has no virtual environment")
-        self.assertEqual(Path(sys.prefix).resolve(), (project_cfg.SCRIPTS_DIR / ".venv").resolve())
+        self.assertEqual(Path(sys.prefix).resolve(), project_cfg.VENV_DIR.resolve())
         self.assertEqual(sys.version_info[:2], (3, 13))
         lock = tomllib.loads((project_cfg.BASE_DIR / "uv.lock").read_text(encoding="utf-8"))
         for entry in lock.get("package", []):

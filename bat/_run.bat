@@ -10,7 +10,7 @@ if not defined RUN_MODULE (
 if not defined RUN_TITLE set "RUN_TITLE=C:\AI"
 pushd "C:\AI"
 title %RUN_TITLE%
-"scripts\.venv\Scripts\python.exe" -m %RUN_MODULE% %*
+".venv\Scripts\python.exe" -m %RUN_MODULE% %*
 set "RUN_EXIT=%ERRORLEVEL%"
 popd
 echo.

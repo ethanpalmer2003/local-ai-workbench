@@ -41,8 +41,6 @@ dev = [
 package = false
 # - a plain `uv sync` installs runtime deps only; `uv sync --group dev` adds the checks
 default-groups = []
-# - the interpreter lives in scripts/.venv, so uv must not create ./.venv:
-#   set UV_PROJECT_ENVIRONMENT=C:/AI/scripts/.venv before any uv sync/lock command
 
 [tool.pytest.ini_options]
 # - a hung socket or probe fails one test instead of the whole run; the model-free suite is seconds
@@ -57,16 +55,16 @@ reportImplicitRelativeImport = "none"
 # - the venv these launchers run in; unset, basedpyright targets a newer Python
 #   and reports removed stdlib modules as unresolvable
 pythonVersion = "3.13"
-venvPath = "scripts"
+venvPath = "."
 venv = ".venv"
-exclude = ["scripts/config/comfyui/ltx_prompt_cache.py", "scripts/tests/cases/personal/comfyui/test_ltx_prompt_cache.py", "scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "frameworks", "trash"]
+exclude = ["scripts/config/comfyui/ltx_prompt_cache.py", "scripts/tests/cases/personal/comfyui/test_ltx_prompt_cache.py", "scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", ".venv", "data", "frameworks", "trash"]
 
 [tool.ruff]
 cache-dir = "scripts/state/cache/ruff"
 line-length = 120
 target-version = "py313"
 include = ["*.py", "*.pyi"]
-extend-exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "/frameworks", "trash", "scripts/config/models/ids.py"]
+extend-exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", ".venv", "data", "/frameworks", "trash", "scripts/config/models/ids.py"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -108,7 +106,7 @@ split-on-trailing-comma = false
 [tool.deptry]
 # - reads [project].dependencies, so a direct dependency nothing imports is now a real finding
 known_first_party = ["scripts"]
-exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", "scripts/.venv", "data", "frameworks", "trash"]
+exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", ".venv", "data", "frameworks", "trash"]
 # - ComfyUI and Piper are imported inside their own runtimes, never from this venv;
 #   torch belongs to the ComfyUI interpreter that loads the synced node
 # - the regression harness imports pytest, which belongs in the dev group

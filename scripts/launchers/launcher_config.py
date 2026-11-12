@@ -18,7 +18,7 @@ from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_PROFILES as LL
 # --- GENERIC PATHS AND LAUNCH SETTINGS ---
 
 
-VENV_PYTHON = project_cfg.SCRIPTS_DIR / ".venv" / "Scripts" / "python.exe"
+VENV_PYTHON = project_cfg.VENV_DIR / "Scripts" / "python.exe"
 
 
 class ServiceMode(str, Enum):
