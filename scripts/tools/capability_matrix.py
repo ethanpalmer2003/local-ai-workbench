@@ -56,7 +56,11 @@ CAPABILITIES = (
 )
 
 # - Work parked on purpose: the row stays so the page says why it is not judged, and a rerun is not expected
-DEFERRED = {"shared/drama3_offload": "the 15.9 GiB local TTS model is heavier than this setup carries"}
+DEFERRED = {
+    "shared/drama3_offload": "the 15.9 GiB local TTS model is heavier than this setup carries",
+    "probes/hrx_updates": "HRX work is paused by the user; the build and its update probe stay out of the rerun set",
+    "llamacpp/benchmark_backends": "its comparison arm is the paused HRX build, so the row cannot be judged while HRX is parked",
+}
 
 
 @dataclass(frozen=True)
