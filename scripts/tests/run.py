@@ -101,6 +101,7 @@ from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
 from scripts.tests.cases.shared.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
 from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
 from scripts.tests.cases.shared.test_label_vocabulary import LabelVocabularyTests
+from scripts.tests.cases.shared.test_language_matrix import LanguageMatrixTests
 from scripts.tests.cases.shared.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.test_local_overlay import LocalOverlayTests
 from scripts.tests.cases.shared.test_low_integrity import LowIntegrityTests
@@ -208,6 +209,7 @@ if __name__ == "__main__":
                     LabelVocabularyTests,
                     PolicyTests,
                     LiveStampTests,
+                    LanguageMatrixTests,
                     RocmInventoryTests,
                     StageRunnerTests,
                     ProbeRunnerTests,

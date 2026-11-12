@@ -53,6 +53,7 @@ class RoleTests(unittest.TestCase):
             "notes/ONBOARDING.md": "running list",
             "scripts/tests/notes/STATUS.md": "running list",
             "scripts/tests/notes/CAPABILITY-MATRIX.md": "generated page",
+            "scripts/config/notes/LANGUAGE-MATRIX.md": "generated page",
             "scripts/config/comfyui/TUNING.md": "component guide",
             "scripts/config/comfyui/README.md": "hub",
             "scripts/config/llamacpp/HRX.md": "component guide",

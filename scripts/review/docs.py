@@ -50,7 +50,7 @@ ROLE_RULES = (
     ("root", r"(?:README|AGENTS)\.md"),
     ("agent rule", r".*AGENTS\.md|\.agents/.*\.md"),
     ("review record", r"notes/reviews/.*\.md"),
-    ("generated page", r"scripts/tests/notes/CAPABILITY-MATRIX\.md"),
+    ("generated page", r"scripts/(?:config|tests)/notes/[A-Z][A-Z0-9-]*-MATRIX\.md"),
     ("running list", "|".join(RUNNING_LIST_PATHS)),
     ("note", r"notes/.*\.md"),
     ("hub", r"^(?:[^/]+/)+README\.md$"),
