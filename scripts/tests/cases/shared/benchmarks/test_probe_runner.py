@@ -1,4 +1,4 @@
-"""The probe runner kills a hung command at its deadline instead of waiting it out."""
+"""Capability modules run under a category budget, and a hung one is killed at its deadline."""
 
 import sys
 import time
@@ -17,9 +17,11 @@ class ProbeRunnerTests(unittest.TestCase):
     def test_a_quick_command_passes_its_own_status(self):
         self.assertEqual(probe_runner.run([sys.executable, "-c", "print('ok')"], 10), 0)
 
-    def test_budgets_are_named_per_probe(self):
-        self.assertEqual(probe_runner.budget_for("scripts.benchmarks.llamacpp.benchmark_ngram"), 300)
-        self.assertEqual(probe_runner.budget_for("scripts.anything.else"), probe_runner.DEFAULT_BUDGET)
+    def test_each_category_has_its_own_budget(self):
+        self.assertEqual(probe_runner.category_for("scripts.benchmarks.llamacpp.benchmark_specspeed"), "smoke")
+        self.assertEqual(probe_runner.category_for("scripts.benchmarks.llamacpp.benchmark_ngram"), "benchmark")
+        self.assertEqual(probe_runner.category_for("scripts.anything.else"), probe_runner.DEFAULT_CATEGORY)
+        self.assertLess(probe_runner.CATEGORY_SECONDS["smoke"], probe_runner.CATEGORY_SECONDS["benchmark"])
 
 
 if __name__ == "__main__":
