@@ -1,0 +1,87 @@
+"""Every label family uses only the values its owner declares, so a typo cannot pass as a label."""
+
+import unittest
+
+from scripts.benchmarks.shared.paths import Outcome
+from scripts.config import models
+from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
+from scripts.config.shared import speech_delivery
+from scripts.launchers import launcher_config as cfg
+from scripts.tests.cases.asr.shared.coverage import coverage
+from scripts.tools import capability_matrix, probe_runner
+
+BUDGET_CLASSES = {"smoke", "probe", "benchmark"}
+SECTIONS = {"defaults", "alternatives"}
+READINESS = {"resident-validated", "unreviewed", "disabled", "manual", "migrated-not-rerun"}
+RUNNERS = {"resident_compare", "file_diagnostic", "whisper_embedded_compare", "gemma_audio_compare", "none"}
+TIERS = {"transcription_ready", "broad_coverage", "adaptation_required"}
+
+
+class LabelVocabularyTests(unittest.TestCase):
+    def test_capability_rows_only_use_declared_budget_classes_and_sections(self):
+        subjects = {subject for subject, _ in capability_matrix.CAPABILITIES}
+        self.assertLessEqual(set(capability_matrix.CATEGORY.values()), BUDGET_CLASSES)
+        self.assertLessEqual(set(capability_matrix.SECTION.values()), SECTIONS)
+        self.assertEqual(set(capability_matrix.CATEGORY), subjects)
+        self.assertEqual(set(capability_matrix.SECTION), subjects)
+        self.assertFalse(set(capability_matrix.DEFERRED) - subjects)
+        self.assertEqual(set(probe_runner.CATEGORY_SECONDS), BUDGET_CLASSES)
+
+    def test_profiles_are_declared_and_their_defaults_name_a_catalog_model(self):
+        stacks = (cfg.KOBOLD_CHAT, cfg.LANGUAGE_PRACTICE)
+        for stack in stacks:
+            self.assertIn(stack.profile, cfg.PROFILE_REQUIREMENTS)
+        labels = {model.label for model in models.MODELS}
+        roles = {role for model in models.MODELS for role in (model.roles or [])}
+        self.assertEqual(set(cfg.TOOL_DEFAULTS), {"transcription", "embeddings"})
+        for name, row in cfg.TOOL_DEFAULTS.items():
+            with self.subTest(tool=name):
+                self.assertIn(row.model, labels)
+                self.assertIn(row.role, roles | {"asr"})
+        self.assertEqual(models.path(cfg.TOOL_DEFAULTS["transcription"].model), cfg.QWEN3_ASR.model)
+        self.assertEqual(models.path(cfg.TOOL_DEFAULTS["embeddings"].model), cfg.EMBEDDINGS_SERVER.model)
+        self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.QWEN3_ASR)
+
+    def test_delivery_and_speech_classes_keep_their_full_vocabulary(self):
+        self.assertEqual(speech_delivery.MODES, ("streaming", "chunked", "whole"))
+        self.assertLessEqual(set(speech_delivery.ASR_STREAMING), set(speech_delivery.ASR_CHUNKED))
+        self.assertEqual({item.value for item in cfg.TtsQualityClass}, {"none", "fast-multilingual", "voice-design"})
+
+    def test_run_outcomes_match_the_documented_set(self):
+        self.assertEqual(
+            {item.value for item in Outcome}, {"verified", "no-gain", "inconclusive", "superseded", "unreviewed"}
+        )
+
+    def test_asr_coverage_uses_declared_readiness_and_runner_values_and_covers_every_profile(self):
+        rows = coverage()
+        self.assertLessEqual({row["status"] for row in rows}, READINESS)
+        self.assertLessEqual({row["runner"] for row in rows}, RUNNERS)
+        self.assertEqual({row["engine"] for row in rows} - set(ASR_FILE_PROFILES) - _adapter_only(), set())
+        self.assertEqual(set(ASR_FILE_PROFILES) - {row["engine"] for row in rows}, set())
+
+    def test_language_tiers_only_use_declared_tiers(self):
+        from scripts.config.models import model_languages
+
+        catalog = model_languages.read_catalog()
+        keys = {key for row in catalog["models"] for key in (row.get("coverage_tiers") or {})}
+        self.assertLessEqual(keys, TIERS)
+
+
+def _adapter_only() -> set[str]:
+    """Resident adapters and manual tools that have no file profile of their own."""
+    return {
+        "handy",
+        "koboldcpp-gemma-audio",
+        "koboldcpp-whisper",
+        "llamacpp-gemma-audio",
+        "llamacpp-granite-5-2b",
+        "llamacpp-qwen-1.7b",
+        "parakeetcpp-cpu",
+        "parakeetcpp-vulkan",
+        "whispercpp-legacy-vulkan",
+        "whispercpp-vulkan-fa",
+    }
+
+
+if __name__ == "__main__":
+    unittest.main()
