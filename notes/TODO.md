@@ -20,8 +20,8 @@
 
 ### Unattended
 
-- [ ] Retest llama.cpp coding on the ROCm build when a release newer than b1373 appears; b1373 aborts at startup with device -1, and b1372 is installed again. ~20 min
+- [ ] Retest the ROCm llama.cpp coding arm on b1375, installed 2026-11-13 in place of b1372: b1373 aborted at startup with device -1, so check first that the engine initializes at all, then the `swift15` profile against the b1372 numbers. ~20 min
 - [ ] Retest Kobold readiness and the remaining live targets after the integrity-label fix; its launcher still timed out at 180 s. ~30 min
 - [ ] Run the Strata arm of the coding-engine benchmark from a normal terminal: under this harness the engine exits with "cannot create the refill stream" after the expert load, and the vision encoder fails with `WinError 5`. The llama.cpp arm is recorded. ~30-45 min
-- [ ] llama.cpp: medium/high-context speculation. Filled context at 32k is measured: cold prefill 505 tok/s with a 63.3 s TTFT, 48.5 tok/s decode warm at 12.8 GiB. Vulkan freezes on long generations ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). ~1-1.5 h
+- [ ] llama.cpp: medium/high-context speculation. Filled context at 32k is measured: cold prefill 505 tok/s with a 63.3 s TTFT, 48.5 tok/s decode warm at 12.8 GiB. Vulkan freezes on long generations, and the build it was seen on was replaced by b12363 on 2026-11-13 ([draft](reviews/LLAMACPP-VULKAN-2026-11-09.md)). ~1-1.5 h
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md). ~1.5-2 h
