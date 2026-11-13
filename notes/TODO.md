@@ -21,7 +21,7 @@
 
 ### Unattended
 
-- [ ] Run the ROCm coding arm on b1375 now that the build hides the iGPU: `swift15` at 119.8 tok/s is the b1372 number to beat or match, and the mask itself needs a coding-sized load rather than a 26-token warmup. ~20 min
+- [ ] Run the four-task coding arm on both builds, three warm samples each: the 2026-11-13 quick screen was one sample of 128 tokens, so it only shows a wash. This is what replaces the b1372 row (119.8 tok/s) and confirms whether b1375 holds up under a coding-sized load. ~20 min
 - [ ] Retest Kobold readiness and the remaining live targets after the integrity-label fix; its launcher still timed out at 180 s. ~30 min
 - [ ] Run the Strata arm of the coding-engine benchmark from a normal terminal: under this harness the engine exits with "cannot create the refill stream" after the expert load, and the vision encoder fails with `WinError 5`. The llama.cpp arm is recorded. ~30-45 min
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md). ~1.5-2 h
