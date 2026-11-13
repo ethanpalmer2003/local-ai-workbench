@@ -67,6 +67,7 @@ from scripts.tests.cases.shared.benchmarks.test_framework_compare import (
 from scripts.tests.cases.shared.benchmarks.test_language_corpus import CorpusManifestTests, ExtractionTests
 from scripts.tests.cases.shared.benchmarks.test_probe_runner import ProbeRunnerTests
 from scripts.tests.cases.shared.benchmarks.test_provenance import (
+    BinaryTests,
     BlockTests,
     CorpusTests,
     FileIdentityTests,
@@ -149,6 +150,7 @@ if __name__ == "__main__":
                     CorpusTests,
                     BlockTests,
                     ProducerTests,
+                    BinaryTests,
                     FreshnessTests,
                     HeadlineTests,
                     RenderTests,
