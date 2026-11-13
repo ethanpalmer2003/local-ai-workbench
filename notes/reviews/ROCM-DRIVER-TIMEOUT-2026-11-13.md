@@ -40,6 +40,10 @@ The build entry now carries the mask, so launchers and benchmarks inherit it.
 
 The iGPU is not a tested device and no measurement here uses it: the mask is set on the build, so every run records one adapter, and the VRAM sampler attributes the adapter its own processes touch rather than summing what the machine has. This page is the only place the device is named, and it names it once, as the cause.
 
+## Is it known upstream?
+
+No report matches it: nothing describes prefill losing several times its rate as only the allocation grows. The nearest is [llama.cpp#32201](https://github.com/ggml-org/llama.cpp/pull/32201), an open RDNA3 HIP FlashAttention kernel whose own baseline shows prompt throughput falling with depth, so RDNA3 HIP attention is known to be weak at depth. Our logs rule out CPU spill: both runs offload 66/66 layers and the 96k KV fits (13.9 of 16.4 GiB). `llama-bench -p 3045 -d 0` at 8192 and 98304 would isolate it.
+
 ## Questions for another reader
 
 - Is this a known regression in the llamacpp-rocm fork after b1372, in release notes or issues?
