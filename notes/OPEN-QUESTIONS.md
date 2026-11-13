@@ -5,7 +5,12 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
 
 ## Unresolved
 
-- Nothing is unresolved. A decision that would change work is added here with its options.
+- **Public evidence for measured claims.** Forty tracked documents cite 132 artifact paths under the ignored
+  `scripts/benchmarks/output/` and `scripts/tests/output/`, so a public reader cannot open the evidence behind
+  a number. Options: commit a curated subset of the `report.md`/`summary.txt` files behind each decision, move
+  the numbers into the documents themselves, or keep the paths local-only. The two folders hold 1.4 GB in total,
+  so a wholesale commit is out; a curated set would be a few MB.
+- A decision that would change work is added here with its options.
 
 ## Superseded
 
