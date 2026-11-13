@@ -14,7 +14,12 @@
 
 ## When
 
-- Iterate with the failing module. Ask before the full review or suite; skip type checks after doc-only edits. Levels: [tool inventory](../scripts/review/TOOLS.md#levels).
+- After one change: pre-commit hooks plus the test module the edit touches. Seconds.
+- After a batch: `python -m scripts.review --yes`, then `python -m scripts.tests.run`. About two minutes together.
+- `--fast` keeps the gate repo-wide but skips types, inventory, advisories and the package summary: about five seconds, so it fits a single edit.
+- Each gate section records its seconds under `scripts/state/logs/shared/review/`, so the cost of a check comes from history instead of a rerun.
+- Live and measure work is scheduled from [TODO](../notes/TODO.md), never part of a code change. Levels: [tool inventory](../scripts/review/TOOLS.md#levels).
+- A push is routine once the checks for the touched level pass; the full gate does not belong to every commit.
 - Prove a live configuration in seconds first: paths, ports, mode flags, one short request. A misconfiguration must fail immediately, not after a multi-minute timeout.
 - Slow speech tests (Qwen3-TTS, Chatterbox, Sesame CSM) run in a console that stays open, through `launch_module(..., mode=SPLIT_INDEPENDENT)`; quick ones (Kokoro, Edge TTS) run inline. Wait for the user before another slow test.
 - GPU metrics are sampled lower bounds; missing PIDs or counters are not zero.
