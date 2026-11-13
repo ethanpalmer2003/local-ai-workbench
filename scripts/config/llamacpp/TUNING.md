@@ -2,7 +2,7 @@
 
 - Owners: [profiles](../../launchers/llamacpp/llamacpp_profiles.py), [native INI](swift-q3.ini), [service/build selection](../../launchers/launcher_config.py).
 - Profile values override INI; the launcher supplies the selected model. Request sampling/reasoning may override startup defaults.
-- Coding default: `swift15` on the ROCm build sourced from Lemonade releases (`rocm-lemonade`), 96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium. The build hides the Ryzen iGPU (`HIP_VISIBLE_DEVICES=0`) because b1373 and later fault while building the context when it is visible; b1375 then loads and decodes at 51-56 tok/s ([upstream](../../../notes/UPSTREAM.md), [note](../../../notes/reviews/ROCM-DRIVER-TIMEOUT-2026-11-13.md)). The Lemonade *server* is a separate language-practice framework; it is not this build.
+- Coding default: `swift15` on the ROCm build sourced from Lemonade releases (`rocm-lemonade`), 96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium. The build hides the Ryzen iGPU (`HIP_VISIBLE_DEVICES=0`) because b1373 and later fault while building the context when it is visible; b1375 then loads and decodes at 51-56 tok/s ([upstream](../../../notes/UPSTREAM.md), [note](../../../notes/reviews/ROCM-DRIVER-TIMEOUT-2026-11-13.md)). It stays the default because a coding prompt is long: at 32768 tokens it leads Vulkan on prefill (505 against 431 tok/s), TTFT (1.33 against 1.60 s) and decode (51.2 against 43.2), while Vulkan only leads on a 66-token prompt. The Lemonade *server* is a separate language-practice framework; it is not this build.
 
 | Choice | Evidence / limitation |
 | --- | --- |
