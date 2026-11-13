@@ -121,7 +121,10 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
     ),
 }
 
-LLAMACPP_ACTIVE_BUILD = "rocm-lemonade"
+# - The coding profile allocates a 96K context. Vulkan prefills a 3K prompt in 5.7 s under that
+#   allocation against ROCm's 23.2 s, with equal decode, so ROCm loses the coding default it held
+#   while the iGPU kept it from loading at all. ROCm still leads at an 8K allocation.
+LLAMACPP_ACTIVE_BUILD = "vulkan"
 
 LLAMACPP_ACTIVE_CODING_AGENT_PROFILE = "swift15"
 

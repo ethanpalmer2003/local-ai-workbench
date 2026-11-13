@@ -29,20 +29,40 @@ def namespace(**values: Any) -> argparse.Namespace:
 
 
 class CodingEngineSummaryTests(unittest.TestCase):
-    def test_cold_and_warm_rates_are_separate(self) -> None:
+    def test_cold_prefill_is_separate_from_the_warm_median(self) -> None:
         rows = {
             "cold": {"a": row(1000, 2000.0, 8, 100.0), "b": row(1000, 2000.0, 8, 100.0)},
             "warm": {"a": [row(1000, 1000.0, 128, 2560.0, 0.4)], "b": [row(1000, 1000.0, 128, 2560.0, 0.4)]},
         }
         summary = benchmark.summarize(rows)
         self.assertEqual(summary["cold_prefill_tokens_per_second"], 500.0)
-        self.assertEqual(summary["warm_prefill_tokens_per_second"], 1000.0)
         self.assertEqual(summary["decode_tokens_per_second"], 50.0)
         self.assertEqual(summary["ttft_seconds"], 0.4)
         self.assertEqual(summary["draft_acceptance"], 0.5)
         self.assertEqual(summary["prompt_tokens"], 1000)
         self.assertEqual(summary["tasks"], 2)
         self.assertEqual(summary["samples"], 2)
+        # - a warm sample prefills only its cache miss, so it cannot be reported as a rate
+        self.assertNotIn("warm_prefill_tokens_per_second", summary)
+
+    def test_a_task_reports_its_median_and_range(self) -> None:
+        rows = {
+            "cold": {"a": row(1000, 2000.0, 8, 100.0)},
+            "warm": {
+                "a": [
+                    row(1000, 1000.0, 128, 6400.0, 0.4),
+                    row(1000, 1000.0, 128, 2560.0, 0.4),
+                    row(1000, 1000.0, 128, 3200.0, 0.4),
+                ]
+            },
+        }
+        summary = benchmark.summarize(rows)
+        self.assertEqual(
+            summary["per_task"]["a"],
+            {"decode_median": 40.0, "decode_min": 20.0, "decode_max": 50.0, "ttft_median": 0.4},
+        )
+        self.assertEqual(summary["decode_tokens_per_second"], 40.0)
+        self.assertEqual(summary["decode_range"], (20.0, 50.0))
 
     def test_a_request_record_keeps_timings_and_drops_the_stream(self) -> None:
         record = benchmark.request_record({**row(10, 5.0, 4, 8.0), "content": "x" * 500})
