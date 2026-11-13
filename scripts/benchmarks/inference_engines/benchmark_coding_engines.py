@@ -3,7 +3,11 @@
 - One task corpus and one request contract for every engine, so a row from one
   engine means the same thing as a row from another
 - Each task is sent once cold (a unique nonce defeats the prompt cache, which is
-  the real prefill measurement) and then `--samples` times warm (cache reuse)
+  the real prefill measurement), then once unmeasured to warm the prefix and the
+  draft model, then `--samples` times warm (cache reuse)
+- Decode and TTFT report the median of the per-task medians with the observed
+  range; pooling the raw samples mixed the ramp into the rate, which is what made
+  one task read 31 and 67 tok/s in the same run
 - Prefill, decode and TTFT come from the server's own `timings` block through
   the shared `stream_metrics`, so no wall-clock proxy is mixed in
 - Engines: `--engine llamacpp` starts a configured profile and build locally;
@@ -166,6 +170,9 @@ def task_rows(session: EngineSession, args: argparse.Namespace, context: str) ->
         )
         cold_rate = (cold[label].get("native_timings") or {}).get("prompt_per_second")
         print(f"  {label}: cold prefill {cold_rate} tok/s", flush=True)
+        # - one unmeasured request warms the shared prefix and the draft model; without it the
+        #   first measured sample carries the ramp and pulls the reported rate down
+        stream_chat(session.connection, request_body(model, prompt, args.tokens), timeout=args.timeout)
         warm[label] = []
         for sample in range(args.samples):
             warm[label].append(
@@ -182,21 +189,49 @@ def task_rows(session: EngineSession, args: argparse.Namespace, context: str) ->
     return {"cold": cold, "warm": warm}
 
 
+def sample_spread(samples: list[dict[str, Any]]) -> dict[str, Any]:
+    """Median and range of one task's samples; pooling the totals hides how far apart they are."""
+    rates = [stream_metrics([row]) for row in samples]
+    decode = [rate["decode_tokens_per_second"] for rate in rates if rate["decode_tokens_per_second"] is not None]
+    ttft = [rate["ttft_seconds"] for rate in rates if rate["ttft_seconds"] is not None]
+    if not decode:
+        return {"decode_median": None, "decode_min": None, "decode_max": None, "ttft_median": None}
+    return {
+        "decode_median": round(statistics.median(decode), 1),
+        "decode_min": round(min(decode), 1),
+        "decode_max": round(max(decode), 1),
+        "ttft_median": round(statistics.median(ttft), 3) if ttft else None,
+    }
+
+
 def summarize(rows: dict[str, Any]) -> dict[str, Any]:
     cold = stream_metrics(list(rows["cold"].values()))
     warm = stream_metrics([row for samples in rows["warm"].values() for row in samples])
+    per_task = {label: sample_spread(samples) for label, samples in rows["warm"].items()}
+    medians = [task["decode_median"] for task in per_task.values() if task["decode_median"] is not None]
+    ttfts = [task["ttft_median"] for task in per_task.values() if task["ttft_median"] is not None]
     return {
+        # - only the cold request fills the whole prompt; a warm sample prefills the cache miss
+        #   alone, so a warm prefill rate would report a four-token latency as throughput
         "cold_prefill_tokens_per_second": cold["prefill_tokens_per_second"],
         "cold_prefill_seconds": cold["prefill_seconds"],
-        "warm_prefill_tokens_per_second": warm["prefill_tokens_per_second"],
-        "decode_tokens_per_second": warm["decode_tokens_per_second"],
-        "ttft_seconds": warm["ttft_seconds"],
+        "decode_tokens_per_second": round(statistics.median(medians), 1) if medians else None,
+        "decode_range": (
+            (
+                min(task["decode_min"] for task in per_task.values()),
+                max(task["decode_max"] for task in per_task.values()),
+            )
+            if medians
+            else None
+        ),
+        "ttft_seconds": round(statistics.median(ttfts), 3) if ttfts else None,
         "draft_acceptance": warm["draft_acceptance"],
         "prompt_tokens": statistics.median(
             (row.get("usage") or {}).get("prompt_tokens", 0) for row in rows["cold"].values()
         ),
         "tasks": len(rows["cold"]),
         "samples": sum(len(samples) for samples in rows["warm"].values()),
+        "per_task": per_task,
     }
 
 
@@ -278,10 +313,15 @@ def main() -> None:
             f"startup: {result['startup_seconds']} s",
             f"cold prefill: {result['cold_prefill_tokens_per_second']} tok/s "
             f"({result['cold_prefill_seconds']} s for {result['prompt_tokens']} prompt tokens)",
-            f"warm prefill: {result['warm_prefill_tokens_per_second']} tok/s",
-            f"decode: {result['decode_tokens_per_second']} tok/s",
+            f"decode: {result['decode_tokens_per_second']} tok/s (median of task medians)",
+            f"decode range: {result['decode_range']}",
             f"TTFT: {result['ttft_seconds']} s",
             f"draft acceptance: {result['draft_acceptance']}",
+        ]
+        lines += [
+            f"  {label}: decode {task['decode_median']} tok/s ({task['decode_min']}-{task['decode_max']}), "
+            f"TTFT {task['ttft_median']} s"
+            for label, task in result["per_task"].items()
         ]
         summary = output.artifacts / "summary.txt"
         summary.write_text("\n".join(lines) + "\n", encoding="utf-8")
