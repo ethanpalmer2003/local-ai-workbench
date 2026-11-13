@@ -34,7 +34,8 @@ Both arms serve the same Strata Swift IQ2_XS weights with the `strata_profiles` 
 | 2026-11-13 | llama.cpp `rocm-lemonade` b1375, `swift15`, quick screen | 118.0 tok/s (66-token prompt, 1.5 s) | 95.6 tok/s | 47.9 tok/s | 0.37 s | 0.809 |
 
 - One run, four coding tasks, three warm samples each: `scripts/benchmarks/output/inference_engines/benchmark_coding_engines/unreviewed/1794441020487629300/artifacts/summary.txt`.
-- The 2026-11-13 rows are a quick screen, not a paired benchmark: 128 generated tokens, one sample, no code context. Treat them as a build sanity check; the 32K context screen has the larger gap.
+- Rows from before 2026-11-13 pooled every sample into one rate and sent no warm-up request, so their decode figure carries the ramp: that run reads 45.5 tok/s pooled while its own samples span 31 to 126. The runner now warms each prompt once and reports the median of per-task medians with the observed range, which is why the 2026-11-13 rows are not comparable with the b1372 row.
+- The 2026-11-13 rows are a quick screen: 128 generated tokens, one sample, no code context. Treat them as a build sanity check; the 32K context screen has the larger gap.
 - The Strata arm did not run here: its engine exits with "cannot create the refill stream" after the expert load, and with the vision section it fails earlier with `WinError 5` spawning the image encoder. Both happen under this harness; run the endpoint arm from a normal terminal.
 
 ## Metric scope
