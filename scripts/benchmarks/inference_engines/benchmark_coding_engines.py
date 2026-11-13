@@ -40,10 +40,10 @@ from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROF
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.services.process import http_ready
 
+# - one task per workload class: fresh generation decodes without help from the prompt, while a
+#   rewrite of given code is the copy-friendly case the draft model accelerates best
 CODING_TASKS: dict[str, str] = {
     "implement": "Add a pure function `chunk(text, limit)` that splits on whitespace without exceeding `limit`.",
-    "debug": "This loop skips the last element:\n\nfor i in range(len(items) - 1):\n    use(items[i])\n\nExplain the fix.",
-    "tests": "Write three unittest cases for a function that parses `key=value` lines and ignores `#` comments.",
     "refactor": (
         "Rewrite this as a small class with one responsibility:\n\n"
         "def load(path):\n    ...\n\ndef save(path, data):\n    ..."
@@ -300,7 +300,8 @@ def main() -> None:
         settings={
             "execution_context": context_info,
             "arguments": vars(args),
-            "contract": "4 coding tasks, temperature 0, seed 42, server-native timings",
+            "contract": f"{len(CODING_TASKS)} coding tasks ({', '.join(CODING_TASKS)}), temperature 0, seed 42, "
+            "server-native timings",
             "context": "strata_profiles PREFIX (100 Python functions)" if context else "none",
         },
     ) as report:
