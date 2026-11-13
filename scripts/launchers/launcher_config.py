@@ -108,7 +108,14 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
     ),
     "rocm-stock": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_ROCM_STOCK_DIR, extra_args={}),
     "vulkan": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "vulkan", extra_args={}),
-    "rocm-lemonade": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_ROCM_LEMONADE_DIR, extra_args={}),
+    "rocm-lemonade": LlamacppStartupBuild(
+        bin_dir=project_cfg.LLAMACPP_ROCM_LEMONADE_DIR,
+        # - The Ryzen iGPU is ROCm1 and reports system RAM as free VRAM. The backend initializes
+        #   every visible device, so it faults while the context is built even when --device limits
+        #   tensor placement. Hiding the iGPU at the HIP level is what makes b1375 load; index 0 is
+        #   the discrete card in --list-devices order.
+        env={"HIP_VISIBLE_DEVICES": "0"},
+    ),
     "rocm-rdna": LlamacppStartupBuild(  # went from 34 to 41t/s with adaptive mtp over 4k tokens (swift15), has other issues potentially
         bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rdna/build/bin", extra_args={}
     ),

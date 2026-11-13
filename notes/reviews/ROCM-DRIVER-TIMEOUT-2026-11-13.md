@@ -23,11 +23,24 @@ AMD Adrenalin shows a driver-timeout notification at the same moment. Nothing el
 
 `unspecified launch failure` next to `current device: -1` means the HIP call ran with no usable device: the context was already lost. Enumeration succeeding while context creation fails points at the ggml-cuda/HIP path that changed between b1372 and b1373, not at a driver that vanished. The Adrenalin toast is the driver recovering after the fault, so it is a symptom rather than the cause.
 
+## Confirmed cause
+
+The second ROCm device is the Ryzen iGPU, and it reports system RAM as free VRAM. The backend initializes every visible device, so a build that leaves both visible faults while the context is built. Masking it fixes the load:
+
+| Attempt | Result |
+| --- | --- |
+| b1375, both devices visible | dies at context build, `current device: -1` |
+| b1375, `--device ROCm0` | still dies; the log shows the card selected, so placement is not the fault |
+| b1375, `HIP_VISIBLE_DEVICES=0` | loads and decodes at 51-56 tok/s on the discrete card |
+| b1372, both devices visible | loaded, so the tolerance for the second device is what changed after b1372 |
+
+The build entry now carries the mask, so launchers and benchmarks inherit it.
+
 ## Questions for another reader
 
 - Is this a known regression in the llamacpp-rocm fork after b1372, in release notes or issues?
 - Why does `current device` read -1 when enumeration succeeded in the same process?
 - Are there WER or `amdkmdag` traces for that instant, and does an 8 s `TdrDelay` hide or cause the symptom?
-- Would `HIP_VISIBLE_DEVICES=0`, a driver update or a different HIP SDK change it?
+- Would a driver update or another HIP SDK change it?
 
 Evidence: `scripts/benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794597852387930200/logs/server-rocm-lemonade.log`.
