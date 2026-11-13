@@ -20,8 +20,12 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
+from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
+
+# - benchmark profiles live beside the launcher ones, so a comparison such as swift15-nospec is reachable
+ALL_PROFILES = {**LLAMACPP_PROFILES, **LLAMACPP_BENCHMARK_PROFILES}
 
 
 def source_corpus() -> tuple[str, list[str]]:
@@ -171,6 +175,8 @@ def parse_settings() -> argparse.Namespace:
     parser.add_argument("--request-timeout", type=float, default=240)
     parser.add_argument("--budget-sec", type=float, default=270)
     args = parser.parse_args()
+    if args.profile not in ALL_PROFILES:
+        parser.error(f"Unknown profile: {args.profile}; choose from " + ", ".join(sorted(ALL_PROFILES)))
     if min(args.tokens, args.runs, args.window_tokens, args.warmups) <= 0:
         parser.error("Positive output/sample/window sizes and at least one warmup are required")
     if args.prompt_tokens < 0 or args.prompt_tokens + args.tokens >= args.capacity:
@@ -243,7 +249,7 @@ def benchmark_build(
     evidence: dict[str, Any],
     deadline: float,
 ) -> None:
-    config = LlamaConfig(args.profile, build_name=build, port=9952, ini_overrides={"fit": "off"})
+    config = LlamaConfig(args.profile, build_name=build, port=9952, ini_overrides={"fit": "off"}, profiles=ALL_PROFILES)
     config.profile = replace(config.profile, extra_args={**config.profile.extra_args, "ctx-size": str(args.capacity)})
     log = run.logs / f"server-{build}.log"
     command = config.build_cmd(log)
@@ -350,7 +356,8 @@ def write_outputs(run: RunPaths, evidence: dict[str, Any]) -> None:
                 frameworks=[provenance.framework_state("llamacpp")],
                 models=[
                     provenance.file_identity(
-                        "llama.cpp profile", LlamaConfig(str(evidence["settings"].get("profile", ""))).model
+                        "llama.cpp profile",
+                        LlamaConfig(str(evidence["settings"].get("profile", "")), profiles=ALL_PROFILES).model,
                     )
                 ],
             ),

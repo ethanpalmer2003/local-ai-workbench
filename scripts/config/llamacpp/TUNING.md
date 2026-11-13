@@ -2,7 +2,7 @@
 
 - Owners: [profiles](../../launchers/llamacpp/llamacpp_profiles.py), [native INI](swift-q3.ini), [service/build selection](../../launchers/launcher_config.py).
 - Profile values override INI; the launcher supplies the selected model. Request sampling/reasoning may override startup defaults.
-- Coding default: `swift15` on the ROCm build sourced from Lemonade releases (`rocm-lemonade`), 96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium. The 2026-11-09 build crashes loading this model, so retest the newest ROCm build after an update ([upstream](../../../notes/UPSTREAM.md)). The Lemonade *server* is a separate language-practice framework; it is not this build.
+- Coding default: `swift15` on the ROCm build sourced from Lemonade releases (`rocm-lemonade`), 96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium. The b1373 release aborted at startup and b1375 initializes (`--list-devices` lists both GPUs), so the coding arm is what a load still needs to confirm ([upstream](../../../notes/UPSTREAM.md)). The Lemonade *server* is a separate language-practice framework; it is not this build.
 
 | Choice | Evidence / limitation |
 | --- | --- |
@@ -18,4 +18,5 @@
 - Optional `swift15-8k`: short greedy screen rose from 38.02 to 57.26 tok/s versus 96K capacity, with identical 64-token outputs. Use only when complete prompt/history/output fits; filled-context/everyday-sampling performance remains unverified.
 - Screens recorded 2026-10-04: MTP evidence (../../tests/output/llamacpp/benchmark_speedbench/verified/1791093433528713400/artifacts/comparison.md), copy evidence (../../tests/output/llamacpp/benchmark_ngram/no-gain/1791087672992167800/artifacts/comparison.md).
 - Profile screen 2026-11-11, b1372, short built-in prompts: cold prefill 43.4 tok/s over a 39-token prompt and decode 63.6 tok/s for `swift15`; 48.8 and 25.5 for `swift15-mtp-notemplate`. One run, code prompt spread is wide. Output: ../../benchmarks/output/llamacpp/benchmark_llamacpp_profiles/unreviewed/1794440590360444400/artifacts/llama-benchmark-summary-20261111-174436.txt
+- Long-context screen 2026-11-13, Vulkan b12363, `swift15` against `swift15-nospec`: 39.4 against 28.4 tok/s at 16384 and 44.2 against 26.8 at 32768, warm TTFT 1.3-1.6 s, cold prefill 490 and 431 tok/s. The gain grows with depth while the no-speculation rate stays flat, so the short-prompt ngram result holds at depth. Output: ../../benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794596215793306500 (32k), 1794596619011805200 (32k nospec), 1794596406205251400 (16k), 1794596831140867800 (16k nospec).
 - [HRX limits](HRX.md), [model benchmarks](../../benchmarks/MODEL-COMPARISONS.md), [pending grids](../../../notes/TODO.md).
