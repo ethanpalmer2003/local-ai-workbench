@@ -165,7 +165,9 @@ def task_rows(session: EngineSession, args: argparse.Namespace, context: str) ->
         prompt = conversation(task, context)
         cold[label] = stream_chat(
             session.connection,
-            request_body(model, conversation(task, context, suffix=NONCE.format(index=index)), 8),
+            # - the nonce leads the context, not the task: a tail-only change leaves the shared
+            #   prefix cached, so tasks after the first would report a cache hit as cold prefill
+            request_body(model, conversation(task, NONCE.format(index=index) + context), 8),
             timeout=args.timeout,
         )
         cold_rate = (cold[label].get("native_timings") or {}).get("prompt_per_second")
