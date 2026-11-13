@@ -27,16 +27,28 @@ Both arms serve the same Strata Swift IQ2_XS weights with the `strata_profiles` 
 
 ## Measured
 
+| Date | Engine | Cold prefill | Decode | TTFT | Draft acceptance |
+| --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | llama.cpp `vulkan` b12363, `swift15` | 528 tok/s (3045-token prompt, 5.7 s) | 192.1 tok/s | 0.118 s | 0.891 |
+| 2026-11-13 | llama.cpp `rocm-lemonade` b1375, `swift15` | 130.6 tok/s (3045-token prompt, 23.2 s) | 190.3 tok/s | 0.111 s | 0.967 |
+| 2026-11-13 | llama.cpp `rocm-lemonade` b1375, `swift15-8k` | 584.7 tok/s (3045-token prompt, 5.2 s) | 215.4 tok/s | 0.112 s | 0.967 |
+
+- Prefill is the only metric the profiles disagree on: 23.2 s under `swift15` (96K, Q8 KV) against 5.2 s under `swift15-8k` for one prompt, while Vulkan pays 5.7 s at 96K. The large allocation costs ROCm four times its prefill and leaves decode and TTFT alone.
+- Decode splits by task class, not build: `refactor` generates fresh text at 65-87 tok/s while the other three reuse the prompt at 185-248. Compare per-task rows, not the median.
+- The Strata arm did not run here: its engine exits with "cannot create the refill stream" after the expert load, and with the vision section it fails earlier with `WinError 5` spawning the image encoder. Both happen under this harness; run the endpoint arm from a normal terminal.
+
+## Superseded measurements
+
+Kept because it was once a decision basis. Do not mix it into a new table; re-run instead.
+
 | Date | Engine | Cold prefill | Warm prefill | Decode | TTFT | Draft acceptance |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2026-11-11 | llama.cpp `rocm-lemonade` b1372, profile `swift15` | 119.8 tok/s (3046-token prompt, 38.1 s) | 113.2 tok/s | 45.5 tok/s | 0.141 s | 0.856 |
-| 2026-11-13 | llama.cpp `vulkan` b12363, `swift15`, quick screen | 139.1 tok/s (66-token prompt, 1.3 s) | 119.7 tok/s | 47.0 tok/s | 0.31 s | 0.793 |
-| 2026-11-13 | llama.cpp `rocm-lemonade` b1375, `swift15`, quick screen | 118.0 tok/s (66-token prompt, 1.5 s) | 95.6 tok/s | 47.9 tok/s | 0.37 s | 0.809 |
+| 2026-11-11 | llama.cpp `rocm-lemonade` b1372, `swift15` | 119.8 tok/s (3046-token prompt, 38.1 s) | 113.2 tok/s | 45.5 tok/s | 0.141 s | 0.856 |
+| 2026-11-13 | llama.cpp `vulkan` b12363, `swift15`, one sample | 139.1 tok/s (66-token prompt, 1.3 s) | 119.7 tok/s | 47.0 tok/s | 0.31 s | 0.793 |
+| 2026-11-13 | llama.cpp `rocm-lemonade` b1375, `swift15`, one sample | 118.0 tok/s (66-token prompt, 1.5 s) | 95.6 tok/s | 47.9 tok/s | 0.37 s | 0.809 |
 
-- One run, four coding tasks, three warm samples each: `scripts/benchmarks/output/inference_engines/benchmark_coding_engines/unreviewed/1794441020487629300/artifacts/summary.txt`.
-- Rows from before 2026-11-13 pooled every sample into one rate and sent no warm-up request, so their decode figure carries the ramp: that run reads 45.5 tok/s pooled while its own samples span 31 to 126. The runner now warms each prompt once and reports the median of per-task medians with the observed range, which is why the 2026-11-13 rows are not comparable with the b1372 row.
-- The 2026-11-13 rows are a quick screen: 128 generated tokens, one sample, no code context. Treat them as a build sanity check; the 32K context screen has the larger gap.
-- The Strata arm did not run here: its engine exits with "cannot create the refill stream" after the expert load, and with the vision section it fails earlier with `WinError 5` spawning the image encoder. Both happen under this harness; run the endpoint arm from a normal terminal.
+- Superseded by the 2026-11-13 harness change: pooled samples without a warm-up, so decode carried the ramp and its own samples span 31 to 126 tok/s. Two one-sample rows predate the warm-up. Warm prefill was dropped: a warm sample prefills only its cache miss.
+- Evidence: `scripts/benchmarks/output/inference_engines/benchmark_coding_engines/unreviewed/1794441020487629300/artifacts/summary.txt`.
 
 ## Metric scope
 
