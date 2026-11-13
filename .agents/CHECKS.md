@@ -15,7 +15,7 @@
 ## When
 
 - After one change: pre-commit hooks plus the test module the edit touches. Seconds.
-- After a batch: `python -m scripts.review --yes`, then `python -m scripts.tests.run`. About two minutes together.
+- After a batch: `python -m scripts.review --yes`, then `python -m scripts.tests.run`. Under a minute together.
 - `--fast` keeps the gate repo-wide but skips types, inventory, advisories and the package summary: about five seconds, so it fits a single edit.
 - Each gate section records its seconds under `scripts/state/logs/shared/review/`, so the cost of a check comes from history instead of a rerun.
 - Live and measure work is scheduled from [TODO](../notes/TODO.md), never part of a code change. Levels: [tool inventory](../scripts/review/TOOLS.md#levels).

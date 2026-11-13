@@ -11,8 +11,8 @@ Measured on this machine; only the last two open a model or service. When to run
 | edit | staged-file hooks: ruff, codespell, ASCII punctuation | seconds |
 | module | one `scripts.review.*` check: docs, layout, wiring, typography, model references | under 2 s |
 | fast | `python -m scripts.review --fast`: repo-wide, minus types, inventory, advisories and the package listing | about 5 s |
-| gate | `python -m scripts.review`: adds those four, and the leftovers scan dominates; sections log to `scripts/state/logs/shared/review/` | about 60 s |
-| suite | `python -m scripts.review --tests`, model-free | about 100 s total |
+| gate | `python -m scripts.review`: adds those four, and the type check dominates; sections log to `scripts/state/logs/shared/review/` | about 20 s |
+| suite | `python -m scripts.review --tests`, model-free | about 50 s total |
 | live | `bat/tests/test_live_launchers.bat`, `test_live_backends.bat` | minutes |
 | measure | a benchmark runner | minutes to hours |
 | publish | `public_audit --history` and `--scrub` | seconds to a minute |
