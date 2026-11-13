@@ -26,3 +26,10 @@ Not a capacity or profile effect: 4k and 8k behave the same, and both profiles c
 Benchmarks take the Lemonade build for repeated long generations and keep Vulkan runs short, with request and wall-clock budgets so a freeze ends the run. Retest after the next build change.
 
 Evidence: `scripts/benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794265265718855500` (freeze, Vulkan 8192), `1794265574615309200` (Lemonade pass).
+
+## Recheck 2026-11-13 on b12363
+
+The build that froze was replaced, and no stall reappeared: six 512-token generations completed at 16384 and again at 32768 context, harder settings than the fourth-generation freeze that prompted this page. Cold prefill ran 490 tok/s at 15k and 431 tok/s at 32k, warm TTFT 1.3-1.6 s, decode 34-55 tok/s across ten samples. The runner still labels both runs inconclusive because its samples spread wider than the reference rate, which is a variance judgment, not a hang.
+
+Evidence: `scripts/benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794596406205251400` (16384), `1794596215793306500` (32768).
+

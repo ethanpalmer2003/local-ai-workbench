@@ -72,6 +72,18 @@ class FreshnessTests(unittest.TestCase):
         block["corpus"] = {**language_corpus.identity(), "manifest_sha256": "0" * 64}
         self.assertIn("corpus manifest changed", matrix.freshness({"provenance": block}))
 
+    def test_a_rebuilt_engine_binary_makes_the_row_stale_and_names_it(self):
+        block = provenanced()
+        block["frameworks"] = [
+            {"key": "llamacpp", "commit": None, "binaries": {"rocm/lemonade/llama-server.exe": {"bytes": 1}}}
+        ]
+        current = {"key": "llamacpp", "commit": None, "binaries": {"rocm/lemonade/llama-server.exe": {"bytes": 2}}}
+        with patch.object(matrix.provenance, "framework_state", return_value=current):
+            self.assertEqual(
+                matrix.freshness({"provenance": block}),
+                "[WARN] stale: llamacpp rebuilt: rocm/lemonade/llama-server.exe",
+            )
+
     def test_a_changed_producer_makes_the_row_stale_and_names_it(self):
         block = provenanced()
         block["producer"] = {"scripts/tools/capability_matrix.py": "0" * 64}

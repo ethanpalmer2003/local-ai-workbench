@@ -140,5 +140,33 @@ class ProducerTests(unittest.TestCase):
         self.assertEqual(provenance.changed_manifest({"scripts/gone.py": "0" * 64}), ["scripts/gone.py"])
 
 
+class BinaryTests(unittest.TestCase):
+    def test_engine_binaries_name_the_build_a_framework_runs(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "vulkan").mkdir()
+            (root / "vulkan" / "llama-server.exe").write_bytes(b"binary")
+            (root / "vulkan" / "notes.txt").write_text("not an engine", encoding="utf-8")
+            states = provenance.engine_binaries(root)
+        self.assertEqual(list(states), ["vulkan/llama-server.exe"])
+        self.assertEqual(states["vulkan/llama-server.exe"]["bytes"], 6)
+
+    def test_a_replaced_or_removed_engine_binary_is_reported(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "vulkan").mkdir()
+            binary = root / "vulkan" / "llama-server.exe"
+            binary.write_bytes(b"old build")
+            recorded = provenance.engine_binaries(root)
+            binary.write_bytes(b"new build, later release")
+            self.assertEqual(
+                provenance.changed_binaries(recorded, provenance.engine_binaries(root)), ["vulkan/llama-server.exe"]
+            )
+            binary.unlink()
+            self.assertEqual(
+                provenance.changed_binaries(recorded, provenance.engine_binaries(root)), ["vulkan/llama-server.exe"]
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

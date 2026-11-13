@@ -19,6 +19,8 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers.runtime.execution_context import execution_context
 
 SHARED_DIR = Path(__file__).resolve().parent
+# - The executable each engine actually runs; a release zip replaces these first
+ENGINE_BINARIES = ("llama-server.exe", "llama-bench.exe", "audiocpp_server.exe", "sd-server.exe")
 
 
 def git_state(path: Path) -> dict[str, Any]:
@@ -49,10 +51,36 @@ def workspace_state() -> dict[str, Any]:
     return {"path": str(project_cfg.BASE_DIR), **git_state(project_cfg.BASE_DIR)}
 
 
+def engine_binaries(directory: Path) -> dict[str, Any]:
+    """Identity of the engine executables an install keeps, so a swapped binary release is visible.
+
+    Releases are zips unpacked over the install folder, and none of them is a git checkout, so size
+    and modification time are the only evidence that the build behind a number changed.
+    """
+    if not directory.is_dir():
+        return {}
+    found: dict[str, Any] = {}
+    for pattern in ("*", "*/*"):
+        for path in sorted(directory.glob(pattern)):
+            if not path.is_file() or path.name not in ENGINE_BINARIES:
+                continue
+            stat = path.stat()
+            found[path.relative_to(directory).as_posix()] = {
+                "bytes": stat.st_size,
+                "modified": datetime.fromtimestamp(stat.st_mtime, UTC).isoformat(timespec="seconds"),
+            }
+    return found
+
+
 def framework_state(key: str) -> dict[str, Any]:
-    """Identity of one installed framework; the folder's own repository decides the commit."""
+    """Identity of one installed framework: its commit when it has one, and its engine binaries."""
     directory = project_cfg.component(key).framework_dir
-    return {"key": key, "dir": str(directory), **git_state(directory)}
+    return {"key": key, "dir": str(directory), **git_state(directory), "binaries": engine_binaries(directory)}
+
+
+def changed_binaries(recorded: dict[str, Any], current: dict[str, Any]) -> list[str]:
+    """Recorded engine binaries a later run would load in a different build."""
+    return sorted(name for name, state in recorded.items() if current.get(name) != state)
 
 
 def file_identity(label: str, path: Path) -> dict[str, Any]:

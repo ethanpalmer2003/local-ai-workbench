@@ -209,6 +209,9 @@ def _framework_moved(report_framework: dict[str, Any]) -> str | None:
     recorded = report_framework.get("commit")
     if recorded and current.get("commit") and recorded != current["commit"]:
         return f"{key} moved"
+    rebuilt = provenance.changed_binaries(report_framework.get("binaries") or {}, current.get("binaries") or {})
+    if rebuilt:
+        return f"{key} rebuilt: {rebuilt[0]}"
     return None
 
 
