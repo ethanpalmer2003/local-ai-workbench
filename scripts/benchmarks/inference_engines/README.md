@@ -32,7 +32,7 @@ Both arms serve the same Strata Swift IQ2_XS weights with the `strata_profiles` 
 | 2026-11-13 | llama.cpp `rocm-lemonade` b1375, `swift15` | 129.5 tok/s (3044-token prompt, 46.7 s) | 149.6 tok/s (216 fresh, 83 rewrite) | 0.112 s | 0.937 |
 
 - The 96K allocation costs ROCm four turns of prefill on the same 3044 tokens; at 64K it reads 551 against Vulkan's 526 tok/s, so ROCm collapses only between 64K and 96K. Decode splits by task class: 71-83 tok/s on the rewrite against 199-216 on fresh generation.
-- The Strata arm did not run here: it exits with "cannot create the refill stream" after the expert load, and with `WinError 5` spawning the image encoder when the vision section is on. Both happen under this harness; run that arm from a normal terminal.
+- The Strata arm runs again: 357 tok/s prefill and 46.2 decode over the 3025-token prefix, TTFT 8.5 s, startup 38 s, with no prompt reuse (`0 reused + 18185 read`). The earlier "cannot create the refill stream" exit no longer reproduces; the vision encoder's `WinError 5` is untested.
 
 ## Superseded measurements
 
