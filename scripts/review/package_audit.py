@@ -5,11 +5,13 @@ module owns the leftovers, packages a past install left behind, and delegates th
 """
 
 import ast
+import os
 import re
 import shutil
 import subprocess
 import sys
 import tomllib
+from collections.abc import Iterator
 from importlib.metadata import distributions, packages_distributions
 from pathlib import Path
 from typing import Any
@@ -51,13 +53,18 @@ def _import_names(tree: ast.Module) -> set[str]:
     return names
 
 
+def _python_files(root: Path) -> Iterator[Path]:
+    """Project sources only; a pruned walk keeps the huge generated folders from being descended."""
+    for folder, subfolders, files in os.walk(root):
+        subfolders[:] = [name for name in subfolders if name not in SKIP_DIRS]
+        yield from (Path(folder) / name for name in files if name.endswith(".py"))
+
+
 def project_imports(root: Path | None = None) -> set[str]:
     """Top-level module names imported by maintained project code."""
     root = project_cfg.SCRIPTS_DIR if root is None else root
     modules: set[str] = set()
-    for path in root.rglob("*.py"):
-        if SKIP_DIRS & set(path.parts):
-            continue
+    for path in _python_files(root):
         try:
             modules.update(_import_names(ast.parse(path.read_text(encoding="utf-8-sig", errors="replace"))))
         except SyntaxError:

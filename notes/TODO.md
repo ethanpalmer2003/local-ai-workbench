@@ -7,8 +7,7 @@
 ## Reliability
 
 - [ ] Nothing is waiting here. A defect that outlives its fix goes back on this list with the check that would have caught it.
-- [ ] The no-model provider seed cannot work: `external_script` writes `kaihordewebui_*` keys, while Lite loads one `settings` record from the IndexedDB database `e_kaihordewebui_`. Either rewrite it to update that record once, or delete the seed and the `--external-endpoint` plumbing and let the page keep whatever provider is saved. ~30 min
-- [ ] Make the slow checks cheaper, using the per-section log under `scripts/state/logs/shared/review/` rather than a fresh stopwatch. The leftover-package scan is 43 s of a 60 s gate: it walks every installed distribution and parses the tree for imports, so cache it against `uv.lock` plus the venv's `dist-info` timestamps and re-scan only on a mismatch. Types cost 10 s and everything else is under 2 s. The suite is 28 s, most of it per-module start-up, so a module filter would help more than a faster runner. ~45 min
+- [ ] Rewrite the no-model provider seed, which external-LLM mode needs: KoboldCpp then runs without a model, so the page has to be pointed at llama-server or generation fails until someone picks the custom provider by hand. `external_script` writes `kaihordewebui_*` localStorage keys while Lite reads one `settings` record from the IndexedDB database `e_kaihordewebui_`, so seed that record once instead. The patch needs the live page: save one with `kobold_lite --export-html` during the next session and reuse it through `--source-file`. ~30 min
 
 ## Needs a model run or device
 
