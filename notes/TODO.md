@@ -20,7 +20,7 @@
 
 ### Unattended
 
-- [ ] Run the ROCm llama.cpp coding arm on b1375: `--list-devices` reports ROCm0 and ROCm1, so the b1373 device -1 abort is gone and an actual load is the remaining proof. Compare the `swift15` profile against b1372's 119.8 tok/s. ~20 min
+- [ ] Restore a working ROCm coding arm: b1375 dies while building the context (`ROCm error: unspecified launch failure`, device -1), the same failure as b1373, so the installed default cannot load a model. Either reinstall b1372, which was the last build that ran (119.8 tok/s), or move the coding default to the Vulkan build, which works but has no coding number yet. ~30 min
 - [ ] Retest Kobold readiness and the remaining live targets after the integrity-label fix; its launcher still timed out at 180 s. ~30 min
 - [ ] Run the Strata arm of the coding-engine benchmark from a normal terminal: under this harness the engine exits with "cannot create the refill stream" after the expert load, and the vision encoder fails with `WinError 5`. The llama.cpp arm is recorded. ~30-45 min
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md). ~1.5-2 h
