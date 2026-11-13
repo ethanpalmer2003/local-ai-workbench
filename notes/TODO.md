@@ -20,8 +20,6 @@
 
 ### Unattended
 
-- [ ] Run the coding arm on both builds through the fixed harness: the 2026-11-13 quick screen was one sample of 128 tokens and the older rows pooled their warm-up, so neither ranks the builds on decode. Three samples per task now that a warm-up request precedes them. ~20 min
-- [ ] Shorten the coding arm: four tasks share one three-thousand-token prefix and a 128-token answer, so they repeat the same measurement while adding a task-specific suffix. Two tasks (one implementation, one refactor) with three samples carry the same signal for half the run, and a second context size would test what the tasks do not. ~15 min
 - [ ] Retest Kobold readiness and the remaining live targets after the integrity-label fix; its launcher still timed out at 180 s. ~30 min
 - [ ] Run the Strata arm of the coding-engine benchmark from a normal terminal: under this harness the engine exits with "cannot create the refill stream" after the expert load, and the vision encoder fails with `WinError 5`. The llama.cpp arm is recorded. ~30-45 min
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The easy paired task is complete. [Results](../scripts/tests/notes/OUTCOMES.md). ~1.5-2 h
