@@ -1,14 +1,11 @@
-# Large installations, runtime data, and recoverable retired files stay local.
+# Runtime data, installations and retired files stay local; none of it is tracked.
 /data/
 /frameworks/
 /trash/
 /.venv/
 /scripts/benchmarks/output/
-# Editor state and scratch drafts stay local.
+
+# Editor and tool state stays local.
 /.zed/
-/.scratch/
-
-
-# Test and editor artifacts stay local.
 /.coverage
 *.lnk
