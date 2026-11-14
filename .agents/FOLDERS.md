@@ -23,6 +23,7 @@
 - The layout check audits file types in the root and each role root.
 - Settings: component first; `_SERVICE`, `_CLIENT` and `_ASR` state the role; `_DIR` binds a `Path` and `_BIN_DIR` an executable, converted at external boundaries.
 - Group by purpose, not count; adapters stay with their owner. Keep a small folder that carries ownership, native layout or output identity; counts are prompts, not orders.
+- A role that owns a module keeps it at that role's root, even when another role calls it: a benchmark area owns its corpus, scoring and reporting modules, and tests import them as clients. `scripts/shared/` is for modules no role owns, so no role tree needs a `shared` folder of its own.
 - A name states its scope: a folder says the workload or engine, an entry point says what it runs, and a document uses an uppercase common noun. Widen the behavior, not the name; `tests` is test code only and vendor scripts keep their names.
 - Historical results and logs keep their paths; `CasePaths` mirrors sources without empty parallel folders.
 - Exceptions are explicit in `COMPONENTS`/`MODEL_ALIASES`: shared llama.cpp/Kobold installs, native app casing, ComfyUI typed storage. Preserve portable data, junctions, shared weights and vendor archive internals.

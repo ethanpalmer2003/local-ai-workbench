@@ -9,7 +9,7 @@ import subprocess
 import threading
 from typing import Any, TextIO
 
-from scripts.benchmarks.asr.shared.corpus import prepare_corpus
+from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.resident_http import ResidentHttp

@@ -28,7 +28,7 @@ import numpy as np
 import psutil
 import requests
 
-from scripts.benchmarks.asr.shared.metrics import pooled_scores, unicode_errors
+from scripts.benchmarks.asr.metrics import pooled_scores, unicode_errors
 from scripts.benchmarks.shared import language_corpus as corpus
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths

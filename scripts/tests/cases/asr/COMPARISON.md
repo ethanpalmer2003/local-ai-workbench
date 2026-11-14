@@ -18,7 +18,7 @@ unknown; no estimated loading cost is subtracted.
 ```powershell
 C:/AI/bat/benchmarks/benchmark_asr_compare.bat
 C:/AI/bat/benchmarks/benchmark_asr_compare.bat --run --samples 2 --clips 2
-python -m scripts.benchmarks.asr.shared.coverage
+python -m scripts.benchmarks.asr.coverage
 ```
 
 Preview does not start native code. Default is every configured resident profile: AudioCpp Cohere, NeMo, Ming and Qwen3-ASR;
@@ -35,7 +35,7 @@ actual execution context, Unicode WER/CER, failures, lifecycle phases and reques
 summaries. Missing assets/failures remain visible; servers are task-owned and
 occupied ports are refused.
 
-The [coverage ledger](../../../benchmarks/asr/shared/coverage.py) explicitly lists every current ASR option,
+The [coverage ledger](../../../benchmarks/asr/coverage.py) explicitly lists every current ASR option,
 including missing resident adapters, manual Handy dictation, disabled legacy Whisper,
 and any unsupported alternatives. New file profiles automatically appear as unreviewed.
 Do not interpret a coverage entry as a completed test. Real microphone pacing,
