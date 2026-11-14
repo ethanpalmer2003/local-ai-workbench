@@ -4,8 +4,7 @@
 
 | Role | Home | Cap |
 | --- | --- | --- |
-| root | repo root: `README.md`, `AGENTS.md` | large, 700 |
-| hub | each folder's `README.md` | large, 700 |
+| hub | every folder's `README.md` and `AGENTS.md`, repo root included | large, 700 |
 | agent rule | `.agents/`, including skills | medium, 500 |
 | running list | index and status pages under `notes/` and `scripts/tests/notes/`; the rules name them | long, 1000 |
 | generated page | output of a tool, such as a matrix | long, 1000 |
@@ -15,6 +14,7 @@
 
 - A document that matches no role fails, so a new kind edits this table.
 - A page is generated only when it derives from evidence; a list already in a data file is not reprinted.
+- A page that does restate a data file's values names that file as the owner and is regenerated, never hand-edited, so a reader knows which copy wins.
 - Uppercase basenames except tool-required names such as `README.md`, `AGENTS.md` and `SKILL.md`.
 - Prefer the code: a name or comment that states the rule beats prose.
 - One owner per thing: state a procedure, choice or fact once, then link it.

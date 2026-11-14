@@ -32,7 +32,7 @@ def launch(
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--build", choices=tuple(cfg.SDCPP_BUILDS), default=cfg.SDCPP_SERVICE.build)
     parser.add_argument("--model-profile", choices=tuple(cfg.SDCPP_MODELS), default=cfg.SDCPP_SERVICE.model)
-    parser.add_argument("--usage-profile", choices=("standalone", "shared"), default="standalone")
+    parser.add_argument("--usage-profile", choices=cfg.USAGE_PROFILES, default="standalone")
     selection, native_args = parser.parse_known_args(extra_args or [])
     if selection.usage_profile == "shared":
         native_args = [*shared_gpu.IMAGE_ARGS, *native_args]

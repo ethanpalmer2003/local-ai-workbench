@@ -7,7 +7,8 @@
 | Install | `frameworks/` |
 | Environment | `.venv/` at the repo root, from `uv sync` |
 | Model | `data/huggingface/models/` |
-| Editable config | `scripts/config/`; model catalogs in `models/`, cross-component settings in `shared/`, shared guides in `notes/` |
+| Download | `scripts/download/`: installers and their catalogs |
+| Editable config | `scripts/config/`; model catalogs in `models/`, cross-component settings in `common/`, shared guides in `notes/` |
 | Launcher | Component launchers live under `scripts/launchers/<component>/`; shared helpers are grouped by purpose under `shared/`; cross-backend readiness, diagnostics and GPU policy use `runtime/`; role-wide plumbing stays at the launcher root. |
 | Cross-role helpers | `scripts/shared/` when a launcher, a benchmark and a test all call the same module; a helper one role owns stays with that role |
 | Repository tools | `scripts/tools/` |
@@ -15,8 +16,7 @@
 | Test source / UI | `scripts/tests/cases/`, `scripts/tests/ui/` |
 | Benchmark source / new results | `scripts/benchmarks/`, `scripts/benchmarks/output/` |
 | Batch entry | `bat/update_frameworks.bat`; coding-agent launchers may sit at the `bat/` root, other routines group by role |
-| App state | `scripts/state/` |
-| New logs/cache/generated | `scripts/state/{logs,cache,generated}/` |
+| App state | `scripts/state/` for app data, with new logs, caches and generated pages under `scripts/state/{logs,cache,generated}/` |
 
 ## Local only
 
@@ -25,16 +25,15 @@ Two ignore files split the untracked tree: the root file holds the heavyweight t
 | Path | Holds |
 | --- | --- |
 | `data/` | Weights, video-gen media, SDKs, generated audio/image/video, private input overlay |
-| `frameworks/` | Installed engines and native state |
+| `frameworks/` | Installed engines |
 | `trash/` | Moved-out files; the only removal path for nonempty data |
 | `.venv/` | The interpreter |
 | `scripts/state/` | Logs, caches, generated reports, app state |
-| `scripts/benchmarks/output/`, `scripts/tests/output/` | Run evidence: reports, artifacts, temp workspaces |
+| `scripts/benchmarks/output/`, `scripts/tests/output/` | Run evidence and temp workspaces |
 | `scripts/.env` | Local credentials |
 | `.zed/`, `.coverage`, `*.lnk` | Editor and tool state |
-
 - Tool caches (`__pycache__/`, `.pytest_cache/`, `.ruff_cache/`) ignore themselves.
-- Evidence a document cites stays here, so a clone shows the citation and not the artifact; [open questions](../notes/OPEN-QUESTIONS.md) tracks shipping a curated subset.
+- Cited evidence stays here, so a clone shows the citation, not the artifact; [open questions](../notes/OPEN-QUESTIONS.md) tracks shipping a curated subset.
 
 ## Naming and grouping
 

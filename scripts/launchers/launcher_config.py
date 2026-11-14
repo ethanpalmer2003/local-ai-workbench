@@ -388,6 +388,9 @@ PROFILE_REQUIREMENTS = {
     "image": ProfileRequirements(SpeechClass.NONE, asr=False, agent=False),
     "video": ProfileRequirements(SpeechClass.NONE, asr=False, agent=False),
 }
+# - one closed set for the flag every launcher accepts: a session either takes the GPU alone or
+#   shares it with another running service
+USAGE_PROFILES = ("standalone", "shared")
 
 
 # - Speech output each framework can actually provide. Lemonade pins its own kokoro-v1 in the
