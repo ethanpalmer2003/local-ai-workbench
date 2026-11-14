@@ -21,9 +21,9 @@ class MoveParsingTests(unittest.TestCase):
             rename_path.parse_moves(["notes/OLD.md=notes/A.md", "notes/OLD.md=notes/B.md"])
 
     def test_a_file_keeps_its_basename_and_path_spellings(self):
-        forms = dict(rename_path.reference_forms("notes/LABELS.md", "notes/LABELS-INDEX.md"))
-        self.assertEqual(forms["LABELS.md"], "LABELS-INDEX.md")
-        self.assertEqual(forms["notes/LABELS.md"], "notes/LABELS-INDEX.md")
+        forms = dict(rename_path.reference_forms("notes/LABELS.md", "notes/GROUPINGS-INDEX.md"))
+        self.assertEqual(forms["LABELS.md"], "GROUPINGS-INDEX.md")
+        self.assertEqual(forms["notes/LABELS.md"], "notes/GROUPINGS-INDEX.md")
 
     def test_a_folder_move_stops_at_the_path(self):
         self.assertEqual(

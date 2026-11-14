@@ -1,6 +1,6 @@
-# Labels
+# Groupings
 
-Index only: it names the owner of each label family, and the values live in those files.
+Index only: it names the four kinds of grouping and the owner of each, and the values live in those files.
 
 Four kinds of grouping answer four questions. **What is this?** is a label family, indexed below. **Where may it
 live?** is placement, **when does it run and what may it start?** is the check/run taxonomy, and **how does a

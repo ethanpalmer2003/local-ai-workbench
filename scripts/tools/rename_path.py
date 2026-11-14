@@ -13,6 +13,7 @@ so a move ends with `python -m scripts.review`.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -21,6 +22,8 @@ from pathlib import Path, PurePosixPath
 
 from scripts.tools.rewrite_imports import EXCLUDED
 
+# - the workspace trees this repository does not own, so a source path is never a reference from there
+PRUNE = EXCLUDED | {"data", "frameworks", "trash"}
 TEXT_SUFFIXES = {".md", ".py", ".bat", ".yaml", ".yml", ".json", ".js", ".cjs", ".mjs"}
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -77,13 +80,13 @@ def move_paths(moves: dict[str, str], *, dry_run: bool, root: Path = ROOT) -> No
 
 
 def text_files(root: Path) -> Iterable[Path]:
-    for path in root.rglob("*"):
-        if not path.is_file() or path.suffix not in TEXT_SUFFIXES:
-            continue
-        # - excluded trees only matter below the scanned root; a fixture root may sit inside one
-        if EXCLUDED & set(path.relative_to(root).parts):
-            continue
-        yield path
+    """Prune the excluded trees while walking; a workspace walk through 700k files takes minutes."""
+    for folder, subfolders, files in os.walk(root):
+        subfolders[:] = [name for name in subfolders if name not in PRUNE]
+        for name in files:
+            path = Path(folder) / name
+            if path.suffix in TEXT_SUFFIXES:
+                yield path
 
 
 def rewrite_references(moves: dict[str, str], *, dry_run: bool, root: Path = ROOT) -> list[Path]:
