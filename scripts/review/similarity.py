@@ -11,12 +11,12 @@ import ast
 import json
 import re
 import time
-import urllib.request
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+import requests
 
 from scripts.benchmarks.shared import provenance
 from scripts.config import models as model_cfg
@@ -125,12 +125,9 @@ def units(path: Path, relative: str) -> list[dict[str, Any]]:
 def embed(texts: list[str], base: str, batch: int = BATCH) -> np.ndarray:
     vectors: list[list[float]] = []
     for start in range(0, len(texts), batch):
-        body = json.dumps({"input": texts[start : start + batch]}).encode()
-        request = urllib.request.Request(
-            base + "/v1/embeddings", data=body, headers={"Content-Type": "application/json"}
-        )
-        with urllib.request.urlopen(request, timeout=300) as response:
-            payload = json.loads(response.read())
+        response = requests.post(base + "/v1/embeddings", json={"input": texts[start : start + batch]}, timeout=300)
+        response.raise_for_status()
+        payload = response.json()
         rows = sorted(payload["data"], key=lambda row: row["index"])
         vectors.extend(row["embedding"] for row in rows)
     matrix = np.asarray(vectors, dtype=np.float32)
