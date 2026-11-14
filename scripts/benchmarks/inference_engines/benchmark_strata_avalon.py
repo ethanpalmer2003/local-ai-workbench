@@ -18,8 +18,10 @@ import json
 import re
 import secrets
 import statistics
+import subprocess
 import time
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -146,6 +148,13 @@ def stream_chat(
     return record
 
 
+def wait_until_ready(process: subprocess.Popen[Any], ready: Callable[[], bool], timeout: float, label: str) -> None:
+    """Readiness wait with the shared heartbeat, so a long expert load reports progress."""
+    from scripts.launchers.shared.services.process import wait_ready
+
+    wait_ready(process, ready, timeout, label=label, interval=1)
+
+
 def measure(
     name: str, output: RunPaths, base_url: str, api_key: str, model: str, args: argparse.Namespace
 ) -> dict[str, Any]:
@@ -239,15 +248,7 @@ def strata_arm(output: RunPaths, args: argparse.Namespace) -> tuple[dict[str, An
     try:
         started = time.perf_counter()
         with monitor:
-            until = time.monotonic() + args.startup_timeout
-            while time.monotonic() < until:
-                if process.poll() is not None:
-                    raise RuntimeError(f"Strata exited with {process.returncode}")
-                if strata_pi.ready_model(connection):
-                    break
-                time.sleep(0.5)
-            else:
-                raise TimeoutError("Strata startup timed out")
+            wait_until_ready(process, lambda: strata_pi.ready_model(connection), args.startup_timeout, "Strata")
             startup = time.perf_counter() - started
             monitor.stage = "measured"
             result = measure("strata", output, connection.base_url, key, data["model_name"], args)
@@ -337,15 +338,12 @@ def avalon_arm(output: RunPaths, args: argparse.Namespace) -> tuple[dict[str, An
         with monitor:
             from scripts.launchers.shared.services.process import http_ready
 
-            until = time.monotonic() + args.startup_timeout
-            while time.monotonic() < until:
-                if process.poll() is not None:
-                    raise RuntimeError(f"Avalon exited with {process.returncode}")
-                if http_ready(f"http://127.0.0.1:{cfg.LLAMACPP_SERVICE.port}/health", timeout=2):
-                    break
-                time.sleep(1)
-            else:
-                raise TimeoutError("Avalon startup timed out")
+            wait_until_ready(
+                process,
+                lambda: http_ready(f"http://127.0.0.1:{cfg.LLAMACPP_SERVICE.port}/health", timeout=2),
+                args.startup_timeout,
+                "Avalon",
+            )
             startup = time.perf_counter() - started
             monitor.stage = "measured"
             result = measure("avalon", output, base_url, "", avalon.ALIAS, args)

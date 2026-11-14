@@ -38,7 +38,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.launchers.shared.services.process import http_ready
+from scripts.launchers.shared.services.process import http_ready, wait_ready
 
 # - one task per workload class: fresh generation decodes without help from the prompt, while a
 #   rewrite of given code is the copy-friendly case the draft model accelerates best
@@ -122,19 +122,14 @@ def endpoint_session(args: argparse.Namespace) -> EngineSession:
 
 
 def wait_started(session: EngineSession, timeout: float) -> float:
+    """Start the clock for startup, printing a heartbeat until the server answers."""
     if session.process is None:
         return 0.0
     started = time.perf_counter()
     parts = urlsplit(session.connection.base_url)
     health = f"{parts.scheme}://{parts.netloc}/health"
-    until = time.monotonic() + timeout
-    while time.monotonic() < until:
-        if session.process.poll() is not None:
-            raise RuntimeError(f"{session.name} exited with {session.process.returncode}")
-        if http_ready(health, timeout=2):
-            return time.perf_counter() - started
-        time.sleep(0.5)
-    raise TimeoutError(f"{session.name} did not become ready within {timeout:g} seconds")
+    wait_ready(session.process, lambda: http_ready(health, timeout=2), timeout, label=session.name, interval=0.5)
+    return time.perf_counter() - started
 
 
 def conversation(task: str, context: str, *, suffix: str = "") -> list[dict[str, str]]:

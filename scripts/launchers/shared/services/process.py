@@ -45,16 +45,28 @@ def wait_ready(
     *,
     label: str = "Server",
     interval: float = 0.2,
+    heartbeat_seconds: float = 10,
 ) -> None:
+    """Wait for readiness, printing a heartbeat so a long model load never looks hung.
+
+    The timeout bounds the wait; the heartbeat answers the other question a person has while
+    watching: whether a slow start is progressing.
+    """
     if timeout <= 0 or interval <= 0:
         raise ValueError("Readiness timeout and polling interval must be positive")
-    deadline = time.monotonic() + timeout
+    started = time.monotonic()
+    deadline = started + timeout
+    announced = started
     while True:
         if process.poll() is not None:
             raise RuntimeError(f"{label} exited during startup ({process.returncode})")
         if ready():
             return
-        remaining = deadline - time.monotonic()
+        now = time.monotonic()
+        if now - announced >= heartbeat_seconds:
+            announced = now
+            print(f"[WAIT] {label} still starting: {now - started:.0f} s of {timeout:.0f} s", flush=True)
+        remaining = deadline - now
         if remaining <= 0:
             raise TimeoutError(f"{label} did not become ready within {timeout:g} seconds")
         time.sleep(min(interval, remaining))
