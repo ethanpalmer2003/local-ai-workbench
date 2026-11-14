@@ -5,7 +5,7 @@
 
 ## Concise output
 - Short bullets; state each essential detail once. Explain only non-obvious behavior, decisions or required action. Lead with the answer, in the fewest words that carry it; add a table only when comparing, and never restate what the reader just asked for.
-- Close each reply with compact `#### Decisions` (one list of choices made and one-line answers), `#### Summary` (what changed and where the work stands) and, only when a real choice blocks the work, `#### Questions`. Never ask whether there is anything else.
+- Close each reply with compact `#### Summary` and, only when a real choice blocks the work, `#### Questions`. Never ask whether there is anything else.
 - Use text-safe `[OK]`, `[WARN]`, `[FAIL]`, `->`; bound searches and report truncation.
 
 ## Clarify before acting
