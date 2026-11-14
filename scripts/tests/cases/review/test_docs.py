@@ -52,7 +52,7 @@ class RoleTests(unittest.TestCase):
             "notes/TODO.md": "running list",
             "notes/reviews/STRUCTURE-REVIEW.md": "review record",
             "notes/ONBOARDING.md": "running list",
-            "scripts/tests/notes/STATUS.md": "running list",
+            "scripts/tests/notes/STATUS-INDEX.md": "running list",
             "scripts/tests/notes/CAPABILITY-MATRIX.md": "generated page",
             "scripts/config/notes/LANGUAGE-MATRIX.md": "generated page",
             "scripts/config/comfyui/TUNING.md": "component guide",

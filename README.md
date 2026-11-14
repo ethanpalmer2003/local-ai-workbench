@@ -53,7 +53,7 @@ character error rates, and synthesized speech is checked against the requested t
 
 ## In progress
 
-[TODO](notes/TODO.md) holds local work that can start, [upstream fixes](notes/UPSTREAM.md) potential
+[TODO](notes/TODO.md) holds local work that can start, [upstream fixes](notes/UPSTREAM-INDEX.md) potential
 framework issues found during limited testing, and [open questions](notes/OPEN-QUESTIONS.md) decisions
 not yet made.
 

@@ -30,7 +30,7 @@ Index only: one line per checked area, each linking the record that holds the ev
 
 - Freshness, last-run numbers and evidence: [capability matrix](CAPABILITY-MATRIX.md), regenerated with `python -m scripts.tools.capability_matrix`.
 
-- Historical evidence and prior scope moved to [evidence](STATUS-EVIDENCE.md).
+- Historical evidence and prior scope moved to [evidence](STATUS-EVIDENCE-INDEX.md).
 
 - Current validation: 615 non-live regressions pass (routing, cleanup, drift boundaries, Silero/duplex); types, structure, punctuation and size pass. [VAD evidence](audiocpp/AUDIOCPP-VAD.md) distinguishes native checks; [review index](../../../notes/reviews/README.md) owns review status.
 

@@ -6,5 +6,5 @@ reuse/isolation policy, model-specific options and native object destruction.
 Production code must not import test fixtures or benchmark command definitions.
 
 [Runtime guide](../../scripts/launchers/shared/README.md) owns usage.
-[Test status](../../scripts/tests/notes/STATUS.md) distinguishes contract checks
+[Test status](../../scripts/tests/notes/STATUS-INDEX.md) distinguishes contract checks
 from live backend coverage; [TODO](../TODO.md) owns follow-up.

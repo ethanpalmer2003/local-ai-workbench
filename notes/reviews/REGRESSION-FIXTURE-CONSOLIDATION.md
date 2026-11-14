@@ -7,4 +7,4 @@ Intentional subprocess fixtures declare their scope; live inference is explicit.
 The guard is not a security sandbox and is not inherited by child interpreters.
 
 [Fixture guide](../../scripts/tests/shared/FIXTURES.md) owns usage;
-[test status](../../scripts/tests/notes/STATUS.md) owns validation evidence.
+[test status](../../scripts/tests/notes/STATUS-INDEX.md) owns validation evidence.

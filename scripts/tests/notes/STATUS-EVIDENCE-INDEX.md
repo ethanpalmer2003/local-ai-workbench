@@ -2,7 +2,7 @@
 
 Index only: historical scope and the record behind it; current status is one page up.
 
-Historical evidence and prior per-area scope; current status lives in [STATUS](STATUS.md).
+Historical evidence and prior per-area scope; current status lives in [STATUS](STATUS-INDEX.md).
 
 | Prior scope | Evidence / limit |
 | --- | --- |

@@ -1,6 +1,6 @@
 # llama.cpp UI patches
 
-Indexed with the other upstream responses: [notes/UPSTREAM.md](../../../../notes/UPSTREAM.md).
+Indexed with the other upstream responses: [notes/UPSTREAM-INDEX.md](../../../../notes/UPSTREAM-INDEX.md).
 
 The patch set targets `frameworks/llamacpp/rdna/tools/ui`:
 

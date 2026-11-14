@@ -10,4 +10,4 @@ The [coverage ledger](../../scripts/benchmarks/asr/coverage.py) exposes
 unsupported, manual and pending ASR adapters. Live pacing, first partials and
 multilingual/noisy quality remain incomplete. `python -m scripts.benchmarks.audit_timing`
 exposes timed-source scopes. [TODO](../TODO.md) owns pending work;
-[test status](../../scripts/tests/notes/STATUS.md) owns run evidence.
+[test status](../../scripts/tests/notes/STATUS-INDEX.md) owns run evidence.
