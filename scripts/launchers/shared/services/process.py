@@ -1,15 +1,13 @@
-"""Shared readiness and cleanup primitives; callers retain ownership/reuse policy."""
+"""Shared cleanup and ownership primitives; callers retain ownership/reuse policy."""
 
 import subprocess
-import time
-import urllib.request
-from collections.abc import Callable
 from types import SimpleNamespace
 from typing import Any
 
 from scripts.launchers import launch_util
 
 # Reuse these primitives; reuse/isolation policy belongs to the calling adapter.
+# Readiness lives in scripts.shared.wait, where every role can reach it.
 
 
 def owned_module_worker(process, module: str):
@@ -27,49 +25,6 @@ def owned_module_worker(process, module: str):
     if len(leaves) != 1:
         raise RuntimeError(f"Cannot identify one owned module worker for {module}")
     return SimpleNamespace(pid=leaves[0].pid, poll=process.poll)
-
-
-def http_ready(url: str, *, timeout: float = 1) -> bool:
-    """Polling probe: an HTTP/socket failure is not-ready; no response is forwarded."""
-    try:
-        with urllib.request.urlopen(url, timeout=timeout):
-            return True
-    except (OSError, TimeoutError):
-        return False
-
-
-def wait_ready(
-    process: subprocess.Popen[Any],
-    ready: Callable[[], bool],
-    timeout: float,
-    *,
-    label: str = "Server",
-    interval: float = 0.2,
-    heartbeat_seconds: float = 10,
-) -> None:
-    """Wait for readiness, printing a heartbeat so a long model load never looks hung.
-
-    The timeout bounds the wait; the heartbeat answers the other question a person has while
-    watching: whether a slow start is progressing.
-    """
-    if timeout <= 0 or interval <= 0:
-        raise ValueError("Readiness timeout and polling interval must be positive")
-    started = time.monotonic()
-    deadline = started + timeout
-    announced = started
-    while True:
-        if process.poll() is not None:
-            raise RuntimeError(f"{label} exited during startup ({process.returncode})")
-        if ready():
-            return
-        now = time.monotonic()
-        if now - announced >= heartbeat_seconds:
-            announced = now
-            print(f"[WAIT] {label} still starting: {now - started:.0f} s of {timeout:.0f} s", flush=True)
-        remaining = deadline - now
-        if remaining <= 0:
-            raise TimeoutError(f"{label} did not become ready within {timeout:g} seconds")
-        time.sleep(min(interval, remaining))
 
 
 def stop_owned(

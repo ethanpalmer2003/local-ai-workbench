@@ -43,7 +43,7 @@ class BackendSessions(unittest.TestCase):
     def test_healthy_services_are_reused(self):
         with (
             patch.object(backends, "BenchmarkVram") as vram_factory,
-            patch.object(backends.launch_util, "backend_ready", return_value=True),
+            patch.object(backends, "http_ready", return_value=True),
             patch.object(backends, "start") as start,
             patch.object(backends.launch_util, "kill_process_tree") as stop,
         ):
@@ -74,7 +74,7 @@ class BackendSessions(unittest.TestCase):
             owned.append(process)
 
         with (
-            patch.object(backends.launch_util, "backend_ready", side_effect=[True, False]),
+            patch.object(backends, "http_ready", side_effect=[True, False]),
             patch.object(backends, "require_free") as free,
             patch.object(backends, "start", side_effect=start),
             patch.object(backends.launch_util, "kill_process_tree") as stop,
@@ -90,7 +90,7 @@ class BackendSessions(unittest.TestCase):
 
     def test_occupied_unhealthy_service_is_never_replaced(self):
         with (
-            patch.object(backends.launch_util, "backend_ready", return_value=False),
+            patch.object(backends, "http_ready", return_value=False),
             patch.object(backends, "listening", return_value=True),
             patch.object(backends, "start") as start,
             self.assertRaisesRegex(RuntimeError, "existing services will not be replaced"),
@@ -107,7 +107,7 @@ class BackendSessions(unittest.TestCase):
             raise RuntimeError("startup failed")
 
         with (
-            patch.object(backends.launch_util, "backend_ready", return_value=False),
+            patch.object(backends, "http_ready", return_value=False),
             patch.object(backends, "require_free"),
             patch.object(backends, "start", side_effect=start),
             patch.object(backends.launch_util, "kill_process_tree") as stop,
@@ -119,7 +119,7 @@ class BackendSessions(unittest.TestCase):
 
     def test_auto_start_can_be_disabled(self):
         with (
-            patch.object(backends.launch_util, "backend_ready", return_value=False),
+            patch.object(backends, "http_ready", return_value=False),
             patch.object(backends, "start") as start,
             self.assertRaisesRegex(RuntimeError, "automatic startup is disabled"),
             backends.backend_sessions(Mock(), ("audio",), start_missing=False),

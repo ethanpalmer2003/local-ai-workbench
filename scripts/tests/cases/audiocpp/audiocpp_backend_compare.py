@@ -164,15 +164,15 @@ def loader_checks(profile: TtsProfile, backends: list[str]) -> int:
 
 
 def health(port: int) -> bool:
-    from scripts.launchers.shared.services.process import http_ready
+    from scripts.shared.wait import http_ready
 
     return http_ready(f"http://127.0.0.1:{port}/health")
 
 
 def wait_for_health(port: int, process: subprocess.Popen[bytes], timeout_s: float = 90) -> None:
-    from scripts.launchers.shared.services.process import wait_ready
+    from scripts.shared.wait import wait_ready
 
-    wait_ready(process, lambda: health(port), timeout_s, label=f"AudioCpp on port {port}", interval=0.5)
+    wait_ready(lambda: health(port), timeout_s, label=f"AudioCpp on port {port}", process=process, interval=0.5)
 
 
 def make_config(backend: str, path: Path, profile: TtsProfile = PROFILES["breeze2"]) -> None:

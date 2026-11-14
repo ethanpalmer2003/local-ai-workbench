@@ -9,6 +9,7 @@ from scripts.launchers.asr.llamacpp import gemma_audio
 from scripts.launchers.asr.shared import practice_models
 from scripts.launchers.llamacpp import chat_models
 from scripts.launchers.shared.services import native
+from scripts.shared.wait import http_ready
 
 
 def chat_command(model_id: str | None = None) -> list[str]:
@@ -32,7 +33,7 @@ def start_chat(model_id: str | None = None) -> subprocess.Popen[Any] | None:
         (cfg.GEMMA_AUDIO_ASR.exe, chat_models.path(model_id)),
         cfg.LLAMACPP_PRACTICE.internal_port,
         "Practice chat",
-        lambda: launch_util.backend_ready(url + "/health"),
+        lambda: http_ready(url + "/health", strict=True),
         lambda: native.matches(command),
         component_key="llamacpp",
     )

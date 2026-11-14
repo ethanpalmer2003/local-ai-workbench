@@ -26,6 +26,7 @@ from scripts.launchers.asr.llamacpp import qwen3_asr as qwen_asr
 from scripts.launchers.asr.whispercpp import server as whisper
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.shared.wait import http_ready
 from scripts.tests.shared.paths import CasePaths, RunPaths
 
 
@@ -69,7 +70,7 @@ def _start_services(
             if name == "asr"
             else "http://127.0.0.1:18885/api/extra/version"
         )
-        while not launch_util.backend_ready(health):
+        while not http_ready(health, strict=True):
             if process.poll() is not None or time.monotonic() >= deadline:
                 raise RuntimeError(f"{name} failed to start within the smoke budget; inspect {run.logs}")
             time.sleep(0.2)
@@ -77,7 +78,7 @@ def _start_services(
 
 
 def _await_lite(lite: str, deadline: float) -> None:
-    while not launch_util.backend_ready(lite + "/health"):
+    while not http_ready(lite + "/health", strict=True):
         if time.monotonic() >= deadline:
             raise TimeoutError("Lite proxy startup exceeded smoke budget")
         time.sleep(0.1)

@@ -21,6 +21,7 @@ from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.strata import strata_pi
 from scripts.shared import benchmark_config as benchmark_cfg
 from scripts.shared.backends import listening
+from scripts.shared.wait import wait_ready
 
 PREFIX = "\n".join(
     f"def example_{i}(values):\n    return [value + {i} for value in values if value % 7 == {i % 7}]\n"
@@ -143,15 +144,14 @@ def run_arm(
     guard = MemoryGuard(process, deadline, args.minimum_ram_gib, output.logs / "ram.jsonl")
     try:
         with guard, BenchmarkVram(output, context) as vram:
-            ready_until = min(deadline, time.monotonic() + args.startup_timeout)
-            while time.monotonic() < ready_until:
-                if process.poll() is not None:
-                    raise RuntimeError(guard.reason or f"Server exited with {process.returncode}")
-                if strata_pi.ready_model(connection):
-                    break
-                time.sleep(0.5)
-            else:
-                raise TimeoutError("Profile startup timed out")
+            wait_ready(
+                lambda: strata_pi.ready_model(connection) is not None,
+                min(deadline - time.monotonic(), args.startup_timeout),
+                label="Strata",
+                process=process,
+                interval=0.5,
+                fail=lambda: guard.reason,
+            )
             result["startup_seconds"] = time.perf_counter() - started
             from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 

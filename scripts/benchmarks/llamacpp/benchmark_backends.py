@@ -8,7 +8,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import post_json, stop_server, wait_ready
+from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import await_http, post_json, stop_server
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
@@ -59,7 +59,7 @@ def run_trial(
     )
     try:
         base = f"http://127.0.0.1:{port}"
-        wait_ready(base, process, 90)
+        await_http(base, process, 90)
         trial["startup_seconds"] = time.monotonic() - load_start
         lifecycle = BenchmarkLifecycle(lambda: f"{process.pid}:{build}" if process.poll() is None else "")
         lifecycle.adopt_prepared(trial["startup_seconds"])

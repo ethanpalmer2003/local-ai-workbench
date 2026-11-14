@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
 
-from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import wait_ready
+from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import await_http
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
@@ -59,7 +59,7 @@ def running_server(
     )
     try:
         base = f"http://127.0.0.1:{trial.port}"
-        wait_ready(base, process, ready_timeout or cfg.LLAMACPP_SERVICE.ready_timeout_s)
+        await_http(base, process, ready_timeout or cfg.LLAMACPP_SERVICE.ready_timeout_s)
         yield base, command, process
     finally:
         if process.poll() is None:

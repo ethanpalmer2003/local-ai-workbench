@@ -1,17 +1,8 @@
+"""Per-test seconds for the suite report; `timed` lives in scripts.shared.timing."""
+
 import time
 import unittest
-from collections.abc import Iterator
-from contextlib import contextmanager
 from typing import Any
-
-
-@contextmanager
-def timed(label: str) -> Iterator[None]:
-    started = time.perf_counter()
-    try:
-        yield
-    finally:
-        print(f"[TIME] {label}: {time.perf_counter() - started:.3f}s", flush=True)
 
 
 class TimedTextTestResult(unittest.TextTestResult):

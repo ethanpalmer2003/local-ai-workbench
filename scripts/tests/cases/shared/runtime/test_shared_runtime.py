@@ -1,6 +1,8 @@
 """Shared runtime contracts without launching processes or loading model libraries."""
 
+import contextlib
 import ctypes
+import io
 import unittest
 from email import policy
 from email.parser import BytesParser
@@ -15,6 +17,7 @@ from scripts.launchers.shared.native_abi.cabi import structures
 from scripts.launchers.shared.native_abi.native_library import NativeLibrary
 from scripts.launchers.shared.services import native, process
 from scripts.launchers.shared.transport.multipart import audio_upload
+from scripts.shared import wait
 from scripts.tests.shared import process_fixtures
 from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.process_fixtures import exited_process, inspected_process, running_process
@@ -118,18 +121,32 @@ class SharedRuntimeTests(unittest.TestCase):
         worker = exited_process(exit_code=4)
         probe = Mock(return_value=True)
         with self.assertRaisesRegex(RuntimeError, "exited"):
-            process.wait_ready(worker, probe, 1)
+            wait.wait_ready(probe, 1, label="fixture", process=worker)
         probe.assert_not_called()
 
     def test_readiness_deadline_is_bounded_without_real_sleep(self):
         worker = running_process()
         with (
-            patch.object(process.time, "monotonic", side_effect=[0, 0, 2]),
-            patch.object(process.time, "sleep") as sleep,
+            patch.object(wait.time, "monotonic", side_effect=[0, 0, 2]),
+            patch.object(wait.time, "sleep") as sleep,
             self.assertRaises(TimeoutError),
         ):
-            process.wait_ready(worker, lambda: False, 1)
+            wait.wait_ready(lambda: False, 1, label="fixture", process=worker)
         sleep.assert_called_once_with(0.2)
+
+    def test_readiness_heartbeat_reports_elapsed_against_the_budget(self):
+        with (
+            patch.object(wait.time, "monotonic", side_effect=[0, 0, 11, 25]),
+            patch.object(wait.time, "sleep"),
+            contextlib.redirect_stdout(stream := io.StringIO()),
+            self.assertRaises(TimeoutError),
+        ):
+            wait.wait_ready(lambda: False, 20, label="Strata", interval=1, heartbeat_seconds=10)
+        self.assertIn("[WAIT] Strata still starting: 11 s of 20 s", stream.getvalue())
+
+    def test_readiness_aborts_with_the_callers_reason(self):
+        with self.assertRaisesRegex(RuntimeError, "guard tripped"):
+            wait.wait_ready(lambda: False, 5, label="fixture", fail=lambda: "guard tripped")
 
     def test_owned_graceful_cleanup_escalates_only_after_timeout(self):
         worker = running_process(pid=12345, wait_timeouts=1)

@@ -19,13 +19,14 @@ from collections.abc import Callable, Mapping
 from ctypes import wintypes
 from enum import Enum
 from typing import Any, cast
-from urllib.error import HTTPError, URLError
+from urllib.error import URLError
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.runtime.gpu_memory import get_gpu_memory_snapshot, report_vram_usage_async
+from scripts.shared.wait import backend_unavailable, http_ready, wait_ready
 
 # - Windows Job Object: kill-on-close backstop for SPLIT_DEPENDENT/MERGE launches -
 #   every process assigned to it dies the instant the launcher process exits,
@@ -196,11 +197,7 @@ def backend_running(port: int, timeout: float = 2.0, *, backend: str | None = No
       this returns False is NOT being served by the local llama-server
     """
     selected = backend or backend_for_port(port)
-    try:
-        with urllib.request.urlopen(ready_url(selected, port), timeout=timeout):
-            return True
-    except (URLError, TimeoutError, OSError):
-        return False
+    return http_ready(ready_url(selected, port), timeout=timeout)
 
 
 def llama_server_running(timeout: float = 2.0) -> bool:
@@ -209,12 +206,17 @@ def llama_server_running(timeout: float = 2.0) -> bool:
 
 
 def wait_for_backend(port: int, timeout_s: float, interval_s: float = 1.0) -> bool:
-    deadline = time.monotonic() + timeout_s
-    while time.monotonic() < deadline:
-        if backend_running(port):
-            return True
-        time.sleep(interval_s)
-    return False
+    """Bool form of wait_ready: the yes/no an adapter asks about a backend this run did not start."""
+    try:
+        wait_ready(
+            lambda: backend_running(port),
+            max(timeout_s, 0),
+            label=f"{backend_for_port(port)} on port {port}",
+            interval=interval_s,
+        )
+        return True
+    except TimeoutError:
+        return False
 
 
 def _pid_alive(pid: int) -> bool:
@@ -612,25 +614,6 @@ def print_settings(tag: str, label: str, settings: Any, off: bool = False) -> No
     print(f"[{tag}] {label}: {fields}")
 
 
-def backend_unavailable(error: BaseException) -> bool:
-    if isinstance(error, HTTPError):
-        return error.code in (502, 503)
-    reason = error.reason if isinstance(error, URLError) else error
-    return isinstance(reason, (ConnectionRefusedError, TimeoutError))
-
-
-def backend_ready(url: str, timeout: float = 2) -> bool:
-    """Quiet readiness probe; unexpected HTTP, socket and programming errors propagate."""
-    try:
-        with urllib.request.urlopen(url, timeout=timeout) as response:
-            response.read()
-        return True
-    except (URLError, ConnectionRefusedError, TimeoutError) as error:
-        if not backend_unavailable(error):
-            raise
-        return False
-
-
 def trigger_preload(
     enabled: bool,
     tag: str,
@@ -649,7 +632,9 @@ def trigger_preload(
 
         for _ in range(cfg.LAUNCH.warmup_policy.attempts):
             try:
-                if ready_url and not backend_ready(ready_url, cfg.LAUNCH.warmup_policy.request_timeout_s):
+                if ready_url and not http_ready(
+                    ready_url, timeout=cfg.LAUNCH.warmup_policy.request_timeout_s, strict=True
+                ):
                     time.sleep(cfg.LAUNCH.warmup_policy.retry_interval_s)
                     continue
                 with urllib.request.urlopen(req, timeout=cfg.LAUNCH.warmup_policy.request_timeout_s) as response:

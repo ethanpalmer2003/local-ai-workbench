@@ -11,7 +11,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import requests
 from scripts.launchers.asr.shared.resident_profiles import build_server_command
 from scripts.launchers.shared.services import native
-from scripts.launchers.shared.services.process import http_ready
+from scripts.shared.wait import http_ready
 
 
 class ResidentBackend:

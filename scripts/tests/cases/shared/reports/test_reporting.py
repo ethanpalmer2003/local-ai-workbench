@@ -6,8 +6,8 @@ from unittest.mock import PropertyMock, patch
 
 from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.reporting import report_run
+from scripts.shared.timing import timed
 from scripts.tests.shared.paths import CasePaths, Outcome, RunPaths
-from scripts.tests.shared.timing import timed
 
 
 class Reporting(unittest.TestCase):

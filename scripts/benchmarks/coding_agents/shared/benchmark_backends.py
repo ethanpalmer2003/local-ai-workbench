@@ -280,17 +280,15 @@ def avalon_endpoint(conf: llamacpp.LlamaConfig, output: RunPaths) -> Iterator[Be
     )
     process_started = launch_util.process_start_time(process.pid)
     try:
-        from scripts.launchers.shared.services.process import http_ready
+        from scripts.shared.wait import http_ready, wait_ready
 
-        deadline = time.monotonic() + 300
-        while time.monotonic() < deadline:
-            if process.poll() is not None:
-                raise RuntimeError(f"Avalon exited with {process.returncode}")
-            if http_ready(f"http://127.0.0.1:{port}/health", timeout=2):
-                break
-            time.sleep(1)
-        else:
-            raise TimeoutError("Avalon did not become ready")
+        wait_ready(
+            lambda: http_ready(f"http://127.0.0.1:{port}/health", timeout=2),
+            300,
+            label="Avalon",
+            process=process,
+            interval=1,
+        )
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/v1/models", timeout=10) as response:
             models = json.load(response).get("data", [])
         if avalon.ALIAS not in [entry.get("id") for entry in models]:

@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 from scripts.benchmarks import amalgamate_benchmarks as summaries
 from scripts.benchmarks.llamacpp import benchmark_llamacpp_profiles as benchmark
+from scripts.shared.timing import timed
 from scripts.tests.shared.paths import CasePaths, RunPaths
-from scripts.tests.shared.timing import timed
 
 
 class ReportOutputs(unittest.TestCase):
@@ -18,7 +18,7 @@ class ReportOutputs(unittest.TestCase):
             with (
                 patch.object(benchmark, "output", output),
                 patch.object(benchmark.launch_util, "launch_process"),
-                patch.object(benchmark, "wait_ready"),
+                patch.object(benchmark, "await_http"),
                 patch.object(benchmark, "stop_server"),
                 patch.object(benchmark, "post_json", return_value={"choices": [{"message": {"content": "answer"}}]}),
             ):

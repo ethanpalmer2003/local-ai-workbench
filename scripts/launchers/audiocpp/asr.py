@@ -13,8 +13,8 @@ from scripts.launchers.asr.shared import requests
 from scripts.launchers.asr.shared.resident_profiles import audio_config
 from scripts.launchers.audiocpp.kokoro import audio_environment
 from scripts.launchers.shared.services import native
-from scripts.launchers.shared.services.process import http_ready
 from scripts.launchers.shared.transport.streaming_http import StreamingPost
+from scripts.shared.wait import http_ready
 
 # - The practice server hosts one ASR model plus TTS; the profile picks which recognizer
 DEFAULT_ENGINE = "audiocpp-vulkan"

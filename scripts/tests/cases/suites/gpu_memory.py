@@ -6,8 +6,8 @@ import os
 import time
 
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
+from scripts.shared.timing import timed
 from scripts.tests.shared.paths import CasePaths
-from scripts.tests.shared.timing import timed
 
 
 def main() -> None:

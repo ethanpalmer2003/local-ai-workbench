@@ -35,6 +35,8 @@ from scripts.launchers.llamacpp import llamacpp, llamacpp_coding, llamacpp_dsh, 
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
 from scripts.shared.http_server import request, server
+from scripts.shared.timing import timed
+from scripts.shared.wait import http_ready
 from scripts.tests.cases.suites import live_frameworks, quick_validation
 from scripts.tests.cases.suites.launcher_behaviors import LauncherBehaviors
 from scripts.tests.shared.media_fixtures import PNG, wav_fixture
@@ -43,7 +45,6 @@ from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.native_suites import SUITES
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.process_fixtures import exited_process, running_process
-from scripts.tests.shared.timing import timed
 
 
 @requires_model_check
@@ -300,7 +301,7 @@ class LaunchCommands(unittest.TestCase):
 
     def test_kobold_opens_localhost_proxy_only_after_page_is_ready(self):
         with (
-            patch.object(kobold, "backend_ready", side_effect=[False, True, True]) as probe,
+            patch.object(kobold, "http_ready", side_effect=[False, True, True]) as probe,
             patch.object(kobold.time, "sleep"),
             patch.object(kobold, "open_browser") as browser,
         ):
@@ -454,10 +455,10 @@ class StateAndReadiness(unittest.TestCase):
         for error in expected + unexpected:
             with self.subTest(error=error), patch.object(launch_util.urllib.request, "urlopen", side_effect=error):
                 if error in expected:
-                    self.assertFalse(launch_util.backend_ready("http://backend/health"))
+                    self.assertFalse(http_ready("http://backend/health", strict=True))
                 else:
                     with self.assertRaises(type(error)):
-                        launch_util.backend_ready("http://backend/health")
+                        http_ready("http://backend/health", strict=True)
 
     def test_warmup_unexpected_errors_propagate(self):
         with (

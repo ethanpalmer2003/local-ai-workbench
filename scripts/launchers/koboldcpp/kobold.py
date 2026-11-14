@@ -13,10 +13,11 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector as transcription
 from scripts.launchers.koboldcpp import external_llm, kokoro
-from scripts.launchers.launch_util import backend_ready, backend_running, launch_module, launch_process, port_listening
+from scripts.launchers.launch_util import backend_running, launch_module, launch_process, port_listening
 from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 from scripts.launchers.runtime import shared_gpu
 from scripts.launchers.runtime.browser import open_browser
+from scripts.shared.wait import http_ready, wait_ready
 
 PROXY_SERVICES = [
     ("Audiocpp", "scripts.launchers.audiocpp.audiocpp_proxy", "AudioCpp Proxy", cfg.AUDIOCPP_SERVICE),
@@ -162,14 +163,17 @@ def open_streaming_ui() -> None:
     url = f"http://localhost:{cfg.KOBOLDCPP_SERVICE.streaming_ui_port}{cfg.KOBOLDCPP_SERVICE.streaming_ui_path}"
     backend_url = f"http://127.0.0.1:{cfg.KOBOLDCPP_KCPPS_ARGS['port']}/"
     print(f"KoboldCpp Lite Proxy: {url}")
-    deadline = time.monotonic() + 120
-    while time.monotonic() < deadline:
-        if not backend_ready(backend_url) or not backend_ready(url):
-            time.sleep(1)
-            continue
-        open_browser(url)
+    try:
+        wait_ready(
+            lambda: http_ready(backend_url, strict=True) and http_ready(url, strict=True),
+            120,
+            label="KoboldCpp Lite Proxy page",
+            interval=1,
+        )
+    except TimeoutError:
+        print(f"KoboldCpp Lite Proxy page not ready after 120s; open {url} once startup finishes")
         return
-    print(f"KoboldCpp Lite Proxy page not ready after 120s; open {url} once startup finishes")
+    open_browser(url)
 
 
 def start_proxy_services(processes: list[tuple[str, subprocess.Popen[Any]]], usage_profile: str) -> None:

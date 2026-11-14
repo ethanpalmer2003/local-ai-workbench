@@ -15,10 +15,10 @@ from scripts.launchers import launch_util, proxy_util
 from scripts.launchers.llamacpp import llamacpp, llamacpp_dsh, llamacpp_proxy
 from scripts.launchers.runtime import gpu_memory
 from scripts.review.inventory_code import inspect_source
+from scripts.shared.timing import timed
 from scripts.tests.cases.koboldcpp.kobold_vram_estimate import kv_cache_mib
 from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.process_fixtures import running_process
-from scripts.tests.shared.timing import timed
 
 
 class SharedContracts(unittest.TestCase):

@@ -4,7 +4,6 @@ import argparse
 import os
 import subprocess
 import sys
-import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from typing import Any
@@ -16,6 +15,7 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.shared.wait import http_ready, wait_ready
 
 NATIVE_BACKENDS = {"kobold": "koboldcpp", "image": "sdcpp", "audio": "audiocpp"}
 
@@ -115,15 +115,14 @@ def start(
     owned.append(process)
     launch_util.assign_process_to_job(process.pid)
     url = ready_url(NATIVE_BACKENDS[backend], ports(backend)[0])
-    deadline = time.monotonic() + 90
-    while time.monotonic() < deadline:
-        if process.poll() is not None:
-            raise RuntimeError(f"{backend} exited with {process.returncode}; see {paths.logs / (backend + '.log')}")
-        if launch_util.backend_ready(url):
-            print(f"[READY] {backend}, pid {process.pid}", flush=True)
-            return
-        time.sleep(0.5)
-    raise TimeoutError(f"{backend} startup exceeded 90 seconds")
+    wait_ready(
+        lambda: http_ready(url, strict=True),
+        90,
+        label=f"{backend} (log: {paths.logs / (backend + '.log')})",
+        process=process,
+        interval=0.5,
+    )
+    print(f"[READY] {backend}, pid {process.pid}", flush=True)
 
 
 @contextmanager
@@ -147,7 +146,7 @@ def owned_backend_sessions(run: RunPaths, backends: tuple[str, ...], start_missi
         missing = []
         for backend in backends:
             url = ready_url(NATIVE_BACKENDS[backend], ports(backend)[0])
-            if launch_util.backend_ready(url):
+            if http_ready(url, strict=True):
                 print(f"[REUSE] {backend}", flush=True)
             else:
                 missing.append(backend)

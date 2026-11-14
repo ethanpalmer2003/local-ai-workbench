@@ -1,3 +1,4 @@
+from scripts.shared.timing import timed
 from scripts.tests.cases.asr.llamacpp.test_gemma_audio import GemmaAudioTests
 from scripts.tests.cases.asr.llamacpp.test_qwen_asr_profiles import QwenAsrProfiles
 from scripts.tests.cases.asr.shared.test_delivery import DeliveryTests
@@ -127,7 +128,6 @@ from scripts.tests.cases.strata.test_strata_profiles import StrataProfileTests
 from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.cases.suites.framework_updates import FrameworkUpdates
 from scripts.tests.cases.suites.shared_contracts import SharedContracts
-from scripts.tests.shared.timing import timed
 
 if __name__ == "__main__":
     with timed("default regressions"):

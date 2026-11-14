@@ -9,7 +9,8 @@ from typing import Any
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.shared.services.process import stop_owned, wait_ready
+from scripts.launchers.shared.services.process import stop_owned
+from scripts.shared.wait import wait_ready
 
 
 def matches(command: list[str]) -> bool:
@@ -59,7 +60,7 @@ def start_server(
         env=env,
     )
     try:
-        wait_ready(process, ready, timeout, label=f"{title}; logs: {logs}")
+        wait_ready(ready, timeout, label=f"{title}; logs: {logs}", process=process)
     except BaseException:
         stop_owned(process)
         raise

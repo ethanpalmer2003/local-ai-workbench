@@ -15,10 +15,10 @@ from scripts.launchers import launch_util
 from scripts.launchers.launch_util import assign_process_to_job
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig, LlamaMonitor
 from scripts.launchers.runtime import gpu_memory
+from scripts.shared.timing import timed
 from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.process_fixtures import running_process
-from scripts.tests.shared.timing import timed
 
 
 class LauncherBehaviors(unittest.TestCase):

@@ -1,4 +1,4 @@
-"""Console timing for benchmark setup, cleanup and whole-run diagnostics."""
+"""Console timing for any step long enough that a person wants to know what it cost."""
 
 import time
 from collections.abc import Iterator

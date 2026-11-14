@@ -13,8 +13,8 @@ from scripts.launchers.launch_util import (
     launch_process,
     wait_for_backend,
 )
+from scripts.shared.timing import timed
 from scripts.tests.shared.paths import CasePaths
-from scripts.tests.shared.timing import timed
 
 
 def get_json(base: str, path: str) -> object:

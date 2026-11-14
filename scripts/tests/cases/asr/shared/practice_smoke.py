@@ -24,8 +24,9 @@ from scripts.launchers.llamacpp.language_practice import chat_command, start_tts
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.launchers.shared.services import native
-from scripts.launchers.shared.services.process import http_ready, stop_owned
+from scripts.launchers.shared.services.process import stop_owned
 from scripts.shared.resources import monitor_process
+from scripts.shared.wait import http_ready
 from scripts.tests.shared.native_suites import refuse_existing_sessions
 from scripts.tests.shared.paths import CasePaths
 
@@ -104,11 +105,15 @@ def _start_chat(runtime, chat_port):
 
 
 def _await_gateway(base, errors):
-    deadline = time.monotonic() + 10
-    while not http_ready(base + "/health"):
-        if errors or time.monotonic() > deadline:
-            raise RuntimeError(str(errors) or "Practice gateway did not start")
-        time.sleep(0.05)
+    from scripts.shared.wait import wait_ready
+
+    wait_ready(
+        lambda: http_ready(base + "/health"),
+        10,
+        label="practice gateway",
+        interval=0.05,
+        fail=lambda: str(errors) if errors else None,
+    )
 
 
 def _stream_pcm(base, token, pcm):

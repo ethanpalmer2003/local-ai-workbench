@@ -18,10 +18,8 @@ import json
 import re
 import secrets
 import statistics
-import subprocess
 import time
 import urllib.request
-from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +33,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
 from scripts.launchers.strata import strata_pi
+from scripts.shared.wait import http_ready, wait_ready
 
 WARMUP = "Describe a red ball in one sentence."
 CONTRACT = "strata_profiles: prefix 100 Python functions, 128 tokens, temperature 0, seed 42, reasoning off"
@@ -148,13 +147,6 @@ def stream_chat(
     return record
 
 
-def wait_until_ready(process: subprocess.Popen[Any], ready: Callable[[], bool], timeout: float, label: str) -> None:
-    """Readiness wait with the shared heartbeat, so a long expert load reports progress."""
-    from scripts.launchers.shared.services.process import wait_ready
-
-    wait_ready(process, ready, timeout, label=label, interval=1)
-
-
 def measure(
     name: str, output: RunPaths, base_url: str, api_key: str, model: str, args: argparse.Namespace
 ) -> dict[str, Any]:
@@ -248,7 +240,13 @@ def strata_arm(output: RunPaths, args: argparse.Namespace) -> tuple[dict[str, An
     try:
         started = time.perf_counter()
         with monitor:
-            wait_until_ready(process, lambda: strata_pi.ready_model(connection), args.startup_timeout, "Strata")
+            wait_ready(
+                lambda: strata_pi.ready_model(connection) is not None,
+                args.startup_timeout,
+                label="Strata",
+                process=process,
+                interval=1,
+            )
             startup = time.perf_counter() - started
             monitor.stage = "measured"
             result = measure("strata", output, connection.base_url, key, data["model_name"], args)
@@ -336,13 +334,12 @@ def avalon_arm(output: RunPaths, args: argparse.Namespace) -> tuple[dict[str, An
     try:
         started = time.perf_counter()
         with monitor:
-            from scripts.launchers.shared.services.process import http_ready
-
-            wait_until_ready(
-                process,
+            wait_ready(
                 lambda: http_ready(f"http://127.0.0.1:{cfg.LLAMACPP_SERVICE.port}/health", timeout=2),
                 args.startup_timeout,
-                "Avalon",
+                label="Avalon",
+                process=process,
+                interval=1,
             )
             startup = time.perf_counter() - started
             monitor.stage = "measured"

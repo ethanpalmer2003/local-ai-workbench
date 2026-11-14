@@ -32,13 +32,13 @@ from scripts.benchmarks.coding_agents.shared.benchmark_requests import stream_ch
 from scripts.benchmarks.coding_agents.strata_profiles import PREFIX
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
-from scripts.benchmarks.shared.timing import timed
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.launchers.shared.services.process import http_ready, wait_ready
+from scripts.shared.timing import timed
+from scripts.shared.wait import http_ready, wait_ready
 
 # - one task per workload class: fresh generation decodes without help from the prompt, while a
 #   rewrite of given code is the copy-friendly case the draft model accelerates best
@@ -119,17 +119,6 @@ def endpoint_session(args: argparse.Namespace) -> EngineSession:
         model=args.model,
         features=f"existing OpenAI-compatible server at {args.endpoint}",
     )
-
-
-def wait_started(session: EngineSession, timeout: float) -> float:
-    """Start the clock for startup, printing a heartbeat until the server answers."""
-    if session.process is None:
-        return 0.0
-    started = time.perf_counter()
-    parts = urlsplit(session.connection.base_url)
-    health = f"{parts.scheme}://{parts.netloc}/health"
-    wait_ready(session.process, lambda: http_ready(health, timeout=2), timeout, label=session.name, interval=0.5)
-    return time.perf_counter() - started
 
 
 def conversation(task: str, context: str, *, suffix: str = "") -> list[dict[str, str]]:
@@ -248,7 +237,17 @@ def run_engine(args: argparse.Namespace, output: RunPaths, context: str) -> dict
     session = llamacpp_session(args, output) if args.engine == "llamacpp" else endpoint_session(args)
     try:
         if session.process is not None:
-            session.startup_seconds = wait_started(session, args.startup_timeout)
+            started = time.perf_counter()
+            parts = urlsplit(session.connection.base_url)
+            health = f"{parts.scheme}://{parts.netloc}/health"
+            wait_ready(
+                lambda: http_ready(health, timeout=2),
+                args.startup_timeout,
+                label=session.name,
+                process=session.process,
+                interval=0.5,
+            )
+            session.startup_seconds = time.perf_counter() - started
         rows = task_rows(session, args, context)
         result = summarize(rows)
         result.update(

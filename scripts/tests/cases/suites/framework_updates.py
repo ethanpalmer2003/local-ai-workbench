@@ -20,9 +20,9 @@ from scripts.download.frameworks.asr import whispercpp
 from scripts.download.frameworks.shared import other_updates
 from scripts.download.frameworks.strata import updates as strata_updates
 from scripts.download.frameworks.tts import updates as tts_updates
+from scripts.shared.timing import timed
 from scripts.tests.shared.http_fixtures import http_response
 from scripts.tests.shared.paths import CasePaths
-from scripts.tests.shared.timing import timed
 
 
 class FrameworkUpdates(unittest.TestCase):
