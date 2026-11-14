@@ -619,7 +619,11 @@ class ProxyHTTP(unittest.TestCase):
         self.assertNotIn("_comparison", forwarded)
 
     def test_test_page_reads_current_proxy_defaults(self):
+        # - this route once walked the voice tree per voice and took 5.5 s; a generous bound still
+        #   catches that returning, without making the check a stopwatch
+        started = time.perf_counter()
         status, body, _ = request(self.audio_url + "/proxy/config")
+        self.assertLess(time.perf_counter() - started, 2.0, "/proxy/config answered slower than 2 s")
         data = json.loads(body)
         self.assertEqual(status, 200)
         preset = cfg.AUDIOCPP_PROXY_MODEL_PRESETS.get(cfg.AudiocppModel(cfg.AUDIOCPP_SERVICE.model))

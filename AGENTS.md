@@ -4,7 +4,8 @@
 - Read [README.md](README.md), [scripts/README.md](scripts/README.md), and the relevant guide.
 
 ## Concise output
-- Short bullets; state each essential detail once. Explain only non-obvious behavior, decisions or required action. Lead with the answer, in the fewest words that carry it; add a table only when comparing, and never restate what the reader just asked for.
+- Number user-facing lists (1, 2, 3); bullets are for notes inside a document, never for a reply.
+- Short lines; state each essential detail once. Explain only non-obvious behavior, decisions or required action. Lead with the answer, in the fewest words that carry it; add a table only when comparing, and never restate what the reader just asked for.
 - Close each reply with compact `#### Summary` and, only when a real choice blocks the work, `#### Questions`. Never ask whether there is anything else.
 - Use text-safe `[OK]`, `[WARN]`, `[FAIL]`, `->`; bound searches and report truncation.
 
