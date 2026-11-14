@@ -54,7 +54,6 @@ KOBOLD_ADMIN_PASSWORD = os.environ.get("KOBOLD_ADMIN_PASSWORD") or ""
 
 HF_HOME_DIR = DATA_DIR / "huggingface"  # HF cache root (HF_HUB_DIR env var)
 HF_MODELS_DIR = HF_HOME_DIR / "models"  # Downloaded model files root
-CHAT_TEMPLATES_DIR = HF_HOME_DIR / "chat-templates"
 
 # - Set HF env vars BEFORE any huggingface_hub imports
 # - HF_HOME is the permanent Windows env var; HF_HUB_DIR is set here for runtime
@@ -198,7 +197,6 @@ def model_destination(key: str, filename: str) -> str:
     return (component(key).models_dir.relative_to(DATA_DIR) / filename).as_posix()
 
 
-ASR_FRAMEWORKS_DIR = component("asr").framework_dir
 COMFYUI_FRAMEWORK_DIR = component("comfyui").framework_dir
 COMFYUI_ROCM_DIR = COMFYUI_FRAMEWORK_DIR / "rocm"
 COMFYUI_MODELS_DIR = component("comfyui").models_dir
@@ -215,7 +213,6 @@ AUDIOCPP_VULKAN_DIR = AUDIOCPP_FRAMEWORK_DIR / "vulkan"
 AUDIOCPP_VULKAN_BIN_DIR = AUDIOCPP_VULKAN_DIR
 AUDIOCPP_BIN_DIR = AUDIOCPP_VULKAN_BIN_DIR
 AUDIOCPP_SERVER_EXE = AUDIOCPP_BIN_DIR / "audiocpp_server.exe"
-AUDIOCPP_CLI_EXE = AUDIOCPP_BIN_DIR / "audiocpp_cli.exe"
 
 # --- avalon (llama.cpp fork for Qwen3.8-Flash-Next; benchmark engine) ---
 AVALON_FRAMEWORK_DIR = component("avalon").framework_dir
@@ -229,10 +226,6 @@ STRATA_MODELS_DIR = component("strata").models_dir
 
 # --- koboldcpp (GGUF storage only - no install dir/exe tracked here) ---
 KOBOLDCPP_FRAMEWORK_DIR = component("koboldcpp").framework_dir
-KOBOLDCPP_MODELS_DIR = component("koboldcpp").models_dir
-
-# --- ASR models (speech recognition) ---
-ASR_MODELS_DIR = component("asr").models_dir
 
 # --- llamacpp (LLM inference) ---
 # - Build dir selection lives in launcher_config.py (LLAMACPP_BUILDS /
@@ -246,7 +239,6 @@ HANDY_APP_DIR = component("asr/handy").framework_dir / "app"
 LLMS_MODELS_DIR = component("llamacpp").models_dir
 LLMS_CODING_MODELS_DIR = LLMS_MODELS_DIR / "coding_models"
 LLMS_MULTILINGUAL_MODELS_DIR = LLMS_MODELS_DIR / "multilingual_models"
-LLMS_CHARACTER_MODELS_DIR = component("koboldcpp").models_dir
 
 # --- sdcpp (Stable Diffusion) ---
 SDCPP_FRAMEWORK_DIR = component("sdcpp").framework_dir

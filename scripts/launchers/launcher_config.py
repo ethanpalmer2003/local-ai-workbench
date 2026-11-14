@@ -142,7 +142,6 @@ LLAMACPP_SERVICE = LlamacppStartupServiceSettings(
 
 
 LLAMACPP_INI_DIR = project_cfg.component("llamacpp").config_dir
-LLAMACPP_JINJA_DIR = LLAMACPP_INI_DIR / "jinja"
 # - INI keys are llama-server flags without leading dashes (build_server_args
 #   in llamacpp.py re-adds them via build_cli_args)
 # - Unknown keys pass straight through and llama-server rejects them
@@ -392,14 +391,6 @@ USAGE_PROFILES = ("standalone", "shared")
 # - Speech output each framework can actually provide. Lemonade pins its own kokoro-v1 in the
 #   comparison; its catalog also lists MOSS TTS, including a voice-design variant, which no
 #   workflow here has exercised yet.
-FRAMEWORK_TTS_CLASSES = {
-    "koboldcpp": SpeechClass.VOICE_DESIGN,
-    "audiocpp": SpeechClass.VOICE_DESIGN,
-    "lemonade_server": SpeechClass.FAST_MULTILINGUAL,
-    "llamacpp": SpeechClass.NONE,
-}
-
-
 def tts_class_for(model: str) -> SpeechClass:
     """The speech class a TTS model declares in its catalog entry; assets and unknown labels claim none."""
     try:

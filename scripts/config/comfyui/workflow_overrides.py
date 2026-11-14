@@ -5,13 +5,6 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-# - Upstream LTX-2 model-card examples; generic placeholders until a prompt is supplied.
-DEFAULT_PROMPT = "A beautiful sunset over the ocean"
-DEFAULT_NEGATIVE = (
-    "shaky, glitchy, low quality, worst quality, deformed, distorted, disfigured, motion smear, "
-    "motion artifacts, fused fingers, bad anatomy, weird hand, ugly, transition, static."
-)
-
 
 def _text_source(
     by_id: dict[str, dict[str, Any]], links: dict[int, list[Any]], kind: str, link_id: int | None
