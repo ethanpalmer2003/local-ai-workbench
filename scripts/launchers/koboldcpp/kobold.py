@@ -27,7 +27,7 @@ LOG_DIR = project_cfg.component("koboldcpp").logs_dir
 
 
 def model_overrides(usage_profile: str = "standalone") -> dict[str, Any]:
-    if usage_profile not in ("standalone", "shared"):
+    if usage_profile not in cfg.USAGE_PROFILES:
         raise ValueError(f"Unknown usage profile: {usage_profile}")
     options = dict(cfg.KOBOLDCPP_MODEL_KCPPS_OVERRIDES.get(cfg.KOBOLDCPP_SERVICE.model, {}))
     if usage_profile == "shared":
@@ -234,7 +234,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=cfg.KOBOLD_CHAT.image == "with",
         help="Include sd.cpp using the shared GPU profile (default from the overlay's chat.image)",
     )
-    parser.add_argument("--usage-profile", choices=("standalone", "shared"), default="shared")
+    parser.add_argument("--usage-profile", choices=cfg.USAGE_PROFILES, default="shared")
     parser.add_argument(
         "--llm",
         choices=("kobold", "external"),

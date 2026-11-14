@@ -45,7 +45,7 @@ class RootDocumentTests(unittest.TestCase):
 class RoleTests(unittest.TestCase):
     def test_known_homes_claim_their_role(self):
         cases = {
-            "AGENTS.md": "root",
+            "AGENTS.md": "hub",
             ".agents/skills/docs-writing/SKILL.md": "agent rule",
             ".agents/CHECKS.md": "agent rule",
             ".agents/CODE.md": "agent rule",

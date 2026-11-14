@@ -19,7 +19,7 @@ def launch(
 ):
     port = port if port is not None else cfg.AUDIOCPP_SERVICE.port
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--usage-profile", choices=("standalone", "shared"), default="standalone")
+    parser.add_argument("--usage-profile", choices=cfg.USAGE_PROFILES, default="standalone")
     selection, native_args = parser.parse_known_args(extra_args or [])
     server_args = {
         **cfg.AUDIOCPP_SERVER_ARGS,

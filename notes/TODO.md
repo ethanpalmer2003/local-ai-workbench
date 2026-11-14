@@ -7,6 +7,7 @@
 ## Reliability
 
 - [ ] Nothing is waiting here. A defect that outlives its fix goes back on this list with the check that would have caught it.
+- [ ] `ProxyHTTP.test_test_page_reads_current_proxy_defaults` times out on `/proxy/config` after 5 s while every other route in that fixture server answers; it reproduces on the clean commit `2c0e882`, so it is environmental or a hang in that route, not a regression. Start by timing the upstream call the handler makes before answering. ~20 min
 - [ ] Rewrite the no-model provider seed, which external-LLM mode needs: KoboldCpp then runs without a model, so the page has to be pointed at llama-server or generation fails until someone picks the custom provider by hand. `external_script` writes `kaihordewebui_*` localStorage keys while Lite reads one `settings` record from the IndexedDB database `e_kaihordewebui_`, so seed that record once instead. The patch needs the live page: save one with `kobold_lite --export-html` during the next session and reuse it through `--source-file`. ~30 min
 
 ## Needs a model run or device

@@ -16,7 +16,6 @@ from scripts.review.sources import maintained_files
 # - three caps only; each document role picks one, so a new kind needs no new number
 WORD_TIERS = {"long": 1000, "large": 700, "medium": 500}
 ROLE_TIERS = {
-    "root": "large",
     "hub": "large",
     "agent rule": "medium",
     "running list": "long",
@@ -47,13 +46,12 @@ RUNNING_LIST_PATHS = (
     r"scripts/tests/notes/(?:STATUS|STATUS-EVIDENCE|OUTCOMES|ESTIMATES)\.md",
 )
 ROLE_RULES = (
-    ("root", r"(?:README|AGENTS)\.md"),
+    ("hub", r"(?:.*/)?(?:README|AGENTS)\.md"),
     ("agent rule", r".*AGENTS\.md|\.agents/.*\.md"),
     ("review record", r"notes/reviews/.*\.md"),
     ("generated page", r"scripts/(?:config|tests)/notes/[A-Z][A-Z0-9-]*-MATRIX\.md"),
     ("running list", "|".join(RUNNING_LIST_PATHS)),
     ("note", r"notes/.*\.md"),
-    ("hub", r"^(?:[^/]+/)+README\.md$"),
     ("component guide", r"scripts/(?:[^/]+/)+[A-Z][A-Z0-9-]*\.md"),
 )
 # - a policy number is stated once; every other document links to its owner instead of repeating it
