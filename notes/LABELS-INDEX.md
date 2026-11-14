@@ -17,6 +17,8 @@ a row here and a constant beside its owner, and the
 | Family | Applies to | Decides | Owner |
 | --- | --- | --- | --- |
 | Budget class | capability rows | Runner budget: seconds a row may take | [capability_matrix.py](../scripts/tools/capability_matrix.py) |
+| Capability section | capability rows | Whether a row tests the defaults or the alternatives | `SECTION` in [capability_matrix.py](../scripts/tools/capability_matrix.py) |
+| Catalog category | catalog entries | Which model family an entry belongs to, and so which lookup and download scope reads it | `CATEGORIES` in [catalog.py](../scripts/config/models/catalog.py); the values are in [catalog.json](../scripts/config/models/catalog.json) |
 | Deferred | anything parked: a model, a framework, a build, a row, a runtime, a piece of work | Why it cannot start, what kind of thing it is, and what would unpark it | `DeferredKind` in [deferred.py](../scripts/config/shared/deferred.py); the records are in [deferred.yaml](../scripts/config/shared/deferred.yaml) |
 | Suite | every test | Whether it may start a process or load weights | `SUITES` in [native_suites.py](../scripts/tests/shared/native_suites.py), with the live targets in [live_frameworks.py](../scripts/tests/cases/suites/live_frameworks.py) |
 | Workflow profile | defaults and benchmarks | Which speech, inference and media parts a framework must provide | `PROFILE_REQUIREMENTS` in [launcher_config.py](../scripts/launchers/launcher_config.py) |
@@ -34,10 +36,13 @@ a row here and a constant beside its owner, and the
 
 - **Folder.** The placement question above, with no vocabulary: [folder rules](../.agents/FOLDERS.md) decide
   what may sit where, and a path has one meaning.
-- **Row fields.** A capability row's `section` and its deferral reason are fields of one owner's table;
-  only the deferral concept is a family, because the parked-work page lists the same things.
+- **Row fields.** A capability row's deferral reason is a field of one owner's table; only the
+  deferral concept is a family, because the parked-work page lists the same things.
 - **Check level.** The gate's stages and their levels are a list, but they run in one order and read
   from one owner: [checks](../.agents/CHECKS.md).
+- **Selection setting.** `ServiceMode`, the engine and model choices and the service policies are closed sets, but
+  nobody writes their values by hand: the code that names them also imports them. A family exists where a data
+  file or a page would otherwise restate the values, so an enum that only code reads stays a setting.
 - **Run status** (`completed`, `failed`, `passed`). Each writer sets its own today, so there is no
   agreed vocabulary to point at; outcome is the label that carries meaning.
 
