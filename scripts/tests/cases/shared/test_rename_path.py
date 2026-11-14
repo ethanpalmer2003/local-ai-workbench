@@ -63,5 +63,16 @@ class ReferenceRewriteTests(unittest.TestCase):
             self.assertIn("OLD-INDEX", target.read_text(encoding="utf-8"))
 
 
+class ScanScopeTests(unittest.TestCase):
+    def test_the_scan_never_enters_a_workspace_tree(self):
+        watched = {"data", "frameworks", "trash", "state", "output", ".venv"}
+        scanned = [path.relative_to(rename_path.ROOT) for path in rename_path.text_files(rename_path.ROOT)]
+        self.assertFalse(
+            [str(path) for path in scanned if watched & set(path.parts)], "a workspace tree is never a source"
+        )
+        # - a whole-workspace walk is the way this tool goes from a fifth of a second to minutes
+        self.assertLess(len(scanned), 10_000, "scan grew past the maintained source tree")
+
+
 if __name__ == "__main__":
     unittest.main()

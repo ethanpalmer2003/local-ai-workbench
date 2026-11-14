@@ -110,7 +110,7 @@ from scripts.tests.cases.shared.test_low_integrity import LowIntegrityTests
 from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_model_run import ModelRunTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
-from scripts.tests.cases.shared.test_rename_path import MoveParsingTests, ReferenceRewriteTests
+from scripts.tests.cases.shared.test_rename_path import MoveParsingTests, ReferenceRewriteTests, ScanScopeTests
 from scripts.tests.cases.shared.test_rocm_inventory import RocmInventoryTests
 from scripts.tests.cases.shared.test_stage_runner import StageRunnerTests
 from scripts.tests.cases.shared.test_state_cleanup import StateCleanupTests
@@ -223,6 +223,7 @@ if __name__ == "__main__":
                     StateCleanupTests,
                     MoveParsingTests,
                     ReferenceRewriteTests,
+                    ScanScopeTests,
                     ProbeRunnerTests,
                     ModelRunTests,
                     ToolchainTests,
