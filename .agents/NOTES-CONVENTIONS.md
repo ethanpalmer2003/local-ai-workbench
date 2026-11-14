@@ -14,6 +14,7 @@
 
 - A document that matches no role fails, so a new kind edits this table.
 - A page is generated only when it derives from evidence; a list already in a data file is not reprinted.
+- An index page says so in its first line and names what it indexes; the values stay with their owners, so a reader never expects a second copy here.
 - A page that does restate a data file's values names that file as the owner and is regenerated, never hand-edited, so a reader knows which copy wins.
 - Uppercase basenames except tool-required names such as `README.md`, `AGENTS.md` and `SKILL.md`.
 - Prefer the code: a name or comment that states the rule beats prose.

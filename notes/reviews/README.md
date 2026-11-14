@@ -1,5 +1,7 @@
 # Code review status
 
+Index only: it lists what has been reviewed and links the record that holds the evidence.
+
 Current shared-runtime, fixture and naming contracts pass non-live validation.
 This is a scoped checkpoint, not an exhaustive codebase audit.
 

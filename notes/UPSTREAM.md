@@ -1,5 +1,7 @@
 # Upstream issues and local patches
 
+Index only: one symptom and the local response per entry, with the component guide owning the fix.
+
 Symptom entries record what this machine saw, not confirmed upstream defects; each names the local
 response that followed. Split by whether a local build is involved.
 

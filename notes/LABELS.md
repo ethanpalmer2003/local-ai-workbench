@@ -1,5 +1,7 @@
 # Labels
 
+Index only: it names the owner of each label family, and the values live in those files.
+
 Organization answers two questions. **Where may this live?** is structure: a component key picks the folder
 and a [document role](../.agents/NOTES-CONVENTIONS.md) picks a page's home and word cap. **What does this
 mean to the code?** is a label: a closed set of values that a second file reads, so the two must agree.

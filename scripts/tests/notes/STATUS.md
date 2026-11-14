@@ -1,5 +1,7 @@
 # Verification status
 
+Index only: one line per checked area, each linking the record that holds the evidence.
+
 - [Practice alternatives](asr/ASR-PRACTICE-ALTERNATIVES.md): Qwen 0.6B, Whisper turbo and Parakeet v3 pass automatic Silero turns, Gemma replies and Vulkan Kokoro with both chat runtimes. English clip only; multilingual and microphone quality ungraded.
 
 - [Nemotron runtimes](asr/NEMOTRON-STREAMING.md): AudioCpp/NeMo Vulkan and Parakeet CPU pass both practice gateways; matched latency and resource screen recorded. Microphone and multilingual quality ungraded.
