@@ -41,6 +41,9 @@ live_timeout = 300.0
 # - One target per user-facing launch entry. Backend probes cover engines/models
 #   that launchers do not exercise; the two sets must stay disjoint.
 LAUNCHER_TARGETS: tuple[str, ...] = ("sdcpp", "audiocpp", "llamacpp", "kobold", "dsh-headless", "practice")
+# - the processes a launcher target may need in its own console; `dsh` is the desktop client the
+#   headless target drives, and `practice` runs in this process instead of spawning a worker
+WORKER_TARGETS: tuple[str, ...] = ("sdcpp", "audiocpp", "llamacpp", "kobold", "dsh", "dsh-headless")
 # - the installed tree each target launches from, so a moved build marks the row stale
 TARGET_COMPONENTS: dict[str, str] = {
     "sdcpp": "sdcpp",

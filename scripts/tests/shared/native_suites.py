@@ -8,6 +8,9 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.kill_all_services import configured_ports
 
+# - every test belongs to one suite: the model-free run, or a native one that starts real processes
+SUITES = ("launchers", "backends", "all")
+
 
 def service_ports(ports: Iterable[int] | None = None) -> list[int]:
     return sorted({int(port) for port in (configured_ports() if ports is None else ports)})

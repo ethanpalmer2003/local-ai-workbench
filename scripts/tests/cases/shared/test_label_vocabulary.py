@@ -10,7 +10,9 @@ from scripts.config.models import catalog
 from scripts.config.shared import deferred as parked
 from scripts.config.shared import speech_delivery
 from scripts.launchers import launcher_config as cfg
+from scripts.tests.cases.suites import live_frameworks, quick_validation
 from scripts.tests.shared.model_checks import requires_model_check
+from scripts.tests.shared.native_suites import SUITES
 from scripts.tools import capability_matrix, probe_runner
 
 BUDGET_CLASSES = {"smoke", "probe", "benchmark"}
@@ -29,6 +31,13 @@ class LabelVocabularyTests(unittest.TestCase):
         self.assertEqual(set(capability_matrix.SECTION), subjects)
         self.assertFalse({entry.subject for entry in parked.records() if entry.subject} - subjects)
         self.assertEqual(set(probe_runner.CATEGORY_SECONDS), BUDGET_CLASSES)
+
+    def test_every_suite_and_live_target_comes_from_its_owner(self):
+        self.assertEqual(SUITES, ("launchers", "backends", "all"))
+        # - a worker is a launcher target plus the desktop client the headless one drives
+        self.assertLessEqual(set(live_frameworks.WORKER_TARGETS) - {"dsh"}, set(live_frameworks.LAUNCHER_TARGETS))
+        # - launchers and backend probes must stay disjoint, or one test would own two names
+        self.assertFalse(set(live_frameworks.LAUNCHER_TARGETS) & set(quick_validation.PROBES))
 
     def test_profiles_are_declared_by_the_stacks_that_run_them(self):
         for stack in (cfg.KOBOLD_CHAT, cfg.LANGUAGE_PRACTICE):
