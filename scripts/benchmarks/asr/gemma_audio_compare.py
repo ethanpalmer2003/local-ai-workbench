@@ -11,6 +11,8 @@ import time
 from types import SimpleNamespace
 from typing import Any
 
+from scripts.benchmarks.asr.shared.corpus import prepare_corpus
+from scripts.benchmarks.asr.shared.metrics import word_errors
 from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
@@ -24,8 +26,6 @@ from scripts.launchers.asr.koboldcpp import gemma_audio as gemma_kobold
 from scripts.launchers.asr.llamacpp import gemma_audio
 from scripts.launchers.koboldcpp import kobold
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.tests.cases.asr.shared.corpus import prepare_corpus
-from scripts.tests.cases.asr.shared.metrics import word_errors
 from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 

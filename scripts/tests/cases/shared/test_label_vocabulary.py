@@ -2,6 +2,7 @@
 
 import unittest
 
+from scripts.benchmarks.asr.shared.coverage import coverage
 from scripts.benchmarks.shared.paths import Outcome
 from scripts.config import models
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
@@ -9,7 +10,6 @@ from scripts.config.models import catalog
 from scripts.config.shared import deferred as parked
 from scripts.config.shared import speech_delivery
 from scripts.launchers import launcher_config as cfg
-from scripts.tests.cases.asr.shared.coverage import coverage
 from scripts.tests.shared.model_checks import requires_model_check
 from scripts.tools import capability_matrix, probe_runner
 

@@ -8,6 +8,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.asr.shared.corpus import prepare_corpus
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.resident_http import ResidentHttp
@@ -17,7 +18,6 @@ from scripts.launchers.audiocpp.asr_turns import Turns, speech_config
 from scripts.launchers.audiocpp.kokoro import audio_environment
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
-from scripts.tests.cases.asr.shared.corpus import prepare_corpus
 from scripts.tests.cases.audiocpp import single_server_speech as shared
 from scripts.tests.shared.paths import CasePaths
 

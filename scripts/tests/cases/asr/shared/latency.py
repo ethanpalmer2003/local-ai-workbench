@@ -9,6 +9,7 @@ import subprocess
 import threading
 from typing import Any, TextIO
 
+from scripts.benchmarks.asr.shared.corpus import prepare_corpus
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.resident_http import ResidentHttp
@@ -22,7 +23,6 @@ from scripts.launchers.asr.shared.resident_profiles import audio_config, profile
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.launchers.shared.services.process import stop_owned
-from scripts.tests.cases.asr.shared.corpus import prepare_corpus
 from scripts.tests.shared.paths import CasePaths
 
 # - One paced replay per engine; automatic adds the speech.cpp VAD pass to the offline run

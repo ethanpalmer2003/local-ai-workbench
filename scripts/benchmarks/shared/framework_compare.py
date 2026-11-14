@@ -28,6 +28,7 @@ import numpy as np
 import psutil
 import requests
 
+from scripts.benchmarks.asr.shared.metrics import pooled_scores, unicode_errors
 from scripts.benchmarks.shared import language_corpus as corpus
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
@@ -47,7 +48,6 @@ from scripts.launchers.shared.media.audio import decode_audio
 from scripts.launchers.shared.services import native
 from scripts.launchers.shared.services.process import http_ready, stop_owned
 from scripts.launchers.shared.transport.multipart import audio_upload
-from scripts.tests.cases.asr.shared.metrics import pooled_scores, unicode_errors
 
 WARMUP_PROMPT = "Say hello in one short sentence."
 PROMPTS = (
