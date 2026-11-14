@@ -10,7 +10,7 @@
 - thing: HRX llama.cpp
   kind: build
   revisit: upstream slows down, or a paired screen comes back
-  source: notes/UPSTREAM.md
+  source: notes/UPSTREAM-INDEX.md
 - thing: HRX build capability row
   kind: row
   subject: probes/hrx_updates

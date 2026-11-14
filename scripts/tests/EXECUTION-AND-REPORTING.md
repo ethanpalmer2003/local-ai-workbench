@@ -20,4 +20,4 @@ Companion to the [test suite index](README.md); it holds the execution rules, ev
 
 - `verified`, `no-gain`, `inconclusive`, `superseded`, `unreviewed`; new runs default unreviewed. Retain partial/failed evidence.
 - Poll compact summaries/status at reasonable intervals; detailed traces stay in artifacts. Do not rerun successful checks without a new reason.
-- [Status](notes/STATUS.md), [outcomes](notes/OUTCOMES.md), [estimates](notes/ESTIMATES.md), [pending work](../../notes/TODO.md).
+- [Status](notes/STATUS-INDEX.md), [outcomes](notes/OUTCOMES.md), [estimates](notes/ESTIMATES.md), [pending work](../../notes/TODO.md).

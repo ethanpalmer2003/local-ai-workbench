@@ -39,11 +39,13 @@ MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 # - evidence and retired trees are not maintained documents, so a pointer into them will not survive a clone
 UNTRACKED_PARTS = frozenset({"output", "old", "retired", "trash"})
 # - one home per role: the table is the whole taxonomy, so an unlisted kind fails instead of drifting in
-RUNNING_LISTS = frozenset({"TODO.md", "OPEN-QUESTIONS.md", "OPEN-QUESTIONS-RESOLVED.md", "UPSTREAM.md", "LABELS.md"})
+RUNNING_LISTS = frozenset(
+    {"TODO.md", "OPEN-QUESTIONS.md", "OPEN-QUESTIONS-RESOLVED.md", "UPSTREAM-INDEX.md", "LABELS-INDEX.md"}
+)
 # - indexes that grow with every decision get the long cap; they are read for one row, not one rule
 RUNNING_LIST_PATHS = (
-    r"notes/(?:TODO|OPEN-QUESTIONS|OPEN-QUESTIONS-RESOLVED|UPSTREAM|LABELS|NATIVE-VALIDATION|ONBOARDING)\.md",
-    r"scripts/tests/notes/(?:STATUS|STATUS-EVIDENCE|OUTCOMES|ESTIMATES)\.md",
+    r"notes/(?:TODO|OPEN-QUESTIONS|OPEN-QUESTIONS-RESOLVED|UPSTREAM-INDEX|LABELS-INDEX|NATIVE-VALIDATION|ONBOARDING)\.md",
+    r"scripts/tests/notes/(?:STATUS-INDEX|STATUS-EVIDENCE-INDEX|OUTCOMES|ESTIMATES)\.md",
 )
 ROLE_RULES = (
     ("hub", r"(?:.*/)?(?:README|AGENTS)\.md"),

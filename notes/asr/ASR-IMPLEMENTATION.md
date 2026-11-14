@@ -1,6 +1,6 @@
 # ASR checkpoint
 
-Current implementation summary; [test status](../../scripts/tests/notes/STATUS.md) owns validation evidence.
+Current implementation summary; [test status](../../scripts/tests/notes/STATUS-INDEX.md) owns validation evidence.
 
 ## Implemented
 
