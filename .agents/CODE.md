@@ -6,7 +6,7 @@
 - Keep lifecycle (`Startup`, `Request`, `StartupRequest`) and scope (`Generic`, `Shared`) explicit in settings classes.
 - Preserve external keys, flags and IDs; fix a contract at its source.
 - Suppressions live in `pyproject.toml` with a reason; an inline `# noqa` is rejected, so restructure and narrow the glob.
-- HTTP: `urllib.request` in launchers, tools, review and shared code, for probes and plain JSON; `requests` only inside the download and benchmark transfer paths, where a body streams. One supported way per job. No second installer, runner or format "just in case": uv is the only package manager, `uv.lock` the only resolution.
+- HTTP: `requests` is the client, probes included; `httpx` where HTTP/2 or an async fan-out is the job. `urllib.request` is legacy here and shrinks with each file touched, so do not add it. One supported way per job. No second installer, runner or format "just in case": uv is the only package manager, `uv.lock` the only resolution.
 - Shared path/model/proxy defaults live in configuration; orchestration-only switches stay local.
 - Signatures and calls stay single-line up to 120 characters; pass-through arguments go last.
 - ASCII punctuation only: `scripts/review/typography.py` rejects dashes, curly quotes, ellipsis and no-break spaces.
