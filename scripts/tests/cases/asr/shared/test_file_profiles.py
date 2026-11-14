@@ -4,10 +4,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from scripts.benchmarks.asr.shared.metrics import pooled_scores, unicode_errors
 from scripts.config import models as model_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers.asr.shared.file_cli import build_command, required_files
-from scripts.tests.cases.asr.shared.metrics import pooled_scores, unicode_errors
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.process_fixtures import running_process
 

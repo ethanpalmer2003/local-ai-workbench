@@ -2,8 +2,8 @@
 
 import unittest
 
+from scripts.benchmarks.asr.shared.metrics import word_errors
 from scripts.benchmarks.asr.whisper_embedded_compare import command
-from scripts.tests.cases.asr.shared.metrics import word_errors
 
 
 class WhisperCompareTests(unittest.TestCase):

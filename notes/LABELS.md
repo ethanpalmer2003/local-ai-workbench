@@ -21,7 +21,7 @@ a row here and a constant beside its owner, and the
 | Delivery mode | speech clients | How text arrives: incremental, per segment, or once | [speech_delivery.py](../scripts/config/shared/speech_delivery.py) |
 | Speech class | TTS weights and profiles | The speech floor a profile needs and a model declares | `SpeechClass` in [catalog.py](../scripts/config/models/catalog.py) |
 | Run outcome | saved run folders | Whether the evidence counts as a decision | [paths.py](../scripts/benchmarks/shared/paths.py) |
-| Test readiness | ASR profiles | What evidence a profile has | [coverage.py](../scripts/tests/cases/asr/shared/coverage.py) |
+| Test readiness | ASR profiles | What evidence a profile has | [coverage.py](../scripts/benchmarks/asr/shared/coverage.py) |
 | Test runner | ASR profiles | Which harness would test it | same |
 | Language tier | checkpoints | Which languages a model handles well | [model_languages.json](../scripts/config/models/model_languages.json) |
 | Catalog role | weight files | What a file is for | [catalog.json](../scripts/config/models/catalog.json) |

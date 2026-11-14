@@ -8,6 +8,8 @@ import threading
 import time
 from typing import Any
 
+from scripts.benchmarks.asr.shared.corpus import prepare_corpus
+from scripts.benchmarks.asr.shared.metrics import word_errors
 from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.benchmarks.shared.vram import BenchmarkVram
@@ -15,8 +17,6 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.tests.cases.asr.shared.corpus import prepare_corpus
-from scripts.tests.cases.asr.shared.metrics import word_errors
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.resources import summarize_resources, watch_resources
 

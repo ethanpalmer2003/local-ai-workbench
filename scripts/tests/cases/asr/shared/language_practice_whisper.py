@@ -13,6 +13,9 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.asr.shared.corpus import prepare_corpus
+from scripts.benchmarks.asr.shared.metrics import word_errors
+from scripts.benchmarks.asr.shared.requests import multipart
 from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.config import project_config as project_cfg
@@ -23,9 +26,6 @@ from scripts.launchers.asr.llamacpp import qwen3_asr as qwen_asr
 from scripts.launchers.asr.whispercpp import server as whisper
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.tests.cases.asr.shared.corpus import prepare_corpus
-from scripts.tests.cases.asr.shared.metrics import word_errors
-from scripts.tests.cases.asr.shared.requests import multipart
 from scripts.tests.shared.paths import CasePaths, RunPaths
 
 

@@ -11,6 +11,9 @@ from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.asr.shared.corpus import prepare_corpus
+from scripts.benchmarks.asr.shared.metrics import unicode_errors
+from scripts.benchmarks.asr.shared.requests import multipart
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import summarize_requests
 from scripts.benchmarks.shared.paths import BenchmarkPaths
@@ -20,9 +23,6 @@ from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers.asr.shared.file_cli import environment
 from scripts.launchers.asr.shared.resident_profiles import audio_config, clean_transcript, profiles
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.tests.cases.asr.shared.corpus import prepare_corpus
-from scripts.tests.cases.asr.shared.metrics import unicode_errors
-from scripts.tests.cases.asr.shared.requests import multipart
 from scripts.tests.shared.resources import monitor_process
 
 
@@ -267,7 +267,7 @@ def main():
         frameworks=[provenance.framework_state(key) for key in sorted({_component(name) for name in engines})],
         models=[provenance.file_identity(name, available[name][1]) for name in engines],
     )
-    from scripts.tests.cases.asr.shared.coverage import coverage
+    from scripts.benchmarks.asr.shared.coverage import coverage
 
     report["coverage"] = coverage()
     deadline = time.monotonic() + args.budget

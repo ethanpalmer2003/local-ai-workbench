@@ -83,7 +83,7 @@ def preflight(conf: llamacpp.LlamaConfig, backends: list[str], config_path: Path
 
 @contextlib.contextmanager
 def llama_endpoint(conf: llamacpp.LlamaConfig, output: RunPaths) -> Iterator[BenchmarkEndpoint]:
-    from scripts.tests.cases.suites import live_frameworks
+    from scripts.tests.shared.http_server import request
 
     free_ports(conf.port, "llama.cpp server")
     settings = {**conf.get_ini(), **conf.profile.extra_args}
@@ -93,7 +93,7 @@ def llama_endpoint(conf: llamacpp.LlamaConfig, output: RunPaths) -> Iterator[Ben
     )
     process_started = launch_util.process_start_time(process.pid)
     try:
-        status, body, _ = live_frameworks.request(f"http://127.0.0.1:{conf.port}/v1/models", timeout=10)
+        status, body, _ = request(f"http://127.0.0.1:{conf.port}/v1/models", timeout=10)
         if status != 200 or conf.alias not in [entry["id"] for entry in json.loads(body)["data"]]:
             raise RuntimeError("Server model does not match the benchmark model")
         yield BenchmarkEndpoint(

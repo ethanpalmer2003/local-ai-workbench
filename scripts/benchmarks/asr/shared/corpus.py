@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared.paths import RunPaths
 from scripts.config import project_config as project_cfg
-from scripts.tests.shared.paths import RunPaths
 
 
 def default_corpus() -> list[dict[str, str]]:
