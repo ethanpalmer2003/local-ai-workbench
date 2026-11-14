@@ -92,7 +92,10 @@ def text_files(root: Path) -> Iterable[Path]:
 def rewrite_references(moves: dict[str, str], *, dry_run: bool, root: Path = ROOT) -> list[Path]:
     pairs = [pair for old, new in moves.items() for pair in reference_forms(old, new)]
     changed = []
-    for path in text_files(root):
+    # - the scan size is printed because a wrong root or an unpruned tree is the way this tool goes slow
+    scanned = list(text_files(root))
+    print(f"[SCAN] {len(scanned)} text file(s) under {root}")
+    for path in scanned:
         text = path.read_text(encoding="utf-8", errors="replace")
         updated = text
         for old, new in pairs:
