@@ -97,6 +97,10 @@ class DefaultPaths(unittest.TestCase):
         for path in (cfg.DEEPSEEK_CLIENT.exe, cfg.DEEPSEEK_CLIENT.patch_path()):
             self.assertTrue(path.is_file(), str(path))
 
+
+class DefaultPorts(unittest.TestCase):
+    """Port ownership is this repository's config, so it runs without a model check."""
+
     def test_ports_are_distinct(self):
         ports = [cfg.LLAMACPP_SERVICE.port, cfg.LLAMACPP_SERVICE.internal_port, live_frameworks.kobold_port()]
         for service in (cfg.SDCPP_SERVICE, cfg.AUDIOCPP_SERVICE):
@@ -1022,6 +1026,7 @@ def _run_native_suite(suite: str, live_target: str | None, probe_names: list[str
 
 DEFAULT_GROUPS: tuple[type[unittest.TestCase], ...] = (
     DefaultPaths,
+    DefaultPorts,
     LaunchCommands,
     StateAndReadiness,
     ProxyHTTP,
