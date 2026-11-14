@@ -18,28 +18,8 @@ from pathlib import Path
 from scripts.config import local_overlay
 from scripts.config import project_config as project_cfg
 from scripts.review import typography
+from scripts.review.text_files import TEXT_SUFFIXES
 
-TEXT_SUFFIXES = {
-    ".py",
-    ".md",
-    ".json",
-    ".yaml",
-    ".yml",
-    ".bat",
-    ".cjs",
-    ".js",
-    ".ts",
-    ".ini",
-    ".kcpps",
-    ".txt",
-    ".jinja",
-    ".toml",
-    ".ps1",
-    ".cfg",
-    ".csv",
-    ".html",
-    ".css",
-}
 DOC_SUFFIXES = {".md"}
 CONFIG_PREFIX = "scripts/config/"
 IGNORED_ROOTS = {"data", "frameworks", "trash", "scripts/benchmarks/output", "scripts/tests/output"}

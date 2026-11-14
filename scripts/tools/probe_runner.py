@@ -27,11 +27,6 @@ def category_for(module: str) -> str:
     return _BY_MODULE.get(module.rsplit(".", 1)[-1], DEFAULT_CATEGORY)
 
 
-def budget_for(module: str) -> int:
-    """The whole-run budget for one probe module name."""
-    return CATEGORY_SECONDS[category_for(module)]
-
-
 def run(command: list[str], seconds: float) -> int:
     """Run a command and kill it when the deadline passes; `TIMEOUT_STATUS` means it fired."""
     started = time.perf_counter()

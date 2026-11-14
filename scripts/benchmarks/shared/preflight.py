@@ -13,12 +13,6 @@ def require_paths(entries: Mapping[str, Path | str]) -> None:
         raise FileNotFoundError("Missing benchmark inputs: " + "; ".join(missing))
 
 
-def require_absent_paths(entries: Mapping[str, Path | str]) -> None:
-    for name, path in entries.items():
-        if Path(path).exists():
-            raise RuntimeError(f"{name} already exists: {path}")
-
-
 def require_free_ports(ports: Mapping[str, int]) -> None:
     """Ports a run will own must be idle; the caller never waits on someone else's session."""
     busy = [f"{name}: {port}" for name, port in ports.items() if launch_util.port_listening(port)]

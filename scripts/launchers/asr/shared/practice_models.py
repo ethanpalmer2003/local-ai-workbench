@@ -1,12 +1,10 @@
 """Practice model catalog and native TTS configuration; paths remain catalog-owned."""
 
-import json
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 from scripts.config import models
-from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audio_config
 from scripts.config.models import model_languages
 from scripts.config.shared import speech_delivery
@@ -193,19 +191,3 @@ def delivery_plan():
     result = speech_delivery.resolve("tts", tts_id(), speech_delivery.tts_supported(streaming))
     result.update(audiocpp_catalog.streaming_defaults(service, spec["id"]))
     return result
-
-
-def tts_command(port: int) -> list[str]:
-    config = {
-        "host": "127.0.0.1",
-        "port": port,
-        "backend": "vulkan",
-        "device": 0,
-        "threads": cfg.KOKORO_TTS.threads,
-        "lazy_load": True,
-        "models": [tts_spec()],
-    }
-    path = project_cfg.component("audiocpp").generated_dir / f"practice-tts-{port}.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(config, indent=2), encoding="utf-8")
-    return [str(project_cfg.AUDIOCPP_SERVER_EXE), "--config", str(path), "--port", str(port)]

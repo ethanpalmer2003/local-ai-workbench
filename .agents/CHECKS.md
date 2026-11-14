@@ -27,6 +27,7 @@
 
 ## Review
 
+- Answer the ten [review questions](REVIEW.md) against the change; they are the checklist this section used to describe.
 - Read the latest [checkpoint](../notes/reviews/README.md); focus on changed contracts.
 - Trace startup, readiness, requests, cleanup and process ownership; check error propagation.
 - Check component keys, directory roles/types and config prefixes against [folder rules](FOLDERS.md); judge sparse-folder audit findings by ownership.

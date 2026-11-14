@@ -20,7 +20,7 @@ from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run, write_results
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
-from scripts.config.comfyui.workflow_overrides import LTXWorkflowOverrides, VAEDecode, VideoVAE, workflow
+from scripts.config.comfyui.workflow_overrides import CONTROL_NAMES, LTXWorkflowOverrides, VAEDecode, VideoVAE, workflow
 from scripts.launchers.runtime import gpu_memory
 
 MODELS = (model_cfg.path("comfyui/LTX25-distilled-DiT-Q3_K_M").name,)
@@ -688,24 +688,12 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-WORKLOAD_ARGUMENTS = (
-    "seconds",
-    "fps",
-    "resolution",
-    "mode",
-    "spatial_tile",
-    "spatial_overlap",
-    "temporal_tile",
-    "temporal_overlap",
-)
-
-
 def _resolve_tile_sweep(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if args.validate_findings or args.compare_workflows:
         parser.error("tile sweep cannot be combined with launcher/workflow comparisons")
     if args.vae_decode == "untiled":
         parser.error("tile sweep uses only the original VAE with tiled decoding")
-    if any(getattr(args, name) is not None for name in WORKLOAD_ARGUMENTS):
+    if any(getattr(args, name) is not None for name in CONTROL_NAMES):
         parser.error("tile sweep defines its own workloads and tiles; omit workload/tile overrides")
     if args.model not in {"all", "1"} or args.encoder not in {"all", "1"}:
         parser.error("tile sweep fixes model 1 and encoder 1")

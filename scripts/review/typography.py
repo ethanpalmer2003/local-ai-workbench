@@ -11,6 +11,8 @@ import re
 import subprocess
 from pathlib import Path
 
+from scripts.review.text_files import tracked_text_files
+
 # - character -> readable kind; every one has a plain ASCII replacement
 BANNED = {
     "\u2014": "em-dash",
@@ -30,27 +32,6 @@ BANNED_PATTERN = re.compile("|".join(re.escape(character) for character in BANNE
 # - escaped characters stay inside the value, so the mask keeps the exact width of what it hides
 REFERENCE_VALUE = re.compile(r'("reference"\s*:\s*")([^"\\]*(?:\\.[^"\\]*)*)(")')
 REFERENCE_FILE = "scripts/config/benchmarks/language_corpus.json"
-TEXT_SUFFIXES = {
-    ".py",
-    ".md",
-    ".json",
-    ".yaml",
-    ".yml",
-    ".bat",
-    ".cjs",
-    ".js",
-    ".ts",
-    ".ini",
-    ".kcpps",
-    ".txt",
-    ".jinja",
-    ".toml",
-    ".ps1",
-    ".cfg",
-    ".csv",
-    ".html",
-    ".css",
-}
 
 
 def masked(text: str, path: str) -> str:
@@ -66,18 +47,6 @@ def scan_text(path: str, text: str) -> list[tuple[int, str]]:
     for number, line in enumerate(masked(text, path).splitlines(), 1):
         findings.extend((number, BANNED[match.group(0)]) for match in BANNED_PATTERN.finditer(line))
     return findings
-
-
-def is_text(path: str) -> bool:
-    """Whether this path is text we write; generated evidence is ignored by git, not by suffix."""
-    return Path(path).suffix.lower() in TEXT_SUFFIXES
-
-
-def tracked_text_files(root: Path) -> list[str]:
-    """Every tracked file whose content is text we write."""
-    result = subprocess.run(["git", "-C", str(root), "ls-files"], capture_output=True, text=True, check=True)
-    # - a deletion is still in the index until it is committed; skip files the tree no longer has
-    return [path for path in result.stdout.splitlines() if path and is_text(path) and (root / path).is_file()]
 
 
 def check(root: Path, paths: list[str]) -> int:

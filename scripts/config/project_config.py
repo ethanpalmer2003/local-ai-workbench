@@ -113,17 +113,6 @@ class ComponentPaths:
     def generated_dir(self) -> Path:
         return GENERATED_DIR / self.key
 
-    @property
-    def test_cases_dir(self) -> Path:
-        return TEST_CASES_DIR / self.key
-
-    @property
-    def test_ui_dir(self) -> Path:
-        return TESTS_DIR / "ui" / self.key
-
-    def batch_dir(self, operation: str) -> Path:
-        return BAT_DIR / operation / self.key
-
 
 COMPONENTS = {
     key: ComponentPaths(key)
@@ -266,24 +255,3 @@ SDCPP_ROCM_DIR = SDCPP_FRAMEWORK_DIR / "rocm"
 SDCPP_VULKAN_DIR = SDCPP_FRAMEWORK_DIR / "vulkan"
 # shared TheRock ROCm runtime: sd.cpp and the AudioCpp ROCm release both load their HIP libraries from it
 ROCM_SDK_BIN_DIR = DATA_DIR / "ROCm" / "therock-dist-windows-gfx110X-all-10.2.0a20260927" / "bin"
-
-
-# --- DIRECTORY INITIALIZATION ---
-
-
-def ensure_project_directories() -> None:
-    """Create the standard project directories when a command needs them.
-
-    - mkdir(parents=True, exist_ok=True) for each core dir
-    """
-    for directory in (
-        DATA_DIR,
-        FRAMEWORKS_DIR,
-        SCRIPTS_DIR,
-        INPUT_DIR,
-        OUTPUT_DIR,
-        HF_HOME_DIR,
-        HF_MODELS_DIR,
-        CHAT_TEMPLATES_DIR,
-    ):
-        directory.mkdir(parents=True, exist_ok=True)
