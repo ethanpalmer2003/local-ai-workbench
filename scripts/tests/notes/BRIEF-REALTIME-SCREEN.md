@@ -6,7 +6,7 @@ administrator false. Servers were task-owned and cleaned up; no packages changed
 
 ## Four TTS frameworks
 
-Exact same short/long English texts; complete WAV synthesis, no playback timing.
+Same short/long English texts; complete WAV synthesis, no playback timing.
 
 | Runtime / model | Short seconds | Long seconds | RTF short / long |
 | --- | ---: | ---: | ---: |
