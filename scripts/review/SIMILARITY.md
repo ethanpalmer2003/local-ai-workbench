@@ -4,8 +4,11 @@
 embeds every bullet and sentence in the maintained Markdown, and lists section pairs that share at least
 two units (or one of 25+ words). Findings are pairs to review; the check never edits a document.
 `--threshold`, `--top` and `--strict` tune it, and `--no-server` reuses a running server. Tables, code
-fences and procedural lines are excluded. Each report records a content digest per file, so the next run
-says how many files changed since it. Evidence:
+fences and procedural lines are excluded. Each run writes
+`scripts/state/generated/shared/similarity/<mode>/<run>/report.json`, which dates it and records a content
+digest per file, so the next run says how many files changed since it. Those folders are prunable; the dated
+[record](../../notes/reviews/EMBEDDINGS-2026-11-10.md) is what survives, so a page that quotes a pair count
+names the date it came from. Evidence:
 [embedding screen](../../notes/reviews/EMBEDDINGS-2026-11-10.md). Batches:
 [check_similarity.bat](../../bat/review/check_similarity.bat),
 [check_code_similarity.bat](../../bat/review/check_code_similarity.bat).
