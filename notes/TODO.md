@@ -10,6 +10,10 @@
 - [ ] `ProxyHTTP.test_test_page_reads_current_proxy_defaults` times out on `/proxy/config` after 5 s while every other route in that fixture server answers; it reproduces on the clean commit `2c0e882`, so it is environmental or a hang in that route, not a regression. Start by timing the upstream call the handler makes before answering. ~20 min
 - [ ] Rewrite the no-model provider seed, which external-LLM mode needs: KoboldCpp then runs without a model, so the page has to be pointed at llama-server or generation fails until someone picks the custom provider by hand. `external_script` writes `kaihordewebui_*` localStorage keys while Lite reads one `settings` record from the IndexedDB database `e_kaihordewebui_`, so seed that record once instead. The patch needs the live page: save one with `kobold_lite --export-html` during the next session and reuse it through `--source-file`. ~30 min
 
+## Standardization
+
+- [ ] Settle the HTTP client split: probes and one-shot GETs use `urllib.request` in 51 modules, while sessions, JSON bodies and downloads use `requests` in 6. Either keep the split with the rule written beside `scripts/shared/wait.py`, or move the one-shot calls to `requests` so one client covers the repository. The second is the smaller vocabulary and the larger diff. ~2-4 h
+
 ## Needs a model run or device
 
 ### Requires user input

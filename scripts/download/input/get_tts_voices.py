@@ -815,21 +815,6 @@ def import_xlsx_transcripts(xlsx_path: Path, files: list[Path], mapping: dict[st
     return added
 
 
-def transcribe_selected(selected_files, mapping, cache, durations, excluded, selected_dir, method):
-    before = sum(bool(mapping.get(audio_id(f), "").strip()) for f in selected_files)
-    mapping = transcribe(selected_files, mapping, cache, durations, excluded)
-    transcribed = sum(bool(mapping.get(audio_id(f), "").strip()) for f in selected_files) - before
-    save_json(cache.parent / "durations.json", durations)
-
-    manifest = selected_dir / "selection.json"
-    if manifest.exists():
-        data = load_json(manifest)
-        data["mapping"] = hash_data(mapping)
-        data["method"] = method
-        save_json(manifest, data)
-    return mapping, transcribed
-
-
 @dataclass
 class VoiceInventory:
     files: list[Path]

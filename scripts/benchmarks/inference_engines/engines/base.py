@@ -1,9 +1,7 @@
 """Normalized engine contract for comparable LLM inference measurements."""
 
 from dataclasses import dataclass, field
-from typing import Any, Protocol
-
-from scripts.benchmarks.shared.paths import RunPaths
+from typing import Any
 
 
 @dataclass
@@ -49,17 +47,6 @@ class EngineResult:
     vram_peak_mib: float | None = None
     request_samples: list[dict[str, Any]] = field(default_factory=list)
     log: str = ""
-
-
-class EngineAdapter(Protocol):
-    name: str
-    label: str
-
-    def runs(self, options: EngineOptions) -> list[RunSpec]: ...
-
-    def available(self, spec: RunSpec) -> tuple[bool, str]: ...
-
-    def run(self, spec: RunSpec, options: EngineOptions, output: RunPaths) -> EngineResult: ...
 
 
 def skipped(engine: str, spec: RunSpec, reason: str) -> EngineResult:

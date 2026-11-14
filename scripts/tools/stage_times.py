@@ -21,8 +21,3 @@ def typical(stage: str) -> float:
 
 def high(stage: str) -> int:
     return RANGES[stage][2]
-
-
-def classify(stage: str, seconds: float) -> str:
-    """`slow` when a stage outran its range, otherwise `ok`."""
-    return "slow" if seconds > high(stage) else "ok"

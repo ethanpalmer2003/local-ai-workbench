@@ -293,10 +293,6 @@ class DeepseekStartupRequestClientSettings:
     def patch_path(self, profile: str | None = None) -> Path:
         return self.home / "profiles" / (profile or self.profile) / "cordis.patch.yml"
 
-    @property
-    def credentials_path(self) -> Path:
-        return self.home / ".credentials.yaml"
-
 
 DEEPSEEK_CLIENT = DeepseekStartupRequestClientSettings()
 

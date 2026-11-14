@@ -11,6 +11,8 @@ import re
 import subprocess
 from pathlib import Path
 
+from scripts.review.text_files import tracked_text_files
+
 # - British form -> American form; each entry is matched as a whole word, case preserved
 VARIANTS: dict[str, str] = {
     "analyse": "analyze",
@@ -155,27 +157,6 @@ CORPUS_FILE = "scripts/config/benchmarks/language_corpus.json"
 # - the checker and its fixtures quote British forms on purpose
 SELF_REFERENTIAL = {"scripts/review/spellings.py", "scripts/tests/cases/review/test_spellings.py"}
 REFERENCE_VALUE = re.compile(r'("reference"\s*:\s*")([^"\\]*(?:\\.[^"\\]*)*)(")')
-TEXT_SUFFIXES = {
-    ".py",
-    ".md",
-    ".json",
-    ".yaml",
-    ".yml",
-    ".bat",
-    ".cjs",
-    ".js",
-    ".ts",
-    ".ini",
-    ".kcpps",
-    ".txt",
-    ".jinja",
-    ".toml",
-    ".ps1",
-    ".cfg",
-    ".csv",
-    ".html",
-    ".css",
-}
 
 
 def american(match: re.Match[str]) -> str:
@@ -204,20 +185,6 @@ def scan_text(path: str, text: str) -> list[tuple[int, str, str]]:
     return findings
 
 
-def is_text(path: str) -> bool:
-    return Path(path).suffix.lower() in TEXT_SUFFIXES
-
-
-def tracked_text_files(root: Path) -> list[str]:
-    result = subprocess.run(["git", "-C", str(root), "ls-files"], capture_output=True, text=True, check=True)
-    # - a deletion is still in the index until it is committed; skip files the tree no longer has
-    return [
-        path
-        for path in result.stdout.splitlines()
-        if path and is_text(path) and path not in SELF_REFERENTIAL and (root / path).is_file()
-    ]
-
-
 def check(root: Path, paths: list[str]) -> int:
     findings = [
         (path, number, found, american_form)
@@ -236,7 +203,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     top = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
     root = Path(top.stdout.strip())
-    return check(root, args.paths or tracked_text_files(root))
+    return check(root, args.paths or tracked_text_files(root, SELF_REFERENTIAL))
 
 
 if __name__ == "__main__":

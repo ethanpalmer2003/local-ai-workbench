@@ -6,7 +6,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.review import typography
+from scripts.review import text_files, typography
 
 
 class ScanTests(unittest.TestCase):
@@ -70,13 +70,13 @@ class CheckTests(unittest.TestCase):
 
 class SuffixTests(unittest.TestCase):
     def test_prose_and_config_are_text_but_weights_are_not(self):
-        self.assertTrue(typography.is_text("README.md"))
-        self.assertTrue(typography.is_text("scripts/launchers/launcher_config.py"))
-        self.assertTrue(typography.is_text("scripts/config/benchmarks/language_corpus.json"))
-        self.assertTrue(typography.is_text("scripts/tests/ui/speech.html"))
-        self.assertTrue(typography.is_text("scripts/tests/notes/asr/leaderboards-2026-10-29/table-15.csv"))
-        self.assertFalse(typography.is_text("data/huggingface/models/llms/character_models/x.gguf"))
-        self.assertFalse(typography.is_text("frameworks/llamacpp/llama-server.exe"))
+        self.assertTrue(text_files.is_text("README.md"))
+        self.assertTrue(text_files.is_text("scripts/launchers/launcher_config.py"))
+        self.assertTrue(text_files.is_text("scripts/config/benchmarks/language_corpus.json"))
+        self.assertTrue(text_files.is_text("scripts/tests/ui/speech.html"))
+        self.assertTrue(text_files.is_text("scripts/tests/notes/asr/leaderboards-2026-10-29/table-15.csv"))
+        self.assertFalse(text_files.is_text("data/huggingface/models/llms/character_models/x.gguf"))
+        self.assertFalse(text_files.is_text("frameworks/llamacpp/llama-server.exe"))
 
 
 if __name__ == "__main__":
