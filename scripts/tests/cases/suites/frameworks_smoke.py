@@ -40,6 +40,7 @@ from scripts.tests.cases.suites.launcher_behaviors import LauncherBehaviors
 from scripts.tests.shared.media_fixtures import PNG, wav_fixture
 from scripts.tests.shared.model_checks import requires_model_check
 from scripts.tests.shared.model_free import fixture_processes
+from scripts.tests.shared.native_suites import SUITES
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.process_fixtures import exited_process, running_process
 from scripts.tests.shared.timing import timed
@@ -1038,11 +1039,7 @@ DEFAULT_GROUPS: tuple[type[unittest.TestCase], ...] = (
 def main(extra_groups: tuple[type[unittest.TestCase], ...] = ()) -> int:
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--suite",
-        choices=("launchers", "backends", "all"),
-        help="native suite to run: launcher wiring, backend probes, or both",
-    )
+    parser.add_argument("--suite", choices=SUITES, help="native suite to run: launcher wiring, backend probes, or both")
     parser.add_argument(
         "--live",
         choices=(*live_frameworks.LAUNCHER_TARGETS, "all"),
@@ -1060,9 +1057,7 @@ def main(extra_groups: tuple[type[unittest.TestCase], ...] = ()) -> int:
         "--with-regressions", action="store_true", help="run the model-free suite before the native suite"
     )
     parser.add_argument("--ini-set", action="append", default=[], help=argparse.SUPPRESS)
-    parser.add_argument(
-        "--worker", choices=("sdcpp", "audiocpp", "llamacpp", "kobold", "dsh", "dsh-headless"), help=argparse.SUPPRESS
-    )
+    parser.add_argument("--worker", choices=live_frameworks.WORKER_TARGETS, help=argparse.SUPPRESS)
     args = parser.parse_args()
     live_frameworks.live_timeout = args.timeout
     if args.worker:
