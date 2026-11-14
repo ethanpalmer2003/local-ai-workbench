@@ -16,10 +16,10 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime import shared_gpu
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
-from scripts.tests.shared import backends
-from scripts.tests.shared import benchmark_config as benchmark_cfg
+from scripts.shared import backends
+from scripts.shared import benchmark_config as benchmark_cfg
+from scripts.shared.resources import summarize_resources, watch_resources
 from scripts.tests.shared.paths import CasePaths, RunPaths
-from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 SPEECH = "The path is quiet. Stay close while I check the entrance."
 RUN_SECONDS = 600

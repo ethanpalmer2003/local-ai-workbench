@@ -16,7 +16,7 @@ from scripts.benchmarks.coding_agents.shared.benchmark_requests import (
     summarize_requests,
 )
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
-from scripts.tests.shared.http_server import request, server
+from scripts.shared.http_server import request, server
 
 SETTINGS = {"temperature": 0, "thinking": "low", "reasoning_budget": 2048, "seed": 42}
 USAGE = {

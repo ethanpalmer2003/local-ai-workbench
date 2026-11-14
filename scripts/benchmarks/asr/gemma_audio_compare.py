@@ -26,7 +26,7 @@ from scripts.launchers.asr.koboldcpp import gemma_audio as gemma_kobold
 from scripts.launchers.asr.llamacpp import gemma_audio
 from scripts.launchers.koboldcpp import kobold
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.tests.shared.resources import summarize_resources, watch_resources
+from scripts.shared.resources import summarize_resources, watch_resources
 
 
 def run_arm(

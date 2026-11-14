@@ -17,8 +17,8 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.shared.resources import summarize_resources, watch_resources
 from scripts.tests.shared.paths import CasePaths, RunPaths
-from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 
 def invoke(command: list[str], env: dict[str, str], paths: RunPaths, deadline: float, context) -> dict[str, Any]:

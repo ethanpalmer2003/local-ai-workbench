@@ -11,7 +11,7 @@ from scripts.benchmarks.personal.sdcpp.sdcpp_backend_compare import arm, preflig
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.launchers import launcher_config as cfg
-from scripts.tests.shared import benchmark_config as benchmark_cfg
+from scripts.shared import benchmark_config as benchmark_cfg
 
 VARIANTS = {
     "baseline": ("--backend", "Vulkan0"),

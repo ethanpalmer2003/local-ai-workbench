@@ -23,7 +23,7 @@ from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers.asr.shared.file_cli import environment
 from scripts.launchers.asr.shared.resident_profiles import audio_config, clean_transcript, profiles
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.tests.shared.resources import monitor_process
+from scripts.shared.resources import monitor_process
 
 
 def _file_sha256(path: Path) -> str:

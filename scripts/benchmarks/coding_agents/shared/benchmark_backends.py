@@ -83,7 +83,7 @@ def preflight(conf: llamacpp.LlamaConfig, backends: list[str], config_path: Path
 
 @contextlib.contextmanager
 def llama_endpoint(conf: llamacpp.LlamaConfig, output: RunPaths) -> Iterator[BenchmarkEndpoint]:
-    from scripts.tests.shared.http_server import request
+    from scripts.shared.http_server import request
 
     free_ports(conf.port, "llama.cpp server")
     settings = {**conf.get_ini(), **conf.profile.extra_args}

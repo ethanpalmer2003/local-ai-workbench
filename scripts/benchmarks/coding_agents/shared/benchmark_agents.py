@@ -29,7 +29,7 @@ from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import coding_clients, llamacpp, llamacpp_coding
-from scripts.tests.shared.service_identity import endpoint_identity
+from scripts.shared.service_identity import endpoint_identity
 
 CLIENTS = ("pi", "littlecoder", "ohmypi", "nanocoder")
 

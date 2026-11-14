@@ -27,11 +27,11 @@ from scripts.launchers.koboldcpp import external_llm, kobold
 from scripts.launchers.runtime import shared_gpu
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor, get_gpu_memory_snapshot
+from scripts.shared import backends
+from scripts.shared import benchmark_config as benchmark_cfg
+from scripts.shared.http_server import request
+from scripts.shared.resources import summarize_resources, watch_resources
 from scripts.tests.cases.koboldcpp.kobold_audiocpp_modes import speech_request
-from scripts.tests.shared import backends
-from scripts.tests.shared import benchmark_config as benchmark_cfg
-from scripts.tests.shared.http_server import request
-from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 llm_mode = "kobold"
 SPEECH_TEXT = "Hello there, this is a short voice test."

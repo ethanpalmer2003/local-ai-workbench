@@ -14,10 +14,10 @@ from typing import Any
 
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.launchers import launcher_config as cfg
+from scripts.shared.backends import backend_sessions
+from scripts.shared.service_identity import audio_identity
 from scripts.tests.cases.audiocpp.audiocpp_streaming import buffer_metrics
-from scripts.tests.shared.backends import backend_sessions
 from scripts.tests.shared.paths import CasePaths
-from scripts.tests.shared.service_identity import audio_identity
 
 
 @dataclass

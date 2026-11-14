@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 from scripts.launchers.asr.shared.vad import command, parse_event
 from scripts.launchers.audiocpp.asr_turns import Turns
 from scripts.launchers.shared.transport.streaming_http import StreamingPost
-from scripts.tests.shared.http_server import server
+from scripts.shared.http_server import server
 
 
 class VadTurns(unittest.TestCase):

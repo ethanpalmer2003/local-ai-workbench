@@ -28,8 +28,8 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared.resident_profiles import whisper_frameworks, whisper_model
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.tests.shared.backends import listening
-from scripts.tests.shared.resources import summarize_resources, watch_resources
+from scripts.shared.backends import listening
+from scripts.shared.resources import summarize_resources, watch_resources
 
 PORT = 18883
 THREADS = 4

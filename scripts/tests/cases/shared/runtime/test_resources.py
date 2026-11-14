@@ -6,7 +6,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from scripts.tests.shared import resources
+from scripts.shared import resources
 from scripts.tests.shared.process_fixtures import running_process
 
 

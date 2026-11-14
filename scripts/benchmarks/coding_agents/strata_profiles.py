@@ -19,8 +19,8 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.strata import strata_pi
-from scripts.tests.shared import benchmark_config as benchmark_cfg
-from scripts.tests.shared.backends import listening
+from scripts.shared import benchmark_config as benchmark_cfg
+from scripts.shared.backends import listening
 
 PREFIX = "\n".join(
     f"def example_{i}(values):\n    return [value + {i} for value in values if value % 7 == {i % 7}]\n"

@@ -17,12 +17,12 @@ from scripts.launchers.runtime import image_on_demand as demand
 from scripts.launchers.runtime import shared_gpu
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
+from scripts.shared import backends
+from scripts.shared import benchmark_config as benchmark_cfg
+from scripts.shared.http_server import request
+from scripts.shared.resources import summarize_resources, watch_resources
 from scripts.tests.cases.koboldcpp.kobold_image_swap import SPEECH
-from scripts.tests.shared import backends
-from scripts.tests.shared import benchmark_config as benchmark_cfg
-from scripts.tests.shared.http_server import request
 from scripts.tests.shared.paths import CasePaths
-from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 RUN_SECONDS = 600
 

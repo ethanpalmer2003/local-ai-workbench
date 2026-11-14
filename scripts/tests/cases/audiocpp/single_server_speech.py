@@ -23,10 +23,10 @@ from scripts.launchers.audiocpp.asr_turns import speech_config
 from scripts.launchers.audiocpp.kokoro import audio_environment
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
+from scripts.shared.resources import summarize_resources, watch_resources
 from scripts.tests.cases.asr.shared.latency import Client
 from scripts.tests.cases.audiocpp.audiocpp_transport import AudioReader
 from scripts.tests.shared.paths import CasePaths
-from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 PORT = 18991
 TEXT = "Hello. Tell me about your day, and I will help you practice a natural conversation."
