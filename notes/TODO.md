@@ -6,15 +6,14 @@
 
 ## Reliability
 
-- [ ] `ProxyHTTP.test_test_page_reads_current_proxy_defaults` times out on `/proxy/config` after 5 s while every other route in that fixture server answers; it reproduces on the clean commit `2c0e882`, so it is environmental or a hang in that route, not a regression. Start by timing the upstream call the handler makes before answering. ~20 min
 - [ ] Rewrite the no-model provider seed, which external-LLM mode needs: KoboldCpp then runs without a model, so the page has to be pointed at llama-server or generation fails until someone picks the custom provider by hand. `external_script` writes `kaihordewebui_*` localStorage keys while Lite reads one `settings` record from the IndexedDB database `e_kaihordewebui_`, so seed that record once instead. The patch needs the live page: save one with `kobold_lite --export-html` during the next session and reuse it through `--source-file`. ~30 min
 
 ## Standardization
 
-- [ ] Settle the HTTP client split: probes and one-shot GETs use `urllib.request` in 51 modules, while sessions, JSON bodies and downloads use `requests` in 6. Either keep the split with the rule written beside `scripts/shared/wait.py`, or move the one-shot calls to `requests` so one client covers the repository. The second is the smaller vocabulary and the larger diff. ~2-4 h
+- [ ] Narrow `requests` to the streaming paths it is kept for: `github.py`, `toolchains.py`, `other_updates.py` and `update_shared.py` still use it for plain JSON reads, and `framework_compare.py` for a models list and a speech POST. Converting those leaves it in `http_transfer.py` and the two archive/asset streams, which is what the rule in [code rules](../.agents/CODE.md) allows. ~1-2 h
 - [ ] Decide the retired TTS pipeline in `scripts/launchers/audiocpp/tts_legacy_buffered.py`: nothing imports it, its own docstring calls it retired, and the active path is `tts_text_processing.py`. Delete it, or name the usefulness it still has; either way drop the `RETIRED` entry in `scripts/review/unused.py` with it. ~20 min
 - [ ] Revisit the three declined library swaps in [review libraries](../scripts/review/LIBRARIES.md) once `unused.py` has a few weeks of findings: vulture for unused code, eradicate for the commented-out rule, a Markdown parser for links. Each trades a dependency for local code, so the decision needs the false-positive record first. ~1 h
-- [ ] Adopt a verbosity rule only with a rule set of its own: vale with a style package, or a phrase list beside `spellings.py`. Proselint reads bullets correctly, and 119 of its 120 findings across 141 documents were misreadings of TODO links, code spans and ISO dates; its built-in set has no `in order to` or `it is important to note` rule and it has no fix mode. ~1 h
+- [ ] Try vale with the styles that fit this voice: `Voices` (hedging and puffery core, Direct and Simple voices), `AiTells` (the tells of generated prose) and `Readability`. Proselint and write-good alone measured nothing worth gating. Vale is one binary with no fix mode, so the work is a `.vale.ini` that selects rules and disables quote and ellipsis checks. ~1-2 h
 - [ ] Re-run both similarity modes: documents last ran 2026-11-10 22:15 and code 21:56, since when the review pages, this TODO and several guides changed. The pair count in [resolved questions](OPEN-QUESTIONS-RESOLVED.md) carries that date for that reason. Needs the embedding model, so it is a live run. `check_similarity.bat` and `check_code_similarity.bat`. ~15 min
 
 ## Needs a model run or device
