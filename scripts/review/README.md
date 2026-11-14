@@ -17,14 +17,14 @@ The runner executes these checks:
 - `model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
 - `frontend_wiring.py`: front-end wiring: HTML/JS asset paths, DOM element ids and injected settings keys.
 - `basedpyright`: Python type errors.
-- `inventory_code.py`: folder counts, sparse-folder warnings, merge candidates, module counts, file lines and function size; the gate is ruff's McCabe rule. Low counts prompt review, not findings.
+- `inventory_code.py`: folder counts, sparse-folder warnings, merge candidates, module counts and file lines; low counts prompt review, not findings.
 - `typography.py`: ASCII punctuation only: em and en dashes, curly quotes, the ellipsis and no-break spaces are rejected in every tracked text file, quoted corpus references excepted. The pre-commit hook runs it on staged files.
 - `comments.py`: markers, banner rules and commented-out code are rejected; comments that explain why stay.
 - `spellings.py`: British spellings report the American form.
 - `network_timeouts.py`: every HTTP call passes `timeout=`; the ASR upload wrapper owns its own.
 - `overlay_access.py`: only `config/local_overlay.py` resolves overlay paths; a direct read elsewhere fails.
 
-Reports go to `scripts/state/generated/shared/code_review/<run>/`. Complexity is gated by ruff at the limit in [code rules](../../.agents/CODE.md); the inventory lists the largest functions and excludes generated output, caches, model data, installs and trash.
+Reports go to `scripts/state/generated/shared/code_review/<run>/`. The inventory lists the largest functions and excludes generated output, caches, model data, installs and trash. Which checks run through a tool and which are this repository's own policy: [libraries](LIBRARIES.md).
 
 ## Duplicate check
 
