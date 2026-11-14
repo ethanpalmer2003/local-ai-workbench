@@ -41,8 +41,9 @@ a row here and a constant beside its owner, and the
 - **Check level.** The gate's stages and their levels are a list, but they run in one order and read
   from one owner: [checks](../.agents/CHECKS.md).
 - **Selection setting.** `ServiceMode`, the engine and model choices and the service policies are closed sets, but
-  nobody writes their values by hand: the code that names them also imports them. A family exists where a data
-  file or a page would otherwise restate the values, so an enum that only code reads stays a setting.
+  their values appear nowhere except their own definition and the code importing it. A family's values are also
+  written elsewhere, such as a data file, a batch flag, a stack declaration or a page, so an enum that only code
+  names stays a setting.
 - **Run status** (`completed`, `failed`, `passed`). Each writer sets its own today, so there is no
   agreed vocabulary to point at; outcome is the label that carries meaning.
 
