@@ -13,9 +13,9 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-from scripts.benchmarks.asr.shared.corpus import prepare_corpus
-from scripts.benchmarks.asr.shared.metrics import word_errors
-from scripts.benchmarks.asr.shared.requests import multipart
+from scripts.benchmarks.asr.corpus import prepare_corpus
+from scripts.benchmarks.asr.metrics import word_errors
+from scripts.benchmarks.asr.requests import multipart
 from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.config import project_config as project_cfg

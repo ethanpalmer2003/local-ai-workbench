@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from scripts.benchmarks.asr.shared.metrics import unicode_errors
+from scripts.benchmarks.asr.metrics import unicode_errors
 from scripts.benchmarks.shared.benchmark import measure_cold_process
 from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES

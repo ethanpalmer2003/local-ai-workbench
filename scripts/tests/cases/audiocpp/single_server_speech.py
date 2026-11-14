@@ -11,8 +11,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
-from scripts.benchmarks.asr.shared.corpus import prepare_corpus
-from scripts.benchmarks.asr.shared.requests import multipart
+from scripts.benchmarks.asr.corpus import prepare_corpus
+from scripts.benchmarks.asr.requests import multipart
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.resident_http import ResidentHttp

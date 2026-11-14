@@ -2,7 +2,7 @@
 
 import unittest
 
-from scripts.benchmarks.asr.shared.metrics import word_errors
+from scripts.benchmarks.asr.metrics import word_errors
 from scripts.benchmarks.asr.whisper_embedded_compare import command
 
 

@@ -2,7 +2,7 @@
 
 import unittest
 
-from scripts.benchmarks.asr.shared.coverage import coverage
+from scripts.benchmarks.asr.coverage import coverage
 from scripts.benchmarks.shared.paths import Outcome
 from scripts.config import models
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
-from scripts.benchmarks.asr.shared.corpus import default_corpus
+from scripts.benchmarks.asr.corpus import default_corpus
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.launchers import launch_util

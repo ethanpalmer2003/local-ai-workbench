@@ -8,8 +8,8 @@ import threading
 import time
 from typing import Any
 
-from scripts.benchmarks.asr.shared.corpus import prepare_corpus
-from scripts.benchmarks.asr.shared.metrics import word_errors
+from scripts.benchmarks.asr.corpus import prepare_corpus
+from scripts.benchmarks.asr.metrics import word_errors
 from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.benchmarks.shared.vram import BenchmarkVram
