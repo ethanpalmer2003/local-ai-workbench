@@ -46,8 +46,9 @@ from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import get_gpu_memory_snapshot
 from scripts.launchers.shared.media.audio import decode_audio
 from scripts.launchers.shared.services import native
-from scripts.launchers.shared.services.process import http_ready, stop_owned
+from scripts.launchers.shared.services.process import stop_owned
 from scripts.launchers.shared.transport.multipart import audio_upload
+from scripts.shared.wait import http_ready, wait_ready
 
 WARMUP_PROMPT = "Say hello in one short sentence."
 PROMPTS = (
@@ -118,16 +119,15 @@ def _free_port() -> int:
 
 def _await_exit(pid: int, timeout_s: float = 90) -> None:
     """Wait until a stopped stack really exited: the next one must not start against held memory."""
-    deadline = time.monotonic() + timeout_s
-    while time.monotonic() < deadline:
+
+    def gone() -> bool:
         try:
             process = psutil.Process(pid)
         except psutil.NoSuchProcess:
-            return
-        if not process.is_running() or process.status() == psutil.STATUS_ZOMBIE:
-            return
-        time.sleep(0.25)
-    raise RuntimeError(f"Process {pid} did not exit within {timeout_s:.0f}s; the next stack would share its memory")
+            return True
+        return not process.is_running() or process.status() == psutil.STATUS_ZOMBIE
+
+    wait_ready(gone, timeout_s, label=f"process {pid} exit", interval=0.25)
 
 
 def _chat_command(weights: Path, port: int) -> list[str]:
@@ -157,13 +157,13 @@ def _gateway_thread(
 
 
 def _await_gateway(base: str, errors: list[str]) -> None:
-    deadline = time.monotonic() + 30
-    while not http_ready(base + "/health"):
-        if errors:
-            raise RuntimeError(errors[0])
-        if time.monotonic() > deadline:
-            raise TimeoutError(f"Practice gateway did not answer {base}/health")
-        time.sleep(0.1)
+    wait_ready(
+        lambda: http_ready(base + "/health"),
+        30,
+        label="practice gateway",
+        interval=0.1,
+        fail=lambda: errors[0] if errors else None,
+    )
 
 
 @contextmanager

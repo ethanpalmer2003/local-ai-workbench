@@ -9,7 +9,8 @@ from typing import Any
 
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.launchers import launch_util
-from scripts.launchers.shared.services.process import http_ready, stop_owned, wait_ready
+from scripts.launchers.shared.services.process import stop_owned
+from scripts.shared.wait import http_ready, wait_ready
 
 
 class ResidentHttp:
@@ -52,7 +53,7 @@ class ResidentHttp:
             stderr=subprocess.STDOUT,
         )
         launch_util.assign_process_to_job(self.process.pid)
-        wait_ready(self.process, self.ready, self.timeout, label=f"Server; log: {self.log}", interval=0.1)
+        wait_ready(self.ready, self.timeout, label=f"Server; log: {self.log}", process=self.process, interval=0.1)
 
     def ready(self) -> bool:
         return http_ready(f"http://127.0.0.1:{self.port}{self.readiness}")

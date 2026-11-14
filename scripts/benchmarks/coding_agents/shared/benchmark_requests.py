@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
 from scripts.benchmarks.shared.benchmark import BenchmarkContractError, BenchmarkLifecycle
+from scripts.shared.wait import wait_ready
 
 # - A socket timeout bounds one read, and every read resets it, so a stream that trickles forever
 #   would hold a run open. The deadline bounds the whole response instead.
@@ -258,13 +259,12 @@ class BenchmarkRelay:
             with suppress(OSError):  # The response may have closed after the snapshot.
                 connection.shutdown(socket.SHUT_RDWR)
             connection.close()
-        deadline = time.monotonic() + 3
-        while time.monotonic() < deadline:
+
+        def drained() -> bool:
             with self.lock:
-                if not any(task is None or label == task for label, _ in self.active.values()):
-                    return
-            time.sleep(0.01)
-        raise TimeoutError("A benchmark API request did not stop after cancellation")
+                return not any(task is None or label == task for label, _ in self.active.values())
+
+        wait_ready(drained, 3, label="benchmark request cancellation", interval=0.01)
 
     def handler(self) -> type[BaseHTTPRequestHandler]:
         return type("Handler", (_BenchmarkRelayHandler,), {"relay": self})

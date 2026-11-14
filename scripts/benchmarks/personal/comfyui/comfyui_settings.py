@@ -7,8 +7,8 @@ import sys
 
 from scripts.benchmarks.shared.paths import BenchmarkPaths
 from scripts.benchmarks.shared.reporting import report_run
-from scripts.benchmarks.shared.timing import timed
 from scripts.config import project_config as project_cfg
+from scripts.shared.timing import timed
 
 
 def setting_cases(group: str) -> list[tuple[str, list[str]]]:

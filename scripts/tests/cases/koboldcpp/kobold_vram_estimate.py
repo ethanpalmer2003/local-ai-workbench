@@ -22,7 +22,7 @@ from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audio_cfg
 from scripts.config.models.gguf_metadata import read_metadata
 from scripts.launchers import launcher_config as cfg
-from scripts.tests.shared.timing import timed
+from scripts.shared.timing import timed
 
 # - audio.cpp has no LLM-style ctx; breeze's model_spec (read from the GGUF)
 #   defines session memory as graph_arena_mb=1024 MiB default + reference

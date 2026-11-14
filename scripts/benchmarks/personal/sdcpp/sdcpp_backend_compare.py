@@ -102,17 +102,15 @@ def _launch_context(build: str, extra_args: tuple[str, ...]) -> tuple[Path, list
 
 def _await_ready(process: subprocess.Popen[bytes], deadline: float) -> None:
     """Wait for the server to answer readiness; raise on early exit or startup timeout."""
-    ready_deadline = min(deadline, time.monotonic() + 90)
-    while time.monotonic() < ready_deadline:
-        if process.poll() is not None:
-            raise RuntimeError(f"Server exited: {process.returncode}")
-        try:
-            with urllib.request.urlopen(ready_url("sdcpp", PORT), timeout=1):
-                break
-        except OSError:
-            time.sleep(0.5)
-    else:
-        raise TimeoutError("Server startup exceeded 90 seconds")
+    from scripts.shared.wait import http_ready, wait_ready
+
+    wait_ready(
+        lambda: http_ready(ready_url("sdcpp", PORT)),
+        max(0.0, min(deadline - time.monotonic(), 90)),
+        label="sdcpp",
+        process=process,
+        interval=0.5,
+    )
 
 
 def _finalize_resources(

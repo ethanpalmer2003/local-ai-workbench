@@ -4,10 +4,10 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import requests
 from scripts.launchers.shared.services import native
+from scripts.shared.wait import http_ready
 
 
 def url() -> str:
@@ -15,7 +15,7 @@ def url() -> str:
 
 
 def ready() -> bool:
-    return launch_util.backend_ready(url() + "/health")
+    return http_ready(url() + "/health", strict=True)
 
 
 def server_command(

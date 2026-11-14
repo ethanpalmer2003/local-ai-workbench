@@ -9,10 +9,10 @@ from scripts.benchmarks.coding_agents.shared import benchmark_agents as benchmar
 from scripts.benchmarks.coding_agents.shared.framework_tasks import TASKS
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import coding_clients, llamacpp, llamacpp_coding
+from scripts.shared.timing import timed
 from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.process_fixtures import fake_process
-from scripts.tests.shared.timing import timed
 
 
 class FrameworkClients(unittest.TestCase):

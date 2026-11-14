@@ -12,7 +12,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import post_json, stop_server, wait_ready
+from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import await_http, post_json, stop_server
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.paths import BenchmarkPaths, Outcome, RunPaths
 from scripts.benchmarks.shared.vram import snapshot_dict
@@ -281,7 +281,7 @@ def benchmark_build(
     try:
         with monitor:
             base = "http://127.0.0.1:9952"
-            wait_ready(base, process, min(90, max(1, deadline - time.perf_counter())))
+            await_http(base, process, min(90, max(1, deadline - time.perf_counter())))
             result["startup_seconds"] = time.perf_counter() - launch_started
             from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 

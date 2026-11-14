@@ -1,17 +1,17 @@
 import argparse
 import json
 import sys
-import time
 from pathlib import Path
 from threading import Thread
 
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.launch_util import backend_ready, prepare_service_port, print_settings, trigger_preload
+from scripts.launchers.launch_util import prepare_service_port, print_settings, trigger_preload
 from scripts.launchers.proxy_restart import OwnedBackendLifecycle, ProxyRestartController, reload_proxy_configuration
 from scripts.launchers.proxy_util import run_json_proxy
 from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.runtime.browser import open_browser
 from scripts.launchers.sdcpp import server as sdcpp
+from scripts.shared.wait import http_ready, wait_ready
 
 TRANSFORM_PATHS = frozenset({"/v1/images/generations"})
 
@@ -68,13 +68,12 @@ def _trigger_sdcpp_preload() -> None:
 
 def _open_test_page() -> None:
     url = f"http://127.0.0.1:{cfg.SDCPP_SERVICE.port}/"
-    deadline = time.monotonic() + 120
-    while time.monotonic() < deadline:
-        if backend_ready(url):
-            open_browser(url)
-            return
-        time.sleep(1)
-    print(f"[sdcpp-proxy] test page not ready after 120s; open {url} once startup finishes")
+    try:
+        wait_ready(lambda: http_ready(url, strict=True), 120, label="sdcpp test page", interval=1)
+    except TimeoutError:
+        print(f"[sdcpp-proxy] test page not ready after 120s; open {url} once startup finishes")
+        return
+    open_browser(url)
 
 
 def launch_proxy(extra_args: list[str] | None = None, open_test: bool = False) -> None:

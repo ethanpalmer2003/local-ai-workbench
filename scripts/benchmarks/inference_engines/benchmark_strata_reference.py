@@ -15,6 +15,7 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.strata import strata_pi
+from scripts.shared.wait import wait_ready
 
 WARMUP_PROMPT = "Describe a red ball in one sentence."
 COLD_TAIL = "Explain Python lists versus tuples in at least 300 words."
@@ -76,15 +77,13 @@ def run_arm(label: str, source: strata_pi.StrataConnection, arm: RunPaths, args:
     process = strata_pi.start_backend(connection, arm.logs / "server.log")
     process_started = launch_util.process_start_time(process.pid)
     try:
-        until = time.monotonic() + args.startup_timeout
-        while time.monotonic() < until:
-            if process.poll() is not None:
-                raise RuntimeError(f"engine exited with {process.returncode}")
-            if strata_pi.ready_model(connection):
-                break
-            time.sleep(1)
-        else:
-            raise TimeoutError("engine startup timed out")
+        wait_ready(
+            lambda: strata_pi.ready_model(connection) is not None,
+            args.startup_timeout,
+            label=f"Strata {label}",
+            process=process,
+            interval=1,
+        )
         result["startup_seconds"] = time.perf_counter() - started
         from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 

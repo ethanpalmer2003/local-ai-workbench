@@ -9,7 +9,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import post_json, stop_server, wait_ready
+from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import await_http, post_json, stop_server
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
@@ -151,7 +151,7 @@ def main() -> None:
     )
     try:
         base = f"http://127.0.0.1:{port}"
-        wait_ready(base, process, 90)
+        await_http(base, process, 90)
         evidence["startup_seconds"] = time.monotonic() - started
         for index, prompt in enumerate(
             ("Describe a green bicycle.", "int add(int a, int b) { return", "int add(int a, int b) { return")

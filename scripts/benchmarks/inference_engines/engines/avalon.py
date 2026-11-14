@@ -24,10 +24,10 @@ from pathlib import Path
 from scripts.benchmarks.inference_engines.engines.base import EngineOptions, EngineResult, RunSpec
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import (
     Sample,
+    await_http,
     build_filler,
     completion_request,
     stop_server,
-    wait_ready,
 )
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import RunPaths
@@ -175,7 +175,7 @@ class AvalonEngine:
         try:
             started = time.perf_counter()
             with monitor:
-                wait_ready(base_url, process, options.startup_timeout)
+                await_http(base_url, process, options.startup_timeout)
                 startup_seconds = time.perf_counter() - started
                 lifecycle = BenchmarkLifecycle(
                     lambda: f"{process.pid}:{spec.identifier}" if process.poll() is None else ""

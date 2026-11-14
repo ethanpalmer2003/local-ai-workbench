@@ -1,9 +1,9 @@
 """Configured llama.cpp audio-chat ASR; reuse Gemma transport and native lifecycle."""
 
-from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.llamacpp import gemma_audio
 from scripts.launchers.shared.services import native
+from scripts.shared.wait import http_ready
 
 
 class AudioChatBackend:
@@ -14,7 +14,7 @@ class AudioChatBackend:
         return f"http://127.0.0.1:{self.settings.port}"
 
     def ready(self):
-        return launch_util.backend_ready(self.url() + "/health")
+        return http_ready(self.url() + "/health", strict=True)
 
     def command(self):
         command = gemma_audio.command()

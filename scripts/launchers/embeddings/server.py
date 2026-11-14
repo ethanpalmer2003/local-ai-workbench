@@ -7,9 +7,9 @@ One server serves the documentation duplicate check; the model and port come fro
 import subprocess
 from typing import Any
 
-from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.shared.services import native
+from scripts.shared.wait import http_ready
 
 
 def url() -> str:
@@ -17,7 +17,7 @@ def url() -> str:
 
 
 def ready() -> bool:
-    return launch_util.backend_ready(url() + "/health")
+    return http_ready(url() + "/health", strict=True)
 
 
 def command() -> list[str]:

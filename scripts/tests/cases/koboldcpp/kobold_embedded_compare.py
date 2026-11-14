@@ -212,17 +212,16 @@ def command(kind: str, arm: str, paths: RunPaths, with_chat: bool = False) -> li
 
 
 def wait_ready(process: subprocess.Popen[Any], deadline: float, port: int = PORT) -> None:
-    while time.monotonic() < deadline:
-        if process.poll() is not None:
-            raise RuntimeError(f"Backend exited with {process.returncode}; inspect server.log")
-        try:
-            with urllib.request.urlopen(f"http://127.0.0.1:{port}/v1/models", timeout=1) as response:
-                if response.status == 200:
-                    return
-        except OSError:
-            pass
-        time.sleep(0.25)
-    raise TimeoutError("Backend readiness budget exhausted")
+    from scripts.shared.wait import http_ready
+    from scripts.shared.wait import wait_ready as shared_wait
+
+    shared_wait(
+        lambda: http_ready(f"http://127.0.0.1:{port}/v1/models"),
+        max(0.0, deadline - time.monotonic()),
+        label=f"Kobold on port {port}",
+        process=process,
+        interval=0.25,
+    )
 
 
 @contextmanager

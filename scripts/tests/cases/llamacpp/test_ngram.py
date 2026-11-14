@@ -46,7 +46,7 @@ class NgramWorkloads(unittest.TestCase):
                 patch.object(benchmark_speedbench, "LlamaConfig", return_value=conf),
                 patch.object(trial, "LlamaConfig", return_value=conf),
                 patch.object(benchmark_speedbench, "BenchmarkPaths") as paths,
-                patch.object(trial, "wait_ready"),
+                patch.object(trial, "await_http"),
                 patch.object(benchmark_speedbench, "post_json"),
                 patch.object(
                     benchmark_speedbench.runpy,

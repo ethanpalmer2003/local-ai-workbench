@@ -21,8 +21,8 @@ from scripts.launchers.launch_util import (
     launch_process,
     wait_for_backend,
 )
+from scripts.shared.timing import timed
 from scripts.tests.shared.paths import CasePaths
-from scripts.tests.shared.timing import timed
 
 TEST_PORT = 18992
 PORT_CANDIDATES = (cfg.AUDIOCPP_SERVICE.internal_port, cfg.AUDIOCPP_SERVICE.port, TEST_PORT)

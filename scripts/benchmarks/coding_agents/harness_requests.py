@@ -11,10 +11,10 @@ from scripts.benchmarks.coding_agents.shared.benchmark_agents import CLIENTS, cl
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
-from scripts.benchmarks.shared.timing import timed
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import llamacpp
+from scripts.shared.timing import timed
 
 
 def capture_client(

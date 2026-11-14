@@ -27,6 +27,7 @@ from scripts.launchers.proxy_util import run_json_proxy
 from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
+from scripts.shared.wait import http_ready, wait_ready
 
 IMAGE_REQUESTS = frozenset(
     {
@@ -255,11 +256,13 @@ class NativeModelSessions:
             self.processes,
             strict=True,
         ):
-            deadline = time.monotonic() + 90
-            while not launch_util.backend_ready(ready_url(name, port)):
-                if process.poll() is not None or time.monotonic() >= deadline:
-                    raise RuntimeError(f"{name} native management startup failed; inspect the server output")
-                time.sleep(0.25)
+            wait_ready(
+                lambda name=name, port=port: http_ready(ready_url(name, port), strict=True),
+                90,
+                label=f"{name} native management",
+                process=process,
+                interval=0.25,
+            )
 
     def _select_image(self) -> None:
         recipes = self.call(self.image_url, "/sdcpp/v1/recipes")["recipes"]

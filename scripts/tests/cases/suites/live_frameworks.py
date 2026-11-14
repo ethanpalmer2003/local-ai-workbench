@@ -32,6 +32,7 @@ from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
 from scripts.shared.http_server import request
+from scripts.shared.wait import wait_ready
 from scripts.tests.shared import live_stamp
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.progress import ProgressBar
@@ -358,14 +359,13 @@ def _ports_ready(ports: list[int], old_pids: set[str], ready_url: str) -> bool:
 def _await_ready(
     worker: subprocess.Popen[Any], framework: str, ports: list[int], old_pids: set[str], ready_url: str, log_path: Path
 ) -> None:
-    deadline = time.monotonic() + live_timeout
-    while time.monotonic() < deadline:
-        if worker.poll() is not None:
-            raise RuntimeError(f"{framework} launcher exited with {worker.returncode}; see {log_path}")
-        if _ports_ready(ports, old_pids, ready_url):
-            return
-        time.sleep(0.5)
-    raise TimeoutError(f"{framework} did not become ready in {live_timeout}s; see {log_path}")
+    wait_ready(
+        lambda: _ports_ready(ports, old_pids, ready_url),
+        live_timeout,
+        label=f"{framework} (log: {log_path})",
+        process=worker,
+        interval=0.5,
+    )
 
 
 def _stop_worker(worker: subprocess.Popen[Any], framework: str, ports: list[int], log_path: Path) -> None:

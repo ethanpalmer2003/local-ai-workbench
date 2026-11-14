@@ -34,7 +34,6 @@ from typing import Any, cast
 
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT, report_run
-from scripts.benchmarks.shared.timing import timed
 from scripts.benchmarks.shared.vram import snapshot_dict
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
@@ -42,6 +41,7 @@ from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
+from scripts.shared.timing import timed
 
 # - Two short, fixed prompts covering the two workloads these profiles
 #   actually get used for (general chat/reasoning vs. coding)
@@ -103,15 +103,15 @@ def post_json(url: str, payload: Mapping[str, object], timeout: float) -> dict[s
         return cast(dict[str, Any], json.loads(response.read().decode("utf-8")))
 
 
-def wait_ready(base_url: str, process: subprocess.Popen[bytes], timeout: float) -> None:
-    from scripts.launchers.shared.services.process import http_ready
-    from scripts.launchers.shared.services.process import wait_ready as wait_process
+def await_http(base_url: str, process: subprocess.Popen[bytes], timeout: float) -> None:
+    """llama.cpp answers /health once it can serve; this run's process ends the wait if it dies."""
+    from scripts.shared.wait import http_ready, wait_ready
 
-    wait_process(
-        process,
+    wait_ready(
         lambda: http_ready(base_url + "/health", timeout=2),
         timeout,
         label=f"llama-server at {base_url}",
+        process=process,
         interval=1,
     )
 
@@ -202,7 +202,7 @@ def run_profile(
     resident = {}
     try:
         with monitor:
-            wait_ready(base_url, process, startup_timeout)
+            await_http(base_url, process, startup_timeout)
             startup_seconds = time.perf_counter() - startup_started
             lifecycle = BenchmarkLifecycle(lambda: f"{process.pid}:{profile_name}" if process.poll() is None else "")
             lifecycle.adopt_prepared(startup_seconds)
@@ -314,7 +314,7 @@ def overthink_profile(
 
     results: dict[str, dict[str, Any]] = {}
     try:
-        wait_ready(base_url, process, startup_timeout)
+        await_http(base_url, process, startup_timeout)
 
         for label, prompt in prompts.items():
             wall_start = time.perf_counter()

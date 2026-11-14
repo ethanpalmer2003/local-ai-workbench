@@ -17,9 +17,9 @@ from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT, report_run
-from scripts.benchmarks.shared.timing import timed
 from scripts.config import project_config as project_cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
+from scripts.shared.timing import timed
 
 
 def run_candidate(

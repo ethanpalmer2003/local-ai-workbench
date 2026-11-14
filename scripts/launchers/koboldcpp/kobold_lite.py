@@ -14,7 +14,6 @@ from scripts.launchers.asr import selector as transcription
 from scripts.launchers.asr.shared import http_api, live, practice_models
 from scripts.launchers.audiocpp import audiocpp_catalog, tts_text_processing
 from scripts.launchers.koboldcpp import external_bridge, kokoro
-from scripts.launchers.launch_util import backend_unavailable
 from scripts.launchers.proxy_util import (
     ProxyHandlerMixin,
     RequestScope,
@@ -26,6 +25,7 @@ from scripts.launchers.proxy_util import (
     send_json_error,
     serve_proxy,
 )
+from scripts.shared.wait import backend_unavailable
 
 
 def audio_delivery_plan():

@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.shared.services import native
-from scripts.launchers.shared.services.process import wait_ready as real_wait_ready
+from scripts.shared.wait import wait_ready as real_wait_ready
 from scripts.tests.shared.process_fixtures import running_process
 
 # - A fixture fake never becomes healthy; truncating the wait turns an unpatched probe into a fast
@@ -19,8 +19,8 @@ from scripts.tests.shared.process_fixtures import running_process
 FIXTURE_READY_TIMEOUT = 0.05
 
 
-def _bounded_wait_ready(process, ready, timeout, **kwargs):
-    return real_wait_ready(process, ready, min(timeout, FIXTURE_READY_TIMEOUT), **kwargs)
+def _bounded_wait_ready(ready, timeout, **kwargs):
+    return real_wait_ready(ready, min(timeout, FIXTURE_READY_TIMEOUT), **kwargs)
 
 
 @dataclass

@@ -9,7 +9,7 @@ from typing import Any
 from scripts.config import project_config as project_cfg
 from scripts.launchers.audiocpp.kokoro import audio_environment
 from scripts.launchers.shared.services import native
-from scripts.launchers.shared.services.process import http_ready
+from scripts.shared.wait import http_ready
 
 
 def start(config: dict[str, Any], port: int):

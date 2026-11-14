@@ -4,7 +4,6 @@ import hashlib
 import importlib
 import socket
 import subprocess
-import time
 import traceback
 from collections.abc import Callable
 from dataclasses import fields
@@ -28,7 +27,7 @@ class OwnedBackendLifecycle:
         self.prepare = prepare
 
     def restart(self) -> None:
-        from scripts.launchers.launch_util import backend_ready, kill_process_tree
+        from scripts.launchers.launch_util import kill_process_tree
 
         self.prepare()
         if self.process.poll() is None:
@@ -40,14 +39,15 @@ class OwnedBackendLifecycle:
             if connection.connect_ex((address.hostname or "127.0.0.1", address.port or 80)) == 0:
                 raise RuntimeError("Backend port is still occupied; refusing to replace another service")
         self.process = self.start()
-        deadline = time.monotonic() + 90
-        while time.monotonic() < deadline:
-            if self.process.poll() is not None:
-                raise RuntimeError(f"Backend exited with code {self.process.returncode}; inspect its console/log")
-            if backend_ready(self.health_url):
-                return
-            time.sleep(0.5)
-        raise TimeoutError("Restarted backend did not become healthy within 90 seconds")
+        from scripts.shared.wait import http_ready, wait_ready
+
+        wait_ready(
+            lambda: http_ready(self.health_url, strict=True),
+            90,
+            label="restarted backend",
+            process=self.process,
+            interval=0.5,
+        )
 
 
 def reload_proxy_configuration(service: object, service_name: str) -> None:

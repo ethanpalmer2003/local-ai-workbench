@@ -16,6 +16,7 @@ import requests
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
+from scripts.shared.wait import http_ready, wait_ready
 
 HEALTH_ROUTE = "/api/v0/health"
 LOAD_ROUTE = "/api/v1/load"
@@ -57,19 +58,22 @@ def run_config(models_dir: Path, port: int | None = None) -> Iterator[None]:
 
 def _answers(port: int) -> bool:
     try:
-        return launch_util.backend_ready(health_url(port), timeout=2)
+        return http_ready(health_url(port), timeout=2, strict=True)
     except (urllib.error.HTTPError, OSError):
         return False
 
 
 def ready(port: int | None = None, timeout_s: float | None = None) -> bool:
-    deadline = time.monotonic() + (timeout_s if timeout_s is not None else cfg.LEMONADE_SERVICE.startup_timeout_s)
+    """Bool form of wait_ready: an adapter asking whether the service can take work."""
     served = port or cfg.LEMONADE_SERVICE.port
-    while time.monotonic() < deadline:
-        if launch_util.port_listening(served) and _answers(served):
-            return True
-        time.sleep(0.5)
-    return False
+    budget = timeout_s if timeout_s is not None else cfg.LEMONADE_SERVICE.startup_timeout_s
+    try:
+        wait_ready(
+            lambda: launch_util.port_listening(served) and _answers(served), budget, label="Lemonade", interval=0.5
+        )
+        return True
+    except TimeoutError:
+        return False
 
 
 def new_log_path() -> Path:
