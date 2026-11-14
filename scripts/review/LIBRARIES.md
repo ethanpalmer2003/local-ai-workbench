@@ -35,5 +35,6 @@ A library cannot know this repository's vocabulary, so these read the tree direc
 | `public_audit.py` | detect-secrets, gitleaks | The terms come from the overlay, and the scan covers history; both tools read a baseline stored in the tree. |
 | `docs.py` links | a Markdown parser | Resolving a link is about forty lines; the work is role, budget and pointer policy. |
 | `similarity.py` | a text-difference library | The duplicate check compares embeddings from the local model, not strings. |
+| a verbosity rule | vale, proselint, LanguageTool | Proselint over 37 documents reported 48 findings, none in its concision families (redundancy, weasel words, hedging); the rest asked for curly quotes and the ellipsis character, which [typography](typography.py) rejects. The writing here is bullets, and `docs.py --words` already shows the pages at their cap. |
 
 An adoption is worth it when the library replaces policy, not when it replaces twenty lines beside it.
