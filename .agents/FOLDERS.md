@@ -18,6 +18,24 @@
 | App state | `scripts/state/` |
 | New logs/cache/generated | `scripts/state/{logs,cache,generated}/` |
 
+## Local only
+
+Two ignore files split the untracked tree: the root file holds the heavyweight trees, [`scripts/.gitignore`](../scripts/.gitignore) the folders its code writes. None of it ships; expect hundreds of gigabytes, all rebuildable but the input overlay and `trash/`.
+
+| Path | Holds |
+| --- | --- |
+| `data/` | Weights, video-gen media, SDKs, generated audio/image/video, private input overlay |
+| `frameworks/` | Installed engines and native state |
+| `trash/` | Moved-out files; the only removal path for nonempty data |
+| `.venv/` | The interpreter |
+| `scripts/state/` | Logs, caches, generated reports, app state |
+| `scripts/benchmarks/output/`, `scripts/tests/output/` | Run evidence: reports, artifacts, temp workspaces |
+| `scripts/.env` | Local credentials |
+| `.zed/`, `.coverage`, `*.lnk` | Editor and tool state |
+
+- Tool caches (`__pycache__/`, `.pytest_cache/`, `.ruff_cache/`) ignore themselves.
+- Evidence a document cites stays here, so a clone shows the citation and not the artifact; [open questions](../notes/OPEN-QUESTIONS.md) tracks shipping a curated subset.
+
 ## Naming and grouping
 
 - The layout check audits file types in the root and each role root.
