@@ -26,7 +26,7 @@ from scripts.launchers.asr.llamacpp import qwen3_asr as qwen_asr
 from scripts.launchers.asr.whispercpp import server as whisper
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.shared.wait import http_ready
+from scripts.shared.wait import http_ready, wait_ready
 from scripts.tests.shared.paths import CasePaths, RunPaths
 
 
@@ -70,18 +70,23 @@ def _start_services(
             if name == "asr"
             else "http://127.0.0.1:18885/api/extra/version"
         )
-        while not http_ready(health, strict=True):
-            if process.poll() is not None or time.monotonic() >= deadline:
-                raise RuntimeError(f"{name} failed to start within the smoke budget; inspect {run.logs}")
-            time.sleep(0.2)
+        wait_ready(
+            lambda: http_ready(health, strict=True),
+            max(0.0, deadline - time.monotonic()),
+            label=f"{name} (logs: {run.logs})",
+            process=process,
+            interval=0.2,
+        )
     return processes
 
 
 def _await_lite(lite: str, deadline: float) -> None:
-    while not http_ready(lite + "/health", strict=True):
-        if time.monotonic() >= deadline:
-            raise TimeoutError("Lite proxy startup exceeded smoke budget")
-        time.sleep(0.1)
+    wait_ready(
+        lambda: http_ready(lite + "/health", strict=True),
+        max(0.0, deadline - time.monotonic()),
+        label="Lite proxy",
+        interval=0.1,
+    )
 
 
 def _transcribe(lite: str, clips: list[dict[str, Any]]) -> list[dict[str, Any]]:
