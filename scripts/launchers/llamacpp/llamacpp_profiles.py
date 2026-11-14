@@ -37,10 +37,6 @@ def model_base(model: str, ini: str) -> LLMProfile:
 
 BASE: dict[str, str] = {"ctx-size": ContextSize.K96}
 
-MTP_BASE = {**BASE, "spec-type": "draft-mtp", "spec-draft-n-max": "3"}
-
-ADAPTIVE_MTP_BASE = {**BASE, "spec-type": "draft-mtp-adaptive"}
-
 NGRAM_BASE = {
     **BASE,
     "spec-type": "draft-mtp,ngram-mod",
@@ -55,8 +51,6 @@ NGRAM_BASE = {
 
 SWIFT15_BASE = model_base(model_cfg.path("llamacpp/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp").name, "swift-q3.ini")
 
-SWIFT15_MTP = with_extra(SWIFT15_BASE, **MTP_BASE)
-SWIFT15_ADAPTIVE = with_extra(SWIFT15_BASE, **ADAPTIVE_MTP_BASE)
 SWIFT15_MTP_NGRAM = with_extra(SWIFT15_BASE, **NGRAM_BASE)
 SWIFT15_MTP_NGRAM_8K = with_extra(SWIFT15_MTP_NGRAM, **{"ctx-size": "8192"})
 SWIFT15_MTP_NGRAM_LEGACY = with_extra(

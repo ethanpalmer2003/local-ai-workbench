@@ -13,6 +13,7 @@
 ## Standardization
 
 - [ ] Settle the HTTP client split: probes and one-shot GETs use `urllib.request` in 51 modules, while sessions, JSON bodies and downloads use `requests` in 6. Either keep the split with the rule written beside `scripts/shared/wait.py`, or move the one-shot calls to `requests` so one client covers the repository. The second is the smaller vocabulary and the larger diff. ~2-4 h
+- [ ] Decide the retired TTS pipeline in `scripts/launchers/audiocpp/tts_legacy_buffered.py`: nothing imports it, its own docstring calls it retired, and the active path is `tts_text_processing.py`. Delete it, or name the usefulness it still has; either way drop the `RETIRED` entry in `scripts/review/unused.py` with it. ~20 min
 
 ## Needs a model run or device
 

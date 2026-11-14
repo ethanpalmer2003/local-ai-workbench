@@ -22,6 +22,7 @@ from scripts.review import (
     package_audit,
     spellings,
     typography,
+    unused,
 )
 from scripts.review.public_audit import main as public_audit_main
 
@@ -243,6 +244,9 @@ def main(argv: list[str] | None = None) -> int:
     print("\n=== COMMENTS ===", flush=True)
     comment_status = timed("comments", comments.main, [])
 
+    print("\n=== DEAD CODE ===", flush=True)
+    unused_status = timed("dead code", unused.main)
+
     print("\n=== AMERICAN SPELLING ===", flush=True)
     variant_status = timed("spelling variants", spellings.main, [])
 
@@ -291,6 +295,7 @@ def main(argv: list[str] | None = None) -> int:
             or inventory_status
             or dash_status
             or comment_status
+            or unused_status
             or variant_status
             or formatting_status
             or spelling_status

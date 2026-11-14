@@ -51,6 +51,7 @@ from scripts.tests.cases.review.test_similarity import (
 )
 from scripts.tests.cases.review.test_spellings import AmericanSpellingTests
 from scripts.tests.cases.review.test_typography import CheckTests, ScanTests, SuffixTests
+from scripts.tests.cases.review.test_unused import DeadCodeTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
 from scripts.tests.cases.shared.benchmarks.test_coding_engines import CodingEngineSummaryTests
@@ -158,6 +159,7 @@ if __name__ == "__main__":
                     CheckTests,
                     ScanTests,
                     SuffixTests,
+                    DeadCodeTests,
                     MarkdownNameTests,
                     ModelNameTests,
                     LinkTests,
