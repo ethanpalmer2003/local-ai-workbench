@@ -35,6 +35,6 @@ A library cannot know this repository's vocabulary, so these read the tree direc
 | `public_audit.py` | detect-secrets, gitleaks | The terms come from the overlay, and the scan covers history; both tools read a baseline stored in the tree. |
 | `docs.py` links | a Markdown parser | Resolving a link is about forty lines; the work is role, budget and pointer policy. |
 | `similarity.py` | a text-difference library | The duplicate check compares embeddings from the local model, not strings. |
-| a verbosity rule | vale, proselint, LanguageTool | Proselint does read bullets as prose, and over all 141 maintained documents it returned 120 findings: 68 annotations, 44 typography asking for the curly quotes and ellipsis that [typography](typography.py) rejects, 4 date style, 3 misc and 1 redundancy. Its built-in set has no rule for `in order to` or `it is important to note`, so a verbosity gate needs a rule set of its own. |
+| a verbosity rule | vale, proselint, LanguageTool | Proselint reads bullets as prose. Over all 141 maintained documents its 120 findings were 119 misreadings: the word TODO in 69 links, `...` inside 44 backtick paths, ISO dates read as ranges, a code identifier and a hyphenated range. The one real hit was `Exact same`. Its built-in set also has no rule for `in order to` or `it is important to note`, and it has no fix mode, so a verbosity gate would need its own rule set and an allowlist. |
 
 An adoption is worth it when the library replaces policy, not when it replaces twenty lines beside it.
