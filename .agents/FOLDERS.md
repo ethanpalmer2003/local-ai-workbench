@@ -9,6 +9,7 @@
 | Model | `data/huggingface/models/` |
 | Editable config | `scripts/config/`; model catalogs in `models/`, cross-component settings in `shared/`, shared guides in `notes/` |
 | Launcher | Component launchers live under `scripts/launchers/<component>/`; shared helpers are grouped by purpose under `shared/`; cross-backend readiness, diagnostics and GPU policy use `runtime/`; role-wide plumbing stays at the launcher root. |
+| Cross-role helpers | `scripts/shared/` when a launcher, a benchmark and a test all call the same module; a helper one role owns stays with that role |
 | Repository tools | `scripts/tools/` |
 | Repository review checks | `scripts/review/` |
 | Test source / UI | `scripts/tests/cases/`, `scripts/tests/ui/` |

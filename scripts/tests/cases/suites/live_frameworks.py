@@ -31,8 +31,8 @@ from scripts.launchers.llamacpp import llamacpp, llamacpp_coding, llamacpp_dsh
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
+from scripts.shared.http_server import request
 from scripts.tests.shared import live_stamp
-from scripts.tests.shared.http_server import request
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.progress import ProgressBar
 from scripts.tests.shared.timing import TimedTextTestResult

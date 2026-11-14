@@ -28,9 +28,9 @@ from scripts.launchers.audiocpp.kokoro import audio_command as audiocpp_audio_co
 from scripts.launchers.koboldcpp import kokoro
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.sdcpp import server as sdcpp
-from scripts.tests.shared.backends import listening
+from scripts.shared.backends import listening
+from scripts.shared.resources import summarize_resources, watch_resources
 from scripts.tests.shared.paths import CasePaths, RunPaths
-from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 PORT = 18881
 TEXTS = (

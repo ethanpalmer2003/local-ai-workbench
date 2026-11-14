@@ -25,9 +25,9 @@ from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.launchers.shared.services import native
 from scripts.launchers.shared.services.process import http_ready, stop_owned
+from scripts.shared.resources import monitor_process
 from scripts.tests.shared.native_suites import refuse_existing_sessions
 from scripts.tests.shared.paths import CasePaths
-from scripts.tests.shared.resources import monitor_process
 
 # - The installed component that owns each startup engine's files; the launcher catalog stays the path owner
 ENGINE_COMPONENTS = {

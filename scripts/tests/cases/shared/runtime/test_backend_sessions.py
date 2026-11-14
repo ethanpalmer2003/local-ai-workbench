@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import Mock, call, patch
 
-from scripts.tests.shared import backends
+from scripts.shared import backends
 from scripts.tests.shared.process_fixtures import running_process
 
 

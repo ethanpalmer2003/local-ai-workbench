@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from typing import Any
 
 from scripts.launchers import launch_util
-from scripts.tests.shared import benchmark_config as benchmark_cfg
+from scripts.shared import benchmark_config as benchmark_cfg
 
 
 @contextmanager

@@ -13,7 +13,7 @@ from scripts.launchers.audiocpp import tts_proxy
 from scripts.launchers.runtime import image_on_demand as demand
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
-from scripts.tests.shared.http_server import request, server
+from scripts.shared.http_server import request, server
 from scripts.tests.shared.process_fixtures import exited_process, running_process
 
 

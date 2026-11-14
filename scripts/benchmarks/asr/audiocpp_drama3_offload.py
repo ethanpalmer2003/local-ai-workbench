@@ -26,6 +26,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp_catalog
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
+from scripts.shared.backends import listening
 from scripts.tests.cases.audiocpp.audiocpp_backend_compare import (
     BUILDS,
     SERVER_BACKENDS,
@@ -34,7 +35,6 @@ from scripts.tests.cases.audiocpp.audiocpp_backend_compare import (
     wait_for_health,
 )
 from scripts.tests.cases.audiocpp.audiocpp_transport import AudioReader
-from scripts.tests.shared.backends import listening
 
 MODEL = project_cfg.AUDIOCPP_MODELS_DIR / "drama-3-backbone-8bit-experts-Q2_K.gguf"
 MODEL_ID = cfg.AudiocppModel.FISH_DRAMA3_Q2.value

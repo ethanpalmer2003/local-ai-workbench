@@ -6,7 +6,7 @@ import unittest
 from http.server import BaseHTTPRequestHandler
 
 from scripts.launchers.koboldcpp import external_bridge
-from scripts.tests.shared.http_server import request, server
+from scripts.shared.http_server import request, server
 
 
 class _Llama(BaseHTTPRequestHandler):

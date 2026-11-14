@@ -24,8 +24,8 @@ from scripts.launchers import launch_util
 from scripts.launchers.audiocpp.kokoro import audio_environment
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
+from scripts.shared.resources import summarize_resources, watch_resources
 from scripts.tests.shared.paths import CasePaths, Outcome, RunPaths
-from scripts.tests.shared.resources import summarize_resources, watch_resources
 
 TEXT = "Good morning. How are you today?"
 

@@ -21,9 +21,9 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.sdcpp import server as sdcpp
-from scripts.tests.shared import benchmark_config as benchmark_cfg
-from scripts.tests.shared.backends import listening
-from scripts.tests.shared.resources import summarize_resources, watch_resources
+from scripts.shared import benchmark_config as benchmark_cfg
+from scripts.shared.backends import listening
+from scripts.shared.resources import summarize_resources, watch_resources
 
 PORT = 18889
 PROMPT = (

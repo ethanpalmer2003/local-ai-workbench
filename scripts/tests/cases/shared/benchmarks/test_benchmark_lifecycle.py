@@ -167,7 +167,7 @@ class BenchmarkLifecycleTests(unittest.TestCase):
         self.assertIsNone(pipeline["request_seconds"])
 
     def test_audio_identity_tracks_model_changes_but_not_mutable_tone_state(self):
-        from scripts.tests.shared.service_identity import audio_model_token
+        from scripts.shared.service_identity import audio_model_token
 
         config = {"model": "breeze", "selected_model": "breeze", "server_session_options": {}}
         token = audio_model_token(config)

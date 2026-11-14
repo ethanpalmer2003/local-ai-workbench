@@ -17,9 +17,9 @@ from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.launchers import launcher_config as cfg
-from scripts.tests.shared.backends import backend_sessions
+from scripts.shared.backends import backend_sessions
+from scripts.shared.service_identity import audio_identity
 from scripts.tests.shared.paths import CasePaths, RunPaths
-from scripts.tests.shared.service_identity import audio_identity
 
 
 def buffer_metrics(chunks: list[dict[str, float]], buffer: float) -> dict[str, float | int]:

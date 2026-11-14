@@ -16,7 +16,7 @@ from scripts.benchmarks.shared import provenance
 from scripts.config.audiocpp import server as audio_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.tests.shared.backends import backend_sessions
+from scripts.shared.backends import backend_sessions
 from scripts.tests.shared.paths import CasePaths
 
 MODES = ("narration", "sentences", "whole")
