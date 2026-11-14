@@ -60,7 +60,7 @@ class RocmInventoryTests(unittest.TestCase):
         self.assertEqual(rows[0].size_bytes, 1)
         self.assertEqual(rows[0].used_by, "consumer")
 
-    def test_size_formatting(self) -> None:
+    def test_size_text_formats_bytes_and_unknown(self) -> None:
         self.assertEqual(rocm_inventory._human(0), "-")
         self.assertEqual(rocm_inventory._human(512), "512 B")
         self.assertEqual(rocm_inventory._human(3 * 1024**3), "3.0 GiB")

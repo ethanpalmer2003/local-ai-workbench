@@ -71,9 +71,22 @@ def server_request_defaults(model: str) -> dict[str, object]:
 
 
 def configured_voices() -> list[dict[str, object]]:
-    return [
-        {"id": voice, "available": resolve_voice_ref(voice) is not None} for voice in cfg.AUDIOCPP_PROXY_CLONE_VOICES
-    ]
+    """One walk of the voice tree for every configured voice; a walk per voice cost seconds."""
+    found = _voice_refs()
+    return [{"id": voice, "available": voice.lower() in found} for voice in cfg.AUDIOCPP_PROXY_CLONE_VOICES]
+
+
+def _voice_refs() -> dict[str, Path]:
+    """Voice name -> its first reference clip, for every `<voice>/` folder at any depth."""
+    root = Path(cfg.AUDIOCPP_INPUT_DIR)
+    if not root.is_dir():
+        return {}
+    matches: dict[str, list[Path]] = {}
+    for wav in root.rglob("*.wav"):
+        for folder in (part.lower() for part in wav.relative_to(root).parts[:-1]):
+            if wav.name.startswith(f"{folder}_"):
+                matches.setdefault(folder, []).append(wav)
+    return {voice: sorted(paths)[0] for voice, paths in matches.items()}
 
 
 def runtime_defaults(

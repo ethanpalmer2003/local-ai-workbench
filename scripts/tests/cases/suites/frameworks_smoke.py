@@ -538,6 +538,7 @@ class StateAndReadiness(unittest.TestCase):
             self.assertEqual(health.call_count, 3)
         self.assertFalse(launch_util.wait_for_backend(12345, 0))
 
+    @requires_model_check
     def test_deepseek_launch_environment(self):
         with (
             CasePaths(__file__).temporary_directory() as folder,
@@ -1142,7 +1143,7 @@ def _run_regressions(
             ),
         ):
             code = pytest.main(
-                ["-q", "-s", "--no-header", "--tb=short", "-p", "no:cacheprovider", *_pytest_nodeids(groups)],
+                ["-q", "-s", "-rs", "--no-header", "--tb=short", "-p", "no:cacheprovider", *_pytest_nodeids(groups)],
                 plugins=[runner],
             )
     (output.artifacts / "timings.json").write_text(json.dumps(runner.seconds, indent=2), encoding="utf-8")
