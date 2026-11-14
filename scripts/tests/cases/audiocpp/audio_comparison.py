@@ -89,11 +89,7 @@ class AudioComparison(unittest.TestCase):
             with (
                 patch.object(cfg, "AUDIOCPP_PROXY_CLONE_VOICES", ("test-voice", "other-voice")),
                 patch.dict(cfg.AUDIOCPP_SERVER_ARGS, {"config": str(config)}),
-                patch.object(
-                    audiocpp_catalog,
-                    "resolve_voice_ref",
-                    side_effect=lambda name: ("voice.wav", "text") if name == "test-voice" else None,
-                ),
+                patch.object(audiocpp_catalog, "_voice_refs", return_value={"test-voice": Path("voice.wav")}),
             ):
                 catalog = audiocpp_catalog.comparison_catalog()
             self.assertEqual(
