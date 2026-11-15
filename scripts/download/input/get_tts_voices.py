@@ -9,13 +9,13 @@ import shutil
 import subprocess
 import traceback
 import urllib.parse
-import urllib.request
 import zipfile
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
 from typing import Any, Literal
 
+import requests
 import yaml
 
 from scripts.config import local_overlay
@@ -465,9 +465,10 @@ def load_map(cache, files, durations, excluded):
 
 
 def download(url, path):
-    req = urllib.request.Request(url, headers={"User-Agent": "audiocpp-preparer"})
-    with urllib.request.urlopen(req, timeout=DOWNLOAD_TIMEOUT) as r, path.open("wb") as f:
-        shutil.copyfileobj(r, f)
+    with requests.get(url, headers={"User-Agent": "audiocpp-preparer"}, timeout=DOWNLOAD_TIMEOUT, stream=True) as r:
+        r.raise_for_status()
+        with path.open("wb") as f:
+            shutil.copyfileobj(r.raw, f)
 
 
 def ordered_pool(files, mapping, mode, pinned_ids, durations):

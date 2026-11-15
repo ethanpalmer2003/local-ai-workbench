@@ -8,6 +8,8 @@ from email.message import Message
 from email.parser import BytesParser
 from unittest.mock import patch
 
+import requests
+
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.whispercpp import server as whisper
 from scripts.launchers.koboldcpp import kobold, kobold_lite
@@ -83,14 +85,14 @@ class WhisperProfiles(unittest.TestCase):
             patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", cfg.AsrStartupEngine.WHISPER_VULKAN),
             patch.object(kobold_lite, "serve_proxy", side_effect=serve),
             patch.object(kobold_lite, "read_request_body", return_value=payload),
-            patch.object(whisper.requests.urllib.request, "urlopen", return_value=opened) as fetch,
+            patch.object(requests, "post", return_value=opened) as posted,
             patch.object(kobold_lite.http_api, "send_bytes"),
         ):
             kobold_lite.run_proxy()
-        request = fetch.call_args.args[0]
-        self.assertEqual(request.full_url, whisper.url() + "/inference")
-        self.assertTrue(request.get_header("Content-type").startswith("multipart/form-data; boundary="))
-        self.assertEqual(request.get_header("Authorization"), "Bearer local-test")
+        headers = posted.call_args.kwargs["headers"]
+        self.assertEqual(posted.call_args.args[0], whisper.url() + "/inference")
+        self.assertTrue(headers["Content-Type"].startswith("multipart/form-data; boundary="))
+        self.assertEqual(headers["Authorization"], "Bearer local-test")
 
     def test_lite_advertises_external_transcription_only_when_ready(self):
         def serve(handler, *_args):

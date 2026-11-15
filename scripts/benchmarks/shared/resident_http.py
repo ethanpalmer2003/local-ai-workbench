@@ -1,11 +1,11 @@
 """Task-owned persistent HTTP process; independent of task, model and native engine."""
 
-import json
 import os
 import subprocess
-import urllib.request
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.launchers import launch_util
@@ -59,11 +59,14 @@ class ResidentHttp:
         return http_ready(f"http://127.0.0.1:{self.port}{self.readiness}")
 
     def post(self, endpoint: str, body: bytes, content_type: str, timeout: float | None = None) -> dict[str, Any]:
-        request = urllib.request.Request(
-            f"http://127.0.0.1:{self.port}{endpoint}", body, {"Content-Type": content_type}
+        response = requests.post(
+            f"http://127.0.0.1:{self.port}{endpoint}",
+            data=body,
+            headers={"Content-Type": content_type},
+            timeout=timeout or self.timeout,
         )
-        with urllib.request.urlopen(request, timeout=timeout or self.timeout) as response:
-            return json.load(response)
+        response.raise_for_status()
+        return response.json()
 
     def stop(self) -> None:
         try:

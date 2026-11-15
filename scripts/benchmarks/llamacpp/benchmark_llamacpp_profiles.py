@@ -24,13 +24,13 @@ import json
 import statistics
 import subprocess
 import time
-import urllib.error
-import urllib.request
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
+
+import requests
 
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT, report_run
@@ -97,10 +97,9 @@ class Sample:
 
 
 def post_json(url: str, payload: Mapping[str, object], timeout: float) -> dict[str, Any]:
-    body = json.dumps(payload).encode("utf-8")
-    request = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return cast(dict[str, Any], json.loads(response.read().decode("utf-8")))
+    response = requests.post(url, json=cast(dict[str, Any], dict(payload)), timeout=timeout)
+    response.raise_for_status()
+    return cast(dict[str, Any], response.json())
 
 
 def await_http(base_url: str, process: subprocess.Popen[bytes], timeout: float) -> None:

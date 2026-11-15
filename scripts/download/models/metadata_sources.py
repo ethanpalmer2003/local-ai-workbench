@@ -2,10 +2,10 @@
 
 import json
 import subprocess
-import urllib.error
-import urllib.request
 from typing import Any
 from urllib.parse import quote
+
+import requests
 
 from scripts.config import project_config as project_cfg
 from scripts.download.models.hub_sources import parse_url
@@ -43,8 +43,9 @@ def hub_metadata(source):
             continue
         url = f"https://huggingface.co/{source.repo_id}/resolve/{quote(info.sha or source.revision, safe='')}/{quote(relative)}"
         try:
-            with urllib.request.urlopen(url, timeout=15) as response:
-                data = response.read(LIMIT + 1)
+            response = requests.get(url, timeout=15)
+            response.raise_for_status()
+            data = response.content[: LIMIT + 1]
             if len(data) > LIMIT:
                 raise ValueError("Config exceeds 8 MiB metadata limit")
             result["configs"][relative] = json.loads(data)

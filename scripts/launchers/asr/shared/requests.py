@@ -2,11 +2,12 @@
 
 import base64
 import json
-import urllib.request
 from dataclasses import dataclass
 from email import policy
 from email.parser import BytesParser
 from typing import Any
+
+import requests
 
 
 @dataclass(frozen=True)
@@ -75,6 +76,6 @@ def post(url: str, body: bytes, content_type: str, headers: dict[str, str] | Non
         if key.lower() not in ("content-type", "content-length", "host", "connection")
     }
     forwarded["Content-Type"] = content_type
-    request = urllib.request.Request(url, body, forwarded)
-    with urllib.request.urlopen(request, timeout=120) as response:
-        return response.read(), response.headers.get("Content-Type", "application/json")
+    response = requests.post(url, data=body, headers=forwarded, timeout=120)
+    response.raise_for_status()
+    return response.content, response.headers.get("Content-Type", "application/json")

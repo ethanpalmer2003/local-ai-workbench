@@ -6,10 +6,11 @@ import functools
 import hashlib
 import json
 import time
-import urllib.error
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.asr.metrics import unicode_errors
@@ -117,9 +118,10 @@ def _infer(server, endpoint, payloads, index, deadline, name):
     body, content_type = payloads[index]
     try:
         value = server.post(endpoint, body, content_type)
-    except urllib.error.HTTPError as error:
-        detail = error.read(8192).decode("utf-8", errors="replace")
-        raise RuntimeError(f"HTTP {error.code}: {detail}") from error
+    except requests.HTTPError as error:
+        status = error.response.status_code if error.response is not None else "unknown"
+        detail = error.response.text[:8192] if error.response is not None else ""
+        raise RuntimeError(f"HTTP {status}: {detail}") from error
     if name in ("llamacpp-gemma-audio", "llamacpp-granite-5-2b"):
         choice = value["choices"][0]
         if choice.get("finish_reason") == "length":
