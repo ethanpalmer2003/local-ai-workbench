@@ -97,6 +97,15 @@ class SimilaritySourceTests(unittest.TestCase):
     def test_an_unchanged_tree_reports_nothing(self):
         self.assertEqual(similarity.changed_sources({"a.md": "one"}, {"a.md": "one"}), [])
 
+    def test_the_embedding_server_starts_the_rocm_build_with_the_igpu_hidden(self):
+        from scripts.launchers import launcher_config as cfg
+
+        settings = cfg.EMBEDDINGS_SERVER
+        # - the Vulkan build faults on a batched embedding request, so this one serves the check
+        self.assertTrue(settings.build.startswith("rocm"), settings.build)
+        self.assertEqual(settings.exe.parts[-3:], ("rocm", "lemonade", "llama-server.exe"))
+        self.assertEqual(settings.env, {"HIP_VISIBLE_DEVICES": "0"})
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -61,5 +61,6 @@ def start() -> subprocess.Popen[Any] | None:
         ready,
         matching_server,
         int(settings.startup_timeout_s),
+        env=settings.env or None,
         component_key="embeddings",
     )

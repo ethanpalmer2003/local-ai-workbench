@@ -1,8 +1,8 @@
 # llama.cpp tuning
 
 - Owners: [profiles](../../launchers/llamacpp/llamacpp_profiles.py), [native INI](swift-q3.ini), [service/build selection](../../launchers/launcher_config.py).
-- Profile values override INI; the launcher supplies the selected model. Request sampling/reasoning may override startup defaults.
-- Coding default: `swift15` (96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium) on the **Vulkan** build. The allocation decides the build: at 96K Vulkan prefills a 3044-token prompt in 11.5 s against ROCm's 46.7 s (526 against 130 tok/s), while ROCm decodes faster (216 against 199 tok/s on fresh code, 83 against 71 on a rewrite). At 64K the same runner reads 526 against 551 tok/s, so ROCm collapses only between 64K and 96K. It wins at 8K (585 against 528 tok/s prefill, 215 against 192 decode) and needs the iGPU hidden to load at all ([upstream](../../../notes/UPSTREAM-INDEX.md), [note](../../../notes/reviews/ROCM-DRIVER-TIMEOUT-2026-11-13.md)); select it with `--build rocm-lemonade` when the context fits. The Lemonade *server* is a separate language-practice framework; it is not this build.
+- Profile values override INI; the launcher supplies the model. Sampling or reasoning may override startup defaults.
+- Coding default: `swift15` (96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium) on the **Vulkan** build. The allocation decides the build: at 96K Vulkan prefills a 3044-token prompt in 11.5 s against ROCm's 46.7 s (526 against 130 tok/s), while ROCm decodes faster (216 against 199 tok/s on fresh code, 83 against 71 on a rewrite). At 64K the same runner reads 526 against 551 tok/s, so ROCm collapses only between 64K and 96K. It wins at 8K (585 against 528 tok/s prefill, 215 against 192 decode) and needs the iGPU hidden to load at all ([upstream](../../../notes/UPSTREAM-INDEX.md), [note](../../../notes/reviews/ROCM-DRIVER-TIMEOUT-2026-11-13.md)); select it with `--build rocm-lemonade` when the context fits; the Lemonade *server* is a different framework.
 
 | Choice | Evidence / limitation |
 | --- | --- |
@@ -14,6 +14,7 @@
 | Flash Attention | Operational compatibility established; isolated speed/quality effect not measured |
 | One slot | Interactive workload/context choice; no universal ngram restriction implied |
 
+- Per-build faults: [builds](BUILDS.md).
 - Legacy ngram 32/4/8 remains a named profile. Do not combine unrelated screens into a stronger claim.
 - Optional `swift15-8k`: short greedy screen rose from 38.02 to 57.26 tok/s versus 96K capacity, with identical 64-token outputs. Use only when complete prompt/history/output fits; filled-context/everyday-sampling performance remains unverified.
 - Screens recorded 2026-10-04: MTP evidence (../../tests/output/llamacpp/benchmark_speedbench/verified/1791093433528713400/artifacts/comparison.md), copy evidence (../../tests/output/llamacpp/benchmark_ngram/no-gain/1791087672992167800/artifacts/comparison.md).

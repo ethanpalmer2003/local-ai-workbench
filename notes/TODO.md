@@ -10,6 +10,7 @@
 ## Standardization
 
 - [ ] Decide the retired TTS pipeline in `scripts/launchers/audiocpp/tts_legacy_buffered.py`: nothing imports it, its own docstring calls it retired, and the active path is `tts_text_processing.py`. Delete it, or name the usefulness it still has; either way drop the `RETIRED` entry in `scripts/review/unused.py` with it. ~20 min
+- [ ] Fetch the behind ComfyUI custom node again, and make that outcome visible: its updater runs in a detached console, so the failed fetch (`curl 18`, `early EOF` on a large repo) still left `comfyui/rocm` listed as updated in the framework summary. Re-run the updater; if the transfer fails again, fetch that node with a shallow clone or raise `http.postBuffer`. Record the vendor updater's exit status in the summary instead of assuming success. ~30 min
 - [ ] Repair the Strata install: the native updater kept engine 0.1.59 because 0.1.60 failed its test start, while control reached 0.1.60, so a launch now exits before serving because the image encoder child cannot start (`WinError 5`). `update_frameworks` reports this and installs nothing; repair it in the Strata app (control reports `failed-before` for the engine) and confirm a plain launch serves without the vision-free config the benchmark used. ~20 min
 
 ## Needs a model run or device

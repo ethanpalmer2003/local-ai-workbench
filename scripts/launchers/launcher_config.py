@@ -966,19 +966,29 @@ LEMONADE_SERVICE = LemonadeStartupServiceSettings()
 
 @dataclass
 class EmbeddingsServerSettings:
-    """llama.cpp serving one embedding model, used by the documentation duplicate check."""
+    """llama.cpp serving one embedding model, used by the documentation duplicate check.
+
+    The ROCm build serves a batched `/v1/embeddings` request; the Vulkan build faults on one with an
+    access violation, so the build here names the ROCm tree and the launcher hides the Ryzen iGPU,
+    which that build aborts on during device fit.
+    """
 
     model: Path = model_cfg.path("embeddings/embeddinggemma-2-Q8_0")
     port: int = 8791
     context: int = 4096
     batch: int = 4096
     pooling: str = "mean"
-    build: str = "vulkan"
+    build: str = "rocm/lemonade"
     startup_timeout_s: float = 90.0
 
     @property
     def exe(self) -> Path:
         return project_cfg.component("llamacpp").framework_dir / self.build / "llama-server.exe"
+
+    @property
+    def env(self) -> dict[str, str]:
+        """Per-build overrides: the ROCm release needs the iGPU hidden to survive device fit."""
+        return {"HIP_VISIBLE_DEVICES": "0"} if self.build.startswith("rocm") else {}
 
 
 EMBEDDINGS_SERVER = EmbeddingsServerSettings()
