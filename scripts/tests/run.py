@@ -100,6 +100,7 @@ from scripts.tests.cases.shared.runtime.test_gpu_memory_monitor import MemoryMon
 from scripts.tests.cases.shared.runtime.test_image_on_demand import NativePassthroughTests, ResidencyTests
 from scripts.tests.cases.shared.runtime.test_resources import ResourceTests
 from scripts.tests.cases.shared.runtime.test_shared_runtime import (
+    ExitReportTests,
     OwnedLaunchTests,
     ReadinessRouteTests,
     SharedRuntimeTests,
@@ -267,6 +268,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     TransportBenchmark,
     BackendSessions,
     TestScope,
+    ExitReportTests,
 )
 
 if __name__ == "__main__":
