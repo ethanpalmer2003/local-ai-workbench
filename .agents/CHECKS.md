@@ -17,7 +17,7 @@
 - After one change: pre-commit hooks plus the test module the edit touches. Seconds.
 - After a batch: `python -m scripts.review --yes`, then `python -m scripts.tests.run`. Under a minute together.
 - `--fast` keeps the gate repo-wide but skips types, inventory, advisories and the package summary: about five seconds, so it fits a single edit.
-- `--touched` runs only the sections whose inputs changed since the upstream branch, working tree and unpushed commits alike; renaming batch files costs about a second, a Python edit adds types and dead code, and only dependency files pull in the advisories. It is a path mapping, not a cache: nothing is remembered between runs, and the default stays the full gate.
+- The default run is scoped: only the sections whose inputs changed since the upstream branch run, working tree and unpushed commits alike. A batch rename costs about a second, a Python edit adds types and dead code, and only dependency files pull in the advisories. `--all` runs every section, and so does an empty change set or `check_repo.bat`; it is a path mapping, not a cache, so nothing is remembered between runs.
 - Each gate section records its seconds under `scripts/state/logs/shared/review/`, so the cost of a check comes from history instead of a rerun.
 - Live and measure work is scheduled from [TODO](../notes/TODO.md), never part of a code change. Levels: [tool inventory](../scripts/review/TOOLS.md#levels).
 - A push is routine once the checks for the touched level pass; the full gate does not belong to every commit.

@@ -64,6 +64,42 @@ class ConsentTests(unittest.TestCase):
                 changed_paths(), ["bat/checks/a.bat", "bat/tests/a.bat", "notes/TODO.md", "scripts/tools/older.py"]
             )
 
+    def test_an_empty_change_set_falls_back_to_every_section(self):
+        from scripts.review import __main__ as gate
+
+        with (
+            patch.object(gate, "changed_paths", return_value=[]),
+            patch.object(gate, "full_gate", return_value=0) as full,
+            patch.object(gate, "touched_gate") as touched,
+        ):
+            gate.main(["--yes"])
+        full.assert_called_once()
+        touched.assert_not_called()
+
+    def test_a_change_runs_only_the_touched_sections(self):
+        from scripts.review import __main__ as gate
+
+        with (
+            patch.object(gate, "changed_paths", return_value=["notes/TODO.md"]),
+            patch.object(gate, "full_gate") as full,
+            patch.object(gate, "touched_gate", return_value=0) as touched,
+        ):
+            gate.main(["--yes"])
+        touched.assert_called_once()
+        full.assert_not_called()
+
+    def test_all_runs_every_section_whatever_changed(self):
+        from scripts.review import __main__ as gate
+
+        with (
+            patch.object(gate, "changed_paths", return_value=["notes/TODO.md"]),
+            patch.object(gate, "full_gate", return_value=0) as full,
+            patch.object(gate, "touched_gate") as touched,
+        ):
+            gate.main(["--yes", "--all"])
+        full.assert_called_once()
+        touched.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
