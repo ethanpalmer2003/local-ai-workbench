@@ -12,12 +12,10 @@ class KoboldOptionTests(unittest.TestCase):
     def _fold(self, *argv: str) -> str:
         parser = kobold.build_parser()
         args = parser.parse_args(list(argv))
-        original = cfg.KOBOLDCPP_SERVICE.model
-        try:
+        # - apply_options folds flags into the shared service object, so it works on a copy
+        with patch.object(cfg, "KOBOLDCPP_SERVICE", replace(cfg.KOBOLDCPP_SERVICE)):
             kobold.apply_options(args, parser)
             return cfg.KOBOLDCPP_SERVICE.model
-        finally:
-            cfg.KOBOLDCPP_SERVICE.model = original
 
     def test_practice_page_selects_the_practice_model(self):
         self.assertEqual(self._fold("--practice-ui"), cfg.LANGUAGE_PRACTICE.llm_model)
