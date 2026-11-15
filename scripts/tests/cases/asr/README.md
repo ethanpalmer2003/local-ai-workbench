@@ -10,8 +10,8 @@
 - Global updater/catalog contracts stay under `cases/shared/`.
 
 ```powershell
-C:/AI/bat/tests/test_model_free.bat
-C:/AI/bat/tests/test_live_backends.bat --only whisper parakeet practice-whisper practice-qwen gemma
+C:/AI/bat/checks/test_model_free.bat
+C:/AI/bat/checks/test_live_backends.bat --only whisper parakeet practice-whisper practice-qwen gemma
 ```
 
 - Quick validation runs native probes sequentially on temporary ports, preserves logs and returns failure if any probe fails. Processes are task-owned; existing native sessions are retained/refused.

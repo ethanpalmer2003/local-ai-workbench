@@ -46,12 +46,12 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 
 | Batch | Purpose |
 | --- | --- |
-| [test_model_free.bat](tests/test_model_free.bat) | Model-free regression suite; no VRAM, no models, no port kills. |
-| [test_live_launchers.bat](tests/test_live_launchers.bat) | Live launcher/proxy wiring: starts each launcher, generates output, stops owned. |
-| [test_live_backends.bat](tests/test_live_backends.bat) | Live backend probes: every model loads and answers; `--only` narrows it. |
-| [test_live_all.bat](tests/test_live_all.bat) | Both native suites: launchers first, then every backend probe. |
-| [test_full.bat](tests/test_full.bat) | Everything in one progress bar: gate, model-free suite and both live suites, skipping unchanged ones. |
-| [refresh_capability_matrix.bat](tests/refresh_capability_matrix.bat) | Last-run evidence table for the long opt-in checks; `--check` fails on stale rows. |
+| [test_model_free.bat](checks/test_model_free.bat) | Model-free regression suite; no VRAM, no models, no port kills. |
+| [test_live_launchers.bat](checks/test_live_launchers.bat) | Live launcher/proxy wiring: starts each launcher, generates output, stops owned. |
+| [test_live_backends.bat](checks/test_live_backends.bat) | Live backend probes: every model loads and answers; `--only` narrows it. |
+| [test_live_all.bat](checks/test_live_all.bat) | Both native suites: launchers first, then every backend probe. |
+| [test_full.bat](checks/test_full.bat) | Everything in one progress bar: gate, model-free suite and both live suites, skipping unchanged ones. |
+| [review_refresh_capability_matrix.bat](checks/review_refresh_capability_matrix.bat) | Last-run evidence table for the long opt-in checks; `--check` fails on stale rows. |
 
 Live entries free their ports instead of refusing.
 
@@ -59,8 +59,8 @@ Live entries free their ports instead of refusing.
 
 - Formatting wrapper: [scripts/review/format_py.bat](../scripts/review/format_py.bat).
 - Repository review: [scripts/review/check_repo.bat](../scripts/review/check_repo.bat).
-- Markdown duplicates: [check_document_similarity.bat](review/check_document_similarity.bat); opt-in, starts the embedding model, reports pairs to review.
-- Code duplicates: [check_code_similarity.bat](review/check_code_similarity.bat); same model, one chunk per function, tests skipped.
+- Markdown duplicates: [review_document_similarity.bat](checks/review_document_similarity.bat); opt-in, starts the embedding model, reports pairs to review.
+- Code duplicates: [review_code_similarity.bat](checks/review_code_similarity.bat); same model, one chunk per function, tests skipped.
 
 ## Benchmarks
 
