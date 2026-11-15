@@ -9,11 +9,11 @@ import statistics
 import subprocess
 import threading
 import time
-import urllib.error
-import urllib.request
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.asr.metrics import word_errors
@@ -56,13 +56,20 @@ def transcribe(engine: str, clip: dict[str, Any], deadline: float) -> dict[str, 
     else:
         body, content_type = multipart(audio)
         endpoint = "/inference"
-    request = urllib.request.Request(f"http://127.0.0.1:{PORT}{endpoint}", body, {"Content-Type": content_type})
     started = time.perf_counter()
     try:
-        with urllib.request.urlopen(request, timeout=min(60, deadline - time.monotonic())) as response:
-            value = json.load(response)
-    except urllib.error.HTTPError as error:
-        raise RuntimeError(f"{engine} HTTP {error.code}: {error.read(2000).decode(errors='replace')}") from error
+        response = requests.post(
+            f"http://127.0.0.1:{PORT}{endpoint}",
+            data=body,
+            headers={"Content-Type": content_type},
+            timeout=min(60, deadline - time.monotonic()),
+        )
+        response.raise_for_status()
+        value = response.json()
+    except requests.HTTPError as error:
+        status = error.response.status_code if error.response is not None else "unknown"
+        detail = error.response.text[:2000] if error.response is not None else ""
+        raise RuntimeError(f"{engine} HTTP {status}: {detail}") from error
     seconds = time.perf_counter() - started
     text = value["text"].strip()
     return {

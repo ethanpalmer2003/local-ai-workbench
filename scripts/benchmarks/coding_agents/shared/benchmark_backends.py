@@ -4,11 +4,12 @@ import contextlib
 import json
 import socket
 import time
-import urllib.request
 from collections.abc import Iterator
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.shared.paths import RunPaths
 from scripts.launchers import launch_util
@@ -289,8 +290,7 @@ def avalon_endpoint(conf: llamacpp.LlamaConfig, output: RunPaths) -> Iterator[Be
             process=process,
             interval=1,
         )
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/v1/models", timeout=10) as response:
-            models = json.load(response).get("data", [])
+        models = requests.get(f"http://127.0.0.1:{port}/v1/models", timeout=10).json().get("data", [])
         if avalon.ALIAS not in [entry.get("id") for entry in models]:
             raise RuntimeError("Avalon serves an unexpected model alias")
         yield BenchmarkEndpoint(

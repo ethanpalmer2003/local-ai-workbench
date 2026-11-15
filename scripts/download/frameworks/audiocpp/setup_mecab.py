@@ -3,8 +3,9 @@
 import hashlib
 import io
 import json
-import urllib.request
 import zipfile
+
+import requests
 
 from scripts.config import project_config as project_cfg
 
@@ -13,8 +14,9 @@ SHA256 = "ad8508d0bf9827b6ad4b3537d144a1ecbbd6a6841b74430c6b74fe4b8766aa42"
 
 
 def main():
-    with urllib.request.urlopen(URL, timeout=30) as response:
-        data = response.read(16 * 1024 * 1024)
+    response = requests.get(URL, timeout=30)
+    response.raise_for_status()
+    data = response.content[: 16 * 1024 * 1024]
     if hashlib.sha256(data).hexdigest() != SHA256:
         raise ValueError("MeCab wheel checksum mismatch")
     root = project_cfg.component("audiocpp/additions/mecab").framework_dir

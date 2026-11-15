@@ -5,8 +5,9 @@ import csv
 import html
 import json
 import re
-import urllib.request
 from datetime import UTC, datetime
+
+import requests
 
 from scripts.config import project_config as project_cfg
 
@@ -14,11 +15,12 @@ BASE = "https://hf-audio-open-asr-leaderboard.hf.space"
 
 
 def fetch(path, data=None):
-    request = urllib.request.Request(
-        BASE + path, json.dumps(data).encode() if data is not None else None, {"Content-Type": "application/json"}
-    )
-    with urllib.request.urlopen(request, timeout=45) as response:
-        return response.read(16 * 1024 * 1024).decode("utf-8")
+    if data is None:
+        response = requests.get(BASE + path, timeout=45)
+    else:
+        response = requests.post(BASE + path, json=data, timeout=45)
+    response.raise_for_status()
+    return response.content[: 16 * 1024 * 1024].decode("utf-8")
 
 
 def plain(value):

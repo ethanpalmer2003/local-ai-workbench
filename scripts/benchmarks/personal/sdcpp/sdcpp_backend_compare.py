@@ -9,9 +9,10 @@ import statistics
 import subprocess
 import threading
 import time
-import urllib.request
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
@@ -54,14 +55,10 @@ def request_body(prompt: str = PROMPT) -> dict[str, Any]:
 def image_request(body: dict[str, Any], path, timeout: float) -> dict[str, Any]:
     from PIL import Image
 
-    request = urllib.request.Request(
-        f"http://127.0.0.1:{PORT}/v1/images/generations",
-        json.dumps(body).encode(),
-        {"Content-Type": "application/json"},
-    )
     start = time.perf_counter()
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        payload = json.load(response)
+    response = requests.post(f"http://127.0.0.1:{PORT}/v1/images/generations", json=body, timeout=timeout)
+    response.raise_for_status()
+    payload = response.json()
     seconds = time.perf_counter() - start
     image = base64.b64decode(payload["data"][0]["b64_json"], validate=True)
     with Image.open(io.BytesIO(image)) as picture:

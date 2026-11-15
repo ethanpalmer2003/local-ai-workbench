@@ -6,6 +6,8 @@ import unittest
 from email.message import Message
 from unittest.mock import patch
 
+import requests
+
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector as transcription
 from scripts.launchers.asr.llamacpp import gemma_audio, llama_audio
@@ -60,14 +62,14 @@ class QwenAsrProfiles(unittest.TestCase):
     def test_browser_json_converted_and_upstream_metadata_preserved(self):
         payload = {"audio_data": base64.b64encode(b"WAVE").decode(), "langcode": "fr", "prompt": "cafÃ©"}
         opened = json_response({"text": "language French<asr_text>Un cafÃ©.", "language": "fr"})
-        with patch.object(qwen_asr.requests.urllib.request, "urlopen", return_value=opened) as fetch:
+        with patch.object(requests, "post", return_value=opened) as posted:
             body, content_type = qwen_asr.transcribe(json.dumps(payload).encode(), "application/json")
         self.assertEqual(json.loads(body), {"text": "Un cafÃ©.", "language": "fr"})
         self.assertEqual(content_type, "application/json")
-        request = fetch.call_args.args[0]
-        self.assertEqual(request.full_url, qwen_asr.url() + "/v1/audio/transcriptions")
-        self.assertIn(b'name="language"\r\n\r\nfr', request.data)
-        self.assertIn("cafÃ©".encode(), request.data)
+        self.assertEqual(posted.call_args.args[0], qwen_asr.url() + "/v1/audio/transcriptions")
+        sent = posted.call_args.kwargs["data"]
+        self.assertIn(b'name="language"\r\n\r\nfr', sent)
+        self.assertIn("cafÃ©".encode(), sent)
 
     def test_whisper_only_option_is_not_silently_ignored(self):
         with self.assertRaisesRegex(ValueError, "Whisper-specific"):
