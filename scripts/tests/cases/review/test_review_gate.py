@@ -51,12 +51,18 @@ class ConsentTests(unittest.TestCase):
         self.assertTrue({"docs", "typography", "spelling"} <= sections)
         self.assertNotIn("lint", sections)
 
-    def test_a_rename_reports_both_paths_from_git_status(self):
+    def test_changed_paths_cover_the_working_tree_and_unpushed_commits(self):
         from scripts.review.__main__ import changed_paths
 
-        completed = Mock(stdout="R  bat/tests/a.bat -> bat/checks/a.bat\n M notes/TODO.md\n")
-        with patch("scripts.review.__main__.subprocess.run", return_value=completed):
-            self.assertEqual(changed_paths(), ["bat/tests/a.bat", "bat/checks/a.bat", "notes/TODO.md"])
+        def git(*args: str) -> str:
+            if args[0] == "status":
+                return "R  bat/tests/a.bat -> bat/checks/a.bat\n M notes/TODO.md\n"
+            return "scripts/tools/older.py\n"
+
+        with patch("scripts.review.__main__._git", side_effect=git):
+            self.assertEqual(
+                changed_paths(), ["bat/checks/a.bat", "bat/tests/a.bat", "notes/TODO.md", "scripts/tools/older.py"]
+            )
 
 
 if __name__ == "__main__":
