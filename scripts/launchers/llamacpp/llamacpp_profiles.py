@@ -59,6 +59,10 @@ SWIFT15_MTP_NGRAM_LEGACY = with_extra(
 SWIFT15_MTP_NOTEMPLATE = SWIFT15_BASE
 SWIFT15_MTP_MEDIUM = with_extra(SWIFT15_BASE, **{"reasoning-effort": "medium"})
 SWIFT15_NOSPEC = with_extra(SWIFT15_BASE, **{"spec-type": "none"})
+# - diagnostic pair for the flash-attention question: attention off needs f16 KV, so it states both
+SWIFT15_NOFA = with_extra(
+    SWIFT15_BASE, **{"spec-type": "none", "fa": "off", "cache-type-k": "f16", "cache-type-v": "f16"}
+)
 SWIFT15_HRX = with_extra(
     SWIFT15_BASE,
     **{"ctx-size": "8192", "cache-type-k": "f16", "cache-type-v": "f16", "spec-type": "none", "reasoning": "off"},
@@ -80,4 +84,5 @@ LLAMACPP_BENCHMARK_PROFILES: dict[str, LLMProfile] = {
     "swift15-mtp-notemplate": SWIFT15_MTP_NOTEMPLATE,
     "swift15-mtp-medium": SWIFT15_MTP_MEDIUM,
     "swift15-nospec": SWIFT15_NOSPEC,
+    "swift15-nofa": SWIFT15_NOFA,
 }
