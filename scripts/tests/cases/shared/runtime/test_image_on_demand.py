@@ -2,11 +2,11 @@
 
 import threading
 import unittest
-import urllib.error
 from contextlib import nullcontext
-from email.message import Message
 from http.server import BaseHTTPRequestHandler
 from unittest.mock import Mock, patch
+
+import requests
 
 from scripts.launchers import proxy_util
 from scripts.launchers.audiocpp import tts_proxy
@@ -15,6 +15,14 @@ from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
 from scripts.shared.http_server import request, server
 from scripts.tests.shared.process_fixtures import exited_process, running_process
+
+
+def busy_response(status: int) -> requests.Response:
+    """A real response object, so the status and its body behave as they do against a server."""
+    response = requests.Response()
+    response.status_code = status
+    response._content = b'{"status": "busy"}'
+    return response
 
 
 class ResidencyTests(unittest.TestCase):
@@ -119,11 +127,11 @@ class ResidencyTests(unittest.TestCase):
 class NativePassthroughTests(unittest.TestCase):
     def test_native_busy_response_does_not_restart_or_cancel_active_jobs(self):
         sessions = demand.NativeModelSessions()
-        busy = urllib.error.HTTPError("http://localhost", 409, "busy", Message(), None)
+        busy = requests.HTTPError("http://localhost", response=busy_response(409))
         with (
             patch.object(sessions, "call", side_effect=busy),
             patch.object(sessions, "_restart_image_server") as restart,
-            self.assertRaises(urllib.error.HTTPError),
+            self.assertRaises(requests.HTTPError),
         ):
             sessions._unload_image()
         restart.assert_not_called()

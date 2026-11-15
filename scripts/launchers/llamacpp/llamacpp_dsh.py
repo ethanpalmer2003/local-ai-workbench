@@ -24,9 +24,9 @@ import os
 import re
 import shutil
 import sys
-import urllib.error
-import urllib.request
 from pathlib import Path
+
+import requests
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.launch_util import backend_running, wait_for_backend
@@ -85,10 +85,12 @@ def discover_models(port: int, timeout: float = 5.0) -> list[str]:
     url = f"{cfg.llama_base_url(port)}/models"
 
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        response = requests.get(url, timeout=timeout)
+        response.raise_for_status()
+    except requests.RequestException as exc:
         raise RuntimeError(f"could not reach {url}: {exc}") from exc
+    try:
+        payload = json.loads(response.text)
     except json.JSONDecodeError as exc:
         raise RuntimeError(f"{url} did not answer with JSON: {exc}") from exc
 

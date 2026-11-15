@@ -5,12 +5,12 @@ from __future__ import annotations
 import json
 import subprocess
 import time
-import urllib.error
-import urllib.request
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
@@ -58,7 +58,7 @@ def run_config(models_dir: Path, port: int | None = None) -> Iterator[None]:
 def _answers(port: int) -> bool:
     try:
         return http_ready(health_url(port), timeout=2, strict=True)
-    except (urllib.error.HTTPError, OSError):
+    except (requests.HTTPError, requests.RequestException):
         return False
 
 
@@ -108,8 +108,9 @@ def stop(process: subprocess.Popen[Any], port: int | None = None) -> None:
 def health(port: int | None = None) -> dict[str, Any]:
     """The server's own view of what is loaded and whether each wrapped backend is ready."""
     url = f"http://127.0.0.1:{port or cfg.LEMONADE_SERVICE.port}{HEALTH_ROUTE}"
-    with urllib.request.urlopen(url, timeout=15) as response:
-        value = json.load(response)
+    response = requests.get(url, timeout=15)
+    response.raise_for_status()
+    value = response.json()
     return value if isinstance(value, dict) else {}
 
 
@@ -120,12 +121,7 @@ def loaded(port: int | None = None) -> list[dict[str, Any]]:
 def load(model: str, port: int | None = None, timeout_s: float | None = None) -> dict[str, Any]:
     """Load one model by name and wait for its backend, instead of stalling inside a first request."""
     served = port or cfg.LEMONADE_SERVICE.port
-    body = json.dumps({"model_name": model}).encode("utf-8")
-    request = urllib.request.Request(
-        f"http://127.0.0.1:{served}{LOAD_ROUTE}", data=body, headers={"Content-Type": "application/json"}, method="POST"
-    )
-    with urllib.request.urlopen(request, timeout=60):
-        pass
+    requests.post(f"http://127.0.0.1:{served}{LOAD_ROUTE}", json={"model_name": model}, timeout=60).raise_for_status()
     deadline = time.monotonic() + (timeout_s if timeout_s is not None else LOAD_TIMEOUT_S)
     while time.monotonic() < deadline:
         for row in loaded(served):

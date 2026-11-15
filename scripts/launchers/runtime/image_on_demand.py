@@ -1,11 +1,8 @@
 """Existing proxies share one residency coordinator; native servers stay running."""
 
-import json
 import subprocess
 import time
 import traceback
-import urllib.error
-import urllib.request
 from collections import deque
 from collections.abc import Callable
 from contextlib import contextmanager, nullcontext
@@ -14,6 +11,8 @@ from pathlib import Path
 from threading import Condition, Event, Lock, Thread
 from typing import Any
 from urllib.parse import urlsplit
+
+import requests
 
 from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audio_cfg
@@ -170,21 +169,15 @@ class NativeModelSessions:
     def _call_native(self, base: str, path: str, payload: dict[str, Any] | None) -> dict[str, Any]:
         deadline = time.monotonic() + demand_cfg.SETTINGS.transition_timeout_seconds
         while True:
-            request = urllib.request.Request(
-                base + path,
-                None if payload is None else json.dumps(payload).encode(),
-                {"Content-Type": "application/json"},
+            timeout = min(demand_cfg.SETTINGS.native_request_timeout_seconds, max(1, deadline - time.monotonic()))
+            response = requests.request(
+                "POST" if payload is not None else "GET", base + path, json=payload, timeout=timeout
             )
-            try:
-                timeout = min(demand_cfg.SETTINGS.native_request_timeout_seconds, max(1, deadline - time.monotonic()))
-                with urllib.request.urlopen(request, timeout=timeout) as response:
-                    return json.load(response)
-            except urllib.error.HTTPError as error:
-                if error.code != 409 or time.monotonic() >= deadline:
-                    error.close()
-                    raise
-                error.close()
+            if response.status_code == 409 and time.monotonic() < deadline:
                 time.sleep(demand_cfg.SETTINGS.busy_retry_seconds)
+                continue
+            response.raise_for_status()
+            return response.json()
 
     def start(self) -> None:
         root = ensure_native_catalog()
@@ -244,7 +237,7 @@ class NativeModelSessions:
     def _unload_image(self) -> None:
         try:
             self.call(self.image_url, "/sdcpp/v1/models/unload", {})
-        except urllib.error.HTTPError:
+        except requests.HTTPError:
             raise
         except Exception as error:
             self._restart_image_server(error)

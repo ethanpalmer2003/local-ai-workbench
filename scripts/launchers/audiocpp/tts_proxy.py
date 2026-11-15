@@ -4,17 +4,16 @@ import contextlib
 import json
 import time
 import traceback
-import urllib.error
-import urllib.request
 import uuid
 import wave
 from collections.abc import Callable
 from dataclasses import dataclass
-from http.client import HTTPResponse
 from io import BytesIO
 from threading import Lock
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
+
+import requests
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
@@ -215,21 +214,21 @@ class _TtsProxyHandler(ProxyHandlerMixin):
           it started responding (generation/model load) versus how long the
           audio transfer took
         """
-        req = urllib.request.Request(
+        upstream_start = time.perf_counter()
+        response = requests.request(
+            method,
             self.upstream_url + self.path,
             data=body if body else None,
-            method=method,
             headers=build_forward_headers(self.headers, body),
+            timeout=UPSTREAM_TIMEOUT,
         )
-        upstream_start = time.perf_counter()
-        with urllib.request.urlopen(req, timeout=UPSTREAM_TIMEOUT) as resp:
-            ttfb = time.perf_counter() - upstream_start
-            resp_body = resp.read()
-        return resp, resp_body, time.perf_counter() - upstream_start, ttfb
+        ttfb = time.perf_counter() - upstream_start
+        response.raise_for_status()
+        return response, response.content, time.perf_counter() - upstream_start, ttfb
 
-    def _send_audio(self, resp: HTTPResponse, resp_body: bytes):
-        self.send_response(resp.status)
-        relay_response_headers(self, resp.getheaders(), len(resp_body))
+    def _send_audio(self, response: requests.Response, resp_body: bytes):
+        self.send_response(response.status_code)
+        relay_response_headers(self, list(response.headers.items()), len(resp_body))
         self.end_headers()
         self.wfile.write(resp_body)
         self.wfile.flush()
@@ -272,7 +271,7 @@ class _TtsProxyHandler(ProxyHandlerMixin):
             send_json_error(self, 400, str(error), "invalid_comparison_selection")
         except (json.JSONDecodeError, UnicodeDecodeError):
             send_json_error(self, 400, "invalid JSON", "invalid_request")
-        except urllib.error.URLError as e:
+        except requests.RequestException as e:
             _log_tts_error(self.tag, rid, raw_input, e)
             forward_upstream_error(self, self.tag, e)
         except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
@@ -305,7 +304,7 @@ class _TtsProxyHandler(ProxyHandlerMixin):
             try:
                 response, body, _, _ = self._call_upstream(method, read_request_body(self))
                 self._send_audio(response, body)
-            except urllib.error.URLError as error:
+            except requests.RequestException as error:
                 forward_upstream_error(self, self.tag, error)
         except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
             print(f"[{self.tag}] client disconnected mid-response")

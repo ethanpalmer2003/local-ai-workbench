@@ -3,8 +3,6 @@
 import argparse
 import difflib
 import json
-import urllib.error
-import urllib.request
 from pathlib import Path
 from typing import Any, ClassVar
 from urllib.parse import urlsplit
@@ -242,8 +240,9 @@ def main() -> None:
         if args.source_file:
             original = args.source_file.read_text(encoding="utf-8")
         else:
-            with urllib.request.urlopen(upstream, timeout=10) as response:
-                original = response.read().decode("utf-8")
+            export = requests.get(upstream, timeout=10)
+            export.raise_for_status()
+            original = export.text
         for target, content in (
             (args.export_diff, export_diff(original, args.variant) if args.export_diff else None),
             (args.export_html, preview_html(original, args.variant) if args.export_html else None),
