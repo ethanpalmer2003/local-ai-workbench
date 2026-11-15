@@ -2,7 +2,6 @@
 #
 # Each voice lists one or more sources. Keys the downloader reads:
 #   category, url, exclude, selected, count, selection, fallback, superseded_by, transcripts_xlsx
-default: <default-voice-id>
 voices:
   <voice-id>:
     category: <category>

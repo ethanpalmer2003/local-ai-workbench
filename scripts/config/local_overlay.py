@@ -76,15 +76,17 @@ def superseded_voices() -> dict[str, str]:
 
 
 def default_voice() -> str:
-    """The manifest's chosen default, else the first discovered id, else empty."""
-    manifest = voice_sources_path()
-    if manifest.is_file():
-        payload = _manifest(manifest)
-        chosen = str(payload.get("default") or "")
-        if chosen and (not payload.get("voices") or chosen in payload["voices"]):
-            return chosen
+    """The overlay's `chat.tts.voice`, else the first discovered id, else empty.
+
+    One owner: `defaults.yaml` decides which voice the chat and the voice tools start from, so a
+    manifest that lists sources cannot disagree with it.
+    """
     ids = voice_ids()
-    return ids[0] if ids else ""
+    fallback = ids[0] if ids else ""
+    chosen = str(setting("chat.tts.voice", fallback))
+    if chosen and (not ids or chosen in ids):
+        return chosen
+    return fallback
 
 
 def voice_dir(voice_id: str) -> Path:
