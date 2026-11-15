@@ -2,17 +2,17 @@
 
 - Owners: [profiles](../../launchers/llamacpp/llamacpp_profiles.py), [native INI](swift-q3.ini), [service/build selection](../../launchers/launcher_config.py).
 - Profile values override INI; the launcher supplies the model. Sampling or reasoning may override startup defaults.
-- Coding default: `swift15` (96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium) on the **Vulkan** build. The allocation decides the build: at 96K Vulkan prefills a 3044-token prompt in 11.5 s against ROCm's 46.7 s (526 against 130 tok/s), while ROCm decodes faster (216 against 199 tok/s on fresh code, 83 against 71 on a rewrite). At 64K the same runner reads 526 against 551 tok/s, so ROCm collapses only between 64K and 96K. It wins at 8K (585 against 528 tok/s prefill, 215 against 192 decode) and needs the iGPU hidden to load at all ([upstream](../../../notes/UPSTREAM-INDEX.md), [note](../../../notes/reviews/ROCM-DRIVER-TIMEOUT-2026-11-13.md)); select it with `--build rocm-lemonade` when the context fits; the Lemonade *server* is a different framework.
+- Coding default: `swift15` (96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium) on the **Vulkan** build. The build follows the allocation: at 96K Vulkan prefills a 3044-token prompt in 11.5 s against ROCm's 46.7 s (526 against 130 tok/s), while ROCm decodes faster (216 against 199 tok/s on fresh code, 83 against 71 on a rewrite). At 64K the same runner reads 526 against 551 tok/s, so ROCm collapses only between 64K and 96K. It wins at 8K and needs the iGPU hidden to load at all ([upstream](../../../notes/UPSTREAM-INDEX.md), [note](../../../notes/reviews/ROCM-DRIVER-TIMEOUT-2026-11-13.md)); select it with `--build rocm-lemonade` when the context fits; the Lemonade *server* is a different framework.
 
 | Choice | Evidence / limitation |
 | --- | --- |
 | MTP depth 2 | Rotated 2/3/4 trials averaged 37.16/35.87/35.42 tok/s; depth 2 shortest aggregate request time. Short English/code scope, not a universal optimum |
 | Ngram 24/48/64 | Two paired source-copy tasks: decode +18.9%, request time +4.3%; four fresh-generation rounds showed no meaningful penalty, not formal equivalence |
-| Q8 K/V | Lower memory than f16; answer-quality loss and Q4 KV not evaluated |
+| Q8 K/V | Faster decode than f16 on ROCm: 59.6 tok/s against 35.1 at 32K, with 510 against 584 prefill. Answer quality and Q4 KV not evaluated |
 | Prefill measured | The profile runner now sends one cold request per prompt: `prompt_per_second` is reported next to decode, with `cache_n` showing reuse. The 32K filled-context run measured 505 tok/s cold prefill and a 63.3 s TTFT |
 | GPU layers 99 | Working full-offload request/cap, not an actual layer count or sweep result |
-| Flash Attention | Operational compatibility established; isolated speed/quality effect not measured |
-| One slot | Interactive workload/context choice; no universal ngram restriction implied |
+| Flash Attention | Compatibility established; speed and quality effect unmeasured |
+| One slot | Interactive choice; no ngram restriction implied |
 
 - Per-build faults: [builds](BUILDS.md).
 - Legacy ngram 32/4/8 remains a named profile. Do not combine unrelated screens into a stronger claim.
