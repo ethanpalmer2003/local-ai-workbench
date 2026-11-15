@@ -10,7 +10,6 @@
 ## Standardization
 
 - [ ] Decide the retired TTS pipeline in `scripts/launchers/audiocpp/tts_legacy_buffered.py`: nothing imports it, its own docstring calls it retired, and the active path is `tts_text_processing.py`. Delete it, or name the usefulness it still has; either way drop the `RETIRED` entry in `scripts/review/unused.py` with it. ~20 min
-- [ ] Re-run both similarity modes: documents last ran 2026-11-10 22:15 and code 21:56. The 2026-11-15 retry embeds for a few dozen units and then the llama.cpp b12421 Vulkan server resets the connection, on CPU as well as GPU, so it is blocked until that engine changes rather than a harness fix. `review_document_similarity.bat` and `review_code_similarity.bat`. ~15 min
 - [ ] Repair the Strata install: the native updater kept engine 0.1.59 because 0.1.60 failed its test start, while control reached 0.1.60, so a launch now exits before serving because the image encoder child cannot start (`WinError 5`). `update_frameworks` reports this and installs nothing; repair it in the Strata app (control reports `failed-before` for the engine) and confirm a plain launch serves without the vision-free config the benchmark used. ~20 min
 
 ## Needs a model run or device
