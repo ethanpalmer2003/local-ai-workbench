@@ -42,7 +42,6 @@ dev = [
     { name = "coverage" },
     { name = "datasets" },
     { name = "deptry" },
-    { name = "eradicate" },
     { name = "pip-audit" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -77,7 +76,6 @@ dev = [
     { name = "coverage" },
     { name = "datasets" },
     { name = "deptry" },
-    { name = "eradicate", specifier = ">=3.0.1" },
     { name = "pip-audit" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -706,15 +704,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/68/bc/d36966de7304047a1001a7559fbf266c464bb5d8cc85464536ef8c9bcc32/distlib-0.4.4.tar.gz", hash = "sha256:ca4175b4ac7f71223cc30ed7248c45d2b38c2439d8ee6e498ab67ed63cf3508d", size = 621304, upload-time = "2026-10-16T13:56:34.203Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/2b/238f02a4927fa2e27aa995371d240a468b52e42eae44a678434aff736b38/distlib-0.4.4-py2.py3-none-any.whl", hash = "sha256:cf09d55b1e85a89576b036aeb71550bfd68320f3f21761ca329eadadad918638", size = 472099, upload-time = "2026-10-16T13:56:32.053Z" },
-]
-
-[[package]]
-name = "eradicate"
-version = "3.0.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/95/f8/40f8032395534e7441f4d05da63300e869823a6040d33a87a1863394e496/eradicate-3.0.1.tar.gz", hash = "sha256:c9cb7ef8e7e83c3fbd9806010e21089892bb649531c68875a555c7b5c978faa6", size = 8876, upload-time = "2025-10-27T07:17:30.221Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/59/b5/9690d52f90f2954ba2c8a7818dcee3e78021d5eb3a3dc93d49b2837cf0b9/eradicate-3.0.1-py3-none-any.whl", hash = "sha256:1037f0aa969b716b6dfc30fa9289f8e2ea6a999c95b487073193ab4844db7fa5", size = 6303, upload-time = "2025-10-27T07:14:29.108Z" },
 ]
 
 [[package]]

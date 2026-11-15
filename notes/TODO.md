@@ -10,7 +10,6 @@
 ## Standardization
 
 - [ ] Decide the retired TTS pipeline in `scripts/launchers/audiocpp/tts_legacy_buffered.py`: nothing imports it, its own docstring calls it retired, and the active path is `tts_text_processing.py`. Delete it, or name the usefulness it still has; either way drop the `RETIRED` entry in `scripts/review/unused.py` with it. ~20 min
-- [ ] Try vale with the styles that fit this voice: `Voices` (hedging and puffery core, Direct and Simple voices), `AiTells` (the tells of generated prose) and `Readability`. Proselint and write-good alone measured nothing worth gating. Vale is one binary with no fix mode, so the work is a `.vale.ini` that selects rules and disables quote and ellipsis checks. ~1-2 h
 - [ ] Re-run both similarity modes: documents last ran 2026-11-10 22:15 and code 21:56, since when the review pages, this TODO and several guides changed. The pair count in [resolved questions](OPEN-QUESTIONS-RESOLVED.md) carries that date for that reason. Needs the embedding model, so it is a live run. `check_document_similarity.bat` and `check_code_similarity.bat`. ~15 min
 
 ## Needs a model run or device
