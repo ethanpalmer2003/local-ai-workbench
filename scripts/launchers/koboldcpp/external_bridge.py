@@ -7,9 +7,10 @@ proxy answers those two paths itself instead of forwarding a payload the no-mode
 from __future__ import annotations
 
 import json
-import urllib.request
 from collections.abc import Iterator
 from typing import Any
+
+import requests
 
 from scripts.launchers.proxy_util import send_bytes
 
@@ -70,22 +71,21 @@ def completion_text(body: bytes) -> str:
     return str(choices[0].get("text") or "") if choices else ""
 
 
-def _call(base: str, request: dict[str, Any]) -> Any:
+def _call(base: str, request: dict[str, Any]) -> requests.Response:
     url = base.rstrip("/") + "/completions"
-    payload = json.dumps(request).encode("utf-8")
-    return urllib.request.urlopen(
-        urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}), timeout=300
-    )
+    return requests.post(url, json=request, timeout=300, stream=True)
 
 
 def generated_text(base: str, payload: dict[str, Any]) -> str:
     with _call(base, openai_request(payload, stream=False)) as response:
-        return completion_text(response.read())
+        response.raise_for_status()
+        return completion_text(response.content)
 
 
 def tokens(base: str, payload: dict[str, Any]) -> Iterator[str]:
     with _call(base, openai_request(payload, stream=True)) as response:
-        for line in response:
+        response.raise_for_status()
+        for line in response.iter_lines():
             if token := streamed_token(line):
                 yield token
 

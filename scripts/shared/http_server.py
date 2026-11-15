@@ -3,30 +3,28 @@
 from __future__ import annotations
 
 import contextlib
-import json
 import threading
-import urllib.error
-import urllib.request
 from collections.abc import Generator
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import Any, cast
+
+import requests
 
 
 def request(
     url: str, payload: dict[str, object] | bytes | None = None, method: str | None = None, timeout: float = 5
 ) -> tuple[int, bytes, str]:
-    body = json.dumps(payload).encode("utf-8") if isinstance(payload, dict) else payload
-    req = urllib.request.Request(
+    structured = payload if isinstance(payload, dict) else None
+    raw = payload if not isinstance(payload, dict) else None
+    response = requests.request(
+        method or ("POST" if payload is not None else "GET"),
         url,
-        data=body,
-        method=method,
+        json=cast(Any, structured),
+        data=raw,
         headers={"Content-Type": "application/json", "Authorization": "Bearer smoke-test"},
+        timeout=timeout,
     )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as response:
-            return response.status, response.read(), response.headers.get("Content-Type", "")
-    except urllib.error.HTTPError as error:
-        with error:
-            return error.code, error.read(), error.headers.get("Content-Type", "")
+    return response.status_code, response.content, response.headers.get("Content-Type", "")
 
 
 @contextlib.contextmanager

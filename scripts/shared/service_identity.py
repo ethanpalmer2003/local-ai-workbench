@@ -2,8 +2,9 @@
 
 import hashlib
 import json
-import urllib.request
 from typing import Any
+
+import requests
 
 from scripts.launchers import launch_util
 
@@ -34,7 +35,8 @@ def audio_identity() -> str:
         if not pids:
             return ""
         identities.extend((pid, psutil.Process(pid).create_time()) for pid in pids)
-    with urllib.request.urlopen(f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}/proxy/config", timeout=5) as response:
-        config = json.load(response)
+    response = requests.get(f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}/proxy/config", timeout=5)
+    response.raise_for_status()
+    config = response.json()
     digest = audio_model_token(config)
     return f"{sorted(identities)}:{digest}"
