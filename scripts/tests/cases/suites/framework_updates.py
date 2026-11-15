@@ -1,10 +1,8 @@
 import contextlib
 import io
 import json
-import os
 import sys
 import tarfile
-import time
 import unittest
 import zipfile
 from pathlib import Path
@@ -231,7 +229,7 @@ class FrameworkUpdates(unittest.TestCase):
                         for part in ("engine", "control", "app")
                     }
                 )
-                strata_updates.process(root, True)
+                strata_updates.process(root)
             command = run.call_args.args[0]
             self.assertIn("--check", command)
             self.assertIn("--app", command)
@@ -240,60 +238,6 @@ class FrameworkUpdates(unittest.TestCase):
             environment = run.call_args.kwargs["env"]
             for key in ("PYTHONHOME", "PYTHONPATH", "STRATA_NO_ACQUIRE"):
                 self.assertNotIn(key, environment)
-
-    def test_strata_app_installers_are_listed_oldest_first(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = Path(folder)
-            app = root / "strata/desktop/components/.updates/app"
-            app.mkdir(parents=True)
-            for name, hours in (("Strata-0.2.9-setup.exe", 5), ("Strata-0.2.11-setup.exe", 1)):
-                installer = app / name
-                installer.write_bytes(b"x")
-                stamp = time.time() - hours * 3600
-                os.utime(installer, (stamp, stamp))
-            with patch.object(strata_updates.project_cfg, "STATE_DIR", root):
-                self.assertEqual(
-                    [path.name for path in strata_updates.app_installers()],
-                    ["Strata-0.2.9-setup.exe", "Strata-0.2.11-setup.exe"],
-                )
-
-    def _strata_app_fixture(self, root: Path, versions: tuple[str, ...]) -> Path:
-        app = root / "strata/desktop/components/.updates/app"
-        app.mkdir(parents=True)
-        for index, version in enumerate(versions):
-            installer = app / f"Strata-{version}-windows-x64-setup.exe"
-            installer.write_bytes(b"x")
-            stamp = time.time() + index
-            os.utime(installer, (stamp, stamp))
-        return app
-
-    def test_strata_app_installer_runs_silently_and_prunes_superseded_files(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = Path(folder)
-            app = self._strata_app_fixture(root, ("0.2.9", "0.2.11"))
-            with (
-                patch.object(strata_updates.project_cfg, "STATE_DIR", root),
-                patch.object(strata_updates, "installed_app_version", side_effect=["0.2.6", "0.2.11"]),
-                patch.object(strata_updates.subprocess, "run") as run,
-            ):
-                self.assertEqual(strata_updates.install_app(Path("C:/AI/frameworks/Strata")), "0.2.11")
-            self.assertEqual(run.call_count, 1)
-            command = run.call_args.args[0]
-            self.assertTrue(command[0].endswith("Strata-0.2.11-windows-x64-setup.exe"))
-            self.assertEqual(command[1:], ["/S", "/D=C:\\AI\\frameworks\\Strata"])
-            self.assertEqual([path.name for path in app.iterdir()], ["Strata-0.2.11-windows-x64-setup.exe"])
-
-    def test_strata_app_installer_that_does_not_take_reports_a_failure(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = Path(folder)
-            self._strata_app_fixture(root, ("0.2.11",))
-            with (
-                patch.object(strata_updates.project_cfg, "STATE_DIR", root),
-                patch.object(strata_updates, "installed_app_version", side_effect=["0.2.6", "0.2.6"]),
-                patch.object(strata_updates.subprocess, "run"),
-                self.assertRaises(updater.UpdateError),
-            ):
-                strata_updates.install_app(Path("C:/AI/frameworks/Strata"))
 
     def _comfyui_tool(self):
         return next(tool for tool in cfg.TOOLS if tool.name == "comfyui/rocm")
@@ -522,18 +466,28 @@ class FrameworkUpdates(unittest.TestCase):
         self.assertIn("0.1.59", summary.manual_check[0])
         self.assertEqual(summary.apply_keys, set())
 
-    def test_a_newer_strata_part_is_applied_only_with_the_opt_in(self):
+    def test_a_newer_strata_part_is_never_work_for_this_run(self):
         tool = next(tool for tool in cfg.TOOLS if tool.name == "strata")
-        summary = updater.UpdateSummary(optional_apply={"strata"})
+        summary = updater.UpdateSummary()
         report = {
             "engine": {"installed": "0.1.50", "offered": "0.1.59", "status": "available"},
             "control": {"installed": "0.1.51", "offered": None, "status": "not-in-feed"},
             "app": {"installed": "0.2.13", "offered": "0.2.13", "status": "current"},
         }
-        with patch.object(strata_updates, "process", return_value=report):
-            self.assertTrue(updater.process_tool(tool, Path("unused"), True, summary))
-        self.assertEqual(summary.manual_check, [])
-        self.assertIn("strata", summary.apply_keys)
+        with patch.object(strata_updates, "process", return_value=report), contextlib.redirect_stdout(io.StringIO()):
+            updater.process_tool(tool, Path("unused"), True, summary)
+        # - the app installs its own bundle, so a notice must never enter the apply set
+        self.assertEqual(len(summary.manual_check), 1)
+        self.assertIn("0.1.59", summary.manual_check[0])
+        self.assertEqual(summary.apply_keys, set())
+
+    def test_strata_update_command_is_a_check_with_a_materialized_config(self):
+        command = strata_updates.update_command(project_cfg.FRAMEWORKS_DIR / "strata")
+        self.assertIn("--check", command)
+        self.assertEqual(command[-2:], ["--output", "json"])
+        config = Path(command[command.index("--model-config") + 1])
+        self.assertTrue(config.is_file())
+        self.assertNotIn("{AI_ROOT}", config.read_text(encoding="utf-8"))
 
     def test_pi_package_installation_is_deferred_until_after_all_checks(self):
         from scripts.download.frameworks.coding_agents.pi import packages as pi_packages
@@ -572,12 +526,6 @@ class FrameworkUpdates(unittest.TestCase):
         snapshot.assert_called_once_with(tool, Path("source"), "fresh-head", "upstream", " M local.cpp\n")
         self.assertEqual(run.call_count, 2)
         self.assertFalse(any("pull" in call.args[0] for call in run.call_args_list))
-
-    def test_strata_update_command_hands_over_a_materialized_config(self):
-        command = strata_updates.update_command(project_cfg.FRAMEWORKS_DIR / "strata", True)
-        config = Path(command[command.index("--model-config") + 1])
-        self.assertTrue(config.is_file())
-        self.assertNotIn("{AI_ROOT}", config.read_text(encoding="utf-8"))
 
     def test_legacy_audiocpp_asset_is_recognized(self):
         tool = next(tool for tool in cfg.TOOLS if tool.name == "audiocpp/additions/rocm/7.1-old")
