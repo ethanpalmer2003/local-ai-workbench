@@ -9,7 +9,7 @@ import time
 import wave
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import requests
 
@@ -73,7 +73,7 @@ def measure(text: str, options: dict[str, object], wav_path: Path, timeout: floa
     pcm = bytearray()
     complete = False
     stream_finished: float | None = None
-    with requests.post(url, json=payload, timeout=timeout, stream=True) as response:
+    with requests.post(url, json=cast(Any, payload), timeout=timeout, stream=True) as response:
         response.raise_for_status()
         for line in response.iter_lines():
             if not line.startswith(b"data:"):
