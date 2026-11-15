@@ -49,7 +49,7 @@ ENGINE_COMPONENTS = {
 }
 
 
-def post(base, path, body, binary=False):
+def post(base, path, body, binary=False) -> Any:
     data = body if binary else json.dumps(body).encode()
     response = requests.post(
         base + path,
