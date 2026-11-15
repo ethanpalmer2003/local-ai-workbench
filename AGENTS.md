@@ -5,8 +5,8 @@
 
 ## Concise output
 - Number user-facing lists (1, 2, 3); bullets are for notes inside a document, never for a reply.
-- Short lines; state each essential detail once. Explain only non-obvious behavior, decisions or required action. Lead with the answer, in the fewest words that carry it; add a table only when comparing, never restate what the reader asked for.
-- Close each reply with compact `#### Summary` and, for a blocking choice or a proposal, `#### Questions`: label proposals, list each option, and mark the one you recommend. Keep undone work out of the body and summary, which record what happened. Never ask whether there is anything else.
+- Short lines; state each essential detail once. Explain only non-obvious behavior or required action. Lead with the answer, in the fewest words that carry it; add a table only when comparing, never restate what the reader asked for.
+- Close each reply with compact `#### Summary` and, for a blocking choice or a proposal, `#### Questions`: label proposals, list each option, and mark the one you recommend. Keep undone work out of the body and summary, which record what happened. A failure names its cause.
 - Use text-safe `[OK]`, `[WARN]`, `[FAIL]`, `->`; bound searches and report truncation.
 
 ## Clarify before acting

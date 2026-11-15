@@ -48,11 +48,6 @@ def main() -> int:
     parser.add_argument("--only", help="select a catalog name or group prefix, for example llamacpp/additions/hrx")
     parser.add_argument("--category", choices=tuple(cfg.CATEGORIES), help="select llama.cpp, TTS/ASR, or other tools")
     parser.add_argument(
-        "--update-strata",
-        action="store_true",
-        help="run Strata's own updater when a part is newer; without it a newer part is only reported",
-    )
-    parser.add_argument(
         "--build-missing",
         action="store_true",
         help="build every missing source install without asking; otherwise it asks once",
@@ -74,8 +69,6 @@ def main() -> int:
         categories={updater.tool_label(tool): tool.category for tool in tools},
         kinds={updater.tool_label(tool): cfg.update_kind(tool) for tool in tools},
     )
-    if args.update_strata:
-        summary.optional_apply.add("strata")
     if args.skip_comfyui:
         summary.skipped = [updater.tool_label(tool) for tool in tools if tool.name == "comfyui/rocm"]
         tools = [tool for tool in tools if tool.name != "comfyui/rocm"]

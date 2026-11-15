@@ -284,7 +284,7 @@ STRATA_STATUS_GROUPS = {"current": "current", "not-in-feed": "current", "none-in
 def process_strata(tool: ToolSpec, dest_dir: Path, check_only: bool, summary: shared.UpdateSummary | None) -> None:
     from scripts.download.frameworks.strata import updates as strata_updates
 
-    report = strata_updates.process(dest_dir, check_only)
+    report = strata_updates.process(dest_dir)
     if summary is None or report is None:
         return
     parts = ("engine", "control", "app")
@@ -292,9 +292,10 @@ def process_strata(tool: ToolSpec, dest_dir: Path, check_only: bool, summary: sh
     groups = {STRATA_STATUS_GROUPS.get(report[part]["status"], "manual_check") for part in parts}
     detail = "; ".join(strata_updates.describe(part, report[part]) for part in parts)
     newer = "manual_check" in groups
-    # - a newer part is a notice by default; --update-strata turns it into work for this run
-    group = "available" if newer and tool.name in summary.optional_apply else "manual_check" if newer else "current"
-    summary.record(tool, group, detail)
+    if newer:
+        print("Status: UPDATE AVAILABLE IN THE STRATA APP; this updater never installs Strata parts")
+    # - Strata is checked here and updated in its own app, so a notice never becomes work for this run
+    summary.record(tool, "manual_check" if newer else "current", detail)
 
 
 def installed_desktop_version(tool: ToolSpec, dest_dir: Path) -> str | None:
