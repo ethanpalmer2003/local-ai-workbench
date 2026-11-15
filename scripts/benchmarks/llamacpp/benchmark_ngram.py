@@ -80,9 +80,31 @@ class Workload:
     expected: str | None = None
 
 
+def first_parsable_block(content: str) -> str | None:
+    """The longest prefix of the answer that parses as Python.
+
+    At depth the model keeps talking after the function, so grading the whole answer marks a correct
+    rewrite wrong; the code it emitted is the part worth grading.
+    """
+    lines = content.strip().splitlines()
+    for end in range(len(lines), 0, -1):
+        candidate = "\n".join(lines[:end]).rstrip()
+        if not candidate:
+            continue
+        try:
+            ast.parse(candidate)
+        except SyntaxError:
+            continue
+        return candidate
+    return None
+
+
 def rewrite_correct(content: str, expected: str) -> bool:
+    block = first_parsable_block(content)
+    if block is None:
+        return False
     try:
-        return ast.dump(ast.parse(content.strip())) == ast.dump(ast.parse(expected.strip()))
+        return ast.dump(ast.parse(block)) == ast.dump(ast.parse(expected.strip()))
     except SyntaxError:
         return False
 
