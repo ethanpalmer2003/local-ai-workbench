@@ -10,7 +10,6 @@
 - Use text-safe `[OK]`, `[WARN]`, `[FAIL]`, `->`; bound searches and report truncation.
 
 ## Clarify before acting
-- Locate before searching: read the guide or the owning module's docstring first, then grep the one file it names. A repo-wide scan is the last resort, never enters `data/`, `frameworks/`, `scripts/state/` or `scripts/tests/output/`, and states what it covers before it runs.
 - Ask at once when the request is ambiguous or assumes an invented detail; never guess intent to keep moving.
 - Do not ask permission to use a standard tool. Prefer a maintained dependency over a local substitute: add it, say what it was, and continue.
 - When a problem needs the user's judgment, put it in [TODO](notes/TODO.md) with the options and start the next independent item instead of waiting.
