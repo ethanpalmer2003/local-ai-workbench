@@ -2,8 +2,9 @@
 
 import json
 import os
-import urllib.error
 from dataclasses import replace
+
+import requests
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector
@@ -20,7 +21,7 @@ def transcribe(handler, body: bytes, engine: cfg.AsrStartupEngine) -> None:
         send_bytes(handler, 200, data, content_type)
     except (ValueError, TypeError) as error:
         send_json_error(handler, 400, str(error), "invalid_request_error")
-    except urllib.error.URLError as error:
+    except requests.RequestException as error:
         forward_upstream_error(handler, "asr", error)
     except TimeoutError:
         send_json_error(handler, 504, "ASR request timed out", "backend_timeout")

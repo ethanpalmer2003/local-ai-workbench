@@ -6,11 +6,11 @@ import os
 import secrets
 import subprocess
 import time
-import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from urllib.error import HTTPError, URLError
+
+import requests
 
 from scripts.config import paths
 from scripts.config import project_config as project_cfg
@@ -73,18 +73,17 @@ def saved_connections(config_path: Path | None = None) -> list[StrataConnection]
 
 def ready_model(connection: StrataConnection) -> dict[str, Any] | None:
     headers = {"Authorization": f"Bearer {connection.api_key}"} if connection.api_key else {}
-    request = urllib.request.Request(ready_url("strata", connection.port), headers=headers)
     try:
-        with urllib.request.urlopen(request, timeout=3) as response:
-            models = json.load(response).get("data", [])
-    except HTTPError as error:
-        if error.code == 503:
-            return None
-        raise RuntimeError(
-            f"Strata API on port {connection.port} returned HTTP {error.code}; check its API key."
-        ) from None
-    except (URLError, TimeoutError):
+        response = requests.get(ready_url("strata", connection.port), headers=headers, timeout=3)
+    except (requests.ConnectionError, requests.Timeout):
         return None
+    if response.status_code == 503:
+        return None
+    if not response.ok:
+        raise RuntimeError(
+            f"Strata API on port {connection.port} returned HTTP {response.status_code}; check its API key."
+        )
+    models = response.json().get("data", [])
     names = {connection.config["model_name"], *(connection.config.get("aliases") or [])}
     model = next((model for model in models if model.get("id") in names), None)
     if model is None:
