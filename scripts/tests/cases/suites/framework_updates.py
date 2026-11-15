@@ -8,6 +8,8 @@ import time
 import unittest
 import zipfile
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
 from unittest.mock import Mock, patch
 
 from scripts.config import project_config as project_cfg
@@ -1157,6 +1159,29 @@ class FrameworkUpdates(unittest.TestCase):
                 handy.install_app()
             run.assert_not_called()
             prepare.assert_called_once()
+
+    def test_a_missing_source_install_is_offered_before_any_build(self):
+        tool: Any = SimpleNamespace(name="fixture/build", build_command=["cmake", "--build", "."])
+        with (
+            patch.object(entry.build_frameworks, "build_targets", return_value=[tool]),
+            patch.object(entry.project_cfg, "framework_install_dir", return_value=Path("absent")),
+        ):
+            self.assertEqual(entry.missing_builds([tool]), [tool])
+
+    def test_declining_the_offer_builds_nothing(self):
+        tool: Any = SimpleNamespace(name="fixture/build", build_command=["cmake"])
+        with patch("builtins.input", return_value="n"), patch.object(entry.build_frameworks, "run_builds") as run:
+            self.assertEqual(entry.build_missing([tool], assume_yes=False), 0)
+        run.assert_not_called()
+
+    def test_assuming_yes_builds_without_a_prompt(self):
+        tool: Any = SimpleNamespace(name="fixture/build", build_command=["cmake"])
+        with (
+            patch("builtins.input", side_effect=AssertionError("should not ask")),
+            patch.object(entry.build_frameworks, "run_builds", return_value=0) as run,
+        ):
+            entry.build_missing([tool], assume_yes=True)
+        run.assert_called_once_with([tool], foreground=True)
 
 
 if __name__ == "__main__":

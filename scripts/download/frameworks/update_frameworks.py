@@ -5,10 +5,38 @@ import time
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
+from scripts.download.frameworks import build_frameworks, toolchains
 from scripts.download.frameworks import framework_catalog as cfg
-from scripts.download.frameworks import toolchains
 from scripts.download.frameworks import update_shared as updater
 from scripts.download.frameworks.coding_agents.pi import packages as pi_packages
+
+
+def missing_builds(tools: list[cfg.ToolSpec]) -> list[cfg.ToolSpec]:
+    """Source builds the update just touched that have no install directory yet."""
+    return [
+        tool
+        for tool in build_frameworks.build_targets([tool.name for tool in tools])
+        if not project_cfg.framework_install_dir(tool.name).is_dir()
+    ]
+
+
+def offer_missing_builds(tools: list[cfg.ToolSpec], *, check_only: bool, assume_yes: bool) -> bool:
+    """An absent install is not an update: offer it once, after the plan is shown. True when a build failed."""
+    missing = missing_builds(tools)
+    if check_only or not missing:
+        return False
+    return bool(build_missing(missing, assume_yes=assume_yes))
+
+
+def build_missing(missing: list[cfg.ToolSpec], *, assume_yes: bool) -> int:
+    """Ask once whether to build absent installs, then build them here; returns failures."""
+    names = ", ".join(tool.name for tool in missing)
+    if not assume_yes:
+        answer = input(f"\n[BUILD] {len(missing)} source install(s) missing: {names}. Build now? [y/N] ")
+        if answer.strip().lower() not in ("y", "yes"):
+            print(f"[SKIP] Build later with: C:/AI/bat/update_frameworks.bat --only {missing[0].name}")
+            return 0
+    return build_frameworks.run_builds(missing, foreground=True)
 
 
 def main() -> int:
@@ -23,6 +51,11 @@ def main() -> int:
         "--update-strata",
         action="store_true",
         help="run Strata's own updater when a part is newer; without it a newer part is only reported",
+    )
+    parser.add_argument(
+        "--build-missing",
+        action="store_true",
+        help="build every missing source install without asking; otherwise it asks once",
     )
     args = parser.parse_args()
     tools = [
@@ -60,7 +93,9 @@ def main() -> int:
     ):
         updater.check_tools(tools, Path(folder), summary, log)
         summary.print()
-        failed = bool(summary.failures)
+        failed = offer_missing_builds(tools, check_only=args.check_only, assume_yes=args.build_missing) or bool(
+            summary.failures
+        )
         toolchain_rows: list[toolchains.Row] = []
         if not args.only and not args.category:
             toolchain_rows = toolchains.check()

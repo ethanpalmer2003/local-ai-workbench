@@ -6,7 +6,7 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 
 | Batch | Purpose |
 | --- | --- |
-| [update_frameworks.bat](update_frameworks.bat) | Check/apply framework updates (`--check-only`, `--only KEY`, `--category`). |
+| [update_frameworks.bat](update_frameworks.bat) | Check/apply framework updates and offer to build any missing source install (`--check-only`, `--only KEY`, `--category`, `--build-missing`). |
 | [manage_kill_ai_services.bat](manage_kill_ai_services.bat) | Stop workspace-owned listeners; `--non-agents` keeps coding agents, llama.cpp and Strata running. |
 | [manage_rocm_installs.bat](manage_rocm_installs.bat) | List ROCm installs with size, version and project references; read-only. |
 | [manage_low_integrity.bat](manage_low_integrity.bat) | Check the workspace for the Low integrity label; `--fix` restores Medium. |

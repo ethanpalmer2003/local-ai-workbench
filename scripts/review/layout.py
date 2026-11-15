@@ -130,7 +130,6 @@ def batch_issues(path: Path, text: str) -> list[str]:
 ROOT_BATCHES = frozenset(
     {
         "update_frameworks.bat",
-        "build_frameworks.bat",
         "cleanup_state.bat",
         "manage_kill_ai_services.bat",
         "manage_rocm_installs.bat",
