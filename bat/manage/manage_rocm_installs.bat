@@ -4,5 +4,5 @@ rem Read-only. --json prints machine-readable rows, --no-sizes skips walking eac
 
 set "RUN_TITLE=ROCm Inventory"
 set "RUN_MODULE=scripts.tools.rocm_inventory"
-call "%~dp0_run.bat" %*
+call "%~dp0..\_run.bat" %*
 exit /b %ERRORLEVEL%
