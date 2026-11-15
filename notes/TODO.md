@@ -24,4 +24,4 @@
 
 ### Unattended
 
-- [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The Strata arm now passes `proverb` and `ledger` on all four clients (2026-11-15, engine 0.1.59 with control 0.1.60), but 27B has no run on `ledger`, so the pair needs the llama.cpp side. [Results](../scripts/tests/notes/OUTCOMES.md). ~1.5-2 h
+- [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The pair now exists on ROCm for `proverb` and `ledger` (27B 23.2 s and 59.3 s against Strata's 74.1 s and 144.0 s, Pi client), but the Vulkan arm still needs the b12422 crash resolved before it can be repeated on the default build. Turn-budget cleanup stays unverified. [Results](../scripts/tests/notes/OUTCOMES.md). ~1 h
