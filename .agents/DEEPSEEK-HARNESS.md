@@ -9,3 +9,4 @@
 - No multi-line Python through `pwsh -Command`: heredocs and quoting break, and a broken edit corrupts files silently. Run a scratch script from `scripts/state/`, or use the file-edit tool.
 - PowerShell flattens `@(@('a','b'))` to two strings, so the loop indexes characters. Use Python for pair lists.
 - A denial is a policy decision, not a retry prompt: escalate that exact operation once, then report the outcome.
+- The desktop profile caps a foreground `pwsh` command at 60 s and clamps a longer per-call request, so no single command can stall a turn for longer. A command that reaches the deadline is promoted to a background job: stop it with `job_kill` without reading its output, because a search that already timed out has nothing worth collecting.
