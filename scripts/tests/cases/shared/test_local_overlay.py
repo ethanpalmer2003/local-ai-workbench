@@ -11,14 +11,16 @@ from scripts.tests.shared.paths import CasePaths
 
 
 class LocalOverlayTests(unittest.TestCase):
-    def test_manifest_supplies_voice_ids_and_its_chosen_default(self):
+    def test_manifest_supplies_voice_ids_and_the_overlay_names_the_default(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
-            (root / "voice_sources.yaml").write_text(
-                "default: second\nvoices:\n  second: {}\n  first: {}\n", encoding="utf-8"
-            )
+            (root / "voice_sources.yaml").write_text("voices:\n  second: {}\n  first: {}\n", encoding="utf-8")
             with patch.dict(local_overlay.os.environ, {"AI_INPUT_DIR": str(root)}):
                 self.assertEqual(local_overlay.voice_ids(), ("first", "second"))
+                # - with no setting the first discovered id answers, so the tools still work
+                self.assertEqual(local_overlay.default_voice(), "first")
+            (root / "defaults.yaml").write_text("chat:\n  tts:\n    voice: second\n", encoding="utf-8")
+            with patch.dict(local_overlay.os.environ, {"AI_INPUT_DIR": str(root)}):
                 self.assertEqual(local_overlay.default_voice(), "second")
 
     def test_without_the_overlay_every_lookup_is_empty_rather_than_an_error(self):
@@ -94,7 +96,6 @@ class LocalOverlayTests(unittest.TestCase):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
             (root / "voice_sources.yaml").write_text(
-                "default: current\n"
                 "voices:\n"
                 "  current: {}\n"
                 "  old:\n    superseded_by: current\n"
@@ -102,6 +103,7 @@ class LocalOverlayTests(unittest.TestCase):
                 "  nonsense:\n    superseded_by: ''\n",
                 encoding="utf-8",
             )
+            (root / "defaults.yaml").write_text("chat:\n  tts:\n    voice: current\n", encoding="utf-8")
             with patch.dict(local_overlay.os.environ, {"AI_INPUT_DIR": str(root)}):
                 self.assertEqual(local_overlay.superseded_voices(), {"old": "current"})
                 # - a superseded id stays listed but sorts last, so a picker opens on a current voice
