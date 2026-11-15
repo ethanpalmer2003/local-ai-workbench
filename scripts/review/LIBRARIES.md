@@ -30,8 +30,8 @@ A library cannot know this repository's vocabulary, so these read the tree direc
 
 | Check | Library | Why the check stays |
 | --- | --- | --- |
-| `unused.py` | vulture | Vulture needs a whitelist that would grow with every `patch.object(..., "name")` reference; this check reads source text, so those count as references and the list stays empty. |
-| `comments.py` | eradicate | Eradicate covers one of the three rules (commented-out code); markers and banner rules are policy. |
+| definitions | vulture | Measured: 6 findings on 457 files, 5 of them interface parameters (`files_metadata`, `map_location`, `weights_only`, cache keys) that a protocol, a fake or an `lru_cache` key must name. The one real hit was a duplicated tail after `return`. Vulture now runs for that unreachable class only, and the definition scan stays here. |
+| `comments.py` | eradicate | Measured: 0 findings on the 457 maintained files, because `comments.py` already rejects commented-out code. Nothing to adopt. |
 | `public_audit.py` | detect-secrets, gitleaks | The terms come from the overlay, and the scan covers history; both tools read a baseline stored in the tree. |
 | `docs.py` links | a Markdown parser | Resolving a link is about forty lines; the work is role, budget and pointer policy. |
 | `similarity.py` | a text-difference library | The duplicate check compares embeddings from the local model, not strings. |

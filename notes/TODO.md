@@ -6,12 +6,10 @@
 
 ## Reliability
 
-- [ ] Rewrite the no-model provider seed, which external-LLM mode needs: KoboldCpp then runs without a model, so the page has to be pointed at llama-server or generation fails until someone picks the custom provider by hand. `external_script` writes `kaihordewebui_*` localStorage keys while Lite reads one `settings` record from the IndexedDB database `e_kaihordewebui_`, so seed that record once instead. The patch needs the live page: save one with `kobold_lite --export-html` during the next session and reuse it through `--source-file`. ~30 min
 
 ## Standardization
 
 - [ ] Decide the retired TTS pipeline in `scripts/launchers/audiocpp/tts_legacy_buffered.py`: nothing imports it, its own docstring calls it retired, and the active path is `tts_text_processing.py`. Delete it, or name the usefulness it still has; either way drop the `RETIRED` entry in `scripts/review/unused.py` with it. ~20 min
-- [ ] Revisit the three declined library swaps in [review libraries](../scripts/review/LIBRARIES.md) once `unused.py` has a few weeks of findings: vulture for unused code, eradicate for the commented-out rule, a Markdown parser for links. Each trades a dependency for local code, so the decision needs the false-positive record first. ~1 h
 - [ ] Try vale with the styles that fit this voice: `Voices` (hedging and puffery core, Direct and Simple voices), `AiTells` (the tells of generated prose) and `Readability`. Proselint and write-good alone measured nothing worth gating. Vale is one binary with no fix mode, so the work is a `.vale.ini` that selects rules and disables quote and ellipsis checks. ~1-2 h
 - [ ] Re-run both similarity modes: documents last ran 2026-11-10 22:15 and code 21:56, since when the review pages, this TODO and several guides changed. The pair count in [resolved questions](OPEN-QUESTIONS-RESOLVED.md) carries that date for that reason. Needs the embedding model, so it is a live run. `check_document_similarity.bat` and `check_code_similarity.bat`. ~15 min
 
