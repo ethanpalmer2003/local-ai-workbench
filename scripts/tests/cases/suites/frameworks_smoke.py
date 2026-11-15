@@ -16,8 +16,6 @@ import threading
 import time
 import tomllib
 import unittest
-import urllib.error
-import urllib.request
 import wave
 from dataclasses import replace
 from http.server import BaseHTTPRequestHandler
@@ -792,13 +790,12 @@ class ProxyHTTP(unittest.TestCase):
             with server(serve.call_args.args[0]) as proxy:
                 body = json.dumps({"input": "Hello", "stream": True}).encode()
                 try:
-                    with urllib.request.urlopen(
-                        urllib.request.Request(proxy + "/v1/audio/speech", data=body), timeout=2
-                    ) as response:
-                        self.assertEqual(response.read1(5), b"first")
+                    with requests.post(proxy + "/v1/audio/speech", data=body, timeout=2, stream=True) as response:
+                        response.raise_for_status()
+                        self.assertEqual(response.raw.read1(5), b"first")
                         self.assertFalse(finish.is_set())
                         finish.set()
-                        self.assertEqual(response.read(), b"last")
+                        self.assertEqual(response.raw.read(), b"last")
                 finally:
                     finish.set()
 
