@@ -19,9 +19,10 @@ import re
 import secrets
 import statistics
 import time
-import urllib.request
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk, summarize_requests
 from scripts.benchmarks.coding_agents.strata_profiles import PREFIX
@@ -123,11 +124,13 @@ def stream_chat(
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = "Bearer " + api_key
-    query = urllib.request.Request(base_url + "/chat/completions", json.dumps(body).encode(), headers)
     started = time.perf_counter()
     record: dict[str, Any] = {"content": "", "finished": False, "output_limit": tokens}
-    with urllib.request.urlopen(query, timeout=timeout) as response:
-        for line in response:
+    with requests.post(
+        base_url + "/chat/completions", json=body, headers=headers, timeout=timeout, stream=True
+    ) as response:
+        response.raise_for_status()
+        for line in response.iter_lines():
             if not line.startswith(b"data:"):
                 continue
             payload = line[5:].strip()

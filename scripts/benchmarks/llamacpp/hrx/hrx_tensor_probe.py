@@ -10,6 +10,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+import requests as http
+
 from scripts.benchmarks.shared.paths import BenchmarkPaths, Outcome, RunPaths
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
@@ -200,7 +202,6 @@ def _server_command(server: Path, port: int, device: str) -> list[str]:
 
 
 def server_smoke(exe: Path, paths: RunPaths, device: str, predict: int, runtime: Path | None = None) -> dict[str, Any]:
-    import urllib.request
 
     from scripts.launchers import launch_util
 
@@ -257,13 +258,9 @@ def server_smoke(exe: Path, paths: RunPaths, device: str, predict: int, runtime:
                     json.dumps(body, indent=2) + "\n", encoding="utf-8"
                 )
                 request_start = time.monotonic()
-                request = urllib.request.Request(
-                    f"http://127.0.0.1:{port}{endpoint}",
-                    json.dumps(body).encode(),
-                    {"Content-Type": "application/json"},
-                )
-                with urllib.request.urlopen(request, timeout=90) as response:
-                    payload = json.load(response)
+                response = http.post(f"http://127.0.0.1:{port}{endpoint}", json=body, timeout=90)
+                response.raise_for_status()
+                payload = response.json()
                 (paths.artifacts / f"{name}-response.json").write_text(
                     json.dumps(payload, indent=2) + "\n", encoding="utf-8"
                 )

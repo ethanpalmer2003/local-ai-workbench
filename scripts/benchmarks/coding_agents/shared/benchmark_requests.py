@@ -5,13 +5,14 @@ import socket
 import statistics
 import threading
 import time
-import urllib.request
 from contextlib import closing, suppress
 from dataclasses import replace
 from http.client import HTTPConnection, HTTPException
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, ClassVar
 from urllib.parse import urlsplit
+
+import requests
 
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
 from scripts.benchmarks.shared.benchmark import BenchmarkContractError, BenchmarkLifecycle
@@ -119,15 +120,14 @@ def stream_chat(
     connection: Any, body: dict[str, Any], *, timeout: float, extra: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """One streaming chat completion, recorded the same way for every Strata benchmark."""
-    query = urllib.request.Request(
-        connection.base_url + "/chat/completions",
-        json.dumps(body).encode(),
-        {"Content-Type": "application/json", "Authorization": "Bearer " + connection.api_key},
-    )
+    headers = {"Authorization": "Bearer " + connection.api_key}
     started = time.perf_counter()
     record: dict[str, Any] = {"content": "", "finished": False, **(extra or {})}
-    with urllib.request.urlopen(query, timeout=timeout) as response:
-        for line in response:
+    with requests.post(
+        connection.base_url + "/chat/completions", json=body, headers=headers, timeout=timeout, stream=True
+    ) as response:
+        response.raise_for_status()
+        for line in response.iter_lines():
             if not line.startswith(b"data:"):
                 continue
             payload = line[5:].strip()
@@ -204,10 +204,10 @@ def warmup(endpoint: BenchmarkEndpoint, tokens: int = 64) -> dict[str, Any]:
     if endpoint.backend == "strata":
         body["reasoning_effort"] = "none"
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {endpoint.api_key}"}
-    request = urllib.request.Request(endpoint.base_url + "/chat/completions", json.dumps(body).encode(), headers)
     started = time.perf_counter()
-    with urllib.request.urlopen(request, timeout=600) as response:
-        result = json.load(response)
+    response = requests.post(endpoint.base_url + "/chat/completions", json=body, headers=headers, timeout=600)
+    response.raise_for_status()
+    result = response.json()
     return {"seconds": time.perf_counter() - started, "usage": result.get("usage"), "max_tokens": tokens}
 
 
