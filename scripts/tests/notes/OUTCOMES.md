@@ -8,6 +8,13 @@
 ## Decisions and limits
 
 - Paired easy Pi task: Strata Swift and 27B both passed 8/8; 31.84/79.03-second timings had different token totals/prefill costs. No general ranking.
+- MTP depth/gate sweep, 2026-11-15, 27B on the pinned Vulkan 1.0.0, one round each, 32K prompt:
+  the shipped `spec-draft-n-max 2` with no `p-min` was best or tied on both workloads (47.8 tok/s
+  generation, 50.8 on the 32K rewrite, acceptance about 0.70). Deeper drafts lost: depth 3 read 40.7
+  and 44.5, depth 4 43.1 and 45.6. The gate raised acceptance as documented upstream (0.55 to 0.88) but
+  never raised throughput, and its one apparent gain (48.9 on short generation at `p-min 0.6`) came with
+  40.3 on the rewrite, which is single-sample variance. One round, so 2-4% gaps are not decided; nothing
+  justifies moving off depth 2. Output `benchmarks/output/llamacpp/benchmark_ngram/unreviewed/1794780309255370400`.
 - Long-context read check, 2026-11-15, 27B on ROCm b1377, one warmup and one sample per capacity, 3,044-token prompt: cold TTFT 5.55 s at 64K and 26.01 s at 96K, which is 548 against 117 tok/s prefill, while decode stayed flat at 60.6 and 62.5 tok/s. The 64K-to-96K cliff reproduces on b1377 and matches the 2026-11-13 pair on b1375; outputs `benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794778187678735400` (64K) and `.../1794778208574993200` (96K).
 - KV precision screen, 2026-11-15, 27B on the ROCm Lemonade build, `proverb`, Pi, 32K: q8 KV finished in 23.2 s with 59.6 tok/s decode and 510 prefill; `swift15-f16-kv` finished in 32.1 s with 35.1 decode and 584 prefill. f16 trades 41% of decode for 14% more prefill, so q8 stays the default. It also fits at 32K on this card, which the profile never assumed.
 - Strata-only agent round, 2026-11-15, engine 0.1.59 with control 0.1.60, decode profile, one repeat each: `proverb` passed 1/1 on all four clients (pi 74.1 s, littlecoder 120.7, nanocoder 93.3, ohmypi 227.9); `ledger`, the two-file output-format task, also passed 1/1 on all four (pi 144.0 s, littlecoder 225.1, nanocoder 142.9, ohmypi 423.9). `ohmypi` reported no token totals in either task, so its wall time is the only comparable figure. Evidence: `benchmarks/output/coding_agents/shared/benchmark_agents/unreviewed/1794767657491819500` (proverb) and `.../1794768206418512400` (ledger).
