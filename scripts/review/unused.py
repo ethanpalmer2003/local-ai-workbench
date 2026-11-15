@@ -9,6 +9,8 @@ Local unused variables and imports are not this check's job: ruff owns them as F
 
 import ast
 import re
+import subprocess
+import sys
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -71,17 +73,39 @@ def dead_definitions(files: list[Path]) -> list[Definition]:
     return dead
 
 
+def unreachable(files: list[Path]) -> list[str]:
+    """Blocks that no path reaches; ruff has no rule for this, vulture does."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "vulture",
+            *(str(path) for path in files if path.suffix == ".py"),
+            "--min-confidence",
+            "100",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return [line.strip() for line in result.stdout.splitlines() if "unreachable code" in line]
+
+
 def main(argv: list[str] | None = None) -> int:
     _ = argv
     files = maintained_files()
     dead = dead_definitions(files)
+    unreachable_blocks = unreachable(files)
     if not dead:
         print(f"[OK] Dead code: {len([p for p in files if p.suffix == '.py'])} files, nothing unreferenced")
         return 0
     for item in dead[:MAX_REPORTED]:
         print(f"[FAIL] {item.path.name}:{item.line}: {item.kind} {item.name} is never referenced")
-    print(f"[FAIL] Dead code: {len(dead)} unreferenced definition(s)")
-    return 1
+    for block in unreachable_blocks[:MAX_REPORTED]:
+        print(f"[FAIL] {block}")
+    total = len(dead) + len(unreachable_blocks)
+    print(f"[FAIL] Dead code: {len(dead)} unreferenced definition(s), {len(unreachable_blocks)} unreachable block(s)")
+    return 1 if total else 0
 
 
 if __name__ == "__main__":
