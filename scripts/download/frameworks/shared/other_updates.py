@@ -224,13 +224,20 @@ def _pull_drift(folder: Path, drift: list[tuple[str, str, str, bool]]) -> None:
             pull_checkout(folder / name)
 
 
-def _launch_updater(exe: Path, dest_dir: Path) -> None:
-    env = os.environ.copy()
-    env["PIP_REQUIRE_VIRTUALENV"] = "false"
-    process = subprocess.Popen(
-        ["cmd.exe", "/k", str(exe)], cwd=dest_dir, env=env, creationflags=subprocess.CREATE_NEW_CONSOLE
+def _run_updater(exe: Path, dest_dir: Path) -> int:
+    """Run the vendor updater attached and return its exit code.
+
+    Detaching it into its own console made the run's summary wrong: a failed `git fetch` looked like a
+    finished update. Attached, its output joins the log and its exit code is this run's exit code; stdin
+    is closed so a trailing `pause` cannot wait for a keypress nobody will press.
+    """
+    environment = os.environ.copy()
+    environment["PIP_REQUIRE_VIRTUALENV"] = "false"
+    print("Status: UPDATING IN THIS RUN; output follows")
+    completed = subprocess.run(
+        ["cmd.exe", "/c", str(exe)], cwd=dest_dir, env=environment, stdin=subprocess.DEVNULL, check=False
     )
-    print(f"Status: UPDATING IN NEW TERMINAL (pid {process.pid}); this window stays open")
+    return completed.returncode
 
 
 def _vendor_batch_state(
@@ -275,7 +282,15 @@ def process_bat(
         return
     if not exe.exists():
         raise shared.UpdateError(f"Updater not found: {exe}")
-    _launch_updater(exe, dest_dir)
+    code = _run_updater(exe, dest_dir)
+    if summary is not None:
+        # - the check recorded an available update; its outcome replaces that line
+        summary.discard(tool)
+        if code == 0:
+            summary.record(tool, "current", "updater finished")
+        else:
+            summary.record(tool, "failures", f"updater exited {code}")
+    print("Status: UPDATED" if code == 0 else f"Status: UPDATE FAILED (updater exited {code})")
 
 
 STRATA_STATUS_GROUPS = {"current": "current", "not-in-feed": "current", "none-installed": "current"}
