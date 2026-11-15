@@ -24,6 +24,8 @@ from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import requests
+
 from scripts.benchmarks.shared.reporting import RunReport
 from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audio_cfg
@@ -34,6 +36,7 @@ from scripts.launchers.koboldcpp import kobold
 from scripts.launchers.llamacpp import llamacpp, llamacpp_coding, llamacpp_dsh, llamacpp_littlecoder
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
+from scripts.shared import wait
 from scripts.shared.http_server import request, server
 from scripts.shared.timing import timed
 from scripts.shared.wait import http_ready
@@ -437,65 +440,64 @@ class LaunchCommands(unittest.TestCase):
                     pipe.close()
 
 
+def answer(status: int) -> requests.Response:
+    """A real response object, so raise_for_status behaves as it does against a server."""
+    response = requests.Response()
+    response.status_code = status
+    response.url = "http://backend/health"
+    return response
+
+
 class StateAndReadiness(unittest.TestCase):
     def test_readiness_only_suppresses_expected_backend_unavailability(self):
-        expected = [
-            urllib.error.URLError(ConnectionRefusedError()),
-            TimeoutError(),
-            urllib.error.HTTPError("test", 502, "loading", Mock(), None),
-            urllib.error.HTTPError("test", 503, "loading", Mock(), None),
-        ]
-        unexpected = [
-            ValueError("bad configuration"),
-            PermissionError("denied"),
-            urllib.error.URLError("invalid hostname"),
-            urllib.error.HTTPError("test", 404, "wrong endpoint", Mock(), None),
-            urllib.error.HTTPError("test", 500, "backend bug", Mock(), None),
-        ]
-        for error in expected + unexpected:
-            with self.subTest(error=error), patch.object(launch_util.urllib.request, "urlopen", side_effect=error):
-                if error in expected:
-                    self.assertFalse(http_ready("http://backend/health", strict=True))
-                else:
-                    with self.assertRaises(type(error)):
-                        http_ready("http://backend/health", strict=True)
+        for error in (requests.ConnectionError("refused"), requests.Timeout("slow")):
+            with self.subTest(error=error), patch.object(wait.requests, "get", side_effect=error):
+                self.assertFalse(http_ready("http://backend/health", strict=True))
+        for status in (502, 503, 504):
+            with self.subTest(status=status), patch.object(wait.requests, "get", return_value=answer(status)):
+                self.assertFalse(http_ready("http://backend/health", strict=True))
+        for status in (404, 500):
+            with (
+                self.subTest(status=status),
+                patch.object(wait.requests, "get", return_value=answer(status)),
+                self.assertRaises(requests.HTTPError),
+            ):
+                http_ready("http://backend/health", strict=True)
+        with patch.object(wait.requests, "get", return_value=answer(200)):
+            self.assertTrue(http_ready("http://backend/health", strict=True))
 
     def test_warmup_unexpected_errors_propagate(self):
         with (
-            patch.object(launch_util.urllib.request, "urlopen", side_effect=ValueError("bad request")),
+            patch.object(launch_util.requests, "post", side_effect=ValueError("bad request")),
             self.assertRaisesRegex(ValueError, "bad request"),
         ):
             launch_util.trigger_preload(True, "test", "http://backend/speech", {}, background=False)
 
-    def test_warmup_waits_for_backend_and_drains_response_before_success(self):
-        health = Mock()
-        audio = Mock()
-        audio.read.side_effect = [b"first", b"last", b""]
-        health_context = Mock()
-        health_context.__enter__ = Mock(return_value=health)
-        health_context.__exit__ = Mock(return_value=False)
-        audio_context = Mock()
-        audio_context.__enter__ = Mock(return_value=audio)
-        audio_context.__exit__ = Mock(return_value=False)
+    def test_warmup_waits_for_backend_then_posts_the_payload(self):
+        health = Mock(status_code=200, ok=True)
+        audio = Mock(status_code=200, ok=True)
+        seen: list[str] = []
 
         def completed():
-            self.assertEqual(audio.read.call_count, 3)
+            seen.append("done")
 
         with (
-            patch.object(
-                launch_util.urllib.request,
-                "urlopen",
-                side_effect=[urllib.error.URLError(ConnectionRefusedError()), health_context, audio_context],
-            ) as opened,
+            patch.object(wait.requests, "get", side_effect=[requests.ConnectionError("refused"), health, health]),
+            patch.object(launch_util.requests, "post", return_value=audio) as posted,
             patch.object(launch_util.time, "sleep"),
         ):
             launch_util.trigger_preload(
-                True, "test", "http://proxy/speech", {}, completed, background=False, ready_url="http://backend/health"
+                True,
+                "test",
+                "http://proxy/speech",
+                {"text": "hi"},
+                completed,
+                background=False,
+                ready_url="http://backend/health",
             )
-        self.assertEqual(
-            [call.args[0] for call in opened.call_args_list[:2]], ["http://backend/health", "http://backend/health"]
-        )
-        self.assertEqual(opened.call_args.args[0].full_url, "http://proxy/speech")
+        self.assertEqual(seen, ["done"])
+        self.assertEqual(posted.call_args.args[0], "http://proxy/speech")
+        self.assertEqual(posted.call_args.kwargs["json"], {"text": "hi"})
 
     def test_dsh_attaches_to_existing_server(self):
         with (

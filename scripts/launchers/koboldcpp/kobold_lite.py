@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Any, ClassVar
 from urllib.parse import urlsplit
 
+import requests
+
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector as transcription
 from scripts.launchers.asr.shared import http_api, live, practice_models
@@ -302,24 +304,29 @@ class _KoboldLiteHandler(ProxyHandlerMixin):
         return False
 
     def _forward_version(self) -> None:
-        request = urllib.request.Request(self.upstream + self.path, headers=build_forward_headers(self.headers, b""))
+        headers = build_forward_headers(self.headers, b"")
         try:
-            with urllib.request.urlopen(request, timeout=10) as response:
-                capabilities = json.load(response)
-            capabilities["transcribe"] = transcription.backend(self.engine).ready()
-            send_bytes(self, 200, json.dumps(capabilities).encode(), "application/json")
-        except urllib.error.URLError as error:
+            response = requests.get(self.upstream + self.path, headers=headers, timeout=10)
+            response.raise_for_status()
+        except requests.RequestException as error:
             forward_upstream_error(self, "kobold-lite", error)
+            return
+        capabilities = response.json()
+        capabilities["transcribe"] = transcription.backend(self.engine).ready()
+        send_bytes(self, 200, json.dumps(capabilities).encode(), "application/json")
 
     def _serve_page(self) -> None:
         try:
-            with urllib.request.urlopen(self.upstream + self.path, timeout=10) as response:
-                html = response.read().decode("utf-8")
-            send_bytes(self, 200, patch_lite(html, self.variant, self.external).encode(), "text/html; charset=utf-8")
-        except (urllib.error.URLError, ConnectionRefusedError, TimeoutError) as error:
-            if not backend_unavailable(error):
-                raise
+            response = requests.get(self.upstream + self.path, timeout=10)
+        except (requests.ConnectionError, requests.Timeout):
             send_bytes(self, 503, b"KoboldCpp is not ready yet", "text/plain; charset=utf-8")
+            return
+        if backend_unavailable(response.status_code):
+            send_bytes(self, 503, b"KoboldCpp is not ready yet", "text/plain; charset=utf-8")
+            return
+        response.raise_for_status()
+        page = patch_lite(response.text, self.variant, self.external)
+        send_bytes(self, 200, page.encode(), "text/html; charset=utf-8")
 
     def _relay(self, method: str, path: str) -> None:
         body = read_request_body(self)
