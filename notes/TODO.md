@@ -24,9 +24,8 @@
 
 ### Unattended
 
-- [ ] Find where the deep-context rewrite breaks: the same graded rewrite task passed at a 32K prompt and
-  failed at 96K, so rerun the 96K arm once with a larger `--output-tokens` (the expected function may exceed
-  the 128-token allowance), then once with the context rebuilt from fewer files, and record whether it is the
-  output budget, the prompt composition or real degradation at depth. [Result](../scripts/tests/notes/OUTCOMES.md).
-  ~30 min
+- [ ] Explain the 96K answer that carries reasoning but no code: the same rewrite task passes at 32K, 40K and
+  64K, and at 96K the model returns 46 tokens of `<think>` and stops, with the output budget ruled out. Probe it
+  once with reasoning off and once at 80K to find the band, then decide whether the deep allocation needs a
+  different profile. [Result](../scripts/tests/notes/OUTCOMES.md). ~30 min
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The pair now exists on ROCm for `proverb` and `ledger` (27B 23.2 s and 59.3 s against Strata's 74.1 s and 144.0 s, Pi client), but the Vulkan arm still needs the b12422 crash resolved before it can be repeated on the default build. Turn-budget cleanup stays unverified. [Results](../scripts/tests/notes/OUTCOMES.md). ~1 h

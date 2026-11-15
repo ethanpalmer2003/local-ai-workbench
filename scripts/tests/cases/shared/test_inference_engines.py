@@ -43,6 +43,16 @@ class InferenceEngines(unittest.TestCase):
         self.assertEqual(gated.options()["spec-draft-p-min"], "0.6")
         self.assertEqual(gated.options()["spec-draft-n-max"], "2")
 
+    def test_a_correct_rewrite_followed_by_reasoning_still_grades_correct(self):
+        from scripts.benchmarks.llamacpp.benchmark_ngram import rewrite_correct
+
+        expected = "def f(x):\n    return x + 1\n"
+        answer = expected + "\n<think>\nThe user wants me to rewrite only the function...\n"
+        # - at depth the model keeps talking after the function it got right
+        self.assertTrue(rewrite_correct(answer, expected))
+        self.assertFalse(rewrite_correct("def f(x):\n    return x + 2\n", expected))
+        self.assertFalse(rewrite_correct("", expected))
+
 
 if __name__ == "__main__":
     unittest.main()
