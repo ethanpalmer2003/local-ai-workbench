@@ -1,7 +1,8 @@
 """Load audio.cpp and record its model/context/memory report."""
 
 import json
-import urllib.request
+
+import requests
 
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.config import project_config as project_cfg
@@ -18,8 +19,9 @@ from scripts.tests.shared.paths import CasePaths
 
 
 def get_json(base: str, path: str) -> object:
-    with urllib.request.urlopen(base + path, timeout=5) as response:
-        return json.loads(response.read().decode("utf-8"))
+    response = requests.get(base + path, timeout=5)
+    response.raise_for_status()
+    return response.json()
 
 
 def main() -> None:
@@ -47,13 +49,11 @@ def main() -> None:
                 if not wait_for_backend(port, 90):
                     raise TimeoutError(f"Audio server did not become ready; see {log}")
             before = get_json(base, "/v1/models")
-            request = urllib.request.Request(
-                base + "/v1/audio/speech",
-                data=json.dumps({"model": cfg.AUDIOCPP_SERVICE.model, "input": "hello"}).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
+            speech = requests.post(
+                base + "/v1/audio/speech", json={"model": cfg.AUDIOCPP_SERVICE.model, "input": "hello"}, timeout=300
             )
-            with urllib.request.urlopen(request, timeout=300) as response:
-                (output.artifacts / "speech.wav").write_bytes(response.read())
+            speech.raise_for_status()
+            (output.artifacts / "speech.wav").write_bytes(speech.content)
             report = {"before": before, "after": get_json(base, "/v1/models")}
             (output.artifacts / "models.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
             print(json.dumps(report, indent=2))

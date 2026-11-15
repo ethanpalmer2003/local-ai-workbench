@@ -9,12 +9,12 @@ import statistics
 import subprocess
 import threading
 import time
-import urllib.error
-import urllib.request
 import wave
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.shared import provenance as shared_provenance
 from scripts.benchmarks.shared.vram import process_evidence, snapshot_dict
@@ -193,19 +193,12 @@ def generate(port: int, wav_path: Path, profile: TtsProfile, text: str, timeout:
     payload = {"model": profile.key, "input": text, "response_format": "wav", "options": options}
     if profile.voice:
         payload["voice"] = profile.voice
-    request = urllib.request.Request(
-        f"http://127.0.0.1:{port}/v1/audio/speech",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-    )
     started = time.perf_counter()
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            body = response.read()
-            content_type = response.headers.get_content_type()
-    except urllib.error.HTTPError as error:
-        detail = error.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"HTTP {error.code}: {detail}") from error
+    response = requests.post(f"http://127.0.0.1:{port}/v1/audio/speech", json=payload, timeout=timeout)
+    if not response.ok:
+        raise RuntimeError(f"HTTP {response.status_code}: {response.text}")
+    body = response.content
+    content_type = response.headers.get("Content-Type", "").split(";")[0]
     elapsed_s = time.perf_counter() - started
     if not body.startswith(b"RIFF") or body[8:12] != b"WAVE":
         raise RuntimeError(f"expected WAV, received {content_type}; body starts {body[:200]!r}")
