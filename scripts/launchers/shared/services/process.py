@@ -36,18 +36,4 @@ def stop_owned(
     kill_timeout: float = 5,
 ) -> None:
     """Only call with a process started/owned by the current operation; the exit status is printed."""
-    if process.poll() is not None:
-        process.wait(timeout=timeout)
-        launch_util.report_exit(process, title)
-        return
-
-    if graceful:
-        process.terminate()
-    else:
-        launch_util.kill_process_tree(process.pid)
-    try:
-        process.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        launch_util.kill_process_tree(process.pid)
-        process.wait(timeout=kill_timeout)
-    launch_util.report_exit(process, title)
+    launch_util.stop_process(process, title, timeout=timeout, graceful=graceful, kill_timeout=kill_timeout)

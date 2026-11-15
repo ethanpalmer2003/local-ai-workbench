@@ -272,30 +272,40 @@ def describe_exit(code: int | None) -> str:
     return f"0x{value:08X} ({value}, {hint})" if hint else f"0x{value:08X} ({value})"
 
 
-def report_exit(process: subprocess.Popen[Any], title: str) -> int | None:
-    """Print one process's exit status, including the case where it died before teardown."""
+def _exit_line(process: subprocess.Popen[Any], title: str, state: str) -> int | None:
     code = process.poll()
-    state = "exited" if code is not None else "still running before teardown"
     print(f"[EXIT] {title} pid {process.pid} {state}: {describe_exit(code)}", flush=True)
     return code
 
 
+def report_exit(process: subprocess.Popen[Any], title: str) -> int | None:
+    """Report a process that ended by itself, so its status is not mistaken for our own stop."""
+    state = "already exited" if process.poll() is not None else "still running"
+    return _exit_line(process, title, state)
+
+
 def stop_process(
-    process: subprocess.Popen[Any], title: str, *, timeout: float = 15, graceful: bool = False
+    process: subprocess.Popen[Any], title: str, *, timeout: float = 15, graceful: bool = False, kill_timeout: float = 5
 ) -> int | None:
-    """Stop an owned process and say how it ended: the status is the evidence a silent death leaves."""
-    code = process.poll()
-    if code is None:
-        if graceful:
-            process.terminate()
-        else:
-            kill_process_tree(process.pid)
-        try:
-            process.wait(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            kill_process_tree(process.pid)
-            process.wait(timeout=5)
-    return report_exit(process, title)
+    """Stop an owned process and say how it ended, separating our kill from its own death.
+
+    The two cases carry different meaning: a status after our kill is the kill's, while a process that
+    was already gone carries whatever fault ended it.
+    """
+    if process.poll() is not None:
+        # - wait() reaps the handle even when the status is already known
+        process.wait(timeout=timeout)
+        return _exit_line(process, title, "already exited")
+    if graceful:
+        process.terminate()
+    else:
+        kill_process_tree(process.pid)
+    try:
+        process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        kill_process_tree(process.pid)
+        process.wait(timeout=kill_timeout)
+    return _exit_line(process, title, "stopped by this run")
 
 
 def descendant_pids(pid: int) -> set[int]:
