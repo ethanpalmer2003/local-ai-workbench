@@ -51,10 +51,12 @@ class ConsentTests(unittest.TestCase):
         self.assertTrue({"docs", "typography", "spelling"} <= sections)
         self.assertNotIn("lint", sections)
 
-    def test_renames_contribute_both_sides(self):
+    def test_a_rename_reports_both_paths_from_git_status(self):
         from scripts.review.__main__ import changed_paths
 
-        self.assertIsInstance(changed_paths(), list)
+        completed = Mock(stdout="R  bat/tests/a.bat -> bat/checks/a.bat\n M notes/TODO.md\n")
+        with patch("scripts.review.__main__.subprocess.run", return_value=completed):
+            self.assertEqual(changed_paths(), ["bat/tests/a.bat", "bat/checks/a.bat", "notes/TODO.md"])
 
 
 if __name__ == "__main__":
