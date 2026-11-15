@@ -23,6 +23,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, ClassVar
 from urllib.parse import urlsplit
 
+import requests
+
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.launch_util import print_ready
 from scripts.launchers.proxy_restart import ProxyRestartController
@@ -75,7 +77,19 @@ def send_json_error(handler: BaseHTTPRequestHandler, status: int, message: str, 
     send_bytes(handler, status, body, content_type="application/json")
 
 
-def forward_upstream_error(handler: BaseHTTPRequestHandler, tag: str, error: urllib.error.URLError):
+def forward_upstream_error(
+    handler: BaseHTTPRequestHandler, tag: str, error: urllib.error.URLError | requests.RequestException
+):
+    if isinstance(error, requests.HTTPError) and error.response is not None:
+        response = error.response
+        detail = response.text
+        with contextlib.suppress(json.JSONDecodeError):
+            detail = json.dumps(response.json(), indent=2)
+        print(f"[{tag}] upstream HTTP {response.status_code}:\n{detail}")
+        send_bytes(
+            handler, response.status_code, response.content, response.headers.get("Content-Type", "application/json")
+        )
+        return
     if isinstance(error, urllib.error.HTTPError):
         with error:
             body = error.read()
@@ -85,8 +99,9 @@ def forward_upstream_error(handler: BaseHTTPRequestHandler, tag: str, error: url
         print(f"[{tag}] upstream HTTP {error.code}:\n{detail}")
         send_bytes(handler, error.code, body, error.headers.get("Content-Type", "application/json"))
     else:
-        print(f"[{tag}] upstream unavailable: {error.reason}")
-        send_json_error(handler, 502, f"upstream unavailable: {error.reason}", "bad_gateway")
+        reason = getattr(error, "reason", None) or str(error)
+        print(f"[{tag}] upstream unavailable: {reason}")
+        send_json_error(handler, 502, f"upstream unavailable: {reason}", "bad_gateway")
 
 
 def read_request_body(handler: BaseHTTPRequestHandler) -> bytes:

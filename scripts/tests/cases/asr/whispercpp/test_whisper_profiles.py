@@ -1,7 +1,6 @@
 """External Whisper routing, startup safety and native request compatibility."""
 
 import base64
-import io
 import json
 import unittest
 from email import policy
@@ -105,9 +104,9 @@ class WhisperProfiles(unittest.TestCase):
                 patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", cfg.AsrStartupEngine.WHISPER_VULKAN),
                 patch.object(kobold_lite, "serve_proxy", side_effect=serve),
                 patch.object(
-                    kobold_lite.urllib.request,
-                    "urlopen",
-                    return_value=io.BytesIO(json.dumps({"transcribe": False, "llm": True, "tts": False}).encode()),
+                    kobold_lite.requests,
+                    "get",
+                    return_value=json_response({"transcribe": False, "llm": True, "tts": False}),
                 ),
                 patch.object(whisper, "ready", return_value=ready),
                 patch.object(kobold_lite, "send_bytes") as send,

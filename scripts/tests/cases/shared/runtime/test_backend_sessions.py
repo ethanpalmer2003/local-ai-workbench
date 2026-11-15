@@ -3,8 +3,18 @@
 import unittest
 from unittest.mock import Mock, call, patch
 
-from scripts.shared import backends
+import requests
+
+from scripts.shared import backends, wait
 from scripts.tests.shared.process_fixtures import running_process
+
+
+def answer(status: int) -> requests.Response:
+    """A real response object, so `ok` and `raise_for_status` behave as they do against a server."""
+    response = requests.Response()
+    response.status_code = status
+    response.url = "http://127.0.0.1/health"
+    return response
 
 
 class BackendSessions(unittest.TestCase):
@@ -28,10 +38,10 @@ class BackendSessions(unittest.TestCase):
 
         expected = f"http://127.0.0.1:{launcher_config.SDCPP_SERVICE.port}/v1/models"
         self.assertEqual(backend_readiness.ready_url("sdcpp", launcher_config.SDCPP_SERVICE.port), expected)
-        with patch.object(launch_util.urllib.request, "urlopen") as get:
+        with patch.object(wait.requests, "get", return_value=answer(200)) as get:
             self.assertTrue(launch_util.backend_running(launcher_config.SDCPP_SERVICE.port))
         self.assertEqual(get.call_args.args[0], expected)
-        with patch.object(launch_util.urllib.request, "urlopen") as get:
+        with patch.object(wait.requests, "get", return_value=answer(200)) as get:
             self.assertTrue(launch_util.backend_running(18889, backend="sdcpp"))
         self.assertEqual(get.call_args.args[0], backend_readiness.ready_url("sdcpp", 18889))
 

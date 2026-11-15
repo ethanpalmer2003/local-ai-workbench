@@ -2,38 +2,40 @@
 
 import subprocess
 import time
-import urllib.error
-import urllib.request
 from collections.abc import Callable
 from typing import Any
+
+import requests
 
 # One loop, one probe. A caller that needs something else (a protocol handshake, a stream read,
 # a service that runs until interrupted) is a different question and owns its own small loop.
 
 
-def backend_unavailable(error: BaseException) -> bool:
-    """Only these answers mean "down or still starting"; every other failure is a real defect."""
-    if isinstance(error, urllib.error.HTTPError):
-        return error.code in (502, 503)
-    reason = error.reason if isinstance(error, urllib.error.URLError) else error
-    return isinstance(reason, (ConnectionRefusedError, TimeoutError))
+UNAVAILABLE_STATUSES = (502, 503, 504)
+
+
+def backend_unavailable(status: int) -> bool:
+    """Only these answers mean "down or still starting"; every other status is a real defect."""
+    return status in UNAVAILABLE_STATUSES
 
 
 def http_ready(url: str, *, timeout: float = 1, strict: bool = False) -> bool:
     """Readiness probe; the two callers differ only in what an unexpected answer means.
 
-    - default, for polling: any transport or status problem is "not ready yet", never an error
-    - strict, for a reuse decision: only an unavailable backend reads as not ready, so a wrong
-      readiness route or a broken server surfaces instead of being polled to the deadline
+    - default, for polling: a connection problem or any error status is "not ready yet"
+    - strict, for a reuse decision: only a gateway saying its backend is unavailable reads as not
+      ready, so a wrong readiness route or a broken server raises instead of polling to the deadline
     """
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as response:
-            response.read()
-        return True
-    except OSError as error:
-        if strict and not backend_unavailable(error):
-            raise
+        response = requests.get(url, timeout=timeout)
+    except (requests.ConnectionError, requests.Timeout):
         return False
+    if response.ok:
+        return True
+    if not strict or backend_unavailable(response.status_code):
+        return False
+    response.raise_for_status()
+    return False
 
 
 def wait_ready(

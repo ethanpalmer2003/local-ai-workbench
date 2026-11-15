@@ -6,7 +6,6 @@
 import contextlib
 import ctypes
 import dataclasses
-import json
 import os
 import shutil
 import socket
@@ -14,12 +13,12 @@ import subprocess
 import sys
 import threading
 import time
-import urllib.request
 from collections.abc import Callable, Mapping
 from ctypes import wintypes
 from enum import Enum
 from typing import Any, cast
-from urllib.error import URLError
+
+import requests
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
@@ -627,22 +626,20 @@ def trigger_preload(
         return
 
     def _preload_task():
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        headers = {"Content-Type": "application/json"}
+        budget = cfg.LAUNCH.warmup_policy.request_timeout_s
 
         for _ in range(cfg.LAUNCH.warmup_policy.attempts):
             try:
-                if ready_url and not http_ready(
-                    ready_url, timeout=cfg.LAUNCH.warmup_policy.request_timeout_s, strict=True
-                ):
+                if ready_url and not http_ready(ready_url, timeout=budget, strict=True):
                     time.sleep(cfg.LAUNCH.warmup_policy.retry_interval_s)
                     continue
-                with urllib.request.urlopen(req, timeout=cfg.LAUNCH.warmup_policy.request_timeout_s) as response:
-                    while response.read(65536):
-                        pass
-            except (URLError, ConnectionRefusedError, TimeoutError) as error:
-                if not backend_unavailable(error):
-                    raise
+                response = requests.post(url, json=cast(Any, payload), headers=headers, timeout=budget)
+                if backend_unavailable(response.status_code):
+                    time.sleep(cfg.LAUNCH.warmup_policy.retry_interval_s)
+                    continue
+                response.raise_for_status()
+            except (requests.ConnectionError, requests.Timeout):
                 time.sleep(cfg.LAUNCH.warmup_policy.retry_interval_s)
                 continue
             if on_success:
