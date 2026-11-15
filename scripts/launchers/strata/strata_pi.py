@@ -220,9 +220,10 @@ def main(argv: list[str] | None = None) -> None:
         client_args = args.client_args[1:] if args.client_args[:1] == ["--"] else args.client_args
         subprocess.run([*pi_command(connection, model), *client_args], cwd=project_cfg.BASE_DIR, env=env, check=True)
     finally:
-        if process is not None and process.poll() is None:
+        if process is not None:
             launch_util.kill_process_tree(process.pid, ports=connection.port)
             process.wait(timeout=15)
+            launch_util.report_exit(process, "Strata server")
 
 
 if __name__ == "__main__":

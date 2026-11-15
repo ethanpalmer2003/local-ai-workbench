@@ -103,7 +103,7 @@ def _watch(process: subprocess.Popen[bytes], log_path: Path, spec: RunSpec, fail
         elif now - moved > spec.silence:
             failure["reason"] = f"no output and no CPU for {spec.silence:.0f} s"
         if failure:
-            launch_util.kill_process_tree(process.pid)
+            launch_util.stop_process(process, "model run worker")
             return
 
 

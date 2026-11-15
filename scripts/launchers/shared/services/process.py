@@ -28,11 +28,17 @@ def owned_module_worker(process, module: str):
 
 
 def stop_owned(
-    process: subprocess.Popen[Any], *, timeout: float = 15, graceful: bool = False, kill_timeout: float = 5
+    process: subprocess.Popen[Any],
+    *,
+    title: str = "service",
+    timeout: float = 15,
+    graceful: bool = False,
+    kill_timeout: float = 5,
 ) -> None:
-    """Only call with a process started/owned by the current operation."""
+    """Only call with a process started/owned by the current operation; the exit status is printed."""
     if process.poll() is not None:
         process.wait(timeout=timeout)
+        launch_util.report_exit(process, title)
         return
 
     if graceful:
@@ -44,3 +50,4 @@ def stop_owned(
     except subprocess.TimeoutExpired:
         launch_util.kill_process_tree(process.pid)
         process.wait(timeout=kill_timeout)
+    launch_util.report_exit(process, title)
