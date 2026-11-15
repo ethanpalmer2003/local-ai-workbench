@@ -205,15 +205,15 @@ class TestBoundaries(unittest.TestCase):
     def test_every_test_case_class_is_registered(self):
         """A module missing from run.py is dead coverage; the suite selects classes by name."""
         tree = ast.parse((project_cfg.TESTS_DIR / "run.py").read_text(encoding="utf-8-sig"))
-        registered = {
-            element.id
-            for call in ast.walk(tree)
-            if isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute) and call.func.attr == "main"
-            for keyword in call.keywords
-            if keyword.arg == "extra_groups"
-            for element in ast.walk(keyword.value)
-            if isinstance(element, ast.Name)
-        }
+        registered: set[str] = set()
+        for node in tree.body:
+            if not isinstance(node, ast.Assign | ast.AnnAssign) or node.value is None:
+                continue
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            if not any(isinstance(target, ast.Name) and target.id == "GROUPS" for target in targets):
+                continue
+            registered = {element.id for element in ast.walk(node.value) if isinstance(element, ast.Name)}
+        self.assertTrue(registered, "run.py no longer lists its classes in GROUPS")
         missing = []
         for path in sorted(project_cfg.TEST_CASES_DIR.rglob("test_*.py")):
             if {"retired", "output"} & set(path.parts):

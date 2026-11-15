@@ -1040,7 +1040,7 @@ DEFAULT_GROUPS: tuple[type[unittest.TestCase], ...] = (
 )
 
 
-def main(extra_groups: tuple[type[unittest.TestCase], ...] = ()) -> int:
+def main(extra_groups: tuple[type[unittest.TestCase], ...] = (), scope_note: str = "") -> int:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--suite", choices=SUITES, help="native suite to run: launcher wiring, backend probes, or both")
@@ -1061,6 +1061,7 @@ def main(extra_groups: tuple[type[unittest.TestCase], ...] = ()) -> int:
         "--with-regressions", action="store_true", help="run the model-free suite before the native suite"
     )
     parser.add_argument("--ini-set", action="append", default=[], help=argparse.SUPPRESS)
+    parser.add_argument("--all", action="store_true", help="run every test class, not just the ones the change reaches")
     parser.add_argument("--worker", choices=live_frameworks.WORKER_TARGETS, help=argparse.SUPPRESS)
     args = parser.parse_args()
     live_frameworks.live_timeout = args.timeout
@@ -1078,6 +1079,7 @@ def main(extra_groups: tuple[type[unittest.TestCase], ...] = ()) -> int:
         settings={
             "test_mode": "model_free",
             "scope": ["mocked_unit", "loopback_integration", "local_assets"],
+            "class_selection": scope_note or "every class",
             "native_suite_after_regressions": native_suite,
         },
     )

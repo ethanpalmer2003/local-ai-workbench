@@ -16,7 +16,7 @@ MODULES: dict[str, tuple[str, tuple[str, ...]]] = {
     "frameworks": ("scripts.download.frameworks.update_frameworks", ("--skip-comfyui",)),
     "models": ("scripts.download.models.updates", ()),
     "gate": ("scripts.review", ("--yes", "--all")),
-    "suite": ("scripts.tests.run", ()),
+    "suite": ("scripts.tests.run", ("--all",)),
     "launchers": ("scripts.tests.cases.suites.live_frameworks", ()),
     "backends": ("scripts.tests.cases.suites.quick_validation", ()),
 }
