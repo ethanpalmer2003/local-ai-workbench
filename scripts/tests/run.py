@@ -20,6 +20,7 @@ from scripts.tests.cases.coding_agents.shared.test_benchmark_requests import Ben
 from scripts.tests.cases.koboldcpp.kobold_lite_streaming import StreamingPatch
 from scripts.tests.cases.koboldcpp.test_external_bridge import ExternalBridgeTests
 from scripts.tests.cases.koboldcpp.test_kobold_image_swap import SwapTests
+from scripts.tests.cases.koboldcpp.test_kobold_lite_patch import ExternalSeedTests
 from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
 from scripts.tests.cases.koboldcpp.test_kobold_stack_vram import StackProbeTests
 from scripts.tests.cases.lemonade_server.test_lemonade_launcher import LemonadeLauncherTests, LemonadeOwnedStartTests
@@ -160,6 +161,7 @@ if __name__ == "__main__":
                     ScanTests,
                     SuffixTests,
                     DeadCodeTests,
+                    ExternalSeedTests,
                     MarkdownNameTests,
                     ModelNameTests,
                     LinkTests,

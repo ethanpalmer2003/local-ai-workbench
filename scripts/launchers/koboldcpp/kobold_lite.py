@@ -147,11 +147,15 @@ def streaming_assets(variant: str) -> tuple[Path, ...]:
     return shared + (folder / "kobold_streaming.js",) if variant == "local" else shared
 
 
+NO_MODEL_GUARD = "localStorage.getItem('kaihordewebui_custom_oai_endpoint')"
+
+
 def external_script(endpoint: str, model: str) -> str:
     """Point Lite's OpenAI-compatible provider at our llama.cpp server unless a stored choice exists.
 
     Seeding only an absent key matters: Lite keeps settings in localStorage per origin, so an
-    unconditional write would undo a provider the user picked on every page load.
+    unconditional write would undo a provider the user picked on every page load. Selecting the
+    provider is the same work Lite's "No Models Loaded" dialog does when it is answered yes.
     """
     values = {"custom_oai_endpoint": endpoint, "custom_oai_key": "noop", "custom_oai_model": model}
     assignments = "".join(
@@ -159,12 +163,32 @@ def external_script(endpoint: str, model: str) -> str:
         f"localStorage.setItem('kaihordewebui_{key}',{json.dumps(value)});"
         for key, value in values.items()
     )
-    return f"<script>try{{{assignments}}}catch(e){{}}</script>"
+    select = (
+        f"if({NO_MODEL_GUARD}){{window.addEventListener('load',function(){{try{{"
+        "localflag=false;hide_popups();restore_endpoint_dropdowns();"
+        "document.getElementById('customapidropdown').value='1';"
+        "render_gametext(false);display_endpoint_container();"
+        "koboldcpp_force_allow_endpoint_selector=true;"
+        "}catch(e){}}});}}"
+    )
+    return f"<script>try{{{assignments}{select}}}catch(e){{}}</script>"
+
+
+def guard_no_model_dialog(html: str) -> str:
+    """Keep Lite's no-model dialog out of the way when an external provider is configured."""
+    return _replace_once(
+        html,
+        "else if(localflag && no_txt_model && !koboldcpp_has_txt2img && !koboldcpp_has_vision && "
+        "!koboldcpp_has_whisper && !koboldcpp_has_tts && !is_using_kcpp_with_admin())",
+        "else if(localflag && no_txt_model && !koboldcpp_has_txt2img && !koboldcpp_has_vision && "
+        "!koboldcpp_has_whisper && !koboldcpp_has_tts && !is_using_kcpp_with_admin() && !" + NO_MODEL_GUARD + ")",
+    )
 
 
 def patch_lite(html: str, variant: str = "local", external: tuple[str, str] | None = None) -> str:
     if variant not in ("local", "pr"):
         raise ValueError(f"Unknown Lite streaming variant: {variant}")
+    html = guard_no_model_dialog(html)
     if variant == "local":
         html, settings_script = _patch_local(html)
     else:
