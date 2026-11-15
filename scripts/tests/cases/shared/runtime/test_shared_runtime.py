@@ -114,7 +114,7 @@ class ExitReportTests(unittest.TestCase):
             code = launch_util.stop_process(process, "llama.cpp server")
         self.assertEqual(code, 0xC0000005)
         kill.assert_not_called()
-        self.assertIn("exited: 0xC0000005", output.getvalue())
+        self.assertIn("already exited: 0xC0000005", output.getvalue())
 
     def test_teardown_reports_a_process_it_had_to_stop(self):
         from scripts.launchers import launch_util
@@ -122,7 +122,8 @@ class ExitReportTests(unittest.TestCase):
         process = process_fixtures.fake_process(pid=4242)
         with patch.object(launch_util, "kill_process_tree"), contextlib.redirect_stdout(io.StringIO()) as output:
             launch_util.stop_process(process, "llama.cpp server")
-        self.assertIn("[EXIT] llama.cpp server pid 4242", output.getvalue())
+        # - a status that came from our own kill must never read like a crash
+        self.assertIn("stopped by this run", output.getvalue())
 
 
 class ReadinessRouteTests(unittest.TestCase):
