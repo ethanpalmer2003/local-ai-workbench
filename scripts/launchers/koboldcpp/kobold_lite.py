@@ -174,15 +174,22 @@ def external_script(endpoint: str, model: str) -> str:
     return f"<script>try{{{assignments}{select}}}catch(e){{}}</script>"
 
 
+# - the branch that offers the external API when nothing is loaded; a future Lite may rename it
+NO_MODEL_BRANCH = (
+    "else if(localflag && no_txt_model && !koboldcpp_has_txt2img && !koboldcpp_has_vision && "
+    "!koboldcpp_has_whisper && !koboldcpp_has_tts && !is_using_kcpp_with_admin())"
+)
+
+
 def guard_no_model_dialog(html: str) -> str:
-    """Keep Lite's no-model dialog out of the way when an external provider is configured."""
-    return _replace_once(
-        html,
-        "else if(localflag && no_txt_model && !koboldcpp_has_txt2img && !koboldcpp_has_vision && "
-        "!koboldcpp_has_whisper && !koboldcpp_has_tts && !is_using_kcpp_with_admin())",
-        "else if(localflag && no_txt_model && !koboldcpp_has_txt2img && !koboldcpp_has_vision && "
-        "!koboldcpp_has_whisper && !koboldcpp_has_tts && !is_using_kcpp_with_admin() && !" + NO_MODEL_GUARD + ")",
-    )
+    """Keep Lite's no-model dialog out of the way when an external provider is configured.
+
+    Optional by design: the seeded provider already selects itself on load, so a Lite build without
+    this exact branch loses only the suppression, not the connection.
+    """
+    if html.count(NO_MODEL_BRANCH) != 1:
+        return html
+    return html.replace(NO_MODEL_BRANCH, NO_MODEL_BRANCH[:-1] + " && !" + NO_MODEL_GUARD + ")")
 
 
 def patch_lite(html: str, variant: str = "local", external: tuple[str, str] | None = None) -> str:

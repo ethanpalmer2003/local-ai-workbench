@@ -24,6 +24,9 @@ class ExternalSeedTests(unittest.TestCase):
         patched = kobold_lite.guard_no_model_dialog(html)
         self.assertIn("!localStorage.getItem('kaihordewebui_custom_oai_endpoint'))", patched)
 
+    def test_a_page_without_the_branch_is_left_alone(self):
+        self.assertEqual(kobold_lite.guard_no_model_dialog("<body>nothing</body>"), "<body>nothing</body>")
+
 
 if __name__ == "__main__":
     unittest.main()
