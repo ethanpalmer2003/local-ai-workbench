@@ -1166,7 +1166,7 @@ def _run_regressions(
         return 1
     if native_suite:
         return _run_native_suite(native_suite, live, only)
-    print("[WARN] Model inference not tested. Use bat/tests/test_live_launchers.bat or test_live_backends.bat.")
+    print("[WARN] Model inference not tested. Use bat/checks/test_live_launchers.bat or test_live_backends.bat.")
     return 0
 
 

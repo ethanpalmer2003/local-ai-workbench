@@ -142,7 +142,7 @@ OWNER_ROOTS = (
     project_cfg.SCRIPTS_DIR / "download/frameworks",
     *(
         project_cfg.BAT_DIR / role
-        for role in ("launchers", "services", "maintenance", "models", "tests", "benchmarks", "browser", "manage")
+        for role in ("launchers", "services", "maintenance", "models", "checks", "benchmarks", "browser", "manage")
     ),
 )
 
