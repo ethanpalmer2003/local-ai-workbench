@@ -262,6 +262,9 @@ def describe_exit(code: int | None) -> str:
     """
     if code is None:
         return "still running"
+    if not isinstance(code, int):
+        # - a stub process in a test reports a mock here; a diagnostic never raises on that
+        return "unknown"
     if 0 <= code < 0x80000000:
         return str(code)
     value = code & 0xFFFFFFFF
