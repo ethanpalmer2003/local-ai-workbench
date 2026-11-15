@@ -9,3 +9,6 @@
 /.zed/
 /.coverage
 *.lnk
+
+# Graphify's local knowledge graph (generated, 9 MB)
+graphify-out/
