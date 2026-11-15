@@ -31,7 +31,10 @@ from scripts.launchers.llamacpp import coding_clients, llamacpp, llamacpp_coding
 from scripts.shared.service_identity import endpoint_identity
 from scripts.shared.timing import timed
 
-CLIENTS = ("pi", "littlecoder", "ohmypi", "nanocoder")
+# - Pi is the only coding client this repository works with. The other three keep their wiring so a
+#   re-enable is one edit, but they never run by default and cannot be requested.
+CLIENTS = ("pi",)
+DISABLED_CLIENTS = ("littlecoder", "ohmypi", "nanocoder")
 
 
 @dataclass
@@ -532,7 +535,13 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Compare Strata and llama.cpp models across coding clients on identical tasks."
     )
-    parser.add_argument("--clients", nargs="+", choices=CLIENTS, default=list(CLIENTS))
+    parser.add_argument(
+        "--clients",
+        nargs="+",
+        choices=CLIENTS,
+        default=list(CLIENTS),
+        help=f"coding client; {', '.join(DISABLED_CLIENTS)} are disabled and stay unselectable",
+    )
     parser.add_argument(
         "--pi-extensions",
         action="store_true",

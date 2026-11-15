@@ -1,7 +1,7 @@
 # Coding-agent benchmarks
 
 - Runner: `scripts.benchmarks.coding_agents.shared.benchmark_agents`; regression tests remain in `scripts/tests/cases/coding_agents/`.
-- Shared runners compare Pi, LittleCoder, Oh My Pi and NanoCoder on identical English/code tasks.
+- Shared runners compare models on identical English/code tasks, with Pi as the only client: LittleCoder, Oh My Pi and NanoCoder stay wired but are disabled, so `--clients` offers `pi` alone and a benchmark run cannot select them.
 
 ```powershell
 C:/AI/bat/benchmarks/benchmark_coding_agents.bat
