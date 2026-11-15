@@ -158,6 +158,18 @@ class LauncherBehaviors(unittest.TestCase):
             self.assertIn("'C:/tools/it''s audio.exe' 'hello world'", command[4])
             self.assertEqual("Tee-Object" in command[4], log_file is not None)
 
+    def test_one_llamacpp_default_serves_every_use_and_an_override_wins(self):
+        from scripts.launchers import launcher_config as cfg
+
+        self.assertEqual(cfg.LLAMACPP_DEFAULT_BUILD, "vulkan-1.0.0")
+        self.assertEqual(cfg.llamacpp_build("coding"), cfg.LLAMACPP_DEFAULT_BUILD)
+        self.assertEqual(cfg.llamacpp_build("embeddings"), cfg.LLAMACPP_DEFAULT_BUILD)
+        with patch.dict(cfg._BUILD_OVERRIDES, {"embeddings": "rocm-lemonade"}):
+            self.assertEqual(cfg.llamacpp_build("embeddings"), "rocm-lemonade")
+            self.assertEqual(cfg.llamacpp_build("coding"), cfg.LLAMACPP_DEFAULT_BUILD)
+        with self.assertRaises(ValueError):
+            cfg.llamacpp_build("unknown-use")
+
     def test_a_deferred_build_or_profile_is_refused_at_the_cli(self):
         import argparse
 
