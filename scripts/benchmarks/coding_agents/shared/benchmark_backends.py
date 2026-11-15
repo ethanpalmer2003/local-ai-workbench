@@ -50,7 +50,12 @@ class BenchmarkEndpoint:
 def benchmark_llama_config(
     overrides: dict[str, str], profile: str = "swift15", build: str | None = None
 ) -> llamacpp.LlamaConfig:
-    conf = llamacpp.LlamaConfig(profile_name=profile, build_name=build, ini_overrides=overrides)
+    conf = llamacpp.LlamaConfig(
+        profile_name=profile,
+        build_name=build,
+        ini_overrides=overrides,
+        profiles={**cfg.LLAMACPP_PROFILES, **cfg.LLAMACPP_BENCHMARK_PROFILES},
+    )
     conf.profile = replace(conf.profile, extra_args={**conf.profile.extra_args, **overrides})
     return conf
 

@@ -13,6 +13,7 @@ from scripts.config.coding_agents.pi import packages as pi_packages
 from scripts.config.models.catalog import SpeechClass
 
 # - deliberate re-export: consumers read it as cfg.LLAMACPP_PROFILES
+from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES as LLAMACPP_BENCHMARK_PROFILES
 from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_PROFILES as LLAMACPP_PROFILES
 
 # --- GENERIC PATHS AND LAUNCH SETTINGS ---
