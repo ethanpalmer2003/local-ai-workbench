@@ -47,4 +47,4 @@ component:
 
 A framework without a startup validator makes its launcher fail on missing paths instead.
 
-Format the whole repository with `scripts/review/format_py.bat`. Lint and format share one scope: repository root, Python files only, with `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and generated `ids.py` excluded. The gate compares formatting too; `--no-format-check` skips it. Tool inventory: [TOOLS.md](TOOLS.md).
+Format what changed with `scripts/review/format_py.bat`; `--all` formats the whole repository. Lint and format share one scope: repository root, Python files only, with `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and generated `ids.py` excluded. The gate compares formatting too and follows the same scoping; `--no-format-check` skips it. Tool inventory: [TOOLS.md](TOOLS.md).
