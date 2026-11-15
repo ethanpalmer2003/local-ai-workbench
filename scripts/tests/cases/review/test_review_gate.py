@@ -100,6 +100,31 @@ class ConsentTests(unittest.TestCase):
         full.assert_called_once()
         touched.assert_not_called()
 
+    def test_a_repo_wide_run_without_agreement_runs_nothing(self):
+        from scripts.review import __main__ as gate
+
+        with (
+            patch.object(gate, "changed_paths", return_value=[]),
+            patch.object(gate, "consents", return_value=False),
+            patch.object(gate, "full_gate") as full,
+            patch.object(gate, "touched_gate") as touched,
+        ):
+            self.assertEqual(gate.main([]), 1)
+        full.assert_not_called()
+        touched.assert_not_called()
+
+    def test_a_scoped_run_does_not_ask(self):
+        from scripts.review import __main__ as gate
+
+        with (
+            patch.object(gate, "changed_paths", return_value=["notes/TODO.md"]),
+            patch.object(gate, "consents") as consent,
+            patch.object(gate, "touched_gate", return_value=0) as touched,
+        ):
+            self.assertEqual(gate.main([]), 0)
+        consent.assert_not_called()
+        touched.assert_called_once()
+
     def test_formatting_targets_the_change_and_falls_back_to_the_tree(self):
         from scripts.review import format_py
 

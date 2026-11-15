@@ -408,13 +408,12 @@ def full_gate(argv: list[str] | None = None) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Scope the gate to the change by default; --all, --prune, --scrub or a clean tree run everything."""
+    """Scope the gate to the change by default; a repo-wide run, asked for by --all, --prune, --scrub or a clean
+    tree, needs the user's agreement because it checks everything rather than the change."""
     argv = list(sys.argv[1:] if argv is None else argv)
     if not (_flag(argv, "--all") or _flag(argv, "--prune") or _flag(argv, "--scrub")) and changed_paths():
-        if not consents(_flag(argv, "--yes")):
-            return 1
         return touched_gate(argv)
-    return full_gate(argv)
+    return full_gate(argv) if consents(_flag(argv, "--yes")) else 1
 
 
 if __name__ == "__main__":
