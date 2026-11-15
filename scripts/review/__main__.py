@@ -171,7 +171,15 @@ def write_timings() -> Path:
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{time.time_ns()}.json"
     path.write_text(
-        json.dumps({"total_seconds": round(sum(item["seconds"] for item in TIMES), 2), "sections": TIMES}, indent=1),
+        json.dumps(
+            {
+                "commit": _git("rev-parse", "HEAD").strip(),
+                "dirty": bool(changed_paths()),
+                "total_seconds": round(sum(item["seconds"] for item in TIMES), 2),
+                "sections": TIMES,
+            },
+            indent=1,
+        ),
         encoding="utf-8",
     )
     return path
@@ -185,17 +193,23 @@ FRONTEND_SUFFIXES = frozenset({".js", ".css", ".html", ".cjs", ".ts"})
 DEPENDENCY_FILES = ("pyproject.toml", "uv.lock")
 
 
-def changed_paths() -> list[str]:
-    """Paths this working tree changed, renames included."""
+def _git(*args: str) -> str:
     result = subprocess.run(
-        ["git", "-C", str(project_cfg.BASE_DIR), "status", "--porcelain"], capture_output=True, text=True, check=False
+        ["git", "-C", str(project_cfg.BASE_DIR), *args], capture_output=True, text=True, check=False
     )
+    return result.stdout if result.returncode == 0 else ""
+
+
+def changed_paths() -> list[str]:
+    """Every path changed since the upstream branch, working tree included; renames give both sides."""
     paths: list[str] = []
-    for line in result.stdout.splitlines():
+    for line in _git("status", "--porcelain").splitlines():
         body = line[3:].strip().strip('"')
         if body:
             paths.extend(part.strip().strip('"') for part in body.split(" -> "))
-    return paths
+    # - a committed but unpushed change is still unreviewed work, so the range covers it
+    paths.extend(path for path in _git("diff", "--name-only", "@{upstream}...HEAD").splitlines() if path.strip())
+    return sorted(set(paths))
 
 
 def touched_sections(paths: list[str]) -> set[str]:
