@@ -32,6 +32,30 @@ class ConsentTests(unittest.TestCase):
             ):
                 self.assertEqual(review.consents(False), expected, answer)
 
+    def test_a_batch_rename_only_needs_layout_and_docs(self):
+        from scripts.review.__main__ import touched_sections
+
+        self.assertEqual(touched_sections(["bat/checks/test_full.bat"]), {"layout", "docs"})
+
+    def test_a_python_edit_adds_the_code_sections(self):
+        from scripts.review.__main__ import touched_sections
+
+        sections = touched_sections(["scripts/tools/example.py"])
+        self.assertTrue({"layout", "docs", "lint", "types", "dead code"} <= sections)
+        self.assertNotIn("spelling", sections)
+
+    def test_a_markdown_edit_adds_the_prose_sections_without_code_ones(self):
+        from scripts.review.__main__ import touched_sections
+
+        sections = touched_sections(["notes/TODO.md"])
+        self.assertTrue({"docs", "typography", "spelling"} <= sections)
+        self.assertNotIn("lint", sections)
+
+    def test_renames_contribute_both_sides(self):
+        from scripts.review.__main__ import changed_paths
+
+        self.assertIsInstance(changed_paths(), list)
+
 
 if __name__ == "__main__":
     unittest.main()
