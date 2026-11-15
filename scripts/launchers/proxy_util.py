@@ -13,12 +13,9 @@ import sys
 import threading
 import time
 import traceback
-import urllib.error
-import urllib.request
 from collections.abc import Callable, Iterable, Mapping
 from contextlib import AbstractContextManager, ExitStack
 from email.message import Message
-from http.client import HTTPResponse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, ClassVar
 from urllib.parse import urlsplit
@@ -77,9 +74,7 @@ def send_json_error(handler: BaseHTTPRequestHandler, status: int, message: str, 
     send_bytes(handler, status, body, content_type="application/json")
 
 
-def forward_upstream_error(
-    handler: BaseHTTPRequestHandler, tag: str, error: urllib.error.URLError | requests.RequestException
-):
+def forward_upstream_error(handler: BaseHTTPRequestHandler, tag: str, error: requests.RequestException):
     if isinstance(error, requests.HTTPError) and error.response is not None:
         response = error.response
         detail = response.text
@@ -90,18 +85,9 @@ def forward_upstream_error(
             handler, response.status_code, response.content, response.headers.get("Content-Type", "application/json")
         )
         return
-    if isinstance(error, urllib.error.HTTPError):
-        with error:
-            body = error.read()
-        detail = body.decode("utf-8", errors="replace")
-        with contextlib.suppress(json.JSONDecodeError):
-            detail = json.dumps(json.loads(detail), indent=2)
-        print(f"[{tag}] upstream HTTP {error.code}:\n{detail}")
-        send_bytes(handler, error.code, body, error.headers.get("Content-Type", "application/json"))
-    else:
-        reason = getattr(error, "reason", None) or str(error)
-        print(f"[{tag}] upstream unavailable: {reason}")
-        send_json_error(handler, 502, f"upstream unavailable: {reason}", "bad_gateway")
+    reason = str(error)
+    print(f"[{tag}] upstream unavailable: {reason}")
+    send_json_error(handler, 502, f"upstream unavailable: {reason}", "bad_gateway")
 
 
 def read_request_body(handler: BaseHTTPRequestHandler) -> bytes:
@@ -144,12 +130,12 @@ class _SseAudioCounter:
 
 def _send_stream_headers(
     handler: BaseHTTPRequestHandler,
-    response: HTTPResponse,
+    response: requests.Response,
     chunked: bool,
     length: str | None,
     response_headers: Mapping[str, str] | None = None,
 ) -> None:
-    handler.send_response(response.status)
+    handler.send_response(response.status_code)
     handler.send_header("Access-Control-Allow-Origin", "*")
     overrides = {name.lower() for name in (response_headers or {})}
     for name, value in response.headers.items():
@@ -207,7 +193,7 @@ def _watch_client_disconnect(client, response, stopped: threading.Event, disconn
 
 def _pump_stream(
     handler: BaseHTTPRequestHandler,
-    response: HTTPResponse,
+    response: requests.Response,
     chunked: bool,
     counter: _SseAudioCounter | None,
     start: float,
@@ -215,7 +201,9 @@ def _pump_stream(
 ) -> None:
     first_chunk = True
     while True:
-        chunk = response.read1(RELAY_CHUNK_BYTES)
+        # - read1 returns what has arrived instead of waiting for a full chunk, so a token stream
+        #   reaches the client as it is produced
+        chunk = response.raw.read1(RELAY_CHUNK_BYTES)
         if not chunk:
             break
         if first_chunk:
@@ -251,11 +239,13 @@ def relay_stream(
     - Returns stats (ttfb, total, audio_bytes, disconnected), or None if
       upstream failed before streaming started
     """
-    request = urllib.request.Request(url, data=body or None, method=method, headers=dict(headers))
     start = time.perf_counter()
     try:
-        response = urllib.request.urlopen(request, timeout=STREAM_TIMEOUT)
-    except urllib.error.URLError as error:
+        response = requests.request(
+            method, url, data=body or None, headers=dict(headers), timeout=STREAM_TIMEOUT, stream=True
+        )
+        response.raise_for_status()
+    except requests.RequestException as error:
         forward_upstream_error(handler, tag, error)
         return None
 
@@ -438,22 +428,23 @@ class _JsonProxyHandler(ProxyHandlerMixin):
         return self.headers.get("Content-Type", "").lower()
 
     def _relay(self, method: str, body: bytes, raw_request: dict[str, object] | None) -> None:
-        req = urllib.request.Request(
-            self.upstream_url + self.path,
-            data=body if body else None,
-            method=method,
-            headers=build_forward_headers(self.headers, body),
-        )
         try:
-            with urllib.request.urlopen(req, timeout=RELAY_TIMEOUT) as resp:
-                resp_body = resp.read()
-                if self.on_response and raw_request is not None:
-                    self._notify_response(resp_body, raw_request)
-                self.send_response(resp.status)
-                relay_response_headers(self, resp.getheaders(), len(resp_body))
-                self.end_headers()
-                self.wfile.write(resp_body)
-        except urllib.error.URLError as e:
+            response = requests.request(
+                method,
+                self.upstream_url + self.path,
+                data=body if body else None,
+                headers=build_forward_headers(self.headers, body),
+                timeout=RELAY_TIMEOUT,
+            )
+            response.raise_for_status()
+            resp_body = response.content
+            if self.on_response and raw_request is not None:
+                self._notify_response(resp_body, raw_request)
+            self.send_response(response.status_code)
+            relay_response_headers(self, list(response.headers.items()), len(resp_body))
+            self.end_headers()
+            self.wfile.write(resp_body)
+        except requests.RequestException as e:
             forward_upstream_error(self, self.tag, e)
             if self.request_scope is not None and method == "POST":
                 raise
