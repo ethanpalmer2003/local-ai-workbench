@@ -7,10 +7,11 @@ import json
 import statistics
 import time
 import traceback
-import urllib.request
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import await_http, post_json, stop_server
 from scripts.benchmarks.shared import provenance
@@ -122,17 +123,18 @@ def stream_request(
     remaining = deadline - time.perf_counter()
     if remaining <= 0:
         raise TimeoutError("Benchmark time budget exhausted before request")
-    request = urllib.request.Request(
-        base + "/completion",
-        data=json.dumps(_request_payload(prompt, args)).encode(),
-        headers={"Content-Type": "application/json"},
-    )
     started = time.perf_counter()
     with (
         trace.open("w", encoding="utf-8") as output,
-        urllib.request.urlopen(request, timeout=min(args.request_timeout, remaining)) as response,
+        requests.post(
+            base + "/completion",
+            json=_request_payload(prompt, args),
+            timeout=min(args.request_timeout, remaining),
+            stream=True,
+        ) as response,
     ):
-        count, events, content, final = _consume_stream(response, output, args, deadline, started)
+        response.raise_for_status()
+        count, events, content, final = _consume_stream(response.iter_lines(), output, args, deadline, started)
     if final is None:
         raise RuntimeError("Stream ended without final completion timings")
     expected = int(final["timings"]["predicted_n"])

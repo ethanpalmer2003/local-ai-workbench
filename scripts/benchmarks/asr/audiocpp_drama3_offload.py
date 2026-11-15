@@ -11,10 +11,11 @@ import subprocess
 import threading
 import time
 import traceback
-import urllib.request
 import wave
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.vram import snapshot_dict
@@ -160,19 +161,17 @@ def measure(
         "response_format": "pcm",
         "options": {"seed": "123", "max_tokens": str(max_tokens), "text_chunk_size": "2000"},
     }
-    request = urllib.request.Request(
-        f"http://127.0.0.1:{PORT}/v1/audio/speech",
-        data=json.dumps(payload).encode(),
-        headers={"Content-Type": "application/json"},
-    )
     reader = AudioReader("sse", 44100)
     started = time.perf_counter()
     first_audio = None
     arrivals = []
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        if response.headers.get_content_type() != "text/event-stream":
+    with requests.post(
+        f"http://127.0.0.1:{PORT}/v1/audio/speech", json=payload, timeout=timeout, stream=True
+    ) as response:
+        response.raise_for_status()
+        if response.headers.get("Content-Type", "").split(";")[0] != "text/event-stream":
             raise RuntimeError(f"Expected SSE, received {response.headers}")
-        while chunk := response.read1(8192):
+        for chunk in response.iter_content(8192):
             added = reader.feed(chunk)
             if added:
                 arrival = time.perf_counter() - started

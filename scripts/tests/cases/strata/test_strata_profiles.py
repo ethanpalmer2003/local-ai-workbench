@@ -1,12 +1,11 @@
 """Strata screening guards, streamed accounting and fixed-answer grading without inference."""
 
-import io
 import json
 import time
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock, patch
 
 from scripts.benchmarks.coding_agents import strata_profiles as screen
 from scripts.benchmarks.coding_agents.shared import benchmark_requests
@@ -43,11 +42,12 @@ class StrataProfileTests(unittest.TestCase):
                 "timings": {"predicted_per_second": 35},
             },
         ]
-        response = io.BytesIO(
-            b"".join(b"data: " + json.dumps(row).encode() + b"\n\n" for row in chunks) + b"data: [DONE]\n"
-        )
+        lines = [b"data: " + json.dumps(row).encode() for row in chunks] + [b"data: [DONE]"]
+        response = MagicMock(iter_lines=Mock(return_value=lines), raise_for_status=Mock())
+        response.__enter__ = Mock(return_value=response)
+        response.__exit__ = Mock(return_value=False)
         connection = StrataConnection(Path("unused"), {"model_name": "swift"}, 1, "test-key")
-        with patch.object(benchmark_requests.urllib.request, "urlopen", return_value=response):
+        with patch.object(benchmark_requests.requests, "post", return_value=response):
             record = screen.request(connection, "prompt", 128, time.monotonic() + 60)
         self.assertEqual(record["content"], "ok")
         self.assertTrue(record["accounting"]["usage_complete"])
