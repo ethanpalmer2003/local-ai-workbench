@@ -5,11 +5,12 @@ import hashlib
 import json
 import threading
 import time
-import urllib.request
 import wave
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
+
+import requests
 
 from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.asr.requests import multipart
@@ -33,8 +34,9 @@ TEXT = "Hello. Tell me about your day, and I will help you practice a natural co
 
 
 def inventory():
-    with urllib.request.urlopen(f"http://127.0.0.1:{PORT}/v1/models", timeout=10) as response:
-        return json.load(response)
+    response = requests.get(f"http://127.0.0.1:{PORT}/v1/models", timeout=10)
+    response.raise_for_status()
+    return response.json()
 
 
 def assert_resident(value):
@@ -59,14 +61,15 @@ def tts(timing=None):
             "options": {"seed": 42},
         }
     )
-    request = urllib.request.Request(
-        f"http://127.0.0.1:{PORT}/v1/audio/speech", json.dumps(body).encode(), {"Content-Type": "application/json"}
-    )
     reader = AudioReader("audio", 24000)
-    with urllib.request.urlopen(request, timeout=60) as response:
-        if response.headers.get_content_type() not in ("audio/pcm", "application/octet-stream", "audio/x-pcm"):
+    with requests.post(
+        f"http://127.0.0.1:{PORT}/v1/audio/speech", json=cast(Any, body), timeout=60, stream=True
+    ) as response:
+        response.raise_for_status()
+        content_type = response.headers.get("Content-Type", "").split(";")[0]
+        if content_type not in ("audio/pcm", "application/octet-stream", "audio/x-pcm"):
             raise ValueError(f"Expected raw PCM, got {response.headers}")
-        while chunk := response.read1(8192):
+        while chunk := response.raw.read1(8192):
             if reader.feed(chunk) and timing:
                 timing.mark("first_audio")
     reader.finish()

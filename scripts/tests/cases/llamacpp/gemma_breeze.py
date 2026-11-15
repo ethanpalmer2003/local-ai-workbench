@@ -3,10 +3,11 @@
 import argparse
 import json
 import time
-import urllib.request
 import wave
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.shared import provenance
 from scripts.config.audiocpp import server as audio_cfg
@@ -38,15 +39,13 @@ def gemma_reply(timeout: float, max_tokens: int) -> dict[str, Any]:
         "chat_template_kwargs": {"enable_thinking": False},
         "stream": True,
     }
-    request = urllib.request.Request(
-        url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"}
-    )
     started = time.perf_counter()
     first_token = None
     finish_reason = None
     pieces: list[str] = []
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        for line in response:
+    with requests.post(url, json=payload, timeout=timeout, stream=True) as response:
+        response.raise_for_status()
+        for line in response.iter_lines():
             if not line.startswith(b"data:"):
                 continue
             data = line[5:].strip()

@@ -13,12 +13,12 @@ import sys
 import threading
 import time
 import unittest
-import urllib.error
-import urllib.request
 import wave
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.reporting import RunReport
@@ -352,7 +352,7 @@ def _ports_ready(ports: list[int], old_pids: set[str], ready_url: str) -> bool:
         listeners = launch_util._listening_pids({str(port) for port in ports})
         new_ports = {int(port) for port, pid in listeners if pid not in old_pids}
         return set(ports).issubset(new_ports) and request(ready_url, timeout=2)[0] == 200
-    except (urllib.error.URLError, TimeoutError, ConnectionError):
+    except (requests.RequestException, ConnectionError):
         return False
 
 

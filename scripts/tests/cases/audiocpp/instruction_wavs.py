@@ -8,8 +8,8 @@ honors per-request "instruction" (overriding the server.json default).
 """
 
 import json
-import urllib.error
-import urllib.request
+
+import requests
 
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.config import project_config as project_cfg
@@ -72,18 +72,20 @@ def main() -> None:
                 payload = json.dumps(
                     {"input": TEXT, "model": cfg.AUDIOCPP_SERVICE.model, "options": {"instruction": instruction}}
                 ).encode("utf-8")
-                req = urllib.request.Request(
-                    f"http://127.0.0.1:{port}/v1/audio/speech",
-                    data=payload,
-                    headers={"Content-Type": "application/json"},
-                )
                 try:
-                    with urllib.request.urlopen(req, timeout=300) as resp:
-                        audio = resp.read()
-                except urllib.error.HTTPError as error:
+                    speech = requests.post(
+                        f"http://127.0.0.1:{port}/v1/audio/speech",
+                        data=payload,
+                        headers={"Content-Type": "application/json"},
+                        timeout=300,
+                    )
+                    speech.raise_for_status()
+                    audio = speech.content
+                except requests.HTTPError as error:
                     run.status = "failed"
-                    detail = error.read().decode("utf-8", "replace")
-                    print(f"[FAIL] {instruction!r}: HTTP {error.code}: {detail[:500]}")
+                    status = error.response.status_code if error.response is not None else "unknown"
+                    detail = error.response.text if error.response is not None else ""
+                    print(f"[FAIL] {instruction!r}: HTTP {status}: {detail[:500]}")
                     continue
                 name = f"instruction_{i:02d}_{instruction.replace(' ', '_').lower()}.wav"
                 (output.artifacts / name).write_bytes(audio)
