@@ -177,6 +177,81 @@ def write_timings() -> Path:
     return path
 
 
+PYTHON_SECTIONS = frozenset(
+    {"lint", "types", "formatting", "comments", "dead code", "network timeouts", "overlay access", "inventory"}
+)
+MARKDOWN_SECTIONS = frozenset({"typography", "spelling variants", "spelling"})
+FRONTEND_SUFFIXES = frozenset({".js", ".css", ".html", ".cjs", ".ts"})
+DEPENDENCY_FILES = ("pyproject.toml", "uv.lock")
+
+
+def changed_paths() -> list[str]:
+    """Paths this working tree changed, renames included."""
+    result = subprocess.run(
+        ["git", "-C", str(project_cfg.BASE_DIR), "status", "--porcelain"], capture_output=True, text=True, check=False
+    )
+    paths: list[str] = []
+    for line in result.stdout.splitlines():
+        body = line[3:].strip().strip('"')
+        if body:
+            paths.extend(part.strip().strip('"') for part in body.split(" -> "))
+    return paths
+
+
+def touched_sections(paths: list[str]) -> set[str]:
+    """The sections whose inputs changed: a rename of batch files needs layout and docs only."""
+    sections = {"layout", "docs"}
+    suffixes = {Path(path).suffix.lower() for path in paths}
+    if ".py" in suffixes:
+        sections |= PYTHON_SECTIONS
+    if ".md" in suffixes:
+        sections |= MARKDOWN_SECTIONS
+    if suffixes & FRONTEND_SUFFIXES:
+        sections.add("front-end wiring")
+    if any(path.endswith(DEPENDENCY_FILES) for path in paths):
+        sections |= {"advisories", "lock check", "deptry"}
+    if any("config/models" in path or path.endswith("ids.py") for path in paths):
+        sections.add("model references")
+    return sections
+
+
+def touched_gate(args: argparse.Namespace) -> int:
+    """Run only the sections the working tree changed, cheapest first; the full gate is unchanged."""
+    selected = touched_sections(changed_paths())
+    print(f"=== TOUCHED: {', '.join(sorted(selected))} ===", flush=True)
+    table = (
+        ("layout", "=== LAYOUT ===", layout.main),
+        ("docs", "\n=== DOCUMENTATION ===", lambda: docs.main([])),
+        ("model references", "\n=== MODEL REFERENCE DRIFT ===", model_references.main),
+        ("front-end wiring", "\n=== FRONT-END WIRING ===", frontend_wiring.main),
+        ("network timeouts", "\n=== NETWORK TIMEOUTS ===", lambda: network_timeouts.main([])),
+        ("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main([])),
+        ("lint", "\n=== LINT ===", lint_check),
+        ("types", "", lambda: type_check(args.fast)),
+        ("formatting", "\n=== PYTHON FORMATTING ===", format_check),
+        ("inventory", "", lambda: inventory_check(package_audit.summary(), args.fast)),
+        ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main([])),
+        ("comments", "\n=== COMMENTS ===", lambda: comments.main([])),
+        ("dead code", "\n=== DEAD CODE ===", unused.main),
+        ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
+        ("spelling", "\n=== SPELLING ===", spelling_check),
+        ("advisories", "", lambda: advisory_check(args.fast)),
+        ("lock check", "\n=== DEPENDENCY HYGIENE ===", package_audit.lock_issues),
+        ("deptry", "", declaration_check),
+    )
+    failed = 0
+    for name, banner, function in table:
+        if name not in selected:
+            continue
+        if banner:
+            print(banner, flush=True)
+        failed = failed or int(bool(timed(name, function)))
+    slowest = sorted(TIMES, key=lambda item: float(str(item["seconds"])), reverse=True)[:3]
+    summary = ", ".join(f"{item['section']} {item['seconds']}s" for item in slowest)
+    print(f"\n[TIME] {write_timings()} (slowest: {summary})")
+    return int(bool(failed))
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-format-check", action="store_true", help="skip the ruff format comparison")
@@ -188,6 +263,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--fast", action="store_true", help="skip the type check, inventory and advisory feed; about five seconds"
     )
+    parser.add_argument(
+        "--touched",
+        action="store_true",
+        help="run only the sections whose inputs this working tree changed; a rename costs about a second",
+    )
     args = parser.parse_args(argv)
     if args.prune:
         return package_audit.main(remove=args.remove)
@@ -195,6 +275,8 @@ def main(argv: list[str] | None = None) -> int:
         return public_audit_main(["--scrub"])
     if not consents(args.yes):
         return 1
+    if args.touched:
+        return touched_gate(args)
 
     print("=== LAYOUT ===", flush=True)
     layout_status = timed("layout", layout.main)
