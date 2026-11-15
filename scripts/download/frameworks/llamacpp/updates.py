@@ -97,16 +97,6 @@ def rdna_tools() -> tuple[ToolSpec, ...]:
 TOOLS = [
     *hrx_tools(),
     ToolSpec(
-        "llamacpp/rocm/stock",
-        "llama-cli.exe",
-        ReleaseType.PRERELEASE,
-        in_use=False,
-        repo="ggml-org/llama.cpp",
-        asset_pattern=r"llama-.*-bin-win-rocm-\d+\.\d+-x64\.zip",
-        version_regex=r"build (\d+)",
-        version_prefix="b",
-    ),
-    ToolSpec(
         "llamacpp/vulkan",
         "llama-cli.exe",
         ReleaseType.PRERELEASE,

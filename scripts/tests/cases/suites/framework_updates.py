@@ -848,7 +848,6 @@ class FrameworkUpdates(unittest.TestCase):
                 "audiocpp/additions/rocm/therock-10.2-hip-7.17-gfx1101",
                 "asr/whispercpp/vulkan",
                 "asr/parakeetcpp/cpu-stream",
-                "llamacpp/rocm/stock",
                 "llamacpp/rdna",
                 "llamacpp/additions/llama-cpp-rdna-boosts",
                 "llamacpp/additions/hrx/llama.cpp",
