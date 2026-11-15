@@ -52,16 +52,17 @@ class ConsentTests(unittest.TestCase):
         self.assertNotIn("lint", sections)
 
     def test_changed_paths_cover_the_working_tree_and_unpushed_commits(self):
-        from scripts.review.__main__ import changed_paths
+        from scripts.shared import changes
 
-        def git(*args: str) -> str:
+        def git(*args: str, **_: object) -> str:
             if args[0] == "status":
                 return "R  bat/tests/a.bat -> bat/checks/a.bat\n M notes/TODO.md\n"
             return "scripts/tools/older.py\n"
 
-        with patch("scripts.review.__main__._git", side_effect=git):
+        with patch.object(changes, "git", side_effect=git):
             self.assertEqual(
-                changed_paths(), ["bat/checks/a.bat", "bat/tests/a.bat", "notes/TODO.md", "scripts/tools/older.py"]
+                changes.changed_paths(),
+                ["bat/checks/a.bat", "bat/tests/a.bat", "notes/TODO.md", "scripts/tools/older.py"],
             )
 
     def test_an_empty_change_set_falls_back_to_every_section(self):

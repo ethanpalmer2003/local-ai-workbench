@@ -25,6 +25,8 @@ from scripts.review import (
     unused,
 )
 from scripts.review.public_audit import main as public_audit_main
+from scripts.shared import changes
+from scripts.shared.changes import changed_paths
 
 SPELL_EXCLUDED = (
     "data/",
@@ -173,7 +175,7 @@ def write_timings() -> Path:
     path.write_text(
         json.dumps(
             {
-                "commit": _git("rev-parse", "HEAD").strip(),
+                "commit": changes.git("rev-parse", "HEAD").strip(),
                 "dirty": bool(changed_paths()),
                 "total_seconds": round(sum(item["seconds"] for item in TIMES), 2),
                 "sections": TIMES,
@@ -191,25 +193,6 @@ PYTHON_SECTIONS = frozenset(
 MARKDOWN_SECTIONS = frozenset({"typography", "spelling variants", "spelling"})
 FRONTEND_SUFFIXES = frozenset({".js", ".css", ".html", ".cjs", ".ts"})
 DEPENDENCY_FILES = ("pyproject.toml", "uv.lock")
-
-
-def _git(*args: str) -> str:
-    result = subprocess.run(
-        ["git", "-C", str(project_cfg.BASE_DIR), *args], capture_output=True, text=True, check=False
-    )
-    return result.stdout if result.returncode == 0 else ""
-
-
-def changed_paths() -> list[str]:
-    """Every path changed since the upstream branch, working tree included; renames give both sides."""
-    paths: list[str] = []
-    for line in _git("status", "--porcelain").splitlines():
-        body = line[3:].strip().strip('"')
-        if body:
-            paths.extend(part.strip().strip('"') for part in body.split(" -> "))
-    # - a committed but unpushed change is still unreviewed work, so the range covers it
-    paths.extend(path for path in _git("diff", "--name-only", "@{upstream}...HEAD").splitlines() if path.strip())
-    return sorted(set(paths))
 
 
 def touched_sections(paths: list[str]) -> set[str]:
@@ -371,7 +354,7 @@ def full_gate(argv: list[str] | None = None) -> int:
         print("\n=== TEST SUITE ===", flush=True)
         started = time.perf_counter()
         tests_status = subprocess.run(
-            [str(project_cfg.VENV_DIR / "Scripts" / "python.exe"), "-m", "scripts.tests.run"],
+            [str(project_cfg.VENV_DIR / "Scripts" / "python.exe"), "-m", "scripts.tests.run", "--all"],
             cwd=project_cfg.BASE_DIR,
             check=False,
         ).returncode
