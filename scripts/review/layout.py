@@ -128,17 +128,7 @@ def batch_issues(path: Path, text: str) -> list[str]:
 
 
 ROOT_BATCHES = frozenset(
-    {
-        "update_frameworks.bat",
-        "cleanup_state.bat",
-        "manage_kill_ai_services.bat",
-        "manage_rocm_installs.bat",
-        "manage_low_integrity.bat",
-        "manage_strata_profile.bat",
-        "_run.bat",
-        "launch_llamacpp_pi_agent.bat",
-        "launch_strata_pi_agent.bat",
-    }
+    {"update_frameworks.bat", "_run.bat", "launch_llamacpp_pi_agent.bat", "launch_strata_pi_agent.bat"}
 )
 
 OWNER_ROOTS = (
@@ -152,7 +142,7 @@ OWNER_ROOTS = (
     project_cfg.SCRIPTS_DIR / "download/frameworks",
     *(
         project_cfg.BAT_DIR / role
-        for role in ("launchers", "services", "maintenance", "models", "tests", "benchmarks", "browser")
+        for role in ("launchers", "services", "maintenance", "models", "tests", "benchmarks", "browser", "manage")
     ),
 )
 
