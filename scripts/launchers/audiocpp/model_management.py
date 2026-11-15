@@ -2,9 +2,10 @@
 
 import hashlib
 import json
-import urllib.request
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers.audiocpp.kokoro import audio_environment
@@ -43,8 +44,6 @@ def start(config: dict[str, Any], port: int):
 
 
 def post(url: str, action: str, model: dict[str, Any]):
-    request = urllib.request.Request(
-        url + "/v1/models/" + action, json.dumps(model).encode(), {"Content-Type": "application/json"}, method="POST"
-    )
-    with urllib.request.urlopen(request, timeout=120) as response:
-        return json.loads(response.read())
+    response = requests.post(url + "/v1/models/" + action, json=model, timeout=120)
+    response.raise_for_status()
+    return response.json()

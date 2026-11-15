@@ -4,8 +4,8 @@ import argparse
 import json
 import os
 import sys
-import urllib.error
-import urllib.request
+
+import requests
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
@@ -76,9 +76,8 @@ def main(start_chat) -> None:
     if reuse and launch_util.port_listening(cfg.LLAMACPP_PRACTICE.port):
         url = f"http://127.0.0.1:{cfg.LLAMACPP_PRACTICE.port}/proxy/config"
         try:
-            with urllib.request.urlopen(url, timeout=2) as response:
-                is_practice_gateway = json.load(response).get("practice_gateway") is True
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+            is_practice_gateway = requests.get(url, timeout=2).json().get("practice_gateway") is True
+        except (requests.RequestException, json.JSONDecodeError):
             is_practice_gateway = False
         if not is_practice_gateway:
             raise RuntimeError("Practice port is occupied by an unhealthy or unrelated service")

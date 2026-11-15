@@ -1,10 +1,9 @@
 """Gemma audio using the same loaded Kobold model for transcription and chat."""
 
-import json
 import subprocess
-import urllib.error
-import urllib.request
 from typing import Any
+
+import requests
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.llamacpp import gemma_audio
@@ -16,11 +15,12 @@ def url() -> str:
 
 def ready() -> bool:
     try:
-        with urllib.request.urlopen(url() + "/api/extra/version", timeout=2) as response:
-            capabilities = json.load(response)
-        return bool(capabilities.get("audio") and capabilities.get("llm"))
-    except (urllib.error.URLError, TimeoutError):
+        response = requests.get(url() + "/api/extra/version", timeout=2)
+        response.raise_for_status()
+    except requests.RequestException:
         return False
+    capabilities = response.json()
+    return bool(capabilities.get("audio") and capabilities.get("llm"))
 
 
 def command() -> list[str]:

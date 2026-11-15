@@ -1,13 +1,12 @@
 """Strata/Pi API selection, credential handling and backend ownership without inference."""
 
-import io
 import json
 import unittest
 from contextlib import ExitStack
-from email.message import Message
 from pathlib import Path
 from unittest.mock import Mock, patch
-from urllib.error import HTTPError
+
+import requests
 
 from scripts.launchers import launch_util
 from scripts.launchers.strata import strata_pi
@@ -20,6 +19,15 @@ def connection(port: int = 18501) -> strata_pi.StrataConnection:
 
 
 MODEL = {"id": "swift", "meta": {"n_ctx": 32768}, "architecture": {"input_modalities": ["text"]}}
+
+
+def answer(payload: dict[str, object], status: int = 200) -> requests.Response:
+    """A real response object: `.json()`, `.ok` and the status branch all behave as they do live."""
+    response = requests.Response()
+    response.status_code = status
+    response.url = "http://127.0.0.1/v1/models"
+    response._content = json.dumps(payload).encode()
+    return response
 
 
 class StrataPiTests(unittest.TestCase):
@@ -50,21 +58,18 @@ class StrataPiTests(unittest.TestCase):
             self.assertEqual([entry.config_path for entry in saved], [path])
 
     def test_model_probe_uses_auth_and_rejects_a_different_model(self):
-        response = io.BytesIO(json.dumps({"data": [MODEL]}).encode())
-        with patch.object(strata_pi.urllib.request, "urlopen", return_value=response) as request:
+        with patch.object(strata_pi.requests, "get", return_value=answer({"data": [MODEL]})) as get:
             self.assertEqual(strata_pi.ready_model(connection()), MODEL)
-            self.assertEqual(request.call_args.args[0].get_header("Authorization"), "Bearer test-key")
-        response = io.BytesIO(b'{"data": [{"id": "other"}]}')
+            self.assertEqual(get.call_args.kwargs["headers"]["Authorization"], "Bearer test-key")
         with (
-            patch.object(strata_pi.urllib.request, "urlopen", return_value=response),
+            patch.object(strata_pi.requests, "get", return_value=answer({"data": [{"id": "other"}]})),
             self.assertRaisesRegex(RuntimeError, "different model"),
         ):
             strata_pi.ready_model(connection())
 
     def test_auth_failure_is_not_treated_as_a_stopped_server(self):
-        error = HTTPError("http://127.0.0.1", 401, "Unauthorized", Message(), None)
         with (
-            patch.object(strata_pi.urllib.request, "urlopen", side_effect=error),
+            patch.object(strata_pi.requests, "get", return_value=answer({}, status=401)),
             self.assertRaisesRegex(RuntimeError, "HTTP 401"),
         ):
             strata_pi.ready_model(connection())
