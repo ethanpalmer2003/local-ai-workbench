@@ -5,7 +5,10 @@ embeds every bullet and sentence in the maintained Markdown, and lists section p
 two units (or one of 25+ words). This mode reads Markdown only, which is why its batch is
 [review_document_similarity.bat](../../bat/checks/review_document_similarity.bat); Python sources are the
 `--code` mode below, run by [review_code_similarity.bat](../../bat/checks/review_code_similarity.bat). Findings are pairs to review; the check never edits a document.
-`--threshold`, `--top` and `--strict` tune it, and `--no-server` reuses a running server. Tables, code
+`--threshold`, `--top` and `--strict` tune it, and `--no-server` reuses a running server. On this machine the
+bundled llama.cpp Vulkan build crashes on a batched embedding request, so start the ROCm build with
+`HIP_VISIBLE_DEVICES=0` on port 8791 and pass `--no-server`; see the upstream entry for the signature.
+Tables, code
 fences and procedural lines are excluded. Each run writes
 `scripts/state/generated/shared/similarity/<mode>/<run>/report.json`, which dates it and records a content
 digest per file, so the next run says how many files changed since it. Those folders are prunable; the dated
