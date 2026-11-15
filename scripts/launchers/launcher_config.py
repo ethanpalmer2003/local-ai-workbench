@@ -127,6 +127,9 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
 LLAMACPP_ACTIVE_BUILD = "vulkan"
 
 LLAMACPP_ACTIVE_CODING_AGENT_PROFILE = "swift15"
+# - deferred work: wired so a re-enable is one edit, never selectable by a launcher or a benchmark
+LLAMACPP_DEFERRED_PROFILES = frozenset({"swift15-hrx"})
+LLAMACPP_DEFERRED_BUILDS = frozenset({"hrx"})
 
 
 @dataclass(kw_only=True)

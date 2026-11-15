@@ -158,6 +158,20 @@ class LauncherBehaviors(unittest.TestCase):
             self.assertIn("'C:/tools/it''s audio.exe' 'hello world'", command[4])
             self.assertEqual("Tee-Object" in command[4], log_file is not None)
 
+    def test_a_deferred_build_or_profile_is_refused_at_the_cli(self):
+        import argparse
+
+        from scripts.launchers import launcher_config as cfg
+        from scripts.launchers.llamacpp import llamacpp
+
+        self.assertIn("hrx", cfg.LLAMACPP_DEFERRED_BUILDS)
+        self.assertIn("swift15-hrx", cfg.LLAMACPP_DEFERRED_PROFILES)
+        parser = argparse.ArgumentParser()
+        llamacpp.add_config_args(parser)
+        for argv in (["--llama-cpp-build", "hrx"], ["--ini-profile", "swift15-hrx"]):
+            with self.subTest(argv=argv), self.assertRaises(SystemExit):
+                llamacpp.config_from_args(parser.parse_args(argv))
+
     def test_hrx_selection_uses_compatible_profile_and_leaves_default_build_unchanged(self):
         from scripts.launchers import launcher_config as cfg
 

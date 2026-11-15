@@ -36,7 +36,11 @@ from scripts.shared.timing import timed
 CLIENTS = ("pi",)
 DISABLED_CLIENTS = ("littlecoder", "ohmypi", "nanocoder")
 # - launcher profiles plus the benchmark-only ones, so a screen can name `swift15-nospec` directly
-PROFILES = {**cfg.LLAMACPP_PROFILES, **cfg.LLAMACPP_BENCHMARK_PROFILES}
+PROFILES = {
+    name: profile
+    for name, profile in {**cfg.LLAMACPP_PROFILES, **cfg.LLAMACPP_BENCHMARK_PROFILES}.items()
+    if name not in cfg.LLAMACPP_DEFERRED_PROFILES
+}
 
 
 @dataclass
@@ -554,7 +558,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--strata-config", type=Path, help="Prepared Strata model configuration; default: discover Swift"
     )
     parser.add_argument("--profile", choices=sorted(PROFILES), default="swift15")
-    parser.add_argument("--build", choices=sorted(cfg.LLAMACPP_BUILDS))
+    parser.add_argument("--build", choices=sorted(set(cfg.LLAMACPP_BUILDS) - cfg.LLAMACPP_DEFERRED_BUILDS))
     parser.add_argument("--context-size", type=int, default=32768)
     parser.add_argument("--max-output-tokens", type=int, default=16384)
     parser.add_argument("--temperature", type=float, default=0)
