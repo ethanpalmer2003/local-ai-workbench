@@ -8,6 +8,7 @@
 ## Decisions and limits
 
 - Paired easy Pi task: Strata Swift and 27B both passed 8/8; 31.84/79.03-second timings had different token totals/prefill costs. No general ranking.
+- Strata-only agent round, 2026-11-15, engine 0.1.59 with control 0.1.60, decode profile, one repeat each: `proverb` passed 1/1 on all four clients (pi 74.1 s, littlecoder 120.7, nanocoder 93.3, ohmypi 227.9); `ledger`, the two-file output-format task, also passed 1/1 on all four (pi 144.0 s, littlecoder 225.1, nanocoder 142.9, ohmypi 423.9). `ohmypi` reported no token totals in either task, so its wall time is the only comparable figure. The 27B arm was not run, so neither task is a ranking; the easy pair above is the only one. Evidence: `benchmarks/output/coding_agents/shared/benchmark_agents/unreviewed/1794767657491819500` (proverb) and `.../1794768206418512400` (ledger).
 - Four-client easy tasks tied supplied-test quality; observed fastest client varied by task. Historical harness output was superseded by the [current coding-agent benchmark](../../benchmarks/coding_agents/README.md) and retired to trash.
 - MTP depth 2 and ngram 24/48/64 have bounded short-task support. [Settings/evidence](../../config/llamacpp/TUNING.md).
 
