@@ -246,32 +246,51 @@ class FrameworkUpdates(unittest.TestCase):
         tool = self._comfyui_tool()
         with (
             CasePaths(__file__).temporary_directory() as folder,
-            patch.object(other_updates.subprocess, "run", return_value=Mock(stdout="abc\n")),
+            patch.object(other_updates.subprocess, "run", return_value=Mock(stdout="abc\n")) as run,
             patch.object(other_updates.requests, "get", return_value=Mock(json=lambda: {"sha": "abc"})),
-            patch.object(other_updates.subprocess, "Popen") as launch,
             contextlib.redirect_stdout(io.StringIO()) as output,
         ):
             summary = updater.UpdateSummary()
             other_updates.process_bat(tool, Path(folder), Path(folder) / tool.exe, False, summary)
         self.assertIn("UP TO DATE", output.getvalue())
         self.assertEqual(summary.current, [tool.name])
-        launch.assert_not_called()
+        # - one call: the commit comparison; the updater never runs when the commits match
+        self.assertEqual(run.call_count, 1)
 
-    def test_comfyui_newer_commit_queues_the_external_updater(self):
+    def test_comfyui_newer_commit_runs_the_external_updater_and_records_success(self):
         tool = self._comfyui_tool()
         with (
             CasePaths(__file__).temporary_directory() as folder,
-            patch.object(other_updates.subprocess, "run", return_value=Mock(stdout="local\n")),
+            patch.object(
+                other_updates.subprocess, "run", side_effect=[Mock(stdout="local\n"), Mock(returncode=0)]
+            ) as run,
             patch.object(other_updates.requests, "get", return_value=Mock(json=lambda: {"sha": "remote"})),
-            patch.object(other_updates.subprocess, "Popen") as launch,
             contextlib.redirect_stdout(io.StringIO()),
         ):
             summary = updater.UpdateSummary()
             updater_exe = Path(folder) / tool.exe
             updater_exe.write_text("@echo off\n")
             other_updates.process_bat(tool, Path(folder), updater_exe, False, summary)
-        self.assertEqual(summary.available, [tool.name])
-        launch.assert_called_once()
+        self.assertEqual(run.call_count, 2)
+        self.assertTrue(summary.current[0].startswith(tool.name))
+        self.assertEqual(summary.failures, [])
+
+    def test_a_failed_external_updater_is_a_failure_not_an_available_update(self):
+        tool = self._comfyui_tool()
+        with (
+            CasePaths(__file__).temporary_directory() as folder,
+            patch.object(other_updates.subprocess, "run", side_effect=[Mock(stdout="local\n"), Mock(returncode=1)]),
+            patch.object(other_updates.requests, "get", return_value=Mock(json=lambda: {"sha": "remote"})),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            summary = updater.UpdateSummary()
+            updater_exe = Path(folder) / tool.exe
+            updater_exe.write_text("@echo off\n")
+            other_updates.process_bat(tool, Path(folder), updater_exe, False, summary)
+        # - a fetch that dies mid-transfer must not read as a finished update
+        self.assertTrue(summary.failures[0].startswith(tool.name))
+        self.assertIn("exit", summary.failures[0])
+        self.assertEqual(summary.available, [])
 
     def test_summary_collapses_a_component_onto_one_line(self):
         summary = updater.UpdateSummary()
