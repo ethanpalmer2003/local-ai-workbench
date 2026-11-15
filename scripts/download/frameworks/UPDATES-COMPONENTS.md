@@ -7,7 +7,7 @@ Per-component install and update specifics; commands, categories and the HRX not
 | Parakeet CPU/Vulkan | Official Windows releases; `--only asr/parakeetcpp`; [models/commands](../../launchers/asr/PARAKEET.md) |
 | Whisper current Vulkan | `--only asr/whispercpp/vulkan-build`; source build with the normal check/apply plan; legacy prebuilt disabled |
 | Handy | `--only asr/handy` downloads the installer and installs the portable app when missing; the app then uses its built-in updater; [portable setup](../../launchers/asr/HANDY.md) |
-| llama.cpp Vulkan | Official assets; ASR and coding share one install |
+| llama.cpp Vulkan | Official assets; ASR and coding share one install. Build ids `vulkan`, `rocm-lemonade` and `rocm-rdna` update from their releases, while `vulkan-1.0.0` is a deliberate pin that no update replaces |
 | AudioCpp | Vulkan and official ROCm active (`--only audiocpp/rocm`); legacy ROCm/build disabled. eSpeak/MeCab under `audiocpp/additions/` are manual; [Kokoro setup](../../launchers/audiocpp/README.md) |
 | Sherpa/Piper | Official Windows CPU packages; `--only tts`; [launchers/models](../../launchers/audiocpp/RETAINED-TTS.md). Piper wheel and dependencies stay inside its framework directory |
 | sd.cpp | ROCm/Vulkan updated; service selection remains in configuration |
