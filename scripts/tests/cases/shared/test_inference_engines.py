@@ -34,6 +34,15 @@ class InferenceEngines(unittest.TestCase):
         self.assertEqual(failure.status, "failed")
         self.assertEqual(failure.reason, "boom")
 
+    def test_a_draft_gate_is_sent_only_when_it_is_open(self):
+        from scripts.benchmarks.llamacpp.benchmark_ngram import Candidate
+
+        ungated = Candidate("mtp2-p0", mtp=2, minimum=48)
+        self.assertNotIn("spec-draft-p-min", ungated.options())
+        gated = Candidate("mtp2-p0.6", mtp=2, p_min=0.6, minimum=48)
+        self.assertEqual(gated.options()["spec-draft-p-min"], "0.6")
+        self.assertEqual(gated.options()["spec-draft-n-max"], "2")
+
 
 if __name__ == "__main__":
     unittest.main()

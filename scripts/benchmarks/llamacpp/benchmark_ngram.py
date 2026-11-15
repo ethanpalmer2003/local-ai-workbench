@@ -27,15 +27,20 @@ class Candidate:
     lookup: int = 24
     minimum: int = 24
     maximum: int = 64
+    # - the confidence gate: drafting stops once the head is this unsure; 0 means ungated
+    p_min: float = 0.0
 
     def options(self) -> dict[str, str]:
-        return {
+        options = {
             "spec-type": self.speculation,
             "spec-draft-n-max": str(self.mtp),
             "spec-ngram-mod-n-match": str(self.lookup),
             "spec-ngram-mod-n-min": str(self.minimum),
             "spec-ngram-mod-n-max": str(self.maximum),
         }
+        if self.p_min:
+            options["spec-draft-p-min"] = f"{self.p_min:g}"
+        return options
 
 
 # - Three candidates remain: the shipped profile, the legacy settings and the no-ngram anchor, which
@@ -150,6 +155,7 @@ def measure_workload(
             settings.timeout,
         )
     )
+    timings: dict[str, Any] = response["timings"]
     result = {
         **timing,
         "candidate": candidate.name,
@@ -160,17 +166,23 @@ def measure_workload(
         "requested_context_tokens": workload.requested_depth,
         "actual_prompt_tokens": depth,
         "seconds": time.perf_counter() - request_started,
-        "timings": response["timings"],
+        "timings": timings,
         "content": response["content"],
         "log": str(log),
         "cache_prompt": False,
         "pool_state": "after unrelated warmup" if workload.kind == "generation" else "after warmup and generation",
         "correct": rewrite_correct(response["content"], workload.expected) if workload.expected else None,
     }
+    drafts = timings.get("draft_n")
+    accepted = timings.get("draft_n_accepted")
+    if drafts and accepted is not None:
+        result["draft_acceptance"] = round(int(accepted) / int(drafts), 3)
     report["results"].append(result)
+    acceptance = f" acc={result['draft_acceptance']:.2f}" if "draft_acceptance" in result else ""
     print(
         f"[RESULT] {candidate.name} {result['category']}/{workload.kind} depth={depth} "
-        f"correct={result['correct']} seconds={result['seconds']:.2f}",
+        f"correct={result['correct']} seconds={result['seconds']:.2f} decode="
+        f"{timings.get('predicted_per_second', 0):.1f}{acceptance}",
         flush=True,
     )
     (output.artifacts / "results.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
@@ -212,9 +224,18 @@ def main() -> None:
     parser.add_argument("--context-tokens", type=int, default=1024)
     parser.add_argument("--output-tokens", type=int, default=128)
     parser.add_argument("--candidates", nargs="+", choices=[candidate.name for candidate in CANDIDATES])
+    parser.add_argument("--mtp-depths", nargs="+", type=int, help="sweep spec-draft-n-max over these depths")
+    parser.add_argument("--mtp-p-mins", nargs="+", type=float, help="sweep spec-draft-p-min over these gates")
     args = parser.parse_args()
     settings = Settings(args.rounds, args.context_tokens, args.output_tokens)
-    selected = tuple(candidate for candidate in CANDIDATES if not args.candidates or candidate.name in args.candidates)
+    if args.mtp_depths or args.mtp_p_mins:
+        depths = args.mtp_depths or [2]
+        gates = args.mtp_p_mins or [0.0]
+        selected = tuple(
+            Candidate(f"mtp{depth}-p{gate:g}", mtp=depth, p_min=gate, minimum=48) for depth in depths for gate in gates
+        )
+    else:
+        selected = tuple(c for c in CANDIDATES if not args.candidates or c.name in args.candidates)
     require_free_session()
     conf = LlamaConfig()
     output = BenchmarkPaths(__file__).new_run()
