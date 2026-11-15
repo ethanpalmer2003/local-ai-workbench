@@ -1,6 +1,7 @@
 @echo off
 rem Check all selected tools, print grouped plan, then apply eligible updates.
-rem Flags: --skip-comfyui, --check-only, --only name-or-group
+rem A source build with no install directory yet is offered once at the end.
+rem Flags: --skip-comfyui, --check-only, --only name-or-group, --build-missing
 rem Runs through the shared progress bar; every line the updater prints is kept.
 
 set "RUN_TITLE=Framework Updates"

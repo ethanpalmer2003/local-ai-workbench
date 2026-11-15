@@ -806,7 +806,7 @@ def apply_updates(tools: list[cfg.ToolSpec], folder: Path, summary: UpdateSummar
         print("\n=== BUILD REQUIRED ===")
         for name in builds:
             print(f"- {name}: source updated; recompile before it is used again")
-        print("\nRun: C:/AI/bat/build_frameworks.bat")
+        print("\nRun: C:/AI/bat/update_frameworks.bat")
     return bool(failed)
 
 
