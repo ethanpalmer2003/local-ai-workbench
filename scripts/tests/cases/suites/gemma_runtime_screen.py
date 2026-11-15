@@ -2,9 +2,10 @@
 
 import hashlib
 import json
-import urllib.request
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk
 from scripts.benchmarks.shared import provenance
@@ -91,9 +92,6 @@ def generate(port: int, prompt: str, timing=None) -> dict[str, Any]:
         "stream": True,
         "stream_options": {"include_usage": True},
     }
-    request = urllib.request.Request(
-        f"http://127.0.0.1:{port}/v1/chat/completions", json.dumps(body).encode(), {"Content-Type": "application/json"}
-    )
     result: dict[str, Any] = {
         "prompt": prompt,
         "request": body,
@@ -102,8 +100,9 @@ def generate(port: int, prompt: str, timing=None) -> dict[str, Any]:
         "finished": False,
         "content_chunks": 0,
     }
-    with urllib.request.urlopen(request, timeout=60) as response:
-        for line in response:
+    with requests.post(f"http://127.0.0.1:{port}/v1/chat/completions", json=body, timeout=60, stream=True) as response:
+        response.raise_for_status()
+        for line in response.iter_lines():
             if not line.startswith(b"data:"):
                 continue
             data = line[5:].strip()

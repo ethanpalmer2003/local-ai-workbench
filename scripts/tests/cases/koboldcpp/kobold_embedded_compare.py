@@ -10,12 +10,12 @@ import statistics
 import subprocess
 import threading
 import time
-import urllib.error
-import urllib.request
 from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
@@ -45,18 +45,15 @@ IMAGE = {"width": 512, "height": 512, "steps": 12, "cfg_scale": 4.0, "clip_skip"
 
 
 def post(path: str, body: dict[str, Any], timeout: float, port: int = PORT) -> tuple[bytes, dict[str, Any]]:
-    request = urllib.request.Request(
-        f"http://127.0.0.1:{port}{path}", json.dumps(body).encode(), {"Content-Type": "application/json"}
-    )
     started = time.perf_counter()
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            first = response.read(4096)
-            first_seconds = time.perf_counter() - started
-            data = first + response.read()
-            content_type = response.headers.get("Content-Type")
-    except urllib.error.HTTPError as error:
-        raise RuntimeError(f"HTTP {error.code}: {error.read(2000).decode(errors='replace')}") from error
+    response = requests.post(f"http://127.0.0.1:{port}{path}", json=body, timeout=timeout, stream=True)
+    with response:
+        if not response.ok:
+            raise RuntimeError(f"HTTP {response.status_code}: {response.text[:2000]}")
+        first = response.raw.read(4096)
+        first_seconds = time.perf_counter() - started
+        data = first + response.raw.read()
+        content_type = response.headers.get("Content-Type")
     return data, {
         "seconds": time.perf_counter() - started,
         "first_body_seconds": first_seconds,

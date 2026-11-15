@@ -6,11 +6,12 @@ import hashlib
 import json
 import statistics
 import time
-import urllib.request
 import wave
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.launchers import launcher_config as cfg
@@ -73,18 +74,16 @@ def measure(transport: str, text: str, seed: int, timeout: float, path: Path) ->
         "stream_format": transport,
         "options": {"seed": str(seed)},
     }
-    request = urllib.request.Request(
-        f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}/v1/audio/speech",
-        data=json.dumps(payload).encode(),
-        headers={"Content-Type": "application/json"},
-    )
     reader = AudioReader(transport, cfg.AUDIOCPP_SERVICE.streaming.pcm_sample_rate)
     started = time.perf_counter()
     trace = []
     body_bytes = 0
     decode_cpu = 0.0
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        content_type = response.headers.get_content_type()
+    with requests.post(
+        f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}/v1/audio/speech", json=payload, timeout=timeout, stream=True
+    ) as response:
+        response.raise_for_status()
+        content_type = response.headers.get("Content-Type", "").split(";")[0]
         expected = (
             ("text/event-stream",) if transport == "sse" else ("audio/pcm", "application/octet-stream", "audio/x-pcm")
         )
@@ -93,7 +92,7 @@ def measure(transport: str, text: str, seed: int, timeout: float, path: Path) ->
                 f"Requested {transport}, received {content_type}; comparison requires both native formats"
             )
         headers_time = time.perf_counter() - started
-        while chunk := response.read1(8192):
+        while chunk := response.raw.read1(8192):
             body_bytes += len(chunk)
             cpu = time.thread_time()
             added = reader.feed(chunk)
@@ -163,8 +162,9 @@ def main() -> None:
                 "Backend session acquisition including monitor setup; reused services have no observable original load time"
             )
             url = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}/proxy/config"
-            with urllib.request.urlopen(url, timeout=5) as response:
-                (run.artifacts / "defaults.json").write_bytes(response.read())
+            defaults = requests.get(url, timeout=5)
+            defaults.raise_for_status()
+            (run.artifacts / "defaults.json").write_bytes(defaults.content)
             memory.stage = "warmup"
             for transport in ("sse", "audio"):
                 lifecycle.warmup(

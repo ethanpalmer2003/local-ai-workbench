@@ -6,11 +6,11 @@ import json
 import shutil
 import subprocess
 import time
-import urllib.error
-import urllib.request
 import wave
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.shared import provenance
 from scripts.config.audiocpp import server as audio_cfg
@@ -60,15 +60,13 @@ def kobold_reply(timeout: float, max_tokens: int) -> dict[str, Any]:
         "seed": 4321,
         "stream": True,
     }
-    request = urllib.request.Request(
-        url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"}
-    )
     started = time.perf_counter()
     first_token = None
     finish_reason = None
     tokens: list[str] = []
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        for line in response:
+    with requests.post(url, json=payload, timeout=timeout, stream=True) as response:
+        response.raise_for_status()
+        for line in response.iter_lines():
             if not line.startswith(b"data:"):
                 continue
             data = line[5:].strip()
@@ -124,16 +122,14 @@ def speech_request(text: str, timeout: float) -> dict[str, Any]:
         "stream_format": "sse",
         "options": {"seed": "4321"},
     }
-    request = urllib.request.Request(
-        url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"}
-    )
     started = time.perf_counter()
     first_data = None
     pcm = bytearray()
     audio_chunks: list[dict[str, float]] = []
     complete = False
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        for line in response:
+    with requests.post(url, json=payload, timeout=timeout, stream=True) as response:
+        response.raise_for_status()
+        for line in response.iter_lines():
             if not line.startswith(b"data:"):
                 continue
             data = line[5:].strip()

@@ -1,9 +1,9 @@
 """Brief Ming clone/stream check through the same running proxy used by the HTML page."""
 
 import json
-import urllib.error
-import urllib.request
 import wave
+
+import requests
 
 from scripts.benchmarks.shared import reporting
 from scripts.benchmarks.shared.reporting import report_run
@@ -21,30 +21,17 @@ def main() -> None:
     run = CasePaths(__file__).new_run()
     print(f"[OUTPUT] {run.root}", flush=True)
     with report_run(run, "Ming test page / clone / SSE", "audiocpp", settings={"execution_context": context}) as report:
-
-        class NoRedirect(urllib.request.HTTPRedirectHandler):
-            def redirect_request(self, req, fp, code, msg, headers, newurl):
-                return None
-
         # - /test/ redirects to the practice workspace by design; the assets must answer directly
-        opener = urllib.request.build_opener(NoRedirect)
         for path, expected in (
             ("/test/", 307),
             ("/test/comparison.js", 200),
             ("/launchers/audiocpp/pcm_audio.js", 200),
         ):
-            try:
-                response = opener.open(root + path, timeout=5)
-            except urllib.error.HTTPError as error:
-                # - a refused redirect arrives as an error; its code is the assertion
-                response = error
-            with response:
-                status = getattr(response, "status", None) or response.getcode()
-                assert status == expected, f"{path}: {status}"
-                if expected == 200:
-                    assert response.read(), path
-        with urllib.request.urlopen(root + "/proxy/config?model=" + model, timeout=10) as response:
-            defaults = json.load(response)
+            response = requests.get(root + path, timeout=5, allow_redirects=False)
+            assert response.status_code == expected, f"{path}: {response.status_code}"
+            if expected == 200:
+                assert response.content, path
+        defaults = requests.get(root + "/proxy/config?model=" + model, timeout=10).json()
         assert any(row["id"] == model and row["installed"] for row in defaults["models"])
         assert defaults["streaming"]["pcm_sample_rate"] == 44100
         assert defaults["instruction_option"] == "instruct"
