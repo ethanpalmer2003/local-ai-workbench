@@ -62,6 +62,8 @@ def start_server(
     try:
         wait_ready(ready, timeout, label=f"{title}; logs: {logs}", process=process)
     except BaseException:
-        stop_owned(process)
+        # - the exit status is the only evidence a server that died before answering leaves
+        launch_util.report_exit(process, title)
+        stop_owned(process, title=title)
         raise
     return process

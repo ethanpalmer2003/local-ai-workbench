@@ -88,6 +88,43 @@ class OwnedLaunchTests(unittest.TestCase):
         self.assertFalse(self._launch(False).called)
 
 
+class ExitReportTests(unittest.TestCase):
+    def test_a_normal_code_is_reported_as_itself(self):
+        from scripts.launchers import launch_util
+
+        self.assertEqual(launch_util.describe_exit(0), "0")
+        self.assertEqual(launch_util.describe_exit(1), "1")
+
+    def test_a_crash_status_is_reported_with_its_name(self):
+        from scripts.launchers import launch_util
+
+        # - the value Windows returns for an access violation, which is what a silent death leaves
+        self.assertEqual(launch_util.describe_exit(0xC0000005), "0xC0000005 (3221225477, access violation)")
+        self.assertEqual(launch_util.describe_exit(0xC0000006), "0xC0000006 (3221225478)")
+
+    def test_teardown_reports_a_process_that_had_already_died(self):
+        from scripts.launchers import launch_util
+
+        process = process_fixtures.fake_process(pid=4242)
+        process.returncode = 0xC0000005
+        with (
+            patch.object(launch_util, "kill_process_tree") as kill,
+            contextlib.redirect_stdout(io.StringIO()) as output,
+        ):
+            code = launch_util.stop_process(process, "llama.cpp server")
+        self.assertEqual(code, 0xC0000005)
+        kill.assert_not_called()
+        self.assertIn("exited: 0xC0000005", output.getvalue())
+
+    def test_teardown_reports_a_process_it_had_to_stop(self):
+        from scripts.launchers import launch_util
+
+        process = process_fixtures.fake_process(pid=4242)
+        with patch.object(launch_util, "kill_process_tree"), contextlib.redirect_stdout(io.StringIO()) as output:
+            launch_util.stop_process(process, "llama.cpp server")
+        self.assertIn("[EXIT] llama.cpp server pid 4242", output.getvalue())
+
+
 class ReadinessRouteTests(unittest.TestCase):
     def test_kobold_ports_are_probed_on_a_route_kobold_serves(self):
         from scripts.launchers import launch_util

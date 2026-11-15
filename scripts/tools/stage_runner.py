@@ -149,7 +149,7 @@ def _overdue(process: subprocess.Popen[Any], stage: Stage, started: float, bar: 
     if time.perf_counter() - started <= limit:
         return False
     bar.write(f"[FAIL] {stage.key}: still running after {limit:.0f} s; stopping it")
-    launch_util.kill_process_tree(process.pid)
+    launch_util.stop_process(process, stage.key)
     return True
 
 

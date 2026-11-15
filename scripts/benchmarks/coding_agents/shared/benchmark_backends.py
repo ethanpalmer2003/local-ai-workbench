@@ -114,10 +114,9 @@ def llama_endpoint(conf: llamacpp.LlamaConfig, output: RunPaths) -> Iterator[Ben
             },
         )
     finally:
-        if process.poll() is None:
-            launch_util.kill_process_tree(process.pid)
+        # - the status is reported before the sweep: a server that died on its own is the evidence
+        launch_util.stop_process(process, "llama.cpp server")
         launch_util.sweep_escaped_children(conf.port, process_started)
-        process.wait(timeout=15)
 
 
 def strata_config(
@@ -206,10 +205,8 @@ def strata_endpoint(
             metadata=metadata,
         )
     finally:
-        if process.poll() is None:
-            launch_util.kill_process_tree(process.pid)
+        launch_util.stop_process(process, "Strata server")
         launch_util.sweep_escaped_children(connection.port, process_started)
-        process.wait(timeout=15)
 
 
 @contextlib.contextmanager
@@ -308,10 +305,8 @@ def avalon_endpoint(conf: llamacpp.LlamaConfig, output: RunPaths) -> Iterator[Be
             },
         )
     finally:
-        if process.poll() is None:
-            launch_util.kill_process_tree(process.pid)
+        launch_util.stop_process(process, "Avalon server")
         launch_util.sweep_escaped_children(port, process_started)
-        process.wait(timeout=15)
 
 
 def backend_endpoint(name: str, conf: llamacpp.LlamaConfig, output: RunPaths, config_path: Path | None = None):

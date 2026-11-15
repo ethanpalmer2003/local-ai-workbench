@@ -17,6 +17,7 @@ from scripts.launchers.launch_util import (
     kill_process_tree,
     launch_process,
     print_ready,
+    report_exit,
     trigger_preload,
     wait_for_backend,
     wait_for_exit,
@@ -342,6 +343,7 @@ def launch(
         print_ready("llm", port=port, args=cmd, profile=conf.name, model=conf.profile.model)
         startup_marker.touch()
     except BaseException:
+        report_exit(proc, "llama.cpp server")
         kill_process_tree(proc.pid)
         proc.wait(timeout=10)
         raise

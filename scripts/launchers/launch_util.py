@@ -241,6 +241,60 @@ def process_start_time(pid: int) -> float | None:
         return None
 
 
+# - Windows status codes a server actually returns; anything else prints as its hex value.
+EXIT_HINTS = {
+    0xC0000005: "access violation",
+    0xC000001D: "illegal instruction",
+    0xC0000094: "integer divide by zero",
+    0xC00000FD: "stack overflow",
+    0xC000013A: "console interrupt",
+    0xC0000374: "heap corruption",
+    0xC0000409: "stack buffer overrun",
+    0xC0000142: "DLL initialization failed",
+}
+
+
+def describe_exit(code: int | None) -> str:
+    """A process exit as a reader can act on: `0`, `1`, or the hex status plus its name.
+
+    Windows hands Python the unsigned status for a crash (3221225477), and other call sites pass the
+    signed form, so both are normalized before the hint lookup.
+    """
+    if code is None:
+        return "still running"
+    if 0 <= code < 0x80000000:
+        return str(code)
+    value = code & 0xFFFFFFFF
+    hint = EXIT_HINTS.get(value)
+    return f"0x{value:08X} ({value}, {hint})" if hint else f"0x{value:08X} ({value})"
+
+
+def report_exit(process: subprocess.Popen[Any], title: str) -> int | None:
+    """Print one process's exit status, including the case where it died before teardown."""
+    code = process.poll()
+    state = "exited" if code is not None else "still running before teardown"
+    print(f"[EXIT] {title} pid {process.pid} {state}: {describe_exit(code)}", flush=True)
+    return code
+
+
+def stop_process(
+    process: subprocess.Popen[Any], title: str, *, timeout: float = 15, graceful: bool = False
+) -> int | None:
+    """Stop an owned process and say how it ended: the status is the evidence a silent death leaves."""
+    code = process.poll()
+    if code is None:
+        if graceful:
+            process.terminate()
+        else:
+            kill_process_tree(process.pid)
+        try:
+            process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            kill_process_tree(process.pid)
+            process.wait(timeout=5)
+    return report_exit(process, title)
+
+
 def descendant_pids(pid: int) -> set[int]:
     """Every current descendant of pid, sampled before the kill severs the parent links."""
     try:
