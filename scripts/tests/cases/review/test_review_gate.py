@@ -100,6 +100,15 @@ class ConsentTests(unittest.TestCase):
         full.assert_called_once()
         touched.assert_not_called()
 
+    def test_formatting_targets_the_change_and_falls_back_to_the_tree(self):
+        from scripts.review import format_py
+
+        with patch.object(format_py, "changed_paths", return_value=["notes/TODO.md", "scripts/tools/a.py"]):
+            self.assertEqual(format_py.python_targets(False), ["scripts/tools/a.py"])
+        with patch.object(format_py, "changed_paths", return_value=["notes/TODO.md"]):
+            self.assertEqual(format_py.python_targets(False), ["."])
+        self.assertEqual(format_py.python_targets(True), ["."])
+
 
 if __name__ == "__main__":
     unittest.main()
