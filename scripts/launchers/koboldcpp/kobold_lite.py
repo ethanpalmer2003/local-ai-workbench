@@ -324,7 +324,12 @@ class _KoboldLiteHandler(ProxyHandlerMixin):
             send_bytes(self, 503, b"KoboldCpp is not ready yet", "text/plain; charset=utf-8")
             return
         response.raise_for_status()
-        page = patch_lite(response.text, self.variant, self.external)
+        seed = self.external
+        if seed is not None:
+            # - the page runs in the client's browser, so loopback would point at the phone
+            host = self.headers.get("Host") or "127.0.0.1"
+            seed = (f"http://{host}/v1", seed[1])
+        page = patch_lite(response.text, self.variant, seed)
         send_bytes(self, 200, page.encode(), "text/html; charset=utf-8")
 
     def _relay(self, method: str, path: str) -> None:
@@ -334,6 +339,9 @@ class _KoboldLiteHandler(ProxyHandlerMixin):
             external_bridge.respond(self, self.external[0], path, body)
             return
         target = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}" if path == "/v1/audio/speech" else self.upstream
+        if self.external is not None and path.startswith("/v1/") and path != "/v1/audio/speech":
+            # - the no-model arm answers OpenAI requests from llama.cpp, on this same origin
+            target = self.external[0].removesuffix("/v1")
         engine = self.engine
         if (
             method == "POST"
