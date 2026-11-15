@@ -101,7 +101,7 @@ def llamacpp_session(args: argparse.Namespace, output: RunPaths) -> EngineSessio
         name="llamacpp",
         connection=Connection(f"http://127.0.0.1:{cfg.LLAMACPP_SERVICE.port}/v1", ""),
         model=Path(profiles[args.profile].model).name,
-        features=f"build {args.build or cfg.LLAMACPP_ACTIVE_BUILD}; profile {args.profile}",
+        features=f"build {args.build or cfg.llamacpp_build('coding')}; profile {args.profile}",
         process=process,
         log_file=log_file,
     )

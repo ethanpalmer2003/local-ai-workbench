@@ -7,8 +7,9 @@ C:/AI/bat/browser/launch_test_llm.bat
 
 - Client variants: Pi, LittleCoder, Oh My Pi and NanoCoder; DSH has its own desktop integration. `--client none` starts without a coding client.
 - Backend-only module: `scripts.launchers.llamacpp.llamacpp`.
-- Selection: `LLAMACPP_ACTIVE_BUILD`, `LLAMACPP_ACTIVE_CODING_AGENT_PROFILE`, `LLAMACPP_SERVICE` and `LLAMACPP_BUILDS`.
-- Build IDs: `rocm-lemonade` (default), `rocm-rdna`, `vulkan`, `hrx`. Native paths come from the component map; old selectors in historical results are not current aliases.
+- Selection: `LLAMACPP_DEFAULT_BUILD`, `LLAMACPP_ACTIVE_CODING_AGENT_PROFILE`, `LLAMACPP_SERVICE` and `LLAMACPP_BUILDS`.
+- One llama.cpp default serves every use: `LLAMACPP_DEFAULT_BUILD` (`vulkan-1.0.0`, the v1.0.0 pin) is what coding, the embedding server and the Kobold no-model arm resolve through `llamacpp_build()`. `LLAMACPP_CODING_BUILD` and `LLAMACPP_EMBEDDINGS_BUILD` override it per use when one needs another build. The rolling `vulkan` and `rocm-lemonade` builds stay selectable by name.
+- Build IDs: `vulkan-1.0.0`, `rocm-lemonade`, `rocm-rdna`, `vulkan`; `hrx` is deferred. Native paths come from the component map; old selectors in historical results are not current aliases.
 - Profiles supply model/context/speculation defaults over native INI. [Settings rationale](../../config/llamacpp/TUNING.md), [HRX](../../config/llamacpp/HRX.md).
 - CLI overrides such as `--llama-cpp-build`, `--ini-profile`, client choice and startup options apply to a new server; existing matching proxy reuse retains its settings.
 - `launch_test_llm.bat` opens the shared `/test/` page with only the LLM stage enabled.

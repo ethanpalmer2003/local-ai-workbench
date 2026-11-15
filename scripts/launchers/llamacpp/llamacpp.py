@@ -88,7 +88,7 @@ class LlamaConfig:
                     return build
             return cfg.LlamacppStartupBuild(bin_dir=dp)
 
-        return builds[cfg.LLAMACPP_ACTIVE_BUILD]
+        return builds[cfg.llamacpp_build("coding")]
 
     @property
     def alias(self) -> str:

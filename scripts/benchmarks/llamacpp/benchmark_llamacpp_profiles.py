@@ -257,7 +257,7 @@ def profile_meta(profile_name: str, build_name: str | None) -> dict[str, str]:
     profile = all_profiles[profile_name]
     params = "; ".join(f"{k}={v}" for k, v in sorted(profile.extra_args.items()))
     return {
-        "build": build_name or cfg.LLAMACPP_ACTIVE_BUILD,
+        "build": build_name or cfg.llamacpp_build("coding"),
         "profile": profile_name,
         "model": profile.model,
         "ini": profile.ini,
@@ -344,7 +344,7 @@ def overthink_profile(
 
         # Write all transcripts as a single JSON file
         transcript_path = (
-            output.artifacts / "overthink" / f"{build_name or cfg.LLAMACPP_ACTIVE_BUILD}-{profile_name}.json"
+            output.artifacts / "overthink" / f"{build_name or cfg.llamacpp_build('coding')}-{profile_name}.json"
         )
         transcript_path.parent.mkdir(parents=True, exist_ok=True)
         transcript_path.write_text(json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -373,7 +373,7 @@ def run_overthink(
     failed = False
     for build_name in builds:
         for profile_name in args.profiles:
-            run_label = f"{build_name or cfg.LLAMACPP_ACTIVE_BUILD}/{profile_name}"
+            run_label = f"{build_name or cfg.llamacpp_build('coding')}/{profile_name}"
             print(f"{run_label}\t-\tstarting", flush=True)
             try:
                 results = overthink_profile(
@@ -477,7 +477,7 @@ def run_decode(
     csv_rows: list[dict[str, str]] = []
     for build_name in builds:
         for profile_name in args.profiles:
-            run_label = f"{build_name or cfg.LLAMACPP_ACTIVE_BUILD}/{profile_name}"
+            run_label = f"{build_name or cfg.llamacpp_build('coding')}/{profile_name}"
             print(f"{run_label}\t-\tstarting", flush=True)
             try:
                 results, prefill, memory = run_profile(
@@ -607,7 +607,7 @@ def main() -> None:
         summary_lines = [
             f"Benchmark started: {datetime.now().isoformat(timespec='seconds')}",
             f"Mode: {'overthink probe' if args.overthink else 'decode speed'}",
-            f"Builds: {', '.join(b or cfg.LLAMACPP_ACTIVE_BUILD for b in builds)}",
+            f"Builds: {', '.join(b or cfg.llamacpp_build('coding') for b in builds)}",
             f"Profiles: {', '.join(args.profiles)}",
             f"Prompts: {', '.join(prompts)}",
             f"Max tokens: {args.max_tokens}; warmup tokens: {args.warmup_tokens}; repeats: {args.repeats}",

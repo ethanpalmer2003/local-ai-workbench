@@ -25,7 +25,8 @@ def no_model_config() -> Path:
     return target
 
 
-def server_exe(build: str = "vulkan") -> Path:
+def server_exe(build: str | None = None) -> Path:
+    build = build or cfg.LLAMACPP_DEFAULT_BUILD
     exe = cfg.LLAMACPP_BUILDS[build].bin_dir / "llama-server.exe"
     if not exe.is_file():
         raise FileNotFoundError(f"llama.cpp server not found: {exe}")

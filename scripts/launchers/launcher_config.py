@@ -123,10 +123,24 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
     ),
 }
 
-# - The coding profile allocates a 96K context. Vulkan prefills a 3K prompt in 5.7 s under that
-#   allocation against ROCm's 23.2 s, with equal decode, so ROCm loses the coding default it held
-#   while the iGPU kept it from loading at all. ROCm still leads at an 8K allocation.
-LLAMACPP_ACTIVE_BUILD = "vulkan"
+# - One llama.cpp default for every use: coding, embeddings and the Kobold external arm all resolve
+#   through `llamacpp_build()`, so the stable pin is what runs unless a use case overrides it.
+# - v1.0.0 (nightly b12359) is the pin because both failures that broke the rolling builds are later
+#   than it: the batched embedding request and the 27B prefill crash ([builds](../config/llamacpp/BUILDS.md)).
+LLAMACPP_DEFAULT_BUILD = "vulkan-1.0.0"
+# - Per-use overrides; None means "follow the llama.cpp default".
+LLAMACPP_CODING_BUILD: str | None = None
+LLAMACPP_EMBEDDINGS_BUILD: str | None = None
+
+_BUILD_OVERRIDES: dict[str, str | None] = {"coding": LLAMACPP_CODING_BUILD, "embeddings": LLAMACPP_EMBEDDINGS_BUILD}
+
+
+def llamacpp_build(use: str = "coding") -> str:
+    """The build id a use case runs: its override when set, otherwise the one llama.cpp default."""
+    if use not in _BUILD_OVERRIDES:
+        raise ValueError(f"Unknown llama.cpp use case: {use}")
+    return _BUILD_OVERRIDES[use] or LLAMACPP_DEFAULT_BUILD
+
 
 LLAMACPP_ACTIVE_CODING_AGENT_PROFILE = "swift15"
 # - deferred work: wired so a re-enable is one edit, never selectable by a launcher or a benchmark
@@ -973,9 +987,8 @@ LEMONADE_SERVICE = LemonadeStartupServiceSettings()
 class EmbeddingsServerSettings:
     """llama.cpp serving one embedding model, used by the documentation duplicate check.
 
-    The ROCm build serves a batched `/v1/embeddings` request; the Vulkan build faults on one with an
-    access violation, so the build here names the ROCm tree and the launcher hides the Ryzen iGPU,
-    which that build aborts on during device fit.
+    The build follows the llama.cpp default unless `LLAMACPP_EMBEDDINGS_BUILD` names another one, and
+    its build-specific environment comes with it, such as the ROCm entry hiding the Ryzen iGPU.
     """
 
     model: Path = model_cfg.path("embeddings/embeddinggemma-2-Q8_0")
@@ -983,17 +996,19 @@ class EmbeddingsServerSettings:
     context: int = 4096
     batch: int = 4096
     pooling: str = "mean"
-    build: str = "rocm/lemonade"
     startup_timeout_s: float = 90.0
 
     @property
-    def exe(self) -> Path:
-        return project_cfg.component("llamacpp").framework_dir / self.build / "llama-server.exe"
+    def build(self) -> str:
+        return llamacpp_build("embeddings")
 
     @property
-    def env(self) -> dict[str, str]:
-        """Per-build overrides: the ROCm release needs the iGPU hidden to survive device fit."""
-        return {"HIP_VISIBLE_DEVICES": "0"} if self.build.startswith("rocm") else {}
+    def exe(self) -> Path:
+        return LLAMACPP_BUILDS[self.build].bin_dir / "llama-server.exe"
+
+    @property
+    def env(self) -> dict[str, str | None]:
+        return dict(LLAMACPP_BUILDS[self.build].env)
 
 
 EMBEDDINGS_SERVER = EmbeddingsServerSettings()
