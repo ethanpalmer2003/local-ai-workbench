@@ -4,12 +4,13 @@ import argparse
 import json
 import threading
 import time
-import urllib.request
 from contextlib import nullcontext
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
+
+import requests
 
 from scripts.benchmarks.asr.corpus import default_corpus
 from scripts.benchmarks.shared import provenance
@@ -50,12 +51,14 @@ ENGINE_COMPONENTS = {
 
 def post(base, path, body, binary=False):
     data = body if binary else json.dumps(body).encode()
-    request = urllib.request.Request(
-        base + path, data, {"Content-Type": "application/octet-stream" if binary else "application/json"}
+    response = requests.post(
+        base + path,
+        data=data,
+        headers={"Content-Type": "application/octet-stream" if binary else "application/json"},
+        timeout=45,
     )
-    with urllib.request.urlopen(request, timeout=45) as response:
-        data = response.read()
-        return data if path == "/v1/audio/speech" else json.loads(data)
+    response.raise_for_status()
+    return response.content if path == "/v1/audio/speech" else response.json()
 
 
 def _gateway_thread(runtime, engine, proxy_port, chat_port, on_server, errors) -> threading.Thread:

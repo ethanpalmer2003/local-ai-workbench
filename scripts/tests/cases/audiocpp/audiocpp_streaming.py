@@ -6,12 +6,12 @@ import http.client
 import json
 import statistics
 import time
-import urllib.error
-import urllib.request
 import wave
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
@@ -68,16 +68,14 @@ def write_summary(artifacts: Path, report: dict[str, Any]) -> None:
 def measure(text: str, options: dict[str, object], wav_path: Path, timeout: float = 60) -> dict[str, Any]:
     payload = {"input": text, "stream": True, "response_format": "pcm", "stream_format": "sse", "options": options}
     url = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}/v1/audio/speech"
-    request = urllib.request.Request(
-        url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"}
-    )
     started = time.perf_counter()
     chunks = []
     pcm = bytearray()
     complete = False
     stream_finished: float | None = None
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        for line in response:
+    with requests.post(url, json=payload, timeout=timeout, stream=True) as response:
+        response.raise_for_status()
+        for line in response.iter_lines():
             if not line.startswith(b"data:"):
                 continue
             data = line[5:].strip()
@@ -170,8 +168,9 @@ def _selected(options: dict[str, Any], requested: list[str] | None) -> dict[str,
 
 def _fetch_server_models(run: RunPaths) -> None:
     url = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}/v1/models?include_params=true&include_session_options=true"
-    with urllib.request.urlopen(url, timeout=10) as response:
-        (run.artifacts / "server-models.json").write_bytes(response.read())
+    models = requests.get(url, timeout=10)
+    models.raise_for_status()
+    (run.artifacts / "server-models.json").write_bytes(models.content)
 
 
 def _tts_models(run: RunPaths) -> list[dict[str, Any]]:
@@ -235,7 +234,7 @@ def _measure_profile(context: _SweepContext, case: _ProfileCase) -> dict[str, An
             accept=lambda value: not value.get("error"),
         )
         result.update(timing)
-    except (OSError, urllib.error.URLError, http.client.HTTPException) as error:
+    except (OSError, requests.RequestException, http.client.HTTPException) as error:
         result = {"error": str(error), "transport_failure": True}
     result.update(profile=case.name, text_case=case.text_case, repeat=case.repeat, options=case.options)
     return result

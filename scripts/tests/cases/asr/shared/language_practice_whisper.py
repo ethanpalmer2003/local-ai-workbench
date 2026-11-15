@@ -8,10 +8,11 @@ import os
 import subprocess
 import threading
 import time
-import urllib.request
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
+
+import requests
 
 from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.asr.metrics import word_errors
@@ -31,10 +32,12 @@ from scripts.tests.shared.paths import CasePaths, RunPaths
 
 
 def request(url: str, payload: bytes | None = None, content_type: str = "application/json") -> Any:
-    with urllib.request.urlopen(
-        urllib.request.Request(url, payload, {"Content-Type": content_type}), timeout=60
-    ) as response:
-        return json.load(response)
+    if payload is None:
+        response = requests.get(url, timeout=60)
+    else:
+        response = requests.post(url, data=payload, headers={"Content-Type": content_type}, timeout=60)
+    response.raise_for_status()
+    return response.json()
 
 
 def _require_free_sessions() -> None:
@@ -195,8 +198,9 @@ def main() -> None:
                 native_caps = request("http://127.0.0.1:18885/api/extra/version")
                 proxy_caps = request(lite + "/api/extra/version")
                 assert native_caps["transcribe"] is False and proxy_caps["transcribe"] is True
-                with urllib.request.urlopen(lite, timeout=30) as response:
-                    html = response.read().decode()
+                page = requests.get(lite, timeout=30)
+                page.raise_for_status()
+                html = page.text
                 assert "kobold_streaming.js" in html
                 transcripts = _transcribe(lite, clips)
                 reply = _chat(lite, transcripts)
