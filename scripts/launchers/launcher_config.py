@@ -107,6 +107,8 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
         default_profile="swift15-hrx",
         unsupported_server_args=("reasoning-effort",),
     ),
+    # - v1.0.0 release pin (nightly b12359), kept for A/B against the rolling vulkan build
+    "vulkan-1.0.0": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "vulkan-1.0.0", extra_args={}),
     "vulkan": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "vulkan", extra_args={}),
     "rocm-lemonade": LlamacppStartupBuild(
         bin_dir=project_cfg.LLAMACPP_ROCM_LEMONADE_DIR,
