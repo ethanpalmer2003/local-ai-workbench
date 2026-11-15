@@ -6,7 +6,7 @@
 ## Concise output
 - Number user-facing lists (1, 2, 3); bullets are for notes inside a document, never for a reply.
 - Short lines; state each essential detail once. Explain only non-obvious behavior, decisions or required action. Lead with the answer, in the fewest words that carry it; add a table only when comparing, and never restate what the reader just asked for.
-- Close each reply with compact `#### Summary` and, only when a real choice blocks the work, `#### Questions`. Never ask whether there is anything else.
+- Close each reply with compact `#### Summary` and, for a blocking choice or a proposal, `#### Questions`; label proposals "proposal" and keep undone work out of the body and summary, which record what happened. Never ask whether there is anything else.
 - Use text-safe `[OK]`, `[WARN]`, `[FAIL]`, `->`; bound searches and report truncation.
 
 ## Clarify before acting
@@ -36,6 +36,6 @@
 - Running under DeepSeek Harness: [.agents/DEEPSEEK-HARNESS.md](.agents/DEEPSEEK-HARNESS.md) covers its permissions, sandbox denials and the settled workarounds.
 
 ## Guides and checks
-- One owner per procedure, implementation or document; every other mention links to it with an example. Budgets and the review list: [notes conventions](.agents/NOTES-CONVENTIONS.md). Every label family - capability category, profile, delivery mode, run outcome, suite - is indexed in [labels](notes/GROUPINGS-INDEX.md), which links the constant that owns it.
+- One owner per procedure, implementation or document; every other mention links to it with an example. Budgets and the review list: [notes conventions](.agents/NOTES-CONVENTIONS.md). Every label family is indexed in [labels](notes/GROUPINGS-INDEX.md), which links the constant that owns it.
 - Run the structure and docs checks plus allowed import/type checks after structural edits; commands and levels are in [checks](.agents/CHECKS.md). Live, slow or paid checks are opt-in; model-free checks are the default.
 - Detailed rules: [code](.agents/CODE.md), [checks](.agents/CHECKS.md), [review](.agents/REVIEW.md), [skills](.agents/SKILLS.md).
