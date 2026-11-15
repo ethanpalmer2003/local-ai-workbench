@@ -229,8 +229,13 @@ def touched_sections(paths: list[str]) -> set[str]:
     return sections
 
 
-def touched_gate(args: argparse.Namespace) -> int:
-    """Run only the sections the working tree changed, cheapest first; the full gate is unchanged."""
+def _flag(argv: list[str], name: str) -> bool:
+    return name in argv
+
+
+def touched_gate(argv: list[str] | None = None) -> int:
+    """Run only the sections the working tree changed since upstream, cheapest first."""
+    argv = list(sys.argv[1:] if argv is None else argv)
     selected = touched_sections(changed_paths())
     print(f"=== TOUCHED: {', '.join(sorted(selected))} ===", flush=True)
     table = (
@@ -241,15 +246,15 @@ def touched_gate(args: argparse.Namespace) -> int:
         ("network timeouts", "\n=== NETWORK TIMEOUTS ===", lambda: network_timeouts.main([])),
         ("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main([])),
         ("lint", "\n=== LINT ===", lint_check),
-        ("types", "", lambda: type_check(args.fast)),
+        ("types", "", lambda: type_check(_flag(argv, "--fast"))),
         ("formatting", "\n=== PYTHON FORMATTING ===", format_check),
-        ("inventory", "", lambda: inventory_check(package_audit.summary(), args.fast)),
+        ("inventory", "", lambda: inventory_check(package_audit.summary(), _flag(argv, "--fast"))),
         ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main([])),
         ("comments", "\n=== COMMENTS ===", lambda: comments.main([])),
         ("dead code", "\n=== DEAD CODE ===", unused.main),
         ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
         ("spelling", "\n=== SPELLING ===", spelling_check),
-        ("advisories", "", lambda: advisory_check(args.fast)),
+        ("advisories", "", lambda: advisory_check(_flag(argv, "--fast"))),
         ("lock check", "\n=== DEPENDENCY HYGIENE ===", package_audit.lock_issues),
         ("deptry", "", declaration_check),
     )
@@ -266,7 +271,8 @@ def touched_gate(args: argparse.Namespace) -> int:
     return int(bool(failed))
 
 
-def main(argv: list[str] | None = None) -> int:
+def full_gate(argv: list[str] | None = None) -> int:
+    """Run every section; --all and an empty change set both land here."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-format-check", action="store_true", help="skip the ruff format comparison")
     parser.add_argument("--tests", action="store_true", help="also run the model-free test suite")
@@ -278,9 +284,9 @@ def main(argv: list[str] | None = None) -> int:
         "--fast", action="store_true", help="skip the type check, inventory and advisory feed; about five seconds"
     )
     parser.add_argument(
-        "--touched",
+        "--all",
         action="store_true",
-        help="run only the sections whose inputs this working tree changed; a rename costs about a second",
+        help="run every section; without it the gate runs only what changed, and an empty change set runs all",
     )
     args = parser.parse_args(argv)
     if args.prune:
@@ -289,8 +295,6 @@ def main(argv: list[str] | None = None) -> int:
         return public_audit_main(["--scrub"])
     if not consents(args.yes):
         return 1
-    if args.touched:
-        return touched_gate(args)
 
     print("=== LAYOUT ===", flush=True)
     layout_status = timed("layout", layout.main)
@@ -401,6 +405,16 @@ def main(argv: list[str] | None = None) -> int:
             or tests_status
         )
     )
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Scope the gate to the change by default; --all, --prune, --scrub or a clean tree run everything."""
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if not (_flag(argv, "--all") or _flag(argv, "--prune") or _flag(argv, "--scrub")) and changed_paths():
+        if not consents(_flag(argv, "--yes")):
+            return 1
+        return touched_gate(argv)
+    return full_gate(argv)
 
 
 if __name__ == "__main__":
