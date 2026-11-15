@@ -61,6 +61,8 @@ SWIFT15_MTP_MEDIUM = with_extra(SWIFT15_BASE, **{"reasoning-effort": "medium"})
 SWIFT15_NOSPEC = with_extra(SWIFT15_BASE, **{"spec-type": "none"})
 # - KV precision screen: same flags as the default profile, f16 cache instead of q8'
 SWIFT15_F16_KV = with_extra(SWIFT15_BASE, **{"cache-type-k": "f16", "cache-type-v": "f16"})
+# - reasoning-off screen: does the think block swallow the answer at depth
+SWIFT15_NOREASON = with_extra(SWIFT15_MTP_NGRAM, **{"reasoning": "off"})
 # - diagnostic pair for the flash-attention question: attention off needs f16 KV, so it states both
 SWIFT15_NOFA = with_extra(
     SWIFT15_BASE, **{"spec-type": "none", "fa": "off", "cache-type-k": "f16", "cache-type-v": "f16"}
@@ -87,5 +89,6 @@ LLAMACPP_BENCHMARK_PROFILES: dict[str, LLMProfile] = {
     "swift15-mtp-medium": SWIFT15_MTP_MEDIUM,
     "swift15-nospec": SWIFT15_NOSPEC,
     "swift15-f16-kv": SWIFT15_F16_KV,
+    "swift15-noreason": SWIFT15_NOREASON,
     "swift15-nofa": SWIFT15_NOFA,
 }

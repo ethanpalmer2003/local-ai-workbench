@@ -15,6 +15,7 @@ from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import context_category, report_run
 from scripts.config import project_config as project_cfg
+from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 from scripts.shared.timing import timed
 
@@ -246,6 +247,7 @@ def main() -> None:
     parser.add_argument("--context-tokens", type=int, default=1024)
     parser.add_argument("--output-tokens", type=int, default=128)
     parser.add_argument("--candidates", nargs="+", choices=[candidate.name for candidate in CANDIDATES])
+    parser.add_argument("--profile", default="swift15", help="llama.cpp profile to run under")
     parser.add_argument("--mtp-depths", nargs="+", type=int, help="sweep spec-draft-n-max over these depths")
     parser.add_argument("--mtp-p-mins", nargs="+", type=float, help="sweep spec-draft-p-min over these gates")
     args = parser.parse_args()
@@ -259,12 +261,17 @@ def main() -> None:
     else:
         selected = tuple(c for c in CANDIDATES if not args.candidates or c.name in args.candidates)
     require_free_session()
-    conf = LlamaConfig()
+    profiles = {
+        name: profile
+        for name, profile in {**cfg.LLAMACPP_PROFILES, **cfg.LLAMACPP_BENCHMARK_PROFILES}.items()
+        if name not in cfg.LLAMACPP_DEFERRED_PROFILES
+    }
+    conf = LlamaConfig(profile_name=args.profile, profiles=profiles)
     output = BenchmarkPaths(__file__).new_run()
     report: dict[str, Any] = {
         "model": str(conf.model),
         "build": str(conf.build_dir),
-        "server_capacity": int(conf.profile.extra_args["ctx-size"]),
+        "server_capacity": int(conf.profile.extra_args.get("ctx-size", 0)),
         "results": [],
         "settings": {
             "rounds": settings.rounds,
