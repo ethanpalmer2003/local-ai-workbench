@@ -13,6 +13,7 @@ import psutil
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import execution_context
+from scripts.shared import consent
 
 ROOT = project_cfg.BASE_DIR.resolve()
 EXTRA_SERVICE_PORTS = {5551, 8080, 8188}  # Kobold RPC, Strata config, ComfyUI default.
@@ -148,6 +149,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="stop non-agent services only; keep coding agents, llama.cpp and Strata running",
     )
+    consent.flag(parser)
     return parser.parse_args()
 
 
@@ -269,6 +271,9 @@ def main() -> int:
     context_failure = report_context()
     if context_failure is not None:
         return context_failure
+    scope = "non-agent services" if args.non_agents else "every C:\\AI-owned service"
+    if not consent.confirm(f"Stop {scope}", args.yes):
+        return 1
 
     ports = configured_ports()
     configured = set(ports)

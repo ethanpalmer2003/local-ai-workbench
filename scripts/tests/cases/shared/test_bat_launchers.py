@@ -21,7 +21,6 @@ SKIP_MODULES = {
     "scripts.download.models.download_models": "delegates argument parsing to download_catalog",
     "scripts.tools.stage_runner": "takes a module path and forwards the rest of the command",
     "scripts.launchers.llamacpp.language_practice": "delegates argument parsing to workspace.main",
-    "scripts.launchers.kill_all_services": "no argparse; running it would stop services",
     "scripts.launchers.llamacpp.llamacpp_pi": "delegates argument parsing to llamacpp_coding.main",
 }
 

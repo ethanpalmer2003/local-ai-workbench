@@ -44,6 +44,15 @@ class ConsentTests(unittest.TestCase):
         self.assertTrue(parser.parse_args(["--yes"]).yes)
         self.assertFalse(parser.parse_args([]).yes)
 
+    def test_confirm_asks_even_for_a_fast_irreversible_action(self):
+        with (
+            patch("scripts.shared.consent.sys.stdin", Mock(isatty=lambda: False)),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            self.assertFalse(consent.confirm("Stop every C:\\AI-owned service"))
+        with patch("scripts.shared.consent.sys.stdin", Mock(isatty=lambda: False)):
+            self.assertTrue(consent.confirm("Stop every C:\\AI-owned service", given=True))
+
     def test_require_refuses_an_unattended_entry_point(self):
         with (
             patch("scripts.shared.consent.sys.stdin", Mock(isatty=lambda: False)),
