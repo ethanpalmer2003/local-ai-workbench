@@ -117,6 +117,7 @@ from scripts.tests.cases.shared.test_low_integrity import LowIntegrityTests
 from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.test_model_run import ModelRunTests
 from scripts.tests.cases.shared.test_preflight import PreflightTests
+from scripts.tests.cases.shared.test_refresh_index import RefreshPlanTests, RefreshReportTests
 from scripts.tests.cases.shared.test_rename_path import MoveParsingTests, ReferenceRewriteTests, ScanScopeTests
 from scripts.tests.cases.shared.test_rocm_inventory import RocmInventoryTests
 from scripts.tests.cases.shared.test_stage_runner import StageRunnerTests
@@ -229,6 +230,8 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     StateCleanupTests,
     MoveParsingTests,
     ReferenceRewriteTests,
+    RefreshPlanTests,
+    RefreshReportTests,
     ScanScopeTests,
     ProbeRunnerTests,
     ModelRunTests,
