@@ -20,7 +20,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 
-BASELINE = project_cfg.SCRIPTS_DIR / "review" / "duplicate-baseline.json"
+BASELINE = project_cfg.SCRIPTS_DIR / "review" / "lists" / "duplicate-baseline.json"
 FINDING = re.compile(r"R0801: Similar lines in (\d+) files")
 REFERENCE = re.compile(r"^==(?P<module>[\w.]+):\[(?P<start>\d+):(?P<end>\d+)\]$")
 

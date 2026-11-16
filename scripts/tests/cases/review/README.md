@@ -8,4 +8,4 @@ suite collects it.
 - The gate itself is a procedure, not a test: `python -m scripts.review`. What each module enforces
   and its cost: [review README](../../../review/README.md), [tooling](../../../review/TOOLS.md).
 - Cases here stay model-free: they exercise chunking, units, findings and boundaries, never the
-  embedding server itself. The opt-in run is `python -m scripts.review.similarity`.
+  embedding server itself. The opt-in run is `python -m scripts.review.checks.similarity`.

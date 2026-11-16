@@ -8,7 +8,8 @@ from unittest.mock import Mock, patch
 
 from scripts.config.shared import speech_delivery
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.asr.shared import delivery, live, practice_models
+from scripts.launchers.asr.shared import delivery, practice_models
+from scripts.launchers.asr.shared.streaming import live
 from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.paths import CasePaths
 

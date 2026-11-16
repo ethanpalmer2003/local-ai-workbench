@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 from scripts.review import MAX_REPORTED
-from scripts.review.sources import maintained_files
+from scripts.review.lists.sources import maintained_files
 
 CALL = re.compile(
     r"(?:urllib\.request\.)?urlopen\("

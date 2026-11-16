@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.config import project_config as project_cfg
-from scripts.review import layout
+from scripts.review.checks import layout
 
 
 class PolicyTests(unittest.TestCase):

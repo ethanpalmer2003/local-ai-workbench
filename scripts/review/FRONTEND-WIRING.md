@@ -1,6 +1,6 @@
 # Front-end wiring check
 
-`scripts/review/frontend_wiring.py` runs in the [repository review](README.md). It is static and
+`scripts/review/checks/frontend_wiring.py` runs in the [repository review](README.md). It is static and
 literal-only; it never executes the pages.
 
 - Asset paths: HTML `<script src>`/`<link href>` and JS `path.join`/`path.resolve` calls. A base variable

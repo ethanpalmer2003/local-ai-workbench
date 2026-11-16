@@ -25,7 +25,7 @@ repos:
         args: ["--ignore-words=.codespell-ignore.txt"]
       - id: ascii-punctuation
         name: ASCII punctuation only
-        entry: .venv/Scripts/python.exe -m scripts.review.typography
+        entry: .venv/Scripts/python.exe -m scripts.review.checks.typography
         language: system
         pass_filenames: true
         types: [text]

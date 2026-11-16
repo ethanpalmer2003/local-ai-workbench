@@ -5,7 +5,7 @@ from pathlib import Path
 
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
-from scripts.review import docs
+from scripts.review.checks import docs
 
 BASE = Path(project_cfg.BASE_DIR)
 
@@ -183,7 +183,7 @@ class LinkTests(unittest.TestCase):
         self.assertTrue(any("missing module" in issue for issue in issues), issues)
 
     def test_a_documented_module_that_exists_is_clean(self):
-        path = self._fixture("# Linked\n\nRun `python -m scripts.review.docs` first.\n")
+        path = self._fixture("# Linked\n\nRun `python -m scripts.review.checks.docs` first.\n")
         try:
             issues = docs.markdown_issues(path, path.read_text(encoding="utf-8"))
         finally:

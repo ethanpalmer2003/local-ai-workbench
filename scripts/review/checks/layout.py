@@ -10,7 +10,7 @@ from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import framework_catalog as update_config
 from scripts.launchers import launcher_config as cfg
 from scripts.review import MAX_REPORTED
-from scripts.review.sources import maintained_files, tracked_files
+from scripts.review.lists.sources import maintained_files, tracked_files
 
 
 def _component_key_issues() -> list[str]:
@@ -159,6 +159,9 @@ def _exempt_area(path: Path) -> bool:
     if path.is_relative_to(project_cfg.CONFIG_DIR / "models"):
         return True
     if path.is_relative_to(project_cfg.CONFIG_DIR / "notes"):
+        return True
+    # - the review tree groups its checks by scope; the module is the owner, not a component
+    if path.is_relative_to(project_cfg.SCRIPTS_DIR / "review"):
         return True
     launcher_root = project_cfg.SCRIPTS_DIR / "launchers"
     return path.is_relative_to(launcher_root) and path.relative_to(launcher_root).parts[0] == "runtime"

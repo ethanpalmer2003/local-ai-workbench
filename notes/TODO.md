@@ -9,11 +9,11 @@
 
 ## Standardization
 
-- [ ] Decide the retired TTS pipeline in `scripts/launchers/audiocpp/tts_legacy_buffered.py`: nothing imports it, its own docstring calls it retired, and the active path is `tts_text_processing.py`. Delete it, or name the usefulness it still has; either way drop the `RETIRED` entry in `scripts/review/dead_code.py` with it. ~20 min
+- [ ] Decide the retired TTS pipeline in `scripts/launchers/audiocpp/tts_legacy_buffered.py`: nothing imports it, its own docstring calls it retired, and the active path is `tts_text_processing.py`. Delete it, or name the usefulness it still has; either way drop the `RETIRED` entry in `scripts/review/checks/dead_code.py` with it. ~20 min
 - [ ] Roll the llama.cpp Vulkan build back: b12422 kills the 27B server while re-prefilling a 3,707-token prompt, so the coding model and the 27B benchmark arm do not run on it ([builds](../scripts/config/llamacpp/BUILDS.md)). Reinstall b12363, confirm one Pi `proverb` run finishes, then finish the Strata/27B pair on that tag. ~30 min
 - [ ] Repair the Strata install: the native updater kept engine 0.1.59 because 0.1.60 failed its test start, while control reached 0.1.60, so a launch now exits before serving because the image encoder child cannot start (`WinError 5`). `update_frameworks` reports this and installs nothing; repair it in the Strata app (control reports `failed-before` for the engine) and confirm a plain launch serves without the vision-free config the benchmark used. ~20 min
 - [ ] Judge the duplicate blocks the baseline still holds: `matching_server` is four identical one-liners (`whispercpp/server`, `embeddings/server`, `audiocpp/asr`, `asr/llamacpp/llama_audio`), `audiocpp.py::main` against `llamacpp.py::main` is two launchers with different wiring, and `launcher_config.py` carries the same three-line `exe` property on three build classes. Fold the one-liners if the wrapper is not the seam a test patches; leave the other two. [code pairs](../scripts/review/SIMILARITY.md). ~30 min
-- [ ] Wire `python -m scripts.review.duplicates` into an opt-in batch and settle its baseline granularity: it records a file pair plus a block count, so a second block in a known pair fails while a moved block does not. pylint needs about a minute over `scripts`. ~30 min
+- [ ] Wire `python -m scripts.review.checks.duplicates` into an opt-in batch and settle its baseline granularity: it records a file pair plus a block count, so a second block in a known pair fails while a moved block does not. pylint needs about a minute over `scripts`. ~30 min
 
 ## Needs a model run or device
 

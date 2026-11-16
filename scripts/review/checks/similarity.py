@@ -3,7 +3,7 @@
 Documents mode embeds every bullet or sentence and reports section pairs that share at least
 two units (or one long unit). Code mode embeds one function per chunk and reports the pairs
 above a higher threshold. A finding is a pair to review; it never edits a file and does not
-gate. Run it as `python -m scripts.review.similarity [--code]`, not in the gate.
+gate. Run it as `python -m scripts.review.checks.similarity [--code]`, not in the gate.
 """
 
 import argparse
@@ -22,7 +22,7 @@ from scripts.benchmarks.shared import provenance
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.launchers.embeddings import server
-from scripts.review.sources import maintained_files
+from scripts.review.lists.sources import maintained_files
 
 LABEL = "embeddings/embeddinggemma-2-Q8_0"
 DEFAULT_THRESHOLD = 0.90

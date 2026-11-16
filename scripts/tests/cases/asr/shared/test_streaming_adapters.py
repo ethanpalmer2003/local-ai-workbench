@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from scripts.launchers.asr.parakeetcpp.streaming import Model, clean_transcript
-from scripts.launchers.asr.shared.websocket_stream import WebSocketBridge
+from scripts.launchers.asr.shared.streaming.websocket_stream import WebSocketBridge
 from scripts.launchers.shared.transport.http_input import chunks
 
 

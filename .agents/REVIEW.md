@@ -6,7 +6,7 @@ Two lists. The first is answered by a command: if the section fails, the change 
 
 | Question | Where it is answered |
 | --- | --- |
-| Is any function or class never referenced? | `=== DEAD CODE ===` in [dead_code.py](../scripts/review/dead_code.py), which runs vulture |
+| Is any function or class never referenced? | `=== DEAD CODE ===` in [dead_code.py](../scripts/review/checks/dead_code.py), which runs vulture |
 | Is any import or local variable unused? | `=== LINT ===`: ruff `F401` and `F841` |
 | Does an import have no declared dependency, or a dependency no import? | `=== DEPENDENCY HYGIENE ===`: deptry and the lock check |
 | Is a file, folder or document in a role its home forbids? | `=== LAYOUT ===`, `=== DOCUMENTATION ===` |
@@ -34,6 +34,6 @@ Two lists. The first is answered by a command: if the section fails, the change 
 
 ## When a question keeps needing a reader
 
-A question that returns in review after review becomes a check, and leaves the second table. Dead code was one: the search took minutes and found eleven definitions, so the dead-code section answers it in under a second. Detection moved to vulture once a measurement showed this repository's own mention count missing the two real findings among 463 files; [dead_code.py](../scripts/review/dead_code.py) keeps the policy that decides which of vulture's findings are actionable.
+A question that returns in review after review becomes a check, and leaves the second table. Dead code was one: the search took minutes and found eleven definitions, so the dead-code section answers it in under a second. Detection moved to vulture once a measurement showed this repository's own mention count missing the two real findings among 463 files; [dead_code.py](../scripts/review/checks/dead_code.py) keeps the policy that decides which of vulture's findings are actionable.
 
 Report a finding with the file, the line and the move that fixes it.

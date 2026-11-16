@@ -11,7 +11,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from scripts.review.text_files import tracked_text_files
+from scripts.review.lists.text_files import tracked_text_files
 
 # - British form -> American form; each entry is matched as a whole word, case preserved
 VARIANTS: dict[str, str] = {
@@ -156,7 +156,7 @@ VARIANTS: dict[str, str] = {
 PATTERN = re.compile(r"\b(" + "|".join(sorted(VARIANTS, key=len, reverse=True)) + r")\b", re.IGNORECASE)
 CORPUS_FILE = "scripts/config/benchmarks/language_corpus.json"
 # - the checker and its fixtures quote British forms on purpose
-SELF_REFERENTIAL = {"scripts/review/spellings.py", "scripts/tests/cases/review/test_spellings.py"}
+SELF_REFERENTIAL = {"scripts/review/checks/spellings.py", "scripts/tests/cases/review/test_spellings.py"}
 REFERENCE_VALUE = re.compile(r'("reference"\s*:\s*")([^"\\]*(?:\\.[^"\\]*)*)(")')
 
 

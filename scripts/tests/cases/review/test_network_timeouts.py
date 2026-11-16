@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.review import network_timeouts
+from scripts.review.checks import network_timeouts
 
 
 class NetworkTimeoutTests(unittest.TestCase):

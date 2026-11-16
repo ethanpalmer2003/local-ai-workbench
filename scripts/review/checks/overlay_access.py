@@ -4,12 +4,16 @@ import argparse
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.review import sources
+from scripts.review.lists import sources
 
 OWNER = "scripts/config/local_overlay.py"
 DECLARES_PATHS = "scripts/config/project_config.py"
 # - the check names the patterns it looks for, and the overlay test sets the variables on purpose
-SELF_REFERENTIAL = {OWNER, "scripts/review/overlay_access.py", "scripts/tests/cases/shared/test_local_overlay.py"}
+SELF_REFERENTIAL = {
+    OWNER,
+    "scripts/review/checks/overlay_access.py",
+    "scripts/tests/cases/shared/test_local_overlay.py",
+}
 ENV_READS = ("AI_INPUT_DIR", "AI_VOICES_DIR")
 ATTRIBUTE_READS = (".INPUT_DIR", ".VOICES_DIR")
 

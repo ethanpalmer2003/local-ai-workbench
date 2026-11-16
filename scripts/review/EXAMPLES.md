@@ -14,7 +14,7 @@ template has its message in that tool.
 | basedpyright | an argument of the wrong type | basedpyright names the argument and its type | fix the annotation or the call |
 | model_references | a runtime default no catalog model resolves | names the model label and the runtime that cannot resolve it | point the runtime at the catalog label |
 | frontend_wiring | a DOM id a script reads but the page never defines | `... unknown element id ...` | add the element or correct the id |
-| inventory_code | an inline `# noqa` | `Inline suppression: ...` | move the suppression into `pyproject.toml` |
+| inventory_code | an inline `# noqa`, or a folder over 20 direct files | `Inline suppression: ...` | move the suppression into `pyproject.toml`, or split the folder by purpose |
 | typography | an em dash or curly quote in shipped text | `em-dash` | use a comma or a plain hyphen |
 | comments | a TODO marker or commented-out code | `... marker comment (...)` | delete it and explain the work in the commit |
 | spellings | a British spelling | `... -> ...` | use the American form |
@@ -25,6 +25,6 @@ template has its message in that tool.
 | similarity | a renamed copy of a function | names the pair, the score and the function names | fold both into one owner |
 | public_audit | a personal term, token or absolute path that must not ship | names the file, the term and the rule | remove it before publishing |
 
-Each check runs alone, for example `python -m scripts.review.layout`; the gate runs every one. A new check
+Each check runs alone, for example `python -m scripts.review.checks.layout`; the gate runs every one. A new check
 adds a row here, and the case module checks that the row exists and that its template still exists in the
 checker.

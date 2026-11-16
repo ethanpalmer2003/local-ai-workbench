@@ -3,7 +3,7 @@
 import unittest
 from collections import Counter
 
-from scripts.review import duplicates
+from scripts.review.checks import duplicates
 
 
 class DuplicateReportTests(unittest.TestCase):

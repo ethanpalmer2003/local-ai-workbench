@@ -11,7 +11,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from scripts.review.text_files import tracked_text_files
+from scripts.review.lists.text_files import tracked_text_files
 
 # - character -> readable kind; every one has a plain ASCII replacement
 BANNED = {
