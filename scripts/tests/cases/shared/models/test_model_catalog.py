@@ -135,7 +135,7 @@ class ModelCatalogTests(unittest.TestCase):
         with patch.object(download, "download_model") as fetch, patch("builtins.print"):
             download.main(["--list"])
             fetch.assert_not_called()
-            download.main(["--active", "--group", "llamacpp", "--download"])
+            download.main(["--active", "--group", "llamacpp", "--download", "--yes"])
             self.assertTrue(fetch.called)
             self.assertTrue(
                 all(call.args[0].in_use and call.args[0].group == "llamacpp" for call in fetch.call_args_list)

@@ -5,8 +5,9 @@ from pathlib import Path
 
 from scripts.config.models import MODELS as MODELS
 from scripts.config.models import ModelDownload as ModelDownload
-from scripts.download.models import transfer
+from scripts.download.models import DOWNLOAD_SECONDS, transfer
 from scripts.download.models.hub_sources import parse_url
+from scripts.shared import consent
 
 
 def download_model(model: ModelDownload, range_download: bool = False, resume_file: Path | None = None) -> None:
@@ -49,6 +50,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--resume-file", type=Path, help="Existing contiguous partial file; requires --range-download and one model"
     )
+    consent.flag(parser)
     return parser
 
 
@@ -98,4 +100,6 @@ def main(argv: list[str] | None = None) -> None:
     missing = [model.label for model in models if model.url is None]
     if missing:
         parser.error(f"Missing source URLs: {', '.join(missing)}")
+    if not consent.ask("Model download", DOWNLOAD_SECONDS, args.yes):
+        raise SystemExit(1)
     _start_downloads(models, args)

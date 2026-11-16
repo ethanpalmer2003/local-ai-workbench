@@ -9,6 +9,10 @@ from scripts.download.frameworks import build_frameworks, toolchains
 from scripts.download.frameworks import framework_catalog as cfg
 from scripts.download.frameworks import update_shared as updater
 from scripts.download.frameworks.coding_agents.pi import packages as pi_packages
+from scripts.shared import consent
+
+# - a check plus the installs it decides on is minutes of network and unpacking
+UPDATE_SECONDS = 600
 
 
 def missing_builds(tools: list[cfg.ToolSpec]) -> list[cfg.ToolSpec]:
@@ -52,7 +56,10 @@ def main() -> int:
         action="store_true",
         help="build every missing source install without asking; otherwise it asks once",
     )
+    consent.flag(parser)
     args = parser.parse_args()
+    if not args.check_only and not consent.ask("Framework update", UPDATE_SECONDS, args.yes):
+        return 1
     tools = [
         tool
         for tool in cfg.TOOLS

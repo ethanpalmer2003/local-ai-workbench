@@ -6,8 +6,10 @@ import sys
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
+from scripts.download.models import DOWNLOAD_SECONDS
 from scripts.download.models.hub_sources import HubFile as HubFile
 from scripts.download.models.hub_sources import parse_url as parse_url
+from scripts.shared import consent
 
 
 def download_snapshot(
@@ -59,10 +61,12 @@ def download_file(
 
 def main(argv: list[str] | None = None):
     arguments = sys.argv[1:] if argv is None else list(argv)
+    given = "--yes" in arguments
+    arguments = [argument for argument in arguments if argument != "--yes"]
     if any(arg in arguments for arg in ("--list", "--model", "--active", "--inactive", "--group", "--download")):
         from scripts.download.models import download_catalog as download
 
-        download.main(arguments)
+        download.main([*arguments, *(["--yes"] if given else [])])
         return
     parser = argparse.ArgumentParser(description="Download models/files from HuggingFace.")
     parser.add_argument("--repo", help="HuggingFace repo ID (e.g., Qwen/Qwen3-AUDIOCPP-12Hz-1.7B-CustomVoice)")
@@ -76,6 +80,8 @@ def main(argv: list[str] | None = None):
     if not args.repo and not args.url:
         parser.print_help()
         sys.exit(1)
+    if not consent.ask("Model download", DOWNLOAD_SECONDS, given):
+        raise SystemExit(1)
 
     repo_id = args.repo
     filename = args.file

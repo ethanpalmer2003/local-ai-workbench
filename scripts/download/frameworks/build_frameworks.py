@@ -6,6 +6,10 @@ import subprocess
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import framework_catalog as update_cfg
 from scripts.download.frameworks.update_types import ToolSpec
+from scripts.shared import consent
+
+# - a source build is minutes of compiler work, so it asks before it starts
+BUILD_SECONDS = 900
 
 
 def build_targets(only: list[str] | None = None) -> list[ToolSpec]:
@@ -48,10 +52,13 @@ def main() -> int:
         "--foreground", action="store_true", help="Build in this console instead of one new terminal per target."
     )
     parser.add_argument("--dry-run", action="store_true", help="Print the resolved commands and stop.")
+    consent.flag(parser)
     args = parser.parse_args()
     targets = build_targets(args.only)
     if not targets:
         parser.error("No catalog entry declares a build command")
+    if not args.dry_run and not consent.ask("Framework build", BUILD_SECONDS, args.yes):
+        return 1
     return 1 if run_builds(targets, foreground=args.foreground, dry_run=args.dry_run) else 0
 
 
