@@ -6,7 +6,6 @@ from typing import Any
 
 from scripts.launchers import launch_util
 from scripts.launchers.shared.services import native
-from scripts.shared.wait import http_ready
 
 COMPONENT_KEY = "asr/llamacpp"
 
@@ -21,10 +20,10 @@ class LlamaAudioBackend:
         self.device = device
 
     def url(self) -> str:
-        return f"http://127.0.0.1:{self.settings.port}"
+        return native.service_url(self.settings.port)
 
     def ready(self) -> bool:
-        return http_ready(self.url() + "/health", strict=True)
+        return native.service_ready(self.settings.port, strict=True)
 
     def command(self) -> list[str]:
         settings = self.settings

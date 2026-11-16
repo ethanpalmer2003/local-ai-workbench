@@ -11,6 +11,13 @@ from typing import Any, cast
 import requests
 
 
+class QuietLog:
+    """Suppress the default per-request line, for a handler whose caller prints its own summary."""
+
+    def log_message(self, format: str, *args: object) -> None:
+        """Drop the access log entry; one owner for the silence instead of a copy per handler."""
+
+
 def request(
     url: str, payload: dict[str, object] | bytes | None = None, method: str | None = None, timeout: float = 5
 ) -> tuple[int, bytes, str]:

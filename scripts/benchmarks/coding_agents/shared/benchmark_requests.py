@@ -16,6 +16,7 @@ import requests
 
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
 from scripts.benchmarks.shared.benchmark import BenchmarkContractError, BenchmarkLifecycle
+from scripts.shared.http_server import QuietLog
 from scripts.shared.wait import wait_ready
 
 # - A socket timeout bounds one read, and every read resets it, so a stream that trickles forever
@@ -312,13 +313,10 @@ _REQUEST_SETTING_KEYS = (
 )
 
 
-class _BenchmarkRelayHandler(BaseHTTPRequestHandler):
+class _BenchmarkRelayHandler(QuietLog, BaseHTTPRequestHandler):
     """One run's relay: forwards chat completions and records what the server reports."""
 
     relay: ClassVar[Any]
-
-    def log_message(self, format: str, *args: object) -> None:
-        pass
 
     def do_GET(self) -> None:
         relay = type(self).relay

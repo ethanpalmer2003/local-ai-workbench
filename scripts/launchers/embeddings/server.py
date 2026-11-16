@@ -9,15 +9,14 @@ from typing import Any
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.shared.services import native
-from scripts.shared.wait import http_ready
 
 
 def url() -> str:
-    return f"http://127.0.0.1:{cfg.EMBEDDINGS_SERVER.port}"
+    return native.service_url(cfg.EMBEDDINGS_SERVER.port)
 
 
 def ready() -> bool:
-    return http_ready(url() + "/health", strict=True)
+    return native.service_ready(cfg.EMBEDDINGS_SERVER.port, strict=True)
 
 
 def command() -> list[str]:

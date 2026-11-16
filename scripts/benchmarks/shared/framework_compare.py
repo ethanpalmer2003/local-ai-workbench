@@ -29,7 +29,7 @@ import psutil
 import requests
 
 from scripts.benchmarks.asr.metrics import pooled_scores, unicode_errors
-from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
+from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance, reporting
 from scripts.benchmarks.shared import language_corpus as corpus
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.config import models as model_cfg
@@ -669,10 +669,6 @@ def measure(
     return result
 
 
-def _mean(values: list[float]) -> str:
-    return f"{sum(values) / len(values):.2f}" if values else "n/a"
-
-
 def _percent(value: float | None) -> str:
     return "n/a" if value is None else f"{value:.1%}"
 
@@ -699,7 +695,7 @@ def _chat_summary(results: list[dict[str, Any]]) -> list[str]:
         rate = [row["chunks_per_second"] for row in rows if row["chunks_per_second"] is not None]
         lines.append(
             f"| {result['backend']} | {leg['model']} | {result['startup_seconds']:.1f} | "
-            f"{_mean(ttft)} | {_mean(rate)} |"
+            f"{reporting.mean_text(ttft)} | {reporting.mean_text(rate)} |"
         )
     return lines
 

@@ -31,11 +31,11 @@ def speech_config(port: int, engine: str = DEFAULT_ENGINE):
 
 
 def url() -> str:
-    return f"http://127.0.0.1:{cfg.AUDIOCPP_VAD.server_port}"
+    return native.service_url(cfg.AUDIOCPP_VAD.server_port)
 
 
 def ready() -> bool:
-    return http_ready(url() + "/health")
+    return native.service_ready(cfg.AUDIOCPP_VAD.server_port)
 
 
 def command(port: int | None = None, engine: str = DEFAULT_ENGINE) -> list[str]:

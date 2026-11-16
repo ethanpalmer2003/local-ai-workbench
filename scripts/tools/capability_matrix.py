@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from scripts.benchmarks.shared import language_corpus, provenance
+from scripts.benchmarks.shared import language_corpus, provenance, reporting
 from scripts.config import project_config as project_cfg
 from scripts.config.shared import deferred as parked
 
@@ -164,16 +164,12 @@ def rows() -> list[Row]:
     return result
 
 
-def _mean(values: list[float]) -> str:
-    return f"{sum(values) / len(values):.2f}" if values else "n/a"
-
-
 def _chat_headline(row: dict[str, Any]) -> str | None:
     chat = (row.get("legs") or {}).get("chat")
     if not chat or chat.get("status") != "measured":
         return None
     first = [item["first_token_seconds"] for item in chat["requests"] if item.get("first_token_seconds")]
-    return f"{row.get('backend')} TTFT {_mean(first)} s"
+    return f"{row.get('backend')} TTFT {reporting.mean_text(first)} s"
 
 
 def _headline(report: dict[str, Any] | None) -> str:

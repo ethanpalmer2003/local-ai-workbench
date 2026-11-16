@@ -129,6 +129,8 @@ class Backend:
 class Handler(ProxyHandlerMixin):
     # - re-chunked replies need HTTP/1.1; the buffering proxies stay on 1.0
     protocol_version = "HTTP/1.1"
+    # - the mixin prints `[tag]`; this module's tag names the backend in the log
+    tag = TAG
 
     backend: ClassVar[Backend]
 
@@ -175,9 +177,6 @@ class Handler(ProxyHandlerMixin):
         entry = {"id": self.backend.conf.alias, "object": "model", "owned_by": "llamacpp"}
         body = json.dumps({"object": "list", "data": [entry]}).encode("utf-8")
         send_bytes(self, 200, body, content_type="application/json")
-
-    def log_message(self, format, *args):
-        print(f"[{TAG}] {format % args}")
 
 
 def _watch_idle(backend: Backend) -> None:
