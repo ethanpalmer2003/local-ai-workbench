@@ -31,7 +31,7 @@ The runner executes these checks:
 - `network_timeouts.py`: every HTTP call passes `timeout=`; the ASR upload wrapper owns its own.
 - `overlay_access.py`: only `config/local_overlay.py` resolves overlay paths; a direct read elsewhere fails.
 
-Reports go to `scripts/state/generated/shared/code_review/<run>/`. The inventory lists the largest functions and excludes generated output, caches, model data, installs and trash. Which checks run through a tool and which are this repository's own policy: [libraries](LIBRARIES.md).
+Reports go to `scripts/state/generated/shared/code_review/<run>/`. The inventory lists the largest functions and excludes generated output, caches, model data, installs and trash. Which checks run through a tool and which are this repository's own policy: [libraries](LIBRARIES.md). One mistake per check, the line it prints and the fix: [examples](EXAMPLES.md).
 
 ## Duplicate check
 
