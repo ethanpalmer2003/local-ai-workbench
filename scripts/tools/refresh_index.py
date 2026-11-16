@@ -2,9 +2,10 @@
 
 Both indexes are snapshots taken by a command: the desktop profile installs no file watcher, so a
 symbol added after the last run reads as missing and an answer about moved code is confidently
-wrong. This runs `codebase-memory-mcp` and `graphify` against the tree in parallel and skips
-graphify when the commit touched no file it extracts. A commit is never failed by an indexer: a
-missing binary prints `[SKIP]` and a crash prints its own exit code.
+wrong. The call graph is cheap, so it is rebuilt before the commit returns. The architecture graph
+costs about 25 s whatever changed, so it is started detached with a lock and finishes after the
+prompt is back; a docs-only commit skips it. A commit is never failed by an indexer: a missing
+binary prints `[SKIP]` and a crash writes its exit code to the run log.
 
 The procedure and its measured cost are in [CODE-SEARCH](../../.agents/CODE-SEARCH.md).
 """
@@ -12,11 +13,12 @@ The procedure and its measured cost are in [CODE-SEARCH](../../.agents/CODE-SEAR
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
+import sys
 import time
-from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -30,15 +32,31 @@ GRAPHIFY_SUFFIXES = frozenset({".py", ".js", ".cjs", ".mjs", ".ts", ".tsx", ".js
 # - the shims the two installers write, before PATH is consulted
 SHIMS = {"codebase-memory-mcp": "codebase-memory-mcp.exe", "graphify": "graphify.exe"}
 
+# - a background run that outlives this bound was killed, so the next refresh may take the lock
+LOCK_STALE_SECONDS = 900
+
+# - a detached child keeps its redirect handles but gets no console window of its own
+DETACHED_PROCESS = 0x00000008
+CREATE_NEW_PROCESS_GROUP = 0x00000200
+
 
 @dataclass(frozen=True)
 class Step:
-    """One index rebuild: a name for the report, its commands, and why it was skipped."""
+    """One inline rebuild: a name for the report, its commands, and why it was skipped."""
 
     name: str
     commands: tuple[tuple[str, ...], ...] = ()
     skip: str = ""
     cwd: str = ""
+
+
+@dataclass(frozen=True)
+class Plan:
+    """What one refresh does: the call graph now, the architecture graph in the background."""
+
+    memory: Step
+    graphify: tuple[tuple[str, ...], ...] = ()
+    graphify_skip: str = ""
 
 
 def binary(name: str) -> str:
@@ -49,41 +67,36 @@ def binary(name: str) -> str:
     return shutil.which(name) or ""
 
 
-def needs_graphify(paths: list[str]) -> bool:
+def needs_graphify(paths: Sequence[str]) -> bool:
     """Whether the commit changed a file graphify extracts; an unknown change set counts as yes."""
     return not paths or any(Path(path).suffix.lower() in GRAPHIFY_SUFFIXES for path in paths)
 
 
-def plan(paths: list[str], root: Path, resolve: Callable[[str], str] = binary) -> list[Step]:
-    """The index rebuilds this change set calls for."""
+def graphify_commands(tool: str, root: Path) -> tuple[tuple[str, ...], ...]:
+    """The two passes graphify needs: extract, then re-cluster so hubs and communities stay current."""
+    return (
+        (tool, "update", root.as_posix(), "--no-cluster"),
+        (tool, "cluster-only", root.as_posix(), "--no-label", "--no-viz"),
+    )
+
+
+def plan(paths: Sequence[str], root: Path, resolve: Callable[[str], str] = binary) -> Plan:
+    """The rebuilds this change set calls for."""
     memory = resolve("codebase-memory-mcp")
-    steps = [
-        Step(
-            "codebase-memory",
-            ((memory, "--quiet", "cli", "index_repository", "--repo-path", root.as_posix(), "--mode", "fast"),)
-            if memory
-            else (),
-            "" if memory else "codebase-memory-mcp not installed",
-            root.as_posix(),
-        )
-    ]
+    step = Step(
+        "codebase-memory",
+        ((memory, "--quiet", "cli", "index_repository", "--repo-path", root.as_posix(), "--mode", "fast"),)
+        if memory
+        else (),
+        "" if memory else "codebase-memory-mcp not installed",
+        root.as_posix(),
+    )
     tool = resolve("graphify")
-    if tool and needs_graphify(paths):
-        steps.append(
-            Step(
-                "graphify",
-                (
-                    (tool, "update", root.as_posix(), "--no-cluster"),
-                    (tool, "cluster-only", root.as_posix(), "--no-label", "--no-viz"),
-                ),
-                cwd=root.as_posix(),
-            )
-        )
-    elif tool:
-        steps.append(Step("graphify", skip="no extracted file in this commit"))
-    else:
-        steps.append(Step("graphify", skip="graphify not installed"))
-    return steps
+    if not tool:
+        return Plan(step, (), "graphify not installed")
+    if not needs_graphify(paths):
+        return Plan(step, (), "no extracted file in this commit")
+    return Plan(step, graphify_commands(tool, root))
 
 
 def run_step(step: Step) -> tuple[Step, float, int, str]:
@@ -108,27 +121,109 @@ def report(step: Step, seconds: float = 0.0, code: int = 0, tail: str = "") -> N
         print(f"[OK] {step.name} {seconds:.1f} s", flush=True)
 
 
+def lock_path(root: Path) -> Path:
+    return root / "scripts" / "state" / "cache" / "shared" / "index-refresh.lock"
+
+
+def log_path(root: Path) -> Path:
+    return root / "scripts" / "state" / "logs" / "shared" / "index-refresh.log"
+
+
+def acquire(lock: Path) -> bool:
+    """Whether this process owns the lock; a lock older than the bound was abandoned by a killed run."""
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    for _ in range(2):
+        try:
+            lock.touch(exist_ok=False)
+            return True
+        except FileExistsError:
+            if time.time() - lock.stat().st_mtime < LOCK_STALE_SECONDS:
+                return False
+            lock.unlink(missing_ok=True)
+    return False
+
+
+def start_graphify(root: Path, lock: Path) -> str:
+    """Start the architecture rebuild detached, so the commit returns first; returns the run log path."""
+    log = log_path(root)
+    log.parent.mkdir(parents=True, exist_ok=True)
+    command = [sys.executable, "-m", "scripts.tools.refresh_index", "--graphify-only", "--lock", str(lock)]
+    command.append(root.as_posix())
+    with log.open("ab") as sink:
+        if os.name == "nt":
+            subprocess.Popen(
+                command,
+                cwd=root.as_posix(),
+                stdin=subprocess.DEVNULL,
+                stdout=sink,
+                stderr=subprocess.STDOUT,
+                creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
+            )
+        else:
+            subprocess.Popen(
+                command,
+                cwd=root.as_posix(),
+                stdin=subprocess.DEVNULL,
+                stdout=sink,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+    return str(log)
+
+
+def run_graphify(commands: Sequence[Sequence[str]], root: Path, lock: Path | None = None) -> int:
+    """Run the architecture rebuild in this process and release the lock whoever ends it."""
+    started = time.monotonic()
+    code, tail = 0, ""
+    try:
+        for command in commands:
+            result = subprocess.run(list(command), capture_output=True, text=True, check=False, cwd=root.as_posix())
+            code = result.returncode
+            tail = (result.stderr or result.stdout).strip().splitlines()[-1] if (result.stderr or result.stdout) else ""
+            if code:
+                break
+    finally:
+        if lock is not None:
+            lock.unlink(missing_ok=True)
+    report(Step("graphify"), time.monotonic() - started, code, tail)
+    return code
+
+
 def default_paths(root: Path) -> list[str]:
     """What to judge with no change set given: the last commit plus anything uncommitted."""
     return sorted(set(changes.committed_paths(root)) | set(changes.changed_paths(root)))
 
 
 def refresh(paths: list[str] | None = None, root: Path | None = None) -> int:
-    """Rebuild what the change set needs, then report each indexer's own exit code."""
+    """Rebuild the call graph, start the architecture graph detached, and report each exit code."""
     base = project_cfg.BASE_DIR if root is None else root
-    steps = plan(default_paths(base) if paths is None else paths, base)
-    with ThreadPoolExecutor(max_workers=len(steps)) as pool:
-        outcomes = list(pool.map(run_step, steps))
-    for outcome in outcomes:
-        report(*outcome)
-    return 0 if all(code == 0 for _, _, code, _ in outcomes) else 1
+    for_commit = plan(default_paths(base) if paths is None else paths, base)
+    _memory, seconds, code, tail = run_step(for_commit.memory)
+    report(for_commit.memory, seconds, code, tail)
+    if not for_commit.graphify:
+        report(Step("graphify", skip=for_commit.graphify_skip))
+        return 0 if code == 0 else 1
+    lock = lock_path(base)
+    if not acquire(lock):
+        report(Step("graphify", skip="a refresh is already running"))
+    else:
+        print(f"[START] graphify in background: {start_graphify(base, lock)}", flush=True)
+    return 0 if code == 0 else 1
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--paths", nargs="*", help="change set to judge; default is HEAD's commit plus the tree")
+    parser.add_argument("--graphify-only", action="store_true", help="run the architecture rebuild here")
+    parser.add_argument("--lock", help="lock file this process removes when the rebuild ends")
+    parser.add_argument("root", nargs="?", help="repository root; defaults to this checkout")
     args = parser.parse_args(argv)
-    return refresh(args.paths)
+    root = Path(args.root).resolve() if args.root else None
+    if args.graphify_only:
+        base = root or project_cfg.BASE_DIR
+        commands = graphify_commands(binary("graphify"), base)
+        return run_graphify(commands, base, Path(args.lock) if args.lock else None)
+    return refresh(args.paths, root)
 
 
 if __name__ == "__main__":
