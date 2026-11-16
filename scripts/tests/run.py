@@ -36,6 +36,7 @@ from scripts.tests.cases.personal.comfyui.test_verify_node import ProviderTests,
 from scripts.tests.cases.review.test_comments import CommentPolicyTests
 from scripts.tests.cases.review.test_dead_code import FindingTests
 from scripts.tests.cases.review.test_docs import (
+    GeneratedPageTests,
     LinkTests,
     MarkdownNameTests,
     ModelNameTests,
@@ -175,6 +176,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     SuffixTests,
     FindingTests,
     ExternalSeedTests,
+    GeneratedPageTests,
     MarkdownNameTests,
     ModelNameTests,
     LinkTests,

@@ -11,7 +11,7 @@ from scripts.config import project_config as project_cfg
 from scripts.config.models import model_languages
 from scripts.launchers import launcher_config as cfg
 
-OUTPUT = project_cfg.CONFIG_DIR / "notes" / "LANGUAGE-MATRIX.md"
+OUTPUT = project_cfg.CONFIG_DIR / "notes" / "GENERATED-LANGUAGE-MATRIX.md"
 HEADER = "| Model | Stage | " + " | ".join(cfg.PRACTICE_LANGUAGES) + " | Declared | Tiers |"
 HEADER_RULE = "| --- | --- | " + " | ".join(":-:" for _ in cfg.PRACTICE_LANGUAGES) + " | ---: | --- |"
 
