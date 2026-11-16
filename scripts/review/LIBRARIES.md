@@ -7,6 +7,7 @@ Which checks run through a maintained tool, which are this repository's own voca
 | Job | Tool |
 | --- | --- |
 | Lint, formatting and the McCabe limit | ruff |
+| Dead definitions and unreachable blocks | vulture |
 | Type contracts | basedpyright |
 | Misspellings | codespell |
 | Declared versus imported dependencies | deptry, `packaging`, `importlib.metadata` |
@@ -24,13 +25,13 @@ A library cannot know this repository's vocabulary, so these read the tree direc
 - `spellings.py`: the American forms this repository writes, on top of codespell's typos.
 - `network_timeouts.py`: a source rule over `urllib`, `requests` and `http.client` calls.
 - `model_references.py`, `frontend_wiring.py`, `overlay_access.py`: catalog ids, DOM ids and settings keys, overlay path ownership.
-- `unused.py`, `comments.py`, `typography.py`: shapes no linter is configured for.
+- `comments.py`, `typography.py`: shapes no linter is configured for.
 
 ## Compared and declined
 
 | Check | Library | Why the check stays |
 | --- | --- | --- |
-| definitions | vulture | Measured: 6 findings on 457 files, 5 of them interface parameters (`files_metadata`, `map_location`, `weights_only`, cache keys) that a protocol, a fake or an `lru_cache` key must name. The one real hit was a duplicated tail after `return`. Vulture now runs for that unreachable class only, and the definition scan stays here. |
+| a definition scan of its own | vulture | Replaced. A hand-rolled mention count reported 0 findings on 463 files, while vulture at 60% found the two that were real (`live.capable`, `SdcppProxyRequestLora`), flagged only because a comment or a docstring named them. What stays this repository's is the policy in `dead_code.py`: `unused function`, `unused class` and unreachable code are findings, and the other 177 lines are not, because protocol attributes (`close_connection`, `daemon_threads`, `LimitFlags`), method overrides (`do_GET`, `log_message`) and exported catalog constants are read by a library or another process rather than by a call this scan can see. |
 | `comments.py` | eradicate | Measured: 0 findings on the 457 maintained files, because `comments.py` already rejects commented-out code. Nothing to adopt. |
 | `public_audit.py` | detect-secrets, gitleaks | The terms come from the overlay, and the scan covers history; both tools read a baseline stored in the tree. |
 | `docs.py` links | a Markdown parser | Resolving a link is about forty lines; the work is role, budget and pointer policy. |

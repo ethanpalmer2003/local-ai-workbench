@@ -922,16 +922,6 @@ SDCPP_REQUEST_DEFAULTS: dict[str, object] = {
 SDCPP_PROXY_ACCEPTED_MODELS = list(SDCPP_MODELS.keys())
 
 
-class SdcppProxyRequestLora:
-    def __init__(self, filename: str, default_weight: float = 0.8):
-        self.filename = filename
-        self.default_weight = default_weight
-
-    def tag(self, weight: float | None = None) -> str:
-        w = weight if weight is not None else self.default_weight
-        return f"<lora:{self.filename}:{w}>"
-
-
 @dataclass
 class SdcppProxyRequestPromptSettings:
     # - Style scaffolding around the subject; matches the reference prompt for this model
@@ -948,7 +938,7 @@ class SdcppProxyRequestPromptSettings:
         "image.prompt", "a person standing outdoors in soft daylight, full body"
     )
 
-    # - Comma-joined lora tags prepended to every prompt, e.g. SdcppProxyRequestLora("style", 0.6).tag()
+    # - Comma-joined lora tags prepended to every prompt, e.g. "<lora:style:0.6>"
     #   Personal LoRAs live in the overlay; the repository default selects none.
     lora_selections: str = local_overlay.setting("image.loras", "")
 
