@@ -11,7 +11,7 @@ import time
 import tokenize
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from scripts.config import project_config as project_cfg
 
@@ -139,9 +139,29 @@ def maintained_python(root: Path):
                 yield parent / name
 
 
-def repository_inventory(root: Path) -> tuple[list[dict[str, int | str]], list[dict[str, int | str]]]:
-    folders: list[dict[str, int | str]] = []
-    source_files: list[dict[str, int | str]] = []
+# - one record shape for a folder row and one for a source-file row, named once instead of repeated
+FolderRecord = dict[str, int | str]
+SourceFileRecord = dict[str, int | str]
+
+
+class FolderInventory(NamedTuple):
+    """The folder rows and the source-file rows, which the report and the checks both read."""
+
+    folders: list[FolderRecord]
+    source_files: list[SourceFileRecord]
+
+
+class FolderEnds(NamedTuple):
+    """Both ends of the folder rule, from one pass over the same rows."""
+
+    sparse: list[FolderRecord]
+    small: list[FolderRecord]
+    crowded: list[FolderRecord]
+
+
+def repository_inventory(root: Path) -> FolderInventory:
+    folders: list[FolderRecord] = []
+    source_files: list[SourceFileRecord] = []
     for directory, children, names in os.walk(root):
         parent = Path(directory)
         children[:] = sorted(name for name in children if name not in REVIEW_EXCLUDED)
@@ -177,14 +197,14 @@ def repository_inventory(root: Path) -> tuple[list[dict[str, int | str]], list[d
             )
     folders.sort(key=lambda item: str(item["directory"]).casefold())
     source_files.sort(key=lambda item: (-int(item["lines"]), str(item["path"]).casefold()))
-    return folders, source_files
+    return FolderInventory(folders, source_files)
 
 
 def folder_inventory_report(
-    folders: list[dict[str, int | str]],
-    sparse_folders: list[dict[str, int | str]],
-    small_folders: list[dict[str, int | str]],
-    crowded_folders: list[dict[str, int | str]],
+    folders: list[FolderRecord],
+    sparse_folders: list[FolderRecord],
+    small_folders: list[FolderRecord],
+    crowded_folders: list[FolderRecord],
 ) -> list[str]:
     lines = [
         "",
@@ -262,9 +282,7 @@ def _dependency_section(counts: dict[str, int]) -> list[str]:
     ]
 
 
-def folder_validation(
-    folders: list[dict[str, int | str]],
-) -> tuple[list[dict[str, int | str]], list[dict[str, int | str]], list[dict[str, int | str]]]:
+def folder_validation(folders: list[FolderRecord]) -> FolderEnds:
     """Both ends of the folder rule: sparse, merge candidates, and over the cap."""
     sparse = [
         item
@@ -273,14 +291,14 @@ def folder_validation(
     ]
     small = [item for item in folders if 1 < int(item["files"]) <= MIN_FOLDER_ITEMS]
     crowded = [item for item in folders if int(item["files"]) > MAX_FOLDER_ITEMS]
-    return sparse, small, crowded
+    return FolderEnds(sparse, small, crowded)
 
 
 def report(
     results: list[FunctionSize],
     files: int,
-    folders: list[dict[str, int | str]],
-    source_files: list[dict[str, int | str]],
+    folders: list[FolderRecord],
+    source_files: list[SourceFileRecord],
     artifacts: Path,
     suppressions: list[str],
     dependencies: dict[str, int] | None = None,

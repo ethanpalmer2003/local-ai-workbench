@@ -13,6 +13,7 @@ from scripts.config import project_config as project_cfg
 from scripts.review.audit import package_audit
 from scripts.review.audit.public_audit import main as public_audit_main
 from scripts.review.checks import (
+    annotations,
     comments,
     dead_code,
     docs,
@@ -172,7 +173,17 @@ def write_timings() -> Path:
 
 
 PYTHON_SECTIONS = frozenset(
-    {"lint", "types", "formatting", "comments", "dead code", "network timeouts", "overlay access", "inventory"}
+    {
+        "annotations",
+        "lint",
+        "types",
+        "formatting",
+        "comments",
+        "dead code",
+        "network timeouts",
+        "overlay access",
+        "inventory",
+    }
 )
 MARKDOWN_SECTIONS = frozenset({"typography", "spelling variants", "spelling"})
 FRONTEND_SUFFIXES = frozenset({".js", ".css", ".html", ".cjs", ".ts"})
@@ -219,6 +230,7 @@ def touched_gate(argv: list[str] | None = None) -> int:
         ("inventory", "", lambda: inventory_check(package_audit.summary(), _flag(argv, "--fast"))),
         ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main([])),
         ("comments", "\n=== COMMENTS ===", lambda: comments.main([])),
+        ("annotations", "\n=== ANNOTATION COMPLEXITY ===", lambda: annotations.main([])),
         ("dead code", "\n=== DEAD CODE ===", lambda: dead_code.main([])),
         ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
         ("spelling", "\n=== SPELLING ===", spelling_check),
@@ -312,6 +324,9 @@ def full_gate(argv: list[str] | None = None) -> int:
     print("\n=== COMMENTS ===", flush=True)
     comment_status = timed("comments", comments.main, [])
 
+    print("\n=== ANNOTATION COMPLEXITY ===", flush=True)
+    annotation_status = timed("annotations", annotations.main, [])
+
     print("\n=== DEAD CODE ===", flush=True)
     dead_status = timed("dead code", dead_code.main, [])
 
@@ -364,6 +379,7 @@ def full_gate(argv: list[str] | None = None) -> int:
             or inventory_status
             or dash_status
             or comment_status
+            or annotation_status
             or dead_status
             or variant_status
             or formatting_status

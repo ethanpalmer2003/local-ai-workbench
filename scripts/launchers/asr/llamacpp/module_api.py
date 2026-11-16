@@ -9,18 +9,25 @@ from __future__ import annotations
 
 import subprocess
 from collections.abc import Callable, MutableMapping
-from typing import Any
+from typing import Any, NamedTuple
+
+Url = Callable[[], str]
+Probe = Callable[[], bool]
+Command = Callable[[], list[str]]
+Launch = Callable[[], subprocess.Popen[Any] | None]
 
 
-def bind(
-    backend: Any, namespace: MutableMapping[str, Any]
-) -> tuple[
-    Callable[[], str],
-    Callable[[], bool],
-    Callable[[], list[str]],
-    Callable[[], bool],
-    Callable[[], subprocess.Popen[Any] | None],
-]:
+class BackendSurface(NamedTuple):
+    """The five functions a llama.cpp ASR module exposes, in the order callers unpack them."""
+
+    url: Url
+    ready: Probe
+    command: Command
+    matching_server: Probe
+    start: Launch
+
+
+def bind(backend: Any, namespace: MutableMapping[str, Any]) -> BackendSurface:
     """Bind (url, ready, command, matching_server, start) to one backend instance.
 
     `start` reads the probes out of `namespace` rather than closing over them, because the module
@@ -42,4 +49,4 @@ def bind(
     def start() -> subprocess.Popen[Any] | None:
         return backend.start(namespace["ready"], namespace["matching_server"])
 
-    return url, ready, command, matching_server, start
+    return BackendSurface(url, ready, command, matching_server, start)
