@@ -227,6 +227,14 @@ class TestBoundaries(unittest.TestCase):
                     missing.append(f"{path.relative_to(project_cfg.TEST_CASES_DIR).as_posix()}:{node.name}")
         self.assertEqual(missing, [], "register the class in scripts/tests/run.py extra_groups")
 
+    def test_a_case_module_names_its_subject_once(self):
+        """The file is `test_<subject>.py`; a subject that starts with "test" would read as test_test_."""
+        doubled = [
+            path.relative_to(project_cfg.TEST_CASES_DIR).as_posix()
+            for path in project_cfg.TEST_CASES_DIR.rglob("test_test_*.py")
+        ]
+        self.assertEqual(doubled, [], "name the subject once: test_<subject>.py")
+
     def test_regressions_do_not_reintroduce_unconfigured_pid_mocks(self):
         offenders = []
         for path in project_cfg.TEST_CASES_DIR.rglob("*.py"):

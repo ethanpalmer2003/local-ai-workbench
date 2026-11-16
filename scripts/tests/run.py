@@ -91,7 +91,7 @@ from scripts.tests.cases.shared.gate.test_inference_engines import InferenceEngi
 from scripts.tests.cases.shared.gate.test_label_vocabulary import LabelVocabularyTests
 from scripts.tests.cases.shared.gate.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.gate.test_model_run import ModelRunTests
-from scripts.tests.cases.shared.gate.test_test_scoping import TestScope
+from scripts.tests.cases.shared.gate.test_scoping import TestScope
 from scripts.tests.cases.shared.gate.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
 from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
@@ -104,8 +104,8 @@ from scripts.tests.cases.shared.models.test_model_updates import (
     TransferTests,
     UpdateModelsTests,
 )
+from scripts.tests.cases.shared.regression.test_boundaries import TestBoundaries
 from scripts.tests.cases.shared.regression.test_regression_fixtures import RegressionFixtures
-from scripts.tests.cases.shared.regression.test_test_boundaries import TestBoundaries
 from scripts.tests.cases.shared.reports.test_reporting import Reporting
 from scripts.tests.cases.shared.reports.test_reports import ReportOutputs
 from scripts.tests.cases.shared.runtime.test_backend_sessions import BackendSessions
