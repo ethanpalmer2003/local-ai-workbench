@@ -9,6 +9,10 @@ uses embeddings: they are AST and call-graph indexes, so semantic near-duplicate
 | Codebase Memory (`cbm_*` tools) | `uv tool install codebase-memory-mcp`, then toggle the bundle so the plugin resolves the runtime | `codebase-memory-mcp cli index_repository '{"repo_path": "C:/AI"}'`; 6 s for 7,460 nodes and 36,025 edges; excludes `.git`, `.venv`, `data`, `.pytest_cache`, `node_modules`; UI on `http://localhost:9749/` | `cbm_trace`, `cbm_search`, `cbm_snippet`, `cbm_arch` |
 | Graphify (`dsh-graphify`, `graphify` CLI) | plugin bundle plus `uv tool install 'graphifyy[mcp]'` | `graphify update <repo> --no-cluster`, then `cluster-only --no-label`; 654 files, 6,168 nodes, 379 communities, no model needed | `graphify affected`, `god-nodes`, `path`, `explain`; `query` needs community labels |
 
+Default choice: Codebase Memory for callers, snippets and name lookup; Graphify for architecture, hubs and
+shortest paths; `git grep` and `git ls-files` for text and filenames. Nothing in this file forces a search
+method; it records what each measured best at.
+
 Measured on this repository: for `http_ready`, `cbm_trace` inbound reported 62 callers where `graphify affected`
 at depth 2 reported 11, so Codebase Memory is the better caller tool and Graphify the better architecture map.
 
