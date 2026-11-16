@@ -2,7 +2,6 @@
   "files": {
     "scripts/benchmarks/shared/framework_compare.py": 923,
     "scripts/download/input/get_tts_voices.py": 1468,
-    "scripts/launchers/launcher_config.py": 1006,
     "scripts/tests/cases/suites/framework_updates.py": 1155,
     "scripts/tests/cases/suites/frameworks_smoke.py": 1180
   }
