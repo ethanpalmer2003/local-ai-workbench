@@ -2,34 +2,15 @@
 
 import json
 import re
-import subprocess
-from typing import Any
 
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr.llamacpp import module_api
 from scripts.launchers.asr.llamacpp.llama_audio import LlamaAudioBackend
 from scripts.launchers.asr.shared import requests
 
 BACKEND = LlamaAudioBackend(cfg.QWEN3_ASR, alias="qwen3-asr", label="Qwen ASR", device=cfg.QWEN3_ASR.device)
 
-
-def url() -> str:
-    return BACKEND.url()
-
-
-def ready() -> bool:
-    return BACKEND.ready()
-
-
-def command() -> list[str]:
-    return BACKEND.command()
-
-
-def matching_server() -> bool:
-    return BACKEND.matching_server()
-
-
-def start() -> subprocess.Popen[Any] | None:
-    return BACKEND.start(ready, matching_server)
+url, ready, command, matching_server, start = module_api.bind(BACKEND, globals())
 
 
 def clean_transcript(text: str) -> str:

@@ -10,7 +10,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from io import BytesIO
 from threading import Lock
-from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 import requests
@@ -32,6 +31,7 @@ from scripts.launchers.proxy_util import (
     serve_proxy,
     streamed_speech_response_headers,
 )
+from scripts.shared.http_server import QuietLog
 
 Payload = dict[str, object]
 
@@ -197,7 +197,7 @@ def _wav_duration(data: bytes) -> float:
         return audio.getnframes() / audio.getframerate()
 
 
-class _TtsProxyHandler(ProxyHandlerMixin):
+class _TtsProxyHandler(QuietLog, ProxyHandlerMixin):
     upstream_url = ""
     tag = "audiocpp-proxy"
     audio_service = None
@@ -372,9 +372,6 @@ class _TtsProxyHandler(ProxyHandlerMixin):
             instruction=instruction,
             guidance_scale=guidance_scale,
         )
-
-    def log_message(self, format: str, *args: Any) -> None:
-        pass  # per-request summary is printed in _forward instead
 
 
 def run_tts_json_proxy(

@@ -11,7 +11,6 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import requests
 from scripts.launchers.asr.shared.resident_profiles import build_server_command
 from scripts.launchers.shared.services import native
-from scripts.shared.wait import http_ready
 
 
 class ResidentBackend:
@@ -19,10 +18,10 @@ class ResidentBackend:
         self.settings = settings
 
     def url(self) -> str:
-        return f"http://127.0.0.1:{self.settings.port}"
+        return native.service_url(self.settings.port)
 
     def ready(self) -> bool:
-        return http_ready(self.url() + "/health")
+        return native.service_ready(self.settings.port)
 
     def command(self) -> list[str]:
         command = build_server_command(self.settings.profile, self.settings.port)

@@ -7,15 +7,14 @@ from typing import Any
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import requests
 from scripts.launchers.shared.services import native
-from scripts.shared.wait import http_ready
 
 
 def url() -> str:
-    return f"http://127.0.0.1:{cfg.WHISPERCPP_ASR.port}"
+    return native.service_url(cfg.WHISPERCPP_ASR.port)
 
 
 def ready() -> bool:
-    return http_ready(url() + "/health", strict=True)
+    return native.service_ready(cfg.WHISPERCPP_ASR.port, strict=True)
 
 
 def server_command(

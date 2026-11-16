@@ -16,6 +16,7 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import llamacpp
 from scripts.shared import consent
+from scripts.shared.http_server import QuietLog
 from scripts.shared.timing import timed
 
 
@@ -72,10 +73,7 @@ def main() -> None:
     conf = llamacpp.LlamaConfig()
     model = cfg.STRATA_SERVICE.model_name if args.backend == "strata" else conf.alias
 
-    class Handler(BaseHTTPRequestHandler):
-        def log_message(self, format: str, *args: object) -> None:
-            pass
-
+    class Handler(QuietLog, BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             body = json.dumps({"data": [{"id": model}]}).encode()
             self.send_response(200)

@@ -10,7 +10,17 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.shared.services.process import stop_owned
-from scripts.shared.wait import wait_ready
+from scripts.shared.wait import http_ready, wait_ready
+
+
+def service_url(port: int) -> str:
+    """The loopback base URL every project service answers on."""
+    return f"http://127.0.0.1:{port}"
+
+
+def service_ready(port: int, path: str = "/health", *, strict: bool = False) -> bool:
+    """Whether the service on this port answers its health path; one owner for the probe."""
+    return http_ready(service_url(port) + path, strict=strict)
 
 
 def matches(command: list[str]) -> bool:

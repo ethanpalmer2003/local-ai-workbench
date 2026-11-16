@@ -21,7 +21,6 @@
     "scripts/download/frameworks/audiocpp/updates.py|scripts/download/frameworks/native_build.py": 1,
     "scripts/download/input/get_tts_voices.py|scripts/download/input/split_from_csv.py": 1,
     "scripts/download/input/split_from_csv.py|scripts/download/input/tune_silence.py": 1,
-    "scripts/launchers/asr/llamacpp/gemma_audio.py|scripts/launchers/asr/llamacpp/qwen3_asr.py": 1,
     "scripts/launchers/asr/llamacpp/llama_audio.py|scripts/tests/cases/suites/gemma_runtime_screen.py": 1,
     "scripts/launchers/audiocpp/audiocpp.py|scripts/launchers/llamacpp/llamacpp.py": 1,
     "scripts/launchers/audiocpp/kokoro.py|scripts/tests/cases/shared/workflows/test_speech_profiles.py": 1,

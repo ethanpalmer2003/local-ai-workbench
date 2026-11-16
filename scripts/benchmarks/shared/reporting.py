@@ -16,6 +16,11 @@ from scripts.benchmarks.shared.paths import RunPaths
 BENCHMARK_REASONING_EFFORT = "low"
 
 
+def mean_text(values: list[float]) -> str:
+    """A mean for a report line: two places, or `n/a` when there is nothing to average."""
+    return f"{sum(values) / len(values):.2f}" if values else "n/a"
+
+
 def write_results(output: RunPaths, rows: list[dict[str, Any]]) -> None:
     """Keep complete JSON and a flat CSV with one row per completed measurement."""
     (output.artifacts / "results.json").write_text(json.dumps(rows, indent=2) + "\n", encoding="utf-8")
