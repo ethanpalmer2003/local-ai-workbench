@@ -19,6 +19,7 @@ import psutil
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
+from scripts.shared import consent
 
 DEFAULT_SILENCE = 180.0
 DEFAULT_MINUTES = 20.0
@@ -159,6 +160,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--require", action="append", default=[], type=Path, help="input file that must exist")
     parser.add_argument("--port", action="append", default=[], type=int, help="port that must be free")
     parser.add_argument("arguments", nargs=argparse.REMAINDER, help="-- then the module's own arguments")
+    consent.flag(parser)
     return parser
 
 
@@ -186,6 +188,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - [FAIL] {problem}")
         print("[OK] dry run passed" if not problems else "[FAIL] dry run failed")
         return 0 if not problems else 2
+    if not consent.ask("Model run", args.minutes * 60, args.yes):
+        return 1
     return run(spec)
 
 

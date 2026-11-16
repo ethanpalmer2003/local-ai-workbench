@@ -1,7 +1,7 @@
 # Review-gate cases
 
 One test module per gate module in [scripts/review](../../../review): comments, docs, layout,
-network timeouts, public audit, the gate's own consent, similarity and typography. A new gate
+network timeouts, public audit, similarity and typography. A new gate
 arrives with its case here, and the class is registered in [run.py](../../run.py) so the default
 suite collects it.
 

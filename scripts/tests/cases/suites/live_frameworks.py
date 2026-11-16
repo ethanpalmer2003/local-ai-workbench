@@ -31,12 +31,14 @@ from scripts.launchers.llamacpp import llamacpp, llamacpp_coding, llamacpp_dsh
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
+from scripts.shared import consent
 from scripts.shared.http_server import request
 from scripts.shared.wait import wait_ready
 from scripts.tests.shared import live_stamp
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.progress import ProgressBar
 from scripts.tests.shared.timing import TimedTextTestResult
+from scripts.tools import stage_times
 
 live_timeout = 300.0
 # - One target per user-facing launch entry. Backend probes cover engines/models
@@ -522,7 +524,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only", nargs="+", choices=(*LAUNCHER_TARGETS, "all"), default=list(LAUNCHER_TARGETS))
     parser.add_argument("--timeout", type=float, default=180)
+    consent.flag(parser)
     args = parser.parse_args()
+    if not consent.ask("Live framework suites", stage_times.typical("launchers"), args.yes):
+        return 1
     global live_timeout
     live_timeout = args.timeout
     targets: list[str] = (
