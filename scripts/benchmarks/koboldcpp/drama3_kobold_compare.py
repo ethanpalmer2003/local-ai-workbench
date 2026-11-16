@@ -12,13 +12,14 @@ from typing import Any
 import psutil
 
 from scripts.benchmarks.asr import audiocpp_drama3_offload as drama3_offload
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor, GpuMemorySnapshot, get_gpu_memory_snapshot
-from scripts.shared import backends
+from scripts.shared import backends, consent
 from scripts.tests.cases.koboldcpp.kobold_audiocpp_modes import kobold_reply, split_text
 
 
@@ -258,4 +259,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()

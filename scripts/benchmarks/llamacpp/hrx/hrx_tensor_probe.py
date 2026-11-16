@@ -12,9 +12,11 @@ from typing import Any
 
 import requests as http
 
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, Outcome, RunPaths
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
+from scripts.shared import consent
 
 HRX_ROOT = project_cfg.FRAMEWORKS_DIR / "llamacpp/additions/hrx"
 LLAMA_SOURCE = HRX_ROOT / "llama.cpp"
@@ -323,4 +325,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()

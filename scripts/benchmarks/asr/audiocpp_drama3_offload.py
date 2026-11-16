@@ -17,6 +17,7 @@ from typing import Any
 
 import requests
 
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.vram import snapshot_dict
 from scripts.config import project_config as project_cfg
@@ -27,6 +28,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp_catalog
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
+from scripts.shared import consent
 from scripts.shared.backends import listening
 from scripts.tests.cases.audiocpp.audiocpp_backend_compare import (
     BUILDS,
@@ -422,4 +424,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     raise SystemExit(main())

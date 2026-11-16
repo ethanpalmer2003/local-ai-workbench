@@ -9,12 +9,14 @@ from pathlib import Path
 from typing import Any
 
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import stream_chat
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared import preflight as preflight_check
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.strata import strata_pi
+from scripts.shared import consent
 from scripts.shared.wait import wait_ready
 
 WARMUP_PROMPT = "Describe a red ball in one sentence."
@@ -190,4 +192,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()

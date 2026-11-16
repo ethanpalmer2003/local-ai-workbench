@@ -32,6 +32,7 @@ from typing import Any, cast
 
 import requests
 
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT, report_run
 from scripts.benchmarks.shared.vram import snapshot_dict
@@ -41,6 +42,7 @@ from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
+from scripts.shared import consent
 from scripts.shared.timing import timed
 
 # - Two short, fixed prompts covering the two workloads these profiles
@@ -631,5 +633,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     with timed("llamacpp/benchmark_llamacpp_profiles"):
         main()

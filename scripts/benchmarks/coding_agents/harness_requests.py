@@ -9,11 +9,13 @@ from typing import Any
 
 from scripts.benchmarks.coding_agents.shared.benchmark_agents import CLIENTS, client_command
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import llamacpp
+from scripts.shared import consent
 from scripts.shared.timing import timed
 
 
@@ -99,5 +101,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     with timed("shared/harness_requests"):
         main()

@@ -14,7 +14,7 @@ from typing import Any
 import requests
 
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import await_http, post_json, stop_server
-from scripts.benchmarks.shared import provenance
+from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
 from scripts.benchmarks.shared.paths import BenchmarkPaths, Outcome, RunPaths
 from scripts.benchmarks.shared.vram import snapshot_dict
 from scripts.config import project_config as project_cfg
@@ -24,6 +24,7 @@ from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
+from scripts.shared import consent
 
 # - benchmark profiles live beside the launcher ones, so a comparison such as swift15-nospec is reachable
 ALL_PROFILES = {**LLAMACPP_PROFILES, **LLAMACPP_BENCHMARK_PROFILES}
@@ -402,4 +403,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()

@@ -15,7 +15,7 @@ import requests
 from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.asr.metrics import unicode_errors
 from scripts.benchmarks.asr.requests import multipart
-from scripts.benchmarks.shared import provenance
+from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
 from scripts.benchmarks.shared.benchmark import summarize_requests
 from scripts.benchmarks.shared.paths import BenchmarkPaths
 from scripts.benchmarks.shared.resident_http import ResidentHttp
@@ -24,6 +24,7 @@ from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers.asr.shared.file_cli import environment
 from scripts.launchers.asr.shared.resident_profiles import audio_config, clean_transcript, profiles
 from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.shared import consent
 from scripts.shared.resources import monitor_process
 
 
@@ -289,4 +290,5 @@ def main():
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     raise SystemExit(main())

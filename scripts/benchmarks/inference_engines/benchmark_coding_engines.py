@@ -30,6 +30,7 @@ from urllib.parse import urlsplit
 
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import stream_chat, stream_metrics
 from scripts.benchmarks.coding_agents.strata_profiles import PREFIX
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.launchers import launch_util
@@ -37,6 +38,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
 from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.shared import consent
 from scripts.shared.timing import timed
 from scripts.shared.wait import http_ready, wait_ready
 
@@ -327,5 +329,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     with timed("llm/benchmark_coding_engines"):
         main()

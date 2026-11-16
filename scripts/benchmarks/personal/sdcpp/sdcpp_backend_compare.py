@@ -14,6 +14,7 @@ from typing import Any
 
 import requests
 
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.benchmarks.shared.vram import BenchmarkVram
@@ -23,6 +24,7 @@ from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.sdcpp import server as sdcpp
 from scripts.shared import benchmark_config as benchmark_cfg
+from scripts.shared import consent
 from scripts.shared.backends import listening
 from scripts.shared.resources import summarize_resources, watch_resources
 
@@ -251,4 +253,5 @@ def main():
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()
