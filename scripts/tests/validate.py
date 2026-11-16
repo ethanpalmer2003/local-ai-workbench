@@ -14,7 +14,7 @@ from scripts.tools import stage_runner, stage_times
 
 MODULES: dict[str, tuple[str, tuple[str, ...]]] = {
     # - ComfyUI is vendor-managed and updated by hand, so it stays out of the automatic preflight
-    "frameworks": ("scripts.download.frameworks.update_frameworks", ("--skip-comfyui",)),
+    "frameworks": ("scripts.download.frameworks.update_frameworks", ("--skip-comfyui", "--yes")),
     "models": ("scripts.download.models.updates", ()),
     "gate": ("scripts.review", ("--all",)),
     "suite": ("scripts.tests.run", ("--all",)),

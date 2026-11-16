@@ -18,13 +18,10 @@ from tqdm import tqdm
 
 from scripts.config import project_config as project_cfg
 from scripts.config.models import MODELS, ModelDownload, catalog
-from scripts.download.models import transfer, updates
+from scripts.download.models import DOWNLOAD_SECONDS, transfer, updates
 from scripts.download.models.hub_sources import parse_url
 from scripts.shared import consent
 from scripts.tools import model_admin
-
-# - sizes are unknown before the transfer starts, and replacing weights is minutes of download
-DOWNLOAD_SECONDS = 600
 
 
 @dataclass

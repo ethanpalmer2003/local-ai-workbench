@@ -105,6 +105,7 @@ class SharedContracts(unittest.TestCase):
             with (
                 patch.object(sys, "argv", ["download", *args]),
                 patch.object(cli_download, "download_file") as download,
+                patch("scripts.shared.consent.ask", return_value=True),
             ):
                 cli_download.main()
                 self.assertEqual(download.call_args.kwargs["revision"], revision)

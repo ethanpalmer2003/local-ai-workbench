@@ -4,6 +4,11 @@ A run expected to pass `LONG_RUN_SECONDS` asks the person at the terminal. An ag
 job has nobody to answer, so silence is a refusal and `--yes` is only for a run the user asked for.
 Shorter runs never ask, because a scoped gate and the suite finish in seconds and asking there only
 trains the reader to answer without looking.
+
+Two kinds of entry point stay out of it. A launcher starts a service the person then uses, so a
+prompt would land in a double-clicked window that nobody watches; and a tool that only reads or
+reports has nothing to agree to. Destructive tools carry their own `--apply` or `--dry-run` default
+instead, which is a better question than a duration.
 """
 
 from __future__ import annotations

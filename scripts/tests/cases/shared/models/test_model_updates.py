@@ -288,7 +288,7 @@ class DownloadModelsTests(unittest.TestCase):
     def test_no_arguments_fetch_only_the_missing_active_files(self) -> None:
         with patch.object(download_models.download_catalog, "main") as main:
             self.assertEqual(download_models.main(["--yes"]), 0)
-        main.assert_called_once_with(["--active", "--download"])
+        main.assert_called_once_with(["--yes", "--active", "--download"])
 
     def test_repo_flags_go_to_the_arbitrary_downloader(self) -> None:
         with patch.object(download_models.cli_download, "main") as main:

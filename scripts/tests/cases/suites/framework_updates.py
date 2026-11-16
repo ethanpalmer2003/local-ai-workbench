@@ -436,7 +436,7 @@ class FrameworkUpdates(unittest.TestCase):
 
         with CasePaths(__file__).temporary_directory() as folder:
             with (
-                patch.object(sys, "argv", ["update_frameworks"]),
+                patch.object(sys, "argv", ["update_frameworks", "--yes"]),
                 patch.object(cfg, "TOOLS", tools),
                 patch.object(project_cfg, "LOGS_DIR", Path(folder)),
                 patch.object(updater, "process_tool", side_effect=process),
@@ -521,7 +521,7 @@ class FrameworkUpdates(unittest.TestCase):
             return True
 
         with (
-            patch.object(sys, "argv", ["update_frameworks"]),
+            patch.object(sys, "argv", ["update_frameworks", "--yes"]),
             patch.object(cfg, "TOOLS", [self.pi_tool]),
             patch.object(updater, "process_tool", side_effect=process),
             patch.object(pi_packages, "sync_plan", return_value=(["new-extension"], [])),

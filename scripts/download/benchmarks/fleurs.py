@@ -15,8 +15,12 @@ from pathlib import Path
 from typing import Any
 
 from scripts.config import project_config as project_cfg
+from scripts.shared import consent
 
 MANIFEST_NAME = "download.json"
+
+# - the pinned archives are a few hundred megabytes, so fetching them is minutes
+CORPUS_SECONDS = 600
 
 
 def manifest_path() -> Path:
@@ -177,6 +181,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.force and not args.download:
         parser.error("--force only applies to --download")
+    if args.download and not consent.ask("FLEURS corpus download", CORPUS_SECONDS):
+        return 1
     if args.download:
         recorded = download(args.force)
         print(f"[OK] {len(recorded['clips'])} clips in {corpus_root()}")
