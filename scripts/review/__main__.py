@@ -20,6 +20,7 @@ from scripts.review import (
     model_references,
     network_timeouts,
     overlay_access,
+    owned_tokens,
     package_audit,
     spellings,
     typography,
@@ -180,7 +181,7 @@ DEPENDENCY_FILES = ("pyproject.toml", "uv.lock")
 
 def touched_sections(paths: list[str]) -> set[str]:
     """The sections whose inputs changed: a rename of batch files needs layout and docs only."""
-    sections = {"layout", "docs"}
+    sections = {"layout", "docs", "single-owner tokens"}
     suffixes = {Path(path).suffix.lower() for path in paths}
     if ".py" in suffixes:
         sections |= PYTHON_SECTIONS
@@ -206,6 +207,7 @@ def touched_gate(argv: list[str] | None = None) -> int:
     print(f"=== TOUCHED: {', '.join(sorted(selected))} ===", flush=True)
     table = (
         ("layout", "=== LAYOUT ===", layout.main),
+        ("single-owner tokens", "\n=== SINGLE-OWNER TOKENS ===", owned_tokens.main),
         ("docs", "\n=== DOCUMENTATION ===", lambda: docs.main([])),
         ("model references", "\n=== MODEL REFERENCE DRIFT ===", model_references.main),
         ("front-end wiring", "\n=== FRONT-END WIRING ===", frontend_wiring.main),
@@ -261,6 +263,9 @@ def full_gate(argv: list[str] | None = None) -> int:
 
     print("=== LAYOUT ===", flush=True)
     layout_status = timed("layout", layout.main)
+
+    print("\n=== SINGLE-OWNER TOKENS ===", flush=True)
+    owned_status = timed("single-owner tokens", owned_tokens.main)
 
     print("\n=== DOCUMENTATION ===", flush=True)
     docs_status = timed("docs", docs.main, [])
@@ -348,6 +353,7 @@ def full_gate(argv: list[str] | None = None) -> int:
     return int(
         bool(
             layout_status
+            or owned_status
             or docs_status
             or model_status
             or frontend_status

@@ -12,6 +12,7 @@ The default run is scoped to what changed since upstream. `--all` checks every s
 The runner executes these checks:
 
 - `layout.py`: component/config ownership, install roots, folder naming, high-level file placement, and batch references.
+- `owned_tokens.py`: a literal one module owns may not be spelled in another, so a copied rule fails here instead of drifting; `--list` prints the table.
 - `docs.py`: Markdown placement, roles, budgets, basename casing, links and model-name policy.
 - `ruff check`: the configured lint set, including the [McCabe limit](../../.agents/CODE.md).
 - `model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
