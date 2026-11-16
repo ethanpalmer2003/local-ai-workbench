@@ -67,6 +67,12 @@ class FindingsTests(unittest.TestCase):
     def test_a_clean_file_reports_nothing(self):
         self.assertEqual(self._findings("def f(value: int) -> int:\n    return value\n"), [])
 
+    def test_a_deep_chain_is_flagged_below_the_score_cap(self):
+        rows = self._findings("def f(value: dict[str, dict[str, dict[str, dict[str, int]]]]) -> None: ...")
+        self.assertEqual(len(rows), 1)
+        self.assertGreater(rows[0].depth, annotations.MAX_DEPTH)
+        self.assertLessEqual(rows[0].score, annotations.MAX_SCORE)
+
 
 if __name__ == "__main__":
     unittest.main()
