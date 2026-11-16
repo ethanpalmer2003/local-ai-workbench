@@ -5,9 +5,11 @@ import json
 import subprocess
 import sys
 
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.config import project_config as project_cfg
+from scripts.shared import consent
 from scripts.shared.timing import timed
 
 
@@ -130,5 +132,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     with timed("ComfyUI setting screen"):
         main()

@@ -15,6 +15,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.benchmark import workflow_timing
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run, write_results
@@ -22,6 +23,7 @@ from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.config.comfyui.workflow_overrides import CONTROL_NAMES, LTXWorkflowOverrides, VAEDecode, VideoVAE, workflow
 from scripts.launchers.runtime import gpu_memory
+from scripts.shared import consent
 
 MODELS = (model_cfg.path("comfyui/LTX25-distilled-DiT-Q3_K_M").name,)
 ENCODERS = (
@@ -769,4 +771,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()

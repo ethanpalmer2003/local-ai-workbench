@@ -13,7 +13,7 @@ from typing import Any
 
 from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.asr.metrics import word_errors
-from scripts.benchmarks.shared import reporting
+from scripts.benchmarks.shared import BENCHMARK_SECONDS, reporting
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
@@ -26,6 +26,7 @@ from scripts.launchers.asr.koboldcpp import gemma_audio as gemma_kobold
 from scripts.launchers.asr.llamacpp import gemma_audio
 from scripts.launchers.koboldcpp import kobold
 from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.shared import consent
 from scripts.shared.resources import summarize_resources, watch_resources
 
 
@@ -218,4 +219,5 @@ def summarize_results(result: dict[str, Any]) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()

@@ -9,13 +9,14 @@ from pathlib import Path
 from typing import Any
 
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import await_http, post_json, stop_server
-from scripts.benchmarks.shared import provenance
+from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
+from scripts.shared import consent
 
 
 def run_trial(
@@ -176,4 +177,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()

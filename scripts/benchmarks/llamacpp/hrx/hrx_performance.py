@@ -10,10 +10,12 @@ from pathlib import Path
 from typing import Any
 
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import await_http, post_json, stop_server
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
+from scripts.shared import consent
 
 
 def compare_runs(previous: Path, current: Path) -> dict[str, Any]:
@@ -187,4 +189,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()

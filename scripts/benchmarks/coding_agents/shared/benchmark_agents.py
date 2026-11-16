@@ -21,6 +21,7 @@ from scripts.benchmarks.coding_agents.shared.benchmark_backends import (
 )
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import BenchmarkRelay, summarize_requests, warmup
 from scripts.benchmarks.coding_agents.shared.framework_tasks import TASKS, CodingTask
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT, report_run
@@ -28,6 +29,7 @@ from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import coding_clients, llamacpp, llamacpp_coding
+from scripts.shared import consent
 from scripts.shared.service_identity import endpoint_identity
 from scripts.shared.timing import timed
 
@@ -676,5 +678,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     with timed("coding_agents/shared/benchmark_agents"):
         raise SystemExit(main())

@@ -27,6 +27,7 @@ import requests
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk, summarize_requests
 from scripts.benchmarks.coding_agents.strata_profiles import PREFIX
 from scripts.benchmarks.inference_engines.engines import avalon
+from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.launchers import launch_util
@@ -34,6 +35,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
 from scripts.launchers.strata import strata_pi
+from scripts.shared import consent
 from scripts.shared.wait import http_ready, wait_ready
 
 WARMUP = "Describe a red ball in one sentence."
@@ -465,4 +467,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()

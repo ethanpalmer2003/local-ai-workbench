@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 # - the repository's approval bound for a single run, in seconds
 LONG_RUN_SECONDS = 300
@@ -36,6 +37,20 @@ def ask(what: str, expected_seconds: float, given: bool = False) -> bool:
             return True
     print(f"[FAIL] {what} takes about {_minutes(expected_seconds)}; pass --yes when the user asked for it.", flush=True)
     return False
+
+
+def require(expected_seconds: float, what: str = "") -> None:
+    """Ask before a hardcoded entry point starts; `--yes` anywhere in argv already answers.
+
+    `--help` passes through untouched, because printing usage starts no work.
+    """
+    argv = sys.argv[1:]
+    if "--help" in argv or "-h" in argv:
+        return
+    given = "--yes" in argv
+    sys.argv[1:] = [argument for argument in argv if argument != "--yes"]
+    if not ask(what or Path(sys.argv[0]).stem, expected_seconds, given):
+        raise SystemExit(1)
 
 
 def flag(parser: argparse.ArgumentParser) -> None:

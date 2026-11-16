@@ -12,13 +12,14 @@ import wave
 from pathlib import Path
 from typing import Any
 
-from scripts.benchmarks.shared import provenance
+from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle, summarize_requests
 from scripts.benchmarks.shared.paths import BenchmarkPaths
 from scripts.benchmarks.tts_engines.fixtures import TEXT, voice_assets
 from scripts.config import models as model_cfg
 from scripts.config import project_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.shared import consent
 
 
 def sherpa_types(root):
@@ -227,4 +228,5 @@ def main():
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     raise SystemExit(main())

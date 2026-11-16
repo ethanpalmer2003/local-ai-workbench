@@ -3,6 +3,7 @@
 import argparse
 import contextlib
 import io
+import sys
 import unittest
 from unittest.mock import Mock, patch
 
@@ -42,3 +43,20 @@ class ConsentTests(unittest.TestCase):
         consent.flag(parser)
         self.assertTrue(parser.parse_args(["--yes"]).yes)
         self.assertFalse(parser.parse_args([]).yes)
+
+    def test_require_refuses_an_unattended_entry_point(self):
+        with (
+            patch("scripts.shared.consent.sys.stdin", Mock(isatty=lambda: False)),
+            patch.object(sys, "argv", ["benchmark"]),
+            contextlib.redirect_stdout(io.StringIO()),
+            self.assertRaises(SystemExit),
+        ):
+            consent.require(900)
+
+    def test_require_accepts_yes_anywhere_and_keeps_help_free(self):
+        with patch.object(sys, "argv", ["benchmark", "--yes", "--rounds", "1"]):
+            consent.require(900)
+            self.assertEqual(sys.argv[1:], ["--rounds", "1"])
+        with patch.object(sys, "argv", ["benchmark", "--help"]), patch("scripts.shared.consent.sys.stdin") as stdin:
+            consent.require(900)
+        stdin.isatty.assert_not_called()

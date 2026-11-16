@@ -18,7 +18,7 @@ import requests
 from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.asr.metrics import word_errors
 from scripts.benchmarks.asr.requests import multipart
-from scripts.benchmarks.shared import reporting
+from scripts.benchmarks.shared import BENCHMARK_SECONDS, reporting
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
@@ -28,6 +28,7 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared.resident_profiles import whisper_frameworks, whisper_model
 from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.shared import consent
 from scripts.shared.backends import listening
 from scripts.shared.resources import summarize_resources, watch_resources
 
@@ -296,4 +297,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()

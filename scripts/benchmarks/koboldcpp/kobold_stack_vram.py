@@ -16,8 +16,8 @@ from threading import Event, Thread
 from types import SimpleNamespace
 from typing import Any
 
+from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
 from scripts.benchmarks.shared import preflight as preflight_check
-from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.config.audiocpp import server as audio_cfg
 from scripts.launchers import launch_util
@@ -27,7 +27,7 @@ from scripts.launchers.koboldcpp import external_llm, kobold
 from scripts.launchers.runtime import shared_gpu
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor, get_gpu_memory_snapshot
-from scripts.shared import backends
+from scripts.shared import backends, consent
 from scripts.shared import benchmark_config as benchmark_cfg
 from scripts.shared.http_server import request
 from scripts.shared.resources import summarize_resources, watch_resources
@@ -439,4 +439,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     main()

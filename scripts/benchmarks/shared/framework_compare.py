@@ -29,8 +29,8 @@ import psutil
 import requests
 
 from scripts.benchmarks.asr.metrics import pooled_scores, unicode_errors
+from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
 from scripts.benchmarks.shared import language_corpus as corpus
-from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
@@ -48,6 +48,7 @@ from scripts.launchers.shared.media.audio import decode_audio
 from scripts.launchers.shared.services import native
 from scripts.launchers.shared.services.process import stop_owned
 from scripts.launchers.shared.transport.multipart import audio_upload
+from scripts.shared import consent
 from scripts.shared.wait import http_ready, wait_ready
 
 WARMUP_PROMPT = "Say hello in one short sentence."
@@ -922,4 +923,5 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    consent.require(BENCHMARK_SECONDS)
     raise SystemExit(main())
