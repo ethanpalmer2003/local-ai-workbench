@@ -2,7 +2,7 @@
 name = "ai-scripts"
 version = "0.1.0"
 description = "Local launchers, benchmarks and checks for the AI stack"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 # - direct dependencies only; uv.lock carries the exact resolved set and hashes
 dependencies = [
     "aiohttp",
@@ -56,7 +56,7 @@ extraPaths = ["."]
 reportImplicitRelativeImport = "none"
 # - the venv these launchers run in; unset, basedpyright targets a newer Python
 #   and reports removed stdlib modules as unresolvable
-pythonVersion = "3.13"
+pythonVersion = "3.14"
 venvPath = "."
 venv = ".venv"
 exclude = ["scripts/config/comfyui/ltx_prompt_cache.py", "scripts/tests/cases/personal/comfyui/test_ltx_prompt_cache.py", "scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", ".venv", "data", "frameworks", "trash"]

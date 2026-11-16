@@ -50,7 +50,14 @@ DEBT_PREAMBLE = (
     "| Complexity | Function |",
     "| ---: | --- |",
 )
-EXCLUDED = {".git", ".venv", "state", "__pycache__", ".pytest_cache", ".ruff_cache"}
+EXCLUDED = {".git", "state", "__pycache__", ".pytest_cache", ".ruff_cache"}
+
+
+def _excluded(name: str) -> bool:
+    """A cache, a generated tree or any virtual environment, including a renamed `.venv-old`."""
+    return name in REVIEW_EXCLUDED or name.startswith(".venv")
+
+
 REVIEW_EXCLUDED = EXCLUDED | {
     "graphify-out",
     "frameworks",
@@ -151,7 +158,7 @@ def inspect_source(source: str, path: str) -> list[FunctionSize]:
 def maintained_python(root: Path):
     for directory, folders, files in os.walk(root):
         parent = Path(directory)
-        folders[:] = [name for name in folders if name not in EXCLUDED and not (parent == root and name == "tests")]
+        folders[:] = [name for name in folders if not _excluded(name) and not (parent == root and name == "tests")]
         for name in sorted(files):
             if name.endswith(".py"):
                 yield parent / name
@@ -182,7 +189,7 @@ def repository_inventory(root: Path) -> FolderInventory:
     source_files: list[SourceFileRecord] = []
     for directory, children, names in os.walk(root):
         parent = Path(directory)
-        children[:] = sorted(name for name in children if name not in REVIEW_EXCLUDED)
+        children[:] = sorted(name for name in children if not _excluded(name))
         visible_names = [name for name in names if name not in {"Thumbs.db", ".DS_Store"}]
         markdown_files = sum(Path(name).suffix.lower() == ".md" for name in visible_names)
         python_modules = sum(
@@ -497,7 +504,7 @@ def python_sources(root: Path):
     """Every maintained Python file, tests included; generated evidence and vendors excluded."""
     for directory, folders, names in os.walk(root):
         parent = Path(directory)
-        folders[:] = sorted(name for name in folders if name not in REVIEW_EXCLUDED)
+        folders[:] = sorted(name for name in folders if not _excluded(name))
         for name in sorted(names):
             if name.endswith(".py"):
                 yield parent / name

@@ -2,7 +2,7 @@
 /data/
 /frameworks/
 /trash/
-/.venv/
+/.venv*/
 /scripts/benchmarks/output/
 
 # Editor and tool state stays local.
