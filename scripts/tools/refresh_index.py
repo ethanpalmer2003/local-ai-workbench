@@ -35,8 +35,7 @@ SHIMS = {"codebase-memory-mcp": "codebase-memory-mcp.exe", "graphify": "graphify
 # - a background run that outlives this bound was killed, so the next refresh may take the lock
 LOCK_STALE_SECONDS = 900
 
-# - a detached child keeps its redirect handles but gets no console window of its own
-DETACHED_PROCESS = 0x00000008
+# - the background run needs no console at all, and its own process group so a Ctrl-C misses it
 CREATE_NEW_PROCESS_GROUP = 0x00000200
 
 
@@ -150,6 +149,9 @@ def start_graphify(root: Path, lock: Path) -> str:
     command = [sys.executable, "-m", "scripts.tools.refresh_index", "--graphify-only", "--lock", str(lock)]
     command.append(root.as_posix())
     with log.open("ab") as sink:
+        # - the run says what it is in its own log, because the window it runs in has no text
+        sink.write(f"[START] graphify {root.as_posix()} {time.strftime('%Y-%m-%d %H:%M:%S')}\n".encode())
+        sink.flush()
         if os.name == "nt":
             subprocess.Popen(
                 command,
@@ -157,7 +159,7 @@ def start_graphify(root: Path, lock: Path) -> str:
                 stdin=subprocess.DEVNULL,
                 stdout=sink,
                 stderr=subprocess.STDOUT,
-                creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
+                creationflags=subprocess.CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP,
             )
         else:
             subprocess.Popen(

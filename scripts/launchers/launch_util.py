@@ -458,7 +458,7 @@ def _child_environment(env: Mapping[str, str | None] | None) -> dict[str, str]:
 def _powershell_launch_cmd(cmd: list[str], title: str, log_file: str | None) -> list[str]:
     quoted = " ".join("'" + part.replace("'", "''") + "'" for part in cmd)
     title_literal = "'" + title.replace("'", "''") + "'"
-    ps_command = f"$Host.UI.RawUI.WindowTitle = {title_literal}; & {quoted}"
+    ps_command = f"$Host.UI.RawUI.WindowTitle = {title_literal}; Write-Host {title_literal}; & {quoted}"
     if log_file:
         log_literal = "'" + log_file.replace("'", "''") + "'"
         ps_command += f" 2>&1 | Tee-Object -FilePath {log_literal}"

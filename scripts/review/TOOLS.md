@@ -28,11 +28,13 @@ Measured on this machine; only the last two open a model or service. When to run
 | `scripts/review/check_repo.bat` | the same, from a normal terminal |
 | `scripts/review/format_py.bat` | applies `ruff format` |
 | `python -m scripts.tests.run` | regression suite through pytest, timings and reports; scoped to the change, `--all` runs every class |
-| `python -m scripts.tests.validate` | updates frameworks, then gate, suite and both live suites in one progress bar; `--models` adds the source check; skips unchanged live stages |
-| `python -m scripts.tools.stage_runner MODULE [ARGS...]` | wraps one long command in the same bar and keeps its output; `--stage-known KEY` takes the expected range from `stage_times` |
+| `python -m scripts.tests.validate` | frameworks, then gate, suite and live suites in one bar; `--models` adds the source check |
+| `python -m scripts.tools.stage_runner MODULE [ARGS...]` | wraps one long command in the same bar; `--stage-known KEY` takes the range from `stage_times` |
 | ... with `AI_MODEL_CHECKS=1` | adds asset/model checks kept out of regressions |
 | `pre-commit run --all-files` | ruff lint and format, codespell |
 | `python -m scripts.review.public_audit [--history]` | publish gate |
+| `python -m scripts.review.duplicates` | pylint verbatim blocks against the reviewed baseline |
+| `python -m scripts.review.similarity --code` | semantic duplicate pairs; needs the model |
 | `python -m scripts.review --scrub` | tree and history scan for personal terms before publishing |
 | `python -m scripts.benchmarks.audit_timing` | benchmark timing-contract inventory (printed, not gated) |
 | `python -m coverage run -m scripts.tests.run` | line coverage, then `coverage report` |

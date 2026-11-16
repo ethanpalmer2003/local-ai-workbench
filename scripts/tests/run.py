@@ -43,6 +43,7 @@ from scripts.tests.cases.review.test_docs import (
     RoleTests,
     RootDocumentTests,
 )
+from scripts.tests.cases.review.test_duplicates import DuplicateReportTests
 from scripts.tests.cases.review.test_layout import PolicyTests
 from scripts.tests.cases.review.test_network_timeouts import NetworkTimeoutTests
 from scripts.tests.cases.review.test_overlay_access import OverlayAccessTests
@@ -253,6 +254,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     PublicAuditTests,
     OverlayAccessTests,
     OwnedTokenTests,
+    DuplicateReportTests,
     SpeechProfiles,
     WorkflowDefaultsTests,
     WhisperCompareTests,

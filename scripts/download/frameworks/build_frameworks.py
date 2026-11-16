@@ -37,9 +37,9 @@ def run_builds(targets: list[ToolSpec], *, foreground: bool = False, dry_run: bo
                 failed += 1
             continue
         print(f"[BUILD] {tool.name}: new terminal -> {command}", flush=True)
-        subprocess.Popen(
-            ["cmd.exe", "/k", *(tool.build_command or [])], cwd=folder, creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
+        # - the new window carries its own title and a first line, so a stray console is identifiable
+        titled = f"title C:/AI build: {tool.name} && echo [BUILD] {tool.name} && {command}"
+        subprocess.Popen(["cmd.exe", "/k", titled], cwd=folder, creationflags=subprocess.CREATE_NEW_CONSOLE)
     if foreground and failed:
         print(f"\n[FAIL] {failed} build(s) failed")
     return failed
