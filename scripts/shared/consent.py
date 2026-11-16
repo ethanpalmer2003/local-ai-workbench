@@ -5,10 +5,11 @@ job has nobody to answer, so silence is a refusal and `--yes` is only for a run 
 Shorter runs never ask, because a scoped gate and the suite finish in seconds and asking there only
 trains the reader to answer without looking.
 
-Two kinds of entry point stay out of it. A launcher starts a service the person then uses, so a
-prompt would land in a double-clicked window that nobody watches; and a tool that only reads or
-reports has nothing to agree to. Destructive tools carry their own `--apply` or `--dry-run` default
-instead, which is a better question than a duration.
+Two kinds of entry point stay out of the duration rule. A launcher starts a service the person then
+uses, so a prompt would land in a double-clicked window that nobody watches; and a tool that only
+reads or reports has nothing to agree to. Destructive tools carry their own `--apply` or `--dry-run`
+default instead, which is a better question than a duration, and an irreversible stop uses
+`confirm`, which asks every time.
 """
 
 from __future__ import annotations
@@ -31,17 +32,35 @@ def _minutes(expected_seconds: float) -> str:
     return f"{minutes:.0f} min" if minutes >= 1 else f"{minutes:.1f} min"
 
 
+def _agree(prompt: str, refusal: str) -> bool:
+    """The one prompt: a person types yes, and anything else, including a closed stdin, refuses."""
+    if sys.stdin.isatty():
+        print(prompt, flush=True)
+        # - readline, not input: a captured or closed stdin answers nothing, which is a refusal
+        if sys.stdin.readline().strip().lower() == "yes":
+            return True
+    print(refusal, flush=True)
+    return False
+
+
 def ask(what: str, expected_seconds: float, given: bool = False) -> bool:
     """Whether `what` may start: a short run always may, a long one needs `--yes` or an answer."""
     if not is_long(expected_seconds) or given:
         return True
-    if sys.stdin.isatty():
-        print(f"{what} takes about {_minutes(expected_seconds)}. Type yes to continue:", flush=True)
-        # - readline, not input: a captured or closed stdin answers nothing, which is a refusal
-        if sys.stdin.readline().strip().lower() == "yes":
-            return True
-    print(f"[FAIL] {what} takes about {_minutes(expected_seconds)}; pass --yes when the user asked for it.", flush=True)
-    return False
+    minutes = _minutes(expected_seconds)
+    return _agree(
+        f"{what} takes about {minutes}. Type yes to continue:",
+        f"[FAIL] {what} takes about {minutes}; pass --yes when the user asked for it.",
+    )
+
+
+def confirm(what: str, given: bool = False) -> bool:
+    """Whether an irreversible action may run: it always asks, because its cost is not time."""
+    if given:
+        return True
+    return _agree(
+        f"{what}. Type yes to continue:", f"[FAIL] {what} needs a yes; pass --yes when the user asked for it."
+    )
 
 
 def require(expected_seconds: float, what: str = "") -> None:
@@ -59,7 +78,7 @@ def require(expected_seconds: float, what: str = "") -> None:
 
 
 def flag(parser: argparse.ArgumentParser) -> None:
-    """Add the `--yes` that lets an unattended long run start."""
+    """Add the `--yes` that lets an unattended long run or an irreversible action start."""
     parser.add_argument(
-        "--yes", action="store_true", help="confirm a run that takes minutes; otherwise a person is asked"
+        "--yes", action="store_true", help="confirm a run that takes minutes or stops something; otherwise ask"
     )
