@@ -218,7 +218,7 @@ class SharedContracts(unittest.TestCase):
             )
         self.assertEqual(
             spawn.call_args.args[0][-1],
-            "$Host.UI.RawUI.WindowTitle = 'test'; & 'backend.exe' 'a''b $value `text' 2>&1 | Tee-Object -FilePath 'C:/AI/log $value.txt'",
+            "$Host.UI.RawUI.WindowTitle = 'test'; Write-Host 'test'; & 'backend.exe' 'a''b $value `text' 2>&1 | Tee-Object -FilePath 'C:/AI/log $value.txt'",
         )
 
     def test_proxy_closes_listener_when_serving_fails(self):

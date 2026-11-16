@@ -35,6 +35,7 @@ dev = [
     "pytest-timeout>=2.4.0",
     "ruff",
     "vulture>=2.16",
+    "pylint>=4.1.4",
 ]
 
 [tool.uv]
