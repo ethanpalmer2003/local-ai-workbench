@@ -33,13 +33,13 @@ Two ignore files split the untracked tree: the root file holds the heavyweight t
 | `scripts/.env` | Local credentials |
 | `.zed/`, `.coverage`, `*.lnk` | Editor and tool state |
 - Tool caches (`__pycache__/`, `.pytest_cache/`, `.ruff_cache/`) ignore themselves.
-- Cited evidence stays here, so a clone shows the citation, not the artifact; [open questions](../notes/OPEN-QUESTIONS.md) tracks shipping a curated subset.
+- Cited evidence stays here; [open questions](../notes/OPEN-QUESTIONS.md) covers shipping a subset.
 
 ## Naming and grouping
 
 - The layout check audits file types in the root and each role root.
-- Settings: component first; `_SERVICE`, `_CLIENT` and `_ASR` state the role; `_DIR` binds a `Path` and `_BIN_DIR` an executable, converted at external boundaries.
-- Group by purpose, not count; adapters stay with their owner. Keep a small folder that carries ownership, native layout or output identity; counts are prompts, not orders.
+- Settings: component first; `_SERVICE`, `_CLIENT` and `_ASR` state the role; `_DIR` binds a `Path` and `_BIN_DIR` an executable.
+- Group by purpose. A folder holds at most 20 direct files; past that it needs another level and fails the inventory gate. Below four files it is a merge candidate, unless it carries ownership, a native layout or an output identity.
 - A role that owns a module keeps it at that role's root, even when another role calls it: a benchmark area owns its corpus, scoring and reporting modules, and tests import them as clients. `scripts/shared/` is for modules no role owns, so no role tree needs a `shared` folder of its own.
 - A name states its scope: a folder says the workload or engine, an entry point says what it runs, and a document uses an uppercase common noun. Widen the behavior, not the name; `tests` is test code only and vendor scripts keep their names.
 - Historical results and logs keep their paths; `CasePaths` mirrors sources without empty parallel folders.

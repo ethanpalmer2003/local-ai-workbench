@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.review import public_audit
+from scripts.review.audit import public_audit
 from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.paths import CasePaths
 
@@ -22,10 +22,10 @@ class PublicAuditTests(unittest.TestCase):
     def test_self_referential_files_are_still_screened_for_vocabulary(self):
         with (
             CasePaths(__file__).temporary_directory() as folder,
-            patch.object(public_audit, "tracked_files", return_value=["scripts/review/public_audit.py"]),
+            patch.object(public_audit, "tracked_files", return_value=["scripts/review/audit/public_audit.py"]),
             patch.object(public_audit, "local_words", return_value=("zzfixture",)),
         ):
-            target = Path(folder) / "scripts" / "review" / "public_audit.py"
+            target = Path(folder) / "scripts" / "review" / "audit" / "public_audit.py"
             target.parent.mkdir(parents=True)
             target.write_text("# zzfixture\n", encoding="utf-8")
             findings = public_audit.audit(Path(folder))

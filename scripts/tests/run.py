@@ -84,6 +84,14 @@ from scripts.tests.cases.shared.benchmarks.test_provenance import (
     ProducerTests,
     WorkspaceTests,
 )
+from scripts.tests.cases.shared.gate.test_bat_launchers import BatLaunchers
+from scripts.tests.cases.shared.gate.test_consent import ConsentTests
+from scripts.tests.cases.shared.gate.test_inference_engines import InferenceEngines
+from scripts.tests.cases.shared.gate.test_label_vocabulary import LabelVocabularyTests
+from scripts.tests.cases.shared.gate.test_live_stamp import LiveStampTests
+from scripts.tests.cases.shared.gate.test_model_run import ModelRunTests
+from scripts.tests.cases.shared.gate.test_test_scoping import TestScope
+from scripts.tests.cases.shared.gate.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
 from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
 from scripts.tests.cases.shared.models.test_model_languages import ModelLanguages
@@ -110,33 +118,25 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
     SharedRuntimeTests,
     SweepMessageTests,
 )
-from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
-from scripts.tests.cases.shared.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
-from scripts.tests.cases.shared.test_consent import ConsentTests
-from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
-from scripts.tests.cases.shared.test_label_vocabulary import LabelVocabularyTests
-from scripts.tests.cases.shared.test_language_matrix import LanguageMatrixTests
-from scripts.tests.cases.shared.test_live_stamp import LiveStampTests
-from scripts.tests.cases.shared.test_local_overlay import LocalOverlayTests
-from scripts.tests.cases.shared.test_low_integrity import LowIntegrityTests
-from scripts.tests.cases.shared.test_model_admin import ModelAdminTests
-from scripts.tests.cases.shared.test_model_run import ModelRunTests
-from scripts.tests.cases.shared.test_preflight import PreflightTests
-from scripts.tests.cases.shared.test_refresh_index import (
+from scripts.tests.cases.shared.tools.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
+from scripts.tests.cases.shared.tools.test_language_matrix import LanguageMatrixTests
+from scripts.tests.cases.shared.tools.test_local_overlay import LocalOverlayTests
+from scripts.tests.cases.shared.tools.test_low_integrity import LowIntegrityTests
+from scripts.tests.cases.shared.tools.test_model_admin import ModelAdminTests
+from scripts.tests.cases.shared.tools.test_preflight import PreflightTests
+from scripts.tests.cases.shared.tools.test_refresh_index import (
     RefreshBackgroundTests,
     RefreshLockTests,
     RefreshPlanTests,
     RefreshReportTests,
 )
-from scripts.tests.cases.shared.test_rename_path import MoveParsingTests, ReferenceRewriteTests, ScanScopeTests
-from scripts.tests.cases.shared.test_rocm_inventory import RocmInventoryTests
-from scripts.tests.cases.shared.test_stage_runner import StageRunnerTests
-from scripts.tests.cases.shared.test_state_cleanup import StateCleanupTests
-from scripts.tests.cases.shared.test_strata_profile import StrataProfileLinkTests
-from scripts.tests.cases.shared.test_test_scoping import TestScope
-from scripts.tests.cases.shared.test_toolchains import ToolchainTests
-from scripts.tests.cases.shared.test_validate import ValidatePlanTests
-from scripts.tests.cases.shared.test_yaml_table import YamlTableTests
+from scripts.tests.cases.shared.tools.test_rename_path import MoveParsingTests, ReferenceRewriteTests, ScanScopeTests
+from scripts.tests.cases.shared.tools.test_rocm_inventory import RocmInventoryTests
+from scripts.tests.cases.shared.tools.test_stage_runner import StageRunnerTests
+from scripts.tests.cases.shared.tools.test_state_cleanup import StateCleanupTests
+from scripts.tests.cases.shared.tools.test_strata_profile import StrataProfileLinkTests
+from scripts.tests.cases.shared.tools.test_toolchains import ToolchainTests
+from scripts.tests.cases.shared.tools.test_yaml_table import YamlTableTests
 from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
 from scripts.tests.cases.shared.workflows.test_speech_profiles import SpeechProfiles
 from scripts.tests.cases.shared.workflows.test_text_processing import TextProcessingTests

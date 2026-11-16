@@ -8,7 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from scripts.launchers.asr.shared.vad import command, parse_event
+from scripts.launchers.asr.shared.streaming.vad import command, parse_event
 from scripts.launchers.audiocpp.asr_turns import Turns
 from scripts.launchers.shared.transport.streaming_http import StreamingPost
 from scripts.shared.http_server import server
@@ -32,7 +32,7 @@ class VadTurns(unittest.TestCase):
             events=queue.Queue(), done=threading.Event(), start=Mock(), send=Mock(), finish=Mock(), close=Mock()
         )
         turns.samples, turns.history = 20000, bytearray(b"ab" * 20000)
-        with patch("scripts.launchers.asr.shared.turns.StreamingPost", return_value=stream):
+        with patch("scripts.launchers.asr.shared.streaming.turns.StreamingPost", return_value=stream):
             turns.vad.events.put({"type": "speech_start", "sample": 16000})
             turns.poll()
             assert turns.active is not None
@@ -50,7 +50,7 @@ class VadTurns(unittest.TestCase):
 
     def test_silence_opens_no_asr_and_partial_frames_are_rejected(self):
         turns = Turns("http://127.0.0.1:12345", Path("unused.log"))
-        with patch("scripts.launchers.asr.shared.turns.StreamingPost") as create:
+        with patch("scripts.launchers.asr.shared.streaming.turns.StreamingPost") as create:
             self.assertEqual(turns.poll(), [])
             with self.assertRaises(ValueError):
                 turns.push(b"odd")

@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.review import comments
+from scripts.review.checks import comments
 
 
 class CommentPolicyTests(unittest.TestCase):

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from scripts.review import similarity
+from scripts.review.checks import similarity
 
 
 class SimilarityUnitTests(unittest.TestCase):

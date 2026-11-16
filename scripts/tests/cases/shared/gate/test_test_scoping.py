@@ -60,15 +60,15 @@ class TestScope(unittest.TestCase):
 
         edges = _graph(
             {
-                "scripts.review.docs": (),
+                "scripts.review.checks.docs": (),
                 "scripts.launchers.koboldcpp.kobold": (),
-                "scripts.tests.cases.review.test_docs": ("scripts.review.docs",),
+                "scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",),
                 "scripts.tests.cases.koboldcpp.test_kobold_options": ("scripts.launchers.koboldcpp.kobold",),
             }
         )
         groups = (PointerTests, KoboldOptionTests)
         with patch.object(scoping, "graph", return_value=edges):
-            selection = scoping.select(groups, paths=["scripts/review/docs.py"])
+            selection = scoping.select(groups, paths=["scripts/review/checks/docs.py"])
         self.assertEqual(selection.kept, (PointerTests,))
         self.assertEqual(selection.dropped, (KoboldOptionTests,))
 
@@ -97,13 +97,13 @@ class TestScope(unittest.TestCase):
         groups = (PointerTests, KoboldOptionTests)
         edges = _graph(
             {
-                "scripts.review.docs": (),
-                "scripts.tests.cases.review.test_docs": ("scripts.review.docs",),
+                "scripts.review.checks.docs": (),
+                "scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",),
                 "scripts.tests.cases.koboldcpp.test_kobold_options": (),
             }
         )
         with patch.object(scoping, "graph", return_value=edges):
-            selection = scoping.select(groups, paths=["scripts/review/docs.py"])
+            selection = scoping.select(groups, paths=["scripts/review/checks/docs.py"])
         self.assertEqual(
             sorted(group.__name__ for group in (*selection.kept, *selection.dropped)),
             sorted(group.__name__ for group in groups),
@@ -113,9 +113,9 @@ class TestScope(unittest.TestCase):
     def test_a_module_git_has_not_seen_still_reaches_its_importers(self):
         from scripts.tests.cases.review.test_docs import PointerTests
 
-        edges = _graph({"scripts.tests.cases.review.test_docs": ("scripts.review.docs",)})
+        edges = _graph({"scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",)})
         with patch.object(scoping, "graph", return_value=edges):
-            selection = scoping.select((PointerTests,), paths=["scripts/review/docs.py"])
+            selection = scoping.select((PointerTests,), paths=["scripts/review/checks/docs.py"])
         self.assertEqual(selection.kept, (PointerTests,))
 
     def test_sources_reads_tracked_python_under_scripts(self):
@@ -129,14 +129,14 @@ class TestScope(unittest.TestCase):
 
         edges = _graph(
             {
-                "scripts.review.docs": (),
-                "scripts.tests.cases.review.test_docs": ("scripts.review.docs",),
+                "scripts.review.checks.docs": (),
+                "scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",),
                 "scripts.tests.cases.koboldcpp.test_kobold_options": ("scripts.launchers.koboldcpp.kobold",),
             }
         )
         with patch.object(scoping, "graph", return_value=edges):
-            selection = scoping.select((PointerTests, KoboldOptionTests), paths=["scripts/review/docs.py"])
-        reach = scoping.affected(edges, {"scripts.review.docs"})
+            selection = scoping.select((PointerTests, KoboldOptionTests), paths=["scripts/review/checks/docs.py"])
+        reach = scoping.affected(edges, {"scripts.review.checks.docs"})
         for group in selection.dropped:
             self.assertEqual(scoping.dependencies(edges, group.__module__) & reach, set(), group.__name__)
 

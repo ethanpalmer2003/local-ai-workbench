@@ -11,7 +11,7 @@ from urllib.parse import unquote
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
-from scripts.review.sources import maintained_files
+from scripts.review.lists.sources import maintained_files
 
 # - three caps only; each document role picks one, so a new kind needs no new number
 WORD_TIERS = {"long": 1000, "large": 700, "medium": 500}

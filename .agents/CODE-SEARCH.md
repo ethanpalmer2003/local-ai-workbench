@@ -3,7 +3,7 @@
 Two graph tools answer structural questions, and both are installed and active in the desktop profile. Neither
 ranks with a neural embedding model: Codebase Memory adds an FTS5 table and token vectors but loads no model,
 Graphify is AST extraction only, so semantic near-duplicate work still belongs to
-[similarity](../scripts/review/similarity.py).
+[similarity](../scripts/review/checks/similarity.py).
 
 | Tool | Install | Index | Query |
 | --- | --- | --- | --- |

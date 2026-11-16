@@ -3,7 +3,7 @@
 import unittest
 from pathlib import Path
 
-from scripts.review import overlay_access
+from scripts.review.checks import overlay_access
 from scripts.tests.shared.paths import CasePaths
 
 

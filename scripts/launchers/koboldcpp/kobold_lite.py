@@ -11,7 +11,8 @@ import requests
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector as transcription
-from scripts.launchers.asr.shared import http_api, live, practice_models
+from scripts.launchers.asr.shared import http_api, practice_models
+from scripts.launchers.asr.shared.streaming import live
 from scripts.launchers.audiocpp import audiocpp_catalog, tts_text_processing
 from scripts.launchers.koboldcpp import external_bridge, kokoro
 from scripts.launchers.proxy_util import (

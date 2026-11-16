@@ -6,6 +6,7 @@ import unittest
 from scripts.config import project_config as project_cfg
 
 REVIEW = project_cfg.SCRIPTS_DIR / "review"
+CHECKS_DIR = REVIEW / "checks"
 
 # - row name -> module that emits the quoted template, or None when the message belongs to a tool
 CHECKS: dict[str, str | None] = {
@@ -63,7 +64,7 @@ class ExamplesPageTests(unittest.TestCase):
             cell = rows()[name][1]
             chunks = [chunk.strip(" `") for chunk in cell.split("...")]
             chunks = [chunk for chunk in chunks if len(chunk.strip()) >= 2]
-            source = (REVIEW / f"{module}.py").read_text(encoding="utf-8")
+            source = (CHECKS_DIR / f"{module}.py").read_text(encoding="utf-8")
             for chunk in chunks:
                 self.assertIn(chunk, source, f"{name}: rewrite the row or the message it quotes")
 

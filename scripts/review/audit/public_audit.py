@@ -17,8 +17,8 @@ from pathlib import Path
 
 from scripts.config import local_overlay
 from scripts.config import project_config as project_cfg
-from scripts.review import typography
-from scripts.review.text_files import TEXT_SUFFIXES
+from scripts.review.checks import typography
+from scripts.review.lists.text_files import TEXT_SUFFIXES
 
 DOC_SUFFIXES = {".md"}
 CONFIG_PREFIX = "scripts/config/"
@@ -44,7 +44,7 @@ ALLOWLIST = {
 }
 
 # - the audit and its fixtures hold every pattern by construction
-SELF_REFERENTIAL = {"scripts/review/public_audit.py", "scripts/tests/cases/review/test_public_audit.py"}
+SELF_REFERENTIAL = {"scripts/review/audit/public_audit.py", "scripts/tests/cases/review/test_public_audit.py"}
 # - history sees these files under the paths they had then, so the file name is the stable key
 SELF_REFERENTIAL_NAMES = {Path(path).name for path in SELF_REFERENTIAL}
 

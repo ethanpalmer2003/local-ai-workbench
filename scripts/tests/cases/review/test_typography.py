@@ -6,7 +6,8 @@ from contextlib import redirect_stdout
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.review import text_files, typography
+from scripts.review.checks import typography
+from scripts.review.lists import text_files
 
 
 class ScanTests(unittest.TestCase):
@@ -52,7 +53,7 @@ class CheckTests(unittest.TestCase):
         return status, stream.getvalue()
 
     def test_a_clean_file_passes(self):
-        status, printed = self.run_check(["scripts/review/typography.py"])
+        status, printed = self.run_check(["scripts/review/checks/typography.py"])
         self.assertEqual(status, 0)
         self.assertIn("0 typographic character(s)", printed)
 

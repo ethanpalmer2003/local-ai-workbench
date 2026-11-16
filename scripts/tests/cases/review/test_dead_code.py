@@ -2,7 +2,7 @@
 
 import unittest
 
-from scripts.review.dead_code import RETIRED, findings
+from scripts.review.checks.dead_code import RETIRED, findings
 
 
 class FindingTests(unittest.TestCase):

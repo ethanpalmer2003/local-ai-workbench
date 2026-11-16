@@ -4,8 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.review import owned_tokens
-from scripts.review.owned_tokens import Rule
+from scripts.review.checks import owned_tokens
+from scripts.review.checks.owned_tokens import Rule
 
 
 class OwnedTokenTests(unittest.TestCase):

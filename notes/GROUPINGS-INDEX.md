@@ -11,7 +11,7 @@ crosses folders: `run outcome` stays inside one benchmark helper that every writ
 leaves the catalog. What makes either a family is that another file would otherwise restate the values.
 
 A new family adds a row here and a constant beside its owner, and the
-[vocabulary test](../scripts/tests/cases/shared/test_label_vocabulary.py) keeps both honest.
+[vocabulary test](../scripts/tests/cases/shared/gate/test_label_vocabulary.py) keeps both honest.
 
 | Family | Applies to | Decides | Owner |
 | --- | --- | --- | --- |

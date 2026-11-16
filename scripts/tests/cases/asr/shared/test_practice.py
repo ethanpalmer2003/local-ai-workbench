@@ -14,9 +14,9 @@ from unittest.mock import Mock, patch
 from scripts.config import models
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector, server
-from scripts.launchers.asr.shared import live
 from scripts.launchers.asr.shared.requests import parse
-from scripts.launchers.asr.shared.segment_stream import SegmentStream
+from scripts.launchers.asr.shared.streaming import live
+from scripts.launchers.asr.shared.streaming.segment_stream import SegmentStream
 from scripts.launchers.audiocpp import asr, asr_qwen3
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.tests.shared.model_free import fixture_processes

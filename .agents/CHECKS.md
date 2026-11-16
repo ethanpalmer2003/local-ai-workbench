@@ -7,7 +7,7 @@
 
 ## Commands
 
-- `python -m scripts.review.layout` checks structure; `.docs` documents; `.comments` rejects markers, banner rules and commented-out code.
+- `python -m scripts.review.checks.layout` checks structure; `.docs` documents; `.comments` rejects markers, banner rules and commented-out code.
 - `basedpyright --level error` catches type/name contracts; syntax compilation alone is not enough. Run from `C:/AI` with the project environment and a normal-token invocation, or dependency discovery reports false missing imports.
 - `python -m scripts.review` or `scripts/review/check_repo.bat` runs every static check: lint, types, inventory, docs, spelling, deps; `--tests` adds the suite.
 - Import smoke checks must not start a suite, model, GPU workload or service.
@@ -33,5 +33,5 @@
 - Read the latest [checkpoint](../notes/reviews/README.md); focus on changed contracts.
 - Trace startup, readiness, requests, cleanup and process ownership; check error propagation.
 - Check component keys, directory roles/types and config prefixes against [folder rules](FOLDERS.md); judge sparse-folder audit findings by ownership.
-- `scripts/review/frontend_wiring.py` checks asset paths, DOM ids and injected settings keys.
+- `scripts/review/checks/frontend_wiring.py` checks asset paths, DOM ids and injected settings keys.
 - Report findings, checks run and remaining limits.

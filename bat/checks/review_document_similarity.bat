@@ -1,5 +1,5 @@
 @echo off
 set "RUN_TITLE=Markdown Duplicates"
-set "RUN_MODULE=scripts.review.similarity"
+set "RUN_MODULE=scripts.review.checks.similarity"
 call "%~dp0..\_run.bat" %*
 exit /b %ERRORLEVEL%

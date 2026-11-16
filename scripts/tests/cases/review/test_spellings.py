@@ -2,7 +2,7 @@
 
 import unittest
 
-from scripts.review import spellings
+from scripts.review.checks import spellings
 
 
 class AmericanSpellingTests(unittest.TestCase):

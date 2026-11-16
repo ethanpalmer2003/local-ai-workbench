@@ -10,7 +10,8 @@ from urllib.parse import urlsplit
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector
-from scripts.launchers.asr.shared import delivery, http_api, lifecycle_http, live, practice_models
+from scripts.launchers.asr.shared import delivery, http_api, lifecycle_http, practice_models
+from scripts.launchers.asr.shared.streaming import live
 from scripts.launchers.llamacpp import speech_ui
 from scripts.launchers.proxy_util import (
     ProxyHandlerMixin,

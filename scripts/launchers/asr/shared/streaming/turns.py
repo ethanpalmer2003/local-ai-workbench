@@ -7,7 +7,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.asr.shared.vad import Silero
+from scripts.launchers.asr.shared.streaming.vad import Silero
 from scripts.launchers.shared.transport.streaming_http import StreamingPost
 
 

@@ -1,6 +1,6 @@
 # Duplicate check
 
-`python -m scripts.review.similarity` is opt-in and needs a model: it starts the cataloged embedding model,
+`python -m scripts.review.checks.similarity` is opt-in and needs a model: it starts the cataloged embedding model,
 embeds every bullet and sentence in the maintained Markdown, and lists section pairs that share at least
 two units (or one of 25+ words). This mode reads Markdown only, which is why its batch is
 [review_document_similarity.bat](../../bat/checks/review_document_similarity.bat); Python sources are the

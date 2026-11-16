@@ -10,7 +10,9 @@ from pathlib import Path
 from typing import Any
 
 from scripts.config import project_config as project_cfg
-from scripts.review import (
+from scripts.review.audit import package_audit
+from scripts.review.audit.public_audit import main as public_audit_main
+from scripts.review.checks import (
     comments,
     dead_code,
     docs,
@@ -21,11 +23,9 @@ from scripts.review import (
     network_timeouts,
     overlay_access,
     owned_tokens,
-    package_audit,
     spellings,
     typography,
 )
-from scripts.review.public_audit import main as public_audit_main
 from scripts.shared import changes
 from scripts.shared.changes import changed_paths
 
@@ -207,7 +207,7 @@ def touched_gate(argv: list[str] | None = None) -> int:
     print(f"=== TOUCHED: {', '.join(sorted(selected))} ===", flush=True)
     table = (
         ("layout", "=== LAYOUT ===", layout.main),
-        ("single-owner tokens", "\n=== SINGLE-OWNER TOKENS ===", owned_tokens.main),
+        ("single-owner tokens", "\n=== SINGLE-OWNER TOKENS ===", lambda: owned_tokens.main([])),
         ("docs", "\n=== DOCUMENTATION ===", lambda: docs.main([])),
         ("model references", "\n=== MODEL REFERENCE DRIFT ===", model_references.main),
         ("front-end wiring", "\n=== FRONT-END WIRING ===", frontend_wiring.main),
@@ -265,7 +265,7 @@ def full_gate(argv: list[str] | None = None) -> int:
     layout_status = timed("layout", layout.main)
 
     print("\n=== SINGLE-OWNER TOKENS ===", flush=True)
-    owned_status = timed("single-owner tokens", owned_tokens.main)
+    owned_status = timed("single-owner tokens", owned_tokens.main, [])
 
     print("\n=== DOCUMENTATION ===", flush=True)
     docs_status = timed("docs", docs.main, [])

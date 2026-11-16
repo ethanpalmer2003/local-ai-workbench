@@ -14,7 +14,7 @@ import ast
 from dataclasses import dataclass
 
 from scripts.config import project_config as project_cfg
-from scripts.review.sources import maintained_files
+from scripts.review.lists.sources import maintained_files
 
 
 @dataclass(frozen=True)
@@ -31,7 +31,7 @@ RULES: tuple[Rule, ...] = (
         "--yes",
         frozenset(
             {
-                "scripts/review/owned_tokens.py",
+                "scripts/review/checks/owned_tokens.py",
                 "scripts/shared/consent.py",
                 "scripts/tests/validate.py",
                 "bat/manage/manage_kill_ai_services.bat",
