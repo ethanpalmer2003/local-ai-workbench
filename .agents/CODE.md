@@ -3,6 +3,7 @@
 - Direct flow; a helper carries reused behavior, a class carries state, settings or policy.
 - One wait, one probe, one timer: [wait.py](../scripts/shared/wait.py) owns `wait_ready` and `http_ready`, [timing.py](../scripts/shared/timing.py) owns `timed`. A wait with a different question inside it (a protocol handshake, a stream read, a service that runs until interrupted) is named for that domain and may keep its own loop.
 - Functions stay at McCabe complexity 10 or below; extract by responsibility. Preserve unexpected tracebacks.
+- A Python file stays under `MAX_FILE_LINES` (800, in `inventory_code`), warns from `WARN_FILE_LINES` (600), and the files already over it are listed in `lists/file-length-baseline.json` until split. Signatures stay under the annotation cap in the same check.
 - Keep lifecycle (`Startup`, `Request`, `StartupRequest`) and scope (`Generic`, `Shared`) explicit in settings classes.
 - Preserve external keys, flags and IDs; fix a contract at its source.
 - Suppressions live in `pyproject.toml` with a reason; an inline `# noqa` is rejected, so restructure and narrow the glob.

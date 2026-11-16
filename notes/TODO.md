@@ -15,6 +15,12 @@
 - [ ] Judge the duplicate blocks the baseline still holds: `matching_server` is four identical one-liners (`whispercpp/server`, `embeddings/server`, `audiocpp/asr`, `asr/llamacpp/llama_audio`), `audiocpp.py::main` against `llamacpp.py::main` is two launchers with different wiring, and `launcher_config.py` carries the same three-line `exe` property on three build classes. Fold the one-liners if the wrapper is not the seam a test patches; leave the other two. [code pairs](../scripts/review/SIMILARITY.md). ~30 min
 - [ ] Wire `python -m scripts.review.checks.duplicates` into an opt-in batch and settle its baseline granularity: it records a file pair plus a block count, so a second block in a known pair fails while a moved block does not. pylint needs about a minute over `scripts`. ~30 min
 
+- [ ] Split the five Python files the length rule accepted in
+ile-length-baseline.json: get_tts_voices.py (1,468 lines),
+rameworks_smoke.py (1,177),
+ramework_updates.py (1,155), launcher_config.py (1,006) and
+ramework_compare.py (923), then delete their baseline rows. [rule](../scripts/review/checks/inventory_code.py). ~3-4 h
+
 ## Needs a model run or device
 
 ### Requires user input
