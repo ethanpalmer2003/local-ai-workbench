@@ -68,6 +68,7 @@ VARIANTS: dict[str, str] = {
     "modelling": "modeling",
     "modelled": "modeled",
     "neighbour": "neighbor",
+    "neighbours": "neighbors",
     "normalise": "normalize",
     "normalised": "normalized",
     "offence": "offense",
