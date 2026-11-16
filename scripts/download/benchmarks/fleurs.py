@@ -178,10 +178,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--download", action="store_true", help="Fetch and extract the selected clips")
     parser.add_argument("--force", action="store_true", help="Re-extract clips that are already present")
+    consent.flag(parser)
     args = parser.parse_args(argv)
     if args.force and not args.download:
         parser.error("--force only applies to --download")
-    if args.download and not consent.ask("FLEURS corpus download", CORPUS_SECONDS):
+    if args.download and not consent.ask("FLEURS corpus download", CORPUS_SECONDS, args.yes):
         return 1
     if args.download:
         recorded = download(args.force)
