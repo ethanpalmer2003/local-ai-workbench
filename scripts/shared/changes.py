@@ -20,6 +20,12 @@ def git(*args: str, root: Path | None = None) -> str:
     return result.stdout if result.returncode == 0 else ""
 
 
+def committed_paths(root: Path | None = None) -> list[str]:
+    """The paths HEAD's commit touched, which is what a post-commit hook has to judge."""
+    lines = git("show", "--name-only", "--pretty=format:", "HEAD", root=root).splitlines()
+    return sorted({line.strip() for line in lines if line.strip()})
+
+
 def changed_paths(root: Path | None = None) -> list[str]:
     """Every path changed since upstream, working tree included; a rename gives both sides."""
     paths: list[str] = []

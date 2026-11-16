@@ -30,3 +30,13 @@ repos:
         pass_filenames: true
         types: [text]
         exclude: ^(data|frameworks|trash|scripts/state|scripts/tests/output|scripts/benchmarks/output)/
+      # Both code indexes are snapshots and nothing watches the tree, so the commit that moves code
+      # is what refreshes them. A docs-only commit rebuilds the call graph and skips graphify.
+      - id: refresh-indexes
+        name: refresh code indexes
+        entry: .venv/Scripts/python.exe -m scripts.tools.refresh_index
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true
+        stages: [post-commit]

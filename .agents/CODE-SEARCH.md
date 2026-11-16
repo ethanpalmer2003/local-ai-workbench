@@ -22,13 +22,18 @@ at depth 2 reported 11, so Codebase Memory is the better caller tool and Graphif
 Both are snapshots taken when a command runs. Nothing watches this repository: the plugin never constructs the
 `RepositoryWatcher` it ships, a probe file added mid-session was still absent from `cbm_search` afterwards, and
 `index_status` reported `watched: false` with the timestamp unchanged. A stale index answers confidently about
-code that has moved, so re-index after a commit that moved code.
+code that has moved, so a commit refreshes them: `scripts/tools/refresh_index.py` is a `post-commit` hook that
+runs both indexers in parallel and skips graphify when the commit touched no file it extracts.
+`python -m scripts.tools.refresh_index [--paths ...]` runs it by hand, and `pre-commit install --hook-type
+post-commit` writes the hook into a fresh clone. A docs-only commit costs about 5 s and a code commit about 24 s,
+of which graphify is 23 s.
 
 1. Codebase Memory: `codebase-memory-mcp cli index_repository --repo-path C:/AI --mode fast` rewrites
    `~/.cache/codebase-memory-mcp/C-AI.db` (21 tables: `nodes`, `edges`, `nodes_fts`, `node_vectors`,
-   `token_vectors`); 7,463 nodes and 36,032 edges in a few seconds.
+   `token_vectors`); 7,463 nodes and 36,032 edges in 2 to 4 s.
 2. Graphify: `graphify update C:/AI --no-cluster`, then `graphify cluster-only C:/AI --no-label --no-viz`;
-   6,170 nodes, 18,417 edges and 362 communities, code only.
+   6,170 nodes, 18,417 edges and 362 communities, code only. It re-extracts 40-odd files every run, so the
+   cost is flat rather than proportional to the change.
 3. Upgrades are separate from refreshes: `codebase-memory-mcp update -y` replaces the versioned binary the
    `~/.local/bin` shim points at, `graphify` updates as a uv tool, and the two DSH bundles through
    [plugin_manager](../.agents/DEEPSEEK-HARNESS.md).
