@@ -44,6 +44,7 @@ from scripts.tests.cases.review.test_docs import (
     RootDocumentTests,
 )
 from scripts.tests.cases.review.test_duplicates import DuplicateReportTests
+from scripts.tests.cases.review.test_examples import ExamplesPageTests
 from scripts.tests.cases.review.test_layout import PolicyTests
 from scripts.tests.cases.review.test_network_timeouts import NetworkTimeoutTests
 from scripts.tests.cases.review.test_overlay_access import OverlayAccessTests
@@ -255,6 +256,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     OverlayAccessTests,
     OwnedTokenTests,
     DuplicateReportTests,
+    ExamplesPageTests,
     SpeechProfiles,
     WorkflowDefaultsTests,
     WhisperCompareTests,
