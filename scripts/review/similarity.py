@@ -136,18 +136,23 @@ def embed(texts: list[str], base: str, batch: int = BATCH) -> np.ndarray:
 
 def neighbours(vectors: np.ndarray, threshold: float, top: int = NEIGHBOURS) -> list[tuple[float, int, int]]:
     """Cosine pairs above the threshold, each pair once, as (score, lower, higher)."""
-    pairs: list[tuple[float, int, int]] = []
-    for start in range(0, len(vectors), 512):
+    count = len(vectors)
+    if count < 2:
+        return []
+    # - a small tree has fewer pairs than the neighbour budget, and argpartition rejects a larger k
+    neighbours_of_each = min(top, count - 1)
+    found: dict[tuple[int, int], float] = {}
+    for start in range(0, count, 512):
         scores = vectors[start : start + 512] @ vectors.T
-        rows = np.arange(scores.shape[0])
-        scores[rows, np.arange(start, start + rows.size)] = -1.0
+        scores[np.arange(scores.shape[0]), np.arange(start, start + scores.shape[0])] = -1.0
         for offset in range(scores.shape[0]):
             index = start + offset
-            for other in np.argpartition(scores[offset], -top)[-top:]:
+            # - both rows see each other, so the pair is kept once and cannot pose as two matches
+            for other in np.argpartition(scores[offset], -neighbours_of_each)[-neighbours_of_each:]:
                 score = float(scores[offset, other])
                 if score >= threshold:
-                    pairs.append((score, min(index, int(other)), max(index, int(other))))
-    return pairs
+                    found.setdefault((min(index, int(other)), max(index, int(other))), score)
+    return [(score, left, right) for (left, right), score in found.items()]
 
 
 def findings(
@@ -163,12 +168,14 @@ def findings(
         grouped[key].append((score, left, right))
     reported = []
     for key, items in grouped.items():
+        # - a pair can arrive from either side, so count distinct pairs rather than arrivals
+        distinct = {(left, right) for _, left, right in items}
         longest = max(len(units_[item[1]]["text"].split()) for item in items)
-        if not require_two or len(items) >= 2 or longest >= LONG_UNIT_WORDS:
+        if not require_two or len(distinct) >= 2 or longest >= LONG_UNIT_WORDS:
             score, left, right = max(items, key=lambda item: item[0])
             reported.append(
                 {
-                    "matches": len(items),
+                    "matches": len(distinct),
                     "best": round(score, 4),
                     "a": key[0],
                     "b": key[1],

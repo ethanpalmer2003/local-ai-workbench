@@ -21,6 +21,11 @@ The runner executes these checks:
 - `typography.py`: ASCII punctuation only: em and en dashes, curly quotes, the ellipsis and no-break spaces are rejected in every tracked text file, quoted corpus references excepted. The pre-commit hook runs it on staged files.
 - `comments.py`: markers, banner rules and commented-out code are rejected; comments that explain why stay.
 - `spellings.py`: British spellings report the American form.
+- `dead_code.py`: an unused function or class, and unreachable code, through vulture; protocol
+  attributes, method overrides and exported catalog constants are read outside the scan and stay out
+  of the report ([libraries](LIBRARIES.md)).
+- `package_audit.py` with deptry: the lock against `pyproject.toml`, installed-package advisories, and
+  every import declared while every declaration is imported.
 - `network_timeouts.py`: every HTTP call passes `timeout=`; the ASR upload wrapper owns its own.
 - `overlay_access.py`: only `config/local_overlay.py` resolves overlay paths; a direct read elsewhere fails.
 
