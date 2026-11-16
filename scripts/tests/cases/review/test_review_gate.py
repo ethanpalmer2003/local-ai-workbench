@@ -8,7 +8,7 @@ class GateScopeTests(unittest.TestCase):
     def test_a_batch_rename_only_needs_layout_and_docs(self):
         from scripts.review.__main__ import touched_sections
 
-        self.assertEqual(touched_sections(["bat/checks/test_full.bat"]), {"layout", "docs"})
+        self.assertEqual(touched_sections(["bat/checks/test_full.bat"]), {"layout", "docs", "single-owner tokens"})
 
     def test_a_python_edit_adds_the_code_sections(self):
         from scripts.review.__main__ import touched_sections

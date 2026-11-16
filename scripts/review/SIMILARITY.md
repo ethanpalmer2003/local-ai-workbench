@@ -21,3 +21,9 @@ names the date it came from. Evidence:
 `--code` switches to functions: one chunk per function or method (AST, bodies of 3+ lines), tests skipped,
 threshold 0.95, every pair reported. Code duplicates are weaker evidence, so read them as a list rather
 than a defect count. It is part of the [repository review](README.md).
+
+Floors, measured on 2026-11-16 over 303 files and 1,753 functions: the shipped floor reports 3 pairs, and
+dropping to 2 lines and 40 characters reports 31, still a reviewable list, which is what brings a renamed
+copy into view. A verbatim matcher does not: pylint's `duplicate-code` found 45 blocks here but missed a
+copied flag-stripping idiom outright once one identifier was renamed, so the semantic check is the one that
+sees a rule that was re-implemented rather than pasted.

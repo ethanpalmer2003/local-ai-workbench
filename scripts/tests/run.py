@@ -46,6 +46,7 @@ from scripts.tests.cases.review.test_docs import (
 from scripts.tests.cases.review.test_layout import PolicyTests
 from scripts.tests.cases.review.test_network_timeouts import NetworkTimeoutTests
 from scripts.tests.cases.review.test_overlay_access import OverlayAccessTests
+from scripts.tests.cases.review.test_owned_tokens import OwnedTokenTests
 from scripts.tests.cases.review.test_public_audit import PublicAuditTests
 from scripts.tests.cases.review.test_review_gate import GateScopeTests
 from scripts.tests.cases.review.test_similarity import (
@@ -251,6 +252,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     PreflightTests,
     PublicAuditTests,
     OverlayAccessTests,
+    OwnedTokenTests,
     SpeechProfiles,
     WorkflowDefaultsTests,
     WhisperCompareTests,
