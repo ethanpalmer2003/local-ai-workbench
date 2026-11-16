@@ -109,23 +109,6 @@ def format_check() -> int:
     ).returncode
 
 
-def consents(given: bool) -> bool:
-    """The gate is repo-wide, so it asks the person at the terminal; an unattended run must say --yes.
-    - an agent or scheduled job has nobody to answer, so silence is a refusal, never consent
-    """
-    if given:
-        return True
-    if not sys.stdin.isatty():
-        print(
-            "[FAIL] The full review gate needs the user's agreement: a person must confirm it, "
-            "or pass --yes when they asked for it.",
-            flush=True,
-        )
-        return False
-    answer = input("Run the full review gate (repo-wide, no models)? Type yes to continue: ").strip().lower()
-    return answer == "yes"
-
-
 def type_check(fast: bool) -> int:
     """basedpyright; the slowest section, so --fast skips it."""
     if fast:
@@ -262,7 +245,6 @@ def full_gate(argv: list[str] | None = None) -> int:
     parser.add_argument("--prune", action="store_true", help="list installed packages nothing imports or declares")
     parser.add_argument("--remove", action="store_true", help="with --prune: uninstall those leftovers")
     parser.add_argument("--scrub", action="store_true", help="scan the tree and history for personal terms")
-    parser.add_argument("--yes", action="store_true", help="confirm the full gate; otherwise a person is asked")
     parser.add_argument(
         "--fast", action="store_true", help="skip the type check, inventory and advisory feed; about five seconds"
     )
@@ -276,8 +258,6 @@ def full_gate(argv: list[str] | None = None) -> int:
         return package_audit.main(remove=args.remove)
     if args.scrub:
         return public_audit_main(["--scrub"])
-    if not consents(args.yes):
-        return 1
 
     print("=== LAYOUT ===", flush=True)
     layout_status = timed("layout", layout.main)
@@ -391,12 +371,11 @@ def full_gate(argv: list[str] | None = None) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Scope the gate to the change by default; a repo-wide run, asked for by --all, --prune, --scrub or a clean
-    tree, needs the user's agreement because it checks everything rather than the change."""
+    """Scope the gate to the change by default; `--all`, `--prune`, `--scrub` or a clean tree run every section."""
     argv = list(sys.argv[1:] if argv is None else argv)
     if not (_flag(argv, "--all") or _flag(argv, "--prune") or _flag(argv, "--scrub")) and changed_paths():
         return touched_gate(argv)
-    return full_gate(argv) if consents(_flag(argv, "--yes")) else 1
+    return full_gate(argv)
 
 
 if __name__ == "__main__":

@@ -20,7 +20,11 @@ from scripts.config import project_config as project_cfg
 from scripts.config.models import MODELS, ModelDownload, catalog
 from scripts.download.models import transfer, updates
 from scripts.download.models.hub_sources import parse_url
+from scripts.shared import consent
 from scripts.tools import model_admin
+
+# - sizes are unknown before the transfer starts, and replacing weights is minutes of download
+DOWNLOAD_SECONDS = 600
 
 
 @dataclass
@@ -143,6 +147,7 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only", nargs="+", help="update only these catalog labels")
     parser.add_argument("--dry-run", action="store_true", help="Show the plan without downloading or replacing")
+    consent.flag(parser)
     return parser.parse_args(argv)
 
 
@@ -164,6 +169,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         print("\n[Dry run] Re-run without --dry-run to download, replace references and retire the old weights.")
         return 0
+    if not consent.ask(f"Model update ({len(actions)} action(s))", DOWNLOAD_SECONDS, args.yes):
+        return 1
     failed = 0
     with tqdm(total=len(actions), desc="models", ascii=True, unit="action") as bar:
         for action in actions:

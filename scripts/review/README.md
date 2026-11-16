@@ -7,7 +7,7 @@ python -m scripts.review
 C:/AI/scripts/review/check_repo.bat
 ```
 
-The default run is scoped to what changed since upstream and runs without asking. `--all` runs every section, which is repo-wide, so the gate asks the person at the terminal and types nothing by itself: an unattended run refuses, and `--yes` is for a run the user asked for, as [validate](../tests/validate.py) passes it.
+The default run is scoped to what changed since upstream. `--all` checks every section in about a minute, so it never asks; the runs that ask for agreement are the ones expected to pass five minutes, through [consent](../shared/consent.py).
 
 The runner executes these checks:
 

@@ -9,16 +9,17 @@ ranges live in `scripts/tests/shared/stage_times.py`.
 import argparse
 import os
 
+from scripts.shared import consent
 from scripts.tools import stage_runner, stage_times
 
 MODULES: dict[str, tuple[str, tuple[str, ...]]] = {
     # - ComfyUI is vendor-managed and updated by hand, so it stays out of the automatic preflight
     "frameworks": ("scripts.download.frameworks.update_frameworks", ("--skip-comfyui",)),
     "models": ("scripts.download.models.updates", ()),
-    "gate": ("scripts.review", ("--yes", "--all")),
+    "gate": ("scripts.review", ("--all",)),
     "suite": ("scripts.tests.run", ("--all",)),
-    "launchers": ("scripts.tests.cases.suites.live_frameworks", ()),
-    "backends": ("scripts.tests.cases.suites.quick_validation", ()),
+    "launchers": ("scripts.tests.cases.suites.live_frameworks", ("--yes",)),
+    "backends": ("scripts.tests.cases.suites.quick_validation", ("--yes",)),
 }
 ALL_KEYS = ("frameworks", "models", "gate", "suite", "launchers", "backends")
 DEFAULT_KEYS = tuple(key for key in ALL_KEYS if key != "models")
@@ -47,6 +48,7 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--no-update", action="store_true", help="skip the framework update preflight")
     parser.add_argument("--dry-run", action="store_true", help="print the plan and expected ranges")
     parser.add_argument("--verbose", action="store_true", help="stream every child line instead of the tagged ones")
+    consent.flag(parser)
     return parser.parse_args(argv)
 
 
@@ -66,6 +68,8 @@ def main(argv: list[str] | None = None) -> int:
             f"  {'total':<12} {sum(stage.typical for stage in stages):>4.0f} s when nothing is skipped and nothing updates"
         )
         return 0
+    if not consent.ask("Full validation", sum(stage.typical for stage in stages), args.yes):
+        return 1
     results = stage_runner.run(stages, title="validate", stream=args.verbose)
     return 0 if all(result.status != "failed" for result in results) else 1
 

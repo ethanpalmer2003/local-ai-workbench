@@ -34,6 +34,7 @@ from scripts.tests.cases.personal.comfyui.test_comfyui_video import ExecutionTes
 from scripts.tests.cases.personal.comfyui.test_ltx_prompt_cache import PromptCacheTests
 from scripts.tests.cases.personal.comfyui.test_verify_node import ProviderTests, VerifyNodeTests
 from scripts.tests.cases.review.test_comments import CommentPolicyTests
+from scripts.tests.cases.review.test_dead_code import FindingTests
 from scripts.tests.cases.review.test_docs import (
     LinkTests,
     MarkdownNameTests,
@@ -46,16 +47,16 @@ from scripts.tests.cases.review.test_layout import PolicyTests
 from scripts.tests.cases.review.test_network_timeouts import NetworkTimeoutTests
 from scripts.tests.cases.review.test_overlay_access import OverlayAccessTests
 from scripts.tests.cases.review.test_public_audit import PublicAuditTests
-from scripts.tests.cases.review.test_review_gate import ConsentTests
+from scripts.tests.cases.review.test_review_gate import GateScopeTests
 from scripts.tests.cases.review.test_similarity import (
     SimilarityCodeTests,
     SimilarityFindingTests,
+    SimilarityNeighborTests,
     SimilaritySourceTests,
     SimilarityUnitTests,
 )
 from scripts.tests.cases.review.test_spellings import AmericanSpellingTests
 from scripts.tests.cases.review.test_typography import CheckTests, ScanTests, SuffixTests
-from scripts.tests.cases.review.test_unused import DeadCodeTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
 from scripts.tests.cases.shared.benchmarks.test_coding_engines import CodingEngineSummaryTests
@@ -108,6 +109,7 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
 )
 from scripts.tests.cases.shared.test_bat_launchers import BatLaunchers
 from scripts.tests.cases.shared.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
+from scripts.tests.cases.shared.test_consent import ConsentTests
 from scripts.tests.cases.shared.test_inference_engines import InferenceEngines
 from scripts.tests.cases.shared.test_label_vocabulary import LabelVocabularyTests
 from scripts.tests.cases.shared.test_language_matrix import LanguageMatrixTests
@@ -168,7 +170,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     CheckTests,
     ScanTests,
     SuffixTests,
-    DeadCodeTests,
+    FindingTests,
     ExternalSeedTests,
     MarkdownNameTests,
     ModelNameTests,
@@ -195,9 +197,11 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     ModelAdminTests,
     LowIntegrityTests,
     ConsentTests,
+    GateScopeTests,
     CommentPolicyTests,
     NetworkTimeoutTests,
     SimilarityUnitTests,
+    SimilarityNeighborTests,
     SimilarityFindingTests,
     SimilaritySourceTests,
     SimilarityCodeTests,
