@@ -25,11 +25,10 @@ class ConsentTests(unittest.TestCase):
             self.assertTrue(consent.ask("Full validation", 600, True))
 
     def test_the_person_at_the_terminal_answers(self):
-        cases = (("yes", True), (" YES ", True), ("no", False), ("", False))
+        cases = (("yes\n", True), (" YES \n", True), ("no\n", False), ("", False))
         for answer, expected in cases:
             with (
-                patch("scripts.shared.consent.sys.stdin", Mock(isatty=lambda: True)),
-                patch("builtins.input", return_value=answer),
+                patch("scripts.shared.consent.sys.stdin", Mock(isatty=lambda: True, readline=lambda: answer)),
                 contextlib.redirect_stdout(io.StringIO()),
             ):
                 self.assertEqual(consent.ask("Full validation", 600), expected, answer)
