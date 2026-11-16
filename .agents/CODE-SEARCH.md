@@ -22,11 +22,13 @@ at depth 2 reported 11, so Codebase Memory is the better caller tool and Graphif
 Both are snapshots taken when a command runs. Nothing watches this repository: the plugin never constructs the
 `RepositoryWatcher` it ships, a probe file added mid-session was still absent from `cbm_search` afterwards, and
 `index_status` reported `watched: false` with the timestamp unchanged. A stale index answers confidently about
-code that has moved, so a commit refreshes them: `scripts/tools/refresh_index.py` is a `post-commit` hook that
-runs both indexers in parallel and skips graphify when the commit touched no file it extracts.
-`python -m scripts.tools.refresh_index [--paths ...]` runs it by hand, and `pre-commit install --hook-type
-post-commit` writes the hook into a fresh clone. A docs-only commit costs about 5 s and a code commit about 24 s,
-of which graphify is 23 s.
+code that has moved, so a commit refreshes them: `scripts/tools/refresh_index.py` is a `post-commit` hook. The
+call graph is rebuilt inline in 2 to 5 s; graphify runs detached, because it costs about 24 s whatever changed,
+and writes its `[OK]` line to `scripts/state/logs/shared/index-refresh.log` about half a minute later. A
+docs-only commit skips it, and a second refresh prints `[SKIP]` while
+`scripts/state/cache/shared/index-refresh.lock` is held.
+Run it by hand with `python -m scripts.tools.refresh_index --paths ...`; `pre-commit install --hook-type
+post-commit` writes the hook into a fresh clone.
 
 1. Codebase Memory: `codebase-memory-mcp cli index_repository --repo-path C:/AI --mode fast` rewrites
    `~/.cache/codebase-memory-mcp/C-AI.db` (21 tables: `nodes`, `edges`, `nodes_fts`, `node_vectors`,
