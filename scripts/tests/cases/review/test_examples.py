@@ -10,6 +10,7 @@ CHECKS_DIR = REVIEW / "checks"
 
 # - row name -> module that emits the quoted template, or None when the message belongs to a tool
 CHECKS: dict[str, str | None] = {
+    "annotations": "annotations",
     "layout": "layout",
     "owned_tokens": "owned_tokens",
     "duplicates": "duplicates",

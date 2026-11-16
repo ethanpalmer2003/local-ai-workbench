@@ -7,6 +7,7 @@ import subprocess
 from collections.abc import Mapping
 from dataclasses import fields, is_dataclass
 from pathlib import Path
+from typing import NamedTuple
 
 import psutil
 
@@ -29,6 +30,37 @@ AGENT_MARKERS = (
     "omp-windows-x64",
     "deepseek harness",
 )
+
+PortKey = tuple[str, int]
+Ports = set[PortKey]
+ListenerMap = dict[int | None, dict[int, Ports]]
+
+
+class Listener(NamedTuple):
+    """One process worth stopping, with the ports it holds."""
+
+    name: str
+    ports: Ports
+
+
+class CandidateScan(NamedTuple):
+    """What to stop, and the configured ports whose owner could not be read."""
+
+    candidates: dict[int, Listener]
+    unknown: Ports
+
+
+class Remaining(NamedTuple):
+    """One listener still holding a configured port, and whether this run chose to keep it."""
+
+    pid: int | None
+    name: str
+    related: bool | None
+    ports: Ports
+    kept: bool
+
+
+RemainingMap = dict[int, list[Remaining]]
 
 
 def agent_roots() -> list[Path]:
@@ -99,9 +131,9 @@ def in_workspace(value: str | None) -> bool:
         return root + "\\" in text
 
 
-def listener_map() -> dict[int | None, dict[int, set[tuple[str, int]]]]:
+def listener_map() -> ListenerMap:
     """Map PID -> local port -> active TCP listeners and UDP sockets."""
-    result: dict[int | None, dict[int, set[tuple[str, int]]]] = {}
+    result: ListenerMap = {}
     for connection in psutil.net_connections(kind="inet"):
         if not connection.laddr:
             continue
@@ -170,15 +202,15 @@ def report_context() -> int | None:
 
 def collect_candidates(
     args: argparse.Namespace, configured: set[int], roots: list[Path], keep_ports: set[int]
-) -> tuple[dict[int, tuple[str, set[tuple[str, int]]]], set[tuple[str, int]]]:
+) -> CandidateScan:
     """C\\AI-owned listeners to stop, plus configured ports whose owner could not be read."""
     try:
         before = listener_map()
     except psutil.AccessDenied as error:
         raise RuntimeError(f"Could not enumerate listening ports: {error}") from error
 
-    candidates: dict[int, tuple[str, set[tuple[str, int]]]] = {}
-    unknown: set[tuple[str, int]] = set()
+    candidates: dict[int, Listener] = {}
+    unknown: Ports = set()
     for pid, listeners in before.items():
         bound = {(protocol, port) for port, endpoints in listeners.items() for protocol, _ in endpoints}
         if pid is None:
@@ -198,27 +230,25 @@ def collect_candidates(
             if args.non_agents and is_agent_process(info, roots):
                 print(f"[KEEP] {name} PID {pid} · {format_ports(bound)} (agent stack)", flush=True)
                 continue
-            candidates[pid] = (name, bound)
+            candidates[pid] = Listener(name, bound)
         elif related is None:
             unknown.update((protocol, port) for protocol, port in bound if port in configured)
-    return candidates, unknown
+    return CandidateScan(candidates, unknown)
 
 
-def terminate(candidates: dict[int, tuple[str, set[tuple[str, int]]]]) -> None:
-    for pid, (name, bound) in sorted(candidates.items()):
-        detail = format_ports(bound)
+def terminate(candidates: dict[int, Listener]) -> None:
+    for pid, listener in sorted(candidates.items()):
+        detail = format_ports(listener.ports)
         result = subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)], capture_output=True, text=True, check=False)
         if result.returncode == 0:
-            print(f"[KILLED] {name} PID {pid} · {detail}")
+            print(f"[KILLED] {listener.name} PID {pid} · {detail}")
         else:
             message = (result.stderr or result.stdout).strip().splitlines()
-            print(f"[FAIL] {name} PID {pid} · {detail}" + (f" · {message[-1]}" if message else ""))
+            print(f"[FAIL] {listener.name} PID {pid} · {detail}" + (f" · {message[-1]}" if message else ""))
 
 
-def remaining_listeners(
-    args: argparse.Namespace, roots: list[Path], keep_ports: set[int]
-) -> dict[int, list[tuple[int | None, str, bool | None, set[tuple[str, int]], bool]]]:
-    remaining: dict[int, list[tuple[int | None, str, bool | None, set[tuple[str, int]], bool]]] = {}
+def remaining_listeners(args: argparse.Namespace, roots: list[Path], keep_ports: set[int]) -> RemainingMap:
+    remaining: RemainingMap = {}
     for pid, listeners in listener_map().items():
         for port, endpoints in listeners.items():
             if pid is None:
@@ -230,34 +260,31 @@ def remaining_listeners(
                 except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                     name, related, kept = f"PID {pid}", None, False
             remaining.setdefault(port, []).append(
-                (pid, name, related, {(protocol, port) for protocol, _ in endpoints}, kept)
+                Remaining(pid, name, related, {(protocol, port) for protocol, _ in endpoints}, kept)
             )
     return remaining
 
 
-def report_remaining(
-    ports: list[int],
-    remaining: dict[int, list[tuple[int | None, str, bool | None, set[tuple[str, int]], bool]]],
-    unknown: set[tuple[str, int]],
-) -> None:
+def report_remaining(ports: list[int], remaining: RemainingMap, unknown: Ports) -> None:
     print("\nConfigured-port check:")
     for port in ports:
         listeners = remaining.get(port, [])
         if not listeners:
             print(f"[FREE] {port}")
             continue
-        for pid, name, related, _, kept in listeners:
-            if kept:
+        for listener in listeners:
+            if listener.kept:
                 label = "AGENT STACK (kept)"
             else:
                 label = (
                     "STILL LISTENING"
-                    if related is True
+                    if listener.related is True
                     else "UNRELATED PROCESS"
-                    if related is False
+                    if listener.related is False
                     else "OWNER UNKNOWN"
                 )
-            print(f"[WARN] {port} {label}: {name} PID {pid if pid is not None else '?'}")
+            owner = "?" if listener.pid is None else listener.pid
+            print(f"[WARN] {port} {label}: {listener.name} PID {owner}")
     for protocol, port in sorted(unknown):
         if port not in remaining:
             print(f"[OK] {protocol}/{port} listener ended before owner details were available.")

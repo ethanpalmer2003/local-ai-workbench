@@ -9,7 +9,7 @@ import time
 import traceback
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import requests
 
@@ -86,9 +86,18 @@ def _request_payload(prompt: list[int], args: argparse.Namespace) -> dict[str, A
     }
 
 
+class StreamOutcome(NamedTuple):
+    """What one streamed request produced: chunk count, events, content, and the final frame."""
+
+    chunks: int
+    events: list[dict[str, Any]]
+    content: list[str]
+    final: dict[str, Any] | None
+
+
 def _consume_stream(
     response: Any, output: Any, args: argparse.Namespace, deadline: float, started: float
-) -> tuple[int, list[dict[str, Any]], list[str], dict[str, Any] | None]:
+) -> StreamOutcome:
     count, events, content = 0, [], []
     final = None
     for raw in response:
@@ -115,7 +124,7 @@ def _consume_stream(
             count += len(tokens)
             events.append({"tokens": count, "seconds": elapsed})
         content.append(item.get("content", ""))
-    return count, events, content, final
+    return StreamOutcome(count, events, content, final)
 
 
 def stream_request(

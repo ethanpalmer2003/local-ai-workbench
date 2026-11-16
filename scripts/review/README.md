@@ -14,6 +14,7 @@ The runner executes these checks:
 - `checks/layout.py`: component/config ownership, install roots, folder naming, high-level file placement, and batch references.
 - `checks/owned_tokens.py`: a literal one module owns may not be spelled in another, so a copied rule fails here instead of drifting; `--list` prints the table.
 - `checks/duplicates.py`: pylint's verbatim duplicate blocks against a reviewed baseline, so a new pasted block fails while the known ones do not; opt-in because pylint needs about a minute over `scripts`.
+- `checks/annotations.py`: annotation complexity by atoms, nesting and union members; above the cap the type asks for a record.
 - `checks/docs.py`: Markdown placement, roles, budgets, basename casing, links and model-name policy.
 - `ruff check`: the configured lint set, including the [McCabe limit](../../.agents/CODE.md).
 - `checks/model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
