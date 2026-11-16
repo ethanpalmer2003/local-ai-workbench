@@ -19,6 +19,24 @@ from scripts.config import project_config as project_cfg
 #   needs another level, and both counts read the same direct-item number from one pass
 MIN_FOLDER_ITEMS = 3
 MAX_FOLDER_ITEMS = 20
+# - a Python file is validated at both ends too: past the warning it wants splitting, past the cap it fails
+WARN_FILE_LINES = 600
+MAX_FILE_LINES = 800
+# - the files already over the cap when the rule landed, with the length that allowed them; growth fails
+FILE_BASELINE = project_cfg.SCRIPTS_DIR / "review" / "lists" / "file-length-baseline.json"
+
+
+def load_file_baseline() -> dict[str, int]:
+    if not FILE_BASELINE.is_file():
+        return {}
+    return dict(json.loads(FILE_BASELINE.read_text(encoding="utf-8"))["files"])
+
+
+def save_file_baseline(rows: list[dict[str, int | str]]) -> None:
+    accepted = {str(row["path"]): int(row["lines"]) for row in rows if int(row["lines"]) > MAX_FILE_LINES}
+    FILE_BASELINE.write_text(json.dumps({"files": dict(sorted(accepted.items()))}, indent=2) + "\n", encoding="utf-8")
+
+
 # - function size is reported for context; the one gate is ruff's McCabe complexity
 LARGEST_FUNCTIONS = 20
 DEBT_DOC = project_cfg.SCRIPTS_DIR / "review" / "GENERATED-COMPLEXITY-DEBT.md"
@@ -294,6 +312,61 @@ def folder_validation(folders: list[FolderRecord]) -> FolderEnds:
     return FolderEnds(sparse, small, crowded)
 
 
+class FileLengths(NamedTuple):
+    """The file rule from one pass: over the cap and accepted, over the cap and new, and under watch."""
+
+    over: list[SourceFileRecord]
+    blocked: list[SourceFileRecord]
+    long: list[SourceFileRecord]
+
+
+def file_lengths(source_files: list[SourceFileRecord], baseline: dict[str, int]) -> FileLengths:
+    """Both ends of the file rule, with the accepted over-cap files kept apart from new ones."""
+    over = [item for item in source_files if int(item["lines"]) > MAX_FILE_LINES]
+    blocked = [item for item in over if int(item["lines"]) > baseline.get(str(item["path"]), 0)]
+    long = [item for item in source_files if WARN_FILE_LINES < int(item["lines"]) <= MAX_FILE_LINES]
+    return FileLengths(over, blocked, long)
+
+
+def file_length_report(lengths: FileLengths, baseline: dict[str, int]) -> list[str]:
+    """The file rule's section: what fails, what is accepted debt, and what is only long."""
+    accepted = [item for item in lengths.over if item not in lengths.blocked]
+    lines = [
+        "",
+        f"## File rule: at most {MAX_FILE_LINES} lines, above {WARN_FILE_LINES} wants splitting",
+        "",
+        "### Over the cap (fails the gate)",
+        "",
+    ]
+    lines.extend(f"- {item['path']} ({item['lines']} lines)" for item in lengths.blocked)
+    if not lengths.blocked:
+        lines.append("None.")
+    lines.extend(("", f"### Accepted over the cap ({len(accepted)})", ""))
+    lines.extend(
+        f"- {item['path']} ({item['lines']} lines, accepted at {baseline.get(str(item['path']))})" for item in accepted
+    )
+    if not accepted:
+        lines.append("None.")
+    lines.extend(("", f"### Over {WARN_FILE_LINES} lines (split when next touched)", ""))
+    lines.extend(f"- {item['path']} ({item['lines']} lines)" for item in lengths.long)
+    if not lengths.long:
+        lines.append("None.")
+    return lines
+
+
+def print_file_lengths(lengths: FileLengths) -> None:
+    """The gate's lines for the file rule."""
+    if lengths.blocked:
+        print(f"[FAIL] {len(lengths.blocked)} file(s) over {MAX_FILE_LINES} lines; split them by purpose")
+        for item in lengths.blocked:
+            print(f"[FAIL] {item['path']}: {item['lines']} lines")
+    accepted = len(lengths.over) - len(lengths.blocked)
+    if accepted:
+        print(f"[INFO] {accepted} file(s) over the cap were accepted in the baseline; split them next touch")
+    if lengths.long:
+        print(f"[INFO] {len(lengths.long)} file(s) over {WARN_FILE_LINES} lines; split when next touched")
+
+
 def report(
     results: list[FunctionSize],
     files: int,
@@ -304,6 +377,8 @@ def report(
     dependencies: dict[str, int] | None = None,
 ) -> int:
     sparse_folders, small_folders, crowded_folders = folder_validation(folders)
+    baseline = load_file_baseline()
+    lengths = file_lengths(source_files, baseline)
     largest = sorted(results, key=lambda item: (-item.code_lines, -item.depth, item.path, item.line))[
         :LARGEST_FUNCTIONS
     ]
@@ -315,6 +390,9 @@ def report(
         "sparse_folders": sparse_folders,
         "small_folder_candidates": small_folders,
         "crowded_folders": crowded_folders,
+        "files_over_cap": lengths.over,
+        "files_to_split": lengths.blocked,
+        "long_files": lengths.long,
         "source_file_lines": source_files,
         "inline_suppressions": suppressions,
         "dependencies": dependencies or {},
@@ -338,6 +416,7 @@ def report(
     ]
     lines.extend(f"| {item['path']} | {item['type']} | {item['lines']} |" for item in source_files[:100])
     lines.extend(folder_inventory_report(folders, sparse_folders, small_folders, crowded_folders))
+    lines.extend(file_length_report(lengths, baseline))
     lines.extend(
         (
             "",
@@ -361,13 +440,14 @@ def report(
         print(f"[FAIL] {len(crowded_folders)} folder(s) over {MAX_FOLDER_ITEMS} direct files; split them by purpose")
         for item in crowded_folders:
             print(f"[FAIL] {item['directory']}: {item['items']} items")
+    print_file_lengths(lengths)
     if sparse_folders or small_folders:
         print(
             f"[INFO] {len(sparse_folders)} empty or one-item, {len(small_folders)} merge candidate(s) "
             f"at 2 to {MIN_FOLDER_ITEMS} items; see report."
         )
     print(f"Review report: {artifacts / 'review.md'}")
-    return bool(suppressions or crowded_folders)
+    return bool(suppressions or crowded_folders or lengths.blocked)
 
 
 def _debt_row(item: dict[str, Any], root: Path) -> tuple[int, str, str]:
@@ -448,6 +528,11 @@ def suppression_issues(root: Path) -> list[str]:
 
 
 def main(dependencies: dict[str, int] | None = None) -> int:
+    if "--accept-files" in sys.argv[1:]:
+        _folders, source_files = repository_inventory(project_cfg.BASE_DIR)
+        save_file_baseline(source_files)
+        print(f"Accepted {len(load_file_baseline())} file(s) over {MAX_FILE_LINES} lines -> {FILE_BASELINE.name}")
+        return 0
     if "--complexity-debt" in sys.argv[1:]:
         print(f"Complexity debt rows: {complexity_debt(project_cfg.BASE_DIR)} -> {DEBT_DOC.name}")
         return 0

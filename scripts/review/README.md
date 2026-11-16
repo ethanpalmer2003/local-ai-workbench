@@ -20,7 +20,7 @@ The runner executes these checks:
 - `checks/model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
 - `checks/frontend_wiring.py`: front-end wiring: HTML/JS asset paths, DOM element ids and injected settings keys.
 - `basedpyright`: Python type errors.
-- `checks/inventory_code.py`: folder counts, a 20-direct-file cap that fails the gate, sparse-folder and merge-candidate warnings, module counts and file lines.
+- `checks/inventory_code.py`: folder counts, a 20-direct-file cap, a 600/800-line file rule, sparse-folder warnings and file lines.
 - `checks/typography.py`: ASCII punctuation only: em and en dashes, curly quotes, the ellipsis and no-break spaces are rejected in every tracked text file, quoted corpus references excepted. The pre-commit hook runs it on staged files.
 - `checks/comments.py`: markers, banner rules and commented-out code are rejected; comments that explain why stay.
 - `checks/spellings.py`: British spellings report the American form.
