@@ -29,19 +29,13 @@ def ask(what: str, expected_seconds: float, given: bool = False) -> bool:
     """Whether `what` may start: a short run always may, a long one needs `--yes` or an answer."""
     if not is_long(expected_seconds) or given:
         return True
-    if not sys.stdin.isatty():
-        print(
-            f"[FAIL] {what} takes about {_minutes(expected_seconds)}; pass --yes when the user asked for it.",
-            flush=True,
-        )
-        return False
-    try:
-        answer = input(f"{what} takes about {_minutes(expected_seconds)}. Type yes to continue: ").strip().lower()
-    except EOFError:
-        # - a captured or closed stdin answers nothing, which is the same refusal as no terminal
-        print(f"[FAIL] {what} needs a yes; pass --yes when the user asked for it.", flush=True)
-        return False
-    return answer == "yes"
+    if sys.stdin.isatty():
+        print(f"{what} takes about {_minutes(expected_seconds)}. Type yes to continue:", flush=True)
+        # - readline, not input: a captured or closed stdin answers nothing, which is a refusal
+        if sys.stdin.readline().strip().lower() == "yes":
+            return True
+    print(f"[FAIL] {what} takes about {_minutes(expected_seconds)}; pass --yes when the user asked for it.", flush=True)
+    return False
 
 
 def flag(parser: argparse.ArgumentParser) -> None:
