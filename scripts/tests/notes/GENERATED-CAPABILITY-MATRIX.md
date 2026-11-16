@@ -16,13 +16,13 @@ Does the shipped default still work?
 | Silero VAD turns | probe | 2026-11-12 | completed | - | [OK] | report (../output/audiocpp/vad_turns/unreviewed/1794445645261693400/artifacts/report.json) |
 | Single AudioCpp server speech | probe | 2026-11-12 | completed | - | [OK] | report (../output/audiocpp/single_server_speech/unreviewed/1794445669079681300/artifacts/report.json) |
 | AudioCpp streaming | probe | 2026-11-12 | completed | 182 s | [OK] | report (../output/audiocpp/audiocpp_streaming/unreviewed/1794445688187145700/artifacts/report.json) |
-| Practice gateway smoke | probe | 2026-11-12 | completed | 31 s | [OK] | report (../output/asr/shared/practice_smoke/unreviewed/1794456283836457700/artifacts/report.json) |
+| Practice gateway smoke | probe | 2026-11-13 | completed | 31 s | [WARN] stale: audiocpp rebuilt: rocm/audiocpp_server.exe, llamacpp rebuilt: vulkan/llama-bench.exe, producer changed: scripts/tests/cases/asr/shared/practice_smoke.py | report (../output/asr/shared/practice_smoke/unreviewed/1794605473032495300/artifacts/report.json) |
 | Paced ASR latency | probe | 2026-11-12 | - | - | [OK] | report (../output/asr/shared/latency/unreviewed/1794455126476096900/artifacts/report.json) |
 | Kobold speech modes | smoke | 2026-11-12 | completed | 72 s | [OK] | report (../output/koboldcpp/kobold_audiocpp_modes/unreviewed/1794446797528993200/artifacts/report.json) |
 | Kobold stacked VRAM | probe | 2026-11-12 | passed | 167 s | [OK] | report (../../benchmarks/output/koboldcpp/kobold_stack_vram/unreviewed/1794446249040548000/artifacts/report.json) |
 | Speculative decoding benchmark | smoke | 2026-11-12 | completed | 72 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_specspeed/unreviewed/1794442124305395400/artifacts/report.json) |
-| Context stream benchmark | smoke | 2026-11-12 | completed | 73 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794443399610811700/artifacts/report.json) |
-| N-gram benchmark | benchmark | 2026-11-12 | completed | 216 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_ngram/unreviewed/1794442198726696500/artifacts/report.json) |
+| Context stream benchmark | smoke | 2026-11-15 | completed | 40 s | [WARN] stale: producer changed: scripts/benchmarks/llamacpp/benchmark_context_stream.py | report (../../benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794778208574993200/artifacts/report.json) |
+| N-gram benchmark | benchmark | 2026-11-15 | failed | 538 s | [WARN] last run failed | report (../../benchmarks/output/llamacpp/benchmark_ngram/unreviewed/1794785407401151200/artifacts/report.json) |
 | Gemma with Breeze speech | probe | 2026-11-12 | completed | 65 s | [OK] | report (../output/llamacpp/gemma_breeze/unreviewed/1794446128468734800/artifacts/report.json) |
 
 ## Alternatives testing

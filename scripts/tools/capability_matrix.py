@@ -20,7 +20,7 @@ from scripts.benchmarks.shared import language_corpus, provenance, reporting
 from scripts.config import project_config as project_cfg
 from scripts.config.shared import deferred as parked
 
-OUTPUT = Path(__file__).resolve().parent.parent / "tests/notes/CAPABILITY-MATRIX.md"
+OUTPUT = Path(__file__).resolve().parent.parent / "tests/notes/GENERATED-CAPABILITY-MATRIX.md"
 REPORT = "artifacts/report.json"
 # - Test evidence roots; benchmark runs use the same report layout under a second root
 ROOTS = (project_cfg.TEST_OUTPUT_DIR, project_cfg.SCRIPTS_DIR / "benchmarks/output")

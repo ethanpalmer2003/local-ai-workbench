@@ -23,7 +23,7 @@ Nemotron and the practice TTS model share one server: [checks](../../tests/notes
   Japanese needs bundled UniDic plus `AUDIOCPP_MECAB_LIBRARY`. Provision the pinned
   portable DLL/licenses with `python -m scripts.download.frameworks.audiocpp.setup_mecab`;
   it does not install a Python package. Language choices inspect the selected GGUF.
-- Standalone reads native JSON; shared GPU and CPU speech configs derive in `state/generated/audiocpp/`. [Ownership](../../config/notes/GENERATED-FILES.md).
+- Standalone reads native JSON; shared GPU and CPU speech configs derive in `state/generated/audiocpp/`. [Ownership](../../config/notes/DERIVED-OUTPUTS.md).
 
 ## Speech test page
 

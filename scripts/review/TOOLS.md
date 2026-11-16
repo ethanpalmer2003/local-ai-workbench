@@ -51,7 +51,7 @@ Measured on this machine; only the last two open a model or service. When to run
 | `docs.py` | doc roles, budgets, links, anchors and model-name policy |
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
 | [frontend wiring](FRONTEND-WIRING.md) | asset targets resolve, DOM ids exist, settings keys both emitted and provided |
-| `inventory_code.py` | inventory, file/function size, inline suppressions; `--complexity-debt` regenerates `COMPLEXITY-DEBT.md` |
+| `inventory_code.py` | inventory, file/function size, inline suppressions; `--complexity-debt` regenerates `GENERATED-COMPLEXITY-DEBT.md` |
 | `public_audit.py` | secrets, credentials, home/machine paths, vocabulary and input names, large files, ignored-but-tracked |
 | `audit_timing.py` | which benchmark runners use the shared timing contract |
 | `package_audit.py` | leftovers no import or manifest declares; `--prune [--remove]`; `uv lock --check` |
@@ -59,7 +59,7 @@ Measured on this machine; only the last two open a model or service. When to run
 
 Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Codespell reads tracked Python and Markdown.
 
-Lint gates at the [McCabe limit](../../.agents/CODE.md). Anything above it is listed in `COMPLEXITY-DEBT.md` and has to be split; the ledger is the only place debt is recorded. The table is currently empty. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
+Lint gates at the [McCabe limit](../../.agents/CODE.md). Anything above it is listed in `GENERATED-COMPLEXITY-DEBT.md` and has to be split; the ledger is the only place debt is recorded. The table is currently empty. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
 
 ## Deliberately absent
 

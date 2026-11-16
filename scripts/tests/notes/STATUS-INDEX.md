@@ -28,7 +28,7 @@ Index only: one line per checked area, each linking the record that holds the ev
 
 - Pending work lives in [TODO](../../../notes/TODO.md). Path and type checks do not establish native runtime correctness.
 
-- Freshness, last-run numbers and evidence: [capability matrix](CAPABILITY-MATRIX.md), regenerated with `python -m scripts.tools.capability_matrix`.
+- Freshness, last-run numbers and evidence: [capability matrix](GENERATED-CAPABILITY-MATRIX.md), regenerated with `python -m scripts.tools.capability_matrix`.
 
 - Historical evidence and prior scope moved to [evidence](STATUS-EVIDENCE-INDEX.md).
 
