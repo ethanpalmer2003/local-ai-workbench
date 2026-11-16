@@ -33,6 +33,16 @@ The runner executes these checks:
 
 Reports go to `scripts/state/generated/shared/code_review/<run>/`. The inventory lists the largest functions and excludes generated output, caches, model data, installs and trash. Which checks run through a tool and which are this repository's own policy: [libraries](LIBRARIES.md). One mistake per check, the line it prints and the fix: [examples](EXAMPLES.md).
 
+## Fixing and finding
+
+Two kinds of section, and the difference decides who acts. `ruff check --fix` and `ruff format` rewrite the
+file, and pre-commit applies them on every commit: what can be applied is applied, never reported. Every other
+section only reports, and the fix belongs to the reader.
+
+The bias is a false alarm over a missed defect, because a finding is reviewed before it is acted on. A repeated
+false alarm is a rule change: narrow the rule by kind, and when only the scope is wrong use a folder exclusion
+rather than a list of names.
+
 ## Duplicate check
 
 The optional embedding check and its code mode: [similarity](SIMILARITY.md). Front-end wiring: [frontend
