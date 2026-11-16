@@ -44,6 +44,12 @@ class ConsentTests(unittest.TestCase):
         self.assertTrue(parser.parse_args(["--yes"]).yes)
         self.assertFalse(parser.parse_args([]).yes)
 
+    def test_take_splits_the_flag_and_forward_puts_it_back(self):
+        self.assertEqual(consent.take(["--yes", "--download"]), (True, ["--download"]))
+        self.assertEqual(consent.take(["--download"]), (False, ["--download"]))
+        self.assertEqual(consent.forward(True, ["--download"]), ["--yes", "--download"])
+        self.assertEqual(consent.forward(False, ["--download"]), ["--download"])
+
     def test_confirm_asks_even_for_a_fast_irreversible_action(self):
         with (
             patch("scripts.shared.consent.sys.stdin", Mock(isatty=lambda: False)),

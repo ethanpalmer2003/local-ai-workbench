@@ -12,16 +12,13 @@ ARBITRARY = {"--repo", "--url", "--file", "--local-dir", "--revision"}
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = list(sys.argv[1:] if argv is None else argv)
-    given = "--yes" in args
-    args = [argument for argument in args if argument != "--yes"]
+    given, args = consent.take(sys.argv[1:] if argv is None else argv)
     if not consent.ask("Model download", DOWNLOAD_SECONDS, given):
         return 1
-    consent_given = ["--yes"] if given else []
     if args and ARBITRARY & set(args):
-        cli_download.main([*consent_given, *args])
+        cli_download.main(consent.forward(given, args))
         return 0
-    download_catalog.main([*consent_given, *(args or ["--active", "--download"])])
+    download_catalog.main(consent.forward(given, args or ["--active", "--download"]))
     return 0
 
 

@@ -63,16 +63,29 @@ def confirm(what: str, given: bool = False) -> bool:
     )
 
 
+def take(argv: list[str] | None = None) -> tuple[bool, list[str]]:
+    """Split `--yes` out of an argument list: whether it was given, and the rest untouched.
+
+    The one place that spells the flag for a caller with no parser, such as a module that forwards
+    its raw arguments to another entry point.
+    """
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    return "--yes" in arguments, [argument for argument in arguments if argument != "--yes"]
+
+
+def forward(given: bool, arguments: list[str]) -> list[str]:
+    """Re-attach `--yes` when handing arguments to a delegate that would otherwise ask again."""
+    return [*(["--yes"] if given else []), *arguments]
+
+
 def require(expected_seconds: float, what: str = "") -> None:
     """Ask before a hardcoded entry point starts; `--yes` anywhere in argv already answers.
 
     `--help` passes through untouched, because printing usage starts no work.
     """
-    argv = sys.argv[1:]
-    if "--help" in argv or "-h" in argv:
+    if "--help" in sys.argv[1:] or "-h" in sys.argv[1:]:
         return
-    given = "--yes" in argv
-    sys.argv[1:] = [argument for argument in argv if argument != "--yes"]
+    given, sys.argv[1:] = take()
     if not ask(what or Path(sys.argv[0]).stem, expected_seconds, given):
         raise SystemExit(1)
 

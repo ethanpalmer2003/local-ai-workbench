@@ -60,13 +60,11 @@ def download_file(
 
 
 def main(argv: list[str] | None = None):
-    arguments = sys.argv[1:] if argv is None else list(argv)
-    given = "--yes" in arguments
-    arguments = [argument for argument in arguments if argument != "--yes"]
+    given, arguments = consent.take(sys.argv[1:] if argv is None else argv)
     if any(arg in arguments for arg in ("--list", "--model", "--active", "--inactive", "--group", "--download")):
         from scripts.download.models import download_catalog as download
 
-        download.main([*arguments, *(["--yes"] if given else [])])
+        download.main(consent.forward(given, arguments))
         return
     parser = argparse.ArgumentParser(description="Download models/files from HuggingFace.")
     parser.add_argument("--repo", help="HuggingFace repo ID (e.g., Qwen/Qwen3-AUDIOCPP-12Hz-1.7B-CustomVoice)")
