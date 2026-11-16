@@ -158,9 +158,5 @@ class Sessions:
         return True
 
 
-def capable(engine: cfg.AsrStartupEngine) -> bool:
-    return engine.value in speech_delivery.ASR_CHUNKED
-
-
 def supported(engine: cfg.AsrStartupEngine) -> bool:
     return speech_delivery.asr_plan(engine.value)["mode"] != "whole"

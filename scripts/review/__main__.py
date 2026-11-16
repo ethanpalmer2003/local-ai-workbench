@@ -12,6 +12,7 @@ from typing import Any
 from scripts.config import project_config as project_cfg
 from scripts.review import (
     comments,
+    dead_code,
     docs,
     frontend_wiring,
     inventory_code,
@@ -22,7 +23,6 @@ from scripts.review import (
     package_audit,
     spellings,
     typography,
-    unused,
 )
 from scripts.review.public_audit import main as public_audit_main
 from scripts.shared import changes
@@ -234,7 +234,7 @@ def touched_gate(argv: list[str] | None = None) -> int:
         ("inventory", "", lambda: inventory_check(package_audit.summary(), _flag(argv, "--fast"))),
         ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main([])),
         ("comments", "\n=== COMMENTS ===", lambda: comments.main([])),
-        ("dead code", "\n=== DEAD CODE ===", unused.main),
+        ("dead code", "\n=== DEAD CODE ===", lambda: dead_code.main([])),
         ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
         ("spelling", "\n=== SPELLING ===", spelling_check),
         ("advisories", "", lambda: advisory_check(_flag(argv, "--fast"))),
@@ -328,7 +328,7 @@ def full_gate(argv: list[str] | None = None) -> int:
     comment_status = timed("comments", comments.main, [])
 
     print("\n=== DEAD CODE ===", flush=True)
-    unused_status = timed("dead code", unused.main)
+    dead_status = timed("dead code", dead_code.main, [])
 
     print("\n=== AMERICAN SPELLING ===", flush=True)
     variant_status = timed("spelling variants", spellings.main, [])
@@ -378,7 +378,7 @@ def full_gate(argv: list[str] | None = None) -> int:
             or inventory_status
             or dash_status
             or comment_status
-            or unused_status
+            or dead_status
             or variant_status
             or formatting_status
             or spelling_status
