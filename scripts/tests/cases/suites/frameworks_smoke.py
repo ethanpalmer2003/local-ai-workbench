@@ -54,7 +54,10 @@ class DefaultPaths(unittest.TestCase):
         if not project_cfg.VENV_DIR.is_dir():
             self.skipTest("this checkout has no virtual environment")
         self.assertEqual(Path(sys.prefix).resolve(), project_cfg.VENV_DIR.resolve())
-        self.assertEqual(sys.version_info[:2], (3, 13))
+        # - the floor comes from pyproject, so bumping the interpreter is one edit and not two
+        declared = tomllib.loads((project_cfg.BASE_DIR / "pyproject.toml").read_text(encoding="utf-8"))
+        floor = declared["project"]["requires-python"].lstrip(">=^~")
+        self.assertEqual(sys.version_info[: len(floor.split("."))], tuple(int(part) for part in floor.split(".")))
         lock = tomllib.loads((project_cfg.BASE_DIR / "uv.lock").read_text(encoding="utf-8"))
         for entry in lock.get("package", []):
             name, version = entry.get("name"), entry.get("version")
