@@ -33,7 +33,7 @@ CODE_TEXT_LIMIT = 6000
 MIN_WORDS = 8
 LONG_UNIT_WORDS = 25
 BATCH = 24
-NEIGHBOURS = 15
+NEIGHBORS = 15
 
 HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
 BULLET = re.compile(r"^\s*(?:[-*]|\d+\.)\s+(.*)$")
@@ -134,13 +134,13 @@ def embed(texts: list[str], base: str, batch: int = BATCH) -> np.ndarray:
     return matrix / np.linalg.norm(matrix, axis=1, keepdims=True)
 
 
-def neighbours(vectors: np.ndarray, threshold: float, top: int = NEIGHBOURS) -> list[tuple[float, int, int]]:
+def neighbors(vectors: np.ndarray, threshold: float, top: int = NEIGHBORS) -> list[tuple[float, int, int]]:
     """Cosine pairs above the threshold, each pair once, as (score, lower, higher)."""
     count = len(vectors)
     if count < 2:
         return []
-    # - a small tree has fewer pairs than the neighbour budget, and argpartition rejects a larger k
-    neighbours_of_each = min(top, count - 1)
+    # - a small tree has fewer pairs than the neighbor budget, and argpartition rejects a larger k
+    neighbors_of_each = min(top, count - 1)
     found: dict[tuple[int, int], float] = {}
     for start in range(0, count, 512):
         scores = vectors[start : start + 512] @ vectors.T
@@ -148,7 +148,7 @@ def neighbours(vectors: np.ndarray, threshold: float, top: int = NEIGHBOURS) -> 
         for offset in range(scores.shape[0]):
             index = start + offset
             # - both rows see each other, so the pair is kept once and cannot pose as two matches
-            for other in np.argpartition(scores[offset], -neighbours_of_each)[-neighbours_of_each:]:
+            for other in np.argpartition(scores[offset], -neighbors_of_each)[-neighbors_of_each:]:
                 score = float(scores[offset, other])
                 if score >= threshold:
                     found.setdefault((min(index, int(other)), max(index, int(other))), score)
@@ -270,7 +270,7 @@ def main(argv: list[str] | None = None) -> int:
         for path in paths:
             parsed.extend(chunker(path, path.relative_to(project_cfg.BASE_DIR).as_posix()))
         vectors = embed([str(unit["text"]) for unit in parsed], base)
-        found = findings(neighbours(vectors, threshold), parsed, require_two=not args.code)
+        found = findings(neighbors(vectors, threshold), parsed, require_two=not args.code)
         payload = {
             "model": LABEL,
             "sha256": digest,

@@ -68,23 +68,23 @@ class SimilarityFindingTests(unittest.TestCase):
         self.assertEqual(similarity.findings([(0.95, 0, 2), (0.95, 0, 2)], self._units()), [])
 
 
-class SimilarityNeighbourTests(unittest.TestCase):
+class SimilarityNeighborTests(unittest.TestCase):
     def _vectors(self, count: int) -> np.ndarray:
         return np.tile(np.array([1.0, 0.0], dtype=np.float32), (count, 1))
 
     def test_a_pair_is_reported_once_however_many_rows_see_it(self):
-        pairs = similarity.neighbours(self._vectors(30), 0.9, top=30)
+        pairs = similarity.neighbors(self._vectors(30), 0.9, top=30)
         self.assertEqual(len(pairs), len({(left, right) for _, left, right in pairs}))
         self.assertEqual(len(pairs), 30 * 29 // 2)
 
-    def test_fewer_units_than_the_neighbour_budget_still_reports(self):
-        self.assertEqual(len(similarity.neighbours(self._vectors(5), 0.9)), 5 * 4 // 2)
+    def test_fewer_units_than_the_neighbor_budget_still_reports(self):
+        self.assertEqual(len(similarity.neighbors(self._vectors(5), 0.9)), 5 * 4 // 2)
 
     def test_a_single_unit_has_no_pairs(self):
-        self.assertEqual(similarity.neighbours(self._vectors(1), 0.9), [])
+        self.assertEqual(similarity.neighbors(self._vectors(1), 0.9), [])
 
-    def test_a_unit_is_never_its_own_neighbour(self):
-        self.assertTrue(all(left != right for _, left, right in similarity.neighbours(self._vectors(4), 0.9)))
+    def test_a_unit_is_never_its_own_neighbor(self):
+        self.assertTrue(all(left != right for _, left, right in similarity.neighbors(self._vectors(4), 0.9)))
 
 
 class SimilarityCodeTests(unittest.TestCase):
