@@ -8,6 +8,10 @@ from typing import Any
 LANGUAGE_KEYS = {"language", "languages", "supported_languages", "language_codes", "lang_to_id", "locale"}
 NON_LANGUAGES = {"auto", "multilingual", "unknown", "und", "code"}
 
+# - one metadata claim, and one claim with the scope it came from
+Claim = dict[str, Any]
+ScopedClaim = tuple[str, Claim]
+
 
 def language_codes(value, key):
     if key == "lang_to_id" and isinstance(value, dict):
@@ -61,7 +65,7 @@ def _curated_claims(
     record: dict[str, Any], language_catalog: dict[str, Any]
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     curated = [entry for entry in language_catalog["models"] if set(entry["model_ids"]) & set(record["ids"])]
-    claims: list[dict[str, Any]] = []
+    claims: list[Claim] = []
     for entry in curated:
         for field, unit in (("languages", "language"), ("locales", "locale"), ("dialects", "dialect")):
             if entry[field]:
@@ -80,10 +84,10 @@ def _curated_claims(
     return claims, curated
 
 
-def _artifact_claims(record: dict[str, Any]) -> tuple[list[dict[str, Any]], list[tuple[str, dict[str, Any]]]]:
+def _artifact_claims(record: dict[str, Any]) -> tuple[list[Claim], list[ScopedClaim]]:
     """Claims and configs from sidecars and hub cards; each keeps its own scope."""
-    claims: list[dict[str, Any]] = []
-    configs: list[tuple[str, dict[str, Any]]] = []
+    claims: list[Claim] = []
+    configs: list[ScopedClaim] = []
     for item in record.get("sidecars", []):
         data = item.get("metadata", {})
         claims += claims_from(

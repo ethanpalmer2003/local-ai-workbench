@@ -22,6 +22,8 @@ from scripts.review.lists.sources import maintained_files
 # - the two ends of one rule: the worst annotation in this tree scores 20, and 22 sit above 14
 WARN_SCORE = 14
 MAX_SCORE = 20
+# - a chain deeper than three subscripts fails on its own, the one signal the flat score can dilute
+MAX_DEPTH = 3
 
 
 @dataclass(frozen=True)
@@ -115,7 +117,9 @@ def annotations_in(path: Path) -> Iterable[Annotation]:
 def findings(paths: list[Path] | None = None) -> list[Annotation]:
     """Annotations at or above the warning score, worst first, one row per function and score."""
     sources = [path for path in (maintained_files() if paths is None else paths) if path.suffix == ".py"]
-    scored = [item for path in sources for item in annotations_in(path) if item.score >= WARN_SCORE]
+    scored = [
+        item for path in sources for item in annotations_in(path) if item.score >= WARN_SCORE or item.depth > MAX_DEPTH
+    ]
     # - one function with four heavy parameters is one thing to fix, not four findings
     unique: dict[tuple[str, str, int], Annotation] = {}
     for item in scored:
@@ -128,13 +132,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.parse_args(argv)
     over = findings()
     for item in over[:MAX_REPORTED]:
-        print(f"[{'FAIL' if item.score > MAX_SCORE else 'INFO'}] {item}")
+        print(f"[{'FAIL' if item.score > MAX_SCORE or item.depth > MAX_DEPTH else 'INFO'}] {item}")
     if len(over) > MAX_REPORTED:
         print(f"[WARN] {len(over) - MAX_REPORTED} further annotations; output bounded at {MAX_REPORTED}")
-    failed = [item for item in over if item.score > MAX_SCORE]
+    failed = [item for item in over if item.score > MAX_SCORE or item.depth > MAX_DEPTH]
     print(
-        f"[{'FAIL' if failed else 'OK'}] Annotations: {len(over)} at or above {WARN_SCORE}, "
-        f"{len(failed)} above {MAX_SCORE}"
+        f"[{'FAIL' if failed else 'OK'}] Annotations: {len(over)} under watch, "
+        f"{len(failed)} over the cap (score above {MAX_SCORE} or depth above {MAX_DEPTH})"
     )
     return 1 if failed else 0
 

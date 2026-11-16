@@ -26,6 +26,9 @@ PROXY_SERVICES = [
 
 LOG_DIR = project_cfg.component("koboldcpp").logs_dir
 
+# - a backend this stack started: its label and the process it owns
+Running = tuple[str, subprocess.Popen[Any]]
+
 
 def model_overrides(usage_profile: str = "standalone") -> dict[str, Any]:
     if usage_profile not in cfg.USAGE_PROFILES:
@@ -316,8 +319,8 @@ def start_lite_proxy(external: bool) -> subprocess.Popen[Any]:
     )
 
 
-def start_stack(external: bool, usage_profile: str) -> tuple[list[tuple[str, subprocess.Popen[Any]]], Path]:
-    processes: list[tuple[str, subprocess.Popen[Any]]] = []
+def start_stack(external: bool, usage_profile: str) -> tuple[list[Running], Path]:
+    processes: list[Running] = []
     if transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine):
         asr_process = transcription.backend(cfg.KOBOLDCPP_SERVICE.transcription_engine).start()
         if asr_process is not None:
