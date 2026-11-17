@@ -38,7 +38,13 @@ TestGroup = type[unittest.TestCase]
 
 
 def module_name(path: str) -> str | None:
-    """`scripts/x/y.py` becomes `scripts.x.y`, a package `__init__.py` names its package, anything else is None."""
+    """`scripts/x/y.py` becomes `scripts.x.y`, a package `__init__.py` names its package, anything else is None.
+
+    A JSON, YAML, template or Markdown path is not a module even when it sits under `scripts/`; treating it
+    as one would read a data change as a code change and quietly narrow the scope.
+    """
+    if not path.endswith(".py"):
+        return None
     parts = Path(path).with_suffix("").parts
     if not parts or parts[0] != "scripts" or ".." in parts:
         return None
