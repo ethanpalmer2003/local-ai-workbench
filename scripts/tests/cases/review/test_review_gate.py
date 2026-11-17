@@ -1,6 +1,8 @@
 """Gate scoping: an empty change set runs every section, a change runs only what it reaches."""
 
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from unittest.mock import patch
 
 
@@ -73,6 +75,34 @@ class GateScopeTests(unittest.TestCase):
             gate.main(["--all"])
         full.assert_called_once()
         touched.assert_not_called()
+
+    def test_a_failing_run_names_the_sections_that_failed(self):
+        from scripts.review import __main__ as gate
+
+        saved = list(gate.TIMES)
+        gate.TIMES[:] = [
+            {"section": "types", "seconds": 11.0, "status": 1},
+            {"section": "formatting", "seconds": 0.4, "status": 2},
+            {"section": "lint", "seconds": 0.3, "status": 0},
+        ]
+        try:
+            with redirect_stdout(StringIO()) as output:
+                self.assertEqual(gate.report_sections(), 1)
+        finally:
+            gate.TIMES[:] = saved
+        self.assertIn("[FAIL] 2 section(s) failed: types, formatting", output.getvalue())
+
+    def test_a_passing_run_says_so(self):
+        from scripts.review import __main__ as gate
+
+        saved = list(gate.TIMES)
+        gate.TIMES[:] = [{"section": "lint", "seconds": 0.3, "status": 0}]
+        try:
+            with redirect_stdout(StringIO()) as output:
+                self.assertEqual(gate.report_sections(), 0)
+        finally:
+            gate.TIMES[:] = saved
+        self.assertIn("[OK] every section passed", output.getvalue())
 
     def test_formatting_targets_the_change_and_falls_back_to_the_tree(self):
         from scripts.review import format_py
