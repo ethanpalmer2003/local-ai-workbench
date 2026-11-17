@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.tests import selection
+from scripts.tests.shared.paths import CasePaths
 
 
 def _graph(edges: dict[str, tuple[str, ...]]) -> dict[str, frozenset[str]]:
@@ -109,6 +110,13 @@ class TestSelection(unittest.TestCase):
             sorted(group.__name__ for group in groups),
         )
         self.assertEqual(set(chosen.kept) & set(chosen.dropped), set())
+
+    def test_a_dynamic_import_named_in_a_string_is_a_dependency(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            path = Path(folder) / "loader.py"
+            path.write_text("import importlib\nimportlib.import_module('scripts.target')\n", encoding="utf-8")
+            self.assertEqual(selection.literal_targets(path, {"scripts.loader", "scripts.target"}), {"scripts.target"})
+            self.assertEqual(selection.literal_targets(path, {"scripts.loader"}), set())
 
     def test_a_module_git_has_not_seen_still_reaches_its_importers(self):
         from scripts.tests.cases.review.test_docs import PointerTests

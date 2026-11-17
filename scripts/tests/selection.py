@@ -85,8 +85,26 @@ def sources(root: Path | None = None) -> list[str]:
     ]
 
 
+def literal_targets(path: Path, known: set[str]) -> set[str]:
+    """Dotted module names this file spells in a string, because a dynamic import hides its target.
+
+    `importlib.import_module("scripts.x")` has no import statement to read, so a string constant that
+    matches a known module is treated as a dependency. A name assembled at runtime stays invisible;
+    that is the one gap `--all` covers.
+    """
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return set()
+    return {
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in known
+    }
+
+
 def graph(root: Path | None = None) -> dict[str, frozenset[str]]:
-    """Module name to the modules it imports, for every tracked module under `scripts/`."""
+    """Module name to the modules it imports or names in a string, for every tracked module under `scripts/`."""
     base = project_cfg.BASE_DIR if root is None else root
     base_paths = [base / path for path in sources() if (base / path).is_file()]
     files: dict[str, Path] = {}
@@ -95,10 +113,11 @@ def graph(root: Path | None = None) -> dict[str, frozenset[str]]:
         if name:
             files[name] = path
     known = set(files)
-    return {
-        name: frozenset(target for target in (_resolve(raw, known) for raw in imported_names(path, name)) if target)
-        for name, path in files.items()
-    }
+    edges: dict[str, frozenset[str]] = {}
+    for name, path in files.items():
+        imported = {target for target in (_resolve(raw, known) for raw in imported_names(path, name)) if target}
+        edges[name] = frozenset(imported | literal_targets(path, known))
+    return edges
 
 
 def dependencies(edges: dict[str, frozenset[str]], module: str) -> frozenset[str]:
