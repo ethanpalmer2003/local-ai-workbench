@@ -14,14 +14,12 @@
 
 ## When
 
-- After one change: pre-commit hooks plus the test module the edit touches. Seconds.
-- After a batch: `python -m scripts.review --all`, then `python -m scripts.tests.run --all`. Under a minute together.
-- The suite is a feedback loop: by default one import hop from the change, `--all` before a push for the rest. No Python path runs none; the manifests keep every class on a code change, not a comment; see [selection](../scripts/tests/selection.py).
-- `--fast` keeps the gate repo-wide but skips types, inventory, advisories and the package summary: about five seconds, so it fits a single edit.
-- The default run is scoped: only the sections whose inputs changed since the upstream branch run, working tree and unpushed commits alike. A batch rename costs about a second, a Python edit adds types and dead code, and only dependency files pull in the advisories. `--all` runs every section, and so does an empty change set or `check_repo.bat`; it is a path mapping, not a cache, so nothing is remembered between runs.
-- Each gate section records its seconds under `scripts/state/logs/shared/review/`, so the cost of a check comes from history instead of a rerun.
+- An edit is the cheapest level: `python -m scripts.review --fast` and the test module the edit touches. About five seconds.
+- A commit runs the hooks: ruff, codespell, typography, then the scoped gate and the scoped suite. A document change is seconds; a code change is about forty.
+- A push runs the same hooks at full width: `python -m scripts.review --all` and `python -m scripts.tests.run --all`. About a minute, and this is the completeness guarantee.
+- The suite is a feedback loop: by default one import hop from the change, `--all` at push for the rest. No Python path runs none; the manifests keep every class on a code change, not a comment; see [selection](../scripts/tests/selection.py).
+- The gate is scoped the same way: only the sections whose inputs changed since the upstream branch, working tree and unpushed commits alike. `--fast` skips types, inventory, advisories and the package summary; `--all` runs every section, and so does an empty change set. Each section records its seconds under `scripts/state/logs/shared/review/`, so the cost of a check comes from history instead of a rerun.
 - Live and measure work is scheduled from [TODO](../notes/TODO.md), never part of a code change. Levels: [tool inventory](../scripts/review/TOOLS.md#levels).
-- A push is routine once the checks for the touched level pass; the full gate does not belong to every commit.
 - Prove a live configuration in seconds first: paths, ports, mode flags, one short request. A misconfiguration must fail immediately, not after a multi-minute timeout.
 - Slow speech tests (Qwen3-TTS, Chatterbox, Sesame CSM) run in a console that stays open, through `launch_module(..., mode=SPLIT_INDEPENDENT)`; quick ones (Kokoro, Edge TTS) run inline. Wait for the user before another slow test.
 - GPU metrics are sampled lower bounds; missing PIDs or counters are not zero.
