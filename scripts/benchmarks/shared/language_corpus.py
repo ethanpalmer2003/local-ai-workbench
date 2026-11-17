@@ -1,6 +1,6 @@
 """The pinned multilingual corpus a language run speaks and hears.
 
-The audio itself is downloaded (`scripts.download.benchmarks.fleurs`); this module turns the
+The audio itself is downloaded (`scripts.download.benchmarks`); this module turns the
 tracked manifest plus the downloaded clips into run artifacts and the provenance a long run
 records, so a changed corpus revision is visible instead of silently mixed.
 """
@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from scripts.benchmarks.shared.paths import RunPaths
-from scripts.download.benchmarks import fleurs
+from scripts.download import benchmarks as fleurs
 
 
 def manifest() -> fleurs.Manifest:
@@ -63,8 +63,7 @@ def prepare(run: RunPaths) -> list[dict[str, Any]]:
     outstanding = missing()
     if outstanding:
         raise FileNotFoundError(
-            f"{len(outstanding)} corpus clips are not downloaded; run "
-            f"python -m scripts.download.benchmarks.fleurs --download"
+            f"{len(outstanding)} corpus clips are not downloaded; run python -m scripts.download.benchmarks --download"
         )
     root = fleurs.corpus_root()
     rows = [

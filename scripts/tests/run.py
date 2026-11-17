@@ -11,7 +11,7 @@ from scripts.tests.cases.asr.shared.test_startup_contracts import StartupContrac
 from scripts.tests.cases.asr.shared.test_streaming_adapters import StreamingAdapters
 from scripts.tests.cases.asr.shared.test_vad_turns import VadTurns
 from scripts.tests.cases.asr.shared.test_whisper_compare import WhisperCompareTests
-from scripts.tests.cases.asr.whispercpp.test_whisper_profiles import WhisperProfiles
+from scripts.tests.cases.asr.test_whisper_profiles import WhisperProfiles
 from scripts.tests.cases.audiocpp.audio_comparison import AudioComparison
 from scripts.tests.cases.audiocpp.test_audiocpp_transport import TransportBenchmark
 from scripts.tests.cases.audiocpp.test_tts_profiles import TtsProfiles
@@ -26,7 +26,6 @@ from scripts.tests.cases.koboldcpp.test_kobold_image_swap import SwapTests
 from scripts.tests.cases.koboldcpp.test_kobold_lite_patch import ExternalSeedTests
 from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
 from scripts.tests.cases.koboldcpp.test_kobold_stack_vram import StackProbeTests
-from scripts.tests.cases.lemonade_server.test_lemonade_launcher import LemonadeLauncherTests, LemonadeOwnedStartTests
 from scripts.tests.cases.llamacpp.hrx.test_hrx_build import HrxBuildTests
 from scripts.tests.cases.llamacpp.test_ngram import NgramWorkloads
 from scripts.tests.cases.llamacpp.test_speech_ui import SpeechUiTests
@@ -136,6 +135,7 @@ from scripts.tests.cases.shared.tools.test_refresh_index import (
     RefreshReportTests,
 )
 from scripts.tests.cases.shared.tools.test_rename_path import (
+    CollapseTests,
     ImportRewriteTests,
     MoveParsingTests,
     PreviewTests,
@@ -158,6 +158,7 @@ from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.cases.suites.framework_updates import FrameworkUpdates
 from scripts.tests.cases.suites.framework_updates_sources import FrameworkUpdateSources
 from scripts.tests.cases.suites.shared_contracts import SharedContracts
+from scripts.tests.cases.test_lemonade_launcher import LemonadeLauncherTests, LemonadeOwnedStartTests
 from scripts.tests.selection import select
 
 GROUPS: tuple[type[unittest.TestCase], ...] = (
@@ -261,6 +262,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     MoveParsingTests,
     ImportRewriteTests,
     PreviewTests,
+    CollapseTests,
     ReferenceRewriteTests,
     RefreshBackgroundTests,
     RefreshLockTests,

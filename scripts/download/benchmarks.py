@@ -251,7 +251,7 @@ def main(argv: list[str] | None = None) -> int:
     for path in current["missing"][:5]:
         print(f"[MISSING] {path}")
     if current["missing"]:
-        print("[NEXT] python -m scripts.download.benchmarks.fleurs --download")
+        print("[NEXT] python -m scripts.download.benchmarks --download")
     return 0
 
 

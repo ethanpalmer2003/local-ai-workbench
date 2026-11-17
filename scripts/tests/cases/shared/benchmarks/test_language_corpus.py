@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.benchmarks.shared import language_corpus
-from scripts.download.benchmarks import fleurs
+from scripts.download import benchmarks as fleurs
 
 LANGUAGES = ("en", "es", "fr", "ja")
 

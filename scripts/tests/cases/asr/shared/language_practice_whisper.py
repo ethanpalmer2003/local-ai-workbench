@@ -23,8 +23,8 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector as transcription
+from scripts.launchers.asr import whispercpp as whisper
 from scripts.launchers.asr.llamacpp import qwen3_asr as qwen_asr
-from scripts.launchers.asr.whispercpp import server as whisper
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.shared.wait import http_ready, wait_ready

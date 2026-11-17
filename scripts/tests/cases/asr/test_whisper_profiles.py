@@ -11,7 +11,7 @@ from unittest.mock import patch
 import requests
 
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.asr.whispercpp import server as whisper
+from scripts.launchers.asr import whispercpp as whisper
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.tests.shared.http_fixtures import json_response
 

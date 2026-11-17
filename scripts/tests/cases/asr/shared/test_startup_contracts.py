@@ -7,9 +7,9 @@ from unittest.mock import patch
 
 from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr import whispercpp as whisper
 from scripts.launchers.asr.llamacpp import gemma_audio, qwen3_asr
 from scripts.launchers.asr.shared.resident_profiles import profiles
-from scripts.launchers.asr.whispercpp import server as whisper
 from scripts.tests.shared.backend_fixtures import startup_fixture
 from scripts.tests.shared.paths import CasePaths
 

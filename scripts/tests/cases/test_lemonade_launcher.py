@@ -6,7 +6,7 @@ from dataclasses import replace
 from unittest.mock import patch
 
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.lemonade_server import lemonade
+from scripts.launchers import lemonade_server as lemonade
 from scripts.tests.shared import process_fixtures
 from scripts.tests.shared.paths import CasePaths
 
@@ -15,7 +15,7 @@ class LemonadeOwnedStartTests(unittest.TestCase):
     def test_an_owned_start_joins_the_launch_job_and_a_plain_start_does_not(self):
         from unittest.mock import MagicMock, patch
 
-        from scripts.launchers.lemonade_server import lemonade
+        from scripts.launchers import lemonade_server as lemonade
 
         process = process_fixtures.fake_process(pid=99)
         with (

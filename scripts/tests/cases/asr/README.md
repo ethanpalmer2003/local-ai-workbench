@@ -4,7 +4,7 @@
 - New file profiles/models: [commands](../../../launchers/asr/FILE-ENGINES.md); `bat/benchmarks/benchmark_asr_compare.bat` previews assets, `--run` explicitly opts into inference. Native validation remains pending approval.
 
 - `whispercpp/`: Whisper profiles; `llamacpp/`: Qwen profiles and Gemma boundary/response contracts.
-- `parakeetcpp/smoke.py`: CPU/Vulkan transcription with/without Silero, plus VAD-only checks.
+- `parakeetcpp/parakeetcpp.py`: CPU/Vulkan transcription with/without Silero, plus VAD-only checks.
 - Dedicated Handy and KoboldCpp test coverage is deferred; shared probes exercise embedded Whisper/Gemma.
 - `shared/`: corpus preparation, metrics, multipart fixtures and cross-runtime/integration probes.
 - Global updater/catalog contracts stay under `cases/shared/`.
