@@ -14,7 +14,7 @@
 
 ## When
 
-- An edit is the only check before a push: `python -m scripts.review` covers the sections and the types the change reaches, and the test module you touched covers the rest. About sixteen seconds.
+- An edit is the only check before a push: `python -m scripts.review` covers the sections and the types the change reaches, and the test module you touched covers the rest. About thirteen seconds for one Python file, two for a document.
 - A commit only repairs: ruff check and format, codespell, the punctuation pass. Seconds.
 - A push runs everything: `python -m scripts.review --all` and `python -m scripts.tests.run --all`. About a minute, and this is the only completeness guarantee.
 - The suite is a feedback loop: by default one import hop from the change, `--all` at push for the rest. No Python path runs none, a comment or docstring edit runs none, and the manifests keep every class on a code change; the launcher and proxy block is in this set rather than outside it; see [selection](../scripts/tests/scoped_selection.py).
