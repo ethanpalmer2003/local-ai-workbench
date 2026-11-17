@@ -55,7 +55,7 @@ def report() -> list[str]:
         f"{len(watched)} under watch, {len(over_annotations)} over, depth {annotation_check.MAX_DEPTH}",
         f"{'folders':<16} {'checks/inventory_code.py':<24} "
         f"{f'{inventory_code.MIN_FOLDER_ITEMS} / {inventory_code.MAX_FOLDER_ITEMS} direct files':<34} "
-        f"{len(folder_ends.crowded)} over, {len(folder_ends.sparse)} empty or one-item",
+        f"{len(folder_ends.crowded)} over, {len(folder_ends.single)} single-file",
         f"{'file length':<16} {'checks/inventory_code.py':<24} "
         f"{f'{inventory_code.WARN_FILE_LINES} warn / {inventory_code.MAX_FILE_LINES} fail':<34} "
         f"{len(file_ends.long)} over the warning, {len(file_ends.over) - len(file_ends.blocked)} accepted",
