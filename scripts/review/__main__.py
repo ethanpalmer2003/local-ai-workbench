@@ -106,11 +106,12 @@ def lint_check() -> int:
     ).returncode
 
 
-def format_check() -> int:
-    """ruff format --check over the tree: the hook formats what is staged, so a difference is a finding."""
+def format_check(paths: list[str] | None = None) -> int:
+    """ruff format --check over the tree, or over the change when the edit level passes paths."""
     checker = project_cfg.VENV_DIR / "Scripts" / "ruff.exe"
+    targets = list(paths) if paths else ["."]
     return subprocess.run(
-        [str(checker), "format", "--check", "--config", str(project_cfg.BASE_DIR / "pyproject.toml"), "."],
+        [str(checker), "format", "--check", "--config", str(project_cfg.BASE_DIR / "pyproject.toml"), *targets],
         cwd=project_cfg.BASE_DIR,
         check=False,
     ).returncode
@@ -159,12 +160,12 @@ def scoped_type_check(paths: list[str], fast: bool) -> int:
         return 1
 
 
-def inventory_check(counts: dict[str, int], fast: bool) -> int:
+def inventory_check(counts: dict[str, int], fast: bool, paths: list[str] | None = None) -> int:
     """Folder and function inventory; it writes a report, so --fast skips it."""
     if fast:
         return 0
     print("\n=== REPOSITORY INVENTORY ===", flush=True)
-    return inventory_code.main(counts)
+    return inventory_code.main(counts, None if paths is None else [project_cfg.BASE_DIR / path for path in paths])
 
 
 def advisory_check(fast: bool) -> int:
@@ -279,8 +280,8 @@ def touched_gate(argv: list[str] | None = None) -> int:
         ("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main(python_files)),
         ("lint", "\n=== LINT ===", lint_check),
         ("types", "", lambda: scoped_type_check(changed, _flag(argv, "--fast"))),
-        ("formatting", "\n=== PYTHON FORMATTING ===", format_check),
-        ("inventory", "", lambda: inventory_check(package_audit.summary(), _flag(argv, "--fast"))),
+        ("formatting", "\n=== PYTHON FORMATTING ===", lambda: format_check(python_files)),
+        ("inventory", "", lambda: inventory_check(package_audit.summary(), _flag(argv, "--fast"), python_files)),
         ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main(changed)),
         ("comments", "\n=== COMMENTS ===", lambda: comments.main(python_files)),
         ("annotations", "\n=== ANNOTATION COMPLEXITY ===", lambda: annotations.main(python_files)),
