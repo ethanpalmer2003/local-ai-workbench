@@ -150,7 +150,7 @@ def _trim_to_vocal_event(content: str) -> str | None:
     for event in sorted(BREEZE_VOCAL_EVENTS.allowed_vocal_events, key=len, reverse=True):
         base = event.lower().strip().strip("()")  # events carry their own parens
         if normalized == base:
-            return None  # already the bare event - keep original
+            return None  # already the bare event, so keep original
         if normalized == base + "s" or normalized.startswith(base + " ") or normalized.startswith(base + "s "):
             return f"({base})"
     return None

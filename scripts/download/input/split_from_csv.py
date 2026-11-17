@@ -6,7 +6,7 @@ Split a full-length mp3 into per-line clips using a Start,Duration,Text CSV.
   - Windows' ~260 char path limit makes long merged sentences unsafe in a filename
 - get_tts_voices.py's load_map() reads subtitles.json first, falls back to
   filename-derived text for missing IDs
-  - Drop-in fit for the existing pipeline - no changes needed there
+  - Drop-in fit for the existing pipeline, no changes needed there
 - This caption format's Start/Duration values overlap almost everywhere
   ("Duration" is an estimate, not a measured end)
   - No usable gap in the CSV itself to detect real pauses

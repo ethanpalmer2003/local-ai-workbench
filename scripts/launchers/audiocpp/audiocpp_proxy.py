@@ -101,7 +101,7 @@ def _apply_model_fallback(payload: Payload) -> str:
 def _apply_voice_ref_fallback(payload: Payload) -> None:
     """
     - Resolve the request voice to a reference, or use the configured default
-    - The voice name must match a clone voice exactly - use one name everywhere
+    - The voice name must match a clone voice exactly, so use one name everywhere
     - Unknown names fall back to the default, annotated in the request log line
     """
     default_voice = cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value

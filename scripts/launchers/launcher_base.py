@@ -170,7 +170,7 @@ LLAMACPP_INI_DIR = project_cfg.component("llamacpp").config_dir
 #   shared memory report; 3 omits these details in the installed build
 
 # - Fixed server flags (keys carry their dashes; see build_cli_args)
-# - Flag-only switches are True-valued entries - build_cli_args emits them bare
+# - Flag-only switches are True-valued entries, and build_cli_args emits them bare
 # "--n-cpu-moe": 13
 # CLI flags; request-related flags establish initial server defaults.
 LLAMACPP_SERVER_ARGS = {

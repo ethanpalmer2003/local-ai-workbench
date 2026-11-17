@@ -10,8 +10,9 @@ disk: tracked, or untracked and not ignored. A parent package joins it when it i
 because importing `scripts.x.y` runs `scripts/x/__init__.py`.
 
 Two gaps stay invisible: a name assembled at runtime, and a file reached through `subprocess`, `runpy`
-or `open`. A third is silent here - an unparsable file gets no edges, so a change below it can drop a
-class above it - and the gate's ruff and pyright are what refuse that file first.
+or `open`. A third is silent here, and it hides more than the others: an unparsable file gets no edges,
+so a change below it can drop a class above it. The gate's ruff and pyright are what refuse that file
+first.
 """
 
 from __future__ import annotations

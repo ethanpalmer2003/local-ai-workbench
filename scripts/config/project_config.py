@@ -224,7 +224,7 @@ AVALON_MTP_GGUF = AVALON_MODELS_DIR / "mtp" / "mtp-Qwen3.8-Flash-Next-shared-IQ3
 # --- strata (app-managed GGUF weights, served by the Strata engine or Avalon) ---
 STRATA_MODELS_DIR = component("strata").models_dir
 
-# --- koboldcpp (GGUF storage only - no install dir/exe tracked here) ---
+# --- koboldcpp (GGUF storage only; no install dir/exe tracked here) ---
 KOBOLDCPP_FRAMEWORK_DIR = component("koboldcpp").framework_dir
 
 # --- llamacpp (LLM inference) ---

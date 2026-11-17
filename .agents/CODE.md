@@ -12,7 +12,7 @@
 - Signatures and calls stay single-line up to 120 characters; pass-through arguments go last.
 - No line exceeds 120 characters: `checks/line_length.py` accepts template and token-like string content and flags prose and code. `python -m scripts.review.limits` prints every numeric rule with its limit, the items at the edge and the exceptions in force.
 - Trash is grouped by day (`trash/YYYY-MM-DD`, `config/trash.py`); an empty directory is deleted rather than archived.
-- ASCII punctuation only: `scripts/review/checks/typography.py` rejects dashes, curly quotes, ellipsis and no-break spaces.
+- ASCII punctuation only: `scripts/review/checks/typography.py` rejects dashes, curly quotes, ellipsis and no-break spaces, and the same flourish written as a spaced dash between words in a docstring or comment.
 - Pick defaults from measured evidence and keep the caveats and context with them.
 - Use what the framework or model already reports instead of storing a copy of it. A tracked page keeps a declaration only because it must render with no weight installed, and a check compares that copy to the packaged spec.
 

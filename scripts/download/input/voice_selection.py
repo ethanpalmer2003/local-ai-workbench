@@ -121,7 +121,7 @@ def choose(files, mapping, mode, count, pinned_ids, durations):
 class VoiceSelector:
     # - longestText is the primary mode: orders by transcript length, so it needs transcripts to exist
     # - longestAudio is the bootstrap mode: picks UNTRANSCRIBED clips longest-first, purely so
-    #   --transcribe can fill them in - once transcripts exist, selection goes back to longestText
+    #   --transcribe can fill them in; once transcripts exist, selection goes back to longestText
     MODES = frozenset(("random", "longestAudio", "longestText", "pinned", "alphabeticalText", "alphabeticalAudio"))
 
     def __init__(self, request: SelectionRequest):

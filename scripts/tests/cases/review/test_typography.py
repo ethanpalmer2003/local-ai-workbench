@@ -44,6 +44,22 @@ class ScanTests(unittest.TestCase):
         line = '{"reference": "\u2014\u2014\u2026"}'
         self.assertEqual(len(typography.masked(line, typography.REFERENCE_FILE)), len(line))
 
+    def test_a_spaced_dash_between_words_is_reported_from_a_docstring(self):
+        text = 'def f():\n    """Keep this - never that."""\n'
+        self.assertEqual(typography.prose_dashes("scripts/a.py", text), [(2, "prose-dash")])
+
+    def test_a_bullet_a_comment_marker_and_arithmetic_stay_legal(self):
+        text = 'def f():\n    """First line.\n\n    - a bullet\n    """\n# - a marker\nVALUE = 1 - 2\n'
+        self.assertEqual(typography.prose_dashes("scripts/a.py", text), [])
+
+    def test_a_prose_dash_in_a_comment_is_reported(self):
+        self.assertEqual(
+            typography.prose_dashes("scripts/a.py", "x = 1  # keep this - never that\n"), [(1, "prose-dash")]
+        )
+
+    def test_only_python_is_scanned_for_prose_dashes(self):
+        self.assertEqual(typography.prose_dashes("notes.md", "one - two"), [])
+
 
 class CheckTests(unittest.TestCase):
     def run_check(self, names: list[str]) -> tuple[int, str]:

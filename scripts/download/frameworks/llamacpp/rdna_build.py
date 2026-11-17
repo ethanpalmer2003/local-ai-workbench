@@ -247,7 +247,7 @@ def build_rdna(
     ]
 
     # - GGML_HIP_ROCWMMA_FATTN is intentionally NOT passed: upstream removed the
-    #   rocWMMA FA kernel (PR #26046) as obsolete - fattn-mma-f16.cuh supersedes
+    #   rocWMMA FA kernel (PR #26046) as obsolete; fattn-mma-f16.cuh supersedes
     #   it on all relevant AMD hardware, so the flag is a no-op
     configure_cmd.extend(extra_cmake_args)
 
