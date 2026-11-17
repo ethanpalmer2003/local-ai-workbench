@@ -9,7 +9,7 @@ import time
 import wave
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, NamedTuple, cast
 
 import requests
 
@@ -265,6 +265,15 @@ def _run_text(context: _SweepContext, text_case: str, text: str, names: list[str
     return False, False
 
 
+class SweepResult(NamedTuple):
+    """What one sweep produced: rows, unsupported profiles, and whether it stopped early."""
+
+    results: list[dict[str, Any]]
+    unsupported: set[str]
+    timed_out: bool
+    transport_failed: bool
+
+
 def _sweep(
     profiles: dict[str, dict[str, object]],
     texts: dict[str, str],
@@ -273,7 +282,7 @@ def _sweep(
     lifecycle: BenchmarkLifecycle,
     memory: BenchmarkVram,
     deadline: float,
-) -> tuple[list[dict[str, Any]], set[str], bool, bool]:
+) -> SweepResult:
     results: list[dict[str, Any]] = []
     unsupported: set[str] = set()
     context = _SweepContext(args, run, lifecycle, memory, profiles, deadline, unsupported, results)
@@ -283,8 +292,8 @@ def _sweep(
         for text_case, text in texts.items():
             timed_out, transport_failed = _run_text(context, text_case, text, names, repeat)
             if timed_out or transport_failed:
-                return results, unsupported, timed_out, transport_failed
-    return results, unsupported, False, False
+                return SweepResult(results, unsupported, timed_out, transport_failed)
+    return SweepResult(results, unsupported, False, False)
 
 
 def _summary(profiles: dict[str, dict[str, object]], results: list[dict[str, Any]]) -> list[dict[str, Any]]:

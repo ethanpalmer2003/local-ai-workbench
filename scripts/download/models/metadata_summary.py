@@ -3,7 +3,7 @@
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 LANGUAGE_KEYS = {"language", "languages", "supported_languages", "language_codes", "lang_to_id", "locale"}
 NON_LANGUAGES = {"auto", "multilingual", "unknown", "und", "code"}
@@ -61,9 +61,14 @@ def _spec(local: dict[str, Any]) -> dict[str, Any]:
     return spec if isinstance(spec, dict) else {}
 
 
-def _curated_claims(
-    record: dict[str, Any], language_catalog: dict[str, Any]
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+class CuratedClaims(NamedTuple):
+    """Claims read from curated catalogs, and the catalog entries they came from."""
+
+    claims: list[Claim]
+    curated: list[dict[str, Any]]
+
+
+def _curated_claims(record: dict[str, Any], language_catalog: dict[str, Any]) -> CuratedClaims:
     curated = [entry for entry in language_catalog["models"] if set(entry["model_ids"]) & set(record["ids"])]
     claims: list[Claim] = []
     for entry in curated:
@@ -81,7 +86,7 @@ def _curated_claims(
                         "validated_accuracy": False,
                     }
                 )
-    return claims, curated
+    return CuratedClaims(claims, curated)
 
 
 def _artifact_claims(record: dict[str, Any]) -> tuple[list[Claim], list[ScopedClaim]]:

@@ -13,7 +13,7 @@ import time
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 
 @dataclass(frozen=True)
@@ -327,13 +327,20 @@ def _get_windows_memory(pid: int | None) -> GpuMemorySnapshot | None:
     return parse_windows_memory(samples, target_pids, process_names)
 
 
-def _collect_samples(samples: object) -> tuple[dict[str, float], list[tuple[str, int, float]]]:
+class SampleBatch(NamedTuple):
+    """Adapter totals in MB and per-process usage rows from one Get-Counter sample."""
+
+    adapter_mb: dict[str, float]
+    process_samples: list[tuple[str, int, float]]
+
+
+def _collect_samples(samples: object) -> SampleBatch:
     """Split Get-Counter JSON into adapter totals (MB) and per-process usage (MB)."""
     entries = [samples] if isinstance(samples, dict) else samples
     adapter_mb: dict[str, float] = {}
     process_samples: list[tuple[str, int, float]] = []
     if not isinstance(entries, list):
-        return adapter_mb, process_samples
+        return SampleBatch(adapter_mb, process_samples)
     for sample in entries:
         if not isinstance(sample, dict):
             continue
@@ -351,7 +358,7 @@ def _collect_samples(samples: object) -> tuple[dict[str, float], list[tuple[str,
             match = re.search(r"pid_(\d+)", path)
             if match:
                 process_samples.append((adapter, int(match.group(1)), value_mb))
-    return adapter_mb, process_samples
+    return SampleBatch(adapter_mb, process_samples)
 
 
 def _attribute_usage(

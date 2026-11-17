@@ -17,7 +17,7 @@ from collections.abc import Callable, Iterable, Mapping
 from contextlib import AbstractContextManager, ExitStack
 from email.message import Message
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, ClassVar
+from typing import Any, ClassVar, NamedTuple
 from urllib.parse import urlsplit
 
 import requests
@@ -102,6 +102,13 @@ def read_request_body(handler: BaseHTTPRequestHandler) -> bytes:
 
 
 RELAY_CHUNK_BYTES = 8192
+
+
+class PreparedRequest(NamedTuple):
+    """A request body and the parsed payload a transform produced, when one ran."""
+
+    body: bytes
+    payload: dict[str, object] | None
 
 
 class _SseAudioCounter:
@@ -396,20 +403,20 @@ class _JsonProxyHandler(ProxyHandlerMixin):
     def _applies(self) -> bool:
         return self.transform_paths is None or urlsplit(self.path).path in self.transform_paths
 
-    def _prepare(self, method: str) -> tuple[bytes, dict[str, object] | None] | None:
+    def _prepare(self, method: str) -> PreparedRequest | None:
         """Read and optionally transform the request; None means a response was already sent."""
         body = read_request_body(self)
         if not (self._applies() and body and (self.transform or self.on_response) and "json" in self._content_type()):
-            return body, None
+            return PreparedRequest(body, None)
         try:
             raw_request = json.loads(body)
         except (json.JSONDecodeError, UnicodeDecodeError):
             send_json_error(self, 400, "invalid JSON", "invalid_request")
             return None
         if not isinstance(raw_request, dict):
-            return body, None
+            return PreparedRequest(body, None)
         if not self.transform:
-            return body, raw_request
+            return PreparedRequest(body, raw_request)
         try:
             # - transform gets a copy: it may mutate in place, while
             #   on_response needs the request as the client sent it
@@ -422,7 +429,7 @@ class _JsonProxyHandler(ProxyHandlerMixin):
         if encoded is None:
             send_bytes(self, 204, b"")
             return None
-        return encoded, raw_request
+        return PreparedRequest(encoded, raw_request)
 
     def _content_type(self) -> str:
         return self.headers.get("Content-Type", "").lower()
