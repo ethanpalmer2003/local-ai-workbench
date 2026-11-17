@@ -12,7 +12,7 @@ import hashlib
 import json
 import tarfile
 from pathlib import Path
-from typing import Any
+from typing import Any, NotRequired, TypedDict
 
 from scripts.config import project_config as project_cfg
 from scripts.shared import consent
@@ -23,40 +23,95 @@ MANIFEST_NAME = "download.json"
 CORPUS_SECONDS = 600
 
 
+class ClipLocation(TypedDict):
+    """Where one clip lives upstream; resolving its local path needs no more than this."""
+
+    config: str
+    member: str
+
+
+class ManifestClip(ClipLocation):
+    """One selected clip: where it lives upstream and what a run must recognize."""
+
+    id: str
+    language: str
+    reference: str
+
+
+class Manifest(TypedDict):
+    """The tracked corpus revision; this file's own contract, so `spec()` validates the keys it needs."""
+
+    corpus: str
+    revision: str
+    split: str
+    clips: list[ManifestClip]
+    corpus_name: NotRequired[str]
+    selection: NotRequired[str]
+    speech_rate: NotRequired[dict[str, list[float]]]
+
+
+class ClipDigest(TypedDict):
+    """One extracted clip as recorded beside the audio, so a later run can see it changed."""
+
+    id: str
+    file: str
+    bytes: int
+    sha256: str
+
+
+class ArchiveRecord(TypedDict):
+    file: str
+    cached: str
+    sha256: str
+
+
+class DownloadRecord(TypedDict):
+    """What the fetcher writes to `download.json`: the pinned revision and every clip digest."""
+
+    corpus: str
+    revision: str
+    split: str
+    manifest: str
+    manifest_sha256: str
+    archives: dict[str, ArchiveRecord]
+    clips: list[ClipDigest]
+
+
 def manifest_path() -> Path:
     return project_cfg.component("benchmarks").config_dir / "language_corpus.json"
 
 
-def spec() -> dict[str, Any]:
+def spec() -> Manifest:
     """The committed corpus manifest."""
     value = json.loads(manifest_path().read_text(encoding="utf-8"))
     if not isinstance(value, dict) or not value.get("corpus") or not value.get("clips"):
         raise ValueError(f"Corpus manifest needs a corpus name and clips: {manifest_path()}")
-    return value
+    data: dict[str, Any] = value
+    return Manifest(**data)
 
 
 def manifest_sha256() -> str:
     return hashlib.sha256(manifest_path().read_bytes()).hexdigest()
 
 
-def corpus_root(manifest: dict[str, Any] | None = None) -> Path:
+def corpus_root(manifest: Manifest | None = None) -> Path:
     """Where this corpus revision's audio lives; the revision keeps old runs reproducible."""
     value = manifest or spec()
     name = str(value.get("corpus_name") or value["corpus"]).lower()
     return project_cfg.component("benchmarks").models_dir / "corpora" / name / str(value["revision"])
 
 
-def clip_path(clip: dict[str, Any], root: Path | None = None) -> Path:
+def clip_path(clip: ClipLocation, root: Path | None = None) -> Path:
     return (root or corpus_root()) / str(clip["config"]) / Path(str(clip["member"])).name
 
 
-def missing(manifest: dict[str, Any] | None = None) -> list[Path]:
+def missing(manifest: Manifest | None = None) -> list[Path]:
     value = manifest or spec()
     root = corpus_root(value)
     return [clip_path(clip, root) for clip in value["clips"] if not clip_path(clip, root).is_file()]
 
 
-def _archive(manifest: dict[str, Any], config: str) -> Path:
+def _archive(manifest: Manifest, config: str) -> Path:
     from huggingface_hub import hf_hub_download
 
     split = str(manifest["split"])
@@ -90,7 +145,7 @@ def _extract(archive: Path, wanted: dict[str, Path]) -> None:
         raise ValueError(f"Archive {archive.name} is missing {sorted(pending)}")
 
 
-def _lfs_hashes(manifest: dict[str, Any]) -> dict[str, str]:
+def _lfs_hashes(manifest: Manifest) -> dict[str, str]:
     """Upstream SHA-256 for each archive, straight from the pinned dataset revision."""
     from huggingface_hub import HfApi
 
@@ -104,7 +159,7 @@ def _lfs_hashes(manifest: dict[str, Any]) -> dict[str, str]:
     }
 
 
-def _clip_rows(manifest: dict[str, Any], config: str, root: Path) -> list[dict[str, Any]]:
+def _clip_rows(manifest: Manifest, config: str, root: Path) -> list[ClipDigest]:
     rows = []
     for clip in manifest["clips"]:
         if clip["config"] != config:
@@ -121,16 +176,16 @@ def _clip_rows(manifest: dict[str, Any], config: str, root: Path) -> list[dict[s
     return rows
 
 
-def _configs(manifest: dict[str, Any]) -> list[str]:
+def _configs(manifest: Manifest) -> list[str]:
     return list(dict.fromkeys(str(clip["config"]) for clip in manifest["clips"]))
 
 
-def download(force: bool = False) -> dict[str, Any]:
+def download(force: bool = False) -> DownloadRecord:
     """Fetch every archive a manifest clip belongs to, then extract those clips."""
     manifest = spec()
     root = corpus_root(manifest)
     archives = _lfs_hashes(manifest)
-    recorded: dict[str, Any] = {
+    recorded: DownloadRecord = {
         "corpus": manifest["corpus"],
         "revision": manifest["revision"],
         "split": manifest["split"],

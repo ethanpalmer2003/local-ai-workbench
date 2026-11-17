@@ -15,7 +15,7 @@ from scripts.benchmarks.shared.paths import RunPaths
 from scripts.download.benchmarks import fleurs
 
 
-def manifest() -> dict[str, Any]:
+def manifest() -> fleurs.Manifest:
     return fleurs.spec()
 
 
