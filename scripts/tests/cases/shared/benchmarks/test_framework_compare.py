@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from scripts.benchmarks.shared import framework_compare as compare
+from scripts.benchmarks.shared import framework_compare_serving as serving
 from scripts.tests.shared.process_fixtures import fake_process
 
 
@@ -34,8 +35,8 @@ class FakeResponse:
         return self._payload
 
 
-def served(backend: str = "practice") -> compare.Served:
-    return compare.Served(
+def served(backend: str = "practice") -> serving.Served:
+    return serving.Served(
         backend=backend,
         chat="http://chat",
         tts="http://speech",
@@ -202,7 +203,7 @@ class RecognitionLegTests(unittest.TestCase):
     def test_kobold_style_posts_base64_audio_to_its_own_route(self):
         clip = {"id": "en-0", "language": "en", "file": __file__, "reference": "one", "duration_seconds": 1.0}
         response = FakeResponse(payload={"text": " Unfortunately, studying"})
-        kobold = compare.Served(
+        kobold = serving.Served(
             backend="koboldcpp",
             chat="http://k",
             tts="http://k",
@@ -362,7 +363,7 @@ class SummaryTests(unittest.TestCase):
         self.assertNotIn("chunks per reply differ", compare.summarize(results))
 
     def test_status_needs_at_least_one_measurement_per_selected_leg_set(self):
-        options = compare.Options(legs=("chat", "tts", "asr"), tokens=8, requests_count=1, clips=1)
+        options = serving.Options(legs=("chat", "tts", "asr"), tokens=8, requests_count=1, clips=1)
         nothing = [{"backend": "practice", "legs": {"chat": {"status": "unavailable"}}}]
         self.assertEqual(compare._status(nothing, options), "failed")
         measured = [{"backend": "practice", "legs": {"chat": {"status": "measured"}}}]
@@ -375,7 +376,7 @@ class AlternateArmTests(unittest.TestCase):
         yield served(backend)
 
     def test_the_alternate_arm_measures_recognition_only(self):
-        options = compare.Options(legs=("chat", "tts", "asr"), tokens=8, requests_count=1, clips=1)
+        options = serving.Options(legs=("chat", "tts", "asr"), tokens=8, requests_count=1, clips=1)
         asr = {"status": "measured", "rows": [], "languages": []}
         with (
             patch.object(compare, "serve", return_value=self.stub("whisper")),
@@ -390,7 +391,7 @@ class AlternateArmTests(unittest.TestCase):
 
     def test_the_alternate_arm_names_its_own_weights(self):
         self.assertEqual(
-            compare._recogniser_model(compare.ALTERNATE_ENGINE, []), Path(str(compare.cfg.WHISPERCPP_ASR.model)).stem
+            serving._recogniser_model(compare.ALTERNATE_ENGINE, []), Path(str(compare.cfg.WHISPERCPP_ASR.model)).stem
         )
         self.assertEqual(compare._recogniser_path(compare.ALTERNATE_ENGINE), Path(compare.cfg.WHISPERCPP_ASR.model))
 
@@ -407,16 +408,16 @@ class KoboldArmTests(unittest.TestCase):
     def stubbed(self, ready: bool = True):
         process = fake_process()
         with (
-            patch.object(compare.kobold, "start_kobold", return_value=(process, Path("k.kcpps"), Path("k.log"))),
-            patch.object(compare, "wait_for_backend", return_value=ready),
-            patch.object(compare, "_await_exit"),
-            patch.object(compare, "stop_owned") as stop,
+            patch.object(serving.kobold, "start_kobold", return_value=(process, Path("k.kcpps"), Path("k.log"))),
+            patch.object(serving, "wait_for_backend", return_value=ready),
+            patch.object(serving, "_await_exit"),
+            patch.object(serving, "stop_owned") as stop,
         ):
             yield process, stop
 
     def test_the_arm_serves_three_legs_from_one_owned_process_on_a_free_port(self):
         with self.stubbed() as (process, stop):
-            with compare._serve_koboldcpp(Path("m.gguf"), MagicMock()) as served:
+            with serving._serve_koboldcpp(Path("m.gguf"), MagicMock()) as served:
                 settings = compare.cfg.KOBOLDCPP_SERVICE
                 self.assertIs(settings.speech_engine, compare.cfg.KoboldcppSpeechStartupEngine.KOKORO_INTERNAL)
                 self.assertIs(settings.transcription_engine, compare.cfg.AsrStartupEngine.EMBEDDED)
@@ -429,14 +430,14 @@ class KoboldArmTests(unittest.TestCase):
         stop.assert_called_once_with(process)
 
     def test_a_stack_left_in_the_configured_port_is_not_the_one_measured(self):
-        with self.stubbed() as (_, _), compare._serve_koboldcpp(Path("m.gguf"), MagicMock()) as served:
+        with self.stubbed() as (_, _), serving._serve_koboldcpp(Path("m.gguf"), MagicMock()) as served:
             self.assertNotEqual(served.details["port"], compare.cfg.KOBOLDCPP_PORT)
 
     def test_a_stack_that_never_answers_fails_instead_of_measuring_nothing(self):
         with (
             self.stubbed(ready=False),
             self.assertRaises(TimeoutError),
-            compare._serve_koboldcpp(Path("m.gguf"), MagicMock()),
+            serving._serve_koboldcpp(Path("m.gguf"), MagicMock()),
         ):
             pass
 
@@ -447,12 +448,12 @@ class LemonadeModelTests(unittest.TestCase):
             "gemma-4-E4B-it-Q4_0": {"path": "C:/models/gemma-4-E4B-it-Q4_0.gguf"},
             "multilingual_models": {"path": "C:/models"},
         }
-        chosen = compare._lemonade_chat_model(catalog, Path("C:/models/gemma-4-E4B-it-Q4_0.gguf"))
+        chosen = serving._lemonade_chat_model(catalog, Path("C:/models/gemma-4-E4B-it-Q4_0.gguf"))
         self.assertEqual(chosen, "gemma-4-E4B-it-Q4_0")
 
     def test_missing_weights_report_the_ids_lemonade_offers(self):
         with self.assertRaises(RuntimeError) as raised:
-            compare._lemonade_chat_model({"other": {}}, Path("C:/models/missing.gguf"))
+            serving._lemonade_chat_model({"other": {}}, Path("C:/models/missing.gguf"))
         self.assertIn("missing.gguf", str(raised.exception))
         self.assertIn("other", str(raised.exception))
 

@@ -1,4 +1,4 @@
-"""HTTP proxy behaviour for the launcher stack, split from the framework smoke suite."""
+"""HTTP proxy behavior for the launcher stack, split from the framework smoke suite."""
 
 from __future__ import annotations
 

@@ -1,6 +1,5 @@
 {
   "files": {
-    "scripts/benchmarks/shared/framework_compare.py": 923,
     "scripts/download/input/get_tts_voices.py": 1468
   }
 }
