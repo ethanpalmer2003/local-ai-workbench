@@ -1,4 +1,4 @@
-"""Review samples: the module in full, the copied functions labeled, and the imports left out listed."""
+"""Review samples: the module in full, the copied definitions under one header per owner, and the accounting."""
 
 import unittest
 from pathlib import Path
@@ -18,31 +18,27 @@ def sample_file(name: str, source: str) -> Path:
 
 
 class SampleCodeTests(unittest.TestCase):
-    def test_a_copied_function_says_where_it_lives(self):
-        path = sample_file("owner.py", "def walk(edges, changed):\n    return changed\n")
+    def test_a_copied_function_is_its_own_source(self):
+        path = sample_file("owner.py", "import os\n\n\ndef walk(edges, changed):\n    return changed\n")
         try:
-            text = sample_code.named_source(path, "walk", "The one-hop walk.")
+            text = sample_code.definition(path, "walk")
         finally:
             path.unlink()
-        self.assertIn("scripts/tests/output/sample-code/owner.py", text)
-        self.assertIn("The one-hop walk.", text)
-        self.assertIn("def walk(edges, changed):", text)
-        self.assertNotIn("import", text)
+        self.assertEqual(text, "def walk(edges, changed):\n    return changed")
 
     def test_a_copied_constant_comes_with_its_line(self):
         path = sample_file("owner.py", "REACH_DEPTH = 1\nOTHER = 2\n")
         try:
-            text = sample_code.named_source(path, "REACH_DEPTH", "One hop.")
+            text = sample_code.definition(path, "REACH_DEPTH")
         finally:
             path.unlink()
-        self.assertIn("REACH_DEPTH = 1", text)
-        self.assertNotIn("OTHER", text)
+        self.assertEqual(text, "REACH_DEPTH = 1")
 
     def test_a_missing_function_is_a_refusal(self):
         path = sample_file("owner.py", "VALUE = 1\n")
         try:
             with self.assertRaises(SystemExit):
-                sample_code.named_source(path, "absent", "")
+                sample_code.definition(path, "absent")
         finally:
             path.unlink()
 
@@ -80,6 +76,30 @@ class SampleCodeTests(unittest.TestCase):
             owner.unlink()
         self.assertNotIn("left out:", sample)
         self.assertIn("copied from scripts/tests/output/sample-code/owner.py", sample)
+
+    def test_one_owner_gets_one_header(self):
+        module = sample_file("module.py", '"""The rule."""\n')
+        owner = sample_file("owner.py", "def one(x):\n    return x\n\n\ndef two(x):\n    return x\n")
+        try:
+            sample = sample_code.build(module, [(owner, "one"), (owner, "two")], "Both halves of the walk.")
+        finally:
+            module.unlink()
+            owner.unlink()
+        self.assertEqual(sample.count("# - copied from"), 1)
+        self.assertIn("Both halves of the walk.", sample)
+        self.assertIn("# - copied in: one, two from", sample)
+
+    def test_a_name_the_copied_code_still_needs_is_listed_with_its_source(self):
+        module = sample_file("module.py", '"""The rule."""\n\n\ndef pick():\n    return walk([])\n')
+        owner = sample_file(
+            "owner.py", "from collections import deque\n\n\ndef walk(items):\n    return deque(items)\n"
+        )
+        try:
+            sample = sample_code.build(module, [(owner, "walk")], "")
+        finally:
+            module.unlink()
+            owner.unlink()
+        self.assertIn("# - left out: deque from collections", sample)
 
 
 if __name__ == "__main__":
