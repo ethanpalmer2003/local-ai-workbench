@@ -53,7 +53,8 @@ def coverage() -> list[dict[str, str]]:
         "audiocpp-qwen3": (
             "resident_compare",
             "resident-validated",
-            "Qwen3-ASR 1.7B Q8_0 with Vulkan session tuning and 3 s streaming windows; slower than llama.cpp on the same model",
+            "Qwen3-ASR 1.7B Q8_0 with Vulkan session tuning and 3 s streaming windows; slower than llama.cpp on the "
+            "same model",
         ),
         "handy": ("none", "manual", "GUI dictation, not a comparable HTTP/CLI backend"),
         "parakeetcpp-v3": (

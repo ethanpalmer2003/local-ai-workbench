@@ -217,7 +217,8 @@ def import_xlsx_transcripts(xlsx_path: Path, files: list[Path], mapping: dict[st
         import openpyxl
     except ImportError:
         print(
-            f"WARNING: openpyxl is not installed, skipping xlsx transcripts ({xlsx_path}). Install with: uv add openpyxl"
+            f"WARNING: openpyxl is not installed, skipping xlsx transcripts ({xlsx_path}). Install with: uv add "
+            f"openpyxl"
         )
         return 0
 

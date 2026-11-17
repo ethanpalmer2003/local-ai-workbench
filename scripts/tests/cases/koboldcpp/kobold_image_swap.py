@@ -54,7 +54,8 @@ class SwapProbe:
                 "image_args": shared_gpu.IMAGE_ARGS,
                 "speech_text": SPEECH,
                 "swap_method": "stop/restart owned native server and proxy worker; no model downloads",
-                "limits": "Explicit prototype transitions, not yet automatic production request routing; OS caches not reset; whole-adapter VRAM includes other apps",
+                "limits": "Explicit prototype transitions, not yet automatic production request routing; OS caches not "
+                "reset; whole-adapter VRAM includes other apps",
             },
         }
         self.save()

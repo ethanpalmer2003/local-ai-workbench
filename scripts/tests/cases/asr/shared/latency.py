@@ -230,7 +230,8 @@ def main():
         "execution_context": context,
         "clip": clip,
         "results": [],
-        "limits": "One paced replay after warmup; clip-end anchor includes original trailing silence. No microphone/browser/LLM/TTS. Parakeet prebuilt exposes no paced-input adapter.",
+        "limits": "One paced replay after warmup; clip-end anchor includes original trailing silence. No microphone/browser/LLM/TTS. "
+        "Parakeet prebuilt exposes no paced-input adapter.",
     }
     selected = [(engine, automatic) for engine, automatic in ENGINES if not args.engines or engine in args.engines]
     models = {engine: model_cfg.path(ASR_FILE_PROFILES[engine].models[0]) for engine, _ in selected}

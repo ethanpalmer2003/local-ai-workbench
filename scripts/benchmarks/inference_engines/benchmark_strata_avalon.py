@@ -393,7 +393,8 @@ def main() -> None:
     parser.add_argument(
         "--strata-resident-experts",
         action="store_true",
-        help="Add --resident-cpu-experts: keep the experts the GPU cache misses in RAM instead of re-reading them from file.",
+        help="Add --resident-cpu-experts: keep the experts the GPU cache misses in RAM instead of re-reading them from "
+        "file.",
     )
     parser.add_argument(
         "--conversation",

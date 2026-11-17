@@ -610,7 +610,15 @@ SDCPP_REQUEST_DEFAULTS: dict[str, object] = {
     "width": 832,
     "height": 1216,
     "seed": 446796035,
-    "negative_prompt": "extra digits, (particles, adversarial noise:1.2), multiple views, multiple angle, split view, grid view, two shot, outside border, picture frame, framed, border, letterboxed, pillarboxed, 2koma, modern, recent, old, oldest, cartoon, graphic, text, painting, crayon, graphite, abstract, glitch, deformed, mutated, ugly, disfigured, long body, lowres, bad anatomy, bad hands, missing fingers, extra fingers, extra digits, fewer digits, cropped, very displeasing, (worst quality, bad quality:1.2), sketch, jpeg artifacts, signature, watermark, username, (censored, bar censor, mosaic censor:1.2), simple background, conjoined, bad ai-generated",
+    "negative_prompt": (
+        "extra digits, (particles, adversarial noise:1.2), multiple views, multiple angle, split view, grid view, "
+        "two shot, outside border, picture frame, framed, border, letterboxed, pillarboxed, 2koma, modern, recent, "
+        "old, oldest, cartoon, graphic, text, painting, crayon, graphite, abstract, glitch, deformed, mutated, ugly, "
+        "disfigured, long body, lowres, bad anatomy, bad hands, missing fingers, extra fingers, extra digits, fewer "
+        "digits, cropped, very displeasing, (worst quality, bad quality:1.2), sketch, jpeg artifacts, signature, "
+        "watermark, username, (censored, bar censor, mosaic censor:1.2), simple background, conjoined, "
+        "bad ai-generated"
+    ),
 }
 
 

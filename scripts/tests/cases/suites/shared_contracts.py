@@ -47,7 +47,10 @@ class SharedContracts(unittest.TestCase):
         self.assertEqual(inspect_source(source, "deep.py")[0].depth, 4)
 
     def test_structure_audit_measures_factory_methods_separately(self):
-        source = "def factory():\n    class Handler:\n        def handle(self):\n            for item in []:\n                pass\n    return Handler\n"
+        source = (
+            "def factory():\n    class Handler:\n        def handle(self):\n            for item in []:\n      "
+            "          pass\n    return Handler\n"
+        )
         factory, method = inspect_source(source, "factory.py")
         self.assertEqual((factory.code_lines, factory.depth), (3, 0))
         self.assertEqual((method.code_lines, method.depth), (3, 1))
@@ -218,7 +221,8 @@ class SharedContracts(unittest.TestCase):
             )
         self.assertEqual(
             spawn.call_args.args[0][-1],
-            "$Host.UI.RawUI.WindowTitle = 'test'; Write-Host 'test'; & 'backend.exe' 'a''b $value `text' 2>&1 | Tee-Object -FilePath 'C:/AI/log $value.txt'",
+            "$Host.UI.RawUI.WindowTitle = 'test'; Write-Host 'test'; & 'backend.exe' 'a''b $value `text' 2>&1 | Tee-Object "
+            "-FilePath 'C:/AI/log $value.txt'",
         )
 
     def test_proxy_closes_listener_when_serving_fails(self):

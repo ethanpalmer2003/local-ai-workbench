@@ -333,7 +333,8 @@ LIMITATIONS = (
     "The backends produced different audio durations despite the same seed, so this is a short throughput screen, "
     "not a quality comparison or a definitive backend ranking. Request elapsed time excludes server startup and "
     "the warmup request; warmup_s includes model loading and first inference, so it is not a pure model-load timer. "
-    "No instruct option is supplied; profiles record fixed voice options when supported. Breeze uses each build's default voice. "
+    "No instruct option is supplied; profiles record fixed voice options when supported. Breeze uses each build's default "
+    "voice. "
     "VRAM peaks are sampled lower bounds. Windows per-process dedicated allocations can exceed adapter physical usage; "
     "counter polling can affect CPU load."
 )
@@ -550,7 +551,8 @@ def _comparison_lines(result: dict[str, Any]) -> list[str]:
         "",
         "## Measured comparison",
         "",
-        "| Backend | Server startup (s) | Warmup/model load + first request (s) | Median request (s) | Median audio (s) | Median RTF |",
+        "| Backend | Server startup (s) | Warmup/model load + first request (s) | Median request (s) | Median audio "
+        "(s) | Median RTF |",
         "| --- | ---: | ---: | ---: | ---: | ---: |",
     ]
     for backend, summary in result["results"].items():

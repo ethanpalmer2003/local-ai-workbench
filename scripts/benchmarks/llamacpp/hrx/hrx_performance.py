@@ -71,7 +71,8 @@ def compare_runs(previous: Path, current: Path) -> dict[str, Any]:
         "current": after,
         "exact_outputs": exact,
         "decode_change_percent": (after["decode_tps"] / before["decode_tps"] - 1) * 100,
-        "reasoning": "One matched previous/current pair with one warmup and two measured requests per fresh server; exploratory, not a statistical speedup claim.",
+        "reasoning": "One matched previous/current pair with one warmup and two measured requests per fresh server; "
+        "exploratory, not a statistical speedup claim.",
     }
     paths = BenchmarkPaths(__file__).new_run()
     paths.write_report(comparison)

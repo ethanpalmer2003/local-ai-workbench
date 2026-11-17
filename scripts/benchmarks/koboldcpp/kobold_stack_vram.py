@@ -257,7 +257,8 @@ def _finish(
         for backend in ("kobold", "audio", "image")
     }
     report["limits"] = (
-        "Sampled dedicated allocation can miss transient peaks; process counters can overlap. Short prompts do not fill Kobold context."
+        "Sampled dedicated allocation can miss transient peaks; process counters can overlap. Short prompts do not fill "
+        "Kobold context."
     )
     (paths.artifacts / "vram.json").write_text(json.dumps(monitor.summary(), indent=2), encoding="utf-8")
     paths.write_report(report)

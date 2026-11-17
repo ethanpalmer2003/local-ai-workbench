@@ -40,8 +40,10 @@ class CasePaths:
         if not guide.exists():
             guide.write_text(
                 f"# {relative.stem}: {outcome}\n\nRuns in this folder have outcome `{outcome}`.\n\n"
-                "Each run uses logs/, artifacts/, and temp/. Open artifacts/report.md for status and recorded elapsed time; "
-                "detailed evidence stays alongside it. Unknown timings and unreviewed status are not successful test results.\n",
+                "Each run uses logs/, artifacts/, and temp/. Open artifacts/report.md for status and recorded elapsed "
+                "time; "
+                "detailed evidence stays alongside it. Unknown timings and unreviewed status are not successful test "
+                "results.\n",
                 encoding="utf-8",
             )
         run.write_report(

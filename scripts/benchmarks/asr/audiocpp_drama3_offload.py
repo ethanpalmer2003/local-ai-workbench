@@ -105,7 +105,8 @@ def weight_estimates() -> dict[str, Any]:
         "file_bytes": MODEL.stat().st_size,
         "tensor_bytes_with_padding": total,
         "expert_bytes_by_layer": experts,
-        "note": "Weight storage only; excludes KV cache, graphs, scratch, driver and other applications. Runtime storage can differ.",
+        "note": "Weight storage only; excludes KV cache, graphs, scratch, driver and other applications. Runtime storage "
+        "can differ.",
         "placements": [
             {
                 "cpu_expert_layers": layers,

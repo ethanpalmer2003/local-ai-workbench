@@ -159,7 +159,8 @@ def main() -> None:
             lifecycle = BenchmarkLifecycle(audio_identity)
             lifecycle.adopt_prepared(time.perf_counter() - started, acquisition=True)
             report["setup_boundary"] = (
-                "Backend session acquisition including monitor setup; reused services have no observable original load time"
+                "Backend session acquisition including monitor setup; reused services have no observable original load "
+                "time"
             )
             url = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}/proxy/config"
             defaults = requests.get(url, timeout=5)
@@ -174,7 +175,10 @@ def main() -> None:
                     includes_model_load=transport == "sse",
                 )
             deadline = time.perf_counter() + args.budget_seconds
-            text = "Hello there. This is a streaming speech comparison. We can take our time and listen carefully to the whole sentence."
+            text = (
+                "Hello there. This is a streaming speech comparison. We can take our time and listen carefully to "
+                "the whole sentence."
+            )
             for repeat in range(args.repeats):
                 if time.perf_counter() + 2 * args.request_timeout > deadline:
                     break
@@ -211,7 +215,11 @@ def main() -> None:
             samples=len(results),
             streaming=asdict(cfg.AUDIOCPP_SERVICE.streaming),
             reasoning="not applicable",
-            limitations="Standalone TTS only. Body bytes exclude HTTP headers/framing. Python reader CPU is not browser CPU; null CPU time is below timer resolution. Buffer estimates simulate arrivals, not actual playback. Same text/seed does not guarantee deterministic GPU output; inspect PCM hashes and durations. No browser listening test.",
+            limitations="Standalone TTS only. Body bytes exclude HTTP headers/framing. Python reader CPU is not "
+            "browser "
+            "CPU; null CPU time is below timer resolution. Buffer estimates simulate arrivals, not actual "
+            "playback. Same text/seed does not guarantee deterministic GPU output; inspect PCM hashes and "
+            "durations. No browser listening test.",
         )
         pairs = [[r for r in results if r["repeat"] == i] for i in range(args.repeats)]
         report["matched_pairs"] = [
@@ -222,7 +230,8 @@ def main() -> None:
         run.write_report(report)
         lines = [
             "",
-            "| Transport | Samples | Median first audio (s) | Median total (s) | Body / PCM bytes | Median simulated buffer (s) |",
+            "| Transport | Samples | Median first audio (s) | Median total (s) | Body / PCM bytes | Median simulated "
+            "buffer (s) |",
             "| --- | ---: | ---: | ---: | ---: | ---: |",
         ]
         for row in report.get("summary", []):

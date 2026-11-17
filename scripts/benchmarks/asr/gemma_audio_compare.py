@@ -186,7 +186,8 @@ def main() -> None:
             "execution_context": context,
             "sha256": integrity,
             "clips": clips,
-            "controls": "Same Q4_0 main weights, Q8_0 projector, 8192 context, 4 threads, GPU 0, strict ASR prompt, temperature 0, one warmup excluded; runtime revisions and kernels differ",
+            "controls": "Same Q4_0 main weights, Q8_0 projector, 8192 context, 4 threads, GPU 0, strict ASR prompt, "
+            "temperature 0, one warmup excluded; runtime revisions and kernels differ",
         },
     ) as report:
         for engine in ("llamacpp", "koboldcpp"):

@@ -97,7 +97,8 @@ class BenchmarkVram:
             "- Baseline, ready-state process usage and stage peaks: [vram.json](vram.json).",
             "- Raw samples: ../logs/vram-*.jsonl.",
             "- Sampled peaks may miss transients; polling adds overhead.",
-            "- Typical usage and >=95%-of-peak sample windows: usage_distribution in vram.json, including per-stage values. Sample windows do not measure continuous peak duration.",
+            "- Typical usage and >=95%-of-peak sample windows: usage_distribution in vram.json, including per-stage "
+            "values. Sample windows do not measure continuous peak duration.",
         ]
         (self.run.artifacts / "vram.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
         report = self.run.artifacts / "report.json"

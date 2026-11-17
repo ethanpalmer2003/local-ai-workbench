@@ -95,7 +95,8 @@ def save(run: RunPaths, report: dict[str, Any]) -> None:
         "- Same Rocinante-generated text, seed and request cap; startup/warmup excluded from measured requests.",
         "- Rocinante generation finishes before TTS; the combined condition keeps its model/KV cache resident.",
         "",
-        "| Condition | CPU layers | Audio / gen second | First audio (s) | Drama VRAM peak (GiB) | GPU total peak (GiB) | Drama RAM RSS peak (GiB) | Min free RAM (GiB) |",
+        "| Condition | CPU layers | Audio / gen second | First audio (s) | Drama VRAM peak (GiB) | GPU total peak (GiB) "
+        "| Drama RAM RSS peak (GiB) | Min free RAM (GiB) |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for item in report["results"]:

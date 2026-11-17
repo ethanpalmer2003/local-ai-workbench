@@ -237,7 +237,8 @@ def main():
             "threads": 8,
             "repetitions": 2,
             "controls": "same model, native server args, prompt, seed, sampler, steps, dimensions; full-workload warmup",
-            "limits": "single ROCm-then-Vulkan order; OS caches not reset; sampled RAM/VRAM; no broad image-quality claim",
+            "limits": "single ROCm-then-Vulkan order; OS caches not reset; sampled RAM/VRAM; no broad image-quality "
+            "claim",
         },
     ) as report:
         for build in ("rocm", "vulkan"):

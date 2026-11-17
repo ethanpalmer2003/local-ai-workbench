@@ -79,10 +79,13 @@ def main():
             "threads": 8,
             "warmup_images_per_variant": 1,
             "measured_images_per_variant": 2,
-            "controls": "same Vulkan release, model, 1024x1024, 25 steps, Euler A, CFG 4, CLIP skip 2; fresh server per variant; same two measured prompts across variants",
-            "prompt_cache": "warmup and both measured prompts differ, including between measured requests; CPU encoder work not hidden by exact-prompt reuse",
+            "controls": "same Vulkan release, model, 1024x1024, 25 steps, Euler A, CFG 4, CLIP skip 2; fresh server "
+            "per variant; same two measured prompts across variants",
+            "prompt_cache": "warmup and both measured prompts differ, including between measured requests; CPU encoder "
+            "work not hidden by exact-prompt reuse",
             "convolution": "direct convolution fixed on to prevent autotuning confounds",
-            "limits": "single ordered screen; OS/shader caches not reset; sampled whole-adapter memory includes other apps and can miss short peaks; no broad quality ranking",
+            "limits": "single ordered screen; OS/shader caches not reset; sampled whole-adapter memory includes other "
+            "apps and can miss short peaks; no broad quality ranking",
         },
     ) as report:
         for variant in args.variants:

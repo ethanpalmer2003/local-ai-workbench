@@ -105,7 +105,8 @@ def main() -> int:
                 tools, summary, log, extra_names=("coding_agents/pi",) if pi_needs_sync else ()
             ):
                 print(
-                    "\n=== UPDATE BLOCKED ===\n- At least one related service could not be stopped; no updates were started."
+                    "\n=== UPDATE BLOCKED ===\n- At least one related service could not be stopped; no updates were "
+                    "started."
                 )
                 failed = True
             else:

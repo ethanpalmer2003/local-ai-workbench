@@ -296,7 +296,9 @@ def add_arguments(parser: argparse.ArgumentParser | argparse._ArgumentGroup) -> 
         action="append",
         default=[],
         metavar="0001,0003",
-        help="exact patch file substrings to apply via git am instead of auto-discovering all .patch files (comma-separated, repeatable)",
+        help="exact patch file substrings to apply via git am instead of auto-discovering all .patch files "
+        "(comma-separated, "
+        "repeatable)",
     )
     parser.add_argument(
         "--extra-pr",

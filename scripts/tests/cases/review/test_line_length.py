@@ -24,12 +24,12 @@ class LineLengthTests(unittest.TestCase):
     def test_a_long_string_literal_is_accepted(self):
         path = sample('PROMPT = "' + "x" * 200 + '"\n')
         self.assertEqual(line_length.findings([path]), [])
-        self.assertEqual(line_length.literals([path]), 1)
+        self.assertEqual(sum(line_length.accepted([path]).values()), 1)
 
     def test_a_template_line_is_accepted(self):
         path = sample('PAGE = """\n' + "<div>" * 40 + '\n"""\n')
         self.assertEqual(line_length.findings([path]), [])
-        self.assertEqual(line_length.literals([path]), 1)
+        self.assertEqual(sum(line_length.accepted([path]).values()), 1)
 
     def test_a_short_file_reports_nothing(self):
         self.assertEqual(line_length.findings([sample("value = 1\n")]), [])

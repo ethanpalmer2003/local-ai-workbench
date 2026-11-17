@@ -322,9 +322,12 @@ def benchmark_build(
 def write_outputs(run: RunPaths, evidence: dict[str, Any]) -> None:
     evidence["limitations"] = (
         "Short exploratory screen with fixed model/settings and varying task suffixes. "
-        "Native per-request decode rates are separate from TTFT/prefill; window rates use receipt timestamps and may include buffering/speculative bursts. "
-        "Shared prompt prefix may be cached after first prefill; inspect native cache_n/tokens_cached to determine actual reuse. Each request retains its recorded actual input depth. "
-        "VRAM peaks are sampled lower bounds. Build revisions differ; this compares installed builds, not isolated backend code."
+        "Native per-request decode rates are separate from TTFT/prefill; window rates use receipt timestamps and may "
+        "include buffering/speculative bursts. "
+        "Shared prompt prefix may be cached after first prefill; inspect native cache_n/tokens_cached to determine actual "
+        "reuse. Each request retains its recorded actual input depth. "
+        "VRAM peaks are sampled lower bounds. Build revisions differ; this compares installed builds, not isolated backend "
+        "code."
     )
     (run.artifacts / "results.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
     columns = [

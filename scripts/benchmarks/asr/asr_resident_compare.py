@@ -257,7 +257,8 @@ def main():
         "results": [],
         "group": args.group,
         "language_override": args.language,
-        "measurement_scope": "Isolated ASR; saved Kokoro clips; no parallel LLM/TTS inference. Resources sampled after readiness; startup memory not measured.",
+        "measurement_scope": "Isolated ASR; saved Kokoro clips; no parallel LLM/TTS inference. Resources sampled after "
+        "readiness; startup memory not measured.",
     }
     report["provenance"] = provenance.block(
         subject="Resident ASR comparison",

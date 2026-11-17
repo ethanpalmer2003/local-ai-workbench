@@ -93,7 +93,8 @@ class ProxyRestartController:
             "reasons": {
                 "backend": "Session options, model/backend configuration: interrupts generation and unloads models.",
                 "proxy": "Proxy configuration: reloads settings and restarts the HTTP listener.",
-                "both": "Changes in both configuration groups. Python implementation edits require relaunching the launcher.",
+                "both": "Changes in both configuration groups. Python implementation edits require relaunching the "
+                "launcher.",
             },
         }
 

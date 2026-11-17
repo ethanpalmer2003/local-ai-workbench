@@ -25,7 +25,8 @@ def execution_context() -> ExecutionContext:
         "platform": sys.platform,
         "process_id": os.getpid(),
         "windows_token": None,
-        "policy_note": "Token flags do not describe all filesystem or network restrictions; consult the active tool policy.",
+        "policy_note": "Token flags do not describe all filesystem or network restrictions; consult the active tool "
+        "policy.",
     }
     if os.name != "nt":
         return context
