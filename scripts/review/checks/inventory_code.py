@@ -16,9 +16,11 @@ from typing import Any, NamedTuple
 from scripts.config import project_config as project_cfg
 
 # - a folder is validated at both ends: below the minimum it is a merge candidate, above the maximum it
-#   needs another level, and both counts read the same direct-item number from one pass
+#   needs another level, and a folder holding one file and nothing else is neither - it fails
 MIN_FOLDER_ITEMS = 3
 MAX_FOLDER_ITEMS = 20
+# - layouts an external loader dictates, where a one-file folder is the required shape
+SINGLE_FILE_LAYOUTS = (".agents/skills/",)
 # - a Python file is validated at both ends too: past the warning it wants splitting, past the cap it fails
 WARN_FILE_LINES = 600
 MAX_FILE_LINES = 800
@@ -179,7 +181,7 @@ class FolderInventory(NamedTuple):
 class FolderEnds(NamedTuple):
     """Both ends of the folder rule, from one pass over the same rows."""
 
-    sparse: list[FolderRecord]
+    single: list[FolderRecord]
     small: list[FolderRecord]
     crowded: list[FolderRecord]
 
@@ -227,7 +229,7 @@ def repository_inventory(root: Path) -> FolderInventory:
 
 def folder_inventory_report(
     folders: list[FolderRecord],
-    sparse_folders: list[FolderRecord],
+    single_folders: list[FolderRecord],
     small_folders: list[FolderRecord],
     crowded_folders: list[FolderRecord],
 ) -> list[str]:
@@ -251,19 +253,20 @@ def folder_inventory_report(
             f"## Folder rule: at most {MAX_FOLDER_ITEMS} direct files, fewer than {MIN_FOLDER_ITEMS + 1} is a "
             f"candidate",
             "",
-            "Counts are prompts at the low end and a gate at the high end: split a crowded folder by purpose; a",
-            "small one stays when it carries an owner, a native layout or an output identity.",
+            "Counts are prompts at the low end and a gate at both hard ends: split a crowded folder by purpose; a",
+            "small one stays when it carries an owner, a native layout or an output identity; a folder holding one",
+            "file and nothing else fails, because that file belongs to its parent.",
             "",
-            "### Over the cap (fails the gate)",
+            "### Single-file folders (fails the gate)",
             "",
         )
     )
+    lines.extend(f"- {item['directory']} ({item['items']} item(s))" for item in single_folders)
+    if not single_folders:
+        lines.append("None.")
+    lines.extend(("", "### Over the cap (fails the gate)", ""))
     lines.extend(f"- {item['directory']} ({item['items']} item(s))" for item in crowded_folders)
     if not crowded_folders:
-        lines.append("None.")
-    lines.extend(("", "### Empty or one-item folders", ""))
-    lines.extend(f"- {item['directory']} ({item['items']} item(s))" for item in sparse_folders)
-    if not sparse_folders:
         lines.append("None.")
     lines.extend(
         (
@@ -309,15 +312,17 @@ def _dependency_section(counts: dict[str, int]) -> list[str]:
 
 
 def folder_validation(folders: list[FolderRecord]) -> FolderEnds:
-    """Both ends of the folder rule: sparse, merge candidates, and over the cap."""
-    sparse = [
+    """Both ends of the folder rule: a one-file folder fails, a sparse one is a candidate, a full one fails."""
+    single = [
         item
         for item in folders
-        if int(item["files"]) <= 1 and not (str(item["directory"]).endswith("/patches") and int(item["files"]) == 1)
+        if int(item["files"]) == 1
+        and int(item["subdirectories"]) == 0
+        and not str(item["directory"]).startswith(SINGLE_FILE_LAYOUTS)
     ]
     small = [item for item in folders if 1 < int(item["files"]) <= MIN_FOLDER_ITEMS]
     crowded = [item for item in folders if int(item["files"]) > MAX_FOLDER_ITEMS]
-    return FolderEnds(sparse, small, crowded)
+    return FolderEnds(single, small, crowded)
 
 
 class FileLengths(NamedTuple):
@@ -384,7 +389,7 @@ def report(
     suppressions: list[str],
     dependencies: dict[str, int] | None = None,
 ) -> int:
-    sparse_folders, small_folders, crowded_folders = folder_validation(folders)
+    single_folders, small_folders, crowded_folders = folder_validation(folders)
     baseline = load_file_baseline()
     lengths = file_lengths(source_files, baseline)
     largest = sorted(results, key=lambda item: (-item.code_lines, -item.depth, item.path, item.line))[
@@ -395,7 +400,7 @@ def report(
         "functions": len(results),
         "largest_functions": [asdict(item) for item in largest],
         "folders": folders,
-        "sparse_folders": sparse_folders,
+        "sparse_folders": single_folders,
         "small_folder_candidates": small_folders,
         "crowded_folders": crowded_folders,
         "files_over_cap": lengths.over,
@@ -424,7 +429,7 @@ def report(
         "| --- | --- | ---: |",
     ]
     lines.extend(f"| {item['path']} | {item['type']} | {item['lines']} |" for item in source_files[:100])
-    lines.extend(folder_inventory_report(folders, sparse_folders, small_folders, crowded_folders))
+    lines.extend(folder_inventory_report(folders, single_folders, small_folders, crowded_folders))
     lines.extend(file_length_report(lengths, baseline))
     lines.extend(
         (
@@ -449,14 +454,15 @@ def report(
         print(f"[FAIL] {len(crowded_folders)} folder(s) over {MAX_FOLDER_ITEMS} direct files; split them by purpose")
         for item in crowded_folders:
             print(f"[FAIL] {item['directory']}: {item['items']} items")
+    if single_folders:
+        print(f"[FAIL] {len(single_folders)} folder(s) holding one file and nothing else; move it to the parent")
+        for item in single_folders:
+            print(f"[FAIL] {item['directory']}: 1 file")
     print_file_lengths(lengths)
-    if sparse_folders or small_folders:
-        print(
-            f"[INFO] {len(sparse_folders)} empty or one-item, {len(small_folders)} merge candidate(s) "
-            f"at 2 to {MIN_FOLDER_ITEMS} items; see report."
-        )
+    if small_folders:
+        print(f"[INFO] {len(small_folders)} merge candidate(s) at 2 to {MIN_FOLDER_ITEMS} direct files; see report.")
     print(f"Review report: {artifacts / 'review.md'}")
-    return bool(suppressions or crowded_folders or lengths.blocked)
+    return bool(suppressions or crowded_folders or single_folders or lengths.blocked)
 
 
 def _debt_row(item: dict[str, Any], root: Path) -> tuple[int, str, str]:

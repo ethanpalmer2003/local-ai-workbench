@@ -48,6 +48,7 @@ from scripts.tests.cases.review.test_docs import (
 )
 from scripts.tests.cases.review.test_duplicates import DuplicateReportTests
 from scripts.tests.cases.review.test_examples import ExamplesPageTests
+from scripts.tests.cases.review.test_folder_rule import FolderRuleTests
 from scripts.tests.cases.review.test_layout import PolicyTests
 from scripts.tests.cases.review.test_line_length import LimitsReportTests, LineLengthTests
 from scripts.tests.cases.review.test_network_timeouts import NetworkTimeoutTests
@@ -274,6 +275,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     OwnedTokenTests,
     DuplicateReportTests,
     ExamplesPageTests,
+    FolderRuleTests,
     SpeechProfiles,
     WorkflowDefaultsTests,
     WhisperCompareTests,
