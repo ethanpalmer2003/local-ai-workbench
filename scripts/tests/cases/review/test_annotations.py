@@ -65,6 +65,53 @@ class DefaultTests(unittest.TestCase):
         """
         self.assertEqual(self.findings(source), [])
 
+    def test_each_default_has_one_category(self):
+        source = """
+            def f(argv=None, limit=None, carried=None):
+                if limit is None:
+                    limit = 3
+            def g(a=1, b=NAME, c=(1, 2), d=lambda: None, e=cfg.KIND, f2=Mode.FAST, h=TABLE['k'], i=16000 * 2):
+                ...
+            def j(k=frozenset()):
+                ...
+        """
+        tree = ast.parse(textwrap.dedent(source))
+        kinds = [node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+        self.assertEqual(sorted(kinds), ["f", "g", "j"])
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "sample.py"
+            path.write_text(textwrap.dedent(source), encoding="utf-8")
+            parsed = ast.parse(path.read_text(encoding="utf-8"))
+        found = {}
+        for node in ast.walk(parsed):
+            if not isinstance(node, ast.FunctionDef):
+                continue
+            for argument, default in annotations._parameters(node):
+                found[argument.arg] = annotations.default_kind(argument, default, node)
+        self.assertEqual(found["argv"], "argv")
+        self.assertEqual(found["limit"], "derived")
+        self.assertEqual(found["carried"], "carried")
+        self.assertEqual(found["a"], "literal")
+        self.assertEqual(found["b"], "name")
+        self.assertEqual(found["c"], "tuple")
+        self.assertEqual(found["d"], "lambda")
+        self.assertEqual(found["e"], "config")
+        self.assertEqual(found["f2"], "attribute")
+        self.assertEqual(found["h"], "table")
+        self.assertEqual(found["i"], "arithmetic")
+        self.assertEqual(found["k"], "immutable")
+
+    def test_the_census_counts_every_category(self):
+        source = "def f(a=1, b=None, c=[]): ...\n"
+        directory = Path(project_cfg.BASE_DIR) / "scripts/tests/output/annotation-census"
+        directory.mkdir(parents=True, exist_ok=True)
+        path = directory / "sample.py"
+        path.write_text(source, encoding="utf-8")
+        try:
+            self.assertEqual(annotations.default_census([path]), {"literal": 1, "carried": 1, "mutable": 1})
+        finally:
+            path.unlink()
+
 
 class FindingsTests(unittest.TestCase):
     def test_the_future_import_is_refused(self):
