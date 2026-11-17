@@ -361,6 +361,16 @@ class LauncherBehaviors(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     archive_path(root.parent, root)
 
+    def test_archive_removes_an_empty_directory_without_a_trash_entry(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            source = root / "bin"
+            source.mkdir()
+            with patch.object(project_cfg, "BASE_DIR", root):
+                archive_path(source, root)
+                self.assertFalse(source.exists())
+                self.assertFalse((root / "trash").exists())
+
     def test_rdna_baseline_uses_explicit_base_key(self):
         with patch.object(Path, "read_text", return_value=json.dumps({"tip": "wrong", "base": "correct"})):
             self.assertEqual(llamacpp_rdna_build.get_baseline_commit(Path("patches")), "correct")

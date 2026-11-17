@@ -15,6 +15,10 @@ def archive_path(path: Path, root: Path) -> None:
         raise ValueError("Cannot archive the containing root")
     if not path.exists():
         return
+    if path.is_dir() and not any(path.iterdir()):
+        # - an empty directory holds nothing worth keeping, so it is removed rather than archived
+        path.rmdir()
+        return
     trash = (project_cfg.BASE_DIR / "trash").resolve()
     trash.mkdir(parents=True, exist_ok=True)
     destination = trash / f"{path.name}-{time.time_ns()}"
