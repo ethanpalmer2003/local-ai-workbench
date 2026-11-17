@@ -46,6 +46,7 @@ from scripts.tests.cases.review.test_docs import (
     RootDocumentTests,
 )
 from scripts.tests.cases.review.test_duplicates import DuplicateReportTests
+from scripts.tests.cases.review.test_dynamic_imports import DynamicImportTests
 from scripts.tests.cases.review.test_examples import ExamplesPageTests
 from scripts.tests.cases.review.test_folder_rule import FolderRuleTests
 from scripts.tests.cases.review.test_layout import PolicyTests
@@ -278,6 +279,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     OverlayAccessTests,
     OwnedTokenTests,
     DuplicateReportTests,
+    DynamicImportTests,
     ExamplesPageTests,
     FolderRuleTests,
     SpeechProfiles,

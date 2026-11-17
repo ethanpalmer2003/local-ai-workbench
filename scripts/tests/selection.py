@@ -9,10 +9,10 @@ The graph is parsed from source, never imported, and holds every Python file und
 disk: tracked, or untracked and not ignored. A parent package joins it when it is such a file itself,
 because importing `scripts.x.y` runs `scripts/x/__init__.py`.
 
-Two gaps stay invisible: a name assembled at runtime, and a file reached through `subprocess`, `runpy`
-or `open`. A third is silent here, and it hides more than the others: an unparsable file gets no edges,
-so a change below it can drop a class above it. The gate's ruff and pyright are what refuse that file
-first.
+A module name assembled at runtime cannot be read here at all, which is why the gate refuses a
+dynamic import outright; a file reached through `subprocess`, `runpy` or `open` stays invisible. An
+unparsable file gets no edges, so a change below it can drop a class above it, and the gate's ruff and
+pyright are what refuse that file first.
 """
 
 from __future__ import annotations
@@ -165,15 +165,6 @@ def imported_names(tree: ast.Module, module: str, *, is_package: bool) -> set[st
     return names
 
 
-def literal_targets(tree: ast.Module, known: set[str]) -> set[str]:
-    """Dotted module names a file spells in a string, matching a known module exactly."""
-    return {
-        node.value
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in known
-    }
-
-
 def _longest_known_prefix(name: str, known: set[str]) -> str | None:
     """The module a dotted name refers to: the longest known prefix, since `from x.y import f` names no module."""
     parts = name.split(".")
@@ -196,7 +187,7 @@ def _parent_packages(module: str, known: set[str]) -> set[str]:
 def import_graph(root: Path | None = None) -> Graph:
     """Module name to the modules it depends on, for every module under `scripts/` on disk.
 
-    A dependency is an import, an exact string naming a known module, or a parent package.
+    A dependency is an import or a parent package.
     """
     files = module_files(root)
     known = set(files)
@@ -207,7 +198,6 @@ def import_graph(root: Path | None = None) -> Graph:
         if tree is not None:
             raw_names = imported_names(tree, name, is_package=path.name == "__init__.py")
             targets |= {target for raw in raw_names if (target := _longest_known_prefix(raw, known))}
-            targets |= literal_targets(tree, known)
         edges[name] = frozenset(targets - {name})
     return edges
 

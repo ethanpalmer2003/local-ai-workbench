@@ -1,7 +1,6 @@
 """Shared download, startup, and memory contracts; no downloads or model launches."""
 
 import hashlib
-import importlib
 import json
 import sys
 import tempfile
@@ -115,7 +114,10 @@ class SharedContracts(unittest.TestCase):
 
     def test_import_does_not_create_download_directory(self):
         with patch("pathlib.Path.mkdir") as mkdir:
-            importlib.import_module("scripts.download.models.download_catalog")
+            from scripts.download.models import download_catalog
+
+            # - the binding keeps the import from reading as unused, and proves the right module loaded
+            self.assertEqual(download_catalog.__name__, "scripts.download.models.download_catalog")
             mkdir.assert_not_called()
 
     def test_sdk_receives_file_revision(self):
