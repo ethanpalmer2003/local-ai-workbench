@@ -14,7 +14,8 @@ from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.services.process import stop_owned
 
 
-def command(settings=cfg.AUDIOCPP_VAD):
+def command(settings=None):
+    settings = cfg.AUDIOCPP_VAD if settings is None else settings
     return [
         str(project_cfg.AUDIOCPP_SERVER_EXE.with_name("audiocpp_cli.exe")),
         "--family",
@@ -54,7 +55,8 @@ def parse_event(line: str):
 
 
 class Silero:
-    def __init__(self, log: Path, settings=cfg.AUDIOCPP_VAD):
+    def __init__(self, log: Path, settings=None):
+        settings = cfg.AUDIOCPP_VAD if settings is None else settings
         self.log, self.settings = log, settings
         self.process: subprocess.Popen[bytes] | None = None
         self.reader: threading.Thread | None = None

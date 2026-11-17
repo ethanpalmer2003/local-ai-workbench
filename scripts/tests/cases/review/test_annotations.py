@@ -6,6 +6,7 @@ import textwrap
 import unittest
 from pathlib import Path
 
+from scripts.config import project_config as project_cfg
 from scripts.review.checks import annotations
 
 
@@ -31,6 +32,38 @@ class ScoreTests(unittest.TestCase):
 
     def test_a_union_reports_its_width(self):
         self.assertEqual(annotations.score(parameter("def f(x: int | str | None) -> None: ...")), (3, 0, 3))
+
+
+class DefaultTests(unittest.TestCase):
+    def findings(self, source: str) -> list[tuple[str, int, str]]:
+        directory = Path(project_cfg.BASE_DIR) / "scripts/tests/output/annotation-defaults"
+        directory.mkdir(parents=True, exist_ok=True)
+        path = directory / "sample.py"
+        path.write_text(textwrap.dedent(source), encoding="utf-8")
+        try:
+            return annotations.default_findings([path])
+        finally:
+            path.unlink()
+
+    def test_a_mutable_default_is_refused(self):
+        self.assertIn("is a mutable default", self.findings("def f(values=[]): ...")[0][2])
+        self.assertIn("is a mutable default", self.findings("def f(values=set()): ...")[0][2])
+
+    def test_a_call_in_a_default_is_refused(self):
+        self.assertIn("calls Path()", self.findings("def f(where=Path('.')): ...")[0][2])
+
+    def test_a_settings_read_is_refused_and_a_class_constant_is_not(self):
+        self.assertIn("reads cfg.SETTINGS", self.findings("def f(settings=cfg.SETTINGS): ...")[0][2])
+        self.assertEqual(self.findings("def f(kind=cfg.Kind.MEMBER): ..."), [])
+
+    def test_literals_names_hooks_and_table_lookups_are_allowed(self):
+        source = """
+            def f(count=1, name=None, hook=lambda: None, pair=(1, 2), empty=frozenset(), size=16000 * 2):
+                ...
+            def g(profile=PROFILES['small'], mode=Mode.FAST):
+                ...
+        """
+        self.assertEqual(self.findings(source), [])
 
 
 class FindingsTests(unittest.TestCase):

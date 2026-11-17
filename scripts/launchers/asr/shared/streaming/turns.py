@@ -19,10 +19,11 @@ class Turns:
         *,
         model="benchmark-asr",
         language="en-US",
-        settings=cfg.AUDIOCPP_VAD,
+        settings=None,
         stream_factory=None,
         transport=None,
     ):
+        settings = cfg.AUDIOCPP_VAD if settings is None else settings
         self.transport = transport
         self.stream_factory = stream_factory
         self.url = (
