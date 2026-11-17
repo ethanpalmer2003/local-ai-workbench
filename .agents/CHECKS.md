@@ -14,11 +14,11 @@
 
 ## When
 
-- A commit checks what the change reaches: the scoped gate and the scoped suite, after ruff, codespell and the punctuation pass. About fifteen seconds for a code change, seconds for a document.
-- A push checks everything: `python -m scripts.review --all` and `python -m scripts.tests.run --all`. About a minute, and this is the only completeness guarantee.
-- The same two commands run by hand at any point; there is no separate edit stage to remember.
-- The suite is a feedback loop: by default one import hop from the change, `--all` at push for the rest. No Python path runs none, a comment or docstring edit runs none, and the manifests keep every class on a code change; the launcher and proxy block is in this set rather than outside it; see [selection](../scripts/tests/scoped_selection.py).
-- The gate is scoped the same way: only the sections whose inputs changed since the upstream branch, working tree and unpushed commits alike, and the type check covers the changed modules plus their direct importers. `--fast` skips types, inventory, advisories and the package summary; `--all` runs every section, and so does an empty change set. Each section records its seconds under `scripts/state/logs/shared/review/`, so the cost of a check comes from history instead of a rerun.
+- A commit checks what the change reaches: the scoped gate and the scoped suite, after ruff, codespell and the punctuation pass. About fifteen seconds for a code change, seconds for prose.
+- A push checks everything: `--push` runs every section and every class when the unpushed commits touch Python, and the prose sections with no class when they do not; no Python behavior changed, and the last push was green.
+- Both commands also run by hand at any point; there is no separate edit stage.
+- The suite is a feedback loop: one import hop from the change by default. No Python path runs none, a comment or docstring edit runs none, and the manifests keep every class on a code change; the launcher and proxy block is in the set; see [selection](../scripts/tests/scoped_selection.py).
+- The gate is scoped the same way: only the sections whose inputs changed since the upstream branch, working tree and unpushed commits alike, and the type check covers the changed modules plus their direct importers. `--fast` skips types, inventory, advisories and the package summary; an empty change set runs every section. Each section records its seconds under `scripts/state/logs/shared/review/`, so the cost of a check comes from history instead of a rerun.
 - Live and measure work is scheduled from [TODO](../notes/TODO.md), never part of a code change. Levels: [tool inventory](../scripts/review/TOOLS.md#levels).
 - Prove a live configuration in seconds first: paths, ports, mode flags, one short request. A misconfiguration must fail immediately, not after a multi-minute timeout.
 - Slow speech tests (Qwen3-TTS, Chatterbox, Sesame CSM) run in a console that stays open, through `launch_module(..., mode=SPLIT_INDEPENDENT)`; quick ones (Kokoro, Edge TTS) run inline. Wait for the user before another slow test.
