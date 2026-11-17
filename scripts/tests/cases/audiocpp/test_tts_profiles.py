@@ -84,6 +84,26 @@ class TtsProfiles(unittest.TestCase):
         self.assertEqual((heavy.family, heavy.seed), ("ming3_audio", 42))
         self.assertEqual(heavy.options, {"language": "en", "voice_id": "US_James"})
 
+    def test_a_voice_reference_comes_from_the_directory_named_for_it(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            from pathlib import Path
+
+            root = Path(folder)
+            clip = root / "soundspriters" / "vera" / "generated" / "vera_1.wav"
+            clip.parent.mkdir(parents=True)
+            clip.write_bytes(b"RIFF")
+            clip.with_suffix(".txt").write_text("hello\n", encoding="utf-8")
+            lookalike = root / "custom" / "vera_custom" / "generated" / "vera_custom_1.wav"
+            lookalike.parent.mkdir(parents=True)
+            lookalike.write_bytes(b"RIFF")
+            flat = root / "selene" / "selene_1.wav"
+            flat.parent.mkdir()
+            flat.write_bytes(b"RIFF")
+            with patch.object(cfg, "AUDIOCPP_INPUT_DIR", str(root)):
+                self.assertEqual(audiocpp_catalog.resolve_voice_ref("vera"), (str(clip), "hello"))
+                self.assertEqual(audiocpp_catalog.resolve_voice_ref("selene"), (str(flat), ""))
+                self.assertIsNone(audiocpp_catalog.resolve_voice_ref("vera_2"))
+
     @requires_model_check
     def test_heavier_ming_is_offline_and_rejects_explicit_streaming(self):
         model = cfg.AudiocppModel.MING3_AUDIO.value

@@ -151,16 +151,14 @@ def runtime_defaults(
 
 def resolve_voice_ref(voice_name: str) -> tuple[str, str] | None:
     """
-    - Find <voice>_*.wav anywhere inside a <voice>/ directory (any category,
-      any depth - e.g. generated/ artifacts)
-    - Plus its matching .txt transcript
+    - Find <voice>_*.wav inside a directory named for the voice, one or two levels below the input
+      tree (e.g. <category>/<voice>/generated/), plus its matching .txt transcript
+    - The search starts at the voice's own directory: the input tree also holds every model's
+      assets, so walking all of it costs a directory scan per request
     """
     root = Path(cfg.AUDIOCPP_INPUT_DIR)
-    wavs = sorted(
-        f
-        for f in root.rglob(f"{voice_name}_*.wav")
-        if voice_name in (part.lower() for part in f.relative_to(root).parts[:-1])
-    )
+    folders = [d for d in (*root.glob("*"), *root.glob("*/*")) if d.is_dir() and d.name.lower() == voice_name]
+    wavs = sorted(f for folder in folders for f in folder.rglob(f"{voice_name}_*.wav"))
     if not wavs:
         return None
     wav = wavs[0]
