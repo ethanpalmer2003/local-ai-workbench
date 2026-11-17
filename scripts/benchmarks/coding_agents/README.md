@@ -1,6 +1,7 @@
 # Coding-agent benchmarks
 
 - Runner: `scripts.benchmarks.coding_agents.shared.benchmark_agents`; regression tests remain in `scripts/tests/cases/coding_agents/`.
+- Results: `scripts.benchmarks.coding_agents.shared.agent_results` owns the `Result` record and writes `results.json`, `summary.json`, `results.csv` and `comparison.md` while a run is still going.
 - Shared runners compare models on identical English/code tasks, with Pi as the only client: LittleCoder, Oh My Pi and NanoCoder stay wired but are disabled, so `--clients` offers `pi` alone and a benchmark run cannot select them.
 
 ```powershell
