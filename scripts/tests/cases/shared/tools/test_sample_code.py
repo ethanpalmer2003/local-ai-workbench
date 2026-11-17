@@ -58,6 +58,18 @@ class SampleCodeTests(unittest.TestCase):
         self.assertIn("left out: graph, walk from scripts.shared.graph", sample)
         self.assertIn("def pick(groups):", sample)
 
+    def test_the_sample_starts_with_the_module_and_ends_with_the_accounting(self):
+        module = sample_file("module.py", '"""The rule."""\n\n\ndef pick(groups):\n    return groups\n')
+        owner = sample_file("owner.py", "def walk(x):\n    return x\n")
+        try:
+            sample = sample_code.build(module, [(owner, "walk")], "")
+        finally:
+            module.unlink()
+            owner.unlink()
+        self.assertTrue(sample.startswith('"""The rule."""'))
+        self.assertNotIn("lines)", sample)
+        self.assertTrue(sample.rstrip().splitlines()[-1].startswith("# - copied in: walk from"))
+
     def test_a_copied_function_is_not_listed_as_left_out(self):
         module = sample_file("module.py", "from scripts.shared.graph import walk\n")
         owner = sample_file("owner.py", "def walk(x):\n    return x\n")
