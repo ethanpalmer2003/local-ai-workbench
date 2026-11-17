@@ -78,8 +78,7 @@ class TestSelection(unittest.TestCase):
     def test_a_chain_of_importers_counts_one_hop_by_default(self):
         edges = _graph({"scripts.a": ("scripts.b",), "scripts.b": ("scripts.c",), "scripts.c": (), "scripts.z": ()})
         self.assertEqual(
-            graph_api.reverse_closure(edges, {"scripts.c"}, depth=scoped_selection.SCOPE_DEPTH),
-            {"scripts.c", "scripts.b"},
+            graph_api.reverse_closure(edges, {"scripts.c"}, depth=graph_api.REACH_DEPTH), {"scripts.c", "scripts.b"}
         )
         self.assertEqual(graph_api.reverse_closure(edges, {"scripts.c"}), {"scripts.c", "scripts.b", "scripts.a"})
 
@@ -326,7 +325,7 @@ class TestSelection(unittest.TestCase):
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             chosen = scoped_selection.select((PointerTests, KoboldOptionTests), paths=["scripts/review/checks/docs.py"])
-        reach = graph_api.reverse_closure(edges, {"scripts.review.checks.docs"}, depth=scoped_selection.SCOPE_DEPTH)
+        reach = graph_api.reverse_closure(edges, {"scripts.review.checks.docs"}, depth=graph_api.REACH_DEPTH)
         for group in chosen.dropped:
             self.assertNotIn(group.__module__, reach, group.__name__)
 

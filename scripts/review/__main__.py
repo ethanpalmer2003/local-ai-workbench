@@ -32,7 +32,14 @@ from scripts.review.checks import (
 )
 from scripts.shared import changes
 from scripts.shared.changes import changed_paths
-from scripts.shared.import_graph import import_graph, module_files, module_name, module_paths, reverse_closure
+from scripts.shared.import_graph import (
+    REACH_DEPTH,
+    import_graph,
+    module_files,
+    module_name,
+    module_paths,
+    reverse_closure,
+)
 
 SPELL_EXCLUDED = (
     "data/",
@@ -145,7 +152,7 @@ def scoped_type_check(paths: list[str], fast: bool) -> int:
     known = module_files()
     if not modules:
         return 0
-    reachable = reverse_closure(import_graph(), modules, depth=1)
+    reachable = reverse_closure(import_graph(), modules, depth=REACH_DEPTH)
     if len(reachable) * 2 > len(known):
         return type_check(fast)
     checker = project_cfg.VENV_DIR / "Scripts" / "basedpyright.exe"
