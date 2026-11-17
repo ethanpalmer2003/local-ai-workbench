@@ -69,6 +69,7 @@ def _from_import_target(node: ast.ImportFrom, module: str, is_package: bool) -> 
         return node.module
     package = module if is_package else module.rpartition(".")[0]
     parts = package.split(".") if package else []
+    # `node.level` is the dot count: 1 (`from . import x`) stays in `package`, 2 climbs one parent up.
     up = node.level - 1
     if up >= len(parts):
         return None
@@ -130,10 +131,13 @@ def reverse_closure(edges: Graph, changed: Iterable[str], *, depth: int | None =
 
     `depth=1` keeps the changed modules and their direct importers, while `None` walks the whole chain.
     """
+    # Invert the forward dependency graph so each module maps to the modules that import it.
     importers: dict[str, set[str]] = {}
     for module, targets in edges.items():
         for target in targets:
             importers.setdefault(target, set()).add(module)
+
+    # Breadth-first search outward from `changed`, stopping at `depth` hops when specified.
     seen: set[str] = set()
     queue = deque((module, 0) for module in changed)
     while queue:
