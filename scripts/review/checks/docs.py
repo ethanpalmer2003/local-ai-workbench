@@ -16,6 +16,8 @@ from scripts.review.lists.sources import maintained_files
 
 # - three caps only; each document role picks one, so a new kind needs no new number
 WORD_TIERS = {"long": 1000, "large": 700, "medium": 500}
+# - the running list of work in progress grows between decisions, so its length is not a finding
+UNCAPPED = frozenset({"notes/TODO.md"})
 ROLE_TIERS = {
     "hub": "large",
     "agent rule": "medium",
@@ -101,8 +103,10 @@ def document_role(relative: str) -> str | None:
     return None
 
 
-def markdown_budget(relative: str) -> int:
-    """One of three caps, chosen by the role the document's home gives it."""
+def markdown_budget(relative: str) -> int | None:
+    """One of three caps by role, or None for a running list that is deliberately uncapped."""
+    if relative in UNCAPPED:
+        return None
     return WORD_TIERS[ROLE_TIERS.get(document_role(relative) or "", "medium")]
 
 
@@ -177,7 +181,7 @@ def word_rows(files: list[Path]) -> list[tuple[int, int, str, bool]]:
         relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
         budget = markdown_budget(relative)
         words = prose_words(path.read_text(encoding="utf-8-sig"))
-        rows.append((words, budget, relative, words > budget))
+        rows.append((words, budget or 0, relative, budget is not None and words > budget))
     return sorted(rows, reverse=True)
 
 
@@ -369,7 +373,7 @@ def markdown_issues(path: Path, text: str) -> list[str]:
     relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
     budget = markdown_budget(relative)
     words = prose_words(text)
-    if words > budget:
+    if budget is not None and words > budget:
         issues.append(f"{relative}: {words} words exceeds {budget}; keep procedures in one owner guide")
     issues.extend(_markdown_hygiene(relative, text))
     issues.extend(_link_issues(path, relative, text))
