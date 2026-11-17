@@ -4,21 +4,43 @@ import json
 import math
 import struct
 from collections import Counter
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
+from typing import Any, BinaryIO, NotRequired, TypedDict
 
 from scripts.config.models.gguf_metadata import inspect_metadata
 
 JSON_LIMIT = 8 * 1024 * 1024
 
 
-def json_file(path: Path):
+class Inspection(TypedDict):
+    """What a format's own header says; fields a format does not have are absent."""
+
+    format: str
+    metadata: dict[str, Any]
+    version: NotRequired[int]
+    tensor_summary: NotRequired[dict[str, Any]]
+    tensor_index: NotRequired[object]
+    limits: NotRequired[list[str]]
+
+
+class Sidecar(TypedDict):
+    """A config file found beside a model; a parse failure keeps its path and error."""
+
+    path: str
+    scope: NotRequired[str]
+    mtime_ns: NotRequired[int]
+    metadata: NotRequired[object]
+    error: NotRequired[str]
+
+
+def json_file(path: Path) -> object:
     if path.stat().st_size > JSON_LIMIT:
         return {"omitted": "JSON exceeds 8 MiB metadata limit", "bytes": path.stat().st_size}
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
-def safetensors(path: Path, tensor_index=False):
+def safetensors(path: Path, tensor_index: bool = False) -> Inspection:
     with path.open("rb") as source:
         length = struct.unpack("<Q", source.read(8))[0]
         if length > 64 * 1024 * 1024 or length + 8 > path.stat().st_size:
@@ -35,7 +57,7 @@ def safetensors(path: Path, tensor_index=False):
     }
 
 
-def varint(source):
+def varint(source: BinaryIO) -> int:
     value = 0
     for shift in range(0, 70, 7):
         byte = source.read(1)
@@ -47,7 +69,7 @@ def varint(source):
     raise ValueError("Invalid protobuf varint")
 
 
-def fields(source, end):
+def fields(source: BinaryIO, end: int) -> Iterator[tuple[int, int, int, int]]:
     while source.tell() < end:
         key = varint(source)
         number, wire = key >> 3, key & 7
@@ -69,14 +91,14 @@ def fields(source, end):
         source.seek(stop)
 
 
-def text(source, size):
+def text(source: BinaryIO, size: int) -> str | dict[str, int]:
     if size > JSON_LIMIT:
         return {"omitted_bytes": size}
     return source.read(size).decode("utf-8", errors="replace")
 
 
-def onnx_pair(source, end):
-    result = {}
+def onnx_pair(source: BinaryIO, end: int) -> dict[str, object]:
+    result: dict[str, object] = {}
     for number, wire, size, _ in fields(source, end):
         if wire == 2 and number in (1, 2):
             result[str(number)] = text(source, size)
@@ -85,7 +107,7 @@ def onnx_pair(source, end):
     return result
 
 
-def onnx_graph(source, end):
+def onnx_graph(source: BinaryIO, end: int) -> dict[str, Any]:
     result: dict[str, Any] = {"nodes": 0, "initializers": 0, "inputs": [], "outputs": []}
     for number, wire, size, stop in fields(source, end):
         if number in (1, 5):
@@ -99,7 +121,7 @@ def onnx_graph(source, end):
     return result
 
 
-def onnx(path: Path):
+def onnx(path: Path) -> Inspection:
     metadata: dict[str, Any] = {"metadata_props": {}, "opsets": []}
     scalar = {1: "ir_version", 5: "model_version"}
     strings = {2: "producer_name", 3: "producer_version", 4: "domain", 6: "doc_string"}
@@ -124,11 +146,12 @@ def onnx(path: Path):
     }
 
 
-def inspect(path: Path, *, full_arrays=False, tensor_index=False) -> dict[str, Any]:
+def inspect(path: Path, *, full_arrays: bool = False, tensor_index: bool = False) -> Inspection:
     with path.open("rb") as source:
         magic = source.read(4)
     if magic == b"GGUF":
-        return inspect_metadata(path, array_limit=None if full_arrays else 128, tensor_index=tensor_index)
+        gguf = inspect_metadata(path, array_limit=None if full_arrays else 128, tensor_index=tensor_index)
+        return Inspection(**gguf)
     if path.suffix.lower() == ".safetensors":
         return safetensors(path, tensor_index)
     if path.suffix.lower() == ".onnx":
@@ -164,7 +187,7 @@ def inspect(path: Path, *, full_arrays=False, tensor_index=False) -> dict[str, A
     }
 
 
-def sidecars(path: Path):
+def sidecars(path: Path) -> list[Sidecar]:
     names = [
         path.name + ".json",
         path.stem + ".json",
@@ -175,7 +198,7 @@ def sidecars(path: Path):
         "preprocessor_config.json",
         "model_index.json",
     ]
-    result = []
+    result: list[Sidecar] = []
     for name in dict.fromkeys(names):
         candidate = path.parent / name
         if candidate.is_file():

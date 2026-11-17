@@ -88,7 +88,8 @@ class ModelAnalysisTests(unittest.TestCase):
             path = Path(folder) / "test.safetensors"
             header = json.dumps({"weight": {"dtype": "F32", "shape": [2, 3], "data_offsets": [0, 24]}}).encode()
             path.write_bytes(struct.pack("<Q", len(header)) + header)
-            self.assertEqual(metadata_formats.inspect(path)["tensor_summary"]["stored_elements"], 6)
+            inspected = metadata_formats.inspect(path)
+            self.assertEqual(inspected.get("tensor_summary", {}).get("stored_elements"), 6)
             opaque = Path(folder) / "unsafe.pth"
             opaque.write_bytes(b"opaque pickle; never execute")
             self.assertEqual(metadata_formats.inspect(opaque)["metadata"], {})

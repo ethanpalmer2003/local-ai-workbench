@@ -4,12 +4,23 @@ import math
 import struct
 from collections import Counter
 from pathlib import Path
-from typing import Any, BinaryIO
+from typing import Any, BinaryIO, TypedDict
 
 GGUF_MAGIC = b"GGUF"
 SCALAR_FMT = {0: "<B", 1: "<b", 2: "<H", 3: "<h", 4: "<I", 5: "<i", 6: "<f", 7: "<?", 10: "<Q", 11: "<q", 12: "<d"}
 TYPE_STRING = 8
 TYPE_ARRAY = 9
+
+
+class GgufInspection(TypedDict):
+    """A GGUF header: metadata values, tensor statistics, and the limits of what was read."""
+
+    format: str
+    version: int
+    metadata: dict[str, Any]
+    tensor_summary: dict[str, Any]
+    tensor_index: list[dict[str, Any]] | None
+    limits: list[str]
 
 
 def _read_str(f: BinaryIO) -> str:
@@ -88,7 +99,7 @@ def inspect_metadata(
     array_limit: int | None = 128,
     tensor_index: bool = False,
     full_array_keys: frozenset[str] = frozenset(),
-) -> dict[str, Any]:
+) -> GgufInspection:
     """All header keys and tensor statistics; seek over payloads, never instantiate weights."""
     metadata, tensors, dtypes = {}, [], Counter()
     elements = 0
