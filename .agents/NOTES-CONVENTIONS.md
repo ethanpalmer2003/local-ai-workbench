@@ -1,6 +1,6 @@
 # Markdown
 
-- A document's role decides its home and word cap, and the gate rejects a home the role forbids. `--roles` prints the counts.
+- A document's role decides its home and word cap, and the gate rejects a home the role forbids. `--roles` prints the counts. `notes/TODO.md` is the one uncapped page, because it grows between decisions rather than stating one.
 
 | Role | Home | Cap |
 | --- | --- | --- |

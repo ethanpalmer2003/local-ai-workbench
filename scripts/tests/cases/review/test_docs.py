@@ -43,6 +43,11 @@ class RootDocumentTests(unittest.TestCase):
 
 
 class RoleTests(unittest.TestCase):
+    def test_the_running_list_of_work_is_uncapped(self):
+        self.assertIsNone(docs.markdown_budget("notes/TODO.md"))
+        self.assertEqual(docs.markdown_budget("notes/OPEN-QUESTIONS.md"), 1000)
+        self.assertEqual(docs.markdown_budget("README.md"), 700)
+
     def test_known_homes_claim_their_role(self):
         cases = {
             "AGENTS.md": "hub",
@@ -82,7 +87,6 @@ class RoleTests(unittest.TestCase):
         cases = {
             "AGENTS.md": 700,
             "scripts/config/comfyui/README.md": 700,
-            "notes/TODO.md": 1000,
             "notes/OPEN-QUESTIONS.md": 1000,
             "scripts/tests/notes/GENERATED-CAPABILITY-MATRIX.md": 1000,
             "notes/reviews/STRUCTURE-REVIEW.md": 500,
