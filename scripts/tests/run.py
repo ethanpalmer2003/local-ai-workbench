@@ -147,6 +147,7 @@ from scripts.tests.cases.strata.test_strata_pi import StrataPiTests
 from scripts.tests.cases.strata.test_strata_profiles import StrataProfileTests
 from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.cases.suites.framework_updates import FrameworkUpdates
+from scripts.tests.cases.suites.framework_updates_sources import FrameworkUpdateSources
 from scripts.tests.cases.suites.shared_contracts import SharedContracts
 from scripts.tests.scoping import select
 
@@ -273,6 +274,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     CodingEngineSummaryTests,
     ContextStreamTests,
     FrameworkUpdates,
+    FrameworkUpdateSources,
     ReportOutputs,
     NgramWorkloads,
     SpeechUiTests,
