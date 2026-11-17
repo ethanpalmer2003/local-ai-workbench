@@ -1,27 +1,30 @@
-"""Assemble one review sample: a module in full, plus the functions from its owners that carry its rule.
+"""Assemble one review sample: a module in full, then the definitions from its owners that carry its rule.
 
-A reader outside the repository cannot follow a rule that calls into a file they do not have, so the
-copied functions are labeled with where they live and the imports left out are listed with the one
-thing each does. The output is a text file, not a document: it is evidence for a reader, not a rule.
+A reader outside the repository cannot follow a rule that calls into a file they do not have, so each
+owner's definitions arrive under one header, and the footer names what was copied and what the excerpt
+still needs. The output is a text file, not a document: evidence for a reader, not a rule.
 """
 
 import argparse
 import ast
+import builtins
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 
 
-def named_source(path: Path, name: str, note: str) -> str:
-    """One top-level definition's source, with a comment saying where it came from and why it is here."""
+def _relative(path: Path) -> str:
+    """A path as the sample prints it."""
+    return path.relative_to(project_cfg.BASE_DIR).as_posix() if path.is_absolute() else path.as_posix()
+
+
+def definition(path: Path, name: str) -> str:
+    """One top-level definition's own source, without the lines around it."""
     text = path.read_text(encoding="utf-8")
-    tree = ast.parse(text)
-    node = next((item for item in tree.body if _defines(item, name)), None)
+    node = next((item for item in ast.parse(text).body if _defines(item, name)), None)
     if node is None:
         raise SystemExit(f"{path}: no top-level function or constant named {name}")
-    relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
-    source = "\n".join(text.splitlines()[node.lineno - 1 : node.end_lineno])
-    return f"# - copied from {relative} so the rule above can be read without it. {note}\n{source}"
+    return "\n".join(text.splitlines()[node.lineno - 1 : node.end_lineno])
 
 
 def _defines(node: ast.stmt, name: str) -> bool:
@@ -32,6 +35,54 @@ def _defines(node: ast.stmt, name: str) -> bool:
         targets = node.targets if isinstance(node, ast.Assign) else [node.target]
         return any(isinstance(target, ast.Name) and target.id == name for target in targets)
     return False
+
+
+def _named(node: ast.AST) -> str | None:
+    """The name a definition binds, when the node is a kind that binds one."""
+    if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef | ast.ExceptHandler):
+        return node.name
+    return None
+
+
+def _top_level(tree: ast.Module) -> set[str]:
+    """Every name a module defines at top level."""
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.Assign | ast.AnnAssign):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            names.update(target.id for target in targets if isinstance(target, ast.Name))
+        elif name := _named(node):
+            names.add(name)
+    return names
+
+
+def _imported(tree: ast.Module) -> dict[str, str]:
+    """Every name a module imports, mapped to the module it comes from."""
+    origins: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            origins.update((alias.asname or alias.name, node.module) for alias in node.names)
+        elif isinstance(node, ast.Import):
+            origins.update((alias.asname or alias.name.split(".")[0], alias.name) for alias in node.names)
+    return origins
+
+
+def _used(source: str) -> set[str]:
+    """Every name some source mentions, arguments and attributes aside."""
+    return {node.id for node in ast.walk(ast.parse(source)) if isinstance(node, ast.Name)}
+
+
+def _local(source: str) -> set[str]:
+    """Every name some source binds for itself, so it needs nothing brought in."""
+    names: set[str] = set()
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+            names.add(node.id)
+        elif isinstance(node, ast.arg):
+            names.add(node.arg)
+        elif name := _named(node):
+            names.add(name)
+    return names
 
 
 def unconsumed(module: Path, shown: set[str]) -> list[str]:
@@ -46,17 +97,39 @@ def unconsumed(module: Path, shown: set[str]) -> list[str]:
     return [f"{', '.join(names)} from {owner}" for owner, names in sorted(owners.items())]
 
 
+def unaccounted(bodies: list[str], known: set[str], owners: list[Path]) -> list[str]:
+    """Names the copied code still needs, each with the module it comes from."""
+    origins: dict[str, str] = {}
+    for owner in owners:
+        tree = ast.parse(owner.read_text(encoding="utf-8"))
+        origins.update(dict.fromkeys(_top_level(tree), _relative(owner)))
+        origins.update(_imported(tree))
+    used = set().union(*(_used(body) for body in bodies))
+    local = set().union(*(_local(body) for body in bodies))
+    missing = sorted((used - local - known) - set(dir(builtins)))
+    return [f"{name} from {origins.get(name, 'an owner not copied')}" for name in missing]
+
+
 def build(module: Path, includes: list[tuple[Path, str]], note: str) -> str:
-    """The whole sample: the module first, the copied definitions after it, and the accounting last."""
-    lines = module.read_text(encoding="utf-8").splitlines()
-    shown = {name for _path, name in includes}
-    blocks = ["\n".join(lines)]
-    blocks.extend(named_source(path, name, note) for path, name in includes)
-    owners: dict[str, list[str]] = {}
+    """The whole sample: the module, one block per owner, and the accounting."""
+    text = module.read_text(encoding="utf-8")
+    grouped: dict[Path, list[tuple[str, str]]] = {}
     for path, name in includes:
-        owners.setdefault(path.relative_to(project_cfg.BASE_DIR).as_posix(), []).append(name)
-    footer = [f"# - copied in: {', '.join(names)} from {owner}" for owner, names in sorted(owners.items())]
-    footer.extend(f"# - left out: {item}" for item in unconsumed(module, shown))
+        grouped.setdefault(path, []).append((name, definition(path, name)))
+    bodies = [source for entries in grouped.values() for _name, source in entries]
+    blocks = [text.rstrip("\n")]
+    for path, entries in grouped.items():
+        reason = f" {note}" if note else ""
+        header = f"# - copied from {_relative(path)} so the rule above can be read without it.{reason}"
+        blocks.append(f"{header}\n" + "\n\n\n".join(source for _name, source in entries))
+    copied = {name for _path, name in includes}
+    known = _top_level(ast.parse(text)) | copied
+    left_out = unconsumed(module, copied) + unaccounted(bodies, known, list(grouped))
+    footer = [
+        f"# - copied in: {', '.join(name for name, _source in entries)} from {_relative(path)}"
+        for path, entries in grouped.items()
+    ]
+    footer.extend(f"# - left out: {item}" for item in sorted(set(left_out)))
     tail = "\n".join(footer)
     return "\n\n\n".join(blocks) + (f"\n\n{tail}" if footer else "") + "\n"
 
@@ -68,17 +141,17 @@ def main(argv: list[str] | None = None) -> int:
         "--include",
         action="append",
         default=[],
-        metavar="FILE:FUNCTION",
-        help="function to copy in after the module, with the file that owns it",
+        metavar="FILE:NAME",
+        help="definition to copy in after the module; repeats from one file share a header",
     )
-    parser.add_argument("--note", default="", help="one sentence on why the copied function is here")
+    parser.add_argument("--note", default="", help="one sentence on why the copied definitions are here")
     parser.add_argument("--out", required=True, help="text file to write, repo-relative")
     args = parser.parse_args(argv)
     includes = []
     for item in args.include:
         path, _, name = item.partition(":")
         if not name:
-            raise SystemExit(f"--include wants FILE:FUNCTION, not {item}")
+            raise SystemExit(f"--include wants FILE:NAME, not {item}")
         includes.append((project_cfg.BASE_DIR / path, name))
     sample = build(project_cfg.BASE_DIR / args.module, includes, args.note)
     target = project_cfg.BASE_DIR / args.out
