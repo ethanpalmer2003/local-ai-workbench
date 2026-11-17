@@ -298,7 +298,10 @@ def process_audiocpp_hip(tool: cfg.ToolSpec, dest_dir: Path, tmp_dir: Path, chec
         raise shared.UpdateError(f"Upstream HIP build script not found: {build_script}")
     build_dir = "build/audiocpp-rocm-therock-10.2-hip-7.17-gfx1101"
     powershell = shutil.which("powershell.exe") or "powershell.exe"
-    common = f'-NoProfile -ExecutionPolicy Bypass -File "{build_script}" -RocmPath "{rocm_path}" -GpuTargets "{tool.gpu_targets}" -BuildDir "{build_dir}" -NoNativeCpu -DeploymentBuild'
+    common = (
+        f'-NoProfile -ExecutionPolicy Bypass -File "{build_script}" -RocmPath "{rocm_path}" '
+        f'-GpuTargets "{tool.gpu_targets}" -BuildDir "{build_dir}" -NoNativeCpu -DeploymentBuild'
+    )
     batch_file = tmp_dir / "build-audiocpp-hip.cmd"
     batch_file.write_text(
         "\n".join(

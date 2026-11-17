@@ -34,7 +34,11 @@ def chat_request(request: requests.AudioRequest) -> bytes:
     audio, _ = prepare_audio(request.audio)
     language = {"en": "English", "es": "Spanish", "fr": "French"}.get(request.language, request.language)
     target = "the original spoken language" if language == "auto" else language
-    prompt = f"Transcribe the following speech segment in {target} into {target} text.\nOnly output the transcription, with no commentary, translation, labels or newlines. Write numbers as digits."
+    prompt = (
+        f"Transcribe the following speech segment in {target} into {target} text.\n"
+        "Only output the transcription, with no commentary, translation, labels or newlines. "
+        "Write numbers as digits."
+    )
     if request.prompt:
         prompt += "\nVocabulary context (not text to copy): " + request.prompt
     return json.dumps(

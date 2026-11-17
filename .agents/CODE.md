@@ -10,6 +10,7 @@
 - HTTP: `requests` is the client, probes included; `httpx` where HTTP/2 or an async fan-out is the job. `urllib.request` is legacy here and shrinks with each file touched, so do not add it. One supported way per job. No second installer, runner or format "just in case": uv is the only package manager, `uv.lock` the only resolution.
 - Shared path/model/proxy defaults live in configuration; orchestration-only switches stay local.
 - Signatures and calls stay single-line up to 120 characters; pass-through arguments go last.
+- No line exceeds 120 characters: `checks/line_length.py` accepts string content and flags code. `python -m scripts.review.limits` prints every numeric rule with its limit, the items at the edge and the exceptions in force.
 - ASCII punctuation only: `scripts/review/checks/typography.py` rejects dashes, curly quotes, ellipsis and no-break spaces.
 - Pick defaults from measured evidence and keep the caveats and context with them.
 - Use what the framework or model already reports instead of storing a copy of it. A tracked page keeps a declaration only because it must render with no weight installed, and a check compares that copy to the packaged spec.

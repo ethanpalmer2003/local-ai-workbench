@@ -12,9 +12,10 @@ The default run is scoped to what changed since upstream. `--all` checks every s
 The runner executes these checks:
 
 - `checks/layout.py`: component/config ownership, install roots, folder naming, high-level file placement, and batch references.
-- `checks/owned_tokens.py`: a literal one module owns may not be spelled in another, so a copied rule fails here instead of drifting; `--list` prints the table.
-- `checks/duplicates.py`: pylint's verbatim duplicate blocks against a reviewed baseline, so a new pasted block fails while the known ones do not; opt-in because pylint needs about a minute over `scripts`.
-- `checks/annotations.py`: annotation complexity by atoms, nesting and union members; above the cap the type asks for a record.
+- `checks/owned_tokens.py`: a literal one module owns may not be spelled in another, so a copied rule fails instead of drifting.
+- `checks/duplicates.py`: pylint's verbatim duplicate blocks against a reviewed baseline, so a new pasted block fails; opt-in, a minute over `scripts`.
+- `checks/annotations.py`: annotation complexity by atoms, nesting and unions; above the cap it asks for a record.
+- `checks/line_length.py`: no line over 120 characters except a line that is string content; the count of accepted literal lines is printed, not hidden.
 - `checks/docs.py`: Markdown placement, roles, budgets, basename casing, links and model-name policy.
 - `ruff check`: the configured lint set, including the [McCabe limit](../../.agents/CODE.md).
 - `checks/model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
@@ -37,7 +38,7 @@ Reports go to `scripts/state/generated/shared/code_review/<run>/`. The inventory
 ## Fixing and finding
 
 Two kinds of section, and the difference decides who acts. `ruff check --fix` and `ruff format` rewrite the
-file, and pre-commit applies them on every commit: what can be applied is applied, never reported. Every other
+file, and pre-commit applies them on every commit: what can be applied is applied. Every other
 section only reports, and the fix belongs to the reader.
 
 The bias is a false alarm over a missed defect, because a finding is reviewed before it is acted on. A repeated
@@ -47,7 +48,7 @@ rather than a list of names.
 ## Duplicate check
 
 The optional embedding check and its code mode: [similarity](SIMILARITY.md). Front-end wiring: [frontend
-wiring](FRONTEND-WIRING.md). Both are part of the gate above.
+wiring](FRONTEND-WIRING.md). Both are part of the gate.
 
 Each check runs alone, for example `python -m scripts.review.checks.layout`. `docs --words` prints every document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers, repeats and unlinked documents. A link fails when it is absolute, uses a backslash, carries a space without angle brackets, points into an untracked path, or misses its target or heading; repeats are advisory. Add `--tests` to run the model-free suite after the gate. Document organization lives in [NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
 

@@ -47,6 +47,11 @@ def static_get(
         send_bytes(handler, 200, json.dumps(test_defaults()).encode(), "application/json")
         return True
     if path == "/asr/status":
+        chat_port = (
+            cfg.GEMMA_AUDIO_ASR.port
+            if engine == cfg.AsrStartupEngine.GEMMA_AUDIO
+            else cfg.LLAMACPP_PRACTICE.internal_port
+        )
         status: dict[str, object] = {
             "engine": engine.value if engine is not None else "off",
             "ready": False,
@@ -54,8 +59,7 @@ def static_get(
             "test_url": "/test/",
             "on_demand": on_demand,
             "llm_model": llm_model or (cfg.GEMMA_AUDIO_ASR.model.name if on_demand else None),
-            "chat_ui_url": chat_ui_url
-            or f"http://127.0.0.1:{cfg.GEMMA_AUDIO_ASR.port if engine == cfg.AsrStartupEngine.GEMMA_AUDIO else cfg.LLAMACPP_PRACTICE.internal_port}/",
+            "chat_ui_url": chat_ui_url or f"http://127.0.0.1:{chat_port}/",
             "automatic_turns": False,
             "delivery": delivery_plan,
             "workspace_pid": os.getpid() if on_demand else None,
