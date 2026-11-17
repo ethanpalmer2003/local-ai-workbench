@@ -8,8 +8,6 @@ dependencies such as torch and onnxruntime.
 Run from `C:/AI`; nothing here edits the project environment.
 """
 
-from __future__ import annotations
-
 import argparse
 import subprocess
 import sys

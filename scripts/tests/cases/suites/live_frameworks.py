@@ -1,7 +1,5 @@
 """Live workflow generation checks and ownership of start/stop workers."""
 
-from __future__ import annotations
-
 import argparse
 import base64
 import contextlib

@@ -34,6 +34,13 @@ class ScoreTests(unittest.TestCase):
 
 
 class FindingsTests(unittest.TestCase):
+    def test_the_future_import_is_refused(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            stale = write(root, "stale.py", "from __future__ import annotations\n\nVALUE = 1\n")
+            clean = write(root, "clean.py", "VALUE = 1\n")
+            self.assertEqual(annotations.future_imports([stale, clean]), [stale])
+
     def _findings(self, source: str) -> list[annotations.Annotation]:
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

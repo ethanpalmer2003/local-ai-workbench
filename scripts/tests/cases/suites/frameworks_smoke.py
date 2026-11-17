@@ -1,7 +1,5 @@
 """Default model-free regressions; `--suite` selects native launcher or backend checks."""
 
-from __future__ import annotations
-
 import argparse
 import contextlib
 import importlib.metadata

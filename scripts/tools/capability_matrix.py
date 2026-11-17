@@ -6,8 +6,6 @@ stale when the build, weights, corpus or producing script it recorded no longer 
 installed. A check that never ran is listed as never run instead of being hidden.
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import os

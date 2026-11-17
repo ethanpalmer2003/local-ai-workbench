@@ -1,7 +1,5 @@
 """HTTP and media fixtures shared by mocked and live workflow checks."""
 
-from __future__ import annotations
-
 import contextlib
 import threading
 from collections.abc import Generator

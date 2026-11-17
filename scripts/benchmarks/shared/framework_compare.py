@@ -8,8 +8,6 @@ built-in Kokoro speech and its embedded whisper. A leg a stack cannot serve is r
 unavailable with the reason the server gave, never dropped.
 """
 
-from __future__ import annotations
-
 import argparse
 import base64
 import json

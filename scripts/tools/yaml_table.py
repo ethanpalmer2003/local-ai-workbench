@@ -5,8 +5,6 @@ lists of records. Rendering one is a read, not a generation step: nothing is com
 stay in step with it.
 """
 
-from __future__ import annotations
-
 import argparse
 from pathlib import Path
 from typing import Any

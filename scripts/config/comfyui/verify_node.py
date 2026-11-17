@@ -4,8 +4,6 @@ ComfyUI's interpreter owns the node's runtime dependencies, so the startup batch
 check instead of the scripts suite; the scripts suite still checks the contract offline.
 """
 
-from __future__ import annotations
-
 import argparse
 import importlib.util
 import re

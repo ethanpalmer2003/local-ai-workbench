@@ -5,8 +5,6 @@ their work to it. The working tree counts, and so does a commit made but not pus
 still unreviewed work.
 """
 
-from __future__ import annotations
-
 import subprocess
 from pathlib import Path
 
@@ -14,10 +12,15 @@ from scripts.config import project_config as project_cfg
 
 
 def git(*args: str, root: Path | None = None) -> str:
-    """The command's stdout, or an empty string when git fails; callers treat that as no evidence."""
+    """The command's stdout, or an empty string when git fails; callers treat that as no evidence.
+
+    The bytes are decoded as UTF-8 here rather than by the locale, because `git show` returns file
+    content: a source file with an accented name or letter is not decodable by every console codec,
+    and a reader thread that raises leaves the caller with None instead of text.
+    """
     base = project_cfg.BASE_DIR if root is None else root
-    result = subprocess.run(["git", "-C", str(base), *args], capture_output=True, text=True, check=False)
-    return result.stdout if result.returncode == 0 else ""
+    result = subprocess.run(["git", "-C", str(base), *args], capture_output=True, check=False)
+    return result.stdout.decode("utf-8", errors="replace") if result.returncode == 0 else ""
 
 
 def committed_paths(root: Path | None = None) -> list[str]:

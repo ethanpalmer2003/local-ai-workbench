@@ -1,7 +1,5 @@
 """llama.cpp server for the KoboldCpp no-model UI, so chat runs on our own engine."""
 
-from __future__ import annotations
-
 import json
 import subprocess
 from pathlib import Path

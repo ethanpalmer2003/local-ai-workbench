@@ -1,7 +1,5 @@
 """HTTP proxy behavior for the launcher stack, split from the framework smoke suite."""
 
-from __future__ import annotations
-
 import base64
 import contextlib
 import io

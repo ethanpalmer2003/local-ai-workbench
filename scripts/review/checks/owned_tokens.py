@@ -7,8 +7,6 @@ place to record a token when a rule becomes single-owner; a new copy then fails 
 passing review unnoticed.
 """
 
-from __future__ import annotations
-
 import argparse
 import ast
 from dataclasses import dataclass

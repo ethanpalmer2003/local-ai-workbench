@@ -1,7 +1,5 @@
 """Lemonade Server startup, and the config patch that points it at our own weights."""
 
-from __future__ import annotations
-
 import json
 import subprocess
 import time

@@ -4,8 +4,6 @@ The embedded Lite keeps posting to its own origin even when an OpenAI provider i
 proxy answers those two paths itself instead of forwarding a payload the no-model Kobold cannot serve.
 """
 
-from __future__ import annotations
-
 import json
 from collections.abc import Iterator
 from http.server import BaseHTTPRequestHandler

@@ -7,8 +7,6 @@ Only explicit module mappings are changed. Python import statements are parsed
 before rewriting, and matching dotted paths in Python source are updated too.
 """
 
-from __future__ import annotations
-
 import argparse
 import ast
 import re

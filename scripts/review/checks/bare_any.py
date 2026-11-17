@@ -5,8 +5,6 @@
 tree is the only exemption and only because fixtures double for arbitrary doubles.
 """
 
-from __future__ import annotations
-
 import argparse
 import ast
 

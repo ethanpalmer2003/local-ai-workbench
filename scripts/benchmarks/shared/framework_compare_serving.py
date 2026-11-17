@@ -1,7 +1,5 @@
 """Starting, probing and stopping a backend for the framework comparison."""
 
-from __future__ import annotations
-
 import socket
 import threading
 from collections.abc import Iterator

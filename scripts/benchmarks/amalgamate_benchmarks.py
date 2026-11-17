@@ -15,8 +15,6 @@ Run from C:/AI:
     python -m scripts.benchmarks.amalgamate_benchmarks
 """
 
-from __future__ import annotations
-
 import csv
 import re
 from dataclasses import dataclass, fields
