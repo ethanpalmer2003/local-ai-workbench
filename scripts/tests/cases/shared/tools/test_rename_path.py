@@ -104,6 +104,19 @@ class ReferenceRewriteTests(unittest.TestCase):
         self.assertIn("from scripts.tests import selection", text)
         self.assertIn("from scripts.tests.selection import select", text)
 
+    def test_a_basename_the_tree_shares_is_never_rewritten_bare(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            for name in ("a", "b"):
+                (root / name).mkdir()
+                (root / name / "README.md").write_text(f"# {name}\n", encoding="utf-8")
+            (root / "doc.md").write_text("See [a](a/README.md) and b/README.md.\n", encoding="utf-8")
+            rename_path.rewrite_references({"a/README.md": "a/RETIRED.md"}, dry_run=False, root=root)
+            doc = (root / "doc.md").read_text(encoding="utf-8")
+        self.assertIn("[a](a/RETIRED.md)", doc)
+        self.assertIn("b/README.md", doc)
+        self.assertEqual(doc.count("RETIRED"), 1, "only the moved file's own path changes")
+
 
 class ScanScopeTests(unittest.TestCase):
     def test_the_scan_never_enters_a_workspace_tree(self):
