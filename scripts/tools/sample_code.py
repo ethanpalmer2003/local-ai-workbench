@@ -47,19 +47,18 @@ def unconsumed(module: Path, shown: set[str]) -> list[str]:
 
 
 def build(module: Path, includes: list[tuple[Path, str]], note: str) -> str:
-    """The whole sample: a header naming what is shown and what is not, then the code in reading order."""
-    relative = module.relative_to(project_cfg.BASE_DIR).as_posix()
+    """The whole sample: the module first, the copied definitions after it, and the accounting last."""
     lines = module.read_text(encoding="utf-8").splitlines()
     shown = {name for _path, name in includes}
-    count = "1 definition" if len(includes) == 1 else f"{len(includes)} definitions"
-    header = [
-        f"# Sample: {relative} ({len(lines)} lines), plus {count} copied from its owners.",
-        *[f"# - left out: {item}" for item in unconsumed(module, shown)],
-        "",
-    ]
     blocks = ["\n".join(lines)]
     blocks.extend(named_source(path, name, note) for path, name in includes)
-    return "\n".join(header) + "\n\n\n".join(blocks) + "\n"
+    owners: dict[str, list[str]] = {}
+    for path, name in includes:
+        owners.setdefault(path.relative_to(project_cfg.BASE_DIR).as_posix(), []).append(name)
+    footer = [f"# - copied in: {', '.join(names)} from {owner}" for owner, names in sorted(owners.items())]
+    footer.extend(f"# - left out: {item}" for item in unconsumed(module, shown))
+    tail = "\n".join(footer)
+    return "\n\n\n".join(blocks) + (f"\n\n{tail}" if footer else "") + "\n"
 
 
 def main(argv: list[str] | None = None) -> int:
