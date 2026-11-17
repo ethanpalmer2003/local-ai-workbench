@@ -88,20 +88,55 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(chosen.kept, (PointerTests,))
         self.assertEqual(chosen.dropped, (KoboldOptionTests,))
 
-    def test_a_data_change_keeps_every_class(self):
+    def test_a_non_python_change_runs_no_class(self):
         groups = (TestSelection,)
-        for paths, why in (
-            (["notes/TODO.md"], "not a Python module"),
-            (["scripts/config/models/catalog.json"], "not a Python module"),
-            (["scripts/benchmarks/README.md"], "not a Python module"),
-            ([], "no change set"),
-            (["scripts/tests/run.py"], "manifest changed"),
-            (["scripts/tests/selection.py"], "manifest changed"),
+        for paths in (
+            ["notes/TODO.md"],
+            ["scripts/config/models/catalog.json"],
+            ["scripts/benchmarks/README.md"],
+            ["bat/checks/test_all.bat"],
         ):
             with self.subTest(paths=paths):
                 chosen = selection.select(groups, paths=paths)
+                self.assertEqual(chosen.kept, ())
+                self.assertEqual(chosen.dropped, groups)
+                self.assertEqual(chosen.why, "no Python change")
+
+    def test_the_manifests_and_lockfiles_keep_every_class(self):
+        groups = (TestSelection,)
+        for path in (
+            "scripts/tests/run.py",
+            "scripts/tests/selection.py",
+            "scripts/__init__.py",
+            "pyproject.toml",
+            "uv.lock",
+        ):
+            with self.subTest(path=path):
+                chosen = selection.select(groups, paths=[path])
                 self.assertEqual(chosen.kept, groups)
-                self.assertIn(why, chosen.why)
+                self.assertIn("manifest changed", chosen.why)
+
+    def test_a_python_change_beside_a_document_still_scopes(self):
+        from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
+        from scripts.tests.cases.review.test_docs import PointerTests
+
+        edges = _graph(
+            {
+                "scripts.review.checks.docs": (),
+                "scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",),
+                "scripts.tests.cases.koboldcpp.test_kobold_options": (),
+            }
+        )
+        groups = (PointerTests, KoboldOptionTests)
+        with patch.object(selection, "import_graph", return_value=edges):
+            chosen = selection.select(groups, paths=["scripts/review/checks/docs.py", "notes/TODO.md"])
+        self.assertEqual(chosen.kept, (PointerTests,))
+        self.assertEqual(chosen.dropped, (KoboldOptionTests,))
+
+    def test_an_empty_change_set_runs_every_class(self):
+        chosen = selection.select((TestSelection,), paths=[])
+        self.assertEqual(chosen.kept, (TestSelection,))
+        self.assertEqual(chosen.why, "no change set")
 
     def test_all_keeps_every_class_and_never_asks_git(self):
         groups = (TestSelection,)
