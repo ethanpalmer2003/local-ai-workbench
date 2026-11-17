@@ -1,11 +1,11 @@
-"""Which test classes a change can reach, from the import graph walked backwards.
+"""Which test classes a change can reach, from the import graph walked one hop backwards.
 
-The model-free suite holds well over a hundred classes, and most changes touch a few modules, so the
-default run keeps only the classes whose module sits in the changed modules' reverse import closure.
-Only a Python module narrows the run: a document, batch file, config or other path contributes no
-module at all, because the gate checks those on every commit; a change set with no Python path runs
-no class. The manifests in `FULL_TRIGGERS` keep every class when their code changes - a comment or
-docstring edit to one decides nothing - and `--all` runs everything.
+The default run is a feedback loop, not a guarantee: it keeps the classes whose module changed or
+imports a changed module, one hop only, and the full run before a push is what catches the rest. Only
+a Python module narrows the run: a document, batch file, config or other path contributes no module,
+so a change set with no Python path runs no class. The two manifests in `FULL_TRIGGERS` keep every
+class when their code changes - a comment or docstring edit to one decides nothing - and `--all` runs
+everything.
 
 The graph is parsed from source, never imported, so it stays model-free. Importing `scripts.x.y` also
 runs `scripts/x/__init__.py`, so every module gets an edge to each of its parent packages. Three gaps
@@ -30,15 +30,13 @@ from scripts.shared.changes import changed_paths, git
 
 FULL_TRIGGERS = frozenset(
     {
-        # - the manifests that decide what the suite is
+        # - the two files that decide what the suite is, and only when their code changes
         "scripts/tests/run.py",
         "scripts/tests/selection.py",
-        # - the top package's init runs before any module inside it, and these change how everything runs
-        "scripts/__init__.py",
-        "pyproject.toml",
-        "uv.lock",
     }
 )
+# - the default scope stops here: the full run before a push is what catches a transitive miss
+SCOPE_DEPTH = 1
 
 Graph = dict[str, frozenset[str]]
 TestGroup = type[unittest.TestCase]
@@ -212,23 +210,26 @@ def import_graph(root: Path | None = None) -> Graph:
     return edges
 
 
-def reverse_closure(edges: Graph, changed: Iterable[str]) -> frozenset[str]:
-    """The changed modules plus every module that depends on one, directly or through a chain.
+def reverse_closure(edges: Graph, changed: Iterable[str], *, depth: int | None = None) -> frozenset[str]:
+    """The changed modules plus every module that depends on one, one hop at a time.
 
-    This is a breadth-first search over the edges reversed, starting from every changed module.
+    `depth` stops the walk before the next hop: 1 keeps the direct importers only, and None walks the
+    whole chain. The default scope uses one hop, because the full run before a push is the guarantee.
     """
     importers: dict[str, set[str]] = {}
     for module, targets in edges.items():
         for target in targets:
             importers.setdefault(target, set()).add(module)
     seen: set[str] = set()
-    queue = deque(changed)
+    queue = deque((module, 0) for module in changed)
     while queue:
-        current = queue.popleft()
+        current, level = queue.popleft()
         if current in seen:
             continue
         seen.add(current)
-        queue.extend(importers.get(current, ()))
+        if depth is not None and level >= depth:
+            continue
+        queue.extend((importer, level + 1) for importer in importers.get(current, ()))
     return frozenset(seen)
 
 
@@ -275,7 +276,7 @@ def select(
     # A module git has not seen yet still reaches the classes that import it.
     for name in changed_modules:
         edges.setdefault(name, frozenset())
-    reachable = reverse_closure(edges, changed_modules)
+    reachable = reverse_closure(edges, changed_modules, depth=SCOPE_DEPTH)
 
     kept: list[TestGroup] = []
     dropped: list[TestGroup] = []
