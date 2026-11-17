@@ -4,8 +4,8 @@ The model-free suite holds well over a hundred classes, and most changes touch a
 default run keeps only the classes whose module sits in the changed modules' reverse import closure.
 Only a Python module narrows the run: a document, batch file, config or other path contributes no
 module at all, because the gate checks those on every commit; a change set with no Python path runs
-no class. The manifests in `FULL_TRIGGERS` are the exception and keep every class, and `--all` runs
-everything.
+no class. The manifests in `FULL_TRIGGERS` keep every class when their code changes - a comment or
+docstring edit to one decides nothing - and `--all` runs everything.
 
 The graph is parsed from source, never imported, so it stays model-free. Importing `scripts.x.y` also
 runs `scripts/x/__init__.py`, so every module gets an edge to each of its parent packages. Three gaps
@@ -82,6 +82,39 @@ def module_files(root: Path | None = None) -> dict[str, Path]:
         if name and path.is_file():
             files[name] = path
     return files
+
+
+def _without_docstrings(tree: ast.Module) -> str:
+    """The tree as text with every docstring blanked, so a comment or docstring edit compares equal."""
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        first = node.body[0] if node.body else None
+        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+            node.body = node.body[1:] or [ast.Pass()]
+    return ast.dump(tree)
+
+
+def cosmetic_only(path: str, root: Path | None = None) -> bool:
+    """Whether a Python file differs from upstream only in comments or docstrings.
+
+    A manifest such as `run.py` decides what the suite is, but only through its code: a comment or a
+    docstring edit changes nothing a test can see, so it should not drag in every class. A file that is
+    new, deleted, unreadable or unparsable on either side counts as a real change.
+    """
+    base = project_cfg.BASE_DIR if root is None else root
+    current = base / path
+    if not current.is_file():
+        return False
+    previous = git("show", f"@{{upstream}}:{path}", root=root)
+    try:
+        before = ast.parse(previous)
+        after = _parse(current)
+    except (SyntaxError, ValueError):
+        return False
+    if after is None:
+        return False
+    return _without_docstrings(before) == _without_docstrings(after)
 
 
 # --- Reading dependencies out of one file --------------------------------------------------------
@@ -225,6 +258,12 @@ def select(
     changed = changed_paths(root) if paths is None else paths
     if not changed:
         return Selection(groups, (), "no change set")
+    # - a trigger decides what the suite is, but a comment or docstring edit to it decides nothing
+    changed = [
+        path for path in changed if not (path in FULL_TRIGGERS and path.endswith(".py") and cosmetic_only(path, root))
+    ]
+    if not changed:
+        return Selection((), groups, "comment or docstring only")
     if triggers := FULL_TRIGGERS.intersection(changed):
         return Selection(groups, (), f"manifest changed: {sorted(triggers)[0]}")
 

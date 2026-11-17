@@ -16,7 +16,7 @@
 
 - After one change: pre-commit hooks plus the test module the edit touches. Seconds.
 - After a batch: `python -m scripts.review --all`, then `python -m scripts.tests.run --all`. Under a minute together.
-- The suite follows the gate's rule: by default it runs the classes a change reaches through imports, and `--all` runs every class. A change set with no Python path runs no class; the manifests and lock files keep every class; see [selection](../scripts/tests/selection.py).
+- The suite follows the gate's rule: by default it runs the classes a change reaches through imports, and `--all` runs every class. No Python path runs none; the manifests keep every class on a code change, not a comment; see [selection](../scripts/tests/selection.py).
 - `--fast` keeps the gate repo-wide but skips types, inventory, advisories and the package summary: about five seconds, so it fits a single edit.
 - The default run is scoped: only the sections whose inputs changed since the upstream branch run, working tree and unpushed commits alike. A batch rename costs about a second, a Python edit adds types and dead code, and only dependency files pull in the advisories. `--all` runs every section, and so does an empty change set or `check_repo.bat`; it is a path mapping, not a cache, so nothing is remembered between runs.
 - Each gate section records its seconds under `scripts/state/logs/shared/review/`, so the cost of a check comes from history instead of a rerun.

@@ -111,10 +111,48 @@ class TestSelection(unittest.TestCase):
             "pyproject.toml",
             "uv.lock",
         ):
-            with self.subTest(path=path):
+            with self.subTest(path=path), patch.object(selection, "cosmetic_only", return_value=False):
                 chosen = selection.select(groups, paths=[path])
                 self.assertEqual(chosen.kept, groups)
                 self.assertIn("manifest changed", chosen.why)
+
+    def test_a_comment_edit_to_a_trigger_runs_nothing(self):
+        with patch.object(selection, "cosmetic_only", return_value=True):
+            chosen = selection.select((TestSelection,), paths=["scripts/tests/selection.py"])
+        self.assertEqual(chosen.kept, ())
+        self.assertEqual(chosen.why, "comment or docstring only")
+
+    def test_a_docstring_only_trigger_beside_code_still_scopes(self):
+        from scripts.tests.cases.review.test_docs import PointerTests
+
+        edges = _graph(
+            {"scripts.review.checks.docs": (), "scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",)}
+        )
+        with (
+            patch.object(selection, "cosmetic_only", return_value=True),
+            patch.object(selection, "import_graph", return_value=edges),
+        ):
+            chosen = selection.select((PointerTests,), paths=["scripts/tests/run.py", "scripts/review/checks/docs.py"])
+        self.assertEqual(chosen.kept, (PointerTests,))
+
+    def test_a_docstring_or_comment_edit_compares_equal(self):
+        before = ast.parse('"""Old."""\n\n\ndef run() -> None:\n    """Doc."""\n    print(1)\n')
+        after = ast.parse('"""New."""\n\n\n# a comment\ndef run() -> None:\n    """Other."""\n    print(1)\n')
+        changed = ast.parse('"""New."""\n\n\ndef run() -> None:\n    """Other."""\n    print(2)\n')
+        self.assertEqual(selection._without_docstrings(before), selection._without_docstrings(after))
+        self.assertNotEqual(selection._without_docstrings(before), selection._without_docstrings(changed))
+
+    def test_a_cosmetic_change_is_read_from_upstream(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            (root / "scripts").mkdir()
+            target = root / "scripts" / "run.py"
+            target.write_text('"""New docstring."""\nVALUE = 1\n', encoding="utf-8")
+            with patch.object(selection, "git", return_value='"""Old docstring."""\nVALUE = 1\n'):
+                self.assertTrue(selection.cosmetic_only("scripts/run.py", root))
+            target.write_text('"""New docstring."""\nVALUE = 2\n', encoding="utf-8")
+            with patch.object(selection, "git", return_value='"""Old docstring."""\nVALUE = 1\n'):
+                self.assertFalse(selection.cosmetic_only("scripts/run.py", root))
 
     def test_a_python_change_beside_a_document_still_scopes(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
