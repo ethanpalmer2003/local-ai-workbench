@@ -22,7 +22,6 @@ import re
 import shutil
 import subprocess
 import sys
-from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path, PurePosixPath
 from typing import NamedTuple
@@ -190,13 +189,22 @@ def rewrite_text(
     dotted: list[tuple[str, str]],
     imports: list[tuple[str, str, str]],
     collapsed: list[tuple[str, str, str, str]] | None = None,
+    local: list[tuple[str, str]] | None = None,
 ) -> tuple[str, int]:
-    """Apply every reference form to one file's text, and count the references that changed."""
+    """Apply every reference form to one file's text, and count the references that changed.
+
+    `local` holds the bare basenames of the moved files, which only mean something in a file that
+    sits in the moved file's own directory; a name like `README.md` matched elsewhere is a different file.
+    """
     updated = text
     changes = 0
     for old, new in pairs:
         changes += updated.count(old)
         updated = updated.replace(old, new)
+    for old, new in local or []:
+        pattern = rf"(?<![\w]){re.escape(old)}(?![\w])"
+        changes += len(re.findall(pattern, updated))
+        updated = re.sub(pattern, lambda _match, replacement=new: replacement, updated)
     for old, _new in dotted:
         changes += len(re.findall(rf"{re.escape(old)}(?![\w])", updated))
     for old_package, old_name, _package, _name in collapsed or []:
@@ -215,21 +223,16 @@ def _moved_forms(moves: dict[str, str]) -> tuple[list[tuple[str, str]], list[tup
     return dotted, imports
 
 
-def _pairs(moves: dict[str, str], names: Counter[str]) -> list[tuple[str, str]]:
-    """Path and basename pairs; a bare basename counts only when the tree holds no other file by that name."""
-    return [
-        pair
-        for move, target in moves.items()
-        for pair in reference_forms(move, target, bare=names[PurePosixPath(move).name] == 0)
-    ]
-
-
-def names_after_move(moves: dict[str, str], root: Path = ROOT) -> Counter[str]:
-    """Basename counts as they will be once the moves land, so a preview matches the write."""
-    names = tree_names(root)
-    for move in moves:
-        names[PurePosixPath(move).name] -= 1
-    return +names
+def _pairs(moves: dict[str, str], root: Path = ROOT) -> tuple[list[tuple[str, str]], dict[Path, list[tuple[str, str]]]]:
+    """Path pairs, and the bare basenames each move may repoint inside its own directory only."""
+    pairs = [pair for move, target in moves.items() for pair in reference_forms(move, target, bare=False)]
+    local: dict[Path, list[tuple[str, str]]] = {}
+    for move, target in moves.items():
+        old_name, new_name = PurePosixPath(move).name, PurePosixPath(target).name
+        if old_name != new_name:
+            directory = root / PurePosixPath(move).parent
+            local.setdefault(directory, []).append((old_name, new_name))
+    return pairs, local
 
 
 def plan_forms(
@@ -239,12 +242,14 @@ def plan_forms(
     *,
     root: Path = ROOT,
     collapsed: list[tuple[str, str, str, str]] | None = None,
+    local: dict[Path, list[tuple[str, str]]] | None = None,
 ) -> list[tuple[Path, int]]:
     """Every file a rewrite would touch and how many references each holds, without writing."""
+    local = local or {}
     planned = []
     for path in text_files(root):
         text = path.read_text(encoding="utf-8", errors="replace")
-        updated, changes = rewrite_text(text, pairs, dotted, imports, collapsed)
+        updated, changes = rewrite_text(text, pairs, dotted, imports, collapsed, local.get(path.parent))
         if updated != text:
             planned.append((path, changes))
     return planned
@@ -252,9 +257,9 @@ def plan_forms(
 
 def preview(moves: dict[str, str], *, root: Path = ROOT) -> list[tuple[Path, int]]:
     """Every file the rewrite would touch and how many references each holds, without writing."""
-    pairs = _pairs(moves, names_after_move(moves, root))
+    pairs, local = _pairs(moves, root)
     dotted, imports = _moved_forms(moves)
-    return plan_forms(pairs, dotted, imports, root=root)
+    return plan_forms(pairs, dotted, imports, root=root, local=local)
 
 
 def rewrite_forms(
@@ -265,12 +270,14 @@ def rewrite_forms(
     dry_run: bool,
     root: Path = ROOT,
     collapsed: list[tuple[str, str, str, str]] | None = None,
+    local: dict[Path, list[tuple[str, str]]] | None = None,
 ) -> list[Path]:
     """Apply one set of reference forms to every source file, writing only when asked."""
+    local = local or {}
     changed = []
     for path in text_files(root):
         text = path.read_text(encoding="utf-8", errors="replace")
-        updated, changes = rewrite_text(text, pairs, dotted, imports, collapsed)
+        updated, changes = rewrite_text(text, pairs, dotted, imports, collapsed, local.get(path.parent))
         if updated == text:
             continue
         print(f"[UPDATE] {path.relative_to(root).as_posix()} ({changes} reference(s))")
@@ -281,9 +288,9 @@ def rewrite_forms(
 
 
 def rewrite_references(moves: dict[str, str], *, dry_run: bool, root: Path = ROOT) -> list[Path]:
-    pairs = _pairs(moves, tree_names(root))
+    pairs, local = _pairs(moves, root)
     dotted, imports = _moved_forms(moves)
-    return rewrite_forms(pairs, dotted, imports, dry_run=dry_run, root=root)
+    return rewrite_forms(pairs, dotted, imports, dry_run=dry_run, root=root, local=local)
 
 
 class Collapse(NamedTuple):
@@ -312,7 +319,7 @@ def collapse_plan(package: str, target: str, *, root: Path = ROOT) -> Collapse:
     module = modules[0]
     old = module.relative_to(root).as_posix()
     moves = {old: target}
-    pairs = _pairs(moves, names_after_move(moves, root))
+    pairs, _local = _pairs(moves, root)
     return Collapse(
         package=directory,
         module=module,
@@ -353,14 +360,8 @@ def collapse(package: str, target: str, *, dry_run: bool, root: Path = ROOT) -> 
 def leftovers(moves: dict[str, str], *, root: Path = ROOT) -> list[str]:
     """References that survived the rewrite, which a manual review then has to explain."""
     scanned = list(text_files(root))
-    names = tree_names(root)
     forms = [
-        pair
-        for move, target in moves.items()
-        for pair in (
-            *reference_forms(move, target, bare=names[PurePosixPath(move).name] == 0),
-            *dotted_forms(move, target),
-        )
+        pair for move, target in moves.items() for pair in (*reference_forms(move, target), *dotted_forms(move, target))
     ]
     names = [old for old, _ in forms]
     found = []
@@ -368,19 +369,6 @@ def leftovers(moves: dict[str, str], *, root: Path = ROOT) -> list[str]:
         text = path.read_text(encoding="utf-8", errors="replace")
         found.extend(f"{path.relative_to(root).as_posix()}: {name}" for name in names if name in text)
     return found
-
-
-def tree_names(root: Path) -> Counter[str]:
-    """How often each basename occurs under the pruned tree.
-
-    A bare reference names a file only when no other file shares that name, and it is counted
-    after the move: a basename still present elsewhere makes every bare spelling ambiguous.
-    """
-    names: Counter[str] = Counter()
-    for folder, subfolders, files in os.walk(root):
-        subfolders[:] = [name for name in subfolders if name not in PRUNE]
-        names.update(files)
-    return names
 
 
 def parse_collapses(values: list[str]) -> list[tuple[str, str]]:
