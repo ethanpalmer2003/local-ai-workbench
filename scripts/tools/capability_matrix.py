@@ -156,7 +156,11 @@ def rows() -> list[Row]:
     """One row per registered capability, with its latest evidence when any exists."""
     result = []
     for subject, label in CAPABILITIES:
-        found = [path for root in ROOTS if (path := _latest_evidence(root, subject)) is not None]
+        found = []
+        for root in ROOTS:
+            path = _latest_evidence(root, subject)
+            if path is not None:
+                found.append(path)
         evidence = max(found, key=lambda item: item.stat().st_mtime) if found else None
         result.append(Row(label, subject, evidence, _load(evidence) if evidence else None))
     return result
@@ -235,12 +239,10 @@ def freshness(report: dict[str, Any] | None) -> str:
     state = report.get("provenance")
     if not isinstance(state, dict):
         return "[WARN] unprovenanced"
-    reasons = [reason for model in state.get("models") or [] if isinstance(model, dict) and (reason := _changed(model))]
-    reasons.extend(
-        reason
-        for framework in state.get("frameworks") or []
-        if isinstance(framework, dict) and (reason := _framework_moved(framework))
-    )
+    models = [model for model in state.get("models") or [] if isinstance(model, dict)]
+    reasons = [reason for reason in map(_changed, models) if reason]
+    frameworks = [framework for framework in state.get("frameworks") or [] if isinstance(framework, dict)]
+    reasons.extend(reason for reason in map(_framework_moved, frameworks) if reason)
     producer = state.get("producer")
     if isinstance(producer, dict):
         reasons.extend(f"producer changed: {name}" for name in provenance.changed_manifest(producer))

@@ -83,13 +83,13 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(graph_api.reverse_closure(edges, {"scripts.c"}), {"scripts.c", "scripts.b", "scripts.a"})
 
     def test_a_transitive_dependent_is_out_of_scope(self):
-        from scripts.tests.cases.review.test_docs import PointerTests
+        from scripts.tests.cases.review.checks.test_docs import PointerTests
 
         edges = _graph(
             {
                 "scripts.review.checks.docs": (),
                 "scripts.review.checks.links": ("scripts.review.checks.docs",),
-                "scripts.tests.cases.review.test_docs": ("scripts.review.checks.links",),
+                "scripts.tests.cases.review.checks.test_docs": ("scripts.review.checks.links",),
             }
         )
         with (
@@ -101,13 +101,13 @@ class TestSelection(unittest.TestCase):
 
     def test_a_change_keeps_the_classes_that_import_it(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
-        from scripts.tests.cases.review.test_docs import PointerTests
+        from scripts.tests.cases.review.checks.test_docs import PointerTests
 
         edges = _graph(
             {
                 "scripts.review.checks.docs": (),
                 "scripts.launchers.koboldcpp.kobold": (),
-                "scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",),
+                "scripts.tests.cases.review.checks.test_docs": ("scripts.review.checks.docs",),
                 "scripts.tests.cases.koboldcpp.test_kobold_options": ("scripts.launchers.koboldcpp.kobold",),
             }
         )
@@ -187,10 +187,13 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(chosen.why, "no Python change")
 
     def test_a_docstring_only_trigger_beside_code_still_scopes(self):
-        from scripts.tests.cases.review.test_docs import PointerTests
+        from scripts.tests.cases.review.checks.test_docs import PointerTests
 
         edges = _graph(
-            {"scripts.review.checks.docs": (), "scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",)}
+            {
+                "scripts.review.checks.docs": (),
+                "scripts.tests.cases.review.checks.test_docs": ("scripts.review.checks.docs",),
+            }
         )
         with (
             patch.object(
@@ -216,6 +219,13 @@ class TestSelection(unittest.TestCase):
         after = ast.parse('def f():\n    """New."""\n')
         self.assertEqual(scoped_selection._without_docstrings(before), scoped_selection._without_docstrings(after))
 
+    def test_a_docstring_only_body_matches_a_pass(self):
+        docstring = ast.parse('def f():\n    """Doc."""\n')
+        pass_only = ast.parse("def f():\n    pass\n")
+        self.assertEqual(
+            scoped_selection._without_docstrings(docstring), scoped_selection._without_docstrings(pass_only)
+        )
+
     def test_a_cosmetic_change_is_read_from_upstream(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
@@ -230,12 +240,12 @@ class TestSelection(unittest.TestCase):
 
     def test_a_python_change_beside_a_document_still_scopes(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
-        from scripts.tests.cases.review.test_docs import PointerTests
+        from scripts.tests.cases.review.checks.test_docs import PointerTests
 
         edges = _graph(
             {
                 "scripts.review.checks.docs": (),
-                "scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",),
+                "scripts.tests.cases.review.checks.test_docs": ("scripts.review.checks.docs",),
                 "scripts.tests.cases.koboldcpp.test_kobold_options": (),
             }
         )
@@ -261,13 +271,13 @@ class TestSelection(unittest.TestCase):
 
     def test_every_class_is_kept_or_dropped_exactly_once(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
-        from scripts.tests.cases.review.test_docs import PointerTests
+        from scripts.tests.cases.review.checks.test_docs import PointerTests
 
         groups = (PointerTests, KoboldOptionTests)
         edges = _graph(
             {
                 "scripts.review.checks.docs": (),
-                "scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",),
+                "scripts.tests.cases.review.checks.test_docs": ("scripts.review.checks.docs",),
                 "scripts.tests.cases.koboldcpp.test_kobold_options": (),
             }
         )
@@ -283,9 +293,9 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(set(chosen.kept) & set(chosen.dropped), set())
 
     def test_a_module_git_has_not_seen_still_reaches_its_importers(self):
-        from scripts.tests.cases.review.test_docs import PointerTests
+        from scripts.tests.cases.review.checks.test_docs import PointerTests
 
-        edges = _graph({"scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",)})
+        edges = _graph({"scripts.tests.cases.review.checks.test_docs": ("scripts.review.checks.docs",)})
         with (
             patch.object(scoped_selection, "cosmetic_only", return_value=False),
             patch.object(scoped_selection, "import_graph", return_value=edges),
@@ -311,12 +321,12 @@ class TestSelection(unittest.TestCase):
 
     def test_a_dropped_class_never_reaches_the_change(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
-        from scripts.tests.cases.review.test_docs import PointerTests
+        from scripts.tests.cases.review.checks.test_docs import PointerTests
 
         edges = _graph(
             {
                 "scripts.review.checks.docs": (),
-                "scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",),
+                "scripts.tests.cases.review.checks.test_docs": ("scripts.review.checks.docs",),
                 "scripts.tests.cases.koboldcpp.test_kobold_options": ("scripts.launchers.koboldcpp.kobold",),
             }
         )

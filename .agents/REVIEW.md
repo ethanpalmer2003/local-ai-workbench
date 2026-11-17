@@ -14,7 +14,8 @@ Two lists. The first is answered by a command: if the section fails, the change 
 | Is a link dead, a page over budget, or a pointer repeated? | `=== DOCUMENTATION ===` |
 | Does a model id, path or alias no longer resolve? | `=== MODEL REFERENCE DRIFT ===` |
 | Does every outbound HTTP call carry a timeout? | `=== NETWORK TIMEOUTS ===` |
-| Is a module loaded by a name the source does not show? | `=== DYNAMIC IMPORTS ===` in [dynamic_imports.py](../scripts/review/checks/dynamic_imports.py) |
+| Is a module loaded by a name the source hides? | `=== DYNAMIC IMPORTS ===` in [dynamic_imports.py](../scripts/review/checks/dynamic_imports.py) |
+| Is an assignment hidden in a comprehension? | `=== WALRUS OPERATOR ===` in [walrus.py](../scripts/review/checks/walrus.py) |
 | Does anything outside the overlay resolve a local input path? | `=== OVERLAY ACCESS ===` |
 | Do front-end ids, asset paths and injected keys still match? | `=== FRONT-END WIRING ===` |
 | Is spelling, punctuation, a comment or the formatting right? | the text and formatting sections |

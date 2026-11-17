@@ -156,7 +156,7 @@ VARIANTS: dict[str, str] = {
 PATTERN = re.compile(r"\b(" + "|".join(sorted(VARIANTS, key=len, reverse=True)) + r")\b", re.IGNORECASE)
 CORPUS_FILE = "scripts/config/benchmarks/language_corpus.json"
 # - the checker and its fixtures quote British forms on purpose
-SELF_REFERENTIAL = {"scripts/review/checks/spellings.py", "scripts/tests/cases/review/test_spellings.py"}
+SELF_REFERENTIAL = {"scripts/review/checks/spellings.py", "scripts/tests/cases/review/checks/test_spellings.py"}
 REFERENCE_VALUE = re.compile(r'("reference"\s*:\s*")([^"\\]*(?:\\.[^"\\]*)*)(")')
 
 
@@ -204,7 +204,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     top = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
     root = Path(top.stdout.strip())
-    return check(root, args.paths or tracked_text_files(root, SELF_REFERENTIAL))
+    # - a scoped run is given paths directly, so it drops the check's own fixtures the same way
+    if args.paths:
+        return check(root, [path for path in args.paths if path not in SELF_REFERENTIAL])
+    return check(root, tracked_text_files(root, SELF_REFERENTIAL))
 
 
 if __name__ == "__main__":

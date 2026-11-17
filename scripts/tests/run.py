@@ -33,11 +33,11 @@ from scripts.tests.cases.llamacpp.test_speech_ui import SpeechUiTests
 from scripts.tests.cases.personal.comfyui.test_comfyui_video import ExecutionTests, WorkflowTests
 from scripts.tests.cases.personal.comfyui.test_ltx_prompt_cache import PromptCacheTests
 from scripts.tests.cases.personal.comfyui.test_verify_node import ProviderTests, VerifyNodeTests
-from scripts.tests.cases.review.test_annotations import DefaultTests, FindingsTests, ScoreTests
-from scripts.tests.cases.review.test_bare_any import BareAnyTests
-from scripts.tests.cases.review.test_comments import CommentPolicyTests
-from scripts.tests.cases.review.test_dead_code import FindingTests
-from scripts.tests.cases.review.test_docs import (
+from scripts.tests.cases.review.checks.test_annotations import DefaultTests, FindingsTests, ScoreTests
+from scripts.tests.cases.review.checks.test_bare_any import BareAnyTests
+from scripts.tests.cases.review.checks.test_comments import CommentPolicyTests
+from scripts.tests.cases.review.checks.test_dead_code import FindingTests
+from scripts.tests.cases.review.checks.test_docs import (
     GeneratedPageTests,
     LinkTests,
     MarkdownNameTests,
@@ -46,26 +46,27 @@ from scripts.tests.cases.review.test_docs import (
     RoleTests,
     RootDocumentTests,
 )
-from scripts.tests.cases.review.test_duplicates import DuplicateReportTests
-from scripts.tests.cases.review.test_dynamic_imports import DynamicImportTests
-from scripts.tests.cases.review.test_examples import ExamplesPageTests
-from scripts.tests.cases.review.test_folder_rule import FolderRuleTests
-from scripts.tests.cases.review.test_layout import PolicyTests
-from scripts.tests.cases.review.test_line_length import LimitsReportTests, LineLengthTests
-from scripts.tests.cases.review.test_network_timeouts import NetworkTimeoutTests
-from scripts.tests.cases.review.test_overlay_access import OverlayAccessTests
-from scripts.tests.cases.review.test_owned_tokens import OwnedTokenTests
-from scripts.tests.cases.review.test_public_audit import PublicAuditTests
-from scripts.tests.cases.review.test_review_gate import GateScopeTests
-from scripts.tests.cases.review.test_similarity import (
+from scripts.tests.cases.review.checks.test_duplicates import DuplicateReportTests
+from scripts.tests.cases.review.checks.test_dynamic_imports import DynamicImportTests
+from scripts.tests.cases.review.checks.test_folder_rule import FolderRuleTests
+from scripts.tests.cases.review.checks.test_layout import PolicyTests
+from scripts.tests.cases.review.checks.test_line_length import LimitsReportTests, LineLengthTests
+from scripts.tests.cases.review.checks.test_network_timeouts import NetworkTimeoutTests
+from scripts.tests.cases.review.checks.test_overlay_access import OverlayAccessTests
+from scripts.tests.cases.review.checks.test_owned_tokens import OwnedTokenTests
+from scripts.tests.cases.review.checks.test_similarity import (
     SimilarityCodeTests,
     SimilarityFindingTests,
     SimilarityNeighborTests,
     SimilaritySourceTests,
     SimilarityUnitTests,
 )
-from scripts.tests.cases.review.test_spellings import AmericanSpellingTests
-from scripts.tests.cases.review.test_typography import CheckTests, ScanTests, SuffixTests
+from scripts.tests.cases.review.checks.test_spellings import AmericanSpellingTests
+from scripts.tests.cases.review.checks.test_typography import CheckTests, ScanTests, SuffixTests
+from scripts.tests.cases.review.checks.test_walrus import WalrusTests
+from scripts.tests.cases.review.test_examples import ExamplesPageTests
+from scripts.tests.cases.review.test_public_audit import PublicAuditTests
+from scripts.tests.cases.review.test_review_gate import GateScopeTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
 from scripts.tests.cases.shared.benchmarks.test_coding_engines import CodingEngineSummaryTests
@@ -284,6 +285,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     OwnedTokenTests,
     DuplicateReportTests,
     DynamicImportTests,
+    WalrusTests,
     ExamplesPageTests,
     FolderRuleTests,
     SpeechProfiles,
