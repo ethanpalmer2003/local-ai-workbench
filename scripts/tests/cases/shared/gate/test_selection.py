@@ -21,6 +21,10 @@ class TestSelection(unittest.TestCase):
             ("notes/TODO.md", None),
             ("README.md", None),
             ("scripts/state/logs/a.py", "scripts.state.logs.a"),
+            # - a data or template file under scripts/ is not a module, so it is an unmodelled path
+            ("scripts/config/models/catalog.json", None),
+            ("scripts/benchmarks/README.md", None),
+            ("scripts/config/llamacpp/chat_template.jinja", None),
         )
         for path, expected in cases:
             self.assertEqual(selection.module_name(path), expected, path)
@@ -88,6 +92,8 @@ class TestSelection(unittest.TestCase):
         groups = (TestSelection,)
         for paths, why in (
             (["notes/TODO.md"], "not a Python module"),
+            (["scripts/config/models/catalog.json"], "not a Python module"),
+            (["scripts/benchmarks/README.md"], "not a Python module"),
             ([], "no change set"),
             (["scripts/tests/run.py"], "manifest changed"),
             (["scripts/tests/selection.py"], "manifest changed"),
