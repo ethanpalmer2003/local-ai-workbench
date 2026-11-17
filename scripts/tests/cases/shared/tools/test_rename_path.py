@@ -71,17 +71,29 @@ class ReferenceRewriteTests(unittest.TestCase):
     def test_references_in_prose_code_and_batches_are_rewritten(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
-            (root / "doc.md").write_text("See [labels](OLD-INDEX.md) and notes/OLD-INDEX.md.\n", encoding="utf-8")
+            (root / "notes").mkdir()
+            (root / "notes" / "doc.md").write_text("See [labels](OLD-INDEX.md) and OLD-INDEX.md.\n", encoding="utf-8")
             (root / "script.py").write_text('PATH = "notes/OLD-INDEX.md"\n', encoding="utf-8")
             (root / "run.bat").write_text("python -m scripts.tools.yaml_table notes\\OLD-INDEX.md\n", encoding="utf-8")
             moves = {"notes/OLD-INDEX.md": "notes/NEW-INDEX.md"}
             changed = rename_path.rewrite_references(moves, dry_run=False, root=root)
             self.assertEqual(len(changed), 3)
-            doc = (root / "doc.md").read_text(encoding="utf-8")
-            self.assertNotIn("OLD-INDEX", doc, "every spelling should be repointed")
+            doc = (root / "notes" / "doc.md").read_text(encoding="utf-8")
+            self.assertNotIn("OLD-INDEX", doc, "every spelling beside the moved file is repointed")
             self.assertIn("[labels](NEW-INDEX.md)", doc)
-            self.assertIn("notes/NEW-INDEX.md", doc)
+            self.assertIn("notes/NEW-INDEX.md", (root / "script.py").read_text(encoding="utf-8"))
             self.assertIn("notes\\NEW-INDEX.md", (root / "run.bat").read_text(encoding="utf-8"))
+
+    def test_a_bare_basename_is_not_rewritten_outside_its_directory(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            (root / "suites").mkdir()
+            (root / "suites" / "README.md").write_text("[smoke](frameworks_smoke.py)\n", encoding="utf-8")
+            (root / "asr").mkdir()
+            (root / "asr" / "smoke.py").write_text("X = 1\n", encoding="utf-8")
+            rename_path.rewrite_references({"asr/smoke.py": "asr/parakeetcpp.py"}, dry_run=False, root=root)
+            readme = (root / "suites" / "README.md").read_text(encoding="utf-8")
+        self.assertIn("frameworks_smoke.py", readme, "a longer name sharing the basename is a different file")
 
     def test_a_dry_run_reports_without_writing(self):
         with CasePaths(__file__).temporary_directory() as folder:
