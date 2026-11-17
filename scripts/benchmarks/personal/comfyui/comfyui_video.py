@@ -13,7 +13,7 @@ import time
 import uuid
 from dataclasses import asdict, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.benchmark import workflow_timing
@@ -343,9 +343,26 @@ def _stage_source(name: str, saved: dict[str, Any], comfy: Path, paths: RunPaths
             shutil.copy2(source_image, target_image)
 
 
-def _select_sources(
-    args: argparse.Namespace, comfy: Path, model_root: Path, paths: RunPaths
-) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...], dict[str, Any], dict[str, Any]]:
+class SelectedSources(NamedTuple):
+    """The model, encoder and preset choices a run resolved, with their sources."""
+
+    models: tuple[str, ...]
+    encoders: tuple[str, ...]
+    presets: tuple[str, ...]
+    sources: dict[str, Any]
+    saved_workflows: dict[str, Any]
+
+
+class LaunchPlan(NamedTuple):
+    """The command, graph and metadata a launch needs, plus its overrides."""
+
+    command: list[str]
+    graph: dict[str, Any]
+    metadata: dict[str, Any]
+    overrides: dict[str, str]
+
+
+def _select_sources(args: argparse.Namespace, comfy: Path, model_root: Path, paths: RunPaths) -> SelectedSources:
     models = MODELS if args.model == "all" else (MODELS[int(args.model) - 1],)
     encoders = ENCODERS if args.encoder == "all" else (ENCODERS[int(args.encoder) - 1],)
     presets = PRESETS if args.preset == "all" else (args.preset,)
@@ -361,7 +378,7 @@ def _select_sources(
         vaes = _workflow_vaes(saved, selected_vae)
         _require_model_files(model_root, (("unet", models), ("clip", encoders), ("vae", vaes)))
         _stage_source(name, saved, comfy, paths)
-    return models, encoders, presets, sources, saved_workflows
+    return SelectedSources(models, encoders, presets, sources, saved_workflows)
 
 
 def _workload_cases(args: argparse.Namespace, paths: RunPaths) -> tuple[tuple[str, LTXWorkflowOverrides], ...]:
@@ -445,7 +462,7 @@ def _launch_plan(
     saved: dict[str, Any],
     source: Any,
     saved_workflows: dict[str, Any],
-) -> tuple[list[str], dict[str, Any], dict[str, Any], dict[str, str]]:
+) -> LaunchPlan:
     if args.launch_case:
         flags, overrides = isolated_launch_options(args.launch_case)
     elif args.compare_workflows or args.tile_sweep:
@@ -478,7 +495,7 @@ def _launch_plan(
         "workflow": str(source),
     }
     (paths.artifacts / f"{label}-launch.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
-    return command, graph, metadata, overrides
+    return LaunchPlan(command, graph, metadata, overrides)
 
 
 def _server_env(python: Path, comfy: Path, overrides: dict[str, str]) -> dict[str, str]:

@@ -465,12 +465,16 @@ class _JsonProxyHandler(ProxyHandlerMixin):
         print(f"[{self.tag}] {format % args}")
 
 
+Transform = Callable[[dict[str, object]], dict[str, object] | None]
+OnResponse = Callable[[dict[str, object], dict[str, object]], None]
+
+
 def run_json_proxy(
     service: cfg.GenericStartupServiceSettings,
     upstream_url: str,
-    transform: Callable[[dict[str, object]], dict[str, object] | None] | None = None,
+    transform: Transform | None = None,
     tag: str = "proxy",
-    on_response: Callable[[dict[str, object], dict[str, object]], None] | None = None,
+    on_response: OnResponse | None = None,
     restart_controller: ProxyRestartController | None = None,
     transform_paths: frozenset[str] | None = None,
     request_scope: RequestScope | None = None,

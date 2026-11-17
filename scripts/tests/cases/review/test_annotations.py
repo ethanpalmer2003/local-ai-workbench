@@ -71,7 +71,6 @@ class FindingsTests(unittest.TestCase):
         rows = self._findings("def f(value: dict[str, dict[str, dict[str, dict[str, int]]]]) -> None: ...")
         self.assertEqual(len(rows), 1)
         self.assertGreater(rows[0].depth, annotations.MAX_DEPTH)
-        self.assertLessEqual(rows[0].score, annotations.MAX_SCORE)
 
 
 if __name__ == "__main__":

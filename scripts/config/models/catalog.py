@@ -8,7 +8,7 @@ import re
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import yaml
 
@@ -62,7 +62,16 @@ def _destination(group: str, label: str, raw: dict[str, Any], destinations: set[
     return str(filename), destination
 
 
-def _download_fields(raw: dict[str, Any], label: str) -> tuple[str | None, bool, str | None, list[Any]]:
+class DownloadFields(NamedTuple):
+    """The source fields one catalog entry declares: url, whether it is in use, hash and roles."""
+
+    url: str | None
+    in_use: bool
+    sha256: str | None
+    roles: list[Any]
+
+
+def _download_fields(raw: dict[str, Any], label: str) -> DownloadFields:
     url = raw.get("url")
     in_use = bool(raw.get("in_use", False))
     if in_use and not url:
@@ -73,7 +82,7 @@ def _download_fields(raw: dict[str, Any], label: str) -> tuple[str | None, bool,
     roles = raw.get("roles") or []
     if not isinstance(roles, list):
         raise ValueError(f"Model roles must be a list: {label}")
-    return (str(url) if url else None), in_use, (str(sha256) if sha256 else None), roles
+    return DownloadFields((str(url) if url else None), in_use, (str(sha256) if sha256 else None), roles)
 
 
 def _entry(raw: dict[str, Any], labels: set[str], destinations: set[str]) -> ModelDownload:
