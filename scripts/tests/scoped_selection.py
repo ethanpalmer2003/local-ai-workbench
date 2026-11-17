@@ -18,7 +18,7 @@ from typing import NamedTuple
 
 from scripts.config import project_config as project_cfg
 from scripts.shared.changes import changed_paths, git
-from scripts.shared.import_graph import import_graph, module_name, parse_source, reverse_closure
+from scripts.shared.import_graph import REACH_DEPTH, import_graph, module_name, parse_source, reverse_closure
 
 FULL_TRIGGERS = frozenset(
     {
@@ -27,8 +27,6 @@ FULL_TRIGGERS = frozenset(
         "scripts/tests/scoped_selection.py",
     }
 )
-# The default scope stops here: the full run before a push catches transitive misses.
-SCOPE_DEPTH = 1
 
 TestGroup = type[unittest.TestCase]
 
@@ -99,7 +97,7 @@ def select(
         return Selection((), groups, "no Python change")
 
     edges = import_graph(root)
-    reachable = reverse_closure(edges, changed_modules, depth=SCOPE_DEPTH)
+    reachable = reverse_closure(edges, changed_modules, depth=REACH_DEPTH)
 
     kept: list[TestGroup] = []
     dropped: list[TestGroup] = []

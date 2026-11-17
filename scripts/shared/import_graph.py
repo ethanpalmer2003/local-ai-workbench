@@ -16,6 +16,9 @@ from scripts.config import project_config as project_cfg
 from scripts.shared.changes import git
 
 Graph = dict[str, frozenset[str]]
+# - one import hop: what a change can break without transitive guessing, used by the suite's scope
+#   and by the type check that runs beside it
+REACH_DEPTH = 1
 
 
 def module_name(path: str) -> str | None:
