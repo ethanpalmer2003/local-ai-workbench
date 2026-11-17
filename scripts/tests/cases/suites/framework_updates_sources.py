@@ -1,4 +1,4 @@
-"""Framework source, git and desktop update behaviour, split from the update suite."""
+"""Framework source, git and desktop update behavior, split from the update suite."""
 
 import contextlib
 import io
