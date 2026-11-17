@@ -434,11 +434,23 @@ def full_gate(argv: list[str] | None = None) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Scope the gate to the change by default; `--all`, `--prune`, `--scrub` or a clean tree run every section."""
+    """Scope the gate to the change by default; `--all`, `--prune`, `--scrub` or a clean tree run every section.
+
+    `--push` is the pre-push stage: every section when the unpushed commits touch Python, and only the
+    prose sections when they do not, since no Python behavior changed and the last push was green.
+    """
     argv = list(sys.argv[1:] if argv is None else argv)
     # - a run's status comes from its own sections, so no earlier run in this process can fail it
     TIMES.clear()
-    if not (_flag(argv, "--all") or _flag(argv, "--prune") or _flag(argv, "--scrub")) and changed_paths():
+    pushing = _flag(argv, "--push")
+    argv = [argument for argument in argv if argument != "--push"]
+    changed = changed_paths()
+    prose_only = pushing and not any(path.endswith(".py") for path in changed)
+    if prose_only:
+        print("[PUSH] no Python change since upstream; prose sections only", flush=True)
+    if prose_only or (
+        not pushing and not (_flag(argv, "--all") or _flag(argv, "--prune") or _flag(argv, "--scrub")) and changed
+    ):
         return touched_gate(argv)
     return full_gate(argv)
 

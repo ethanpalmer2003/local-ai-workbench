@@ -46,17 +46,17 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
-      # - the push level: every section and every class, the completeness guarantee
+      # - the push level: every section and every class when Python changed, prose only when it did not
       - id: gate-full
-        name: review gate (all)
-        entry: .venv/Scripts/python.exe -m scripts.review --all
+        name: review gate (push)
+        entry: .venv/Scripts/python.exe -m scripts.review --push
         language: system
         pass_filenames: false
         always_run: true
         stages: [pre-push]
       - id: suite-full
-        name: model-free suite (all)
-        entry: .venv/Scripts/python.exe -m scripts.tests.run --all
+        name: model-free suite (push)
+        entry: .venv/Scripts/python.exe -m scripts.tests.run --push
         language: system
         pass_filenames: false
         always_run: true

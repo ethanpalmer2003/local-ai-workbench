@@ -147,6 +147,30 @@ class GateScopeTests(unittest.TestCase):
             self.assertEqual(sources.check_targets([], (".py",)), [Path("scripts/tests/a.py")])
         self.assertEqual(sources.check_targets(["notes/TODO.md"], (".py",)), [project_cfg.BASE_DIR / "notes/TODO.md"])
 
+    def test_a_prose_only_push_runs_the_touched_sections(self):
+        from scripts.review import __main__ as gate
+
+        with (
+            patch.object(gate, "changed_paths", return_value=["notes/TODO.md"]),
+            patch.object(gate, "touched_gate", return_value=0) as touched,
+            patch.object(gate, "full_gate") as full,
+        ):
+            self.assertEqual(gate.main(["--push"]), 0)
+        touched.assert_called_once_with([])
+        full.assert_not_called()
+
+    def test_a_push_with_python_runs_every_section(self):
+        from scripts.review import __main__ as gate
+
+        with (
+            patch.object(gate, "changed_paths", return_value=["scripts/shared/consent.py"]),
+            patch.object(gate, "touched_gate") as touched,
+            patch.object(gate, "full_gate", return_value=0) as full,
+        ):
+            self.assertEqual(gate.main(["--push"]), 0)
+        full.assert_called_once_with([])
+        touched.assert_not_called()
+
     def test_formatting_targets_the_change_and_falls_back_to_the_tree(self):
         from scripts.review import format_py
 
