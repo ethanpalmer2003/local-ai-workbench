@@ -16,8 +16,8 @@ from scripts.config import project_config as project_cfg
 from scripts.shared.changes import git
 
 Graph = dict[str, frozenset[str]]
-# - one import hop: what a change can break without transitive guessing, used by the suite's scope
-#   and by the type check that runs beside it
+# One import hop: what a change can break without transitive guessing, used by the suite's scope
+# and by the type check that runs beside it.
 REACH_DEPTH = 1
 
 
@@ -46,7 +46,8 @@ def module_files(root: Path | None = None) -> dict[str, Path]:
     files: dict[str, Path] = {}
     for relative in git("ls-files", "--cached", "--others", "--exclude-standard", "scripts", root=root).splitlines():
         name = module_name(relative)
-        if name and (path := base / relative).is_file():
+        path = base / relative
+        if name and path.is_file():
             files[name] = path
     return files
 
@@ -68,9 +69,10 @@ def _from_import_target(node: ast.ImportFrom, module: str, is_package: bool) -> 
         return node.module
     package = module if is_package else module.rpartition(".")[0]
     parts = package.split(".") if package else []
-    if node.level - 1 >= len(parts):
+    up = node.level - 1
+    if up >= len(parts):
         return None
-    base = ".".join(parts[: len(parts) - (node.level - 1)])
+    base = ".".join(parts[: len(parts) - up])
     return f"{base}.{node.module}" if node.module else base
 
 
@@ -111,11 +113,14 @@ def import_graph(root: Path | None = None) -> Graph:
     edges: Graph = {}
     for name, path in files.items():
         parts = name.split(".")
-        targets = {parent for end in range(1, len(parts)) if (parent := ".".join(parts[:end])) in known}
+        parents = {".".join(parts[:end]) for end in range(1, len(parts))}
+        targets = parents & known
         tree = parse_source(path)
         if tree is not None:
-            raw_names = imported_names(tree, name, is_package=path.name == "__init__.py")
-            targets |= {target for raw in raw_names if (target := _longest_known_prefix(raw, known))}
+            for raw in imported_names(tree, name, is_package=path.name == "__init__.py"):
+                target = _longest_known_prefix(raw, known)
+                if target:
+                    targets.add(target)
         edges[name] = frozenset(targets - {name})
     return edges
 
