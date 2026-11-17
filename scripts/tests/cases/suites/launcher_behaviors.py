@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from scripts.config import project_config as project_cfg
-from scripts.config.trash import archive_path
+from scripts.config.trash import archive_path, trash_dir
 from scripts.download.frameworks.llamacpp import rdna_build as llamacpp_rdna_build
 from scripts.download.input import split_from_csv, voice_model, voice_workflow
 from scripts.launchers import launch_util
@@ -355,11 +355,20 @@ class LauncherBehaviors(unittest.TestCase):
             (source / "voice.txt").write_text("keep me", encoding="utf-8")
             with patch.object(project_cfg, "BASE_DIR", root):
                 archive_path(source, root)
-                archived = next((root / "trash").glob("generated-*"))
+                archived = next((root / "trash").glob("*/generated-*"))
                 self.assertEqual((archived / "voice.txt").read_text(encoding="utf-8"), "keep me")
                 self.assertFalse(source.exists())
                 with self.assertRaises(ValueError):
                     archive_path(root.parent, root)
+
+    def test_trash_groups_by_day_without_creating_the_folder(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            with patch.object(project_cfg, "BASE_DIR", root):
+                first, second = trash_dir(), trash_dir()
+            self.assertEqual(first, second)
+            self.assertFalse(first.exists())
+            self.assertRegex(first.name, r"^\d{4}-\d{2}-\d{2}$")
 
     def test_archive_removes_an_empty_directory_without_a_trash_entry(self):
         with CasePaths(__file__).temporary_directory() as folder:

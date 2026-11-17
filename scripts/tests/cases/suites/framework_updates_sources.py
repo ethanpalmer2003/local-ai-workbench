@@ -429,7 +429,7 @@ class FrameworkUpdateSources(unittest.TestCase):
             ):
                 updater.update_tool(asset, destination, scratch, "tool.exe")
             self.assertEqual((destination / "tool.exe").read_bytes(), b"new installation")
-            backups = list((root / "trash").glob("*/tool.exe"))
+            backups = list((root / "trash").glob("*/*/tool.exe"))
             self.assertEqual(len(backups), 1)
             self.assertEqual(backups[0].read_bytes(), b"old installation")
 

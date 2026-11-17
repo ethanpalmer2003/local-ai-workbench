@@ -21,6 +21,7 @@ from pathlib import Path
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.config.models import catalog
+from scripts.config.trash import trash_dir
 from scripts.download.models import model_sync
 
 
@@ -142,7 +143,7 @@ def trash_target(source: Path, stamp: str) -> Path:
         relative = source.resolve().relative_to(project_cfg.BASE_DIR)
     except ValueError:
         relative = Path(source.name)
-    return project_cfg.BASE_DIR / "trash" / "model_admin" / stamp / relative
+    return trash_dir() / "model_admin" / stamp / relative
 
 
 def backup_file(source: Path, stamp: str) -> Path | None:
