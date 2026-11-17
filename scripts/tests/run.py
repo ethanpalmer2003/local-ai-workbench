@@ -94,7 +94,7 @@ from scripts.tests.cases.shared.gate.test_inference_engines import InferenceEngi
 from scripts.tests.cases.shared.gate.test_label_vocabulary import LabelVocabularyTests
 from scripts.tests.cases.shared.gate.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.gate.test_model_run import ModelRunTests
-from scripts.tests.cases.shared.gate.test_scoping import TestScope
+from scripts.tests.cases.shared.gate.test_selection import TestSelection
 from scripts.tests.cases.shared.gate.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
 from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
@@ -151,7 +151,7 @@ from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.cases.suites.framework_updates import FrameworkUpdates
 from scripts.tests.cases.suites.framework_updates_sources import FrameworkUpdateSources
 from scripts.tests.cases.suites.shared_contracts import SharedContracts
-from scripts.tests.scoping import select
+from scripts.tests.selection import select
 
 GROUPS: tuple[type[unittest.TestCase], ...] = (
     BenchmarkLifecycleTests,
@@ -299,7 +299,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     StackProbeTests,
     TransportBenchmark,
     BackendSessions,
-    TestScope,
+    TestSelection,
     ExitReportTests,
 )
 
