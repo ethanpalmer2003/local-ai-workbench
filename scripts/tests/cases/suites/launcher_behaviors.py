@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 from scripts.config import project_config as project_cfg
 from scripts.config.trash import archive_path
 from scripts.download.frameworks.llamacpp import rdna_build as llamacpp_rdna_build
-from scripts.download.input import get_tts_voices, split_from_csv
+from scripts.download.input import split_from_csv, voice_model, voice_workflow
 from scripts.launchers import launch_util
 from scripts.launchers.launch_util import assign_process_to_job
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig, LlamaMonitor
@@ -318,10 +318,10 @@ class LauncherBehaviors(unittest.TestCase):
     def test_ffprobe_failure_is_not_a_zero_duration(self):
         error = subprocess.CalledProcessError(1, ["ffprobe"])
         with (
-            patch.object(get_tts_voices.subprocess, "run", side_effect=error),
+            patch.object(voice_model.subprocess, "run", side_effect=error),
             self.assertRaises(subprocess.CalledProcessError),
         ):
-            get_tts_voices.duration(Path("missing.wav"))
+            voice_model.duration(Path("missing.wav"))
 
     def test_failed_silence_scan_does_not_write_cache(self):
         with (
@@ -337,14 +337,14 @@ class LauncherBehaviors(unittest.TestCase):
 
     def test_corrupt_transcripts_raise(self):
         with patch.object(Path, "read_text", return_value="{invalid"), self.assertRaises(json.JSONDecodeError):
-            get_tts_voices.load_json(Path("subtitles.json"))
+            voice_model.load_json(Path("subtitles.json"))
 
     def test_spreadsheet_closes_after_import_failure(self):
         sheet = Mock()
         sheet.iter_rows.side_effect = RuntimeError("bad spreadsheet")
         workbook = Mock(worksheets=[sheet])
         with patch("openpyxl.load_workbook", return_value=workbook), self.assertRaises(RuntimeError):
-            get_tts_voices.import_xlsx_transcripts(Path("transcripts.xlsx"), [], {})
+            voice_workflow.import_xlsx_transcripts(Path("transcripts.xlsx"), [], {})
         workbook.close.assert_called_once()
 
     def test_archive_preserves_data_and_rejects_outside_root(self):
