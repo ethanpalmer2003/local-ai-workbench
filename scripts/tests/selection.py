@@ -185,7 +185,7 @@ def _longest_known_prefix(name: str, known: set[str]) -> str | None:
 
 
 def _parent_packages(module: str, known: set[str]) -> set[str]:
-    """The tracked packages above a module, whose `__init__.py` runs whenever the module is imported."""
+    """The known packages above a module, whose `__init__.py` runs whenever the module is imported."""
     parts = module.split(".")
     return {parent for end in range(1, len(parts)) if (parent := ".".join(parts[:end])) in known}
 
