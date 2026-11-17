@@ -138,6 +138,7 @@ from scripts.tests.cases.shared.tools.test_refresh_index import (
 from scripts.tests.cases.shared.tools.test_rename_path import (
     ImportRewriteTests,
     MoveParsingTests,
+    PreviewTests,
     ReferenceRewriteTests,
     ScanScopeTests,
 )
@@ -259,6 +260,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     StateCleanupTests,
     MoveParsingTests,
     ImportRewriteTests,
+    PreviewTests,
     ReferenceRewriteTests,
     RefreshBackgroundTests,
     RefreshLockTests,
