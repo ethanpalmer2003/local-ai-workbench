@@ -2,26 +2,41 @@
 
 import json
 import subprocess
-from typing import Any
+from pathlib import Path
+from typing import Any, NotRequired, TypedDict
 from urllib.parse import quote
 
 import requests
 
 from scripts.config import project_config as project_cfg
-from scripts.download.models.hub_sources import parse_url
-from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.download.models.hub_sources import HubFile, parse_url
+from scripts.launchers.runtime.execution_context import ExecutionContext, require_native_execution
 
 LIMIT = 8 * 1024 * 1024
 
 
-def hub_source(url):
+class NativeMetadata(TypedDict):
+    """What a native inspector reported, or why no verified inspector could run."""
+
+    status: str
+    reason: NotRequired[str]
+    command: NotRequired[list[str]]
+    returncode: NotRequired[int]
+    metadata: NotRequired[object]
+    stdout: NotRequired[str]
+    stderr: NotRequired[str]
+    truncated: NotRequired[bool]
+    execution_context: NotRequired[ExecutionContext]
+
+
+def hub_source(url: str | None) -> HubFile | None:
     try:
         return parse_url(url) if url else None
     except ValueError:
         return None
 
 
-def hub_metadata(source):
+def hub_metadata(source: HubFile) -> dict[str, Any]:
     from huggingface_hub import HfApi
 
     info = HfApi(token=False).model_info(source.repo_id, revision=source.revision)
@@ -54,7 +69,7 @@ def hub_metadata(source):
     return result
 
 
-def native_metadata(path, groups):
+def native_metadata(path: Path, groups: list[str]) -> NativeMetadata:
     if "silero" in path.name.lower() or path.name == "Kokoro_no_espeak_Q4.gguf":
         return {
             "status": "not_available",

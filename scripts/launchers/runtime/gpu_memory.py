@@ -13,7 +13,53 @@ import time
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, TypedDict
+
+
+class UsageWindow(TypedDict):
+    """Consecutive samples at or above the near-peak threshold."""
+
+    first_sample_seconds: float
+    last_sample_seconds: float
+    sample_count: int
+
+
+class UsageDistribution(TypedDict):
+    """Sampled spread for one counter; nulls mean no sample carried the value."""
+
+    minimum_used_mb: float | None
+    median_used_mb: float | None
+    near_peak_threshold_mb: float | None
+    near_peak_fraction: float
+    near_peak_windows: list[UsageWindow]
+    timing_limit: str
+
+
+class StagePeak(TypedDict):
+    """One named stage's peak and spread, so a load step is not read as request time."""
+
+    total_used_mb: float | None
+    process_used_mb: float | None
+    usage_distribution: UsageDistribution
+
+
+class MonitorSummary(TypedDict):
+    """What one monitor saw: how it sampled, the peaks and the stage split."""
+
+    status: str
+    units: str
+    poll_pause_s: float
+    source: str
+    max_query_s: float
+    peak_kind: str
+    samples: int
+    available_samples: int
+    peak_total_used_mb: float | None
+    peak_process_used_mb: float | None
+    minimum_available_mb: float | None
+    usage_distribution: UsageDistribution
+    process_usage_distribution: UsageDistribution
+    stage_peaks: dict[str, StagePeak]
 
 
 @dataclass(frozen=True)
@@ -130,7 +176,7 @@ class GpuMemoryMonitor:
                 stream.flush()
                 self._stop.wait(0.1 if self.fast_windows else GPU_SETTINGS.poll_interval_s)
 
-    def summary(self) -> dict[str, Any]:
+    def summary(self) -> MonitorSummary:
         valid = [sample for sample in self.samples if sample["memory"] is not None]
 
         def peak(samples: list[dict[str, Any]], field: str) -> float | None:
@@ -165,15 +211,15 @@ class GpuMemoryMonitor:
         }
 
 
-def sampled_usage(samples: list[dict[str, Any]], field: str = "used_mb") -> dict[str, Any]:
+def sampled_usage(samples: list[dict[str, Any]], field: str = "used_mb") -> UsageDistribution:
     values = [
         sample["memory"][field]
         for sample in samples
         if sample.get("memory") is not None and sample["memory"].get(field) is not None
     ]
     threshold = max(values) * 0.95 if values else None
-    windows: list[dict[str, Any]] = []
-    current = None
+    windows: list[UsageWindow] = []
+    current: UsageWindow | None = None
     for sample in samples:
         memory = sample.get("memory")
         if memory is None or memory.get(field) is None or threshold is None or memory[field] < threshold:

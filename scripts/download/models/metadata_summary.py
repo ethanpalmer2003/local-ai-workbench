@@ -3,17 +3,46 @@
 import json
 import re
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, NotRequired, TypedDict
 
 LANGUAGE_KEYS = {"language", "languages", "supported_languages", "language_codes", "lang_to_id", "locale"}
 NON_LANGUAGES = {"auto", "multilingual", "unknown", "und", "code"}
 
-# - one metadata claim, and one claim with the scope it came from
-Claim = dict[str, Any]
-ScopedClaim = tuple[str, Claim]
+
+class Claim(TypedDict):
+    """One metadata claim about a model, kept with the scope it came from."""
+
+    source: str
+    scope: str
+    unit: str
+    codes: list[str]
+    count: int
+    validated_accuracy: bool
+    notes: NotRequired[str]
+    coverage_tiers: NotRequired[dict[str, list[str]] | None]
 
 
-def language_codes(value, key):
+# - where a config came from, then the config itself; each source keeps its own scope
+ScopedConfig = tuple[str, dict[str, Any]]
+
+
+class ModelSummary(TypedDict):
+    """The summary written into a model record; missing fields mean unknown, not unsupported."""
+
+    tasks: list[str] | None
+    fields: dict[str, Any]
+    language_claims: list[Claim]
+    language_status: str
+    review_flags: list[str]
+    chat_template_sources: list[str]
+    capabilities: object
+    modes: object
+    voices: object
+    quantization_filename_hint: str | None
+    limits: list[str]
+
+
+def language_codes(value: object, key: str) -> list[str] | None:
     if key == "lang_to_id" and isinstance(value, dict):
         value = [code.removeprefix("<|").removesuffix("|>") for code in value]
     if isinstance(value, dict):
@@ -28,10 +57,10 @@ def language_codes(value, key):
     return sorted({code.strip() for code in value if code.strip().lower() not in NON_LANGUAGES}) or None
 
 
-def claims_from(data, source, scope="model"):
+def claims_from(data: object, source: str, scope: str = "model") -> list[Claim]:
     if not isinstance(data, dict):
         return []
-    result = []
+    result: list[Claim] = []
     for key, value in data.items():
         leaf = key.lower().split(".")[-1]
         if leaf in LANGUAGE_KEYS:
@@ -89,10 +118,10 @@ def _curated_claims(record: dict[str, Any], language_catalog: dict[str, Any]) ->
     return CuratedClaims(claims, curated)
 
 
-def _artifact_claims(record: dict[str, Any]) -> tuple[list[Claim], list[ScopedClaim]]:
+def _artifact_claims(record: dict[str, Any]) -> tuple[list[Claim], list[ScopedConfig]]:
     """Claims and configs from sidecars and hub cards; each keeps its own scope."""
     claims: list[Claim] = []
-    configs: list[ScopedClaim] = []
+    configs: list[ScopedConfig] = []
     for item in record.get("sidecars", []):
         data = item.get("metadata", {})
         claims += claims_from(
@@ -162,7 +191,7 @@ def _templates(local: dict[str, Any], configs: list[tuple[str, dict[str, Any]]])
     return templates
 
 
-def summary(record, language_catalog) -> dict[str, Any]:
+def summary(record: dict[str, Any], language_catalog: dict[str, Any]) -> ModelSummary:
     local = record.get("local", {}).get("metadata", {})
     spec = _spec(local)
     claims = claims_from(local, "embedded") + claims_from(spec, "embedded:model_spec", "speech runtime")

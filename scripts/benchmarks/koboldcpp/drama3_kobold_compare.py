@@ -18,7 +18,12 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor, GpuMemorySnapshot, get_gpu_memory_snapshot
+from scripts.launchers.runtime.gpu_memory import (
+    GpuMemoryMonitor,
+    GpuMemorySnapshot,
+    MonitorSummary,
+    get_gpu_memory_snapshot,
+)
 from scripts.shared import backends, consent
 from scripts.tests.cases.koboldcpp.kobold_audiocpp_modes import kobold_reply, split_text
 
@@ -31,6 +36,12 @@ def process_ram(pid: int | None) -> dict[str, float] | None:
     except (psutil.NoSuchProcess, psutil.AccessDenied):
         return None
     return {name: getattr(info, name) / 2**20 for name in ("rss", "vms", "peak_wset", "private") if hasattr(info, name)}
+
+
+class DramaSummary(MonitorSummary):
+    """The monitor summary plus the system RAM counters sampled beside VRAM."""
+
+    ram: dict[str, Any]
 
 
 class DramaMemoryMonitor(GpuMemoryMonitor):
@@ -49,26 +60,31 @@ class DramaMemoryMonitor(GpuMemoryMonitor):
         }
         return sample
 
-    def summary(self) -> dict[str, Any]:
-        result = super().summary()
+    def summary(self) -> DramaSummary:
         ram = [sample["ram"] for sample in self.samples if sample.get("ram")]
         available = [sample["system_available_mb"] for sample in ram]
-        result["ram"] = {
-            "units": "MiB",
-            "samples": len(ram),
-            "minimum_system_available_mb": min(available) if available else None,
-            "processes": {
-                name: {
-                    field: max(
-                        (sample[name][field] for sample in ram if sample[name] is not None and field in sample[name]),
-                        default=None,
-                    )
-                    for field in ("rss", "private", "peak_wset")
-                }
-                for name in ("drama", "kobold")
+        return {
+            **super().summary(),
+            "ram": {
+                "units": "MiB",
+                "samples": len(ram),
+                "minimum_system_available_mb": min(available) if available else None,
+                "processes": {
+                    name: {
+                        field: max(
+                            (
+                                sample[name][field]
+                                for sample in ram
+                                if sample[name] is not None and field in sample[name]
+                            ),
+                            default=None,
+                        )
+                        for field in ("rss", "private", "peak_wset")
+                    }
+                    for name in ("drama", "kobold")
+                },
             },
         }
-        return result
 
 
 def save(run: RunPaths, report: dict[str, Any]) -> None:
