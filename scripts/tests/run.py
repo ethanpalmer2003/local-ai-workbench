@@ -95,7 +95,7 @@ from scripts.tests.cases.shared.gate.test_inference_engines import InferenceEngi
 from scripts.tests.cases.shared.gate.test_label_vocabulary import LabelVocabularyTests
 from scripts.tests.cases.shared.gate.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.gate.test_model_run import ModelRunTests
-from scripts.tests.cases.shared.gate.test_selection import TestSelection
+from scripts.tests.cases.shared.gate.test_scoped_selection import TestSelection
 from scripts.tests.cases.shared.gate.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
 from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
@@ -160,7 +160,7 @@ from scripts.tests.cases.suites.framework_updates import FrameworkUpdates
 from scripts.tests.cases.suites.framework_updates_sources import FrameworkUpdateSources
 from scripts.tests.cases.suites.shared_contracts import SharedContracts
 from scripts.tests.cases.test_lemonade_launcher import LemonadeLauncherTests, LemonadeOwnedStartTests
-from scripts.tests.selection import select
+from scripts.tests.scoped_selection import select
 
 GROUPS: tuple[type[unittest.TestCase], ...] = (
     BenchmarkLifecycleTests,
