@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
+from scripts.config.trash import trash_path
 from scripts.download.frameworks import update_shared as shared
 from scripts.download.frameworks import update_types as cfg
 from scripts.download.frameworks.update_types import ReleaseType, ToolSpec
@@ -216,12 +217,10 @@ def install_audiocpp_hip(staged: Path, dest_dir: Path) -> None:
     ensure_audiocpp_not_running(dest_dir)
     backup: Path | None = None
     if dest_dir.exists():
-        trash = project_cfg.BASE_DIR / "trash"
-        trash.mkdir(parents=True, exist_ok=True)
-        backup = trash / f"audiocpp-hip-build-{time.strftime('%Y%m%d-%H%M%S')}"
+        backup = trash_path(f"audiocpp-hip-build-{time.strftime('%Y%m%d-%H%M%S')}")
         suffix = 1
         while backup.exists():
-            backup = trash / f"audiocpp-hip-build-{time.strftime('%Y%m%d-%H%M%S')}-{suffix}"
+            backup = trash_path(f"audiocpp-hip-build-{time.strftime('%Y%m%d-%H%M%S')}-{suffix}")
             suffix += 1
         shutil.move(str(dest_dir), str(backup))
     try:
