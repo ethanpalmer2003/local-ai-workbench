@@ -310,7 +310,7 @@ def run_backend(
             stop_owned(process, timeout=20, graceful=True, kill_timeout=10)
             watcher.join(timeout=5)
             (run_root / "logs" / f"resources-{backend}.json").write_text(json.dumps(traces, indent=2), encoding="utf-8")
-    memory: dict[str, Any] = process_evidence(monitor, baseline, resident, memory_path)
+    memory = process_evidence(monitor, baseline, resident, memory_path)
     for index, sample in enumerate(samples, start=1):
         stage = memory["stage_peaks"].get(f"request-{index}", {})
         sample["vram_peak_process_mib"] = stage.get("process_used_mb")

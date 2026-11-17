@@ -3,12 +3,37 @@
 import json
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 from scripts.benchmarks.shared.paths import RunPaths
-from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor, get_gpu_memory_snapshot
+from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor, MonitorSummary, get_gpu_memory_snapshot
 
 MEMORY_SOURCE = "Windows dedicated-memory counters; per-process allocations and whole-adapter usage are distinct"
+
+
+class BackendEvidence(TypedDict):
+    """One watched backend: whether its pids were identified, and what each one used."""
+
+    status: str
+    processes: list[dict[str, Any]]
+
+
+class VramEvidence(TypedDict):
+    """The `vram.json` document: adapter summary, baselines, per-backend rows and the limits."""
+
+    execution_context: dict[str, Any]
+    baseline: dict[str, Any] | None
+    adapter: MonitorSummary
+    backends: dict[str, BackendEvidence]
+    limits: list[str]
+
+
+class ProcessEvidence(MonitorSummary):
+    """A monitor summary with the two snapshots it is judged against."""
+
+    baseline: dict[str, Any] | None
+    resident: dict[str, Any] | None
+    trace: str
 
 
 def snapshot_dict(pid: int | None = None) -> dict[str, Any] | None:
@@ -23,7 +48,7 @@ def process_evidence(
     resident: dict[str, Any] | None,
     trace: Path,
     source: str = MEMORY_SOURCE,
-) -> dict[str, Any]:
+) -> ProcessEvidence:
     """Per-process VRAM evidence: monitor summary plus baseline, resident snapshot and trace."""
     return {**monitor.summary(), "baseline": baseline, "resident": resident, "trace": str(trace), "source": source}
 
@@ -35,7 +60,7 @@ class BenchmarkVram:
         self.adapter = GpuMemoryMonitor(None, run.logs / "vram-adapter.jsonl", fast_windows=fast_adapter_sampling)
         self.adapter.stage = "startup"
         self.processes: dict[str, list[tuple[int, GpuMemoryMonitor, object]]] = {}
-        self.baseline: object = None
+        self.baseline: dict[str, Any] | None = None
 
     def __enter__(self) -> "BenchmarkVram":
         snapshot = get_gpu_memory_snapshot()
@@ -68,7 +93,7 @@ class BenchmarkVram:
         for processes in self.processes.values():
             for _, monitor, _ in processes:
                 monitor.__exit__()
-        summary: dict[str, Any] = {
+        summary: VramEvidence = {
             "execution_context": self.context,
             "baseline": self.baseline,
             "adapter": self.adapter.summary(),
