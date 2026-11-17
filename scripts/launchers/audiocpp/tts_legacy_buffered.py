@@ -85,7 +85,7 @@ AUDIOCPP_PROXY_QUOTES = AudiocppQuoteSettings()
 #   - STOP mode reassembles those fragments and re-splits per the rules below
 # modes:
 #   OFF   - every chunk is its own request
-#   LIMIT - fire at max_words or max_chars
+#   LIMIT: fire at max_words or max_chars
 #   STOP  - fire at a sentence ending, up to the last one (rest stays
 #           buffered); ending only counts once text before it meets
 #           stop_min_words/stop_min_chars, else max_words/max_chars fire it
@@ -142,7 +142,7 @@ class AudiocppBufferSettings:
     # - " " suits word/sentence chunks; "" suits raw sub-word tokens
     joiner: str = " "
     # buffered text idle this long is only logged as stale on the next request;
-    # it is never dropped - the tail is spoken ahead of the new text
+    # it is never dropped: the tail is spoken ahead of the new text
     stale_seconds: float = 15.0
 
 
@@ -406,13 +406,13 @@ def _trim_silence(
     - Legacy buffered-only; native streams never enter this helper
     - Optionally crops dead air off the start and/or end of a WAV clip
       (keeping pad_seconds so a cut isn't abrupt)
-    - Only ever trims past the first/last loud chunk - a real mid-clip pause
+    - Only ever trims past the first/last loud chunk, so a real mid-clip pause
       (e.g. a dialogue beat) is never touched
     - Returns (trimmed_wav_bytes, raw_duration, trimmed_duration)
     - Falls back to the original bytes if nothing can be parsed or there's
       nothing to trim
     - Leading trim is riskier than trailing: cut too aggressively and you clip
-      the start of the first word instead of just losing dead air - hence it's
+      the start of the first word instead of just losing dead air, hence it's
       off by default
     """
     try:
@@ -445,7 +445,7 @@ def _trim_silence(
         return data, raw_duration, raw_duration
 
     if not loud_starts_ends:
-        return data, raw_duration, raw_duration  # entirely silent or failed - leave as-is
+        return data, raw_duration, raw_duration  # entirely silent or failed, so leave as-is
 
     start_at = 0
     if trim_leading:
@@ -524,7 +524,7 @@ class PlaybackQueue:
           before sending it; queue_ahead is the resulting backlog (seconds of
           queued audio still ahead of "now"), useful for telling a one-off
           backlog apart from one that keeps growing
-        - Clips never overlap - each starts no earlier than the previous one's
+        - Clips never overlap: each starts no earlier than the previous one's
           estimated end, plus pause_before if generation didn't already cover it
         - Served strictly in ticket (arrival) order so a fast-generating later
           line can't jump ahead of an earlier one

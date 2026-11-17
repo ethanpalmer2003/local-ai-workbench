@@ -1,6 +1,6 @@
 """Print a YAML list of mappings as a table.
 
-The data files this workspace keeps by hand - parked work, the input overlay, voice sources - are already
+The data files this workspace keeps by hand (parked work, the input overlay, voice sources) are already
 lists of records. Rendering one is a read, not a generation step: nothing is computed, so no page has to
 stay in step with it.
 """

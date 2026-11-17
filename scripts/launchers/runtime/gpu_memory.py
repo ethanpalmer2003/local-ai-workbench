@@ -250,7 +250,7 @@ _BUFFER_LINE = re.compile(r"^\S+:\s+(\S+)\s+(?:model|KV|compute) buffer size\s*=
 
 def parse_koboldcpp_buffer_report(log_path: str) -> dict[str, float]:
     """Sum koboldcpp's own startup-log buffer-size lines (model + KV + compute) per device.
-    - what the loader itself declares it allocated - deterministic and tied directly to config
+    - what the loader itself declares it allocated, deterministic and tied directly to config
       (moecpu, gpulayers, context size, etc)
     - unlike the OS-level GPU counter snapshot, which also picks up driver overhead,
       other processes, and polling-timing noise

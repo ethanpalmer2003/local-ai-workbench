@@ -16,7 +16,7 @@ from typing import Any, NamedTuple
 from scripts.config import project_config as project_cfg
 
 # - a folder is validated at both ends: below the minimum it is a merge candidate, above the maximum it
-#   needs another level, and a folder holding one file and nothing else is neither - it fails
+#   needs another level, and a folder holding one file and nothing else is neither, so it fails
 MIN_FOLDER_ITEMS = 3
 MAX_FOLDER_ITEMS = 20
 # - layouts an external loader dictates, where a one-file folder is the required shape

@@ -2,13 +2,18 @@
 
 - Dashes, curly quotes, the ellipsis and no-break spaces are what editors and chat interfaces
   insert by default; they read as prose flourishes and survive copy-paste into code
+- The same flourish in ASCII is a spaced dash between two words, so a Python docstring or comment
+  is refused for it as well; a list bullet and the `# -` comment marker put the dash at the start
 - The pinned corpus quotes third-party transcript text verbatim, so its reference values are
   masked before scanning: the quoted sentences are data, not our prose
 """
 
 import argparse
+import ast
+import io
 import re
 import subprocess
+import tokenize
 from pathlib import Path
 
 from scripts.review.lists.text_files import tracked_text_files
@@ -49,12 +54,51 @@ def scan_text(path: str, text: str) -> list[tuple[int, str]]:
     return findings
 
 
+WORD_DASH = re.compile(r"(?<=[A-Za-z0-9]) - (?=[A-Za-z0-9])")
+DOCSTRING_NODES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+
+
+def prose_dashes(path: str, text: str) -> list[tuple[int, str]]:
+    """Line and kind for every spaced dash between words inside a Python docstring or comment.
+
+    A bullet in a docstring and the `# -` comment marker start with the dash, so they stay legal.
+    A dash joining two words is the prose habit this refuses, in ASCII form. A file that does not
+    parse is left to the lint and type sections, which report it themselves.
+    """
+    if not path.endswith(".py"):
+        return []
+    try:
+        tree = ast.parse(text)
+    except (SyntaxError, ValueError):
+        return []
+    findings: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, DOCSTRING_NODES):
+            continue
+        docstring = ast.get_docstring(node, clean=False)
+        if not docstring:
+            continue
+        for offset, line in enumerate(docstring.splitlines()):
+            if WORD_DASH.search(line):
+                findings.append((node.body[0].lineno + offset, "prose-dash"))
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO(text).readline))
+    except (tokenize.TokenError, IndentationError):
+        return findings
+    findings.extend(
+        (token.start[0], "prose-dash")
+        for token in tokens
+        if token.type == tokenize.COMMENT and WORD_DASH.search(token.string)
+    )
+    return findings
+
+
 def check(root: Path, paths: list[str]) -> int:
-    findings = [
-        (path, number, kind)
-        for path in paths
-        for number, kind in scan_text(path, (root / path).read_text(encoding="utf-8", errors="ignore"))
-    ]
+    findings = []
+    for path in paths:
+        text = (root / path).read_text(encoding="utf-8", errors="ignore")
+        findings.extend((path, number, kind) for number, kind in scan_text(path, text))
+        findings.extend((path, number, kind) for number, kind in prose_dashes(path, text))
     for path, number, kind in findings:
         print(f"[FAIL] {path}:{number}: {kind}")
     print(f"{len(findings)} typographic character(s); straight quotes, three dots and single spaces are fine")

@@ -28,7 +28,7 @@ from scripts.shared.wait import backend_unavailable, http_ready, wait_ready
 
 # - Windows Job Object: kill-on-close backstop for SPLIT_DEPENDENT/MERGE launches -
 #   every process assigned to it dies the instant the launcher process exits,
-#   for ANY reason - normal exit, crash, or the terminal window being closed
+#   for ANY reason: normal exit, crash, or the terminal window being closed
 #   outright, where our own Python cleanup code never gets a chance to run
 # - SPLIT_INDEPENDENT launches skip the job entirely: the process outlives the
 #   launcher and every other terminal by design
@@ -190,7 +190,7 @@ def backend_running(port: int, timeout: float = 2.0, *, backend: str | None = No
     """
     - True if the backend's shared readiness route answers right now.
     - Generic check for any backend (llamacpp 9931, audiocpp 8889, sdcpp 1235,
-      koboldcpp 5001 - ports from cfg)
+      koboldcpp 5001, ports from cfg)
     - Session-locality check for llamacpp: an agent that's still talking while
       this returns False is NOT being served by the local llama-server
     """
@@ -474,7 +474,7 @@ def _merge_streams(mode: ConsoleTerminalLaunchMode, capture: TextIO | None) -> t
 
 
 def _bind_job(proc: subprocess.Popen[Any], mode: ConsoleTerminalLaunchMode) -> None:
-    # - SPLIT_INDEPENDENT: no job object - the process outlives this launcher and
+    # - SPLIT_INDEPENDENT: no job object, so the process outlives this launcher and
     #   every other terminal by design
     if mode == ConsoleTerminalLaunchMode.SPLIT_INDEPENDENT:
         return

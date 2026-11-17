@@ -299,8 +299,8 @@ def overthink_profile(
       effort / thinking defaults apply)
     - reasoning-format=auto (set in the ini) splits thoughts into
       message.reasoning_content; char counts stand in for token counts
-    - No max_tokens cap - runaways get unlimited room
-    - Single request, no repeats, no ignore_eos - this is a behavior probe,
+    - No max_tokens cap, so runaways get unlimited room
+    - Single request, no repeats, no ignore_eos: this is a behavior probe,
       not a speed benchmark
     """
     all_profiles = {**LLAMACPP_PROFILES, **LLAMACPP_BENCHMARK_PROFILES}

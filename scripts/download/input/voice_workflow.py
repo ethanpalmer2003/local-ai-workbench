@@ -183,7 +183,7 @@ def build_wav(files, mapping, workspace, count, duration_target=None):
 def ensure_sources(config: CharacterConfig, workspace: CharacterWorkspace) -> Path:
     """Sources = the character directory as-is (never reorganized).
     - if there's no source audio yet and a url is configured, fetch the zip and extract it
-      into a subfolder named after the zip - same as a manual extract
+      into a subfolder named after the zip, same as a manual extract
     """
     directory = workspace.directory
     generated = workspace.generated

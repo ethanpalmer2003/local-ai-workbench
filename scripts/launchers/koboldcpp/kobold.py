@@ -213,7 +213,7 @@ def start_proxy_services(processes: list[tuple[str, subprocess.Popen[Any]]], usa
             continue
         if service.enabled and service.mode == cfg.ServiceMode.PROXY:
             print(f"Starting {name} proxy...")
-            # - DEPENDENT: kobold is a supervisor - its exit (any reason)
+            # - DEPENDENT: kobold is a supervisor, so its exit (any reason)
             #   tears the children down via the job object; no manual kill
             #   loop needed
             processes.append(
