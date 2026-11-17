@@ -14,9 +14,9 @@
 
 ## When
 
-- An edit is the cheapest level: `python -m scripts.review --fast` and the test module the edit touches. About twelve seconds.
-- A commit runs the hooks: ruff, codespell, typography, then the scoped gate and the scoped suite. A document change is seconds; a code change is about twenty-five.
-- A push runs the same hooks at full width: `python -m scripts.review --all` and `python -m scripts.tests.run --all`. About a minute, and this is the completeness guarantee.
+- An edit is the only check before a push: `python -m scripts.review` covers the sections and the types the change reaches, and the test module you touched covers the rest. About sixteen seconds.
+- A commit only repairs: ruff check and format, codespell, the punctuation pass. Seconds.
+- A push runs everything: `python -m scripts.review --all` and `python -m scripts.tests.run --all`. About a minute, and this is the only completeness guarantee.
 - The suite is a feedback loop: by default one import hop from the change, `--all` at push for the rest. No Python path runs none, a comment or docstring edit runs none, and the manifests keep every class on a code change; the launcher and proxy block is in this set rather than outside it; see [selection](../scripts/tests/scoped_selection.py).
 - The gate is scoped the same way: only the sections whose inputs changed since the upstream branch, working tree and unpushed commits alike, and the type check covers the changed modules plus their direct importers. `--fast` skips types, inventory, advisories and the package summary; `--all` runs every section, and so does an empty change set. Each section records its seconds under `scripts/state/logs/shared/review/`, so the cost of a check comes from history instead of a rerun.
 - Live and measure work is scheduled from [TODO](../notes/TODO.md), never part of a code change. Levels: [tool inventory](../scripts/review/TOOLS.md#levels).
