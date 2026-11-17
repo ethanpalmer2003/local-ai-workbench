@@ -646,7 +646,8 @@ def main(extra_groups: tuple[type[unittest.TestCase], ...] = (), scope_note: str
     native_suite = args.suite or ("launchers" if args.live else None)
     if native_suite and not args.with_regressions:
         return _run_native_suite(native_suite, args.live, args.only)
-    groups = (*DEFAULT_GROUPS, *extra_groups)
+    # - the caller's classes are the whole run when it has some; a direct call keeps the default block
+    groups = extra_groups or DEFAULT_GROUPS
     # - guard the tests themselves against accidental process/port side effects
     output = CasePaths(__file__).new_run()
     report = RunReport(

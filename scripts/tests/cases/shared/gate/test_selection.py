@@ -104,6 +104,21 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(chosen.kept, (PointerTests,))
         self.assertEqual(chosen.dropped, (KoboldOptionTests,))
 
+    def test_the_launcher_block_is_in_the_graph_like_any_other_class(self):
+        from scripts.tests.cases.suites.frameworks_smoke import DEFAULT_GROUPS, ProxyHTTP
+
+        edges = _graph(
+            {
+                "scripts.launchers.audiocpp.audiocpp_proxy": (),
+                "scripts.tests.cases.suites.frameworks_smoke_proxy": ("scripts.launchers.audiocpp.audiocpp_proxy",),
+            }
+        )
+        with patch.object(selection, "import_graph", return_value=edges):
+            kept = selection.select(DEFAULT_GROUPS, paths=["scripts/launchers/audiocpp/audiocpp_proxy.py"])
+            dropped = selection.select(DEFAULT_GROUPS, paths=["scripts/tools/rename_path.py"])
+        self.assertEqual(kept.kept, (ProxyHTTP,), "a proxy change keeps the loopback tests that drive it")
+        self.assertEqual(dropped.kept, (), "nothing outside the launcher wiring keeps the block")
+
     def test_a_non_python_change_runs_no_class(self):
         groups = (TestSelection,)
         for paths in (

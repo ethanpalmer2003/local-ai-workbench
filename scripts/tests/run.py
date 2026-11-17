@@ -313,6 +313,9 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     BackendSessions,
     TestSelection,
     ExitReportTests,
+    # - the launcher and proxy block is scoped like everything else: a change to that wiring keeps it,
+    #   a change elsewhere leaves it to the push, so no class sits outside the graph
+    *frameworks_smoke.DEFAULT_GROUPS,
 )
 
 if __name__ == "__main__":
