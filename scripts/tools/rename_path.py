@@ -27,8 +27,8 @@ from pathlib import Path, PurePosixPath
 from scripts.shared import consent
 from scripts.tools.rewrite_imports import EXCLUDED
 
-# - the workspace trees this repository does not own, so a source path is never a reference from there
-PRUNE = EXCLUDED | {"data", "frameworks", "trash"}
+# - the workspace and generated trees this repository does not own, so a source path is never a reference there
+PRUNE = EXCLUDED | {"data", "frameworks", "trash", "graphify-out"}
 TEXT_SUFFIXES = {".md", ".py", ".bat", ".yaml", ".yml", ".json", ".js", ".cjs", ".mjs"}
 # - `from package import module` names the module by its last component, so it needs its own rewrite
 FROM_IMPORT = re.compile(r"^(?P<head>\s*from\s+(?P<package>[\w.]+)\s+import\s+)(?P<names>[^\n]+)$", re.MULTILINE)
