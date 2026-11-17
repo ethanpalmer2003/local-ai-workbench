@@ -109,5 +109,8 @@ def select(
     kept: list[TestGroup] = []
     dropped: list[TestGroup] = []
     for group in groups:
-        (kept if group.__module__ in reachable else dropped).append(group)
+        if group.__module__ in reachable:
+            kept.append(group)
+        else:
+            dropped.append(group)
     return Selection(tuple(kept), tuple(dropped), f"{len(reachable)} of {len(edges)} modules reachable")

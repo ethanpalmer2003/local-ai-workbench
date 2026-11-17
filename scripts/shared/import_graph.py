@@ -33,27 +33,17 @@ def module_name(path: str) -> str | None:
     return ".".join(parts) if len(parts) > 1 else None
 
 
-def source_files(root: Path | None = None) -> list[str]:
-    """Every Python file under `scripts/` on disk, tracked or untracked-but-not-ignored.
-
-    `--cached` is required: `--others` alone lists untracked files only. The ignored state and
-    test-output trees never enter the graph.
-    """
-    return [
-        line
-        for line in git("ls-files", "--cached", "--others", "--exclude-standard", "scripts", root=root).splitlines()
-        if line.startswith("scripts/") and line.endswith(".py")
-    ]
-
-
 def module_files(root: Path | None = None) -> dict[str, Path]:
-    """Module name to source file, for every module under `scripts/` that exists on disk."""
+    """Module name to source file, for every module under `scripts/` that exists on disk.
+
+    `--cached` is required alongside `--others`: `--others` alone lists untracked files only.
+    The ignored state and test-output trees never enter the graph.
+    """
     base = project_cfg.BASE_DIR if root is None else root
     files: dict[str, Path] = {}
-    for relative in source_files(root):
-        path = base / relative
+    for relative in git("ls-files", "--cached", "--others", "--exclude-standard", "scripts", root=root).splitlines():
         name = module_name(relative)
-        if name and path.is_file():
+        if name and (path := base / relative).is_file():
             files[name] = path
     return files
 
@@ -66,7 +56,7 @@ def parse_source(path: Path) -> ast.Module | None:
         return None
 
 
-def from_import_target(node: ast.ImportFrom, module: str, is_package: bool) -> str | None:
+def _from_import_target(node: ast.ImportFrom, module: str, is_package: bool) -> str | None:
     """The module a `from ... import ...` reads, resolving the dots against this module's package.
 
     Returns None when the dots climb out of the top-level package, because no module has that name.
@@ -91,14 +81,14 @@ def imported_names(tree: ast.Module, module: str, *, is_package: bool) -> set[st
         if isinstance(node, ast.Import):
             names.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
-            base = from_import_target(node, module, is_package)
+            base = _from_import_target(node, module, is_package)
             if base:
                 names.add(base)
                 names.update(f"{base}.{alias.name}" for alias in node.names)
     return names
 
 
-def longest_known_prefix(name: str, known: set[str]) -> str | None:
+def _longest_known_prefix(name: str, known: set[str]) -> str | None:
     """The module a dotted name refers to: the longest known prefix, since `from x.y import f` names no module."""
     parts = name.split(".")
     for end in range(len(parts), 0, -1):
@@ -108,26 +98,22 @@ def longest_known_prefix(name: str, known: set[str]) -> str | None:
     return None
 
 
-def parent_packages(module: str, known: set[str]) -> set[str]:
-    """The known packages above a module, whose `__init__.py` runs whenever the module is imported."""
-    parts = module.split(".")
-    return {parent for end in range(1, len(parts)) if (parent := ".".join(parts[:end])) in known}
-
-
 def import_graph(root: Path | None = None) -> Graph:
     """Module name to the modules it depends on, for every module under `scripts/` on disk.
 
-    A dependency is an import or a parent package.
+    A dependency is an import or a parent package; a parent counts when it is itself a module, because
+    importing `scripts.x.y` runs `scripts/x/__init__.py`.
     """
     files = module_files(root)
     known = set(files)
     edges: Graph = {}
     for name, path in files.items():
-        targets = parent_packages(name, known)
+        parts = name.split(".")
+        targets = {parent for end in range(1, len(parts)) if (parent := ".".join(parts[:end])) in known}
         tree = parse_source(path)
         if tree is not None:
             raw_names = imported_names(tree, name, is_package=path.name == "__init__.py")
-            targets |= {target for raw in raw_names if (target := longest_known_prefix(raw, known))}
+            targets |= {target for raw in raw_names if (target := _longest_known_prefix(raw, known))}
         edges[name] = frozenset(targets - {name})
     return edges
 
