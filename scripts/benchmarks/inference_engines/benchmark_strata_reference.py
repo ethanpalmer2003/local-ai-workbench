@@ -103,7 +103,11 @@ def run_arm(label: str, source: strata_pi.StrataConnection, arm: RunPaths, args:
             samples.append(row)
             speed = (row.get("accounting") or {}).get("decode_tokens_per_second")
             print(f"  decode {index + 1}/{args.samples}: {speed:.2f} tok/s", flush=True)
-        rates = [rate for row in samples if (rate := (row.get("accounting") or {}).get("decode_tokens_per_second"))]
+        rates = []
+        for row in samples:
+            rate = (row.get("accounting") or {}).get("decode_tokens_per_second")
+            if rate:
+                rates.append(rate)
         result["decode"] = {
             "median": statistics.median(rates) if rates else None,
             "min": min(rates) if rates else None,

@@ -178,7 +178,11 @@ def _default_problem(node: ast.expr) -> str | None:
     if isinstance(node, ast.Subscript) and isinstance(node.value, ast.Name):
         return None
     if isinstance(node, ast.Tuple):
-        return next((problem for item in node.elts if (problem := _default_problem(item))), None)
+        for item in node.elts:
+            problem = _default_problem(item)
+            if problem:
+                return problem
+        return None
     if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
         if node.func.id in IMMUTABLE_CALLS and not node.args and not node.keywords:
             return None

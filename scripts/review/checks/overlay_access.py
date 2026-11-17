@@ -13,7 +13,7 @@ DECLARES_PATHS = "scripts/config/project_config.py"
 SELF_REFERENTIAL = {
     OWNER,
     "scripts/review/checks/overlay_access.py",
-    "scripts/tests/cases/review/test_overlay_access.py",
+    "scripts/tests/cases/review/checks/test_overlay_access.py",
     "scripts/tests/cases/shared/tools/test_local_overlay.py",
 }
 ENV_READS = ("AI_INPUT_DIR", "AI_VOICES_DIR")

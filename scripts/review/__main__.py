@@ -29,6 +29,7 @@ from scripts.review.checks import (
     owned_tokens,
     spellings,
     typography,
+    walrus,
 )
 from scripts.shared import changes
 from scripts.shared.changes import changed_paths
@@ -148,7 +149,8 @@ def scoped_type_check(paths: list[str], fast: bool) -> int:
         print("\n=== TYPE CHECK ===\n[SKIP] --fast")
         return 0
     print("\n=== TYPE CHECK ===", flush=True)
-    modules = {name for path in paths if (name := module_name(path))}
+    names = (module_name(path) for path in paths)
+    modules = {name for name in names if name}
     known = module_files()
     if not modules:
         return 0
@@ -239,6 +241,7 @@ PYTHON_SECTIONS = frozenset(
         "comments",
         "dead code",
         "dynamic imports",
+        "walrus",
         "network timeouts",
         "overlay access",
         "inventory",
@@ -274,7 +277,9 @@ def touched_gate(argv: list[str] | None = None) -> int:
     """Run only the sections the working tree changed since upstream, cheapest first."""
     argv = list(sys.argv[1:] if argv is None else argv)
     changed = changed_paths()
-    python_files = [path for path in changed if path.endswith(".py")]
+    # - a rename leaves the old name in the change set, and a deleted file has nothing to read
+    existing = [path for path in changed if (project_cfg.BASE_DIR / path).is_file()]
+    python_files = [path for path in existing if path.endswith(".py")]
     selected = touched_sections(changed)
     print(f"=== TOUCHED: {', '.join(sorted(selected))} ===", flush=True)
     table = (
@@ -286,18 +291,19 @@ def touched_gate(argv: list[str] | None = None) -> int:
         ("network timeouts", "\n=== NETWORK TIMEOUTS ===", lambda: network_timeouts.main(python_files)),
         ("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main(python_files)),
         ("lint", "\n=== LINT ===", lint_check),
-        ("types", "", lambda: scoped_type_check(changed, _flag(argv, "--fast"))),
+        ("types", "", lambda: scoped_type_check(existing, _flag(argv, "--fast"))),
         ("formatting", "\n=== PYTHON FORMATTING ===", lambda: format_check(python_files)),
         ("inventory", "", lambda: inventory_check(package_audit.summary(), _flag(argv, "--fast"), python_files)),
-        ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main(changed)),
+        ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main(existing)),
         ("comments", "\n=== COMMENTS ===", lambda: comments.main(python_files)),
         ("annotations", "\n=== ANNOTATION COMPLEXITY ===", lambda: annotations.main(python_files)),
         ("line length", "\n=== LINE LENGTH ===", lambda: line_length.main(python_files)),
         ("bare any", "\n=== BARE ANY ===", lambda: bare_any.main(python_files)),
         ("dead code", "\n=== DEAD CODE ===", lambda: dead_code.main([])),
         ("dynamic imports", "\n=== DYNAMIC IMPORTS ===", lambda: dynamic_imports.main(python_files)),
-        ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main(changed)),
-        ("spelling", "\n=== SPELLING ===", lambda: spelling_check(changed)),
+        ("walrus", "\n=== WALRUS OPERATOR ===", lambda: walrus.main(python_files)),
+        ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main(existing)),
+        ("spelling", "\n=== SPELLING ===", lambda: spelling_check(existing)),
         ("advisories", "", lambda: advisory_check(_flag(argv, "--fast"))),
         ("lock check", "\n=== DEPENDENCY HYGIENE ===", package_audit.lock_issues),
         ("deptry", "", declaration_check),
@@ -401,6 +407,9 @@ def full_gate(argv: list[str] | None = None) -> int:
 
     print("\n=== DYNAMIC IMPORTS ===", flush=True)
     timed("dynamic imports", dynamic_imports.main, [])
+
+    print("\n=== WALRUS OPERATOR ===", flush=True)
+    timed("walrus", walrus.main, [])
 
     print("\n=== AMERICAN SPELLING ===", flush=True)
     timed("spelling variants", spellings.main, [])
