@@ -39,6 +39,7 @@ def _without_docstrings(tree: ast.Module) -> str:
             continue
         first = node.body[0]
         if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+            # Substitute `pass` when the docstring was the only statement in the body.
             node.body = node.body[1:] or [ast.Pass()]
     return ast.dump(tree)
 
@@ -53,8 +54,10 @@ def cosmetic_only(path: str, root: Path | None = None) -> bool:
     current = base / path
     if not current.is_file():
         return False
-    previous = git("show", f"@{{upstream}}:{path}", root=root)
+    # Read the committed version from the remote tracking branch for comparison.
+    previous = git("show", "@{upstream}:" + path, root=root)
     try:
+        # `ast.parse` discards `#` comments automatically; `_without_docstrings` strips docstrings.
         before = ast.parse(previous)
         after = parse_source(current)
     except (SyntaxError, ValueError):
