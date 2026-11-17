@@ -36,7 +36,7 @@ class TestSelection(unittest.TestCase):
         names: set[str] = set()
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
-                base = graph_api.from_import_target(node, "scripts.pkg.module", False)
+                base = graph_api._from_import_target(node, "scripts.pkg.module", False)
                 if base:
                     names.add(base)
                     names.update(f"{base}.{alias.name}" for alias in node.names)
@@ -54,11 +54,20 @@ class TestSelection(unittest.TestCase):
     def test_a_relative_import_beyond_the_top_package_names_nothing(self):
         tree = ast.parse("from ..outside import thing\n")
         node = next(node for node in ast.walk(tree) if isinstance(node, ast.ImportFrom))
-        self.assertIsNone(graph_api.from_import_target(node, "scripts.pkg", False))
+        self.assertIsNone(graph_api._from_import_target(node, "scripts.pkg", False))
 
-    def test_every_module_depends_on_its_parent_packages(self):
-        known = {"scripts", "scripts.pkg", "scripts.pkg.module"}
-        self.assertEqual(graph_api.parent_packages("scripts.pkg.module", known), {"scripts", "scripts.pkg"})
+    def test_a_submodule_depends_on_the_known_parent_packages(self):
+        listing = "scripts/__init__.py\nscripts/pkg/__init__.py\nscripts/pkg/module.py\n"
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            for relative in ("scripts/__init__.py", "scripts/pkg/__init__.py", "scripts/pkg/module.py"):
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("", encoding="utf-8")
+            with patch.object(graph_api, "git", return_value=listing):
+                edges = graph_api.import_graph(root)
+        # - `scripts/__init__.py` names no module, so `scripts` itself never becomes a parent package
+        self.assertEqual(edges["scripts.pkg.module"], frozenset({"scripts.pkg"}))
 
     def test_an_unparsable_file_has_no_tree(self):
         with CasePaths(__file__).temporary_directory() as folder:
@@ -280,16 +289,21 @@ class TestSelection(unittest.TestCase):
             chosen = scoped_selection.select((PointerTests,), paths=["scripts/review/checks/docs.py"])
         self.assertEqual(chosen.kept, (PointerTests,))
 
-    def test_sources_list_tracked_and_untracked_python_under_scripts(self):
+    def test_module_files_list_tracked_and_untracked_python_under_scripts(self):
         listing = "scripts/a.py\nscripts/b.md\nnotes/c.py\n"
-        with patch.object(graph_api, "git", return_value=listing) as run:
-            self.assertEqual(graph_api.source_files(), ["scripts/a.py"])
-        run.assert_called_once_with("ls-files", "--cached", "--others", "--exclude-standard", "scripts", root=None)
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            (root / "scripts").mkdir()
+            (root / "scripts" / "a.py").write_text("", encoding="utf-8")
+            with patch.object(graph_api, "git", return_value=listing) as run:
+                self.assertEqual(graph_api.module_files(root), {"scripts.a": root / "scripts" / "a.py"})
+        run.assert_called_once_with("ls-files", "--cached", "--others", "--exclude-standard", "scripts", root=root)
 
     def test_the_graph_is_built_from_the_root_it_was_given(self):
-        with patch.object(graph_api, "source_files", return_value=[]) as sources:
+        with patch.object(graph_api, "git", return_value="") as run:
             self.assertEqual(graph_api.module_files(Path("elsewhere")), {})
-        sources.assert_called_once_with(Path("elsewhere"))
+        run.assert_called_once()
+        self.assertEqual(run.call_args.kwargs["root"], Path("elsewhere"))
 
     def test_a_dropped_class_never_reaches_the_change(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
