@@ -14,7 +14,7 @@ from dataclasses import asdict
 from pathlib import Path
 from threading import Event, Thread
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, NamedTuple
 
 from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
 from scripts.benchmarks.shared import preflight as preflight_check
@@ -86,20 +86,27 @@ def _request_spec(kind: str, text: str, text_port: int | None) -> tuple[dict[str
     )
 
 
-def _perform_request(
-    kind: str, port: int, route: str, payload: dict[str, object], text: str
-) -> tuple[dict[str, Any] | None, int, bytes, str]:
+class PerformedRequest(NamedTuple):
+    """One proxied request: the speech body when it was speech, its status, bytes and type."""
+
+    speech: dict[str, Any] | None
+    status: int
+    body: bytes
+    content_type: str
+
+
+def _perform_request(kind: str, port: int, route: str, payload: dict[str, object], text: str) -> PerformedRequest:
     """Speech goes through the streaming client; everything else is one JSON POST."""
     if kind != "audio":
         status, body, content_type = request(f"http://127.0.0.1:{port}{route}", payload, timeout=90)
-        return None, status, body, content_type
+        return PerformedRequest(None, status, body, content_type)
     speech = speech_request(text[:240], 90)
     pcm = speech.pop("pcm")
     with io.BytesIO() as buffer:
         with wave.open(buffer, "wb") as audio:
             audio.setparams((1, 2, 24000, 0, "NONE", "not compressed"))
             audio.writeframes(pcm)
-        return speech, 200, buffer.getvalue(), "audio/wav"
+        return PerformedRequest(speech, 200, buffer.getvalue(), "audio/wav")
 
 
 def _describe_text(result: dict[str, Any], body: bytes) -> str:

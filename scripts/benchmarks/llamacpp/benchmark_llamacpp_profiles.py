@@ -28,7 +28,7 @@ from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, NamedTuple, cast
 
 import requests
 
@@ -155,6 +155,14 @@ def completion_request(base_url: str, prompt: str, n_predict: int, timeout: floa
     )
 
 
+class ProfileRun(NamedTuple):
+    """The samples, prefill samples and metrics one profile run produced."""
+
+    results: dict[str, list[Sample]]
+    prefill: dict[str, Sample]
+    metrics: dict[str, Any]
+
+
 def run_profile(
     profile_name: str,
     prompts: dict[str, str],
@@ -165,7 +173,7 @@ def run_profile(
     request_timeout: float,
     build_name: str | None = None,
     ctx_fill: int = 0,
-) -> tuple[dict[str, list[Sample]], dict[str, Sample], dict[str, Any]]:
+) -> ProfileRun:
     context = require_native_execution("llama.cpp benchmark")
     from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 
@@ -250,7 +258,7 @@ def run_profile(
     (output.artifacts / f"metrics-{build_name or 'active'}-{profile_name}.json").write_text(
         json.dumps(metrics, indent=2) + "\n", encoding="utf-8"
     )
-    return results, prefill, metrics
+    return ProfileRun(results, prefill, metrics)
 
 
 def profile_meta(profile_name: str, build_name: str | None) -> dict[str, str]:

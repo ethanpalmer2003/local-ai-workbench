@@ -21,7 +21,7 @@ from scripts.review.lists.sources import maintained_files
 
 # - the two ends of one rule: the worst annotation in this tree scores 20, and 22 sit above 14
 WARN_SCORE = 14
-MAX_SCORE = 20
+MAX_SCORE = 16
 # - a chain deeper than three subscripts fails on its own, the one signal the flat score can dilute
 MAX_DEPTH = 3
 
