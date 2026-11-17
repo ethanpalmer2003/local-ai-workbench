@@ -34,6 +34,34 @@ class MoveParsingTests(unittest.TestCase):
             ],
         )
 
+    def test_a_python_module_also_renames_its_dotted_name(self):
+        self.assertEqual(
+            rename_path.dotted_forms("scripts/tests/scoping.py", "scripts/tests/selection.py"),
+            [("scripts.tests.scoping", "scripts.tests.selection")],
+        )
+
+    def test_a_package_init_and_a_folder_have_no_dotted_form(self):
+        self.assertEqual(rename_path.dotted_forms("scripts/tests/__init__.py", "scripts/tests/sub/__init__.py"), [])
+        self.assertEqual(rename_path.dotted_forms("scripts/config/shared", "scripts/config/common"), [])
+
+
+class ImportRewriteTests(unittest.TestCase):
+    def test_a_module_imported_by_name_is_renamed_and_its_alias_kept(self):
+        text = "from scripts.tests import scoping, other\nfrom scripts.tests import scoping as scope\n"
+        rewritten = rename_path.rename_import_names(text, [("scripts.tests", "scoping", "selection")])
+        self.assertEqual(
+            rewritten, "from scripts.tests import selection, other\nfrom scripts.tests import selection as scope\n"
+        )
+
+    def test_another_package_and_a_longer_name_are_untouched(self):
+        text = "from scripts.other import scoping\nfrom scripts.tests import scoping_extras\n"
+        self.assertEqual(rename_path.rename_import_names(text, [("scripts.tests", "scoping", "selection")]), text)
+
+    def test_a_dotted_name_sharing_the_prefix_is_not_truncated(self):
+        text = "from scripts.tests.scoping_extras import helper\n"
+        rewritten = rename_path.rename_dotted(text, [("scripts.tests.scoping", "scripts.tests.selection")])
+        self.assertEqual(rewritten, text)
+
 
 class ReferenceRewriteTests(unittest.TestCase):
     def test_references_in_prose_code_and_batches_are_rewritten(self):
@@ -61,6 +89,20 @@ class ReferenceRewriteTests(unittest.TestCase):
             )
             self.assertEqual(len(changed), 1)
             self.assertIn("OLD-INDEX", target.read_text(encoding="utf-8"))
+
+    def test_both_import_spellings_of_a_moved_module_are_repointed(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            (root / "use.py").write_text(
+                "from scripts.tests import scoping\nfrom scripts.tests.scoping import select\n", encoding="utf-8"
+            )
+            rename_path.rewrite_references(
+                {"scripts/tests/scoping.py": "scripts/tests/selection.py"}, dry_run=False, root=root
+            )
+            text = (root / "use.py").read_text(encoding="utf-8")
+        self.assertNotIn("scoping", text)
+        self.assertIn("from scripts.tests import selection", text)
+        self.assertIn("from scripts.tests.selection import select", text)
 
 
 class ScanScopeTests(unittest.TestCase):
