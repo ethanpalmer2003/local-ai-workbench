@@ -547,7 +547,7 @@ def suppression_issues(root: Path) -> list[str]:
     return issues
 
 
-def main(dependencies: dict[str, int] | None = None) -> int:
+def main(dependencies: dict[str, int] | None = None, paths: list[Path] | None = None) -> int:
     if "--accept-files" in sys.argv[1:]:
         _folders, source_files = repository_inventory(project_cfg.BASE_DIR)
         save_file_baseline(source_files)
@@ -557,7 +557,8 @@ def main(dependencies: dict[str, int] | None = None) -> int:
         print(f"Complexity debt rows: {complexity_debt(project_cfg.BASE_DIR)} -> {DEBT_DOC.name}")
         return 0
     root = project_cfg.SCRIPTS_DIR
-    files = list(maintained_python(root))
+    # - the folder rows and the length rules need the tree; a scoped run reads only the change's files
+    files = list(maintained_python(root)) if paths is None else [path for path in paths if path.is_file()]
     results = [
         result
         for path in files

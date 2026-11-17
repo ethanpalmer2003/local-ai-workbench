@@ -1,7 +1,6 @@
 # Local hooks: the project venv's binaries, so no clone and no second copy of the config.
-# Two checking levels and one repairing level: an edit runs `python -m scripts.review` over what the
-# change reaches, a commit only fixes formatting and punctuation, and a push runs every section and
-# every class. Nothing is checked twice at full width.
+# Two levels, each with a natural trigger: a commit checks what the change reaches, and a push checks
+# everything. The same commands run by hand while working, so there is no third stage to remember.
 repos:
   - repo: local
     hooks:
@@ -32,7 +31,21 @@ repos:
         pass_filenames: true
         types: [text]
         exclude: ^(data|frameworks|trash|scripts/state|scripts/tests/output|scripts/benchmarks/output)/
-      # - the commit level only repairs what a script can repair; every check waits for the push
+      # - the commit level checks what the change reaches; the push level checks everything
+      - id: gate-scoped
+        name: review gate (scoped)
+        entry: .venv/Scripts/python.exe -m scripts.review
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+      - id: suite-scoped
+        name: model-free suite (scoped)
+        entry: .venv/Scripts/python.exe -m scripts.tests.run
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
       # - the push level: every section and every class, the completeness guarantee
       - id: gate-full
         name: review gate (all)
