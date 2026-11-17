@@ -82,7 +82,10 @@ class TestSelection(unittest.TestCase):
                 "scripts.tests.cases.review.test_docs": ("scripts.review.checks.links",),
             }
         )
-        with patch.object(selection, "import_graph", return_value=edges):
+        with (
+            patch.object(selection, "cosmetic_only", return_value=False),
+            patch.object(selection, "import_graph", return_value=edges),
+        ):
             chosen = selection.select((PointerTests,), paths=["scripts/review/checks/docs.py"])
         self.assertEqual(chosen.kept, (), "a two-hop dependent waits for the full run")
 
@@ -99,7 +102,10 @@ class TestSelection(unittest.TestCase):
             }
         )
         groups = (PointerTests, KoboldOptionTests)
-        with patch.object(selection, "import_graph", return_value=edges):
+        with (
+            patch.object(selection, "cosmetic_only", return_value=False),
+            patch.object(selection, "import_graph", return_value=edges),
+        ):
             chosen = selection.select(groups, paths=["scripts/review/checks/docs.py"])
         self.assertEqual(chosen.kept, (PointerTests,))
         self.assertEqual(chosen.dropped, (KoboldOptionTests,))
@@ -113,7 +119,10 @@ class TestSelection(unittest.TestCase):
                 "scripts.tests.cases.suites.frameworks_smoke_proxy": ("scripts.launchers.audiocpp.audiocpp_proxy",),
             }
         )
-        with patch.object(selection, "import_graph", return_value=edges):
+        with (
+            patch.object(selection, "cosmetic_only", return_value=False),
+            patch.object(selection, "import_graph", return_value=edges),
+        ):
             kept = selection.select(DEFAULT_GROUPS, paths=["scripts/launchers/audiocpp/audiocpp_proxy.py"])
             dropped = selection.select(DEFAULT_GROUPS, paths=["scripts/tools/rename_path.py"])
         self.assertEqual(kept.kept, (ProxyHTTP,), "a proxy change keeps the loopback tests that drive it")
@@ -143,7 +152,8 @@ class TestSelection(unittest.TestCase):
 
     def test_a_lock_config_or_package_init_runs_no_class(self):
         for path in ("pyproject.toml", "uv.lock", "scripts/__init__.py"):
-            with self.subTest(path=path):
+            # - the package init is a code change here, so the reason is the missing module, not prose
+            with self.subTest(path=path), patch.object(selection, "cosmetic_only", return_value=False):
                 chosen = selection.select((TestSelection,), paths=[path])
                 self.assertEqual(chosen.kept, ())
                 self.assertEqual(chosen.why, "no Python change")
@@ -154,6 +164,18 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(chosen.kept, ())
         self.assertEqual(chosen.why, "comment or docstring only")
 
+    def test_a_comment_edit_to_an_ordinary_module_runs_nothing(self):
+        with patch.object(selection, "cosmetic_only", return_value=True):
+            chosen = selection.select((TestSelection,), paths=["scripts/shared/consent.py"])
+        self.assertEqual(chosen.kept, ())
+        self.assertEqual(chosen.why, "comment or docstring only")
+
+    def test_a_cosmetic_module_beside_a_document_runs_nothing(self):
+        with patch.object(selection, "cosmetic_only", return_value=True):
+            chosen = selection.select((TestSelection,), paths=["scripts/shared/consent.py", "notes/TODO.md"])
+        self.assertEqual(chosen.kept, ())
+        self.assertEqual(chosen.why, "no Python change")
+
     def test_a_docstring_only_trigger_beside_code_still_scopes(self):
         from scripts.tests.cases.review.test_docs import PointerTests
 
@@ -161,11 +183,12 @@ class TestSelection(unittest.TestCase):
             {"scripts.review.checks.docs": (), "scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",)}
         )
         with (
-            patch.object(selection, "cosmetic_only", return_value=True),
+            patch.object(selection, "cosmetic_only", side_effect=lambda path, *_: path in selection.FULL_TRIGGERS),
             patch.object(selection, "import_graph", return_value=edges),
         ):
             chosen = selection.select((PointerTests,), paths=["scripts/tests/run.py", "scripts/review/checks/docs.py"])
         self.assertEqual(chosen.kept, (PointerTests,))
+        self.assertEqual(chosen.why, "2 of 2 modules reachable")
 
     def test_a_docstring_or_comment_edit_compares_equal(self):
         before = ast.parse('"""Old."""\n\n\ndef run() -> None:\n    """Doc."""\n    print(1)\n')
@@ -198,7 +221,10 @@ class TestSelection(unittest.TestCase):
             }
         )
         groups = (PointerTests, KoboldOptionTests)
-        with patch.object(selection, "import_graph", return_value=edges):
+        with (
+            patch.object(selection, "cosmetic_only", return_value=False),
+            patch.object(selection, "import_graph", return_value=edges),
+        ):
             chosen = selection.select(groups, paths=["scripts/review/checks/docs.py", "notes/TODO.md"])
         self.assertEqual(chosen.kept, (PointerTests,))
         self.assertEqual(chosen.dropped, (KoboldOptionTests,))
@@ -226,7 +252,10 @@ class TestSelection(unittest.TestCase):
                 "scripts.tests.cases.koboldcpp.test_kobold_options": (),
             }
         )
-        with patch.object(selection, "import_graph", return_value=edges):
+        with (
+            patch.object(selection, "cosmetic_only", return_value=False),
+            patch.object(selection, "import_graph", return_value=edges),
+        ):
             chosen = selection.select(groups, paths=["scripts/review/checks/docs.py"])
         self.assertEqual(
             sorted(group.__name__ for group in (*chosen.kept, *chosen.dropped)),
@@ -243,19 +272,23 @@ class TestSelection(unittest.TestCase):
         from scripts.tests.cases.review.test_docs import PointerTests
 
         edges = _graph({"scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",)})
-        with patch.object(selection, "import_graph", return_value=edges):
+        with (
+            patch.object(selection, "cosmetic_only", return_value=False),
+            patch.object(selection, "import_graph", return_value=edges),
+        ):
             chosen = selection.select((PointerTests,), paths=["scripts/review/checks/docs.py"])
         self.assertEqual(chosen.kept, (PointerTests,))
 
-    def test_sources_reads_tracked_python_under_scripts(self):
+    def test_sources_list_tracked_and_untracked_python_under_scripts(self):
         listing = "scripts/a.py\nscripts/b.md\nnotes/c.py\n"
-        with patch.object(selection, "git", return_value=listing):
-            self.assertEqual(selection.tracked_sources(), ["scripts/a.py"])
+        with patch.object(selection, "git", return_value=listing) as run:
+            self.assertEqual(selection.source_files(), ["scripts/a.py"])
+        run.assert_called_once_with("ls-files", "--cached", "--others", "--exclude-standard", "scripts", root=None)
 
     def test_the_graph_is_built_from_the_root_it_was_given(self):
-        with patch.object(selection, "tracked_sources", return_value=[]) as tracked:
+        with patch.object(selection, "source_files", return_value=[]) as sources:
             self.assertEqual(selection.module_files(Path("elsewhere")), {})
-        tracked.assert_called_once_with(Path("elsewhere"))
+        sources.assert_called_once_with(Path("elsewhere"))
 
     def test_a_dropped_class_never_reaches_the_change(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
@@ -268,7 +301,10 @@ class TestSelection(unittest.TestCase):
                 "scripts.tests.cases.koboldcpp.test_kobold_options": ("scripts.launchers.koboldcpp.kobold",),
             }
         )
-        with patch.object(selection, "import_graph", return_value=edges):
+        with (
+            patch.object(selection, "cosmetic_only", return_value=False),
+            patch.object(selection, "import_graph", return_value=edges),
+        ):
             chosen = selection.select((PointerTests, KoboldOptionTests), paths=["scripts/review/checks/docs.py"])
         reach = selection.reverse_closure(edges, {"scripts.review.checks.docs"}, depth=selection.SCOPE_DEPTH)
         for group in chosen.dropped:
