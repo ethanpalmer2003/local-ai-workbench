@@ -22,19 +22,19 @@ from scripts.shared.import_graph import import_graph, module_name, parse_source,
 
 FULL_TRIGGERS = frozenset(
     {
-        # - the two files that decide what the suite is, and only when their code changes
+        # The two files that decide what the suite is, and only when their code changes.
         "scripts/tests/run.py",
         "scripts/tests/scoped_selection.py",
     }
 )
-# - the default scope stops here: the full run before a push is what catches a transitive miss
+# The default scope stops here: the full run before a push catches transitive misses.
 SCOPE_DEPTH = 1
 
 TestGroup = type[unittest.TestCase]
 
 
 def _without_docstrings(tree: ast.Module) -> str:
-    """The tree as text with every docstring removed, so a comment or docstring edit compares equal.
+    """Return the AST dump with every docstring removed, so comment or docstring edits compare equal.
 
     A body left with no statement gets a `pass`, because a function holding only a docstring and one
     holding `pass` are the same program; blanking the string instead would stop an added or removed
@@ -50,7 +50,7 @@ def _without_docstrings(tree: ast.Module) -> str:
 
 
 def cosmetic_only(path: str, root: Path | None = None) -> bool:
-    """Whether a Python file differs from upstream only in comments or docstrings.
+    """Return whether a Python file differs from upstream only in comments or docstrings.
 
     If upstream is missing or the comparison fails, it counts as a real change. New, deleted, unreadable,
     or unparsable files also count as real changes.
@@ -92,7 +92,7 @@ def select(
     changed = changed_paths(root) if paths is None else paths
     if not changed:
         return Selection(groups, (), "no change set")
-    # - a comment or docstring edit changes nothing a test can see, wherever it lands
+    # A comment or docstring edit changes nothing a test can see, wherever it lands.
     changed = [path for path in changed if not (path.endswith(".py") and cosmetic_only(path, root))]
     if not changed:
         return Selection((), groups, "comment or docstring only")
