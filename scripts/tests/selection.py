@@ -7,9 +7,13 @@ non-Python file, a manifest such as `scripts/tests/run.py` - keeps every class, 
 omission hides a regression while a wrong inclusion only costs seconds.
 
 The graph is parsed from source, never imported, so it stays model-free. Importing `scripts.x.y` also
-runs `scripts/x/__init__.py`, so every module gets an edge to each of its parent packages. The graph
-cannot see a dynamic import or a file opened by string path; that blind spot is why the fallback is
-broad rather than clever, and why `--all` exists.
+runs `scripts/x/__init__.py`, so every module gets an edge to each of its parent packages. Three gaps
+remain and they are not equal: a module name assembled at runtime, and a Python file reached through
+`subprocess`, `runpy` or `open`, are invisible to the graph; an unreadable or unparsable file gets no
+edges at all. That last one is silent to this module - a change below a broken file can drop a class
+above it - and is caught one step earlier instead, because ruff and pyright fail the gate on any
+maintained file that does not parse. A new module git has not seen resolves to its parent package.
+The fallback is broad rather than clever, and `--all` exists, because of those gaps.
 """
 
 from __future__ import annotations
@@ -111,8 +115,8 @@ def literal_targets(tree: ast.Module, known: set[str]) -> set[str]:
     """Dotted module names a file spells in a string, because a dynamic import hides its target.
 
     `importlib.import_module("scripts.x")` has no import statement to read, so a string constant that
-    matches a known module is treated as a dependency. A name assembled at runtime stays invisible;
-    that is the one gap `--all` covers.
+    matches a known module is treated as a dependency. A name assembled at runtime stays invisible,
+    which is one of the gaps `--all` covers.
     """
     return {
         node.value
