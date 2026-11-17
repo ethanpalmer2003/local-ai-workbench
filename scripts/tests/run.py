@@ -48,6 +48,7 @@ from scripts.tests.cases.review.test_docs import (
 from scripts.tests.cases.review.test_duplicates import DuplicateReportTests
 from scripts.tests.cases.review.test_examples import ExamplesPageTests
 from scripts.tests.cases.review.test_layout import PolicyTests
+from scripts.tests.cases.review.test_line_length import LimitsReportTests, LineLengthTests
 from scripts.tests.cases.review.test_network_timeouts import NetworkTimeoutTests
 from scripts.tests.cases.review.test_overlay_access import OverlayAccessTests
 from scripts.tests.cases.review.test_owned_tokens import OwnedTokenTests
@@ -241,6 +242,8 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     LabelVocabularyTests,
     YamlTableTests,
     PolicyTests,
+    LineLengthTests,
+    LimitsReportTests,
     LiveStampTests,
     LanguageMatrixTests,
     RocmInventoryTests,

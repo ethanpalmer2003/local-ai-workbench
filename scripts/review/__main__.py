@@ -20,6 +20,7 @@ from scripts.review.checks import (
     frontend_wiring,
     inventory_code,
     layout,
+    line_length,
     model_references,
     network_timeouts,
     overlay_access,
@@ -175,6 +176,7 @@ def write_timings() -> Path:
 PYTHON_SECTIONS = frozenset(
     {
         "annotations",
+        "line length",
         "lint",
         "types",
         "formatting",
@@ -231,6 +233,7 @@ def touched_gate(argv: list[str] | None = None) -> int:
         ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main([])),
         ("comments", "\n=== COMMENTS ===", lambda: comments.main([])),
         ("annotations", "\n=== ANNOTATION COMPLEXITY ===", lambda: annotations.main([])),
+        ("line length", "\n=== LINE LENGTH ===", lambda: line_length.main([])),
         ("dead code", "\n=== DEAD CODE ===", lambda: dead_code.main([])),
         ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
         ("spelling", "\n=== SPELLING ===", spelling_check),
@@ -327,6 +330,9 @@ def full_gate(argv: list[str] | None = None) -> int:
     print("\n=== ANNOTATION COMPLEXITY ===", flush=True)
     annotation_status = timed("annotations", annotations.main, [])
 
+    print("\n=== LINE LENGTH ===", flush=True)
+    line_status = timed("line length", line_length.main, [])
+
     print("\n=== DEAD CODE ===", flush=True)
     dead_status = timed("dead code", dead_code.main, [])
 
@@ -380,6 +386,7 @@ def full_gate(argv: list[str] | None = None) -> int:
             or dash_status
             or comment_status
             or annotation_status
+            or line_status
             or dead_status
             or variant_status
             or formatting_status

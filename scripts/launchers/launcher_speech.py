@@ -365,7 +365,8 @@ class KoboldcppStartupServiceSettings:
 
 KOBOLDCPP_SERVICE = KoboldcppStartupServiceSettings()
 
-# - Admin password stays out of the tracked config and out of service snapshots; set KOBOLD_ADMIN_PASSWORD in scripts/.env.
+# - Admin password stays out of the tracked config and out of service snapshots; set
+#   KOBOLD_ADMIN_PASSWORD in scripts/.env.
 KOBOLDCPP_ADMIN_PASSWORD = project_cfg.KOBOLD_ADMIN_PASSWORD
 
 
