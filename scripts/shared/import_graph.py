@@ -19,7 +19,7 @@ Graph = dict[str, frozenset[str]]
 
 
 def module_name(path: str) -> str | None:
-    """`scripts/x/y.py` becomes `scripts.x.y`, a package `__init__.py` names its package, anything else is None.
+    """Convert `scripts/x/y.py` to `scripts.x.y`, package `__init__.py` to its package, or anything else to None.
 
     A document, template or config path is not a module even under `scripts/`, so it contributes no node.
     """
@@ -34,10 +34,10 @@ def module_name(path: str) -> str | None:
 
 
 def module_files(root: Path | None = None) -> dict[str, Path]:
-    """Module name to source file, for every module under `scripts/` that exists on disk.
+    """Map module names to source files for every module under `scripts/` that exists on disk.
 
     `--cached` is required alongside `--others`: `--others` alone lists untracked files only.
-    The ignored state and test-output trees never enter the graph.
+    Ignored state and test-output trees never enter the graph.
     """
     base = project_cfg.BASE_DIR if root is None else root
     files: dict[str, Path] = {}
@@ -49,7 +49,7 @@ def module_files(root: Path | None = None) -> dict[str, Path]:
 
 
 def parse_source(path: Path) -> ast.Module | None:
-    """The syntax tree of a source file, or None when it cannot be read or parsed."""
+    """Parse and return the syntax tree of a source file, or None when it cannot be read or parsed."""
     try:
         return ast.parse(path.read_text(encoding="utf-8"))
     except (OSError, SyntaxError, UnicodeDecodeError):
@@ -57,9 +57,9 @@ def parse_source(path: Path) -> ast.Module | None:
 
 
 def _from_import_target(node: ast.ImportFrom, module: str, is_package: bool) -> str | None:
-    """The module a `from ... import ...` reads, resolving the dots against this module's package.
+    """Resolve the target module of a `from ... import ...` node against the current module's package.
 
-    Returns None when the dots climb out of the top-level package, because no module has that name.
+    Returns None when relative dots climb past the top-level package.
     """
     if not node.level:
         return node.module
@@ -72,7 +72,7 @@ def _from_import_target(node: ast.ImportFrom, module: str, is_package: bool) -> 
 
 
 def imported_names(tree: ast.Module, module: str, *, is_package: bool) -> set[str]:
-    """Every dotted name a file imports, relative imports resolved.
+    """Return every dotted name a file imports, with relative imports resolved.
 
     `from x import y` yields both `x` and `x.y`, because `y` may be a submodule or just a name in `x`.
     """
@@ -89,7 +89,7 @@ def imported_names(tree: ast.Module, module: str, *, is_package: bool) -> set[st
 
 
 def _longest_known_prefix(name: str, known: set[str]) -> str | None:
-    """The module a dotted name refers to: the longest known prefix, since `from x.y import f` names no module."""
+    """Resolve a dotted import name to the longest prefix that matches a known module."""
     parts = name.split(".")
     for end in range(len(parts), 0, -1):
         candidate = ".".join(parts[:end])
@@ -99,10 +99,9 @@ def _longest_known_prefix(name: str, known: set[str]) -> str | None:
 
 
 def import_graph(root: Path | None = None) -> Graph:
-    """Module name to the modules it depends on, for every module under `scripts/` on disk.
+    """Build a map of module name to the modules it depends on for every module under `scripts/` on disk.
 
-    A dependency is an import or a parent package; a parent counts when it is itself a module, because
-    importing `scripts.x.y` runs `scripts/x/__init__.py`.
+    A dependency is an imported module or a known parent package (whose `__init__.py` runs on import).
     """
     files = module_files(root)
     known = set(files)
@@ -119,10 +118,9 @@ def import_graph(root: Path | None = None) -> Graph:
 
 
 def reverse_closure(edges: Graph, changed: Iterable[str], *, depth: int | None = None) -> frozenset[str]:
-    """The changed modules plus every module that depends on one, one hop at a time.
+    """Return the changed modules plus every module that depends on them, walking up to `depth` hops.
 
-    `depth` stops the walk: depth 1 keeps the changed modules and their direct importers, while None walks the
-    whole chain.
+    `depth=1` keeps the changed modules and their direct importers, while `None` walks the whole chain.
     """
     importers: dict[str, set[str]] = {}
     for module, targets in edges.items():
@@ -142,7 +140,7 @@ def reverse_closure(edges: Graph, changed: Iterable[str], *, depth: int | None =
 
 
 def module_paths(modules: Iterable[str], root: Path | None = None) -> list[str]:
-    """Repo-relative source paths for the modules that still exist on disk, for a tool that reads files."""
+    """Return sorted repo-relative source paths for the given modules that exist on disk."""
     base = project_cfg.BASE_DIR if root is None else root
     files = module_files(root)
     return sorted(files[module].relative_to(base).as_posix() for module in modules if module in files)
