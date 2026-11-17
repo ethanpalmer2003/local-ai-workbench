@@ -2,6 +2,7 @@
 
 import contextlib
 import io
+import subprocess
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -140,6 +141,49 @@ class PreviewTests(unittest.TestCase):
             self.assertIn("OLD", (root / "a.md").read_text(encoding="utf-8"))
         self.assertIn("[PREVIEW] 1 reference(s) in 1 file(s)", printed.getvalue())
         self.assertIn("[NEXT] re-run with --apply", printed.getvalue())
+
+
+class CollapseTests(unittest.TestCase):
+    def test_a_collapse_moves_the_module_and_repoints_both_import_spellings(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            package = root / "scripts" / "use"
+            package.mkdir(parents=True)
+            (package / "__init__.py").write_text('"""One module."""\n', encoding="utf-8")
+            (package / "impl.py").write_text("VALUE = 1\n", encoding="utf-8")
+            (root / "scripts" / "caller.py").write_text(
+                "from scripts.use import impl\nfrom scripts.use.impl import VALUE\n", encoding="utf-8"
+            )
+            # - the model-free suite forbids a real process; git is never asked here
+            with patch.object(
+                rename_path.subprocess, "run", return_value=subprocess.CompletedProcess([], 1, stdout="", stderr="")
+            ):
+                rename_path.collapse("scripts/use", "scripts/use_impl.py", dry_run=False, root=root)
+            self.assertFalse(package.exists())
+            self.assertTrue((root / "scripts" / "use_impl.py").is_file())
+            caller = (root / "scripts" / "caller.py").read_text(encoding="utf-8")
+        self.assertIn("from scripts import use_impl", caller)
+        self.assertIn("from scripts.use_impl import VALUE", caller)
+
+    def test_an_init_that_holds_code_is_refused(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            package = root / "scripts" / "use"
+            package.mkdir(parents=True)
+            (package / "__init__.py").write_text("VALUE = 1\n", encoding="utf-8")
+            (package / "impl.py").write_text("OTHER = 2\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "merge it into the module"):
+                rename_path.collapse_plan("scripts/use", "scripts/use.py", root=root)
+
+    def test_a_package_with_a_subdirectory_is_refused(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            package = root / "scripts" / "use"
+            (package / "child").mkdir(parents=True)
+            (package / "__init__.py").write_text("", encoding="utf-8")
+            (package / "impl.py").write_text("VALUE = 1\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "subdirectory"):
+                rename_path.collapse_plan("scripts/use", "scripts/use.py", root=root)
 
 
 class ScanScopeTests(unittest.TestCase):
