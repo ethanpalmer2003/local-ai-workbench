@@ -22,7 +22,7 @@ from typing import NamedTuple
 from scripts.config import project_config as project_cfg
 from scripts.shared.changes import changed_paths, git
 
-FULL_TRIGGERS = frozenset({"scripts/tests/run.py", "scripts/tests/scoping.py"})
+FULL_TRIGGERS = frozenset({"scripts/tests/run.py", "scripts/tests/selection.py"})
 
 
 def module_name(path: str) -> str | None:
