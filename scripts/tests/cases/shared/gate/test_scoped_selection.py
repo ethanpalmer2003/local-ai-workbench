@@ -212,6 +212,11 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(scoped_selection._without_docstrings(before), scoped_selection._without_docstrings(after))
         self.assertNotEqual(scoped_selection._without_docstrings(before), scoped_selection._without_docstrings(changed))
 
+    def test_a_docstring_only_function_still_compares_equal(self):
+        before = ast.parse('def f():\n    """Old."""\n')
+        after = ast.parse('def f():\n    """New."""\n')
+        self.assertEqual(scoped_selection._without_docstrings(before), scoped_selection._without_docstrings(after))
+
     def test_a_cosmetic_change_is_read_from_upstream(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
