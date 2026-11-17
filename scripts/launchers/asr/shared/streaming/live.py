@@ -55,7 +55,7 @@ class Sessions:
             self._drop()
         self.reaper.join(timeout=6)
 
-    def _nemo_transport(self, streaming: bool, language: str) -> Any:
+    def _nemo_transport(self, streaming: bool, language: str) -> "WebSocketBridge | None":
         if not (streaming and self.engine == cfg.AsrStartupEngine.NEMO):
             return None
         return WebSocketBridge(
@@ -102,7 +102,7 @@ class Sessions:
         self.touched = time.monotonic()
         return {"session": self.token, "sample_rate": 16000, "frame_samples": 512}
 
-    def _push(self, turns: Any, body: bytes) -> dict[str, Any]:
+    def _push(self, turns: "Turns", body: bytes) -> dict[str, Any]:
         try:
             events = []
             for offset in range(0, len(body), 1024):

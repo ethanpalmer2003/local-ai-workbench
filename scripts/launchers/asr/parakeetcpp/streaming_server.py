@@ -4,8 +4,9 @@ import argparse
 import json
 import os
 import threading
+from collections.abc import Iterable
 from http.server import BaseHTTPRequestHandler
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Protocol
 from urllib.parse import parse_qs, urlsplit
 
 from scripts.config import models as model_cfg
@@ -15,6 +16,14 @@ from scripts.launchers.asr.shared import requests
 from scripts.launchers.proxy_util import ExclusiveThreadingHTTPServer, read_request_body, send_bytes
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.launchers.shared.transport.http_input import chunks
+
+
+class ModelStream(Protocol):
+    """The native streaming decoder a request runs over."""
+
+    def push(self, frame: bytes) -> str: ...
+
+    def finish(self) -> str: ...
 
 
 class _StreamingHandler(BaseHTTPRequestHandler):
@@ -78,7 +87,7 @@ class _StreamingHandler(BaseHTTPRequestHandler):
         stream = self.model.stream(request.language)
         return stream, (pcm[offset : offset + 4096] for offset in range(0, len(pcm), 4096))
 
-    def _pump(self, stream: Any, inputs: Any, live: bool) -> str:
+    def _pump(self, stream: ModelStream, inputs: Iterable[bytes], live: bool) -> str:
         text = ""
         for frame in inputs:
             delta = stream.push(frame)

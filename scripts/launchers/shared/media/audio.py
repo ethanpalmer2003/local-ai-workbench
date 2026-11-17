@@ -3,7 +3,10 @@
 import io
 import math
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 def decode_audio(source: bytes | Path) -> tuple[Any, int]:
@@ -15,7 +18,7 @@ def decode_audio(source: bytes | Path) -> tuple[Any, int]:
         raise ValueError("Cannot decode audio; send a valid WAV, FLAC or MP3 file") from error
 
 
-def mono_resample(samples: Any, rate: int, target_rate: int = 16000, *, clip: bool = False) -> Any:
+def mono_resample(samples: "np.ndarray", rate: int, target_rate: int = 16000, *, clip: bool = False) -> "np.ndarray":
     import numpy as np
     from scipy.signal import resample_poly
 
@@ -29,7 +32,7 @@ def mono_resample(samples: Any, rate: int, target_rate: int = 16000, *, clip: bo
     return np.clip(samples, -1, 1) if clip else samples
 
 
-def pcm_wav(samples: Any, rate: int = 16000) -> bytes:
+def pcm_wav(samples: "np.ndarray", rate: int = 16000) -> bytes:
     import soundfile as sf
 
     destination = io.BytesIO()

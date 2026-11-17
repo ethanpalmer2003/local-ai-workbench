@@ -14,6 +14,7 @@ from scripts.review.audit import package_audit
 from scripts.review.audit.public_audit import main as public_audit_main
 from scripts.review.checks import (
     annotations,
+    bare_any,
     comments,
     dead_code,
     docs,
@@ -145,7 +146,7 @@ def advisory_check(fast: bool) -> int:
     return status
 
 
-def timed[T](name: str, function: Callable[..., T], *args: Any) -> T:
+def timed[T](name: str, function: Callable[..., T], *args: object) -> T:
     """Run one gate section and keep its duration, so history answers cost questions without a rerun."""
     started = time.perf_counter()
     status = function(*args)
@@ -176,6 +177,7 @@ def write_timings() -> Path:
 PYTHON_SECTIONS = frozenset(
     {
         "annotations",
+        "bare any",
         "line length",
         "lint",
         "types",
@@ -234,6 +236,7 @@ def touched_gate(argv: list[str] | None = None) -> int:
         ("comments", "\n=== COMMENTS ===", lambda: comments.main([])),
         ("annotations", "\n=== ANNOTATION COMPLEXITY ===", lambda: annotations.main([])),
         ("line length", "\n=== LINE LENGTH ===", lambda: line_length.main([])),
+        ("bare any", "\n=== BARE ANY ===", lambda: bare_any.main([])),
         ("dead code", "\n=== DEAD CODE ===", lambda: dead_code.main([])),
         ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
         ("spelling", "\n=== SPELLING ===", spelling_check),
@@ -333,6 +336,9 @@ def full_gate(argv: list[str] | None = None) -> int:
     print("\n=== LINE LENGTH ===", flush=True)
     line_status = timed("line length", line_length.main, [])
 
+    print("\n=== BARE ANY ===", flush=True)
+    any_status = timed("bare any", bare_any.main, [])
+
     print("\n=== DEAD CODE ===", flush=True)
     dead_status = timed("dead code", dead_code.main, [])
 
@@ -387,6 +393,7 @@ def full_gate(argv: list[str] | None = None) -> int:
             or comment_status
             or annotation_status
             or line_status
+            or any_status
             or dead_status
             or variant_status
             or formatting_status

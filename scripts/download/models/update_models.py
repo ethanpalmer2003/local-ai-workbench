@@ -36,7 +36,7 @@ class Action:
         return str(self.entry["label"]) if self.entry else self.model.label
 
 
-def _file_for(api: Any, old: ModelDownload, repo: str) -> str | None:
+def _file_for(api: updates.Hub, old: ModelDownload, repo: str) -> str | None:
     """The newer repo's file: the old name with the new version, or a unique same-quant match."""
     name = Path(old.filename or old.path.name).name
     version = updates.RELEASE.search(repo.rsplit("/", 1)[-1])
@@ -70,7 +70,7 @@ def _entry(old: ModelDownload, filename: str, repo: str) -> dict[str, Any]:
     }
 
 
-def _upgrade(api: Any, model: ModelDownload) -> Action | None:
+def _upgrade(api: updates.Hub, model: ModelDownload) -> Action | None:
     release = updates.latest_release(api, parse_url(model.url).repo_id) if model.url else None
     if release is None:
         return None
@@ -82,7 +82,7 @@ def _upgrade(api: Any, model: ModelDownload) -> Action | None:
     return Action("upgrade", model, _entry(model, filename, newer_repo))
 
 
-def plan(api: Any, models: list[ModelDownload]) -> list[Action]:
+def plan(api: updates.Hub, models: list[ModelDownload]) -> list[Action]:
     """Upgrades for versioned families with a newer release, and refreshes for size drift."""
     actions: list[Action] = []
     for model in models:

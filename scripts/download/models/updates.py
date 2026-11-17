@@ -7,9 +7,13 @@ version token in the same family. A replacement stays an explicit `model_admin r
 import argparse
 import hashlib
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
+
+if TYPE_CHECKING:
+    from huggingface_hub import ModelInfo
 
 from scripts.config import project_config as project_cfg
 from scripts.config.models import MODELS as MODELS
@@ -22,11 +26,11 @@ LIMIT = 30
 
 
 class Hub(Protocol):
-    def model_info(self, repo_id: str, *, revision: str | None = None, files_metadata: bool = False) -> Any: ...
+    def model_info(self, repo_id: str, *, revision: str | None = None, files_metadata: bool = False) -> "ModelInfo": ...
 
-    def list_models(self, *, search: str, limit: int) -> Any: ...
+    def list_models(self, *, search: str, limit: int) -> "Iterable[ModelInfo]": ...
 
-    def list_repo_files(self, repo_id: str, *, revision: str | None = None) -> Any: ...
+    def list_repo_files(self, repo_id: str, *, revision: str | None = None) -> list[str]: ...
 
 
 @dataclass

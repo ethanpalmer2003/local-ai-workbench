@@ -42,7 +42,7 @@ def cache_file(text: str, prompt: dict[str, Any], unique_id: str) -> Path:
     return CACHE_DIR / f"{key}.pt"
 
 
-def cpu_conditioning(value: Any) -> Any:
+def cpu_conditioning(value: object) -> object:
     import torch
 
     if isinstance(value, torch.Tensor):
@@ -76,18 +76,20 @@ class LocalLTXCachedTextEncode:
 
     @classmethod
     def IS_CHANGED(
-        cls, clip: Any, text: str, cache_enabled: bool, prompt: dict[str, Any], unique_id: str
+        cls, clip: object, text: str, cache_enabled: bool, prompt: dict[str, Any], unique_id: str
     ) -> str | float:
         return cache_file(text, prompt, unique_id).stem if cache_enabled else float("nan")
 
     def check_lazy_status(
-        self, clip: Any, text: str, cache_enabled: bool, prompt: dict[str, Any], unique_id: str
+        self, clip: object, text: str, cache_enabled: bool, prompt: dict[str, Any], unique_id: str
     ) -> list[str]:
         if cache_enabled and cache_file(text, prompt, unique_id).is_file():
             return []
         return ["clip"] if clip is None else []
 
-    def encode(self, clip: Any, text: str, cache_enabled: bool, prompt: dict[str, Any], unique_id: str) -> tuple[Any]:
+    def encode(
+        self, clip: object, text: str, cache_enabled: bool, prompt: dict[str, Any], unique_id: str
+    ) -> tuple[object]:
         import torch
 
         path = cache_file(text, prompt, unique_id) if cache_enabled else None

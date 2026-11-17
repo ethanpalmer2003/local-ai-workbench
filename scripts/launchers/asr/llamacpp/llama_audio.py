@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typing import Any
 
 from scripts.launchers import launch_util
+from scripts.launchers import launcher_config as cfg
 from scripts.launchers.shared.services import native
 
 COMPONENT_KEY = "asr/llamacpp"
@@ -13,7 +14,14 @@ COMPONENT_KEY = "asr/llamacpp"
 class LlamaAudioBackend:
     """One llama.cpp audio server described by the settings it starts from."""
 
-    def __init__(self, settings: Any, *, alias: str, label: str, device: str) -> None:
+    def __init__(
+        self,
+        settings: cfg.Qwen3AsrStartupRequestSettings | cfg.GemmaAudioAsrStartupRequestSettings,
+        *,
+        alias: str,
+        label: str,
+        device: str,
+    ) -> None:
         self.settings = settings
         self.alias = alias
         self.label = label

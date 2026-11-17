@@ -94,7 +94,7 @@ def echoed(line: str) -> bool:
     return not PROGRESS_RE.match(line)
 
 
-def _consume(line: str, live: _Live, bar: Any, stage: Stage, show: bool = True) -> None:
+def _consume(line: str, live: _Live, bar: tqdm[Any], stage: Stage, show: bool = True) -> None:
     key = skipped(line)
     if key == stage.key:
         live.skipped = True
@@ -116,7 +116,7 @@ def _consume(line: str, live: _Live, bar: Any, stage: Stage, show: bool = True) 
         bar.write(line)
 
 
-def _refresh(bar: Any, stage: Stage, prefix: float, live: _Live, started: float) -> None:
+def _refresh(bar: tqdm[Any], stage: Stage, prefix: float, live: _Live, started: float) -> None:
     elapsed = time.perf_counter() - started
     fraction = max(live.fraction, elapsed / stage.typical)
     slow = " SLOW" if elapsed > stage.high else ""
@@ -143,7 +143,7 @@ def _tail(path: Path, count: int = 12) -> list[str]:
         return []
 
 
-def _overdue(process: subprocess.Popen[Any], stage: Stage, started: float, bar: Any) -> bool:
+def _overdue(process: subprocess.Popen[Any], stage: Stage, started: float, bar: tqdm[Any]) -> bool:
     """Stop a child that outlived its cap; True once the tree has been asked to die."""
     limit = limit_for(stage)
     if time.perf_counter() - started <= limit:
@@ -167,7 +167,7 @@ class _Pump:
     killed: bool = False
     drained: float | None = None
 
-    def feed(self, line: Any) -> bool:
+    def feed(self, line: object) -> bool:
         if line is None:
             return True
         if line is TIMEOUT:
@@ -177,6 +177,8 @@ class _Pump:
             # - a surviving grandchild can hold the pipe open; stop once the output is drained
             self.drained = self.drained or time.perf_counter() + 2.0
             return time.perf_counter() > self.drained
+        if not isinstance(line, str):
+            return True
         self.log.write(line + "\n")
         if self.stream and echoed(line):
             self.bar.write(line)
@@ -184,7 +186,7 @@ class _Pump:
         return False
 
 
-def _run_stage(stage: Stage, log_path: Path, bar: Any, prefix: float, stream: bool) -> Result:
+def _run_stage(stage: Stage, log_path: Path, bar: tqdm[Any], prefix: float, stream: bool) -> Result:
     started = time.perf_counter()
     live = _Live()
     env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8", "AI_TEST_TITLE": stage.key}

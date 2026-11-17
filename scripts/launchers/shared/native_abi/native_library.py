@@ -2,6 +2,7 @@
 
 import ctypes
 import os
+from collections.abc import Callable
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
@@ -19,7 +20,7 @@ class NativeLibrary:
             self.close()
             raise
 
-    def bind(self, name: str, arguments: list[Any], result: Any) -> Any:
+    def bind(self, name: str, arguments: list[object], result: object) -> Callable[..., Any]:
         try:
             function = getattr(self.dll, self.prefix + name)
             function.argtypes, function.restype = arguments, result

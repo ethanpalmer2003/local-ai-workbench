@@ -15,6 +15,7 @@ template has its message in that tool.
 | model_references | a runtime default no catalog model resolves | names the model label and the runtime that cannot resolve it | point the runtime at the catalog label |
 | frontend_wiring | a DOM id a script reads but the page never defines | `... unknown element id ...` | add the element or correct the id |
 | annotations | a five-part tuple spelled inline in a signature | `... atoms, depth ... union members` | name the record in a NamedTuple or dataclass |
+| bare_any | a parameter or return annotated exactly `Any` | `: Any` | name the real type, or `object` for an opaque value |
 | line_length | a wrappable line over 120 characters | `characters (` | wrap prose and code; templates and long tokens are exempt |
 | inventory_code | an inline `# noqa`, or a folder over 20 direct files | `Inline suppression: ...` | move the suppression into `pyproject.toml`, or split the folder by purpose |
 | typography | an em dash or curly quote in shipped text | `em-dash` | use a comma or a plain hyphen |

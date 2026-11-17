@@ -267,11 +267,11 @@ def summarize_requests(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def summarize_report(value: Any) -> dict[str, Any]:
+def summarize_report(value: object) -> dict[str, Any]:
     """Collect lifecycle records once; never promote arbitrary elapsed-time fields."""
     rows: list[dict[str, Any]] = []
 
-    def visit(item: Any) -> None:
+    def visit(item: object) -> None:
         if isinstance(item, dict):
             lifecycle = item.get("benchmark", item)
             if isinstance(lifecycle, dict) and lifecycle.get("schema") == "benchmark-lifecycle-v1":

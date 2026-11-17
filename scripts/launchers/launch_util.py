@@ -5,7 +5,6 @@
 
 import contextlib
 import ctypes
-import dataclasses
 import os
 import shutil
 import socket
@@ -16,7 +15,7 @@ import time
 from collections.abc import Callable, Mapping
 from ctypes import wintypes
 from enum import Enum
-from typing import Any, cast
+from typing import Any, TextIO, cast
 
 import requests
 
@@ -465,7 +464,7 @@ def _powershell_launch_cmd(cmd: list[str], title: str, log_file: str | None) -> 
     return ["powershell.exe", "-NoProfile", "-NoExit", "-Command", ps_command]
 
 
-def _merge_streams(mode: ConsoleTerminalLaunchMode, capture: Any) -> tuple[Any, Any]:
+def _merge_streams(mode: ConsoleTerminalLaunchMode, capture: TextIO | None) -> tuple[TextIO | None, TextIO | None]:
     """MERGE runs headless; an opened log_file replaces the inherited console."""
     if mode != ConsoleTerminalLaunchMode.MERGE:
         return None, None
@@ -655,7 +654,7 @@ def print_ready(tag: str, port: int | str, args: list[str] | None = None, **conf
         print(f"[{tag}] config: {details}")
 
 
-def _format_setting(value: Any) -> str:
+def _format_setting(value: object) -> str:
     if isinstance(value, Enum):
         return value.value
     if isinstance(value, (set, frozenset)):
@@ -663,7 +662,7 @@ def _format_setting(value: Any) -> str:
     return repr(value)
 
 
-def print_settings(tag: str, label: str, settings: Any, off: bool = False) -> None:
+def print_settings(tag: str, label: str, settings: object, off: bool = False) -> None:
     """
     - Dump a settings dataclass at startup
     - 'label: off' when disabled, otherwise every field as key=value
@@ -674,7 +673,7 @@ def print_settings(tag: str, label: str, settings: Any, off: bool = False) -> No
     values = (
         settings.items()
         if isinstance(settings, Mapping)
-        else ((field.name, getattr(settings, field.name)) for field in dataclasses.fields(settings))
+        else ((name, getattr(settings, name)) for name in getattr(settings, "__dataclass_fields__", {}))
     )
     fields = ", ".join(f"{name}={_format_setting(value)}" for name, value in values)
     print(f"[{tag}] {label}: {fields}")

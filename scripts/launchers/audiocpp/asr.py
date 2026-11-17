@@ -4,7 +4,6 @@ import hashlib
 import json
 import queue
 from pathlib import Path
-from typing import Any
 from urllib.parse import urlencode
 
 from scripts.config import project_config as project_cfg
@@ -63,14 +62,14 @@ def start(port: int | None = None, engine: str = DEFAULT_ENGINE):
     )
 
 
-def _validated(request: Any) -> None:
+def _validated(request: requests.AudioRequest) -> None:
     if request.suppress_non_speech:
         raise ValueError("Non-speech token suppression is a Whisper-specific option")
     if request.response_format not in ("json", "text"):
         raise ValueError("AudioCpp speech models support json or text output")
 
 
-def _pcm(request: Any) -> bytes:
+def _pcm(request: requests.AudioRequest) -> bytes:
     from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 
     samples, rate = decode_audio(request.audio)
@@ -80,7 +79,7 @@ def _pcm(request: Any) -> bytes:
     return pcm
 
 
-def _stream_url(request: Any) -> str:
+def _stream_url(request: requests.AudioRequest) -> str:
     query = urlencode(
         {
             "model": "benchmark-asr",
@@ -93,7 +92,7 @@ def _stream_url(request: Any) -> str:
     return url() + "/v1/audio/transcriptions/live?" + query
 
 
-def _await_transcript(stream: Any, response_format: str) -> tuple[bytes, str]:
+def _await_transcript(stream: StreamingPost, response_format: str) -> tuple[bytes, str]:
     while True:
         try:
             event = stream.events.get(timeout=1)

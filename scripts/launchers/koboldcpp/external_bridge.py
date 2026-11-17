@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from typing import Any
+from http.server import BaseHTTPRequestHandler
+from typing import Any, cast
 
 import requests
 
@@ -90,8 +91,9 @@ def tokens(base: str, payload: dict[str, Any]) -> Iterator[str]:
                 yield token
 
 
-def respond(handler: Any, base: str, path: str, body: bytes) -> None:
+def respond(handler: object, base: str, path: str, body: bytes) -> None:
     """Answer one Lite generation request from the external server, in the shapes Lite parses."""
+    handler = cast(BaseHTTPRequestHandler, handler)
     payload = json.loads(body or b"{}")
     if path != STREAM_PATH:
         text = generated_text(base, payload)

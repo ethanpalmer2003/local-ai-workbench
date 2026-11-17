@@ -7,9 +7,10 @@ import json
 import statistics
 import time
 import traceback
+from collections.abc import Iterator
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, TextIO
 
 import requests
 
@@ -96,7 +97,7 @@ class StreamOutcome(NamedTuple):
 
 
 def _consume_stream(
-    response: Any, output: Any, args: argparse.Namespace, deadline: float, started: float
+    response: Iterator[bytes], output: TextIO, args: argparse.Namespace, deadline: float, started: float
 ) -> StreamOutcome:
     count, events, content = 0, [], []
     final = None

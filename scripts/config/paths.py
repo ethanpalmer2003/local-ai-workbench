@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from scripts.config import project_config as project_cfg
 
@@ -17,8 +17,9 @@ def load_text(path: Path) -> str:
     return resolve_text(path.read_text(encoding="utf-8"))
 
 
-def load_json(path: Path) -> Any:
-    return json.loads(load_text(path))
+def load_json(path: Path) -> dict[str, Any]:
+    """Read a JSON object; every configuration file here is an object."""
+    return cast(dict[str, Any], json.loads(load_text(path)))
 
 
 def materialize(source: Path, folder: str = "configs") -> Path:
