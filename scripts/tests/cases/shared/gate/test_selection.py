@@ -65,10 +65,26 @@ class TestSelection(unittest.TestCase):
             broken.write_text("def broken(:\n", encoding="utf-8")
             self.assertIsNone(selection._parse(broken))
 
-    def test_a_chain_of_importers_all_count(self):
+    def test_a_chain_of_importers_counts_one_hop_by_default(self):
         edges = _graph({"scripts.a": ("scripts.b",), "scripts.b": ("scripts.c",), "scripts.c": (), "scripts.z": ()})
+        self.assertEqual(
+            selection.reverse_closure(edges, {"scripts.c"}, depth=selection.SCOPE_DEPTH), {"scripts.c", "scripts.b"}
+        )
         self.assertEqual(selection.reverse_closure(edges, {"scripts.c"}), {"scripts.c", "scripts.b", "scripts.a"})
-        self.assertEqual(selection.reverse_closure(edges, {"scripts.z"}), {"scripts.z"})
+
+    def test_a_transitive_dependent_is_out_of_scope(self):
+        from scripts.tests.cases.review.test_docs import PointerTests
+
+        edges = _graph(
+            {
+                "scripts.review.checks.docs": (),
+                "scripts.review.checks.links": ("scripts.review.checks.docs",),
+                "scripts.tests.cases.review.test_docs": ("scripts.review.checks.links",),
+            }
+        )
+        with patch.object(selection, "import_graph", return_value=edges):
+            chosen = selection.select((PointerTests,), paths=["scripts/review/checks/docs.py"])
+        self.assertEqual(chosen.kept, (), "a two-hop dependent waits for the full run")
 
     def test_a_change_keeps_the_classes_that_import_it(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
@@ -102,19 +118,20 @@ class TestSelection(unittest.TestCase):
                 self.assertEqual(chosen.dropped, groups)
                 self.assertEqual(chosen.why, "no Python change")
 
-    def test_the_manifests_and_lockfiles_keep_every_class(self):
+    def test_the_manifests_keep_every_class(self):
         groups = (TestSelection,)
-        for path in (
-            "scripts/tests/run.py",
-            "scripts/tests/selection.py",
-            "scripts/__init__.py",
-            "pyproject.toml",
-            "uv.lock",
-        ):
+        for path in ("scripts/tests/run.py", "scripts/tests/selection.py"):
             with self.subTest(path=path), patch.object(selection, "cosmetic_only", return_value=False):
                 chosen = selection.select(groups, paths=[path])
                 self.assertEqual(chosen.kept, groups)
                 self.assertIn("manifest changed", chosen.why)
+
+    def test_a_lock_config_or_package_init_runs_no_class(self):
+        for path in ("pyproject.toml", "uv.lock", "scripts/__init__.py"):
+            with self.subTest(path=path):
+                chosen = selection.select((TestSelection,), paths=[path])
+                self.assertEqual(chosen.kept, ())
+                self.assertEqual(chosen.why, "no Python change")
 
     def test_a_comment_edit_to_a_trigger_runs_nothing(self):
         with patch.object(selection, "cosmetic_only", return_value=True):
@@ -238,7 +255,7 @@ class TestSelection(unittest.TestCase):
         )
         with patch.object(selection, "import_graph", return_value=edges):
             chosen = selection.select((PointerTests, KoboldOptionTests), paths=["scripts/review/checks/docs.py"])
-        reach = selection.reverse_closure(edges, {"scripts.review.checks.docs"})
+        reach = selection.reverse_closure(edges, {"scripts.review.checks.docs"}, depth=selection.SCOPE_DEPTH)
         for group in chosen.dropped:
             self.assertNotIn(group.__module__, reach, group.__name__)
 
