@@ -9,6 +9,8 @@
 
 ## Standardization
 
+- [ ] Decide what to do with the 646 parameter defaults the census counts (python -m scripts.review.checks.annotations --census): keep rgv, decide whether a derived default becomes a required argument, and audit the 231 carried ones where None is also a legal value, which needs a sentinel. Owner: [annotations check](../scripts/review/checks/annotations.py). ~2 h
+
 - [ ] Decide the docstring voice repo-wide: PEP 257 asks for imperative mood ("Return the path"), and 127 of 1157 docstrings here do that while 1030 describe ("The path..."). `scripts/shared/import_graph.py` and `scripts/tests/scoped_selection.py` are on the standard as the reference. The same pass settles the `# - ` comment marker, 517 lines of which the two files no longer use. Migrate area by area, then state the rule in [code](../.agents/CODE.md) and check it in `scripts/review/checks/comments.py` only if the opening word can be measured. ~3 h
 
 - [ ] Decide whether vague names get an audit, and at what strictness: 784 public functions in `scripts` are one word (310 distinct names, led by `start`, `command`, `close`, `run`, `ready`), so a blanket rule would flag most idiomatic code; the enforceable part is a short banned list for names that carry no object (`run`, `check`, `handle`, `process`, `data`, `utils`, `helpers`, `common`, `base`, `manager`), checked like `owned_tokens.py`, plus the [folder](../.agents/FOLDERS.md) rule "a name states its scope" extended to modules and functions. The earlier module pass found only `engines/base.py` under that list; `scoping` was vague but no banned word, and became `selection`. ~30 min
