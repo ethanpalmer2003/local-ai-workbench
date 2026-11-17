@@ -145,6 +145,7 @@ from scripts.tests.cases.shared.tools.test_rename_path import (
     ScanScopeTests,
 )
 from scripts.tests.cases.shared.tools.test_rocm_inventory import RocmInventoryTests
+from scripts.tests.cases.shared.tools.test_sample_code import SampleCodeTests
 from scripts.tests.cases.shared.tools.test_stage_runner import StageRunnerTests
 from scripts.tests.cases.shared.tools.test_state_cleanup import StateCleanupTests
 from scripts.tests.cases.shared.tools.test_strata_profile import StrataProfileLinkTests
@@ -251,6 +252,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     TransferTests,
     DownloadModelsTests,
     LocalOverlayTests,
+    SampleCodeTests,
     LabelVocabularyTests,
     YamlTableTests,
     PolicyTests,
