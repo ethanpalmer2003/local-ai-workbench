@@ -424,10 +424,15 @@ def save_comparison(root: Path, results: list[Result]) -> None:
     lines += [
         "",
         "Task time includes harness startup, model calls and tools; grading and backend startup are separate.",
-        "Tokens are server-reported API totals across all turns, including repeated input. Cached tokens are a subset of input.",
-        "TTFT, prefill and decode are medians of server-reported native timings per API request, so harness overhead is excluded.",
-        "Prefill counts only tokens the server actually prefilled, so prefix-cache reuse lowers it without lowering prompt tokens.",
-        "Missing usage is unavailable, not zero. Tokenizers, quants, chat templates and inference backends differ between models.",
+        "Tokens are server-reported API totals across all turns, including repeated input. Cached tokens are a subset "
+        "of input.",
+        "TTFT, prefill and decode are medians of server-reported native timings per API request, so harness overhead "
+        "is excluded.",
+        "Prefill counts only tokens the server actually prefilled, so prefix-cache reuse lowers it without lowering "
+        "prompt tokens.",
+        "Missing usage is unavailable, not zero. Tokenizers, quants, chat templates and inference backends differ "
+        "between "
+        "models.",
         "Only compare runs with the same tasks, repetitions, context, sampling and thinking limits.",
     ]
     (root / "comparison.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

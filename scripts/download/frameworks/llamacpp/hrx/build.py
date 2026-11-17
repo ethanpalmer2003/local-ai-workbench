@@ -197,7 +197,10 @@ def write_checkpoint_report(paths: RunPaths) -> None:
             "name": "HRX runtime update",
             "category": "probes",
             "status": "passed",
-            "reasoning": "Six CPU-reference operators, normal/chunked tensors, exact code tokens/text, chat, installed binary hashes and generation passed. Previous runtime retained for rollback; ports clear. Validation covers short Swift requests at 8K/f16 KV; other models and larger contexts remain unverified.",
+            "reasoning": "Six CPU-reference operators, normal/chunked tensors, exact code tokens/text, chat, installed "
+            "binary hashes and generation passed. Previous runtime retained for rollback; ports clear. "
+            "Validation covers short Swift requests at 8K/f16 KV; other models and larger contexts remain "
+            "unverified.",
             "installed": installed,
             "previous_checkpoint": previous,
             "provenance": provenance.block(

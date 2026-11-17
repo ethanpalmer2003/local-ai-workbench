@@ -45,7 +45,8 @@ def write_summary(artifacts: Path, report: dict[str, Any]) -> None:
         "",
         report["conditions"],
         "",
-        "| Profile | Samples | Median first data (s) | Largest simulated startup buffer (s) | Median generation/audio ratio |",
+        "| Profile | Samples | Median first data (s) | Largest simulated startup buffer (s) | Median generation/audio "
+        "ratio |",
         "| --- | ---: | ---: | ---: | ---: |",
     ]
     for item in report["summary"]:
@@ -57,7 +58,9 @@ def write_summary(artifacts: Path, report: dict[str, Any]) -> None:
             "",
             "Unsupported profiles: " + ", ".join(report["unsupported_profiles"]),
             "",
-            "First-data latency excludes the player buffer. Ratios above 1 mean generation took longer than the audio duration. Buffer estimates reproduce recorded chunk arrival timing; they do not guarantee future playback or score speech quality.",
+            "First-data latency excludes the player buffer. Ratios above 1 mean generation took longer than the audio "
+            "duration. Buffer estimates reproduce recorded chunk arrival timing; they do not guarantee future playback "
+            "or score speech quality.",
         ]
     )
     for limitation in report.get("limitations", []):
@@ -158,7 +161,9 @@ STREAM_PROFILES: dict[str, dict[str, object]] = {
 
 STREAM_TEXTS: dict[str, str] = {
     "short": "Hello there. This is a streaming speech test. How are you doing today?",
-    "long": "Hello there, I am glad you made it back. We should take a moment to think this through before we move. There is no need to rush into anything. Tell me what you noticed outside, and then we can decide together what to do next.",
+    "long": "Hello there, I am glad you made it back. We should take a moment to think this through before we move. "
+    "There is no need to rush into anything. Tell me what you noticed outside, and then we can decide together "
+    "what to do next.",
 }
 
 
@@ -310,13 +315,16 @@ def run_comparison(args: argparse.Namespace, run: RunPaths, memory: BenchmarkVra
     results, unsupported, timed_out, transport_failed = _sweep(profiles, texts, args, run, lifecycle, memory, deadline)
     report = {
         "benchmark": lifecycle.record(),
-        "setup_boundary": "Backend session acquisition including monitor setup; original load time unavailable for reused services",
+        "setup_boundary": "Backend session acquisition including monitor setup; original load time unavailable for reused "
+        "services",
         "summary": _summary(profiles, results),
         "unsupported_profiles": sorted(unsupported),
         "time_budget_reached": timed_out,
         "transport_failure": transport_failed,
         "elapsed": time.perf_counter() - started,
-        "conditions": "Standalone TTS only; no LLM requests initiated. PCM assumed mono s16le 24 kHz. First-data excludes playback buffering. Buffer results are simulated from real arrivals. All profiles use the same text/seed for each matched comparison.",
+        "conditions": "Standalone TTS only; no LLM requests initiated. PCM assumed mono s16le 24 kHz. First-data excludes "
+        "playback buffering. Buffer results are simulated from real arrivals. All profiles use the same "
+        "text/seed for each matched comparison.",
     }
     identity = provenance.block(
         subject="audiocpp/audiocpp_streaming",

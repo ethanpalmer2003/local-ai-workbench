@@ -103,7 +103,8 @@ def main():
         "clip": clip,
         "results": [],
         "status": "running",
-        "limits": "Paced saved English; CPU native VAD helper plus one Vulkan ASR/TTS server. No microphone/browser/echo handling. No Gemma workload.",
+        "limits": "Paced saved English; CPU native VAD helper plus one Vulkan ASR/TTS server. No microphone/browser/echo "
+        "handling. No Gemma workload.",
     }
     print(f"[OUTPUT] {run.root}", flush=True)
     try:

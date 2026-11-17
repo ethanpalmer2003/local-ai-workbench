@@ -28,7 +28,8 @@ def gemma_reply(timeout: float, max_tokens: int) -> dict[str, Any]:
         "messages": [
             {
                 "role": "system",
-                "content": "Write a natural spoken reply in about five sentences. Use brief narration and dialogue; no list or heading.",
+                "content": "Write a natural spoken reply in about five sentences. Use brief narration and dialogue; "
+                "no list or heading.",
             },
             {"role": "user", "content": "Describe a quiet scouting mission near an enemy facility with a teammate."},
         ],
@@ -166,7 +167,8 @@ def run(timeout: float, max_tokens: int) -> Path:
                 delivery_modes=delivery_modes,
                 warmup_seconds=warmup["elapsed_seconds"],
                 generated_text=reply,
-                measurement="One completed Gemma reply reused in narration, separate-sentence and full-reply modes; no inference overlap.",
+                measurement="One completed Gemma reply reused in narration, separate-sentence and full-reply modes; "
+                "no inference overlap.",
             )
     except BaseException as error:
         report.update(status="failed", error=str(error))

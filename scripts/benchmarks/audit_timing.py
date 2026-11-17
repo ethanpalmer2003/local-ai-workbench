@@ -11,8 +11,10 @@ LEGACY_SCOPES = {
     "llamacpp/hrx/hrx_tensor_probe.py": "disabled HRX kernel probe",
     "asr/audiocpp_drama3_offload.py": "deferred resource probe",
     "coding_agents/harness_requests.py": "interactive coding-task request capture",
-    "inference_engines/benchmark_strata_avalon.py": "paired native-timing screen; both arms report their own server timings",
-    "inference_engines/benchmark_coding_engines.py": "server-native prefill/decode/TTFT per request; no host-side split to share",
+    "inference_engines/benchmark_strata_avalon.py": "paired native-timing screen; both arms report their own server "
+    "timings",
+    "inference_engines/benchmark_coding_engines.py": "server-native prefill/decode/TTFT per request; no host-side split "
+    "to share",
     "amalgamate_benchmarks.py": "historical artifact aggregation",
 }
 

@@ -140,7 +140,8 @@ def main():
     print(f"  boundaries from MAX_MERGED_DUR cap: {cap_cuts}")
     if silence_cuts == 0:
         print(
-            "  -> no real pauses detected at all; every cut is an arbitrary MAX_MERGED_DUR cap. Try raising SILENCE_NOISE_DB (e.g. -20 or -15) - background music/noise is likely never dipping below the current threshold."
+            "  -> no real pauses detected at all; every cut is an arbitrary MAX_MERGED_DUR cap. Try raising SILENCE_NOISE_DB "
+            "(e.g. -20 or -15) - background music/noise is likely never dipping below the current threshold."
         )
     print()
 

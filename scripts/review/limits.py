@@ -48,7 +48,8 @@ def report() -> list[str]:
         f"{'rule':<16} {'owner':<24} {'limit':<34} now",
         f"{'-' * 16} {'-' * 24} {'-' * 34} {'-' * 30}",
         f"{'line length':<16} {'checks/line_length.py':<24} "
-        f"{f'{line_length.LIMIT} characters':<34} {len(line_length.findings())} to wrap, {line_length.literals()} literal lines",
+        f"{f'{line_length.LIMIT} characters':<34} {len(line_length.findings())} to wrap, "
+        f"{sum(line_length.accepted().values())} accepted lines",
         f"{'annotations':<16} {'checks/annotations.py':<24} "
         f"{f'{annotation_check.WARN_SCORE} warn / {annotation_check.MAX_SCORE} fail':<34} "
         f"{len(watched)} under watch, {len(over_annotations)} over, depth {annotation_check.MAX_DEPTH}",
@@ -74,7 +75,10 @@ def report() -> list[str]:
     lines.extend(f"- accepted file: {path} ({length} lines)" for path, length in sorted(baseline.items()))
     if not baseline:
         lines.append("- no file-length exceptions")
-    lines.extend(("", f"{line_length.literals()} long lines are exempt as string content"))
+    accepted = line_length.accepted()
+    lines.extend(
+        ("", f"{accepted['template']} template and {accepted['token']} token lines are exempt as string content")
+    )
     return lines
 
 

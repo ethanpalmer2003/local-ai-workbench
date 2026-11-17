@@ -248,7 +248,8 @@ def folder_inventory_report(
             "",
             "*Python modules exclude `__init__.py`.*",
             "",
-            f"## Folder rule: at most {MAX_FOLDER_ITEMS} direct files, fewer than {MIN_FOLDER_ITEMS + 1} is a candidate",
+            f"## Folder rule: at most {MAX_FOLDER_ITEMS} direct files, fewer than {MIN_FOLDER_ITEMS + 1} is a "
+            f"candidate",
             "",
             "Counts are prompts at the low end and a gate at the high end: split a crowded folder by purpose; a",
             "small one stays when it carries an owner, a native layout or an output identity.",
@@ -413,7 +414,8 @@ def report(
         "Function size is context, not a gate: ruff's McCabe rule fails a function above 10. Code lines exclude",
         "blank/comment/docstring lines; multiline signatures/data count. Nested bodies are measured independently.",
         "The function audit excludes the tests tree; benchmarks and probes are included. File/folder inventory excludes",
-        "third-party installs, model data, generated state, trash and caches. JavaScript/TypeScript line counts are not",
+        "third-party installs, model data, generated state, trash and caches. JavaScript/TypeScript line counts are "
+        "not",
         "included.",
         "",
         "## Largest Python and Markdown files",

@@ -56,7 +56,8 @@ def capabilities(engine) -> dict[str, Any]:
             "languages": describe(list(dict.fromkeys(row["code"] for row in profiles))),
             "profiles": profiles,
             "default_language": selected_tts["default_language"],
-            "notes": "Voices/languages declared by installed model. Pronunciation quality is not validated by this list.",
+            "notes": "Voices/languages declared by installed model. Pronunciation quality is not validated by this "
+            "list.",
         },
         "common": common,
     }

@@ -194,7 +194,8 @@ def sampled_usage(samples: list[dict[str, Any]], field: str = "used_mb") -> dict
         "near_peak_threshold_mb": threshold,
         "near_peak_fraction": 0.95,
         "near_peak_windows": windows,
-        "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. Missing samples break windows. Query time adds to poll pause.",
+        "timing_limit": "Consecutive samples at >=95% of sampled peak; sample spans are not continuous-duration measurements. "
+        "Missing samples break windows. Query time adds to poll pause.",
     }
 
 
@@ -234,7 +235,10 @@ def _memory_value(data: Mapping[str, object], *names: str) -> float | None:
 
 
 def _get_windows_processes(pid: int) -> tuple[set[int], dict[int, tuple[str, str]]]:
-    script = "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,CommandLine | ConvertTo-Json -Compress"
+    script = (
+        "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,CommandLine | ConvertTo-Json "
+        "-Compress"
+    )
     try:
         result = subprocess.run(
             ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],

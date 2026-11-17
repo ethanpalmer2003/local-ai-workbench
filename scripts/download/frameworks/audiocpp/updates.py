@@ -251,7 +251,8 @@ def _resolve_commit(
     commit = shared.process_source(source_tool, source_dir, False)
     if commit != latest:
         raise shared.UpdateError(
-            "AudioCpp checkout did not land on the latest upstream commit; check for local commits or a concurrent upstream update before building."
+            "AudioCpp checkout did not land on the latest upstream commit; check for local commits or a concurrent upstream "
+            "update before building."
         )
     return commit
 

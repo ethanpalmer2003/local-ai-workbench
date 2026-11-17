@@ -36,7 +36,9 @@ def argument_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--cleanup",
         action="store_true",
-        help="Only clean subtitles.json for the chosen characters (normalize keys, clean text, fill filename transcripts). Backs up the original once as subtitles.json.bak. Nothing is downloaded or transcribed.",
+        help="Only clean subtitles.json for the chosen characters (normalize keys, clean text, fill filename "
+        "transcripts). "
+        "Backs up the original once as subtitles.json.bak. Nothing is downloaded or transcribed.",
     )
     p.add_argument(
         "--drop-orphans", action="store_true", help="With --cleanup: also delete transcripts that match no audio file."
@@ -44,7 +46,8 @@ def argument_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--validate",
         action="store_true",
-        help="Read-only check of transcript/key-matching problems for the chosen characters (use with --all). Nothing is downloaded, transcribed or written.",
+        help="Read-only check of transcript/key-matching problems for the chosen characters (use with --all). Nothing "
+        "is downloaded, transcribed or written.",
     )
     p.add_argument(
         "--transcribe",
@@ -56,17 +59,21 @@ def argument_parser() -> argparse.ArgumentParser:
         type=int,
         default=0,
         metavar="N",
-        help="Before selecting, make sure the N longest clips (by audio length) have transcripts, so longestText ranks over a real pool. Idempotent. Implies --transcribe.",
+        help="Before selecting, make sure the N longest clips (by audio length) have transcripts, so longestText ranks "
+        "over a real pool. Idempotent. Implies --transcribe.",
     )
     p.add_argument(
         "--dry-run",
         action="store_true",
-        help="Report how many clips --transcribe / --transcribe-top would transcribe, per character. Nothing is transcribed, downloaded or written.",
+        help="Report how many clips --transcribe / --transcribe-top would transcribe, per character. Nothing is "
+        "transcribed, "
+        "downloaded or written.",
     )
     p.add_argument(
         "--force",
         action="store_true",
-        help="Recreate output even if the target wav already exists. Without this, any (character, variant) whose wav is already on disk is skipped entirely - no re-download, re-transcribe, or re-selection.",
+        help="Recreate output even if the target wav already exists. Without this, any (character, variant) whose wav "
+        "is already on disk is skipped entirely - no re-download, re-transcribe, or re-selection.",
     )
 
     dur = p.add_mutually_exclusive_group()
@@ -75,14 +82,16 @@ def argument_parser() -> argparse.ArgumentParser:
         type=float,
         default=None,
         metavar="SECONDS",
-        help="Ignore --count; add clips in --selection/--fallback order until the total is at least this many seconds (the clip that crosses the line is kept).",
+        help="Ignore --count; add clips in --selection/--fallback order until the total is at least this many seconds "
+        "(the clip that crosses the line is kept).",
     )
     dur.add_argument(
         "--max-duration",
         type=float,
         default=None,
         metavar="SECONDS",
-        help="Ignore --count; add clips in --selection/--fallback order and stop before the total would exceed this many seconds (the clip that would push it over is dropped).",
+        help="Ignore --count; add clips in --selection/--fallback order and stop before the total would exceed this "
+        "many seconds (the clip that would push it over is dropped).",
     )
 
     return p

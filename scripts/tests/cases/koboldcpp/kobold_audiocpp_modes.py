@@ -51,7 +51,8 @@ def kobold_reply(timeout: float, max_tokens: int) -> dict[str, Any]:
         "messages": [
             {
                 "role": "system",
-                "content": "Write natural spoken replies in about five sentences. Use brief narration and dialogue; no list or heading.",
+                "content": "Write natural spoken replies in about five sentences. Use brief narration and dialogue; "
+                "no list or heading.",
             },
             {"role": "user", "content": "Describe a quiet scouting mission near an enemy facility with a teammate."},
         ],

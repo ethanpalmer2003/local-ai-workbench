@@ -253,7 +253,8 @@ def run_profile(
         "execution_context": context,
         "request_samples": {name: [asdict(sample) for sample in samples] for name, samples in results.items()},
         "prefill_samples": {name: asdict(sample) for name, sample in prefill.items()},
-        "limitations": "Sampled dedicated-memory counters; peaks may be missed. Per-process allocations can exceed adapter physical usage. Counter polling may affect CPU load.",
+        "limitations": "Sampled dedicated-memory counters; peaks may be missed. Per-process allocations can exceed adapter "
+        "physical usage. Counter polling may affect CPU load.",
     }
     (output.artifacts / f"metrics-{build_name or 'active'}-{profile_name}.json").write_text(
         json.dumps(metrics, indent=2) + "\n", encoding="utf-8"

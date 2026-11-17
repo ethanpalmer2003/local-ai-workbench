@@ -30,7 +30,11 @@ from scripts.shared.wait import backend_unavailable
 
 
 def audio_delivery_plan():
-    """The practice gateway's TTS plan and model id; Lite's own TTS cannot stream, so streaming needs the AudioCpp path."""
+    (
+        """The practice gateway's TTS plan and model id; Lite's own TTS cannot stream, so streaming needs the """
+        """AudioCpp """
+        """path."""
+    )
     external = not kokoro.internal() and (
         cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP or kokoro.selected()
     )

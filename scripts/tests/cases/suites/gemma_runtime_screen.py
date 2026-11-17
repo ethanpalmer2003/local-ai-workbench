@@ -179,7 +179,8 @@ def main():
             frameworks=[provenance.framework_state("koboldcpp"), provenance.framework_state("llamacpp")],
             models=[provenance.file_identity("chat", Path(cfg.GEMMA_AUDIO_ASR.model))],
         ),
-        "limits": "One warmup/two short prompts; thinking disabled, 192-token cap; templates/cache/runtime defaults may differ. No ASR/TTS overlap or quality ranking.",
+        "limits": "One warmup/two short prompts; thinking disabled, 192-token cap; templates/cache/runtime defaults "
+        "may differ. No ASR/TTS overlap or quality ranking.",
     }
     (run.artifacts / "report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     return int(any(row["status"] != "completed" for row in results))

@@ -16,7 +16,8 @@ class StreamingPatch(unittest.TestCase):
         original = '<body><script>function restart_new_game(save = true, keep_memory = false) { } function tts_speak_direct() {} function abort_generation() { }\n\t\t\t\tfetch(sub_endpt, {}); tts_speak_input_queue = text2.split("\\n").map(chunk => chunk.trim()).filter(chunk => chunk.length > 0);</script></body>'
         original = original.replace(
             "</script>",
-            "let narrateonlydialog = localsettings.narrate_only_dialog; if(streamallowed && localsettings.tts_stream && !is_test) {} </script>",
+            "let narrateonlydialog = localsettings.narrate_only_dialog; if(streamallowed && localsettings.tts_stream "
+            "&& !is_test) {} </script>",
         )
         patched = patch_lite(original)
         preset = cfg.AUDIOCPP_PROXY_MODEL_PRESETS[cfg.AudiocppModel.BREEZE_TTS]
