@@ -1,19 +1,16 @@
 """Which test classes a change can reach, from the import graph walked one hop backwards.
 
-The default run is a feedback loop, not a guarantee: it keeps the classes whose module changed or
-imports a changed module, one hop only, and the full run before a push is what catches the rest. Only
-a Python module narrows the run: a document, batch file, config or other path contributes no module,
-so a change set with no Python path runs no class. The two manifests in `FULL_TRIGGERS` keep every
-class when their code changes - a comment or docstring edit to one decides nothing - and `--all` runs
-everything.
+The default run is a feedback loop, not a guarantee: one hop back from the change keeps the classes
+whose module changed or imports a changed module, and the full run at push catches the rest. Only a
+Python module narrows the run, so a change set with no Python path runs no class; `FULL_TRIGGERS` keeps
+every class when its own code changes, and `--all` always does.
 
-The graph is parsed from source, never imported, so it stays model-free. Importing `scripts.x.y` also
-runs `scripts/x/__init__.py`, so every module gets an edge to each of its parent packages. Three gaps
-remain and they are not equal: a module name assembled at runtime, and a Python file reached through
-`subprocess`, `runpy` or `open`, are invisible to the graph; an unreadable or unparsable file gets no
-edges at all. That last one is silent to this module - a change below a broken file can drop a class
-above it - and is caught one step earlier instead, because ruff and pyright fail the gate on any
-maintained file that does not parse. A new module git has not seen resolves to its parent package.
+The graph is parsed from source, never imported. A parent package joins it when it is a tracked module
+itself, because importing `scripts.x.y` runs `scripts/x/__init__.py`.
+
+Two gaps stay invisible: a name assembled at runtime, and a file reached through `subprocess`, `runpy`
+or `open`. A third is silent here - an unparsable file gets no edges, so a change below it can drop a
+class above it - and the gate's ruff and pyright are what refuse that file first.
 """
 
 from __future__ import annotations
@@ -96,9 +93,8 @@ def _without_docstrings(tree: ast.Module) -> str:
 def cosmetic_only(path: str, root: Path | None = None) -> bool:
     """Whether a Python file differs from upstream only in comments or docstrings.
 
-    A manifest such as `run.py` decides what the suite is, but only through its code: a comment or a
-    docstring edit changes nothing a test can see, so it should not drag in every class. A file that is
-    new, deleted, unreadable or unparsable on either side counts as a real change.
+    If upstream is missing or the comparison fails, it counts as a real change. New, deleted, unreadable,
+    or unparsable files also count as real changes.
     """
     base = project_cfg.BASE_DIR if root is None else root
     current = base / path
@@ -159,11 +155,9 @@ def imported_names(tree: ast.Module, module: str, *, is_package: bool) -> set[st
 
 
 def literal_targets(tree: ast.Module, known: set[str]) -> set[str]:
-    """Dotted module names a file spells in a string, because a dynamic import hides its target.
+    """Dotted module names a file spells in a string matching a known module exactly.
 
-    `importlib.import_module("scripts.x")` has no import statement to read, so a string constant that
-    matches a known module is treated as a dependency. A name assembled at runtime stays invisible,
-    which is one of the gaps `--all` covers.
+    String constants matching a known module name exactly are treated as dependencies.
     """
     return {
         node.value
@@ -183,7 +177,7 @@ def _longest_known_prefix(name: str, known: set[str]) -> str | None:
 
 
 def _parent_packages(module: str, known: set[str]) -> set[str]:
-    """The known packages above a module, whose `__init__.py` runs whenever the module is imported."""
+    """The tracked packages above a module, whose `__init__.py` runs whenever the module is imported."""
     parts = module.split(".")
     return {parent for end in range(1, len(parts)) if (parent := ".".join(parts[:end])) in known}
 
@@ -194,7 +188,7 @@ def _parent_packages(module: str, known: set[str]) -> set[str]:
 def import_graph(root: Path | None = None) -> Graph:
     """Module name to the modules it depends on, for every tracked module under `scripts/`.
 
-    A dependency is an import, a string naming a known module, or a parent package.
+    A dependency is an import, an exact string naming a known module, or a tracked parent package.
     """
     files = module_files(root)
     known = set(files)
@@ -213,8 +207,8 @@ def import_graph(root: Path | None = None) -> Graph:
 def reverse_closure(edges: Graph, changed: Iterable[str], *, depth: int | None = None) -> frozenset[str]:
     """The changed modules plus every module that depends on one, one hop at a time.
 
-    `depth` stops the walk before the next hop: 1 keeps the direct importers only, and None walks the
-    whole chain. The default scope uses one hop, because the full run before a push is the guarantee.
+    `depth` stops the walk: depth 1 keeps the changed modules and their direct importers, while None walks the
+    whole chain.
     """
     importers: dict[str, set[str]] = {}
     for module, targets in edges.items():
@@ -249,8 +243,7 @@ def select(
 ) -> Selection:
     """Keep the classes a Python change can reach; a change set with no Python path runs no class.
 
-    A class is reachable when its module is in the reverse closure of the changed modules. That is
-    equivalent to its dependencies overlapping the closure, and needs one search instead of one per class.
+    A class is kept if its module is in the reverse closure of the changed modules.
     A document, config or batch path contributes no module, so it neither narrows nor widens the run;
     `FULL_TRIGGERS` and `--all` are the only ways to ask for every class.
     """
