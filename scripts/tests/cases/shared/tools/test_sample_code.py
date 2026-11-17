@@ -21,7 +21,7 @@ class SampleCodeTests(unittest.TestCase):
     def test_a_copied_function_says_where_it_lives(self):
         path = sample_file("owner.py", "def walk(edges, changed):\n    return changed\n")
         try:
-            text = sample_code.function_source(path, "walk", "The one-hop walk.")
+            text = sample_code.named_source(path, "walk", "The one-hop walk.")
         finally:
             path.unlink()
         self.assertIn("scripts/tests/output/sample-code/owner.py", text)
@@ -29,11 +29,20 @@ class SampleCodeTests(unittest.TestCase):
         self.assertIn("def walk(edges, changed):", text)
         self.assertNotIn("import", text)
 
+    def test_a_copied_constant_comes_with_its_line(self):
+        path = sample_file("owner.py", "REACH_DEPTH = 1\nOTHER = 2\n")
+        try:
+            text = sample_code.named_source(path, "REACH_DEPTH", "One hop.")
+        finally:
+            path.unlink()
+        self.assertIn("REACH_DEPTH = 1", text)
+        self.assertNotIn("OTHER", text)
+
     def test_a_missing_function_is_a_refusal(self):
         path = sample_file("owner.py", "VALUE = 1\n")
         try:
             with self.assertRaises(SystemExit):
-                sample_code.function_source(path, "absent", "")
+                sample_code.named_source(path, "absent", "")
         finally:
             path.unlink()
 

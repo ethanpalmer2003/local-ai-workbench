@@ -12,19 +12,26 @@ from pathlib import Path
 from scripts.config import project_config as project_cfg
 
 
-def function_source(path: Path, name: str, note: str) -> str:
-    """One top-level function's source, with a comment saying where it came from and why it is here."""
+def named_source(path: Path, name: str, note: str) -> str:
+    """One top-level definition's source, with a comment saying where it came from and why it is here."""
     text = path.read_text(encoding="utf-8")
     tree = ast.parse(text)
-    node = next(
-        (item for item in tree.body if isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef) and item.name == name),
-        None,
-    )
+    node = next((item for item in tree.body if _defines(item, name)), None)
     if node is None:
-        raise SystemExit(f"{path}: no top-level function named {name}")
+        raise SystemExit(f"{path}: no top-level function or constant named {name}")
     relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
     source = "\n".join(text.splitlines()[node.lineno - 1 : node.end_lineno])
     return f"# - copied from {relative} so the rule above can be read without it. {note}\n{source}"
+
+
+def _defines(node: ast.stmt, name: str) -> bool:
+    """Whether this top-level statement names the definition a sample asked for."""
+    if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+        return node.name == name
+    if isinstance(node, ast.Assign | ast.AnnAssign):
+        targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+        return any(isinstance(target, ast.Name) and target.id == name for target in targets)
+    return False
 
 
 def unconsumed(module: Path, shown: set[str]) -> list[str]:
@@ -44,14 +51,14 @@ def build(module: Path, includes: list[tuple[Path, str]], note: str) -> str:
     relative = module.relative_to(project_cfg.BASE_DIR).as_posix()
     lines = module.read_text(encoding="utf-8").splitlines()
     shown = {name for _path, name in includes}
-    count = "1 function" if len(includes) == 1 else f"{len(includes)} functions"
+    count = "1 definition" if len(includes) == 1 else f"{len(includes)} definitions"
     header = [
         f"# Sample: {relative} ({len(lines)} lines), plus {count} copied from its owners.",
         *[f"# - left out: {item}" for item in unconsumed(module, shown)],
         "",
     ]
     blocks = ["\n".join(lines)]
-    blocks.extend(function_source(path, name, note) for path, name in includes)
+    blocks.extend(named_source(path, name, note) for path, name in includes)
     return "\n".join(header) + "\n\n\n".join(blocks) + "\n"
 
 
