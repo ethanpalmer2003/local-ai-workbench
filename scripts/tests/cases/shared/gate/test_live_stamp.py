@@ -13,6 +13,8 @@ class LiveStampTests(unittest.TestCase):
         with (
             patch.object(live_stamp, "_stamps", side_effect=lambda: store),
             patch.object(live_stamp, "_save", side_effect=store.update),
+            # - the order of targets is the subject; a real fingerprint would also hash installed files
+            patch.object(live_stamp, "fingerprint", return_value="fixed"),
         ):
             live_stamp.record("launchers", ["sdcpp", "kobold"])
             self.assertTrue(live_stamp.unchanged("launchers", ["kobold", "sdcpp"]))

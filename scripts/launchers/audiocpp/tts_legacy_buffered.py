@@ -34,6 +34,9 @@ from threading import Condition, Lock
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import tts_text_processing
 
+# - what a caller's text cleanup returns: the rewritten text (or None) and the seconds it measured
+Cleanup = Callable[[dict[str, object]], tuple[str | None, float]]
+
 SILENCE_CHUNK_SECONDS = 0.02
 SILENCE_RMS_THRESHOLD = 300
 
@@ -354,9 +357,7 @@ def _apply_buffer(payload: dict[str, object]) -> bool:
 
 
 def transform_text(
-    payload: dict[str, object],
-    preset: cfg.AudiocppProxyRequestModelPreset | None,
-    cleanup: Callable[[dict[str, object]], tuple[str | None, float]],
+    payload: dict[str, object], preset: cfg.AudiocppProxyRequestModelPreset | None, cleanup: Cleanup
 ) -> tuple[dict[str, object], float] | None:
     tone_enabled = payload.get("model") in cfg.BREEZE_MODELS
     if tone_enabled:

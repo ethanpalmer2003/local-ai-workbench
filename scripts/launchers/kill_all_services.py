@@ -148,21 +148,29 @@ def listener_map() -> ListenerMap:
     return result
 
 
-def process_identity(pid: int) -> tuple[str, bool | None, dict[str, object]]:
+class ProcessIdentity(NamedTuple):
+    """A process's display name, whether it belongs to this workspace, and its raw info."""
+
+    name: str
+    related: bool | None
+    info: dict[str, object]
+
+
+def process_identity(pid: int) -> ProcessIdentity:
     process = psutil.Process(pid)
     info = process.as_dict(attrs=["name", "exe", "cmdline", "cwd"], ad_value=None)
     name = info.get("name") or info.get("exe") or f"PID {pid}"
     if not any((info.get("exe"), info.get("cwd"), info.get("cmdline"))):
-        return name, None, info
+        return ProcessIdentity(name, None, info)
     executable = info.get("exe") or next(iter(info.get("cmdline") or []), "")
     if in_workspace(executable):
-        return name, True, info
+        return ProcessIdentity(name, True, info)
     # - Third-party apps can carry a C:\AI document argument, or even cwd there.
     #   Only interpreter/runtime wrappers are project-owned outside the workspace.
     if Path(executable).name.casefold() not in PROJECT_RUNTIMES:
-        return name, False, info
+        return ProcessIdentity(name, False, info)
     related = in_workspace(info.get("cwd")) or any(in_workspace(argument) for argument in (info.get("cmdline") or []))
-    return name, related, info
+    return ProcessIdentity(name, related, info)
 
 
 def process_details(pid: int) -> tuple[str, bool | None]:
