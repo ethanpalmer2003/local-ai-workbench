@@ -9,7 +9,7 @@ from scripts.tests import selection
 from scripts.tests.shared.paths import CasePaths
 
 
-def _graph(edges: dict[str, tuple[str, ...]]) -> dict[str, frozenset[str]]:
+def _graph(edges: dict[str, tuple[str, ...]]) -> selection.Graph:
     return {name: frozenset(targets) for name, targets in edges.items()}
 
 
@@ -31,7 +31,7 @@ class TestSelection(unittest.TestCase):
         names: set[str] = set()
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
-                base = selection._target(node, "scripts.pkg.module", False)
+                base = selection._from_import_target(node, "scripts.pkg.module", False)
                 if base:
                     names.add(base)
                     names.update(f"{base}.{alias.name}" for alias in node.names)
@@ -46,14 +46,25 @@ class TestSelection(unittest.TestCase):
             },
         )
 
+    def test_a_relative_import_beyond_the_top_package_names_nothing(self):
+        tree = ast.parse("from ..outside import thing\n")
+        node = next(node for node in ast.walk(tree) if isinstance(node, ast.ImportFrom))
+        self.assertIsNone(selection._from_import_target(node, "scripts.pkg", False))
+
+    def test_every_module_depends_on_its_parent_packages(self):
+        known = {"scripts", "scripts.pkg", "scripts.pkg.module"}
+        self.assertEqual(selection._parent_packages("scripts.pkg.module", known), {"scripts", "scripts.pkg"})
+
+    def test_an_unparsable_file_has_no_tree(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            broken = Path(folder) / "broken.py"
+            broken.write_text("def broken(:\n", encoding="utf-8")
+            self.assertIsNone(selection._parse(broken))
+
     def test_a_chain_of_importers_all_count(self):
         edges = _graph({"scripts.a": ("scripts.b",), "scripts.b": ("scripts.c",), "scripts.c": (), "scripts.z": ()})
-        self.assertEqual(selection.dependencies(edges, "scripts.a"), {"scripts.a", "scripts.b", "scripts.c"})
-        self.assertEqual(selection.affected(edges, {"scripts.c"}), {"scripts.c", "scripts.b", "scripts.a"})
-
-    def test_an_unparsable_file_imports_nothing(self):
-        with patch.object(Path, "read_text", side_effect=SyntaxError("bad")):
-            self.assertEqual(selection.imported_names(Path("scripts/broken.py"), "scripts.broken"), set())
+        self.assertEqual(selection.reverse_closure(edges, {"scripts.c"}), {"scripts.c", "scripts.b", "scripts.a"})
+        self.assertEqual(selection.reverse_closure(edges, {"scripts.z"}), {"scripts.z"})
 
     def test_a_change_keeps_the_classes_that_import_it(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
@@ -68,7 +79,7 @@ class TestSelection(unittest.TestCase):
             }
         )
         groups = (PointerTests, KoboldOptionTests)
-        with patch.object(selection, "graph", return_value=edges):
+        with patch.object(selection, "import_graph", return_value=edges):
             chosen = selection.select(groups, paths=["scripts/review/checks/docs.py"])
         self.assertEqual(chosen.kept, (PointerTests,))
         self.assertEqual(chosen.dropped, (KoboldOptionTests,))
@@ -86,10 +97,11 @@ class TestSelection(unittest.TestCase):
                 self.assertEqual(chosen.kept, groups)
                 self.assertIn(why, chosen.why)
 
-    def test_all_keeps_every_class_whatever_changed(self):
+    def test_all_keeps_every_class_and_never_asks_git(self):
         groups = (TestSelection,)
-        with patch.object(selection, "changed_paths", return_value=["scripts/shared/wait.py"]):
+        with patch.object(selection, "changed_paths", side_effect=AssertionError("git was asked")):
             self.assertEqual(selection.select(groups, full=True).kept, groups)
+            self.assertEqual(selection.select(groups, full=True).why, "--all")
 
     def test_every_class_is_kept_or_dropped_exactly_once(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
@@ -103,7 +115,7 @@ class TestSelection(unittest.TestCase):
                 "scripts.tests.cases.koboldcpp.test_kobold_options": (),
             }
         )
-        with patch.object(selection, "graph", return_value=edges):
+        with patch.object(selection, "import_graph", return_value=edges):
             chosen = selection.select(groups, paths=["scripts/review/checks/docs.py"])
         self.assertEqual(
             sorted(group.__name__ for group in (*chosen.kept, *chosen.dropped)),
@@ -112,24 +124,27 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(set(chosen.kept) & set(chosen.dropped), set())
 
     def test_a_dynamic_import_named_in_a_string_is_a_dependency(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            path = Path(folder) / "loader.py"
-            path.write_text("import importlib\nimportlib.import_module('scripts.target')\n", encoding="utf-8")
-            self.assertEqual(selection.literal_targets(path, {"scripts.loader", "scripts.target"}), {"scripts.target"})
-            self.assertEqual(selection.literal_targets(path, {"scripts.loader"}), set())
+        tree = ast.parse("import importlib\nimportlib.import_module('scripts.target')\n")
+        self.assertEqual(selection.literal_targets(tree, {"scripts.loader", "scripts.target"}), {"scripts.target"})
+        self.assertEqual(selection.literal_targets(tree, {"scripts.loader"}), set())
 
     def test_a_module_git_has_not_seen_still_reaches_its_importers(self):
         from scripts.tests.cases.review.test_docs import PointerTests
 
         edges = _graph({"scripts.tests.cases.review.test_docs": ("scripts.review.checks.docs",)})
-        with patch.object(selection, "graph", return_value=edges):
+        with patch.object(selection, "import_graph", return_value=edges):
             chosen = selection.select((PointerTests,), paths=["scripts/review/checks/docs.py"])
         self.assertEqual(chosen.kept, (PointerTests,))
 
     def test_sources_reads_tracked_python_under_scripts(self):
         listing = "scripts/a.py\nscripts/b.md\nnotes/c.py\n"
         with patch.object(selection, "git", return_value=listing):
-            self.assertEqual(selection.sources(), ["scripts/a.py"])
+            self.assertEqual(selection.tracked_sources(), ["scripts/a.py"])
+
+    def test_the_graph_is_built_from_the_root_it_was_given(self):
+        with patch.object(selection, "tracked_sources", return_value=[]) as tracked:
+            self.assertEqual(selection.module_files(Path("elsewhere")), {})
+        tracked.assert_called_once_with(Path("elsewhere"))
 
     def test_a_dropped_class_never_reaches_the_change(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
@@ -142,11 +157,11 @@ class TestSelection(unittest.TestCase):
                 "scripts.tests.cases.koboldcpp.test_kobold_options": ("scripts.launchers.koboldcpp.kobold",),
             }
         )
-        with patch.object(selection, "graph", return_value=edges):
+        with patch.object(selection, "import_graph", return_value=edges):
             chosen = selection.select((PointerTests, KoboldOptionTests), paths=["scripts/review/checks/docs.py"])
-        reach = selection.affected(edges, {"scripts.review.checks.docs"})
+        reach = selection.reverse_closure(edges, {"scripts.review.checks.docs"})
         for group in chosen.dropped:
-            self.assertEqual(selection.dependencies(edges, group.__module__) & reach, set(), group.__name__)
+            self.assertNotIn(group.__module__, reach, group.__name__)
 
 
 if __name__ == "__main__":

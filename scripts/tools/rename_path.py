@@ -32,6 +32,10 @@ from scripts.tools.rewrite_imports import EXCLUDED
 # - the workspace and generated trees this repository does not own, so a source path is never a reference there
 PRUNE = EXCLUDED | {"data", "frameworks", "trash", "graphify-out"}
 TEXT_SUFFIXES = {".md", ".py", ".bat", ".yaml", ".yml", ".json", ".js", ".cjs", ".mjs"}
+
+# - one planned rewrite, and the bare basenames a move may repoint beside it
+Planned = list[tuple[Path, int]]
+LocalForms = dict[Path, list[tuple[str, str]]]
 # - `from package import module` names the module by its last component, so it needs its own rewrite
 FROM_IMPORT = re.compile(r"^(?P<head>\s*from\s+(?P<package>[\w.]+)\s+import\s+)(?P<names>[^\n]+)$", re.MULTILINE)
 ROOT = Path(__file__).resolve().parents[2]
@@ -223,7 +227,7 @@ def _moved_forms(moves: dict[str, str]) -> tuple[list[tuple[str, str]], list[tup
     return dotted, imports
 
 
-def _pairs(moves: dict[str, str], root: Path = ROOT) -> tuple[list[tuple[str, str]], dict[Path, list[tuple[str, str]]]]:
+def _pairs(moves: dict[str, str], root: Path = ROOT) -> tuple[list[tuple[str, str]], LocalForms]:
     """Path pairs, and the bare basenames each move may repoint inside its own directory only."""
     pairs = [pair for move, target in moves.items() for pair in reference_forms(move, target, bare=False)]
     local: dict[Path, list[tuple[str, str]]] = {}
@@ -242,8 +246,8 @@ def plan_forms(
     *,
     root: Path = ROOT,
     collapsed: list[tuple[str, str, str, str]] | None = None,
-    local: dict[Path, list[tuple[str, str]]] | None = None,
-) -> list[tuple[Path, int]]:
+    local: LocalForms | None = None,
+) -> Planned:
     """Every file a rewrite would touch and how many references each holds, without writing."""
     local = local or {}
     planned = []
@@ -255,7 +259,7 @@ def plan_forms(
     return planned
 
 
-def preview(moves: dict[str, str], *, root: Path = ROOT) -> list[tuple[Path, int]]:
+def preview(moves: dict[str, str], *, root: Path = ROOT) -> Planned:
     """Every file the rewrite would touch and how many references each holds, without writing."""
     pairs, local = _pairs(moves, root)
     dotted, imports = _moved_forms(moves)
@@ -270,7 +274,7 @@ def rewrite_forms(
     dry_run: bool,
     root: Path = ROOT,
     collapsed: list[tuple[str, str, str, str]] | None = None,
-    local: dict[Path, list[tuple[str, str]]] | None = None,
+    local: LocalForms | None = None,
 ) -> list[Path]:
     """Apply one set of reference forms to every source file, writing only when asked."""
     local = local or {}

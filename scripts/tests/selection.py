@@ -6,9 +6,10 @@ files' reverse import closure. Anything the graph cannot account for - a path ou
 non-Python file, a manifest such as `scripts/tests/run.py` - keeps every class, because a wrong
 omission hides a regression while a wrong inclusion only costs seconds.
 
-The graph is parsed from source, never imported, so it stays model-free. It cannot see a dynamic
-import or a file opened by string path; that blind spot is why the fallback is broad rather than
-clever, and why `--all` exists.
+The graph is parsed from source, never imported, so it stays model-free. Importing `scripts.x.y` also
+runs `scripts/x/__init__.py`, so every module gets an edge to each of its parent packages. The graph
+cannot see a dynamic import or a file opened by string path; that blind spot is why the fallback is
+broad rather than clever, and why `--all` exists.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from __future__ import annotations
 import ast
 import unittest
 from collections import deque
+from collections.abc import Iterable
 from pathlib import Path
 from typing import NamedTuple
 
@@ -23,6 +25,12 @@ from scripts.config import project_config as project_cfg
 from scripts.shared.changes import changed_paths, git
 
 FULL_TRIGGERS = frozenset({"scripts/tests/run.py", "scripts/tests/selection.py"})
+
+Graph = dict[str, frozenset[str]]
+TestGroup = type[unittest.TestCase]
+
+
+# --- Mapping files to module names ---------------------------------------------------------------
 
 
 def module_name(path: str) -> str | None:
@@ -35,38 +43,85 @@ def module_name(path: str) -> str | None:
     return ".".join(parts) if len(parts) > 1 else None
 
 
-def _target(node: ast.ImportFrom, module: str, is_package: bool) -> str | None:
-    """The module a `from ... import ...` reads, resolving the dots against this module's package."""
+def tracked_sources(root: Path | None = None) -> list[str]:
+    """Tracked Python files under `scripts/`; the ignored state and test-output trees never enter the graph."""
+    return [
+        line
+        for line in git("ls-files", "scripts", root=root).splitlines()
+        if line.startswith("scripts/") and line.endswith(".py")
+    ]
+
+
+def module_files(root: Path | None = None) -> dict[str, Path]:
+    """Module name to source file, for every tracked module under `scripts/` that still exists on disk."""
+    base = project_cfg.BASE_DIR if root is None else root
+    files: dict[str, Path] = {}
+    for relative in tracked_sources(root):
+        path = base / relative
+        name = module_name(relative)
+        if name and path.is_file():
+            files[name] = path
+    return files
+
+
+# --- Reading dependencies out of one file --------------------------------------------------------
+
+
+def _parse(path: Path) -> ast.Module | None:
+    """The syntax tree of a source file, or None when it cannot be read or parsed."""
+    try:
+        return ast.parse(path.read_text(encoding="utf-8"))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return None
+
+
+def _from_import_target(node: ast.ImportFrom, module: str, is_package: bool) -> str | None:
+    """The module a `from ... import ...` reads, resolving the dots against this module's package.
+
+    Returns None when the dots climb out of the top-level package, because no module has that name.
+    """
     if not node.level:
         return node.module
     package = module if is_package else module.rpartition(".")[0]
     parts = package.split(".") if package else []
-    if node.level - 1 > len(parts):
+    if node.level - 1 >= len(parts):
         return None
     base = ".".join(parts[: len(parts) - (node.level - 1)])
     return f"{base}.{node.module}" if node.module else base
 
 
-def imported_names(path: Path, module: str) -> set[str]:
-    """Every dotted name this file imports, relative imports resolved; an unparsable file imports nothing."""
-    try:
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-    except (OSError, SyntaxError, UnicodeDecodeError):
-        return set()
-    is_package = path.name == "__init__.py"
+def imported_names(tree: ast.Module, module: str, *, is_package: bool) -> set[str]:
+    """Every dotted name a file imports, relative imports resolved.
+
+    `from x import y` yields both `x` and `x.y`, because `y` may be a submodule or just a name in `x`.
+    """
     names: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             names.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
-            base = _target(node, module, is_package)
+            base = _from_import_target(node, module, is_package)
             if base:
                 names.add(base)
                 names.update(f"{base}.{alias.name}" for alias in node.names)
     return names
 
 
-def _resolve(name: str, known: set[str]) -> str | None:
+def literal_targets(tree: ast.Module, known: set[str]) -> set[str]:
+    """Dotted module names a file spells in a string, because a dynamic import hides its target.
+
+    `importlib.import_module("scripts.x")` has no import statement to read, so a string constant that
+    matches a known module is treated as a dependency. A name assembled at runtime stays invisible;
+    that is the one gap `--all` covers.
+    """
+    return {
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in known
+    }
+
+
+def _longest_known_prefix(name: str, known: set[str]) -> str | None:
     """The module a dotted name refers to: the longest known prefix, since `from x.y import f` names no module."""
     parts = name.split(".")
     for end in range(len(parts), 0, -1):
@@ -76,65 +131,39 @@ def _resolve(name: str, known: set[str]) -> str | None:
     return None
 
 
-def sources(root: Path | None = None) -> list[str]:
-    """Tracked Python files under `scripts/`; the ignored state and test-output trees never enter the graph."""
-    return [
-        line
-        for line in git("ls-files", "scripts", root=root).splitlines()
-        if line.startswith("scripts/") and line.endswith(".py")
-    ]
+def _parent_packages(module: str, known: set[str]) -> set[str]:
+    """The known packages above a module, whose `__init__.py` runs whenever the module is imported."""
+    parts = module.split(".")
+    return {parent for end in range(1, len(parts)) if (parent := ".".join(parts[:end])) in known}
 
 
-def literal_targets(path: Path, known: set[str]) -> set[str]:
-    """Dotted module names this file spells in a string, because a dynamic import hides its target.
+# --- The graph and the queries on it -------------------------------------------------------------
 
-    `importlib.import_module("scripts.x")` has no import statement to read, so a string constant that
-    matches a known module is treated as a dependency. A name assembled at runtime stays invisible;
-    that is the one gap `--all` covers.
+
+def import_graph(root: Path | None = None) -> Graph:
+    """Module name to the modules it depends on, for every tracked module under `scripts/`.
+
+    A dependency is an import, a string naming a known module, or a parent package.
     """
-    try:
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-    except (OSError, SyntaxError, UnicodeDecodeError):
-        return set()
-    return {
-        node.value
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in known
-    }
-
-
-def graph(root: Path | None = None) -> dict[str, frozenset[str]]:
-    """Module name to the modules it imports or names in a string, for every tracked module under `scripts/`."""
-    base = project_cfg.BASE_DIR if root is None else root
-    base_paths = [base / path for path in sources() if (base / path).is_file()]
-    files: dict[str, Path] = {}
-    for path in base_paths:
-        name = module_name(path.relative_to(base).as_posix())
-        if name:
-            files[name] = path
+    files = module_files(root)
     known = set(files)
-    edges: dict[str, frozenset[str]] = {}
+    edges: Graph = {}
     for name, path in files.items():
-        imported = {target for target in (_resolve(raw, known) for raw in imported_names(path, name)) if target}
-        edges[name] = frozenset(imported | literal_targets(path, known))
+        targets = _parent_packages(name, known)
+        tree = _parse(path)
+        if tree is not None:
+            raw_names = imported_names(tree, name, is_package=path.name == "__init__.py")
+            targets |= {target for raw in raw_names if (target := _longest_known_prefix(raw, known))}
+            targets |= literal_targets(tree, known)
+        edges[name] = frozenset(targets - {name})
     return edges
 
 
-def dependencies(edges: dict[str, frozenset[str]], module: str) -> frozenset[str]:
-    """Everything this module reaches through imports, itself included."""
-    seen: set[str] = set()
-    queue = deque([module])
-    while queue:
-        current = queue.popleft()
-        if current in seen:
-            continue
-        seen.add(current)
-        queue.extend(edges.get(current, ()))
-    return frozenset(seen)
+def reverse_closure(edges: Graph, changed: Iterable[str]) -> frozenset[str]:
+    """The changed modules plus every module that depends on one, directly or through a chain.
 
-
-def affected(edges: dict[str, frozenset[str]], changed: set[str]) -> frozenset[str]:
-    """The changed modules plus every module that imports one, directly or through a chain."""
+    This is a breadth-first search over the edges reversed, starting from every changed module.
+    """
     importers: dict[str, set[str]] = {}
     for module, targets in edges.items():
         for target in targets:
@@ -150,39 +179,47 @@ def affected(edges: dict[str, frozenset[str]], changed: set[str]) -> frozenset[s
     return frozenset(seen)
 
 
+# --- Choosing the classes ------------------------------------------------------------------------
+
+
 class Selection(NamedTuple):
     """The classes to run, the ones that stayed out, and the reason the scope is what it is."""
 
-    kept: tuple[type[unittest.TestCase], ...]
-    dropped: tuple[type[unittest.TestCase], ...]
+    kept: tuple[TestGroup, ...]
+    dropped: tuple[TestGroup, ...]
     why: str
 
 
 def select(
-    groups: tuple[type[unittest.TestCase], ...],
-    *,
-    full: bool = False,
-    paths: list[str] | None = None,
-    root: Path | None = None,
+    groups: tuple[TestGroup, ...], *, full: bool = False, paths: list[str] | None = None, root: Path | None = None
 ) -> Selection:
-    """Keep the classes a change can reach; `full`, an empty change set or an unmodelled path keeps them all."""
-    changed = changed_paths(root) if paths is None else paths
+    """Keep the classes a change can reach; `full`, an empty change set or an unmodelled path keeps them all.
+
+    A class is reachable when its module is in the reverse closure of the changed modules. That is
+    equivalent to its dependencies overlapping the closure, and needs one search instead of one per class.
+    """
     if full:
         return Selection(groups, (), "--all")
+    changed = changed_paths(root) if paths is None else paths
     if not changed:
         return Selection(groups, (), "no change set")
-    named = {path: module_name(path) for path in changed}
-    unmodelled = sorted(path for path, name in named.items() if name is None)
+
+    modules_by_path = {path: module_name(path) for path in changed}
+    unmodelled = sorted(path for path, name in modules_by_path.items() if name is None)
     if unmodelled:
         return Selection(groups, (), f"not a Python module: {unmodelled[0]}")
     if triggers := FULL_TRIGGERS.intersection(changed):
         return Selection(groups, (), f"manifest changed: {sorted(triggers)[0]}")
-    edges = graph(root)
-    # - a module git has not seen yet still reaches the classes that import it
-    for name in named.values():
-        if name:
-            edges.setdefault(name, frozenset())
-    reach = affected(edges, {name for name in named.values() if name})
-    kept = tuple(group for group in groups if dependencies(edges, group.__module__) & reach)
-    dropped = tuple(group for group in groups if group not in kept)
-    return Selection(kept, dropped, f"{len(reach)} of {len(edges)} modules reachable")
+
+    changed_modules = {name for name in modules_by_path.values() if name}
+    edges = import_graph(root)
+    # A module git has not seen yet still reaches the classes that import it.
+    for name in changed_modules:
+        edges.setdefault(name, frozenset())
+    reachable = reverse_closure(edges, changed_modules)
+
+    kept: list[TestGroup] = []
+    dropped: list[TestGroup] = []
+    for group in groups:
+        (kept if group.__module__ in reachable else dropped).append(group)
+    return Selection(tuple(kept), tuple(dropped), f"{len(reachable)} of {len(edges)} modules reachable")
