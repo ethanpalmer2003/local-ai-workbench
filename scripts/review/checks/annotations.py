@@ -14,6 +14,7 @@ and resolve it in the body instead, where a test can replace it.
 
 import argparse
 import ast
+from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -189,6 +190,99 @@ def _default_problem(node: ast.expr) -> str | None:
     return f"evaluates {ast.unparse(node)}"
 
 
+def _parameters(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[tuple[ast.arg, ast.expr]]:
+    """Every parameter that carries a default, with that default."""
+    args = node.args
+    positional = args.args[len(args.args) - len(args.defaults) :] if args.defaults else []
+    return [
+        (argument, default)
+        for argument, default in zip([*positional, *args.kwonlyargs], [*args.defaults, *args.kw_defaults], strict=False)
+        if default is not None
+    ]
+
+
+def _compares_none(node: ast.FunctionDef | ast.AsyncFunctionDef, name: str) -> bool:
+    """Whether the body tests this parameter against None, which is how a default derives a value."""
+    for inner in ast.walk(node):
+        if not isinstance(inner, ast.Compare):
+            continue
+        parts = [inner.left, *inner.comparators]
+        tests_none = any(isinstance(part, ast.Constant) and part.value is None for part in parts)
+        mentions = any(isinstance(part, ast.Name) and part.id == name for part in parts)
+        if tests_none and mentions:
+            return True
+    return False
+
+
+def _call_kind(node: ast.Call) -> str:
+    """A no-argument immutable constructor is a constant; a mutable constructor is shared state."""
+    if isinstance(node.func, ast.Name):
+        if node.func.id in IMMUTABLE_CALLS and not node.args:
+            return "immutable"
+        if node.func.id in MUTABLE_CALLS:
+            return "mutable"
+    return "call"
+
+
+def _value_kind(default: ast.expr) -> str:
+    """The category a default that is not None falls into by its syntax."""
+    if isinstance(default, ast.Constant):
+        return "literal"
+    if isinstance(default, ast.Tuple):
+        return "tuple"
+    if isinstance(default, ast.Lambda):
+        return "lambda"
+    if isinstance(default, ast.Name):
+        return "name"
+    if isinstance(default, ast.BinOp):
+        return "arithmetic"
+    if isinstance(default, ast.Subscript):
+        return "table"
+    if isinstance(default, ast.Attribute):
+        return "config" if _config_read(default) else "attribute"
+    if isinstance(default, ast.List | ast.Dict | ast.Set):
+        return "mutable"
+    if isinstance(default, ast.Call):
+        return _call_kind(default)
+    return "other"
+
+
+def _none_kind(argument: ast.arg, function: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+    """None is the CLI convention, a value derived in the body, or an optional value carried through."""
+    if argument.arg == "argv":
+        return "argv"
+    return "derived" if _compares_none(function, argument.arg) else "carried"
+
+
+def default_kind(argument: ast.arg, default: ast.expr, function: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+    """The category a default belongs to, which is what a census counts.
+
+        None has three shapes: rgv follows the CLI convention, derived resolves inside the body, and
+        carried is an optional value stored or forwarded untouched. The rest are the value's syntax:
+        literal,
+    ame, 	uple, lambda, ttribute, 	able, rithmetic, immutable, then the three
+        refused ones, mutable, call and config.
+    """
+    if isinstance(default, ast.Constant) and default.value is None:
+        return _none_kind(argument, function)
+    return _value_kind(default)
+
+
+def default_census(paths: list[Path] | None = None) -> Counter[str]:
+    """How many defaults of each category the given files hold, which is how the categories stay honest."""
+    census: Counter[str] = Counter()
+    for path in [path for path in (maintained_files() if paths is None else paths) if path.suffix == ".py"]:
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
+        except (OSError, SyntaxError):
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                for argument, default in _parameters(node):
+                    census[default_kind(argument, default, node)] += 1
+    return census
+
+
 def default_findings(paths: list[Path] | None = None) -> list[tuple[str, int, str]]:
     """Repo-relative path, line and reason for every default that is computed when the module loads."""
     sources = [path for path in (maintained_files() if paths is None else paths) if path.suffix == ".py"]
@@ -202,30 +296,33 @@ def default_findings(paths: list[Path] | None = None) -> list[tuple[str, int, st
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue
-            args = node.args
-            positional = args.args[len(args.args) - len(args.defaults) :] if args.defaults else []
-            for argument, default in zip(
-                [*positional, *args.kwonlyargs], [*args.defaults, *args.kw_defaults], strict=False
-            ):
-                if default is None:
-                    continue
-                if isinstance(default, ast.List | ast.Dict | ast.Set) or (
-                    isinstance(default, ast.Call)
-                    and isinstance(default.func, ast.Name)
-                    and default.func.id in MUTABLE_CALLS
-                ):
+            for argument, default in _parameters(node):
+                kind = default_kind(argument, default, node)
+                if kind == "mutable":
                     found.append((relative, default.lineno, f"{node.name}({argument.arg}) is a mutable default"))
-                    continue
-                if problem := _default_problem(default):
-                    found.append((relative, default.lineno, f"{node.name}({argument.arg}) default {problem}"))
+                elif kind == "call":
+                    found.append(
+                        (relative, default.lineno, f"{node.name}({argument.arg}) default {_default_problem(default)}")
+                    )
+                elif kind == "config":
+                    found.append(
+                        (relative, default.lineno, f"{node.name}({argument.arg}) default {_config_read(default)}")
+                    )
     return found
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("paths", nargs="*", help="files to check (default: every maintained Python file)")
+    parser.add_argument("--census", action="store_true", help="count defaults by category instead of checking")
     args = parser.parse_args(argv)
     targets = check_targets(args.paths, (".py",))
+    if args.census:
+        census = default_census(targets)
+        for kind, count in sorted(census.items(), key=lambda item: (-item[1], item[0])):
+            print(f"[COUNT] {count:5d}  {kind}")
+        print(f"[OK] Defaults: {sum(census.values())} in {len(census)} categories")
+        return 0
     over = findings(targets)
     for item in over[:MAX_REPORTED]:
         print(f"[{'FAIL' if item.score > MAX_SCORE or item.depth > MAX_DEPTH else 'INFO'}] {item}")
