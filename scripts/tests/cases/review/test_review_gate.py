@@ -4,6 +4,7 @@ import subprocess
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
+from pathlib import Path
 from unittest.mock import patch
 
 
@@ -111,6 +112,32 @@ class GateScopeTests(unittest.TestCase):
         finally:
             gate.TIMES[:] = saved
         self.assertIn("[OK] every section passed", output.getvalue())
+
+    def test_scoped_types_check_only_the_change_and_its_importers(self):
+        from scripts.review import __main__ as gate
+
+        edges = {"scripts.a": (), "scripts.b": ("scripts.a",), "scripts.c": ("scripts.b",), "scripts.z": ()}
+        completed = subprocess.CompletedProcess(args=[], returncode=0)
+        with (
+            patch.object(gate, "import_graph", return_value=edges),
+            patch.object(gate, "module_files", return_value={name: Path(name) for name in edges}),
+            patch.object(gate, "module_paths", side_effect=lambda modules: sorted(f"{name}.py" for name in modules)),
+            patch.object(gate.subprocess, "run", return_value=completed) as run,
+        ):
+            self.assertEqual(gate.scoped_type_check(["scripts/a.py"], False), 0)
+        self.assertEqual(sorted(run.call_args.args[0][3:]), ["scripts.a.py", "scripts.b.py"])
+
+    def test_scoped_types_run_the_whole_project_when_the_reach_is_wide(self):
+        from scripts.review import __main__ as gate
+
+        edges = {"scripts.a": (), **{f"scripts.m{index}": ("scripts.a",) for index in range(5)}}
+        with (
+            patch.object(gate, "import_graph", return_value=edges),
+            patch.object(gate, "module_files", return_value={name: Path(name) for name in edges}),
+            patch.object(gate, "type_check", return_value=0) as full,
+        ):
+            self.assertEqual(gate.scoped_type_check(["scripts/a.py"], False), 0)
+        full.assert_called_once_with(False)
 
     def test_formatting_targets_the_change_and_falls_back_to_the_tree(self):
         from scripts.review import format_py

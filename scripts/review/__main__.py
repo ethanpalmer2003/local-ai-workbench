@@ -32,6 +32,7 @@ from scripts.review.checks import (
 )
 from scripts.shared import changes
 from scripts.shared.changes import changed_paths
+from scripts.shared.import_graph import import_graph, module_files, module_name, module_paths, reverse_closure
 
 SPELL_EXCLUDED = (
     "data/",
@@ -123,6 +124,35 @@ def type_check(fast: bool) -> int:
     checker = project_cfg.VENV_DIR / "Scripts" / "basedpyright.exe"
     try:
         return subprocess.run([str(checker), "--level", "error"], cwd=project_cfg.BASE_DIR, check=False).returncode
+    except OSError as error:
+        print(f"[FAIL] Could not run basedpyright at {checker}: {error}")
+        return 1
+
+
+def scoped_type_check(paths: list[str], fast: bool) -> int:
+    """basedpyright on what the change reaches: its modules and their direct importers.
+
+    Anything further away cannot have been broken by this change, and the full project runs at push.
+    A reach covering most of the tree costs less as one whole-project run, so it falls back to that.
+    """
+    if fast:
+        print("\n=== TYPE CHECK ===\n[SKIP] --fast")
+        return 0
+    print("\n=== TYPE CHECK ===", flush=True)
+    modules = {name for path in paths if (name := module_name(path))}
+    known = module_files()
+    if not modules:
+        return 0
+    reachable = reverse_closure(import_graph(), modules, depth=1)
+    if len(reachable) * 2 > len(known):
+        return type_check(fast)
+    checker = project_cfg.VENV_DIR / "Scripts" / "basedpyright.exe"
+    targets = module_paths(reachable)
+    print(f"[SCOPE] types: {len(targets)} of {len(known)} modules, the change and its direct importers")
+    try:
+        return subprocess.run(
+            [str(checker), "--level", "error", *targets], cwd=project_cfg.BASE_DIR, check=False
+        ).returncode
     except OSError as error:
         print(f"[FAIL] Could not run basedpyright at {checker}: {error}")
         return 1
@@ -234,7 +264,8 @@ def _flag(argv: list[str], name: str) -> bool:
 def touched_gate(argv: list[str] | None = None) -> int:
     """Run only the sections the working tree changed since upstream, cheapest first."""
     argv = list(sys.argv[1:] if argv is None else argv)
-    selected = touched_sections(changed_paths())
+    changed = changed_paths()
+    selected = touched_sections(changed)
     print(f"=== TOUCHED: {', '.join(sorted(selected))} ===", flush=True)
     table = (
         ("layout", "=== LAYOUT ===", layout.main),
@@ -245,7 +276,7 @@ def touched_gate(argv: list[str] | None = None) -> int:
         ("network timeouts", "\n=== NETWORK TIMEOUTS ===", lambda: network_timeouts.main([])),
         ("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main([])),
         ("lint", "\n=== LINT ===", lint_check),
-        ("types", "", lambda: type_check(_flag(argv, "--fast"))),
+        ("types", "", lambda: scoped_type_check(changed, _flag(argv, "--fast"))),
         ("formatting", "\n=== PYTHON FORMATTING ===", format_check),
         ("inventory", "", lambda: inventory_check(package_audit.summary(), _flag(argv, "--fast"))),
         ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main([])),

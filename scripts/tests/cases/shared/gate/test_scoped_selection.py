@@ -5,11 +5,12 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from scripts.shared import import_graph as graph_api
 from scripts.tests import scoped_selection
 from scripts.tests.shared.paths import CasePaths
 
 
-def _graph(edges: dict[str, tuple[str, ...]]) -> scoped_selection.Graph:
+def _graph(edges: dict[str, tuple[str, ...]]) -> graph_api.Graph:
     return {name: frozenset(targets) for name, targets in edges.items()}
 
 
@@ -27,7 +28,7 @@ class TestSelection(unittest.TestCase):
             ("scripts/config/llamacpp/chat_template.jinja", None),
         )
         for path, expected in cases:
-            self.assertEqual(scoped_selection.module_name(path), expected, path)
+            self.assertEqual(graph_api.module_name(path), expected, path)
 
     def test_relative_imports_resolve_within_the_package(self):
         source = "from . import sibling\nfrom .sibling import thing\nfrom ..parent import other\n"
@@ -35,7 +36,7 @@ class TestSelection(unittest.TestCase):
         names: set[str] = set()
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
-                base = scoped_selection._from_import_target(node, "scripts.pkg.module", False)
+                base = graph_api.from_import_target(node, "scripts.pkg.module", False)
                 if base:
                     names.add(base)
                     names.update(f"{base}.{alias.name}" for alias in node.names)
@@ -53,27 +54,25 @@ class TestSelection(unittest.TestCase):
     def test_a_relative_import_beyond_the_top_package_names_nothing(self):
         tree = ast.parse("from ..outside import thing\n")
         node = next(node for node in ast.walk(tree) if isinstance(node, ast.ImportFrom))
-        self.assertIsNone(scoped_selection._from_import_target(node, "scripts.pkg", False))
+        self.assertIsNone(graph_api.from_import_target(node, "scripts.pkg", False))
 
     def test_every_module_depends_on_its_parent_packages(self):
         known = {"scripts", "scripts.pkg", "scripts.pkg.module"}
-        self.assertEqual(scoped_selection._parent_packages("scripts.pkg.module", known), {"scripts", "scripts.pkg"})
+        self.assertEqual(graph_api.parent_packages("scripts.pkg.module", known), {"scripts", "scripts.pkg"})
 
     def test_an_unparsable_file_has_no_tree(self):
         with CasePaths(__file__).temporary_directory() as folder:
             broken = Path(folder) / "broken.py"
             broken.write_text("def broken(:\n", encoding="utf-8")
-            self.assertIsNone(scoped_selection._parse(broken))
+            self.assertIsNone(graph_api.parse_source(broken))
 
     def test_a_chain_of_importers_counts_one_hop_by_default(self):
         edges = _graph({"scripts.a": ("scripts.b",), "scripts.b": ("scripts.c",), "scripts.c": (), "scripts.z": ()})
         self.assertEqual(
-            scoped_selection.reverse_closure(edges, {"scripts.c"}, depth=scoped_selection.SCOPE_DEPTH),
+            graph_api.reverse_closure(edges, {"scripts.c"}, depth=scoped_selection.SCOPE_DEPTH),
             {"scripts.c", "scripts.b"},
         )
-        self.assertEqual(
-            scoped_selection.reverse_closure(edges, {"scripts.c"}), {"scripts.c", "scripts.b", "scripts.a"}
-        )
+        self.assertEqual(graph_api.reverse_closure(edges, {"scripts.c"}), {"scripts.c", "scripts.b", "scripts.a"})
 
     def test_a_transitive_dependent_is_out_of_scope(self):
         from scripts.tests.cases.review.test_docs import PointerTests
@@ -283,13 +282,13 @@ class TestSelection(unittest.TestCase):
 
     def test_sources_list_tracked_and_untracked_python_under_scripts(self):
         listing = "scripts/a.py\nscripts/b.md\nnotes/c.py\n"
-        with patch.object(scoped_selection, "git", return_value=listing) as run:
-            self.assertEqual(scoped_selection.source_files(), ["scripts/a.py"])
+        with patch.object(graph_api, "git", return_value=listing) as run:
+            self.assertEqual(graph_api.source_files(), ["scripts/a.py"])
         run.assert_called_once_with("ls-files", "--cached", "--others", "--exclude-standard", "scripts", root=None)
 
     def test_the_graph_is_built_from_the_root_it_was_given(self):
-        with patch.object(scoped_selection, "source_files", return_value=[]) as sources:
-            self.assertEqual(scoped_selection.module_files(Path("elsewhere")), {})
+        with patch.object(graph_api, "source_files", return_value=[]) as sources:
+            self.assertEqual(graph_api.module_files(Path("elsewhere")), {})
         sources.assert_called_once_with(Path("elsewhere"))
 
     def test_a_dropped_class_never_reaches_the_change(self):
@@ -308,9 +307,7 @@ class TestSelection(unittest.TestCase):
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             chosen = scoped_selection.select((PointerTests, KoboldOptionTests), paths=["scripts/review/checks/docs.py"])
-        reach = scoped_selection.reverse_closure(
-            edges, {"scripts.review.checks.docs"}, depth=scoped_selection.SCOPE_DEPTH
-        )
+        reach = graph_api.reverse_closure(edges, {"scripts.review.checks.docs"}, depth=scoped_selection.SCOPE_DEPTH)
         for group in chosen.dropped:
             self.assertNotIn(group.__module__, reach, group.__name__)
 
