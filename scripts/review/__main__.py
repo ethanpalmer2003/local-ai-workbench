@@ -104,7 +104,7 @@ def lint_check() -> int:
 
 
 def format_check() -> int:
-    """Formatting is optional: the codebase keeps hand-wrapped lines ruff format would join."""
+    """ruff format --check over the tree: the hook formats what is staged, so a difference is a finding."""
     checker = project_cfg.VENV_DIR / "Scripts" / "ruff.exe"
     return subprocess.run(
         [str(checker), "format", "--check", "--config", str(project_cfg.BASE_DIR / "pyproject.toml"), "."],
@@ -152,6 +152,20 @@ def timed[T](name: str, function: Callable[..., T], *args: object) -> T:
     status = function(*args)
     TIMES.append({"section": name, "seconds": round(time.perf_counter() - started, 2), "status": status})
     return status
+
+
+def report_sections() -> int:
+    """The exit code and the line that explains it: a failing run always names its sections.
+
+    The code comes from the recorded sections and nothing else, so a nonzero exit cannot happen
+    without a `[FAIL]` line beside it.
+    """
+    failed = [str(item["section"]) for item in TIMES if item["status"]]
+    if not failed:
+        print("[OK] every section passed")
+        return 0
+    print(f"[FAIL] {len(failed)} section(s) failed: {', '.join(failed)}")
+    return 1
 
 
 def write_timings() -> Path:
@@ -244,17 +258,16 @@ def touched_gate(argv: list[str] | None = None) -> int:
         ("lock check", "\n=== DEPENDENCY HYGIENE ===", package_audit.lock_issues),
         ("deptry", "", declaration_check),
     )
-    failed = 0
     for name, banner, function in table:
         if name not in selected:
             continue
         if banner:
             print(banner, flush=True)
-        failed = failed or int(bool(timed(name, function)))
+        timed(name, function)
     slowest = sorted(TIMES, key=lambda item: float(str(item["seconds"])), reverse=True)[:3]
     summary = ", ".join(f"{item['section']} {item['seconds']}s" for item in slowest)
     print(f"\n[TIME] {write_timings()} (slowest: {summary})")
-    return int(bool(failed))
+    return report_sections()
 
 
 def full_gate(argv: list[str] | None = None) -> int:
@@ -280,31 +293,31 @@ def full_gate(argv: list[str] | None = None) -> int:
         return public_audit_main(["--scrub"])
 
     print("=== LAYOUT ===", flush=True)
-    layout_status = timed("layout", layout.main)
+    timed("layout", layout.main)
 
     print("\n=== SINGLE-OWNER TOKENS ===", flush=True)
-    owned_status = timed("single-owner tokens", owned_tokens.main, [])
+    timed("single-owner tokens", owned_tokens.main, [])
 
     print("\n=== DOCUMENTATION ===", flush=True)
-    docs_status = timed("docs", docs.main, [])
+    timed("docs", docs.main, [])
 
     print("\n=== MODEL REFERENCE DRIFT ===", flush=True)
-    model_status = timed("model references", model_references.main)
+    timed("model references", model_references.main)
 
     print("\n=== FRONT-END WIRING ===", flush=True)
-    frontend_status = timed("front-end wiring", frontend_wiring.main)
+    timed("front-end wiring", frontend_wiring.main)
 
     print("\n=== NETWORK TIMEOUTS ===", flush=True)
-    timeout_status = timed("network timeouts", network_timeouts.main, [])
+    timed("network timeouts", network_timeouts.main, [])
 
     print("\n=== OVERLAY ACCESS ===", flush=True)
-    overlay_status = timed("overlay access", overlay_access.main, [])
+    timed("overlay access", overlay_access.main, [])
 
     print("\n=== LINT ===", flush=True)
     lint_status = timed("lint", lint_check)
     print("[OK] Lint clean" if not lint_status else "[FAIL] Lint findings above")
 
-    type_status = timed("types", type_check, args.fast)
+    timed("types", type_check, args.fast)
     counts = None
     if not args.fast:
         started_summary = time.perf_counter()
@@ -312,7 +325,7 @@ def full_gate(argv: list[str] | None = None) -> int:
         TIMES.append(
             {"section": "package summary", "seconds": round(time.perf_counter() - started_summary, 2), "status": 0}
         )
-    inventory_status = timed("inventory", inventory_check, counts or {}, args.fast)
+    timed("inventory", inventory_check, counts or {}, args.fast)
 
     formatting_status = 0
     if not args.no_format_check:
@@ -321,35 +334,35 @@ def full_gate(argv: list[str] | None = None) -> int:
         print(
             "[OK] Formatting matches"
             if not formatting_status
-            else "[WARN] Formatting differs; run review/format_py.bat"
+            else "[FAIL] Formatting differs; run review/format_py.bat"
         )
 
     print("\n=== TYPOGRAPHIC PUNCTUATION ===", flush=True)
-    dash_status = timed("typography", typography.main, [])
+    timed("typography", typography.main, [])
 
     print("\n=== COMMENTS ===", flush=True)
-    comment_status = timed("comments", comments.main, [])
+    timed("comments", comments.main, [])
 
     print("\n=== ANNOTATION COMPLEXITY ===", flush=True)
-    annotation_status = timed("annotations", annotations.main, [])
+    timed("annotations", annotations.main, [])
 
     print("\n=== LINE LENGTH ===", flush=True)
-    line_status = timed("line length", line_length.main, [])
+    timed("line length", line_length.main, [])
 
     print("\n=== BARE ANY ===", flush=True)
-    any_status = timed("bare any", bare_any.main, [])
+    timed("bare any", bare_any.main, [])
 
     print("\n=== DEAD CODE ===", flush=True)
-    dead_status = timed("dead code", dead_code.main, [])
+    timed("dead code", dead_code.main, [])
 
     print("\n=== AMERICAN SPELLING ===", flush=True)
-    variant_status = timed("spelling variants", spellings.main, [])
+    timed("spelling variants", spellings.main, [])
 
     print("\n=== SPELLING ===", flush=True)
     spelling_status = timed("spelling", spelling_check)
     print("[OK] Spelling clean" if not spelling_status else "[FAIL] Spelling findings above")
 
-    audit_status = timed("advisories", advisory_check, args.fast)
+    timed("advisories", advisory_check, args.fast)
 
     print("\n=== DEPENDENCY HYGIENE ===", flush=True)
     issues = timed("lock check", package_audit.lock_issues)
@@ -377,38 +390,14 @@ def full_gate(argv: list[str] | None = None) -> int:
     slowest = sorted(TIMES, key=lambda item: float(str(item["seconds"])), reverse=True)[:3]
     summary = ", ".join(f"{item['section']} {item['seconds']}s" for item in slowest)
     print(f"\n[TIME] {write_timings()} (slowest: {summary})")
-    return int(
-        bool(
-            layout_status
-            or owned_status
-            or docs_status
-            or model_status
-            or frontend_status
-            or timeout_status
-            or overlay_status
-            or lint_status
-            or type_status
-            or inventory_status
-            or dash_status
-            or comment_status
-            or annotation_status
-            or line_status
-            or any_status
-            or dead_status
-            or variant_status
-            or formatting_status
-            or spelling_status
-            or audit_status
-            or issues
-            or declaration_status
-            or tests_status
-        )
-    )
+    return report_sections()
 
 
 def main(argv: list[str] | None = None) -> int:
     """Scope the gate to the change by default; `--all`, `--prune`, `--scrub` or a clean tree run every section."""
     argv = list(sys.argv[1:] if argv is None else argv)
+    # - a run's status comes from its own sections, so no earlier run in this process can fail it
+    TIMES.clear()
     if not (_flag(argv, "--all") or _flag(argv, "--prune") or _flag(argv, "--scrub")) and changed_paths():
         return touched_gate(argv)
     return full_gate(argv)
