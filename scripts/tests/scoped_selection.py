@@ -34,18 +34,13 @@ TestGroup = type[unittest.TestCase]
 
 
 def _without_docstrings(tree: ast.Module) -> str:
-    """Return the AST dump with every docstring removed, so comment or docstring edits compare equal.
-
-    A body left with no statement gets a `pass`, because a function holding only a docstring and one
-    holding `pass` are the same program; blanking the string instead would stop an added or removed
-    docstring from comparing equal.
-    """
+    """Return the AST dump with docstrings removed, so a comment or docstring edit compares equal."""
     for node in ast.walk(tree):
         if not isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
         first = node.body[0] if node.body else None
         if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
-            node.body = node.body[1:] or [ast.Pass()]
+            node.body = node.body[1:]
     return ast.dump(tree)
 
 
