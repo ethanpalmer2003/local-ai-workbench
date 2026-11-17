@@ -11,8 +11,6 @@
   expert pages and is not comparable to the rest
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import re

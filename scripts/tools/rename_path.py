@@ -13,8 +13,6 @@ Afterwards the docs and layout checks fail on any link or rule the rewrite misse
 with `python -m scripts.review`.
 """
 
-from __future__ import annotations
-
 import argparse
 import ast
 import os

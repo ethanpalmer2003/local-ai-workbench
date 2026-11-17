@@ -6,8 +6,6 @@ and exempts only the two groups where wrapping would change meaning or add noise
 template or docstring, and single-line literals that carry no sentence (URLs, ids, encoded values).
 """
 
-from __future__ import annotations
-
 import argparse
 import io
 import re

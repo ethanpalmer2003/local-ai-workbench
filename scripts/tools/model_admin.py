@@ -7,8 +7,6 @@
   entry, and moves the old weights to trash. Strata native configs are a boundary.
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import shutil

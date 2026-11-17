@@ -16,8 +16,6 @@
 - A run stops only the server it started; an endpoint run starts nothing
 """
 
-from __future__ import annotations
-
 import argparse
 import contextlib
 import statistics

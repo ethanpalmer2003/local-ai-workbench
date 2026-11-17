@@ -17,8 +17,6 @@ Complete-WAV requests now use the active HTTP relay without this pipeline. Share
 Breeze 2 tone/vocal-event processing live in tts_text_processing.py, not this legacy pipeline.
 """
 
-from __future__ import annotations
-
 import contextlib
 import re
 import threading

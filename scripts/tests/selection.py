@@ -15,8 +15,6 @@ unparsable file gets no edges, so a change below it can drop a class above it, a
 pyright are what refuse that file first.
 """
 
-from __future__ import annotations
-
 import ast
 import unittest
 from collections import deque

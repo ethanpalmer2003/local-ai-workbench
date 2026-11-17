@@ -1,5 +1,6 @@
 """Gate scoping: an empty change set runs every section, a change runs only what it reaches."""
 
+import subprocess
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
@@ -25,6 +26,13 @@ class GateScopeTests(unittest.TestCase):
         sections = touched_sections(["notes/TODO.md"])
         self.assertTrue({"docs", "typography", "spelling"} <= sections)
         self.assertNotIn("lint", sections)
+
+    def test_git_output_is_decoded_as_text_whatever_the_console_codec(self):
+        from scripts.shared import changes
+
+        completed = subprocess.CompletedProcess(args=[], returncode=0, stdout=b"caf\x81 line\n", stderr=b"")
+        with patch.object(changes.subprocess, "run", return_value=completed):
+            self.assertEqual(changes.git("show", "scripts/a.py"), "caf\ufffd line\n")
 
     def test_changed_paths_cover_the_working_tree_and_unpushed_commits(self):
         from scripts.shared import changes

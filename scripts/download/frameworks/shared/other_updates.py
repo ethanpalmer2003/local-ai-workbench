@@ -1,7 +1,5 @@
 """Other framework catalog and delegated/package update handlers."""
 
-from __future__ import annotations
-
 import ast
 import base64
 import hashlib

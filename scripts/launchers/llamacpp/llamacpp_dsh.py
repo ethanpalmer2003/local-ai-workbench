@@ -15,8 +15,6 @@
   round trip would either refuse or rewrite
 """
 
-from __future__ import annotations
-
 import argparse
 import io
 import json

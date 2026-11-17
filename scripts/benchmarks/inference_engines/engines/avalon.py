@@ -13,8 +13,6 @@
 - Same prompt contract and native timing source as the llama.cpp sweep
 """
 
-from __future__ import annotations
-
 import os
 import statistics
 import time

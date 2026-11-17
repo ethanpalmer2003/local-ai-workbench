@@ -5,8 +5,6 @@ tracked manifest plus the downloaded clips into run artifacts and the provenance
 records, so a changed corpus revision is visible instead of silently mixed.
 """
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 from typing import Any

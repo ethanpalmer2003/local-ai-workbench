@@ -7,8 +7,6 @@ so the score is spelled out here: one point per atom, two per level of nesting, 
 Between `WARN_SCORE` and `MAX_SCORE` the finding is a prompt; above `MAX_SCORE` it fails the gate.
 """
 
-from __future__ import annotations
-
 import argparse
 import ast
 from collections.abc import Iterable
@@ -127,6 +125,29 @@ def findings(paths: list[Path] | None = None) -> list[Annotation]:
     return sorted(unique.values(), key=lambda item: (-item.score, item.path, item.line))
 
 
+def future_imports(paths: list[Path] | None = None) -> list[Path]:
+    """Files that switch annotations to strings; the interpreters here already defer them.
+
+    The statement is read as syntax, not as text, so this module and its test can name it.
+    """
+    sources = [path for path in (maintained_files() if paths is None else paths) if path.suffix == ".py"]
+    stale = []
+    for path in sources:
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
+        except (OSError, SyntaxError):
+            continue
+        imports_future = any(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "__future__"
+            and any(alias.name == "annotations" for alias in node.names)
+            for node in tree.body
+        )
+        if imports_future:
+            stale.append(path)
+    return stale
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.parse_args(argv)
@@ -135,12 +156,16 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[{'FAIL' if item.score > MAX_SCORE or item.depth > MAX_DEPTH else 'INFO'}] {item}")
     if len(over) > MAX_REPORTED:
         print(f"[WARN] {len(over) - MAX_REPORTED} further annotations; output bounded at {MAX_REPORTED}")
+    stale = future_imports()
+    for path in stale[:MAX_REPORTED]:
+        print(f"[FAIL] {path.relative_to(project_cfg.BASE_DIR).as_posix()}: drop the future import")
     failed = [item for item in over if item.score > MAX_SCORE or item.depth > MAX_DEPTH]
     print(
-        f"[{'FAIL' if failed else 'OK'}] Annotations: {len(over)} under watch, "
-        f"{len(failed)} over the cap (score above {MAX_SCORE} or depth above {MAX_DEPTH})"
+        f"[{'FAIL' if failed or stale else 'OK'}] Annotations: {len(over)} under watch, "
+        f"{len(failed)} over the cap (score above {MAX_SCORE} or depth above {MAX_DEPTH}), "
+        f"{len(stale)} with the future import"
     )
-    return 1 if failed else 0
+    return 1 if failed or stale else 0
 
 
 if __name__ == "__main__":

@@ -12,8 +12,6 @@ default instead, which is a better question than a duration, and an irreversible
 `confirm`, which asks every time.
 """
 
-from __future__ import annotations
-
 import argparse
 import sys
 from pathlib import Path

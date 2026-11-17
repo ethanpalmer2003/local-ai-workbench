@@ -5,8 +5,6 @@ revision, the split, each selected clip member and its reference text; this modu
 pinned archives and extracts only those clips, so a run never depends on a moving corpus.
 """
 
-from __future__ import annotations
-
 import argparse
 import hashlib
 import json

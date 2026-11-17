@@ -5,8 +5,6 @@ workspace commit, each framework revision, each model file, the effective settin
 revision plus manifest hash.
 """
 
-from __future__ import annotations
-
 import hashlib
 import json
 import subprocess

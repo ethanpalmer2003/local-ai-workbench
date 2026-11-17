@@ -9,8 +9,6 @@ A finding is a file pair plus how many blocks that pair shares, so a new block i
 pair still fails. `--update` accepts today's list into the baseline; review it before doing that.
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import re

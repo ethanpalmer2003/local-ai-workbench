@@ -6,8 +6,6 @@ between the warning and the failure. Run it before raising a limit: the borderli
 change would let through.
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 

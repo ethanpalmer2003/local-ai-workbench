@@ -1,7 +1,5 @@
 """Canonical model catalog: data file, loader, and generated Python IDs."""
 
-from __future__ import annotations
-
 import json
 import os
 import re

@@ -10,8 +10,6 @@ binary prints `[SKIP]` and a crash writes its exit code to the run log.
 The procedure and its measured cost are in [CODE-SEARCH](../../.agents/CODE-SEARCH.md).
 """
 
-from __future__ import annotations
-
 import argparse
 import os
 import shutil

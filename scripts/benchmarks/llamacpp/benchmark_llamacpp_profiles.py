@@ -16,8 +16,6 @@
   - Run lengths (and accept-rate exposure) comparable across profiles
 """
 
-from __future__ import annotations
-
 import argparse
 import csv
 import json

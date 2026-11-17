@@ -5,8 +5,6 @@ so both modules had a copy of the same five wrappers. The factory is the one own
 each module binds it to its own `BACKEND`, which keeps the module API and the copy out of the tree.
 """
 
-from __future__ import annotations
-
 import subprocess
 from collections.abc import Callable, MutableMapping
 from typing import Any, NamedTuple, Protocol, cast

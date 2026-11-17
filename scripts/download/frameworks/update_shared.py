@@ -1,7 +1,5 @@
 """Shared release/source operations and check-first update planning."""
 
-from __future__ import annotations
-
 import contextlib
 import hashlib
 import io
@@ -14,12 +12,10 @@ import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, NotRequired, TextIO, TypedDict, cast
+from typing import NotRequired, TextIO, TypedDict, cast
 
+import psutil
 import requests
-
-if TYPE_CHECKING:
-    import psutil
 
 from scripts.config import project_config as project_cfg
 from scripts.config.trash import archive_path
@@ -346,8 +342,6 @@ def _runs_from(value: str, target: str) -> bool:
 
 
 def _matching_processes(target: str) -> list[psutil.Process]:
-    import psutil
-
     matches: list[psutil.Process] = []
     for process in psutil.process_iter(["name", "exe", "cmdline"]):
         info = process.info
@@ -358,8 +352,6 @@ def _matching_processes(target: str) -> list[psutil.Process]:
 
 
 def _process_tree(matches: list[psutil.Process]) -> dict[int, psutil.Process]:
-    import psutil
-
     tree: dict[int, psutil.Process] = {}
     for process in matches:
         try:
@@ -374,8 +366,6 @@ def _process_tree(matches: list[psutil.Process]) -> dict[int, psutil.Process]:
 
 
 def _terminate_processes(processes: list[psutil.Process], dest_dir: Path) -> None:
-    import psutil
-
     for process in reversed(processes):
         try:
             process.terminate()
