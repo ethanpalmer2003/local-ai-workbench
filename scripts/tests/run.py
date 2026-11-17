@@ -134,7 +134,12 @@ from scripts.tests.cases.shared.tools.test_refresh_index import (
     RefreshPlanTests,
     RefreshReportTests,
 )
-from scripts.tests.cases.shared.tools.test_rename_path import MoveParsingTests, ReferenceRewriteTests, ScanScopeTests
+from scripts.tests.cases.shared.tools.test_rename_path import (
+    ImportRewriteTests,
+    MoveParsingTests,
+    ReferenceRewriteTests,
+    ScanScopeTests,
+)
 from scripts.tests.cases.shared.tools.test_rocm_inventory import RocmInventoryTests
 from scripts.tests.cases.shared.tools.test_stage_runner import StageRunnerTests
 from scripts.tests.cases.shared.tools.test_state_cleanup import StateCleanupTests
@@ -252,6 +257,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     StageRunnerTests,
     StateCleanupTests,
     MoveParsingTests,
+    ImportRewriteTests,
     ReferenceRewriteTests,
     RefreshBackgroundTests,
     RefreshLockTests,
