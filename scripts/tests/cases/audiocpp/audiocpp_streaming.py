@@ -178,7 +178,7 @@ def _fetch_server_models(run: RunPaths) -> None:
     (run.artifacts / "server-models.json").write_bytes(models.content)
 
 
-def _tts_models(run: RunPaths) -> list[dict[str, Any]]:
+def _tts_models(run: RunPaths) -> list[provenance.ModelIdentity]:
     """The speech weights the running server had configured, so the row can be judged later."""
     try:
         payload = json.loads((run.artifacts / "server-models.json").read_text(encoding="utf-8"))
@@ -322,7 +322,7 @@ def run_comparison(args: argparse.Namespace, run: RunPaths, memory: BenchmarkVra
     profiles = _selected(STREAM_PROFILES, args.profiles)
     texts = _selected(STREAM_TEXTS, args.texts)
     results, unsupported, timed_out, transport_failed = _sweep(profiles, texts, args, run, lifecycle, memory, deadline)
-    report = {
+    report: dict[str, Any] = {
         "benchmark": lifecycle.record(),
         "setup_boundary": "Backend session acquisition including monitor setup; original load time unavailable for reused "
         "services",

@@ -537,7 +537,7 @@ def summarize(results: list[dict[str, Any]]) -> str:
     return body + ("\n\n## Notes\n\n" + "\n".join(notes) if notes else "")
 
 
-def _source_models(weights: Path) -> list[dict[str, Any]]:
+def _source_models(weights: Path) -> list[provenance.ModelIdentity]:
     """Weight files behind every stack, recorded so a swap is visible later."""
     return [
         provenance.file_identity("chat", weights),

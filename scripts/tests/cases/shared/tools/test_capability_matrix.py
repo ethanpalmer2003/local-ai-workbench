@@ -20,7 +20,7 @@ def fake_git(command, **_kwargs):
     return subprocess.CompletedProcess(command, 0, stdout=output)
 
 
-def provenanced(models: list[dict[str, object]] | None = None) -> dict[str, object]:
+def provenanced(models: list[object] | None = None) -> dict[str, object]:
     """A recorded block that matches this workspace except where a test says otherwise."""
     return {
         "recorded_at": "2026-01-02T03:04:05+00:00",

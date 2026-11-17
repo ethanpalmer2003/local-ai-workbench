@@ -87,8 +87,11 @@ class Reporting(unittest.TestCase):
         with CasePaths(__file__).temporary_directory() as folder:
             output = RunPaths(Path(folder))
             output.create()
-            with report_run(output, "fixture", "model-free") as report:
-                report.provenance = {"subject": "fixture", "models": [], "frameworks": []}
+            with (
+                patch.object(reporting.provenance, "workspace_state", return_value={"path": "workspace"}),
+                report_run(output, "fixture", "model-free") as report,
+            ):
+                report.record_provenance(models=[], frameworks=[])
             payload = json.loads((output.artifacts / "report.json").read_text(encoding="utf-8"))
             self.assertEqual(payload["provenance"]["subject"], "fixture")
 

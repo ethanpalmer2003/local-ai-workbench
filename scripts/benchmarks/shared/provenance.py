@@ -13,17 +13,67 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, NotRequired, TypedDict
 
 from scripts.config import project_config as project_cfg
-from scripts.launchers.runtime.execution_context import execution_context
+from scripts.launchers.runtime.execution_context import ExecutionContext, execution_context
 
 SHARED_DIR = Path(__file__).resolve().parent
+
+
+class GitState(TypedDict):
+    """A checkout that may be absent, so nulls replace a commit instead of an error."""
+
+    commit: str | None
+    dirty: bool | None
+
+
+class WorkspaceState(GitState):
+    path: str
+
+
+class BinaryState(TypedDict):
+    """What changes when a release zip replaces an executable."""
+
+    bytes: int
+    modified: str
+
+
+class FrameworkState(GitState):
+    key: str
+    dir: str
+    binaries: dict[str, BinaryState]
+
+
+class ModelIdentity(TypedDict):
+    """Weight identity; `bytes` and `modified` are absent when the file is not there."""
+
+    label: str
+    path: str
+    present: bool
+    bytes: NotRequired[int]
+    modified: NotRequired[str]
+
+
+class ProvenanceBlock(TypedDict):
+    """The block a long run records; keys stay stable so a later run can compare."""
+
+    subject: str
+    recorded_at: str
+    execution_context: ExecutionContext
+    workspace: WorkspaceState
+    producer: dict[str, str]
+    frameworks: list[FrameworkState]
+    models: list[ModelIdentity]
+    config: dict[str, Any]
+    corpus: dict[str, Any] | None
+
+
 # - The executable each engine actually runs; a release zip replaces these first
 ENGINE_BINARIES = ("llama-server.exe", "llama-bench.exe", "audiocpp_server.exe", "sd-server.exe")
 
 
-def git_state(path: Path) -> dict[str, Any]:
+def git_state(path: Path) -> GitState:
     """Commit and dirty flag for a checkout, or nulls when the folder is not its own repository."""
     try:
         top = subprocess.run(
@@ -47,11 +97,11 @@ def git_state(path: Path) -> dict[str, Any]:
     return {"commit": commit or None, "dirty": bool(status.strip())}
 
 
-def workspace_state() -> dict[str, Any]:
+def workspace_state() -> WorkspaceState:
     return {"path": str(project_cfg.BASE_DIR), **git_state(project_cfg.BASE_DIR)}
 
 
-def engine_binaries(directory: Path) -> dict[str, Any]:
+def engine_binaries(directory: Path) -> dict[str, BinaryState]:
     """Identity of the engine executables an install keeps, so a swapped binary release is visible.
 
     Releases are zips unpacked over the install folder, and none of them is a git checkout, so size
@@ -59,7 +109,7 @@ def engine_binaries(directory: Path) -> dict[str, Any]:
     """
     if not directory.is_dir():
         return {}
-    found: dict[str, Any] = {}
+    found: dict[str, BinaryState] = {}
     for pattern in ("*", "*/*"):
         for path in sorted(directory.glob(pattern)):
             if not path.is_file() or path.name not in ENGINE_BINARIES:
@@ -72,18 +122,18 @@ def engine_binaries(directory: Path) -> dict[str, Any]:
     return found
 
 
-def framework_state(key: str) -> dict[str, Any]:
+def framework_state(key: str) -> FrameworkState:
     """Identity of one installed framework: its commit when it has one, and its engine binaries."""
     directory = project_cfg.component(key).framework_dir
     return {"key": key, "dir": str(directory), **git_state(directory), "binaries": engine_binaries(directory)}
 
 
-def changed_binaries(recorded: dict[str, Any], current: dict[str, Any]) -> list[str]:
+def changed_binaries(recorded: dict[str, BinaryState], current: dict[str, BinaryState]) -> list[str]:
     """Recorded engine binaries a later run would load in a different build."""
     return sorted(name for name, state in recorded.items() if current.get(name) != state)
 
 
-def file_identity(label: str, path: Path) -> dict[str, Any]:
+def file_identity(label: str, path: Path) -> ModelIdentity:
     """Weight identity that survives a rename: exact size and modification time."""
     if not path.is_file():
         return {"label": label, "path": str(path), "present": False}
@@ -154,15 +204,15 @@ def block(
     *,
     subject: str,
     config: dict[str, Any],
-    frameworks: list[dict[str, Any]],
-    models: list[dict[str, Any]],
+    frameworks: list[FrameworkState],
+    models: list[ModelIdentity],
     corpus: dict[str, Any] | None = None,
-) -> dict[str, Any]:
+) -> ProvenanceBlock:
     """The provenance every long run writes; keys stay stable so a later run can be compared."""
     return {
         "subject": subject,
         "recorded_at": datetime.now(UTC).isoformat(timespec="seconds"),
-        "execution_context": dict(execution_context()),
+        "execution_context": execution_context(),
         "workspace": workspace_state(),
         "producer": producer_state(),
         "frameworks": frameworks,

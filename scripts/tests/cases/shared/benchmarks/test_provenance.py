@@ -73,7 +73,7 @@ class FileIdentityTests(unittest.TestCase):
             path.write_bytes(b"weights")
             identity = provenance.file_identity("chat", path)
         self.assertTrue(identity["present"])
-        self.assertEqual(identity["bytes"], 7)
+        self.assertEqual(identity.get("bytes"), 7)
         self.assertIn("modified", identity)
 
     def test_an_absent_weight_stays_visible_instead_of_being_dropped(self):
@@ -103,8 +103,8 @@ class BlockTests(unittest.TestCase):
             block = provenance.block(
                 subject="example",
                 config={"tokens": 8},
-                frameworks=[{"key": "llamacpp", "commit": COMMIT}],
-                models=[{"label": "chat", "present": True}],
+                frameworks=[provenance.framework_state("llamacpp")],
+                models=[provenance.file_identity("chat", Path("missing.gguf"))],
                 corpus={"corpus": "google/fleurs", "manifest_sha256": "ff"},
             )
         self.assertEqual(block["subject"], "example")
@@ -112,7 +112,7 @@ class BlockTests(unittest.TestCase):
         self.assertIn("execution_context", block)
         self.assertEqual(block["workspace"]["commit"], COMMIT)
         self.assertEqual(block["config"]["tokens"], 8)
-        self.assertEqual(block["corpus"]["manifest_sha256"], "ff")
+        self.assertEqual(block["corpus"], {"corpus": "google/fleurs", "manifest_sha256": "ff"})
 
     def test_settings_digest_ignores_key_order_and_changes_with_values(self):
         first = provenance.digest({"a": 1, "b": 2})

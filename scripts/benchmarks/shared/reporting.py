@@ -54,10 +54,14 @@ class RunReport:
     settings: dict[str, Any] = field(default_factory=dict)
     results: list[dict[str, Any]] = field(default_factory=list)
     error: str | None = None
-    provenance: dict[str, Any] = field(default_factory=dict)
+    provenance: provenance.ProvenanceBlock | None = None
 
     def record_provenance(
-        self, *, models: list[dict[str, Any]], frameworks: list[dict[str, Any]], corpus: dict[str, Any] | None = None
+        self,
+        *,
+        models: list[provenance.ModelIdentity],
+        frameworks: list[provenance.FrameworkState],
+        corpus: dict[str, Any] | None = None,
     ) -> None:
         """Stamp what this run used, so the capability matrix can judge it instead of guessing."""
         self.provenance = provenance.block(

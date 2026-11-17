@@ -87,7 +87,7 @@ class ExtractionTests(unittest.TestCase):
             self.assertIn("test/zzz.wav", str(raised.exception))
 
     def test_a_clip_lives_under_its_language_inside_the_revision_folder(self):
-        clip = {"config": "ja_jp", "member": "test/123.wav"}
+        clip: fleurs.ClipLocation = {"config": "ja_jp", "member": "test/123.wav"}
         self.assertEqual(fleurs.clip_path(clip, Path("root")), Path("root/ja_jp/123.wav"))
 
     def test_clip_rows_record_bytes_and_digest_for_the_download_evidence(self):
@@ -96,7 +96,12 @@ class ExtractionTests(unittest.TestCase):
             target = root / "en_us" / "1.wav"
             target.parent.mkdir(parents=True)
             target.write_bytes(b"WAVE")
-            manifest = {"clips": [{"id": "en-0", "config": "en_us", "member": "test/1.wav"}]}
+            manifest: fleurs.Manifest = {
+                "corpus": "google/fleurs",
+                "revision": "test",
+                "split": "test",
+                "clips": [{"id": "en-0", "language": "en", "config": "en_us", "member": "test/1.wav", "reference": ""}],
+            }
             rows = fleurs._clip_rows(manifest, "en_us", root)
         self.assertEqual(rows[0]["file"], "en_us/1.wav")
         self.assertEqual(rows[0]["bytes"], 4)

@@ -3,13 +3,60 @@
 import math
 import statistics
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any, TypeVar
+from typing import Any, TypedDict, TypeVar
 
 T = TypeVar("T")
 # One timing owner for every domain; adapters must not estimate/subtract hidden loading costs.
+
+
+class PhaseRecord(TypedDict):
+    """One setup step, kept so a reader can see where a run's seconds went."""
+
+    phase: str
+    seconds: float
+    status: str
+
+
+class RequestRecord(TypedDict):
+    """One measured request: the contract every adapter is ranked by."""
+
+    timing_scope: str
+    request_seconds: float | None
+    status: str
+    marks_seconds: dict[str, float]
+    error: str | None
+
+
+class RequestSummary(TypedDict):
+    """Pooled statistics over completed resident requests; percentiles need a sample floor."""
+
+    timing_scope: str
+    samples: int
+    excluded_rows: int
+    p50_seconds: float | None
+    p95_seconds: float | None
+    p95_minimum_samples: int
+
+
+class LifecycleRecord(TypedDict):
+    """The `benchmark-lifecycle-v1` document a run writes beside its numbers."""
+
+    schema: str
+    state: str
+    resident: bool
+    identity: str | None
+    startup_seconds: float | None
+    model_load_seconds: float | None
+    startup_and_model_load_seconds: float | None
+    session_acquisition_seconds: float | None
+    model_load_and_first_inference_seconds: float | None
+    warmup_seconds: float
+    phases: list[PhaseRecord]
+    requests: list[RequestRecord]
+    errors: list[str]
 
 
 def measure_cold_process[T](operation: Callable[[], T]) -> tuple[T, dict[str, Any]]:
@@ -67,7 +114,7 @@ class RequestTiming:
             raise BenchmarkContractError("Cannot mark a finished request")
         self.marks.setdefault(name, self.clock() - self.started)
 
-    def record(self) -> dict[str, Any]:
+    def record(self) -> RequestRecord:
         return {
             "timing_scope": "resident_request",
             "request_seconds": self.seconds,
@@ -94,8 +141,8 @@ class BenchmarkLifecycle:
         self.clock = clock
         self.state = "new"
         self.prepared_identity: str | None = None
-        self.phases: list[dict[str, Any]] = []
-        self.requests: list[dict[str, Any]] = []
+        self.phases: list[PhaseRecord] = []
+        self.requests: list[RequestRecord] = []
         self.errors: list[str] = []
         self.active_request = False
 
@@ -191,7 +238,7 @@ class BenchmarkLifecycle:
 
     def measure(
         self, operation: Callable[[], T], *, accept: Callable[[T], bool] | None = None
-    ) -> tuple[T, dict[str, Any]]:
+    ) -> tuple[T, RequestRecord]:
         with self.request() as timing:
             value = operation()
             if accept is not None and not accept(value):
@@ -208,7 +255,7 @@ class BenchmarkLifecycle:
         child.state = "warm"
         return child
 
-    def record(self) -> dict[str, Any]:
+    def record(self) -> LifecycleRecord:
         durations = {row["phase"]: row["seconds"] for row in self.phases}
         return {
             "schema": "benchmark-lifecycle-v1",
@@ -247,16 +294,18 @@ class BenchmarkLifecycle:
                 raise
 
 
-def summarize_requests(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    eligible = [
-        row["request_seconds"]
-        for row in rows
-        if row.get("timing_scope") == "resident_request"
-        and row.get("status") == "completed"
-        and type(row.get("request_seconds")) in (int, float)
-        and math.isfinite(row["request_seconds"])
-        and row["request_seconds"] >= 0
-    ]
+def summarize_requests(rows: Sequence[RequestRecord | dict[str, Any]]) -> RequestSummary:
+    """Pool completed resident requests; rows may come from a report, so each is checked, not trusted."""
+    eligible: list[float] = []
+    for row in rows:
+        seconds = row.get("request_seconds")
+        if row.get("timing_scope") != "resident_request" or row.get("status") != "completed":
+            continue
+        # - bool is an int, and a flag is not a duration
+        if isinstance(seconds, bool) or not isinstance(seconds, int | float):
+            continue
+        if math.isfinite(seconds) and seconds >= 0:
+            eligible.append(seconds)
     return {
         "timing_scope": "resident_request",
         "samples": len(eligible),
@@ -267,9 +316,10 @@ def summarize_requests(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def summarize_report(value: object) -> dict[str, Any]:
+def summarize_report(value: object) -> RequestSummary:
     """Collect lifecycle records once; never promote arbitrary elapsed-time fields."""
-    rows: list[dict[str, Any]] = []
+    # - rows come from a report on disk, so the record shape is trusted, not validated
+    rows: list[RequestRecord | dict[str, Any]] = []
 
     def visit(item: object) -> None:
         if isinstance(item, dict):
