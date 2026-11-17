@@ -1,12 +1,13 @@
 """Which test classes a change can reach, from the import graph walked one hop backwards.
 
 The default run is a feedback loop, not a guarantee: one hop back from the change keeps the classes
-whose module changed or imports a changed module, and the full run at push catches the rest. Only a
-Python module narrows the run, so a change set with no Python path runs no class; `FULL_TRIGGERS` keeps
-every class when its own code changes, and `--all` always does.
+whose module changed or imports a changed module, and the full run at push catches the rest. A change
+set with no Python module runs no class, while an empty one keeps them all; a comment or docstring edit
+runs nothing wherever it lands, and `FULL_TRIGGERS` keeps every class when its own code changes.
 
-The graph is parsed from source, never imported. A parent package joins it when it is a tracked module
-itself, because importing `scripts.x.y` runs `scripts/x/__init__.py`.
+The graph is parsed from source, never imported, and holds every Python file under `scripts/` that is on
+disk: tracked, or untracked and not ignored. A parent package joins it when it is such a file itself,
+because importing `scripts.x.y` runs `scripts/x/__init__.py`.
 
 Two gaps stay invisible: a name assembled at runtime, and a file reached through `subprocess`, `runpy`
 or `open`. A third is silent here - an unparsable file gets no edges, so a change below it can drop a
@@ -58,20 +59,24 @@ def module_name(path: str) -> str | None:
     return ".".join(parts) if len(parts) > 1 else None
 
 
-def tracked_sources(root: Path | None = None) -> list[str]:
-    """Tracked Python files under `scripts/`; the ignored state and test-output trees never enter the graph."""
+def source_files(root: Path | None = None) -> list[str]:
+    """Every Python file under `scripts/` on disk, tracked or untracked-but-not-ignored.
+
+    `--cached` is required: `--others` alone lists untracked files only. The ignored state and
+    test-output trees never enter the graph.
+    """
     return [
         line
-        for line in git("ls-files", "scripts", root=root).splitlines()
+        for line in git("ls-files", "--cached", "--others", "--exclude-standard", "scripts", root=root).splitlines()
         if line.startswith("scripts/") and line.endswith(".py")
     ]
 
 
 def module_files(root: Path | None = None) -> dict[str, Path]:
-    """Module name to source file, for every tracked module under `scripts/` that still exists on disk."""
+    """Module name to source file, for every module under `scripts/` that exists on disk."""
     base = project_cfg.BASE_DIR if root is None else root
     files: dict[str, Path] = {}
-    for relative in tracked_sources(root):
+    for relative in source_files(root):
         path = base / relative
         name = module_name(relative)
         if name and path.is_file():
@@ -80,7 +85,12 @@ def module_files(root: Path | None = None) -> dict[str, Path]:
 
 
 def _without_docstrings(tree: ast.Module) -> str:
-    """The tree as text with every docstring blanked, so a comment or docstring edit compares equal."""
+    """The tree as text with every docstring removed, so a comment or docstring edit compares equal.
+
+    A body left with no statement gets a `pass`, because a function holding only a docstring and one
+    holding `pass` are the same program; blanking the string instead would stop an added or removed
+    docstring from comparing equal.
+    """
     for node in ast.walk(tree):
         if not isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
@@ -155,10 +165,7 @@ def imported_names(tree: ast.Module, module: str, *, is_package: bool) -> set[st
 
 
 def literal_targets(tree: ast.Module, known: set[str]) -> set[str]:
-    """Dotted module names a file spells in a string matching a known module exactly.
-
-    String constants matching a known module name exactly are treated as dependencies.
-    """
+    """Dotted module names a file spells in a string, matching a known module exactly."""
     return {
         node.value
         for node in ast.walk(tree)
@@ -186,9 +193,9 @@ def _parent_packages(module: str, known: set[str]) -> set[str]:
 
 
 def import_graph(root: Path | None = None) -> Graph:
-    """Module name to the modules it depends on, for every tracked module under `scripts/`.
+    """Module name to the modules it depends on, for every module under `scripts/` on disk.
 
-    A dependency is an import, an exact string naming a known module, or a tracked parent package.
+    A dependency is an import, an exact string naming a known module, or a parent package.
     """
     files = module_files(root)
     known = set(files)
@@ -241,21 +248,19 @@ class Selection(NamedTuple):
 def select(
     groups: tuple[TestGroup, ...], *, full: bool = False, paths: list[str] | None = None, root: Path | None = None
 ) -> Selection:
-    """Keep the classes a Python change can reach; a change set with no Python path runs no class.
+    """Keep the classes a Python change can reach; a change set with no Python module runs no class.
 
-    A class is kept if its module is in the reverse closure of the changed modules.
-    A document, config or batch path contributes no module, so it neither narrows nor widens the run;
-    `FULL_TRIGGERS` and `--all` are the only ways to ask for every class.
+    A class is kept if its module is in the reverse closure of the changed modules. A document, config
+    or batch path contributes no module, so it neither narrows nor widens the run; `FULL_TRIGGERS` keeps
+    every class when its own code changes, and `--all` always does.
     """
     if full:
         return Selection(groups, (), "--all")
     changed = changed_paths(root) if paths is None else paths
     if not changed:
         return Selection(groups, (), "no change set")
-    # - a trigger decides what the suite is, but a comment or docstring edit to it decides nothing
-    changed = [
-        path for path in changed if not (path in FULL_TRIGGERS and path.endswith(".py") and cosmetic_only(path, root))
-    ]
+    # - a comment or docstring edit changes nothing a test can see, wherever it lands
+    changed = [path for path in changed if not (path.endswith(".py") and cosmetic_only(path, root))]
     if not changed:
         return Selection((), groups, "comment or docstring only")
     if triggers := FULL_TRIGGERS.intersection(changed):
@@ -266,9 +271,6 @@ def select(
         return Selection((), groups, "no Python change")
 
     edges = import_graph(root)
-    # A module git has not seen yet still reaches the classes that import it.
-    for name in changed_modules:
-        edges.setdefault(name, frozenset())
     reachable = reverse_closure(edges, changed_modules, depth=SCOPE_DEPTH)
 
     kept: list[TestGroup] = []
