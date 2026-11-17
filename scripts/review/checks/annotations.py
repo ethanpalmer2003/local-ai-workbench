@@ -15,7 +15,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
-from scripts.review.lists.sources import maintained_files
+from scripts.review.lists.sources import check_targets, maintained_files
 
 # - the two ends of one rule: the worst annotation in this tree scores 20, and 22 sit above 14
 WARN_SCORE = 14
@@ -150,8 +150,9 @@ def future_imports(paths: list[Path] | None = None) -> list[Path]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args(argv)
-    over = findings()
+    parser.add_argument("paths", nargs="*", help="files to check (default: every maintained Python file)")
+    args = parser.parse_args(argv)
+    over = findings(check_targets(args.paths, (".py",)))
     for item in over[:MAX_REPORTED]:
         print(f"[{'FAIL' if item.score > MAX_SCORE or item.depth > MAX_DEPTH else 'INFO'}] {item}")
     if len(over) > MAX_REPORTED:

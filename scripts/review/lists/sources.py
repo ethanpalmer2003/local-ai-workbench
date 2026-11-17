@@ -37,3 +37,14 @@ def maintained_files() -> list[Path]:
                 elif path.is_file() and path.suffix in (".py", ".md", ".bat"):
                     files.append(path)
     return files
+
+
+def check_targets(argv: list[str] | None, suffixes: tuple[str, ...]) -> list[Path]:
+    """The files a section reads: its positional arguments when given, otherwise the whole tree.
+
+    A section takes repo-relative paths so the scoped run reads only the change, while the full run
+    passes nothing and keeps its whole-tree guarantee.
+    """
+    if argv:
+        return [project_cfg.BASE_DIR / path for path in argv]
+    return [path for path in maintained_files() if path.suffix in suffixes]

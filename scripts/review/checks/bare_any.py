@@ -10,7 +10,7 @@ import ast
 
 from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
-from scripts.review.lists.sources import maintained_files
+from scripts.review.lists.sources import check_targets, maintained_files
 
 
 def bare_any(path) -> list[tuple[str, int, str]]:
@@ -41,10 +41,10 @@ def bare_any(path) -> list[tuple[str, int, str]]:
     return found
 
 
-def findings() -> list[tuple[str, int, str]]:
+def findings(paths=None) -> list[tuple[str, int, str]]:
     """Every bare `Any` outside the tests tree."""
     found = []
-    for path in maintained_files():
+    for path in maintained_files() if paths is None else paths:
         if path.suffix != ".py":
             continue
         if path.relative_to(project_cfg.BASE_DIR).as_posix().startswith("scripts/tests/"):
@@ -55,8 +55,9 @@ def findings() -> list[tuple[str, int, str]]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args(argv)
-    over = findings()
+    parser.add_argument("paths", nargs="*", help="files to check (default: every maintained Python file)")
+    args = parser.parse_args(argv)
+    over = findings(check_targets(args.paths, (".py",)))
     for relative, line, signature in over[:MAX_REPORTED]:
         print(f"[FAIL] {relative}:{line}: {signature}")
     if len(over) > MAX_REPORTED:

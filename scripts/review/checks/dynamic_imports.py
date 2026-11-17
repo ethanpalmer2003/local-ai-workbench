@@ -10,7 +10,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
-from scripts.review.lists.sources import maintained_files
+from scripts.review.lists.sources import check_targets
 
 LOADERS = frozenset(
     {
@@ -59,8 +59,7 @@ def issues(path: Path) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    _ = argv
-    files = [path for path in maintained_files() if path.suffix == ".py"]
+    files = check_targets(argv, (".py",))
     exempt = [path for path in files if path.relative_to(project_cfg.BASE_DIR).as_posix() in ALLOWED]
     found = [issue for path in files if path not in exempt for issue in issues(path)]
     if not found:

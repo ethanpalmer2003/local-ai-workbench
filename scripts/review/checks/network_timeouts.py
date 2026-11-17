@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 from scripts.review import MAX_REPORTED
-from scripts.review.lists.sources import maintained_files
+from scripts.review.lists.sources import check_targets
 
 CALL = re.compile(
     r"(?:urllib\.request\.)?urlopen\("
@@ -53,8 +53,7 @@ def issues(path: Path) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    _ = argv
-    files = [path for path in maintained_files() if path.suffix == ".py" and "tests" not in path.parts]
+    files = [path for path in check_targets(argv, (".py",)) if "tests" not in path.parts]
     found = [issue for path in files for issue in issues(path)]
     if not found:
         print(f"[OK] Network timeouts: {len(files)} files, 0 issues")

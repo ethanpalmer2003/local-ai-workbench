@@ -139,6 +139,14 @@ class GateScopeTests(unittest.TestCase):
             self.assertEqual(gate.scoped_type_check(["scripts/a.py"], False), 0)
         full.assert_called_once_with(False)
 
+    def test_a_section_reads_its_arguments_or_the_whole_tree(self):
+        from scripts.config import project_config as project_cfg
+        from scripts.review.lists import sources
+
+        with patch.object(sources, "maintained_files", return_value=[Path("scripts/tests/a.py")]):
+            self.assertEqual(sources.check_targets([], (".py",)), [Path("scripts/tests/a.py")])
+        self.assertEqual(sources.check_targets(["notes/TODO.md"], (".py",)), [project_cfg.BASE_DIR / "notes/TODO.md"])
+
     def test_formatting_targets_the_change_and_falls_back_to_the_tree(self):
         from scripts.review import format_py
 

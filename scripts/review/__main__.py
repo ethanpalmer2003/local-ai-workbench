@@ -56,9 +56,10 @@ def _spelling_targets() -> list[str]:
     return [item for item in listed if item and not item.startswith(SPELL_EXCLUDED)]
 
 
-def spelling_check() -> int:
+def spelling_check(paths: list[str] | None = None) -> int:
+    """Codespell over the change at edit time and the whole tree at push."""
     checker = project_cfg.VENV_DIR / "Scripts" / "codespell.exe"
-    targets = _spelling_targets()
+    targets = list(paths) if paths else _spelling_targets()
     status = 0
     for start in range(0, len(targets), 80):
         status |= subprocess.run(
@@ -265,6 +266,7 @@ def touched_gate(argv: list[str] | None = None) -> int:
     """Run only the sections the working tree changed since upstream, cheapest first."""
     argv = list(sys.argv[1:] if argv is None else argv)
     changed = changed_paths()
+    python_files = [path for path in changed if path.endswith(".py")]
     selected = touched_sections(changed)
     print(f"=== TOUCHED: {', '.join(sorted(selected))} ===", flush=True)
     table = (
@@ -273,21 +275,21 @@ def touched_gate(argv: list[str] | None = None) -> int:
         ("docs", "\n=== DOCUMENTATION ===", lambda: docs.main([])),
         ("model references", "\n=== MODEL REFERENCE DRIFT ===", model_references.main),
         ("front-end wiring", "\n=== FRONT-END WIRING ===", frontend_wiring.main),
-        ("network timeouts", "\n=== NETWORK TIMEOUTS ===", lambda: network_timeouts.main([])),
-        ("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main([])),
+        ("network timeouts", "\n=== NETWORK TIMEOUTS ===", lambda: network_timeouts.main(python_files)),
+        ("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main(python_files)),
         ("lint", "\n=== LINT ===", lint_check),
         ("types", "", lambda: scoped_type_check(changed, _flag(argv, "--fast"))),
         ("formatting", "\n=== PYTHON FORMATTING ===", format_check),
         ("inventory", "", lambda: inventory_check(package_audit.summary(), _flag(argv, "--fast"))),
-        ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main([])),
-        ("comments", "\n=== COMMENTS ===", lambda: comments.main([])),
-        ("annotations", "\n=== ANNOTATION COMPLEXITY ===", lambda: annotations.main([])),
-        ("line length", "\n=== LINE LENGTH ===", lambda: line_length.main([])),
-        ("bare any", "\n=== BARE ANY ===", lambda: bare_any.main([])),
+        ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main(changed)),
+        ("comments", "\n=== COMMENTS ===", lambda: comments.main(python_files)),
+        ("annotations", "\n=== ANNOTATION COMPLEXITY ===", lambda: annotations.main(python_files)),
+        ("line length", "\n=== LINE LENGTH ===", lambda: line_length.main(python_files)),
+        ("bare any", "\n=== BARE ANY ===", lambda: bare_any.main(python_files)),
         ("dead code", "\n=== DEAD CODE ===", lambda: dead_code.main([])),
-        ("dynamic imports", "\n=== DYNAMIC IMPORTS ===", lambda: dynamic_imports.main([])),
-        ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
-        ("spelling", "\n=== SPELLING ===", spelling_check),
+        ("dynamic imports", "\n=== DYNAMIC IMPORTS ===", lambda: dynamic_imports.main(python_files)),
+        ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main(changed)),
+        ("spelling", "\n=== SPELLING ===", lambda: spelling_check(changed)),
         ("advisories", "", lambda: advisory_check(_flag(argv, "--fast"))),
         ("lock check", "\n=== DEPENDENCY HYGIENE ===", package_audit.lock_issues),
         ("deptry", "", declaration_check),
