@@ -29,7 +29,7 @@ FULL_TRIGGERS = frozenset(
     {
         # - the two files that decide what the suite is, and only when their code changes
         "scripts/tests/run.py",
-        "scripts/tests/selection.py",
+        "scripts/tests/scoped_selection.py",
     }
 )
 # - the default scope stops here: the full run before a push is what catches a transitive miss
