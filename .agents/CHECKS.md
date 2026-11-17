@@ -14,7 +14,7 @@
 
 ## When
 
-- An edit is the cheapest level: `python -m scripts.review --fast` and the test module the edit touches. About five seconds.
+- An edit is the cheapest level: `python -m scripts.review --fast` and the test module the edit touches. About twelve seconds.
 - A commit runs the hooks: ruff, codespell, typography, then the scoped gate and the scoped suite. A document change is seconds; a code change is about twenty-five.
 - A push runs the same hooks at full width: `python -m scripts.review --all` and `python -m scripts.tests.run --all`. About a minute, and this is the completeness guarantee.
 - The suite is a feedback loop: by default one import hop from the change, `--all` at push for the rest. No Python path runs none, a comment or docstring edit runs none, and the manifests keep every class on a code change; the launcher and proxy block is in this set rather than outside it; see [selection](../scripts/tests/selection.py).
