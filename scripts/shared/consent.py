@@ -20,6 +20,8 @@ from pathlib import Path
 
 # - the repository's approval bound for a single run, in seconds
 LONG_RUN_SECONDS = 300
+# - the one spelling of the flag a caller passes instead of answering the prompt
+FLAG = "--yes"
 
 
 def is_long(expected_seconds: float) -> bool:
@@ -70,12 +72,12 @@ def take(argv: list[str] | None = None) -> tuple[bool, list[str]]:
     its raw arguments to another entry point.
     """
     arguments = list(sys.argv[1:] if argv is None else argv)
-    return "--yes" in arguments, [argument for argument in arguments if argument != "--yes"]
+    return FLAG in arguments, [argument for argument in arguments if argument != FLAG]
 
 
 def forward(given: bool, arguments: list[str]) -> list[str]:
     """Re-attach `--yes` when handing arguments to a delegate that would otherwise ask again."""
-    return [*(["--yes"] if given else []), *arguments]
+    return [*([FLAG] if given else []), *arguments]
 
 
 def require(expected_seconds: float, what: str = "") -> None:
@@ -93,5 +95,5 @@ def require(expected_seconds: float, what: str = "") -> None:
 def flag(parser: argparse.ArgumentParser) -> None:
     """Add the `--yes` that lets an unattended long run or an irreversible action start."""
     parser.add_argument(
-        "--yes", action="store_true", help="confirm a run that takes minutes or stops something; otherwise ask"
+        FLAG, action="store_true", help="confirm a run that takes minutes or stops something; otherwise ask"
     )

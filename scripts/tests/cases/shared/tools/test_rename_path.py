@@ -1,7 +1,10 @@
 """Renaming a path repoints its references and reports the ones it could not reach."""
 
+import contextlib
+import io
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from scripts.tests.shared.paths import CasePaths
 from scripts.tools import rename_path
@@ -116,6 +119,27 @@ class ReferenceRewriteTests(unittest.TestCase):
         self.assertIn("[a](a/RETIRED.md)", doc)
         self.assertIn("b/README.md", doc)
         self.assertEqual(doc.count("RETIRED"), 1, "only the moved file's own path changes")
+
+
+class PreviewTests(unittest.TestCase):
+    def test_a_preview_counts_references_without_writing(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            (root / "a.md").write_text("notes/OLD.md and notes/OLD.md\n", encoding="utf-8")
+            planned = rename_path.preview({"notes/OLD.md": "notes/NEW.md"}, root=root)
+            self.assertEqual([(path.name, count) for path, count in planned], [("a.md", 2)])
+            self.assertIn("OLD", (root / "a.md").read_text(encoding="utf-8"))
+
+    def test_without_apply_main_reports_the_count_and_writes_nothing(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            (root / "a.md").write_text("notes/OLD.md\n", encoding="utf-8")
+            printed = io.StringIO()
+            with patch.object(rename_path, "ROOT", root), contextlib.redirect_stdout(printed):
+                self.assertEqual(rename_path.main(["--move", "notes/OLD.md=notes/NEW.md"]), 0)
+            self.assertIn("OLD", (root / "a.md").read_text(encoding="utf-8"))
+        self.assertIn("[PREVIEW] 1 reference(s) in 1 file(s)", printed.getvalue())
+        self.assertIn("[NEXT] re-run with --apply", printed.getvalue())
 
 
 class ScanScopeTests(unittest.TestCase):

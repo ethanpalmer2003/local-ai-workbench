@@ -2,12 +2,15 @@
 
 Run from C:/AI:
   python -m scripts.tools.rename_path --move notes/OLD.md=notes/NEW.md
-  python -m scripts.tools.rename_path --move scripts/config/old=scripts/config/new --dry-run
+  python -m scripts.tools.rename_path --move notes/OLD.md=notes/NEW.md --apply
 
 The move is `git mv`, so history follows the path. References are the basenames, repo-relative
 paths, dotted module names and `from package import module` imports that appear in Markdown,
-Python, batch, YAML and JSON sources. Afterwards the docs and layout checks fail on any link or
-rule the rewrite missed, so a move ends with `python -m scripts.review`.
+Python, batch, YAML and JSON sources. The tool always previews the count and the files first: a
+rename rewrites many files, and a count read after the fact is too late to stop one that went wide.
+Writing needs `--apply` and the consent flag, so an unattended run cannot move anything by accident.
+Afterwards the docs and layout checks fail on any link or rule the rewrite missed, so a move ends
+with `python -m scripts.review`.
 """
 
 from __future__ import annotations
@@ -21,6 +24,7 @@ from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path, PurePosixPath
 
+from scripts.shared import consent
 from scripts.tools.rewrite_imports import EXCLUDED
 
 # - the workspace trees this repository does not own, so a source path is never a reference from there
@@ -149,29 +153,70 @@ def text_files(root: Path) -> Iterable[Path]:
                 yield path
 
 
-def rewrite_references(moves: dict[str, str], *, dry_run: bool, root: Path = ROOT) -> list[Path]:
-    # - the scan size is printed because a wrong root or an unpruned tree is the way this tool goes slow
-    scanned = list(text_files(root))
-    print(f"[SCAN] {len(scanned)} text file(s) under {root}")
-    names = tree_names(root)
-    pairs = [
+def rewrite_text(
+    text: str, pairs: list[tuple[str, str]], dotted: list[tuple[str, str]], imports: list[tuple[str, str, str]]
+) -> tuple[str, int]:
+    """Apply every reference form to one file's text, and count the references that changed."""
+    updated = text
+    changes = 0
+    for old, new in pairs:
+        changes += updated.count(old)
+        updated = updated.replace(old, new)
+    for old, _new in dotted:
+        changes += len(re.findall(rf"{re.escape(old)}(?![\w])", updated))
+    updated = rename_dotted(updated, dotted)
+    updated = rename_import_names(updated, imports)
+    return updated, changes
+
+
+def _moved_forms(moves: dict[str, str]) -> tuple[list[tuple[str, str]], list[tuple[str, str, str]]]:
+    """The dotted and import-name forms, which do not depend on where the move happens."""
+    dotted = [pair for old, new in moves.items() for pair in dotted_forms(old, new)]
+    imports = [form for old, new in moves.items() for form in import_name_forms(old, new)]
+    return dotted, imports
+
+
+def _pairs(moves: dict[str, str], names: Counter[str]) -> list[tuple[str, str]]:
+    """Path and basename pairs; a bare basename counts only when the tree holds no other file by that name."""
+    return [
         pair
         for move, target in moves.items()
         for pair in reference_forms(move, target, bare=names[PurePosixPath(move).name] == 0)
     ]
-    dotted = [pair for old, new in moves.items() for pair in dotted_forms(old, new)]
-    imports = [form for old, new in moves.items() for form in import_name_forms(old, new)]
+
+
+def names_after_move(moves: dict[str, str], root: Path = ROOT) -> Counter[str]:
+    """Basename counts as they will be once the moves land, so a preview matches the write."""
+    names = tree_names(root)
+    for move in moves:
+        names[PurePosixPath(move).name] -= 1
+    return +names
+
+
+def preview(moves: dict[str, str], *, root: Path = ROOT) -> list[tuple[Path, int]]:
+    """Every file the rewrite would touch and how many references each holds, without writing."""
+    pairs = _pairs(moves, names_after_move(moves, root))
+    dotted, imports = _moved_forms(moves)
+    planned = []
+    for path in text_files(root):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        updated, changes = rewrite_text(text, pairs, dotted, imports)
+        if updated != text:
+            planned.append((path, changes))
+    return planned
+
+
+def rewrite_references(moves: dict[str, str], *, dry_run: bool, root: Path = ROOT) -> list[Path]:
+    # - the scan size is printed because a wrong root or an unpruned tree is the way this tool goes slow
+    scanned = list(text_files(root))
+    pairs = _pairs(moves, tree_names(root))
+    dotted, imports = _moved_forms(moves)
     changed = []
     for path in scanned:
         text = path.read_text(encoding="utf-8", errors="replace")
-        updated = text
-        for old, new in pairs:
-            updated = updated.replace(old, new)
-        updated = rename_dotted(updated, dotted)
-        updated = rename_import_names(updated, imports)
+        updated, _changes = rewrite_text(text, pairs, dotted, imports)
         if updated == text:
             continue
-        print(f"[UPDATE] {path.relative_to(root).as_posix()}")
         changed.append(path)
         if not dry_run:
             path.write_text(updated, encoding="utf-8", newline="\n")
@@ -211,20 +256,33 @@ def tree_names(root: Path) -> Counter[str]:
     return names
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--move", action="append", default=[], metavar="OLD=NEW", help="Repo-relative path mapping")
-    parser.add_argument("--dry-run", action="store_true", help="Report the move and the files without writing")
-    args = parser.parse_args()
+    parser.add_argument("--apply", action="store_true", help="Move the paths and rewrite; without it, preview only")
+    parser.add_argument("--dry-run", action="store_true", help="Preview only, which is the default; kept for habit")
+    consent.flag(parser)
+    args = parser.parse_args(argv)
     try:
         moves = parse_moves(args.move)
     except ValueError as error:
         parser.error(str(error))
 
-    move_paths(moves, dry_run=args.dry_run)
-    changed = rewrite_references(moves, dry_run=args.dry_run)
-    action = "would update" if args.dry_run else "updated"
-    print(f"[OK] {action} {len(changed)} file(s); run `python -m scripts.review` for the link checks")
+    planned = preview(moves, root=ROOT)
+    references = sum(count for _path, count in planned)
+    print(f"[SCAN] {len(list(text_files(ROOT)))} text file(s) under {ROOT}")
+    print(f"[PREVIEW] {references} reference(s) in {len(planned)} file(s)")
+    for path, count in planned:
+        print(f"[PREVIEW] {path.relative_to(ROOT).as_posix()} ({count} reference(s))")
+    if not args.apply or args.dry_run:
+        print(f"[NEXT] re-run with --apply and {consent.FLAG} to move and rewrite")
+        return 0
+    if not consent.confirm(f"Move {len(moves)} path(s) and rewrite {len(planned)} file(s)", args.yes):
+        return 1
+
+    move_paths(moves, dry_run=False)
+    changed = rewrite_references(moves, dry_run=False)
+    print(f"[OK] moved {len(moves)} path(s); updated {len(changed)} file(s); run `python -m scripts.review`")
     remaining = leftovers(moves)
     for line in remaining:
         print(f"[WARN] Reference outside the rewrite: {line}")
