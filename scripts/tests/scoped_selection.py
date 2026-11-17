@@ -33,12 +33,13 @@ TestGroup = type[unittest.TestCase]
 
 def _without_docstrings(tree: ast.Module) -> str:
     """Return the AST dump with docstrings removed, so a comment or docstring edit compares equal."""
+    scopes = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
     for node in ast.walk(tree):
-        if not isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+        if not isinstance(node, scopes) or not node.body:
             continue
-        first = node.body[0] if node.body else None
+        first = node.body[0]
         if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
-            node.body = node.body[1:]
+            node.body = node.body[1:] or [ast.Pass()]
     return ast.dump(tree)
 
 
@@ -89,10 +90,16 @@ def select(
     changed = [path for path in changed if not (path.endswith(".py") and cosmetic_only(path, root))]
     if not changed:
         return Selection((), groups, "comment or docstring only")
-    if triggers := FULL_TRIGGERS.intersection(changed):
+
+    triggers = FULL_TRIGGERS.intersection(changed)
+    if triggers:
         return Selection(groups, (), f"manifest changed: {sorted(triggers)[0]}")
 
-    changed_modules = {name for path in changed if (name := module_name(path))}
+    changed_modules: set[str] = set()
+    for path in changed:
+        name = module_name(path)
+        if name:
+            changed_modules.add(name)
     if not changed_modules:
         return Selection((), groups, "no Python change")
 
