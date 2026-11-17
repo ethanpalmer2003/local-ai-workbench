@@ -320,4 +320,8 @@ if __name__ == "__main__":
         # - the scope follows the change; --all runs every class, and run.py keeps it exhaustive
         selection = select(GROUPS, full="--all" in sys.argv[1:])
         print(f"[SCOPE] {len(selection.kept)} of {len(GROUPS)} test classes ({selection.why})", flush=True)
+        if not selection.kept:
+            # - a change set with no Python module runs nothing; pytest with no node ids would collect all
+            print("[SCOPE] nothing to run; pass --all for every class", flush=True)
+            raise SystemExit(0)
         raise SystemExit(frameworks_smoke.main(extra_groups=selection.kept, scope_note=selection.why))

@@ -1,10 +1,11 @@
 """Which test classes a change can reach, from the import graph walked backwards.
 
 The model-free suite holds well over a hundred classes, and most changes touch a few modules, so the
-default run keeps the classes whose own module, or anything that module imports, sits in the changed
-files' reverse import closure. Anything the graph cannot account for - a path outside `scripts/`, a
-non-Python file, a manifest such as `scripts/tests/run.py` - keeps every class, because a wrong
-omission hides a regression while a wrong inclusion only costs seconds.
+default run keeps only the classes whose module sits in the changed modules' reverse import closure.
+Only a Python module narrows the run: a document, batch file, config or other path contributes no
+module at all, because the gate checks those on every commit; a change set with no Python path runs
+no class. The manifests in `FULL_TRIGGERS` are the exception and keep every class, and `--all` runs
+everything.
 
 The graph is parsed from source, never imported, so it stays model-free. Importing `scripts.x.y` also
 runs `scripts/x/__init__.py`, so every module gets an edge to each of its parent packages. Three gaps
@@ -13,7 +14,6 @@ remain and they are not equal: a module name assembled at runtime, and a Python 
 edges at all. That last one is silent to this module - a change below a broken file can drop a class
 above it - and is caught one step earlier instead, because ruff and pyright fail the gate on any
 maintained file that does not parse. A new module git has not seen resolves to its parent package.
-The fallback is broad rather than clever, and `--all` exists, because of those gaps.
 """
 
 from __future__ import annotations
@@ -28,7 +28,17 @@ from typing import NamedTuple
 from scripts.config import project_config as project_cfg
 from scripts.shared.changes import changed_paths, git
 
-FULL_TRIGGERS = frozenset({"scripts/tests/run.py", "scripts/tests/selection.py"})
+FULL_TRIGGERS = frozenset(
+    {
+        # - the manifests that decide what the suite is
+        "scripts/tests/run.py",
+        "scripts/tests/selection.py",
+        # - the top package's init runs before any module inside it, and these change how everything runs
+        "scripts/__init__.py",
+        "pyproject.toml",
+        "uv.lock",
+    }
+)
 
 Graph = dict[str, frozenset[str]]
 TestGroup = type[unittest.TestCase]
@@ -40,8 +50,8 @@ TestGroup = type[unittest.TestCase]
 def module_name(path: str) -> str | None:
     """`scripts/x/y.py` becomes `scripts.x.y`, a package `__init__.py` names its package, anything else is None.
 
-    A JSON, YAML, template or Markdown path is not a module even when it sits under `scripts/`; treating it
-    as one would read a data change as a code change and quietly narrow the scope.
+    A document, template or config path is not a module even under `scripts/`, so it neither narrows the
+    run nor asks for the full suite.
     """
     if not path.endswith(".py"):
         return None
@@ -203,25 +213,25 @@ class Selection(NamedTuple):
 def select(
     groups: tuple[TestGroup, ...], *, full: bool = False, paths: list[str] | None = None, root: Path | None = None
 ) -> Selection:
-    """Keep the classes a change can reach; `full`, an empty change set or an unmodelled path keeps them all.
+    """Keep the classes a Python change can reach; a change set with no Python path runs no class.
 
     A class is reachable when its module is in the reverse closure of the changed modules. That is
     equivalent to its dependencies overlapping the closure, and needs one search instead of one per class.
+    A document, config or batch path contributes no module, so it neither narrows nor widens the run;
+    `FULL_TRIGGERS` and `--all` are the only ways to ask for every class.
     """
     if full:
         return Selection(groups, (), "--all")
     changed = changed_paths(root) if paths is None else paths
     if not changed:
         return Selection(groups, (), "no change set")
-
-    modules_by_path = {path: module_name(path) for path in changed}
-    unmodelled = sorted(path for path, name in modules_by_path.items() if name is None)
-    if unmodelled:
-        return Selection(groups, (), f"not a Python module: {unmodelled[0]}")
     if triggers := FULL_TRIGGERS.intersection(changed):
         return Selection(groups, (), f"manifest changed: {sorted(triggers)[0]}")
 
-    changed_modules = {name for name in modules_by_path.values() if name}
+    changed_modules = {name for path in changed if (name := module_name(path))}
+    if not changed_modules:
+        return Selection((), groups, "no Python change")
+
     edges = import_graph(root)
     # A module git has not seen yet still reaches the classes that import it.
     for name in changed_modules:
