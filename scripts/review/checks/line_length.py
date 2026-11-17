@@ -13,7 +13,7 @@ import tokenize
 
 from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
-from scripts.review.lists.sources import maintained_files
+from scripts.review.lists.sources import check_targets, maintained_files
 
 # - the one number this rule owns; ruff's formatter uses the same width
 LIMIT = 120
@@ -104,8 +104,9 @@ def accepted(paths=None) -> dict[str, int]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args(argv)
-    over = findings()
+    parser.add_argument("paths", nargs="*", help="files to check (default: every maintained Python file)")
+    args = parser.parse_args(argv)
+    over = findings(check_targets(args.paths, (".py",)))
     for relative, number, length, kind in over[:MAX_REPORTED]:
         print(f"[FAIL] {relative}:{number}: {length} characters ({kind}); wrap it")
     if len(over) > MAX_REPORTED:

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.review.lists import sources
+from scripts.review.lists.sources import check_targets
 
 OWNER = "scripts/config/local_overlay.py"
 DECLARES_PATHS = "scripts/config/project_config.py"
@@ -12,7 +13,8 @@ DECLARES_PATHS = "scripts/config/project_config.py"
 SELF_REFERENTIAL = {
     OWNER,
     "scripts/review/checks/overlay_access.py",
-    "scripts/tests/cases/shared/test_local_overlay.py",
+    "scripts/tests/cases/review/test_overlay_access.py",
+    "scripts/tests/cases/shared/tools/test_local_overlay.py",
 }
 ENV_READS = ("AI_INPUT_DIR", "AI_VOICES_DIR")
 ATTRIBUTE_READS = (".INPUT_DIR", ".VOICES_DIR")
@@ -23,12 +25,12 @@ def issues(root: Path | None = None, paths: list[Path] | None = None) -> list[st
     base = root or project_cfg.BASE_DIR
     found = []
     for entry in paths if paths is not None else sources.tracked_files():
-        path = entry.as_posix()
+        path = entry.as_posix() if not entry.is_absolute() else entry.relative_to(base).as_posix()
         if not path.startswith("scripts/") or not path.endswith(".py"):
             continue
         if path in SELF_REFERENTIAL or path == DECLARES_PATHS:
             continue
-        text = (base / entry).read_text(encoding="utf-8", errors="ignore")
+        text = (base / path).read_text(encoding="utf-8", errors="ignore")
         for name in ENV_READS:
             if f'"{name}"' in text or f"'{name}'" in text:
                 found.append(f"{path}: reads {name}; call local_overlay instead")
@@ -40,8 +42,9 @@ def issues(root: Path | None = None, paths: list[Path] | None = None) -> list[st
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args(argv)
-    found = issues()
+    parser.add_argument("paths", nargs="*", help="files to check (default: every maintained Python file)")
+    args = parser.parse_args(argv)
+    found = issues(paths=check_targets(args.paths, (".py",)))
     for issue in found:
         print(f"[FAIL] {issue}")
     if not found:
