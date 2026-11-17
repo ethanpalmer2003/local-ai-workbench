@@ -17,6 +17,7 @@ import os
 import re
 import subprocess
 import sys
+from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path, PurePosixPath
 
@@ -50,14 +51,18 @@ def parse_moves(values: list[str]) -> dict[str, str]:
     return moves
 
 
-def reference_forms(old: str, new: str) -> list[tuple[str, str]]:
-    """Every spelling a reference can take, longest first so a path wins over a basename."""
+def reference_forms(old: str, new: str, *, bare: bool = True) -> list[tuple[str, str]]:
+    """Every spelling a reference can take, longest first so a path wins over a basename.
+
+    The bare basename is only a reference when the tree holds one file by that name: rewriting
+    every `README.md` because one of forty moved is how a rename corrupts a repository.
+    """
     pairs: list[tuple[str, str]] = []
     if "/" in old:
         pairs.append((old, new))
         pairs.append((old.replace("/", "\\"), new.replace("/", "\\")))
     old_name, new_name = PurePosixPath(old).name, PurePosixPath(new).name
-    if old_name != new_name and PurePosixPath(old).suffix:
+    if bare and old_name != new_name and PurePosixPath(old).suffix:
         pairs.append((old_name, new_name))
     return sorted(pairs, key=lambda pair: len(pair[0]), reverse=True)
 
@@ -145,13 +150,18 @@ def text_files(root: Path) -> Iterable[Path]:
 
 
 def rewrite_references(moves: dict[str, str], *, dry_run: bool, root: Path = ROOT) -> list[Path]:
-    pairs = [pair for old, new in moves.items() for pair in reference_forms(old, new)]
-    dotted = [pair for old, new in moves.items() for pair in dotted_forms(old, new)]
-    imports = [form for old, new in moves.items() for form in import_name_forms(old, new)]
-    changed = []
     # - the scan size is printed because a wrong root or an unpruned tree is the way this tool goes slow
     scanned = list(text_files(root))
     print(f"[SCAN] {len(scanned)} text file(s) under {root}")
+    names = tree_names(root)
+    pairs = [
+        pair
+        for move, target in moves.items()
+        for pair in reference_forms(move, target, bare=names[PurePosixPath(move).name] == 0)
+    ]
+    dotted = [pair for old, new in moves.items() for pair in dotted_forms(old, new)]
+    imports = [form for old, new in moves.items() for form in import_name_forms(old, new)]
+    changed = []
     for path in scanned:
         text = path.read_text(encoding="utf-8", errors="replace")
         updated = text
@@ -170,15 +180,35 @@ def rewrite_references(moves: dict[str, str], *, dry_run: bool, root: Path = ROO
 
 def leftovers(moves: dict[str, str], *, root: Path = ROOT) -> list[str]:
     """References that survived the rewrite, which a manual review then has to explain."""
+    scanned = list(text_files(root))
+    names = tree_names(root)
     forms = [
-        pair for move, target in moves.items() for pair in (*reference_forms(move, target), *dotted_forms(move, target))
+        pair
+        for move, target in moves.items()
+        for pair in (
+            *reference_forms(move, target, bare=names[PurePosixPath(move).name] == 0),
+            *dotted_forms(move, target),
+        )
     ]
     names = [old for old, _ in forms]
     found = []
-    for path in text_files(root):
+    for path in scanned:
         text = path.read_text(encoding="utf-8", errors="replace")
         found.extend(f"{path.relative_to(root).as_posix()}: {name}" for name in names if name in text)
     return found
+
+
+def tree_names(root: Path) -> Counter[str]:
+    """How often each basename occurs under the pruned tree.
+
+    A bare reference names a file only when no other file shares that name, and it is counted
+    after the move: a basename still present elsewhere makes every bare spelling ambiguous.
+    """
+    names: Counter[str] = Counter()
+    for folder, subfolders, files in os.walk(root):
+        subfolders[:] = [name for name in subfolders if name not in PRUNE]
+        names.update(files)
+    return names
 
 
 def main() -> int:
