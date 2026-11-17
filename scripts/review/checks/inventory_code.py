@@ -201,6 +201,7 @@ def repository_inventory(root: Path) -> FolderInventory:
             {
                 "directory": "." if parent == root else parent.relative_to(root).as_posix(),
                 "files": len(visible_names),
+                "rule_files": len(visible_names) - sum(name == "__init__.py" for name in visible_names),
                 "subdirectories": len(children),
                 "items": len(visible_names) + len(children),
                 "markdown_files": markdown_files,
@@ -253,9 +254,10 @@ def folder_inventory_report(
             f"## Folder rule: at most {MAX_FOLDER_ITEMS} direct files, fewer than {MIN_FOLDER_ITEMS + 1} is a "
             f"candidate",
             "",
-            "Counts are prompts at the low end and a gate at both hard ends: split a crowded folder by purpose; a",
-            "small one stays when it carries an owner, a native layout or an output identity; a folder holding one",
-            "file and nothing else fails, because that file belongs to its parent.",
+            "Counts exclude `__init__.py`, so a package holding one module counts as one file. They are prompts at the",
+            "low end and a gate at both hard ends: split a crowded folder by purpose; a small one stays when it",
+            "carries an owner, a native layout or an output identity; a folder holding one file and nothing else",
+            "fails, because that file belongs to its parent.",
             "",
             "### Single-file folders (fails the gate)",
             "",
@@ -312,16 +314,19 @@ def _dependency_section(counts: dict[str, int]) -> list[str]:
 
 
 def folder_validation(folders: list[FolderRecord]) -> FolderEnds:
-    """Both ends of the folder rule: a one-file folder fails, a sparse one is a candidate, a full one fails."""
+    """Both ends of the folder rule: a one-file folder fails, a sparse one is a candidate, a full one fails.
+
+    `__init__` does not count: a package holding one module is that module with a wrapper around it.
+    """
     single = [
         item
         for item in folders
-        if int(item["files"]) == 1
+        if int(item["rule_files"]) == 1
         and int(item["subdirectories"]) == 0
         and not str(item["directory"]).startswith(SINGLE_FILE_LAYOUTS)
     ]
-    small = [item for item in folders if 1 < int(item["files"]) <= MIN_FOLDER_ITEMS]
-    crowded = [item for item in folders if int(item["files"]) > MAX_FOLDER_ITEMS]
+    small = [item for item in folders if 1 < int(item["rule_files"]) <= MIN_FOLDER_ITEMS]
+    crowded = [item for item in folders if int(item["rule_files"]) > MAX_FOLDER_ITEMS]
     return FolderEnds(single, small, crowded)
 
 

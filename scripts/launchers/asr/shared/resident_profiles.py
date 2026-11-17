@@ -8,7 +8,7 @@ from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.asr.whispercpp.server import server_command
+from scripts.launchers.asr.whispercpp import server_command
 
 
 def build_server_command(engine: str, port: int) -> list[str]:

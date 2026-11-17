@@ -18,7 +18,7 @@ from scripts.tests.shared.progress import ProgressBar
 from scripts.tools import stage_times
 
 PROBES = {
-    "parakeet": ("scripts.tests.cases.asr.parakeetcpp.smoke", [], 240),
+    "parakeet": ("scripts.tests.cases.asr.parakeetcpp", [], 240),
     "whisper": (
         "scripts.benchmarks.asr.whisper_embedded_compare",
         ["--order", "internal", "vulkan-fa", "--repetitions", "1", "--budget", "180"],

@@ -5,13 +5,14 @@ import unittest
 from scripts.review.checks import inventory_code
 
 
-def folder(directory: str, files: int, subdirectories: int) -> inventory_code.FolderRecord:
+def folder(directory: str, files: int, subdirectories: int, *, inits: int = 0) -> inventory_code.FolderRecord:
     """One inventory row, shaped the way `repository_inventory` builds it."""
     return {
         "directory": directory,
-        "files": files,
+        "files": files + inits,
+        "rule_files": files,
         "subdirectories": subdirectories,
-        "items": files + subdirectories,
+        "items": files + inits + subdirectories,
         "markdown_files": 0,
         "python_modules": 0,
     }
@@ -31,6 +32,10 @@ class FolderRuleTests(unittest.TestCase):
     def test_the_skill_loader_lays_out_one_folder_per_skill(self):
         ends = inventory_code.folder_validation([folder(".agents/skills/docs-writing", 1, 0)])
         self.assertEqual(ends.single, [])
+
+    def test_a_package_init_is_not_counted(self):
+        ends = inventory_code.folder_validation([folder("scripts/launchers/asr/handy", 1, 0, inits=1)])
+        self.assertEqual([item["directory"] for item in ends.single], ["scripts/launchers/asr/handy"])
 
     def test_two_to_three_files_stay_a_merge_candidate(self):
         ends = inventory_code.folder_validation([folder("scripts/config/models", 3, 0)])

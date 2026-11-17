@@ -22,7 +22,7 @@ from scripts.config import models
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.asr.koboldcpp import gemma_audio as gemma_kobold
+from scripts.launchers.asr import koboldcpp as gemma_kobold
 from scripts.launchers.asr.llamacpp import gemma_audio
 from scripts.launchers.koboldcpp import kobold
 from scripts.launchers.runtime.execution_context import require_native_execution

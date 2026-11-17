@@ -19,12 +19,12 @@ from scripts.benchmarks.shared.paths import RunPaths
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers import lemonade_server as lemonade
 from scripts.launchers.asr import selector
 from scripts.launchers.asr import server as asr_gateway
 from scripts.launchers.audiocpp import asr as audiocpp_asr
 from scripts.launchers.koboldcpp import kobold
 from scripts.launchers.launch_util import wait_for_backend
-from scripts.launchers.lemonade_server import lemonade
 from scripts.launchers.llamacpp import language_practice
 from scripts.launchers.shared.services import native
 from scripts.launchers.shared.services.process import stop_owned
