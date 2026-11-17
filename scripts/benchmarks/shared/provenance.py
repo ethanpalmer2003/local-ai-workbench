@@ -172,6 +172,6 @@ def block(
     }
 
 
-def digest(value: Any) -> str:
+def digest(value: object) -> str:
     """Stable short hash of a settings mapping, so two runs can be diffed by settings alone."""
     return hashlib.sha256(json.dumps(value, sort_keys=True, default=str).encode()).hexdigest()[:12]

@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, cast
 
 
 def _text_source(
@@ -55,7 +55,7 @@ CONTROL_NAMES = (
 )
 
 
-def _apply_control(graph: dict[str, Any], controls: dict[str, int], name: str, value: Any) -> None:
+def _apply_control(graph: dict[str, Any], controls: dict[str, int], name: str, value: object) -> None:
     if name not in controls:
         raise ValueError(f"Workflow has no {name} control; use the supplied simplified workflow")
     control = graph[str(controls[name])]
@@ -103,7 +103,7 @@ def patch_prompts(
     return saved
 
 
-def _text_encoder_ref(graph: dict[str, Any], kind: str, ref: Any) -> str | None:
+def _text_encoder_ref(graph: dict[str, Any], kind: str, ref: list[Any] | dict[str, Any]) -> str | None:
     """Walk a conditioning reference down to the TextEncode node it came from."""
     if not isinstance(ref, list) or len(ref) != 2:
         return None
@@ -229,7 +229,7 @@ class LTXWorkflowOverrides:
     def effective_settings(self, graph: dict[str, Any], controls: dict[str, int]) -> dict[str, Any]:
         """Resolve the supplied workflow's primitive controls and four-mode selectors."""
 
-        def value(source: Any) -> Any:
+        def value(source: object) -> object:
             if not isinstance(source, list):
                 return source
             node = graph[source[0]]
@@ -240,7 +240,7 @@ class LTXWorkflowOverrides:
             if expression == "a":
                 return value(inputs["values.a"])
             if expression == "b if a <= 1 else c if a == 2 else d if a == 3 else e":
-                mode = value(inputs["values.a"])
+                mode = cast(int, value(inputs["values.a"]))
                 key = "b" if mode <= 1 else "c" if mode == 2 else "d" if mode == 3 else "e"
                 return value(inputs[f"values.{key}"])
             raise ValueError(f"Unsupported settings expression: {expression}")

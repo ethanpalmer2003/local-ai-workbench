@@ -13,8 +13,12 @@ import time
 import uuid
 from dataclasses import asdict, replace
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, BinaryIO, TextIO
 
+import aiohttp
+from tqdm import tqdm
+
+from scripts.benchmarks.personal.comfyui.video_records import LaunchPlan, SelectedSources
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.benchmark import workflow_timing
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
@@ -184,7 +188,7 @@ def check_ports(port: int) -> None:
                 raise RuntimeError(f"Cannot reserve localhost port {candidate}: {error}") from error
 
 
-async def wait_ready(session: Any, base: str, process: subprocess.Popen[bytes]) -> dict[str, Any]:
+async def wait_ready(session: aiohttp.ClientSession, base: str, process: subprocess.Popen[bytes]) -> dict[str, Any]:
     import aiohttp
 
     deadline = time.monotonic() + 180
@@ -202,7 +206,7 @@ async def wait_ready(session: Any, base: str, process: subprocess.Popen[bytes]) 
     raise TimeoutError("ComfyUI startup exceeded 180 seconds")
 
 
-async def _submit_prompt(session: Any, base: str, graph: dict[str, Any], client: str) -> str:
+async def _submit_prompt(session: aiohttp.ClientSession, base: str, graph: dict[str, Any], client: str) -> str:
     async with session.post(base + "/prompt", json={"prompt": graph, "client_id": client}) as response:
         submitted = await response.json()
         if response.status != 200:
@@ -218,7 +222,14 @@ class _StageTracker:
         self.started = 0.0
         self.stages: dict[str, float] = {}
 
-    def executing(self, data: dict[str, Any], now: float, graph: dict[str, Any], bar: Any, monitor: Any) -> bool:
+    def executing(
+        self,
+        data: dict[str, Any],
+        now: float,
+        graph: dict[str, Any],
+        bar: tqdm[Any],
+        monitor: gpu_memory.GpuMemoryMonitor | None,
+    ) -> bool:
         """Charge the previous node, describe the new one, and report whether execution ended."""
         if self.active is not None:
             self.stages[self.active] = self.stages.get(self.active, 0) + now - self.started
@@ -233,9 +244,9 @@ class _StageTracker:
 
 
 async def _consume_events(
-    ws: Any,
-    log: Any,
-    bar: Any,
+    ws: aiohttp.ClientWebSocketResponse,
+    log: TextIO,
+    bar: tqdm[Any],
     graph: dict[str, Any],
     prompt_id: str,
     timeout: float,
@@ -270,14 +281,14 @@ async def _consume_events(
     return tracker.stages
 
 
-async def _fetch_history(session: Any, base: str, prompt_id: str) -> dict[str, Any]:
+async def _fetch_history(session: aiohttp.ClientSession, base: str, prompt_id: str) -> dict[str, Any]:
     async with session.get(base + "/history/" + prompt_id) as response:
         response.raise_for_status()
         return await response.json()
 
 
 async def generate(
-    session: Any,
+    session: aiohttp.ClientSession,
     base: str,
     graph: dict[str, Any],
     paths: RunPaths,
@@ -341,25 +352,6 @@ def _stage_source(name: str, saved: dict[str, Any], comfy: Path, paths: RunPaths
             target_image = paths.temp / image_name
             target_image.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_image, target_image)
-
-
-class SelectedSources(NamedTuple):
-    """The model, encoder and preset choices a run resolved, with their sources."""
-
-    models: tuple[str, ...]
-    encoders: tuple[str, ...]
-    presets: tuple[str, ...]
-    sources: dict[str, Any]
-    saved_workflows: dict[str, Any]
-
-
-class LaunchPlan(NamedTuple):
-    """The command, graph and metadata a launch needs, plus its overrides."""
-
-    command: list[str]
-    graph: dict[str, Any]
-    metadata: dict[str, Any]
-    overrides: dict[str, str]
 
 
 def _select_sources(args: argparse.Namespace, comfy: Path, model_root: Path, paths: RunPaths) -> SelectedSources:
@@ -460,7 +452,7 @@ def _launch_plan(
     paths: RunPaths,
     case_settings: LTXWorkflowOverrides,
     saved: dict[str, Any],
-    source: Any,
+    source: dict[str, Any],
     saved_workflows: dict[str, Any],
 ) -> LaunchPlan:
     if args.launch_case:
@@ -509,7 +501,7 @@ def _server_env(python: Path, comfy: Path, overrides: dict[str, str]) -> dict[st
     return env
 
 
-def _rocm_sdk_env(comfy: Path, python: Path, env: dict[str, str], server_log: Any) -> None:
+def _rocm_sdk_env(comfy: Path, python: Path, env: dict[str, str], server_log: BinaryIO) -> None:
     subprocess.run(
         [str(python), "-m", "rocm_sdk", "init"],
         cwd=comfy,
@@ -524,7 +516,9 @@ def _rocm_sdk_env(comfy: Path, python: Path, env: dict[str, str], server_log: An
     env.update(HIP_PATH=sdk, ROCM_PATH=sdk)
 
 
-def _launch_process(comfy: Path, command: list[str], env: dict[str, str], server_log: Any) -> subprocess.Popen[bytes]:
+def _launch_process(
+    comfy: Path, command: list[str], env: dict[str, str], server_log: BinaryIO
+) -> subprocess.Popen[bytes]:
     return subprocess.Popen(command, cwd=comfy, env=env, stdout=server_log, stderr=subprocess.STDOUT)
 
 
@@ -542,8 +536,8 @@ async def _generate_clips(
     args: argparse.Namespace,
     paths: RunPaths,
     results: list[dict[str, Any]],
-    overall: Any,
-    session: Any,
+    overall: tqdm[Any],
+    session: aiohttp.ClientSession,
     base: str,
     process: subprocess.Popen[bytes],
     graph: dict[str, Any],
@@ -589,7 +583,7 @@ async def _run_configuration(
     args: argparse.Namespace,
     paths: RunPaths,
     results: list[dict[str, Any]],
-    overall: Any,
+    overall: tqdm[Any],
     comfy: Path,
     python: Path,
     base: str,

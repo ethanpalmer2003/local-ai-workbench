@@ -12,6 +12,7 @@ CHECKS_DIR = REVIEW / "checks"
 CHECKS: dict[str, str | None] = {
     "annotations": "annotations",
     "line_length": "line_length",
+    "bare_any": "bare_any",
     "layout": "layout",
     "owned_tokens": "owned_tokens",
     "duplicates": "duplicates",

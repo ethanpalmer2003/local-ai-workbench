@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import subprocess
 from collections.abc import Callable, MutableMapping
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Protocol, cast
 
 Url = Callable[[], str]
 Probe = Callable[[], bool]
@@ -27,7 +27,21 @@ class BackendSurface(NamedTuple):
     start: Launch
 
 
-def bind(backend: Any, namespace: MutableMapping[str, Any]) -> BackendSurface:
+class AsrBackend(Protocol):
+    """The surface a llama.cpp ASR backend module exposes to the runner."""
+
+    def url(self) -> str: ...
+
+    def ready(self) -> bool: ...
+
+    def command(self) -> list[str]: ...
+
+    def matching_server(self) -> bool: ...
+
+    def start(self, ready: Callable[[], bool], matching: Callable[[], bool]) -> subprocess.Popen[Any] | None: ...
+
+
+def bind(backend: AsrBackend, namespace: MutableMapping[str, object]) -> BackendSurface:
     """Bind (url, ready, command, matching_server, start) to one backend instance.
 
     `start` reads the probes out of `namespace` rather than closing over them, because the module
@@ -47,6 +61,8 @@ def bind(backend: Any, namespace: MutableMapping[str, Any]) -> BackendSurface:
         return backend.matching_server()
 
     def start() -> subprocess.Popen[Any] | None:
-        return backend.start(namespace["ready"], namespace["matching_server"])
+        return backend.start(
+            cast(Callable[[], bool], namespace["ready"]), cast(Callable[[], bool], namespace["matching_server"])
+        )
 
     return BackendSurface(url, ready, command, matching_server, start)

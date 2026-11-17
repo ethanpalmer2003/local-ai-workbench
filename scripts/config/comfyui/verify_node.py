@@ -52,7 +52,7 @@ def load(node: Path) -> ModuleType:
     return module
 
 
-def _class_issues(node: Any) -> list[str]:
+def _class_issues(node: dict[str, Any]) -> list[str]:
     issues = [f"{NODE_CLASS}.{name} is missing" for name in CLASS_ATTRIBUTES if not getattr(node, name, None)]
     issues += [f"{NODE_CLASS}.{name} is not callable" for name in METHODS if not callable(getattr(node, name, None))]
     function = getattr(node, "FUNCTION", "")
@@ -61,8 +61,8 @@ def _class_issues(node: Any) -> list[str]:
     return issues
 
 
-def _input_issues(node: Any) -> list[str]:
-    inputs = node.INPUT_TYPES()
+def _input_issues(node: object) -> list[str]:
+    inputs = getattr(node, "INPUT_TYPES")()
     if not isinstance(inputs, dict):
         return [f"{NODE_CLASS}.INPUT_TYPES did not return a mapping"]
     raw_required, raw_hidden = inputs.get("required"), inputs.get("hidden")

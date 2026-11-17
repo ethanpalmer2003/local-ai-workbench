@@ -13,9 +13,10 @@ The runner executes these checks:
 
 - `checks/layout.py`: component/config ownership, install roots, folder naming, high-level file placement, and batch references.
 - `checks/owned_tokens.py`: a literal one module owns may not be spelled in another, so a copied rule fails instead of drifting.
-- `checks/duplicates.py`: pylint's verbatim duplicate blocks against a reviewed baseline, so a new pasted block fails; opt-in, a minute over `scripts`.
+- `checks/duplicates.py`: pylint duplicate blocks against a reviewed baseline; opt-in, a minute over `scripts`.
 - `checks/annotations.py`: annotation complexity by atoms, nesting and unions; above the cap it asks for a record.
-- `checks/line_length.py`: no line over 120 characters except a line that is string content; the count of accepted literal lines is printed, not hidden.
+- `checks/line_length.py`: no line over 120 except template or token string content; the accepted count is printed.
+- `checks/bare_any.py`: no parameter or return may be exactly `Any` outside the tests tree; `dict[str, Any]` stays allowed.
 - `checks/docs.py`: Markdown placement, roles, budgets, basename casing, links and model-name policy.
 - `ruff check`: the configured lint set, including the [McCabe limit](../../.agents/CODE.md).
 - `checks/model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
@@ -48,7 +49,7 @@ rather than a list of names.
 ## Duplicate check
 
 The optional embedding check and its code mode: [similarity](SIMILARITY.md). Front-end wiring: [frontend
-wiring](FRONTEND-WIRING.md). Both are part of the gate.
+wiring](FRONTEND-WIRING.md). Both are in the gate.
 
 Each check runs alone, for example `python -m scripts.review.checks.layout`. `docs --words` prints every document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers, repeats and unlinked documents. A link fails when it is absolute, uses a backslash, carries a space without angle brackets, points into an untracked path, or misses its target or heading; repeats are advisory. Add `--tests` to run the model-free suite after the gate. Document organization lives in [NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
 

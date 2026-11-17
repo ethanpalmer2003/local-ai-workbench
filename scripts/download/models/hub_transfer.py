@@ -5,6 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, cast
 
+from huggingface_hub import HfFileMetadata
+
 from scripts.config import project_config as project_cfg
 from scripts.download.models.hub_sources import HubFile
 
@@ -14,7 +16,7 @@ class _RangeFetcher:
 
     chunk_size = 32 * 1024**2
 
-    def __init__(self, url: str, headers: dict[str, str], metadata: Any) -> None:
+    def __init__(self, url: str, headers: dict[str, str], metadata: HfFileMetadata) -> None:
         self.url = url
         self.headers = headers
         self.metadata = metadata
@@ -22,7 +24,7 @@ class _RangeFetcher:
     def fetch(self, start: int) -> bytes:
         from huggingface_hub.utils import get_session
 
-        end = min(self.metadata.size, start + self.chunk_size) - 1
+        end = min(cast(int, self.metadata.size), start + self.chunk_size) - 1
         # Requests strips Authorization on cross-host redirects to signed storage URLs.
         response = get_session().get(
             self.url, headers={**self.headers, "Range": f"bytes={start}-{end}"}, timeout=cast(Any, (15, 60))

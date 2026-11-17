@@ -13,7 +13,7 @@ import json
 
 from scripts.config import project_config as project_cfg
 from scripts.review.checks import annotations as annotation_check
-from scripts.review.checks import inventory_code, line_length, owned_tokens
+from scripts.review.checks import bare_any, inventory_code, line_length, owned_tokens
 
 DUPLICATE_BASELINE = project_cfg.SCRIPTS_DIR / "review" / "lists" / "duplicate-baseline.json"
 
@@ -59,6 +59,8 @@ def report() -> list[str]:
         f"{'file length':<16} {'checks/inventory_code.py':<24} "
         f"{f'{inventory_code.WARN_FILE_LINES} warn / {inventory_code.MAX_FILE_LINES} fail':<34} "
         f"{len(file_ends.long)} over the warning, {len(file_ends.over) - len(file_ends.blocked)} accepted",
+        f"{'bare Any':<16} {'checks/bare_any.py':<24} "
+        f"{'no bare signature Any':<34} {len(bare_any.findings())} signature(s) in code",
         f"{'owned tokens':<16} {'checks/owned_tokens.py':<24} "
         f"{'one spelling per token':<34} {len(owned_tokens.RULES)} token(s), "
         f"{sum(len(rule.owners) for rule in owned_tokens.RULES)} accepted owners",

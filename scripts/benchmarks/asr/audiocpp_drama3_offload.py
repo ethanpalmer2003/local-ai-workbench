@@ -13,7 +13,7 @@ import time
 import traceback
 import wave
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, BinaryIO
 
 import requests
 
@@ -294,7 +294,13 @@ def _spawn_server(exe: Path, config: Path, log) -> subprocess.Popen[Any]:
     )
 
 
-def _lifecycle(process, exe: Path, config: Path, source: Path, log, monitor) -> Any:
+if TYPE_CHECKING:
+    from scripts.launchers.proxy_restart import OwnedBackendLifecycle
+
+
+def _lifecycle(
+    process: subprocess.Popen[bytes], exe: Path, config: Path, source: Path, log: BinaryIO, monitor: GpuMemoryMonitor
+) -> "OwnedBackendLifecycle":
     from scripts.launchers.proxy_restart import OwnedBackendLifecycle
 
     def prepare_backend() -> None:

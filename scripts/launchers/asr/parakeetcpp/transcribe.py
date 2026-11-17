@@ -4,14 +4,13 @@ import argparse
 import os
 import subprocess
 from pathlib import Path
-from typing import Any
 
 from scripts.config import models as model_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
 
 
-def _parser(settings: Any) -> argparse.ArgumentParser:
+def _parser(settings: cfg.ParakeetcppAsrStartupRequestSettings) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", required=True, type=Path, help="Input WAV file")
     parser.add_argument("--build", choices=("vulkan", "cpu"), default=settings.build)
@@ -37,7 +36,7 @@ def _validate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None
         parser.error("Explicit --language is configured only for Nemotron")
 
 
-def _profile_model(profile: str, settings: Any) -> Path:
+def _profile_model(profile: str, settings: cfg.ParakeetcppAsrStartupRequestSettings) -> Path:
     return {
         "110m": settings.model,
         "v3": model_cfg.path("asr/parakeetcpp/parakeet-tdt-0.6b-v3-q8_0"),
@@ -45,7 +44,9 @@ def _profile_model(profile: str, settings: Any) -> Path:
     }[profile]
 
 
-def _command(args: argparse.Namespace, settings: Any, exe: Path, vad: bool) -> list[str]:
+def _command(
+    args: argparse.Namespace, settings: cfg.ParakeetcppAsrStartupRequestSettings, exe: Path, vad: bool
+) -> list[str]:
     command = [str(exe), "transcribe", "--model", str(args.model), "--input", str(args.input)]
     command += ["--threads", str(settings.threads)]
     if args.profile == "nemotron":

@@ -5,11 +5,12 @@ import socket
 import statistics
 import threading
 import time
+from collections.abc import Iterable
 from contextlib import closing, suppress
 from dataclasses import replace
-from http.client import HTTPConnection, HTTPException
+from http.client import HTTPConnection, HTTPException, HTTPResponse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Protocol
 from urllib.parse import urlsplit
 
 import requests
@@ -23,6 +24,22 @@ from scripts.shared.wait import wait_ready
 #   would hold a run open. The deadline bounds the whole response instead.
 RELAY_SOCKET_TIMEOUT_SECONDS = 600
 RELAY_DEADLINE_SECONDS = 600
+
+
+class ChatConnection(Protocol):
+    """The two attributes a chat client needs: where to post and what to authorize with."""
+
+    @property
+    def api_key(self) -> str: ...
+
+    @property
+    def base_url(self) -> str: ...
+
+
+class TimingMark(Protocol):
+    """A lifecycle timer that records one named mark."""
+
+    def mark(self, name: str) -> None: ...
 
 
 def request_settings(body: dict[str, Any], endpoint: BenchmarkEndpoint, settings: dict[str, Any]) -> dict[str, Any]:
@@ -118,7 +135,7 @@ def stream_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def stream_chat(
-    connection: Any, body: dict[str, Any], *, timeout: float, extra: dict[str, Any] | None = None
+    connection: ChatConnection, body: dict[str, Any], *, timeout: float, extra: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """One streaming chat completion, recorded the same way for every Strata benchmark."""
     headers = {"Authorization": "Bearer " + connection.api_key}
@@ -389,7 +406,7 @@ class _BenchmarkRelayHandler(QuietLog, BaseHTTPRequestHandler):
             self._write_payload(response, request, bool(body.get("stream")), deadline)
         record["finished"] = not body.get("stream") or bool(record.get("stream_done"))
 
-    def _write_payload(self, response: Any, request: _RelayRequest, streaming: bool, deadline: float) -> None:
+    def _write_payload(self, response: HTTPResponse, request: _RelayRequest, streaming: bool, deadline: float) -> None:
         if not streaming:
             content = response.read()
             self._check_deadline(deadline)
@@ -403,7 +420,12 @@ class _BenchmarkRelayHandler(QuietLog, BaseHTTPRequestHandler):
             raise TimeoutError(f"Backend response exceeded the {RELAY_DEADLINE_SECONDS:.0f} s relay deadline")
 
     def _stream_response(
-        self, response: Any, record: dict[str, Any], started: float, deadline: float, timing: Any = None
+        self,
+        response: Iterable[bytes],
+        record: dict[str, Any],
+        started: float,
+        deadline: float,
+        timing: TimingMark | None = None,
     ) -> None:
         for line in response:
             self._check_deadline(deadline)
