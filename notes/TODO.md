@@ -14,12 +14,8 @@
 - [ ] Repair the Strata install: the native updater kept engine 0.1.59 because 0.1.60 failed its test start, while control reached 0.1.60, so a launch now exits before serving because the image encoder child cannot start (`WinError 5`). `update_frameworks` reports this and installs nothing; repair it in the Strata app (control reports `failed-before` for the engine) and confirm a plain launch serves without the vision-free config the benchmark used. ~20 min
 - [ ] Judge the duplicate blocks the baseline still holds: `matching_server` is four identical one-liners (`whispercpp/server`, `embeddings/server`, `audiocpp/asr`, `asr/llamacpp/llama_audio`), `audiocpp.py::main` against `llamacpp.py::main` is two launchers with different wiring, and `launcher_config.py` carries the same three-line `exe` property on three build classes. Fold the one-liners if the wrapper is not the seam a test patches; leave the other two. [code pairs](../scripts/review/SIMILARITY.md). ~30 min
 - [ ] Wire `python -m scripts.review.checks.duplicates` into an opt-in batch and settle its baseline granularity: it records a file pair plus a block count, so a second block in a known pair fails while a moved block does not. pylint needs about a minute over `scripts`. ~30 min
-
-ile-length-baseline.json: get_tts_voices.py (1,468 lines) - cut it into a model module (settings classes and loading), a text module (number spelling, cleaning, speech checks), a selection module (mapping, pools, materialize) and a workflow module (transcribe, build, prepare, validate), leaving argument parsing and main behind, then delete its baseline row. Four other files were split in this round. [rule](../scripts/review/checks/inventory_code.py). ~2-3 h
-ile-length-baseline.json: get_tts_voices.py (1,468 lines),
-rameworks_smoke.py (1,177),
-ramework_updates.py (1,155), launcher_config.py (1,006) and
-ramework_compare.py (923), then delete their baseline rows. [rule](../scripts/review/checks/inventory_code.py). ~3-4 h
+- [ ] Move the `codebase-memory-mcp` uv tool to Python 3.14 (`uv tool install --python 3.14 codebase-memory-mcp --force`), then uninstall the managed 3.13 interpreter; the tool currently runs on `cpython-3.13-windows-x86_64-none`, which blocked `uv python uninstall 3.13`. ~5 min
+- [ ] Find which update path keeps creating an empty `bin` directory; it was archived 70 times into `trash/` on 2026-11-15. `archive_path` now removes empty directories instead of trashing them, so the churn is invisible, but the source is still unknown. ~20 min
 
 ## Needs a model run or device
 
