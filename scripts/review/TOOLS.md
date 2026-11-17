@@ -48,14 +48,15 @@ Measured on this machine; only the last two open a model or service. When to run
 | basedpyright | type errors, `--level error`, no strict mode |
 | pytest | regression execution, timings, failure details |
 | `layout.py` | component keys, ownership, install roots, folder naming, batch references |
-| `docs.py` | doc roles, budgets, links, anchors and model-name policy |
+| `docs.py` | doc roles, budgets, links, anchors, model names |
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
 | [frontend wiring](FRONTEND-WIRING.md) | asset targets resolve, DOM ids exist, settings keys both emitted and provided |
 | `inventory_code.py` | inventory, file/function size, inline suppressions; `--complexity-debt` regenerates `GENERATED-COMPLEXITY-DEBT.md` |
 | `public_audit.py` | secrets, credentials, home/machine paths, vocabulary and input names, large files, ignored-but-tracked |
+| `dynamic_imports.py` | static imports; five loaders exempt |
 | `audit_timing.py` | which benchmark runners use the shared timing contract |
 | `package_audit.py` | leftovers no import or manifest declares; `--prune [--remove]`; `uv lock --check` |
-| `coverage.py`, `pip-audit` | coverage; advisories run inside the gate (network, unreachable feed is a warning) |
+| `coverage.py`, `pip-audit` | coverage; advisories in the gate (unreachable feed warns) |
 
 Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Codespell reads tracked Python and Markdown.
 

@@ -4,7 +4,6 @@ import hashlib
 import json
 import os
 import uuid
-from importlib import import_module
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +14,7 @@ CACHE_DIR = Path(
 
 
 def cache_file(text: str, prompt: dict[str, Any], unique_id: str) -> Path:
-    folder_paths = import_module("folder_paths")
+    import folder_paths
 
     source = prompt[str(unique_id)]["inputs"]["clip"][0]
     loader = prompt[str(source)]

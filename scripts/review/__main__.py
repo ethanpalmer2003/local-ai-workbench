@@ -18,6 +18,7 @@ from scripts.review.checks import (
     comments,
     dead_code,
     docs,
+    dynamic_imports,
     frontend_wiring,
     inventory_code,
     layout,
@@ -198,6 +199,7 @@ PYTHON_SECTIONS = frozenset(
         "formatting",
         "comments",
         "dead code",
+        "dynamic imports",
         "network timeouts",
         "overlay access",
         "inventory",
@@ -252,6 +254,7 @@ def touched_gate(argv: list[str] | None = None) -> int:
         ("line length", "\n=== LINE LENGTH ===", lambda: line_length.main([])),
         ("bare any", "\n=== BARE ANY ===", lambda: bare_any.main([])),
         ("dead code", "\n=== DEAD CODE ===", lambda: dead_code.main([])),
+        ("dynamic imports", "\n=== DYNAMIC IMPORTS ===", lambda: dynamic_imports.main([])),
         ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
         ("spelling", "\n=== SPELLING ===", spelling_check),
         ("advisories", "", lambda: advisory_check(_flag(argv, "--fast"))),
@@ -354,6 +357,9 @@ def full_gate(argv: list[str] | None = None) -> int:
 
     print("\n=== DEAD CODE ===", flush=True)
     timed("dead code", dead_code.main, [])
+
+    print("\n=== DYNAMIC IMPORTS ===", flush=True)
+    timed("dynamic imports", dynamic_imports.main, [])
 
     print("\n=== AMERICAN SPELLING ===", flush=True)
     timed("spelling variants", spellings.main, [])
