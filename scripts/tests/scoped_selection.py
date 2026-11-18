@@ -61,12 +61,13 @@ def select_test_classes(
     """Partition `test_classes` into kept and dropped test classes for the current change set."""
     if full:
         return Selection(test_classes, (), "--all")
-    changed = changed_since_upstream(root) if change_set is None else change_set
+    from_git = change_set is None
+    changed = changed_since_upstream(root) if from_git else change_set
     # Git listed nothing. With an upstream to compare against that is evidence: the tree is clean, so no
     # test can see a difference. Without one, or when the read failed, there is no evidence at all and
     # every class runs rather than none.
     if not changed:
-        if change_set is None and not upstream_known(root):
+        if from_git and not upstream_known(root):
             return Selection(test_classes, (), "no upstream ref")
         return Selection((), test_classes, "nothing changed")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
