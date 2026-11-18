@@ -23,11 +23,11 @@ from scripts.shared.changes import NoUpstreamError, changed_since_upstream, git_
 from scripts.shared.import_graph import (
     REACH_DEPTH,
     ImportGraph,
+    ast_parse_text_or_file,
     find_affected_modules,
     import_graph,
     module_name,
     module_names,
-    parse,
 )
 
 FULL_TRIGGERS = frozenset(
@@ -116,16 +116,17 @@ def code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
         return True
     # Read the committed version from the remote tracking branch for comparison.
     # `@{upstream}` is git's name for the branch this one tracks, not the tip of this branch.
-    previous = git_text_or_empty("show", "@{upstream}:" + path, root=root)
-    # `ast.parse` discards `#` comments automatically; `_dump_without_docstrings` strips docstrings.
-    before = parse(previous)
-    after = parse(current)
-    # No evidence from git is not proof of a prose edit: `git_text_or_empty` answers "" when the read failed, and
-    # broken or unreadable file on either side is a real change too, since nothing can be ruled out.
-    if not previous or before is None or after is None:
+    # `git_text_or_empty` answers "" when git could not read the committed copy, and the parser answers None
+    # for empty or unparsable source, so both kinds of no-evidence arrive as a missing tree.
+    previous_source = git_text_or_empty("show", "@{upstream}:" + path, root=root)
+    committed = ast_parse_text_or_file(previous_source)
+    # `ast.parse` discards `#` comments; `_dump_without_docstrings` strips docstrings, so the two trees hold
+    # only code.
+    working = ast_parse_text_or_file(current)
+    if committed is None or working is None:
         return True
     # Different trees after stripping prose means a test can observe the edit.
-    return _dump_without_docstrings(before) != _dump_without_docstrings(after)
+    return _dump_without_docstrings(committed) != _dump_without_docstrings(working)
 
 
 def _partition(test_classes: tuple[TestClass, ...], reachable: frozenset[str], reason: str) -> Selection:
