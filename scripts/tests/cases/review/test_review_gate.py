@@ -73,6 +73,33 @@ class GateScopeTests(unittest.TestCase):
         touched.assert_called_once()
         full.assert_not_called()
 
+    def test_a_commit_reads_the_working_tree_only(self):
+        from scripts.review import __main__ as gate
+
+        with (
+            patch.object(gate, "uncommitted_paths", return_value=["scripts/shared/consent.py"]) as working,
+            patch.object(gate, "changed_since_upstream") as upstream,
+            patch.object(gate, "touched_gate", return_value=0) as touched,
+            patch.object(gate, "full_gate"),
+        ):
+            self.assertEqual(gate.main(["--commit"]), 0)
+        upstream.assert_not_called()
+        working.assert_called_once_with()
+        touched.assert_called_once_with([], ["scripts/shared/consent.py"])
+
+    def test_the_uncommitted_change_set_ignores_unpushed_commits(self):
+        from scripts.shared import changes
+
+        calls: list[str] = []
+
+        def git_text(*args: str, **_: object) -> str:
+            calls.append(args[0])
+            return " M notes/TODO.md\n"
+
+        with patch.object(changes, "git_text", side_effect=git_text):
+            self.assertEqual(changes.uncommitted_paths(), ["notes/TODO.md"])
+        self.assertEqual(calls, ["status"])
+
     def test_all_runs_every_section_whatever_changed(self):
         from scripts.review import __main__ as gate
 
@@ -156,7 +183,7 @@ class GateScopeTests(unittest.TestCase):
             patch.object(gate, "full_gate") as full,
         ):
             self.assertEqual(gate.main(["--push"]), 0)
-        touched.assert_called_once_with([])
+        touched.assert_called_once_with([], ["notes/TODO.md"])
         full.assert_not_called()
 
     def test_a_push_with_python_runs_every_section(self):

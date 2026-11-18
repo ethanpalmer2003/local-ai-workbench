@@ -1,6 +1,6 @@
 # Local hooks: the project venv's binaries, so no clone and no second copy of the config.
-# Two levels, each with a natural trigger: a commit checks what the change reaches, and a push checks
-# everything. The same commands run by hand while working, so there is no third stage to remember.
+# Two levels, each with a natural trigger: `--commit` judges what is about to be recorded, and `--push`
+# judges everything unreviewed. The same commands run by hand while working, so there is no third stage.
 repos:
   - repo: local
     hooks:
@@ -34,14 +34,14 @@ repos:
       # - the commit level checks what the change reaches; the push level checks everything
       - id: gate-scoped
         name: review gate (scoped)
-        entry: .venv/Scripts/python.exe -m scripts.review
+        entry: .venv/Scripts/python.exe -m scripts.review --commit
         language: system
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
       - id: suite-scoped
         name: model-free suite (scoped)
-        entry: .venv/Scripts/python.exe -m scripts.tests.run
+        entry: .venv/Scripts/python.exe -m scripts.tests.run --commit
         language: system
         pass_filenames: false
         always_run: true
