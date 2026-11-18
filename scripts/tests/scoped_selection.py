@@ -73,7 +73,7 @@ def select_test_classes(
     if not changed:
         return Selection((), test_classes, "nothing changed")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
-    code_changes = [path for path in changed if not (path.endswith(".py") and ast_matches_upstream(path, root))]
+    code_changes = [path for path in changed if _may_change_code(path, root)]
     if not code_changes:
         return Selection((), test_classes, "no code change")
 
@@ -97,6 +97,11 @@ def select_test_classes(
         else:
             dropped.append(test_class)
     return Selection(tuple(kept), tuple(dropped), f"{len(reachable)} of {len(edges)} modules reachable")
+
+
+def _may_change_code(path: str, root: Path | None) -> bool:
+    """Whether the path could carry a change a test can observe."""
+    return not path.endswith(".py") or not ast_matches_upstream(path, root)
 
 
 def ast_matches_upstream(path: str, root: Path | None = None) -> bool:
@@ -129,8 +134,14 @@ def _dump_without_docstrings(tree: ast.Module) -> str:
     for node in ast.walk(tree):
         if not isinstance(node, scopes) or not node.body:
             continue
-        first = node.body[0]
-        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+        if _is_docstring(node.body[0]):
             # Substitute `pass` when the docstring was the only statement in the body.
             node.body = node.body[1:] or [ast.Pass()]
     return ast.dump(tree)
+
+
+def _is_docstring(statement: ast.stmt) -> bool:
+    """Whether a statement is a bare string, which is how a docstring is stored."""
+    if not isinstance(statement, ast.Expr) or not isinstance(statement.value, ast.Constant):
+        return False
+    return isinstance(statement.value.value, str)
