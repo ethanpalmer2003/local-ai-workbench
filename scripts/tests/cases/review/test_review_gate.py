@@ -33,19 +33,19 @@ class GateScopeTests(unittest.TestCase):
 
         completed = subprocess.CompletedProcess(args=[], returncode=0, stdout=b"caf\x81 line\n", stderr=b"")
         with patch.object(changes.subprocess, "run", return_value=completed):
-            self.assertEqual(changes.git("show", "scripts/a.py"), "caf\ufffd line\n")
+            self.assertEqual(changes.git_text("show", "scripts/a.py"), "caf\ufffd line\n")
 
-    def test_changed_paths_cover_the_working_tree_and_unpushed_commits(self):
+    def test_the_change_set_covers_the_working_tree_and_unpushed_commits(self):
         from scripts.shared import changes
 
-        def git(*args: str, **_: object) -> str:
+        def git_text(*args: str, **_: object) -> str:
             if args[0] == "status":
                 return "R  bat/tests/a.bat -> bat/checks/a.bat\n M notes/TODO.md\n"
             return "scripts/tools/older.py\n"
 
-        with patch.object(changes, "git", side_effect=git):
+        with patch.object(changes, "git_text", side_effect=git_text):
             self.assertEqual(
-                changes.changed_paths(),
+                changes.changed_since_upstream(),
                 ["bat/checks/a.bat", "bat/tests/a.bat", "notes/TODO.md", "scripts/tools/older.py"],
             )
 
@@ -53,7 +53,7 @@ class GateScopeTests(unittest.TestCase):
         from scripts.review import __main__ as gate
 
         with (
-            patch.object(gate, "changed_paths", return_value=[]),
+            patch.object(gate, "changed_since_upstream", return_value=[]),
             patch.object(gate, "full_gate", return_value=0) as full,
             patch.object(gate, "touched_gate") as touched,
         ):
@@ -65,7 +65,7 @@ class GateScopeTests(unittest.TestCase):
         from scripts.review import __main__ as gate
 
         with (
-            patch.object(gate, "changed_paths", return_value=["notes/TODO.md"]),
+            patch.object(gate, "changed_since_upstream", return_value=["notes/TODO.md"]),
             patch.object(gate, "full_gate") as full,
             patch.object(gate, "touched_gate", return_value=0) as touched,
         ):
@@ -77,7 +77,7 @@ class GateScopeTests(unittest.TestCase):
         from scripts.review import __main__ as gate
 
         with (
-            patch.object(gate, "changed_paths", return_value=["notes/TODO.md"]),
+            patch.object(gate, "changed_since_upstream", return_value=["notes/TODO.md"]),
             patch.object(gate, "full_gate", return_value=0) as full,
             patch.object(gate, "touched_gate") as touched,
         ):
@@ -120,7 +120,7 @@ class GateScopeTests(unittest.TestCase):
         completed = subprocess.CompletedProcess(args=[], returncode=0)
         with (
             patch.object(gate, "import_graph", return_value=edges),
-            patch.object(gate, "module_files", return_value={name: Path(name) for name in edges}),
+            patch.object(gate, "git_module_files", return_value={name: Path(name) for name in edges}),
             patch.object(gate, "module_paths", side_effect=lambda modules: sorted(f"{name}.py" for name in modules)),
             patch.object(gate.subprocess, "run", return_value=completed) as run,
         ):
@@ -133,7 +133,7 @@ class GateScopeTests(unittest.TestCase):
         edges = {"scripts.a": (), **{f"scripts.m{index}": ("scripts.a",) for index in range(5)}}
         with (
             patch.object(gate, "import_graph", return_value=edges),
-            patch.object(gate, "module_files", return_value={name: Path(name) for name in edges}),
+            patch.object(gate, "git_module_files", return_value={name: Path(name) for name in edges}),
             patch.object(gate, "type_check", return_value=0) as full,
         ):
             self.assertEqual(gate.scoped_type_check(["scripts/a.py"], False), 0)
@@ -151,7 +151,7 @@ class GateScopeTests(unittest.TestCase):
         from scripts.review import __main__ as gate
 
         with (
-            patch.object(gate, "changed_paths", return_value=["notes/TODO.md"]),
+            patch.object(gate, "changed_since_upstream", return_value=["notes/TODO.md"]),
             patch.object(gate, "touched_gate", return_value=0) as touched,
             patch.object(gate, "full_gate") as full,
         ):
@@ -163,7 +163,7 @@ class GateScopeTests(unittest.TestCase):
         from scripts.review import __main__ as gate
 
         with (
-            patch.object(gate, "changed_paths", return_value=["scripts/shared/consent.py"]),
+            patch.object(gate, "changed_since_upstream", return_value=["scripts/shared/consent.py"]),
             patch.object(gate, "touched_gate") as touched,
             patch.object(gate, "full_gate", return_value=0) as full,
         ):
@@ -174,9 +174,9 @@ class GateScopeTests(unittest.TestCase):
     def test_formatting_targets_the_change_and_falls_back_to_the_tree(self):
         from scripts.review import format_py
 
-        with patch.object(format_py, "changed_paths", return_value=["notes/TODO.md", "scripts/tools/a.py"]):
+        with patch.object(format_py, "changed_since_upstream", return_value=["notes/TODO.md", "scripts/tools/a.py"]):
             self.assertEqual(format_py.python_targets(False), ["scripts/tools/a.py"])
-        with patch.object(format_py, "changed_paths", return_value=["notes/TODO.md"]):
+        with patch.object(format_py, "changed_since_upstream", return_value=["notes/TODO.md"]):
             self.assertEqual(format_py.python_targets(False), ["."])
         self.assertEqual(format_py.python_targets(True), ["."])
 

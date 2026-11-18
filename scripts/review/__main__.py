@@ -1,13 +1,16 @@
 """Run the repository structure, type and size/complexity reviews."""
 
 import argparse
+import contextlib
+import io
 import json
 import subprocess
 import sys
+import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple, TextIO
 
 from scripts.config import project_config as project_cfg
 from scripts.review.audit import package_audit
@@ -32,14 +35,14 @@ from scripts.review.checks import (
     walrus,
 )
 from scripts.shared import changes
-from scripts.shared.changes import changed_paths
+from scripts.shared.changes import changed_since_upstream
 from scripts.shared.import_graph import (
     REACH_DEPTH,
+    find_affected_modules,
+    git_module_files,
     import_graph,
-    module_files,
-    module_name,
+    module_names,
     module_paths,
-    reverse_closure,
 )
 
 SPELL_EXCLUDED = (
@@ -51,6 +54,10 @@ SPELL_EXCLUDED = (
     "scripts/benchmarks/output/",
 )
 TIMES: list[dict[str, Any]] = []
+# - basedpyright threads on the whole project: six measured fastest on this 12-core box (7.6 s against 12.5 s on one)
+TYPE_THREADS = 6
+# - wall clock from the first section to the last, since concurrent sections sum to more than the wait
+_started_at = 0.0
 
 
 def _spelling_targets() -> list[str]:
@@ -104,6 +111,15 @@ def declaration_check() -> int:
     return subprocess.run([str(checker), "scripts"], cwd=project_cfg.BASE_DIR, check=False).returncode
 
 
+def lock_check() -> int:
+    """The lock issues, printed where they are found, so one status reaches the timing log."""
+    issues = package_audit.lock_issues()
+    for issue in issues[:10]:
+        print(f"[FAIL] {issue}")
+    print("[OK] uv.lock matches pyproject" if not issues else f"[FAIL] {len(issues)} lock issue(s)")
+    return int(bool(issues))
+
+
 def lint_check() -> int:
     """ruff lint: the configured rule set, including the McCabe limit."""
     checker = project_cfg.VENV_DIR / "Scripts" / "ruff.exe"
@@ -133,10 +149,22 @@ def type_check(fast: bool) -> int:
     print("\n=== TYPE CHECK ===", flush=True)
     checker = project_cfg.VENV_DIR / "Scripts" / "basedpyright.exe"
     try:
-        return subprocess.run([str(checker), "--level", "error"], cwd=project_cfg.BASE_DIR, check=False).returncode
+        result = subprocess.run(
+            [str(checker), "--level", "error", "--threads", str(TYPE_THREADS)],
+            cwd=project_cfg.BASE_DIR,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
     except OSError as error:
         print(f"[FAIL] Could not run basedpyright at {checker}: {error}")
         return 1
+    # - captured, so the section's output lands in its own buffer rather than straight on the terminal
+    print(result.stdout, end="", flush=True)
+    print(result.stderr, end="", flush=True)
+    return result.returncode
 
 
 def scoped_type_check(paths: list[str], fast: bool) -> int:
@@ -149,12 +177,11 @@ def scoped_type_check(paths: list[str], fast: bool) -> int:
         print("\n=== TYPE CHECK ===\n[SKIP] --fast")
         return 0
     print("\n=== TYPE CHECK ===", flush=True)
-    names = (module_name(path) for path in paths)
-    modules = {name for name in names if name}
-    known = module_files()
+    modules = module_names(paths)
+    known = git_module_files()
     if not modules:
         return 0
-    reachable = reverse_closure(import_graph(), modules, depth=REACH_DEPTH)
+    reachable = find_affected_modules(import_graph(), modules, depth=REACH_DEPTH)
     if len(reachable) * 2 > len(known):
         return type_check(fast)
     checker = project_cfg.VENV_DIR / "Scripts" / "basedpyright.exe"
@@ -196,6 +223,94 @@ def timed[T](name: str, function: Callable[..., T], *args: object) -> T:
     return status
 
 
+# - the three sections that cost seconds and share nothing, so they run together and print in order
+CONCURRENT = ("types", "inventory", "dead code")
+
+
+class _ThreadStream(io.TextIOBase):
+    """Standard output that a thread can redirect on its own, so concurrent sections do not interleave."""
+
+    def __init__(self, fallback: TextIO) -> None:
+        self._fallback = fallback
+        self._local = threading.local()
+
+    def write(self, text: str) -> int:
+        return self._target().write(text)
+
+    def flush(self) -> None:
+        self._target().flush()
+
+    def _target(self) -> TextIO:
+        return getattr(self._local, "buffer", None) or self._fallback
+
+    @contextlib.contextmanager
+    def collecting(self) -> Iterator[io.StringIO]:
+        """Capture this thread's writes into a buffer instead of the terminal."""
+        buffer = io.StringIO()
+        self._local.buffer = buffer
+        try:
+            yield buffer
+        finally:
+            self._local.buffer = None
+
+
+def run_alongside(
+    name: str, function: Callable[[], int], stream: _ThreadStream, outcomes: dict[str, tuple[int, str]]
+) -> None:
+    """Run one concurrent section with its output captured, recording its duration and status."""
+    started = time.perf_counter()
+    try:
+        with stream.collecting() as buffer:
+            status = function()
+    except Exception as error:  # - a section that raises is a failed section, not a lost thread
+        status = 1
+        with stream.collecting() as buffer:
+            print(f"[FAIL] {name} raised {type(error).__name__}: {error}")
+    TIMES.append({"section": name, "seconds": round(time.perf_counter() - started, 2), "status": status})
+    outcomes[name] = (status, buffer.getvalue())
+
+
+class Section(NamedTuple):
+    """One gate section: its name in the log, the banner above it, the work, and any verdict line."""
+
+    name: str
+    banner: str
+    run: Callable[[], int]
+    after: Callable[[int], None] | None = None
+
+
+def run_sections(sections: list[Section]) -> None:
+    """Run the sections in table order, starting the expensive independent ones together.
+
+    Each concurrent section writes into its own buffer, so the terminal still reads top to bottom.
+    """
+    outcomes: dict[str, tuple[int, str]] = {}
+    alongside = [section for section in sections if section.name in CONCURRENT]
+    if len(alongside) > 1:
+        stream = _ThreadStream(sys.stdout)
+        with contextlib.redirect_stdout(stream):
+            workers = [
+                threading.Thread(target=run_alongside, args=(section.name, section.run, stream, outcomes))
+                for section in alongside
+            ]
+            for worker in workers:
+                worker.start()
+            for worker in workers:
+                worker.join()
+    for section in sections:
+        if section.name in outcomes:
+            status, output = outcomes[section.name]
+            if section.banner:
+                print(section.banner, flush=True)
+            print(output, end="")
+        else:
+            if section.banner:
+                print(section.banner, flush=True)
+            status = timed(section.name, section.run)
+        if section.after is not None:
+            section.after(status)
+
+
 def report_sections() -> int:
     """The exit code and the line that explains it: a failing run always names its sections.
 
@@ -218,9 +333,10 @@ def write_timings() -> Path:
     path.write_text(
         json.dumps(
             {
-                "commit": changes.git("rev-parse", "HEAD").strip(),
-                "dirty": bool(changed_paths()),
-                "total_seconds": round(sum(item["seconds"] for item in TIMES), 2),
+                "commit": changes.git_text("rev-parse", "HEAD").strip(),
+                "dirty": bool(changed_since_upstream()),
+                "total_seconds": round(time.perf_counter() - _started_at, 2),
+                "work_seconds": round(sum(item["seconds"] for item in TIMES), 2),
                 "sections": TIMES,
             },
             indent=1,
@@ -276,7 +392,7 @@ def _flag(argv: list[str], name: str) -> bool:
 def touched_gate(argv: list[str] | None = None) -> int:
     """Run only the sections the working tree changed since upstream, cheapest first."""
     argv = list(sys.argv[1:] if argv is None else argv)
-    changed = changed_paths()
+    changed = changed_since_upstream()
     # - a rename leaves the old name in the change set, and a deleted file has nothing to read
     existing = [path for path in changed if (project_cfg.BASE_DIR / path).is_file()]
     python_files = [path for path in existing if path.endswith(".py")]
@@ -305,19 +421,25 @@ def touched_gate(argv: list[str] | None = None) -> int:
         ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main(existing)),
         ("spelling", "\n=== SPELLING ===", lambda: spelling_check(existing)),
         ("advisories", "", lambda: advisory_check(_flag(argv, "--fast"))),
-        ("lock check", "\n=== DEPENDENCY HYGIENE ===", package_audit.lock_issues),
+        ("lock check", "\n=== DEPENDENCY HYGIENE ===", lock_check),
         ("deptry", "", declaration_check),
     )
-    for name, banner, function in table:
-        if name not in selected:
-            continue
-        if banner:
-            print(banner, flush=True)
-        timed(name, function)
+    chosen = [Section(name, banner, function) for name, banner, function in table if name in selected]
+    run_sections(chosen)
     slowest = sorted(TIMES, key=lambda item: float(str(item["seconds"])), reverse=True)[:3]
     summary = ", ".join(f"{item['section']} {item['seconds']}s" for item in slowest)
     print(f"\n[TIME] {write_timings()} (slowest: {summary})")
     return report_sections()
+
+
+def _package_summary(fast: bool) -> dict[str, int] | None:
+    """Installed package counts, recorded as their own section; --fast skips the audit."""
+    if fast:
+        return None
+    started = time.perf_counter()
+    counts = package_audit.summary()
+    TIMES.append({"section": "package summary", "seconds": round(time.perf_counter() - started, 2), "status": 0})
+    return counts
 
 
 def full_gate(argv: list[str] | None = None) -> int:
@@ -342,93 +464,75 @@ def full_gate(argv: list[str] | None = None) -> int:
     if args.scrub:
         return public_audit_main(["--scrub"])
 
-    print("=== LAYOUT ===", flush=True)
-    timed("layout", layout.main)
-
-    print("\n=== SINGLE-OWNER TOKENS ===", flush=True)
-    timed("single-owner tokens", owned_tokens.main, [])
-
-    print("\n=== DOCUMENTATION ===", flush=True)
-    timed("docs", docs.main, [])
-
-    print("\n=== MODEL REFERENCE DRIFT ===", flush=True)
-    timed("model references", model_references.main)
-
-    print("\n=== FRONT-END WIRING ===", flush=True)
-    timed("front-end wiring", frontend_wiring.main)
-
-    print("\n=== NETWORK TIMEOUTS ===", flush=True)
-    timed("network timeouts", network_timeouts.main, [])
-
-    print("\n=== OVERLAY ACCESS ===", flush=True)
-    timed("overlay access", overlay_access.main, [])
-
-    print("\n=== LINT ===", flush=True)
-    lint_status = timed("lint", lint_check)
-    print("[OK] Lint clean" if not lint_status else "[FAIL] Lint findings above")
-
-    timed("types", type_check, args.fast)
-    counts = None
-    if not args.fast:
-        started_summary = time.perf_counter()
-        counts = package_audit.summary()
-        TIMES.append(
-            {"section": "package summary", "seconds": round(time.perf_counter() - started_summary, 2), "status": 0}
-        )
-    timed("inventory", inventory_check, counts or {}, args.fast)
-
-    formatting_status = 0
+    counts = _package_summary(args.fast)
+    sections = [
+        Section("layout", "=== LAYOUT ===", layout.main),
+        Section("single-owner tokens", "\n=== SINGLE-OWNER TOKENS ===", lambda: owned_tokens.main([])),
+        Section("docs", "\n=== DOCUMENTATION ===", lambda: docs.main([])),
+        Section("model references", "\n=== MODEL REFERENCE DRIFT ===", model_references.main),
+        Section("front-end wiring", "\n=== FRONT-END WIRING ===", frontend_wiring.main),
+        Section("network timeouts", "\n=== NETWORK TIMEOUTS ===", lambda: network_timeouts.main([])),
+        Section("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main([])),
+        Section(
+            "lint",
+            "\n=== LINT ===",
+            lint_check,
+            lambda status: print("[OK] Lint clean" if not status else "[FAIL] Lint findings above"),
+        ),
+        Section("types", "", lambda: type_check(args.fast)),
+        Section("inventory", "", lambda: inventory_check(counts or {}, args.fast)),
+    ]
     if not args.no_format_check:
-        print("\n=== PYTHON FORMATTING ===", flush=True)
-        formatting_status = timed("formatting", format_check)
-        print(
-            "[OK] Formatting matches"
-            if not formatting_status
-            else "[FAIL] Formatting differs; run review/format_py.bat"
+        sections.append(
+            Section(
+                "formatting",
+                "\n=== PYTHON FORMATTING ===",
+                format_check,
+                lambda status: print(
+                    "[OK] Formatting matches" if not status else "[FAIL] Formatting differs; run review/format_py.bat"
+                ),
+            )
         )
+    lock: dict[str, list[str]] = {}
 
-    print("\n=== TYPOGRAPHIC PUNCTUATION ===", flush=True)
-    timed("typography", typography.main, [])
+    def run_lock() -> int:
+        """The lock issues, kept for the verdict lines that print after deptry."""
+        lock["issues"] = package_audit.lock_issues()
+        return int(bool(lock["issues"]))
 
-    print("\n=== COMMENTS ===", flush=True)
-    timed("comments", comments.main, [])
+    def report_lock(_status: int) -> None:
+        if counts:
+            print(f"{counts['locked']} locked, {counts['installed']} installed, {counts['leftovers']} leftovers")
 
-    print("\n=== ANNOTATION COMPLEXITY ===", flush=True)
-    timed("annotations", annotations.main, [])
+    def report_declaration(status: int) -> None:
+        print("[OK] Imports match the pins" if not status else "[FAIL] deptry reported issues")
+        for issue in lock["issues"][:10]:
+            print(f"[FAIL] {issue}")
+        print("[OK] uv.lock matches pyproject" if not lock["issues"] else f"[FAIL] {len(lock['issues'])} lock issue(s)")
 
-    print("\n=== LINE LENGTH ===", flush=True)
-    timed("line length", line_length.main, [])
-
-    print("\n=== BARE ANY ===", flush=True)
-    timed("bare any", bare_any.main, [])
-
-    print("\n=== DEAD CODE ===", flush=True)
-    timed("dead code", dead_code.main, [])
-
-    print("\n=== DYNAMIC IMPORTS ===", flush=True)
-    timed("dynamic imports", dynamic_imports.main, [])
-
-    print("\n=== WALRUS OPERATOR ===", flush=True)
-    timed("walrus", walrus.main, [])
-
-    print("\n=== AMERICAN SPELLING ===", flush=True)
-    timed("spelling variants", spellings.main, [])
-
-    print("\n=== SPELLING ===", flush=True)
-    spelling_status = timed("spelling", spelling_check)
-    print("[OK] Spelling clean" if not spelling_status else "[FAIL] Spelling findings above")
-
-    timed("advisories", advisory_check, args.fast)
-
-    print("\n=== DEPENDENCY HYGIENE ===", flush=True)
-    issues = timed("lock check", package_audit.lock_issues)
-    if counts:
-        print(f"{counts['locked']} locked, {counts['installed']} installed, {counts['leftovers']} leftovers")
-    declaration_status = timed("deptry", declaration_check)
-    print("[OK] Imports match the pins" if not declaration_status else "[FAIL] deptry reported issues")
-    for issue in issues[:10]:
-        print(f"[FAIL] {issue}")
-    print("[OK] uv.lock matches pyproject" if not issues else f"[FAIL] {len(issues)} lock issue(s)")
+    sections.extend(
+        [
+            Section("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main([])),
+            Section("comments", "\n=== COMMENTS ===", lambda: comments.main([])),
+            Section("annotations", "\n=== ANNOTATION COMPLEXITY ===", lambda: annotations.main([])),
+            Section("line length", "\n=== LINE LENGTH ===", lambda: line_length.main([])),
+            Section("bare any", "\n=== BARE ANY ===", lambda: bare_any.main([])),
+            Section("dead code", "\n=== DEAD CODE ===", lambda: dead_code.main([])),
+            Section("dynamic imports", "\n=== DYNAMIC IMPORTS ===", lambda: dynamic_imports.main([])),
+            Section("walrus", "\n=== WALRUS OPERATOR ===", lambda: walrus.main([])),
+            Section("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
+            Section(
+                "spelling",
+                "\n=== SPELLING ===",
+                spelling_check,
+                lambda status: print("[OK] Spelling clean" if not status else "[FAIL] Spelling findings above"),
+            ),
+            Section("advisories", "", lambda: advisory_check(args.fast)),
+            Section("lock check", "\n=== DEPENDENCY HYGIENE ===", run_lock, report_lock),
+            Section("deptry", "", declaration_check, report_declaration),
+        ]
+    )
+    run_sections(sections)
 
     tests_status = 0
     if args.tests:
@@ -457,10 +561,12 @@ def main(argv: list[str] | None = None) -> int:
     """
     argv = list(sys.argv[1:] if argv is None else argv)
     # - a run's status comes from its own sections, so no earlier run in this process can fail it
+    global _started_at
     TIMES.clear()
+    _started_at = time.perf_counter()
     pushing = _flag(argv, "--push")
     argv = [argument for argument in argv if argument != "--push"]
-    changed = changed_paths()
+    changed = changed_since_upstream()
     prose_only = pushing and not any(path.endswith(".py") for path in changed)
     if prose_only:
         print("[PUSH] no Python change since upstream; prose sections only", flush=True)

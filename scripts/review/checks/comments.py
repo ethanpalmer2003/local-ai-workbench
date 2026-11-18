@@ -13,6 +13,7 @@ from pathlib import Path
 
 from scripts.review import MAX_REPORTED
 from scripts.review.lists.sources import check_targets
+from scripts.shared.paths import display_path
 
 MARKER = re.compile(r"\b(TODO|FIXME|XXX|HACK)\b")
 SEPARATOR = re.compile(r"^#\s*([=*#_-])\1{7,}\s*$")
@@ -61,11 +62,11 @@ def issues(path: Path) -> list[str]:
             raw = token.string
             body = raw.lstrip("#").strip()
             if _marker(body):
-                found.append(f"{path.name}:{token.start[0]}: marker comment ({body[:40]})")
+                found.append(f"{display_path(path)}:{token.start[0]}: marker comment ({body[:40]})")
             elif SEPARATOR.match(raw):
-                found.append(f"{path.name}:{token.start[0]}: banner rule; use one '# --- title ---' line")
+                found.append(f"{display_path(path)}:{token.start[0]}: banner rule; use one '# --- title ---' line")
             elif _commented_out(body):
-                found.append(f"{path.name}:{token.start[0]}: commented-out code ({body[:40]})")
+                found.append(f"{display_path(path)}:{token.start[0]}: commented-out code ({body[:40]})")
     except (tokenize.TokenError, IndentationError):
         return found
     return found

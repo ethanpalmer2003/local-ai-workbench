@@ -12,6 +12,7 @@ from pathlib import Path
 
 from scripts.review import MAX_REPORTED
 from scripts.review.lists.sources import check_targets
+from scripts.shared.paths import display_path
 
 CALL = re.compile(
     r"(?:urllib\.request\.)?urlopen\("
@@ -48,7 +49,7 @@ def issues(path: Path) -> list[str]:
         if "timeout" in call:
             continue
         line = text.count("\n", 0, match.start()) + 1
-        found.append(f"{path.name}:{line}: HTTP call without a timeout")
+        found.append(f"{display_path(path)}:{line}: HTTP call without a timeout")
     return found
 
 

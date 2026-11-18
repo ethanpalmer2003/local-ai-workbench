@@ -34,6 +34,14 @@ class SampleCodeTests(unittest.TestCase):
             path.unlink()
         self.assertEqual(text, "REACH_DEPTH = 1")
 
+    def test_a_comment_directly_above_the_definition_comes_with_it(self):
+        path = sample_file("owner.py", "# One hop.\nREACH_DEPTH = 1\n\n# Unrelated.\nOTHER = 2\n")
+        try:
+            text = sample_code.definition(path, "OTHER")
+        finally:
+            path.unlink()
+        self.assertEqual(text, "# Unrelated.\nOTHER = 2")
+
     def test_a_missing_function_is_a_refusal(self):
         path = sample_file("owner.py", "VALUE = 1\n")
         try:
@@ -48,7 +56,7 @@ class SampleCodeTests(unittest.TestCase):
             "from scripts.shared.graph import graph, walk\n\n\ndef pick(groups):\n    return walk(graph(), groups)\n",
         )
         try:
-            sample = sample_code.build(module, [], "")
+            sample = sample_code.build(module, [])
         finally:
             module.unlink()
         self.assertIn("left out: graph, walk from scripts.shared.graph", sample)
@@ -58,7 +66,7 @@ class SampleCodeTests(unittest.TestCase):
         module = sample_file("module.py", '"""The rule."""\n\n\ndef pick(groups):\n    return groups\n')
         owner = sample_file("owner.py", "def walk(x):\n    return x\n")
         try:
-            sample = sample_code.build(module, [(owner, "walk")], "")
+            sample = sample_code.build(module, [(owner, "walk")])
         finally:
             module.unlink()
             owner.unlink()
@@ -70,7 +78,7 @@ class SampleCodeTests(unittest.TestCase):
         module = sample_file("module.py", "from scripts.shared.graph import walk\n")
         owner = sample_file("owner.py", "def walk(x):\n    return x\n")
         try:
-            sample = sample_code.build(module, [(owner, "walk")], "")
+            sample = sample_code.build(module, [(owner, "walk")])
         finally:
             module.unlink()
             owner.unlink()
@@ -81,12 +89,11 @@ class SampleCodeTests(unittest.TestCase):
         module = sample_file("module.py", '"""The rule."""\n')
         owner = sample_file("owner.py", "def one(x):\n    return x\n\n\ndef two(x):\n    return x\n")
         try:
-            sample = sample_code.build(module, [(owner, "one"), (owner, "two")], "Both halves of the walk.")
+            sample = sample_code.build(module, [(owner, "one"), (owner, "two")])
         finally:
             module.unlink()
             owner.unlink()
         self.assertEqual(sample.count("# - copied from"), 1)
-        self.assertIn("Both halves of the walk.", sample)
         self.assertIn("# - copied in: one, two from", sample)
 
     def test_a_name_the_copied_code_still_needs_is_listed_with_its_source(self):
@@ -95,7 +102,7 @@ class SampleCodeTests(unittest.TestCase):
             "owner.py", "from collections import deque\n\n\ndef walk(items):\n    return deque(items)\n"
         )
         try:
-            sample = sample_code.build(module, [(owner, "walk")], "")
+            sample = sample_code.build(module, [(owner, "walk")])
         finally:
             module.unlink()
             owner.unlink()

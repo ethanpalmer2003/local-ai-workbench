@@ -11,7 +11,7 @@ from pathlib import Path
 from scripts.config import project_config as project_cfg
 
 
-def git(*args: str, root: Path | None = None) -> str:
+def git_text(*args: str, root: Path | None = None) -> str:
     """The command's stdout, or an empty string when git fails; callers treat that as no evidence.
 
     The bytes are decoded as UTF-8 here rather than by the locale, because `git show` returns file
@@ -25,18 +25,18 @@ def git(*args: str, root: Path | None = None) -> str:
 
 def committed_paths(root: Path | None = None) -> list[str]:
     """The paths HEAD's commit touched, which is what a post-commit hook has to judge."""
-    lines = git("show", "--name-only", "--pretty=format:", "HEAD", root=root).splitlines()
+    lines = git_text("show", "--name-only", "--pretty=format:", "HEAD", root=root).splitlines()
     return sorted({line.strip() for line in lines if line.strip()})
 
 
-def changed_paths(root: Path | None = None) -> list[str]:
+def changed_since_upstream(root: Path | None = None) -> list[str]:
     """Every path changed since upstream, working tree included; a rename gives both sides."""
     paths: list[str] = []
-    for line in git("status", "--porcelain", root=root).splitlines():
+    for line in git_text("status", "--porcelain", root=root).splitlines():
         body = line[3:].strip().strip('"')
         if body:
             paths.extend(part.strip().strip('"') for part in body.split(" -> "))
     paths.extend(
-        path for path in git("diff", "--name-only", "@{upstream}...HEAD", root=root).splitlines() if path.strip()
+        path for path in git_text("diff", "--name-only", "@{upstream}...HEAD", root=root).splitlines() if path.strip()
     )
     return sorted(set(paths))

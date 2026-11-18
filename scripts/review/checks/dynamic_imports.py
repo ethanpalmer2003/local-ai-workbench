@@ -11,6 +11,7 @@ from pathlib import Path
 from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
 from scripts.review.lists.sources import check_targets
+from scripts.shared.paths import display_path
 
 LOADERS = frozenset(
     {
@@ -54,7 +55,7 @@ def issues(path: Path) -> list[str]:
             continue
         name = _dotted(node.func)
         if name in LOADERS:
-            found.append(f"{path.name}:{node.lineno}: dynamic import ({name})")
+            found.append(f"{display_path(path)}:{node.lineno}: dynamic import ({name})")
     return found
 
 
