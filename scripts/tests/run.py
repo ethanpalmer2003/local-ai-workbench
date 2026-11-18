@@ -23,9 +23,9 @@ if __name__ == "__main__":
             full="--all" in arguments or "--push" in arguments,
             change_set=changed_since_head() if committing else None,
         )
-        print(f"[SCOPE] {len(selection.kept)} of {len(TEST_CLASSES)} test classes ({selection.why})", flush=True)
+        print(f"[SCOPE] {len(selection.kept)} of {len(TEST_CLASSES)} test classes ({selection.reason})", flush=True)
         if not selection.kept:
             # - a change set with no Python module runs nothing; pytest with no node ids would collect all
             print("[SCOPE] nothing to run; pass --all for every class", flush=True)
             raise SystemExit(0)
-        raise SystemExit(frameworks_smoke.main(extra_classes=selection.kept, scope_note=selection.why))
+        raise SystemExit(frameworks_smoke.main(extra_classes=selection.kept, scope_note=selection.reason))
