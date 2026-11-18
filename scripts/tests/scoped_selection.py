@@ -32,7 +32,8 @@ from scripts.shared.import_graph import (
 
 FULL_TRIGGERS = frozenset(
     {
-        # The two files that decide what the suite is, and only when their code changes.
+        # The files that decide what the suite is, and only when their code changes.
+        "scripts/tests/groups.py",
         "scripts/tests/run.py",
         "scripts/tests/scoped_selection.py",
     }

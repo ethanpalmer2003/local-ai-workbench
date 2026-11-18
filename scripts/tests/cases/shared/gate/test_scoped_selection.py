@@ -160,7 +160,7 @@ class TestSelection(unittest.TestCase):
 
     def test_the_manifests_keep_every_class(self):
         groups = (TestSelection,)
-        for path in ("scripts/tests/run.py", "scripts/tests/scoped_selection.py"):
+        for path in ("scripts/tests/groups.py", "scripts/tests/run.py", "scripts/tests/scoped_selection.py"):
             with self.subTest(path=path), patch.object(scoped_selection, "ast_matches_upstream", return_value=False):
                 chosen = scoped_selection.select_test_classes(groups, change_set=[path])
                 self.assertEqual(chosen.kept, groups)
