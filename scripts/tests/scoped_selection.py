@@ -30,15 +30,9 @@ from scripts.shared.import_graph import (
     module_names,
 )
 
-FULL_TRIGGERS = frozenset(
-    {
-        # The files that decide what the suite is, and only when their code changes.
-        # `registry.py` lists the classes, `run.py` runs them, and this file holds the rule that picks from them.
-        "scripts/tests/registry.py",
-        "scripts/tests/run.py",
-        "scripts/tests/scoped_selection.py",
-    }
-)
+# The files that decide what the suite is, and only when their code changes.
+# `registry.py` lists the classes, `run.py` runs them, and this file holds the rule that picks from them.
+FULL_TRIGGERS = {"scripts/tests/registry.py", "scripts/tests/run.py", "scripts/tests/scoped_selection.py"}
 
 # Alias for a test class rather than one of its instances, which is what the scope passes around.
 TestClass = type[unittest.TestCase]
