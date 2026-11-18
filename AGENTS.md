@@ -11,24 +11,25 @@
 
 ## Clarify before acting
 - Ask at once when the request is ambiguous or assumes an invented detail; never guess intent to keep moving.
+- Prefer the plain form: write the simplest code that solves the problem. Immutability, generics, protocols or helpers nothing exercises are complexity, not quality.
 - Do not ask permission to use a standard tool. Prefer a maintained dependency over a local substitute: add it, say what it was, and continue. The same goes for an algorithm: check an installed dependency and the standard library before hand-writing a traversal, and say why if you keep it.
 - When a problem needs the user's judgment, put it in [TODO](notes/TODO.md) with the options and start the next independent item instead of waiting.
 
 ## Work and permissions
 - Routine reads, Git status/diff/log, static checks and task-owned runs under five minutes are allowed.
-- Get approval for framework installs, model downloads, deletion, persistent services and runs over five minutes, which the long runners ask for at the terminal and accept `--yes` when you asked; prior approval covers the agreed task and retries. Dev-group tools and dependency-group additions need no approval. Pushes to this repository's own branches are routine once a part is finished.
-- Never create or edit issues, pull requests or discussions outside this account; upstream reports stay local drafts.
-- Respect explicit test deferrals. Never infer permission for live tests from a TODO or saved result.
+- Get approval for framework installs, model downloads, deletion, persistent services and runs over five minutes; long runners ask at the terminal and accept `--yes` when you asked, and prior approval covers the agreed task and retries. Dev-group tools and dependency-group additions need none. Pushing this repository's own branches is routine once a part is finished.
+- Never create or edit issues, pull requests or discussions outside this account.
+- Respect explicit test deferrals; a TODO or saved result never authorizes a live test.
 - Fix a defect in code already being touched, then and there. Record a larger unrelated fix as a TODO entry.
-- Each invocation uses its current tool policy; earlier outside-sandbox approval does not change later defaults.
-- Before native/GPU work, servers or process discovery, state execution context; check the token with `python -m scripts.launchers.runtime.execution_context` and record it with benchmark evidence.
+- Each invocation uses its current tool policy; earlier approval does not change later defaults.
+- Before native/GPU work or servers, state execution context with `python -m scripts.launchers.runtime.execution_context` and record it beside benchmark evidence.
 - Before manual llama-server startup, check `launch_util.llama_server_running()`. Manage only processes a run started and never stop an unrelated session. Port policy: [shared launcher helpers](scripts/launchers/shared/README.md).
 
 ## Structure and safety
 - Reuse one canonical component key wherever that component owns files; identity stays consistent across config, catalogs, tests and batches. Paths come from `project_config.component()`.
 - Change, move or remove a model through `python -m scripts.tools.model_admin` (`where`, `replace`, `remove`): it edits the owning catalog, regenerates `ids.py`, rewrites references and trashes the weights. Hand-editing a catalog misses the last two. [Tools](scripts/tools/README.md).
 - [Folder rules](.agents/FOLDERS.md) own typed bindings, naming and the move checklist. Preserve model identity and shared assets through a move.
-- Preserve nonempty data by moving it to `C:/AI/trash`; direct deletion is for empty files/directories only. Verify resolved move/delete paths stay within the intended workspace.
+- Preserve nonempty data by moving it to `C:/AI/trash`; delete only empty files and directories, and verify each resolved path first.
 - Preserve existing work and evidence. `.gitignore` entries cover whole folders.
 - Use uv; the interpreter and the checks that run it are in [checks](.agents/CHECKS.md). Secrets are in `scripts/.env`, Hugging Face data in `data/huggingface/`.
 - Codex under [.agents/CODEX-HARNESS.md](.agents/CODEX-HARNESS.md): a command refusal is a hard stop; report what must be allowed.
