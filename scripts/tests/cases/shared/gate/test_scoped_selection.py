@@ -189,7 +189,7 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(chosen.reason, "no code change")
 
     def test_a_module_with_unchanged_code_beside_a_document_runs_nothing(self):
-        with patch.object(scoped_selection, "ast_matches_upstream", return_value=True):
+        with patch.object(scoped_selection, "ast_matches_upstream", side_effect=lambda path, *_: path.endswith(".py")):
             chosen = scoped_selection.select_test_classes(
                 (TestSelection,), change_set=["scripts/shared/consent.py", "notes/TODO.md"]
             )
