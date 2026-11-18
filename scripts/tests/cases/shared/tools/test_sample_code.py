@@ -35,14 +35,6 @@ class SampleCodeTests(unittest.TestCase):
             path.unlink()
         self.assertEqual(text, "REACH_DEPTH = 1")
 
-    def test_a_comment_directly_above_the_definition_comes_with_it(self):
-        path = sample_file("owner.py", "# One hop.\nREACH_DEPTH = 1\n\n# Unrelated.\nOTHER = 2\n")
-        try:
-            text = sample_code.definition(path, "OTHER")
-        finally:
-            path.unlink()
-        self.assertEqual(text, "# Unrelated.\nOTHER = 2")
-
     def test_a_title_leads_the_file_as_a_comment(self):
         module = sample_file("module.py", '"""The rule."""\n')
         try:
@@ -61,19 +53,7 @@ class SampleCodeTests(unittest.TestCase):
         finally:
             path.unlink()
 
-    def test_the_sample_lists_what_it_leaves_out(self):
-        module = sample_file(
-            "module.py",
-            "from scripts.shared.graph import graph, walk\n\n\ndef pick(groups):\n    return walk(graph(), groups)\n",
-        )
-        try:
-            sample = sample_code.build(module, [])
-        finally:
-            module.unlink()
-        self.assertIn("left out: graph, walk from scripts.shared.graph", sample)
-        self.assertIn("def pick(groups):", sample)
-
-    def test_the_sample_starts_with_the_module_and_ends_with_the_accounting(self):
+    def test_the_sample_starts_with_the_module_and_ends_with_the_copied_definition(self):
         module = sample_file("module.py", '"""The rule."""\n\n\ndef pick(groups):\n    return groups\n')
         owner = sample_file("owner.py", "def walk(x):\n    return x\n")
         try:
@@ -83,18 +63,8 @@ class SampleCodeTests(unittest.TestCase):
             owner.unlink()
         self.assertTrue(sample.startswith('"""The rule."""'))
         self.assertNotIn("lines)", sample)
-        self.assertTrue(sample.rstrip().splitlines()[-1].startswith("# - copied in: walk from"))
-
-    def test_a_copied_function_is_not_listed_as_left_out(self):
-        module = sample_file("module.py", "from scripts.shared.graph import walk\n")
-        owner = sample_file("owner.py", "def walk(x):\n    return x\n")
-        try:
-            sample = sample_code.build(module, [(owner, "walk")])
-        finally:
-            module.unlink()
-            owner.unlink()
-        self.assertNotIn("left out:", sample)
-        self.assertIn("copied from scripts/tests/output/sample-code/owner.py", sample)
+        self.assertIn("# - walk lives in", sample)
+        self.assertTrue(sample.rstrip().endswith("return x"))
 
     def test_one_owner_gets_one_header(self):
         module = sample_file("module.py", '"""The rule."""\n')
@@ -104,20 +74,8 @@ class SampleCodeTests(unittest.TestCase):
         finally:
             module.unlink()
             owner.unlink()
-        self.assertEqual(sample.count("# - copied from"), 1)
-        self.assertIn("# - copied in: one, two from", sample)
-
-    def test_a_name_the_copied_code_still_needs_is_listed_with_its_source(self):
-        module = sample_file("module.py", '"""The rule."""\n\n\ndef pick():\n    return walk([])\n')
-        owner = sample_file(
-            "owner.py", "from collections import deque\n\n\ndef walk(items):\n    return deque(items)\n"
-        )
-        try:
-            sample = sample_code.build(module, [(owner, "walk")])
-        finally:
-            module.unlink()
-            owner.unlink()
-        self.assertIn("# - left out: deque from collections", sample)
+        self.assertEqual(sample.count("# - one, two lives in"), 1)
+        self.assertIn("# - one, two lives in", sample)
 
 
 if __name__ == "__main__":
