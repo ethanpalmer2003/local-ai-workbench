@@ -63,7 +63,7 @@ class SampleCodeTests(unittest.TestCase):
             owner.unlink()
         self.assertTrue(sample.startswith('"""The rule."""'))
         self.assertNotIn("lines)", sample)
-        self.assertIn("# - walk lives in", sample)
+        self.assertIn("# - walk from", sample)
         self.assertTrue(sample.rstrip().endswith("return x"))
 
     def test_one_owner_gets_one_header(self):
@@ -74,8 +74,8 @@ class SampleCodeTests(unittest.TestCase):
         finally:
             module.unlink()
             owner.unlink()
-        self.assertEqual(sample.count("# - one, two lives in"), 1)
-        self.assertIn("# - one, two lives in", sample)
+        self.assertEqual(sample.count("# - one, two from"), 1)
+        self.assertIn("# - one, two from", sample)
 
 
 if __name__ == "__main__":
