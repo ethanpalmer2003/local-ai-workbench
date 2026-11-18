@@ -1,16 +1,16 @@
-"""Select test classes affected by local changes using a one-hop reverse import walk.
+"""Select the test classes a local change can affect, using a one-hop reverse import walk.
 
-Keeps test classes defined in a changed module or in a module that directly imports one. `--all`, code
-edits to `FULL_TRIGGERS`, a deleted Python file and a branch with no upstream run the full suite; a
-clean tree, a non-Python change and an edit whose code is unchanged run no classes.
+A class is kept when its module changed or directly imports a changed module. The full suite runs for
+`--all`, a code change to a `FULL_TRIGGERS` file, a deleted Python file, or a branch with no upstream.
+No classes run for a clean tree, an edit to comments, docstrings or layout only, or a change that
+touches no Python module.
 
-One hop is the deliberate trade, since a second hop costs close to a full run: a test two imports away
-waits for the full pre-push run, which is also the backstop for data the graph cannot see. The graph
-knows modules, so a change to a `.json`, template or config path selects nothing on its own.
+The walk is currently set to one hop because a second hop was tested and found to select close to a
+full run. A test two imports away waits for the full pre-push run.
 
-Dependency edges come from [import_graph](../shared/import_graph.py), parsed statically with `ast`
-rather than imported. Dynamic imports and files executed via `subprocess`, `runpy`, or `open` are
-not tracked by the module graph and rely on the full pre-push run.
+Edges come from parsing source with `ast`; nothing is imported. The graph only knows modules, so a
+`.json`, template or config change selects nothing on its own, and dynamic imports and files reached
+through `subprocess`, `runpy` or `open` are not tracked. The full pre-push run covers all of these.
 """
 
 import ast
