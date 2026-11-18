@@ -116,13 +116,15 @@ def code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
         return True
     # Read the committed version from the remote tracking branch for comparison.
     # `@{upstream}` is git's name for the branch this one tracks, not the tip of this branch.
-    # `git_text_or_empty` answers "" when git could not read the committed copy, and the parser answers None
-    # for empty or unparsable source, so both kinds of no-evidence arrive as a missing tree.
     previous_source = git_text_or_empty("show", "@{upstream}:" + path, root=root)
+    # Nothing to compare against: git could not read the committed copy, or that copy is an empty file.
+    if not previous_source:
+        return True
     committed = ast_parse_text_or_file(previous_source)
     # `ast.parse` discards `#` comments; `_dump_without_docstrings` strips docstrings, so the two trees hold
     # only code.
     working = ast_parse_text_or_file(current)
+    # A copy that will not parse is a real change as well, since nothing can be ruled out.
     if committed is None or working is None:
         return True
     # Different trees after stripping prose means a test can observe the edit.
