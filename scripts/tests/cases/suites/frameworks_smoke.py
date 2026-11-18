@@ -681,14 +681,14 @@ class _PytestRun:
             self.outcomes.append(("passed", report.nodeid, ""))
 
 
-def _pytest_nodeids(classes: tuple[type[unittest.TestCase], ...]) -> list[str]:
+def _node_ids(classes: tuple[type[unittest.TestCase], ...]) -> list[str]:
     """Explicit class selection: unregistered modules must never be collected."""
-    nodeids = []
+    ids = []
     for test_class in classes:
         module = sys.modules[test_class.__module__]
         source = Path(str(module.__file__)).as_posix()
-        nodeids.append(f"{source}::{test_class.__qualname__}")
-    return nodeids
+        ids.append(f"{source}::{test_class.__qualname__}")
+    return ids
 
 
 def _run_regressions(
@@ -719,7 +719,7 @@ def _run_regressions(
             ),
         ):
             code = pytest.main(
-                ["-q", "-s", "-rs", "--no-header", "--tb=short", "-p", "no:cacheprovider", *_pytest_nodeids(classes)],
+                ["-q", "-s", "-rs", "--no-header", "--tb=short", "-p", "no:cacheprovider", *_node_ids(classes)],
                 plugins=[runner],
             )
     (output.artifacts / "timings.json").write_text(json.dumps(runner.seconds, indent=2), encoding="utf-8")
