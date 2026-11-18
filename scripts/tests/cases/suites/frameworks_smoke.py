@@ -614,7 +614,7 @@ DEFAULT_CLASSES: tuple[type[unittest.TestCase], ...] = (
 )
 
 
-def main(extra_classes: tuple[type[unittest.TestCase], ...] = (), scope_note: str = "") -> int:
+def main(extra_classes: tuple[type[unittest.TestCase], ...] = (), reason: str = "") -> int:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--suite", choices=SUITES, help="native suite to run: launcher wiring, backend probes, or both")
@@ -654,7 +654,7 @@ def main(extra_classes: tuple[type[unittest.TestCase], ...] = (), scope_note: st
         settings={
             "test_mode": "model_free",
             "scope": ["mocked_unit", "loopback_integration", "local_assets"],
-            "class_selection": scope_note or "every class",
+            "class_selection": reason or "every class",
             "native_suite_after_regressions": native_suite,
         },
     )
