@@ -9,7 +9,7 @@ to it. Two functions, one per stage:
   branch lacks, since anything unreviewed is in scope there.
 
 A git command that fails raises `GitError`, because a broken read is not the same answer as an empty one.
-The two callers that deliberately read failure as no evidence use `git_text_or_empty`.
+The callers that deliberately read failure as no evidence use `git_text_or_none`, which answers None.
 """
 
 import subprocess
@@ -37,17 +37,17 @@ def git_text(*args: str, root: Path | None = None) -> str:
     return result.stdout.decode("utf-8", errors="replace")
 
 
-def git_text_or_empty(*args: str, root: Path | None = None) -> str:
-    """The command's stdout, or an empty string when git fails; callers read that as no evidence."""
+def git_text_or_none(*args: str, root: Path | None = None) -> str | None:
+    """The command's stdout, or None when git fails; callers read that as no evidence."""
     try:
         return git_text(*args, root=root)
     except GitError:
-        return ""
+        return None
 
 
 def committed_paths(root: Path | None = None) -> list[str]:
     """The paths HEAD's commit touched, which is what a post-commit hook has to judge."""
-    lines = git_text_or_empty("show", "--name-only", "--pretty=format:", "HEAD", root=root).splitlines()
+    lines = (git_text_or_none("show", "--name-only", "--pretty=format:", "HEAD", root=root) or "").splitlines()
     return sorted({line.strip() for line in lines if line.strip()})
 
 
@@ -57,7 +57,7 @@ class NoUpstreamError(RuntimeError):
 
 def upstream_known(root: Path | None = None) -> bool:
     """Whether this branch has an upstream ref, which an empty change set cannot tell you."""
-    return bool(git_text_or_empty("rev-parse", "--abbrev-ref", "@{upstream}", root=root).strip())
+    return bool((git_text_or_none("rev-parse", "--abbrev-ref", "@{upstream}", root=root) or "").strip())
 
 
 def changed_since_head(root: Path | None = None) -> list[str]:

@@ -44,7 +44,7 @@ class ScopedSkipTests(unittest.TestCase):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
             (root / "module.py").write_text(after, encoding="utf-8")
-            with patch.object(dead_code, "git_text_or_empty", return_value=before):
+            with patch.object(dead_code, "git_text_or_none", return_value=before):
                 return dead_code.verdict_cannot_change(["module.py"], root)
 
     def test_a_body_edit_that_names_the_same_things_cannot_move_the_verdict(self):
