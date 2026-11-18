@@ -1,5 +1,6 @@
 """Review samples: the module in full, the copied definitions under one header per owner, and the accounting."""
 
+import ast
 import unittest
 from pathlib import Path
 
@@ -41,6 +42,16 @@ class SampleCodeTests(unittest.TestCase):
         finally:
             path.unlink()
         self.assertEqual(text, "# Unrelated.\nOTHER = 2")
+
+    def test_a_title_leads_the_file_as_a_comment(self):
+        module = sample_file("module.py", '"""The rule."""\n')
+        try:
+            untitled = sample_code.build(module, [])
+            titled = sample_code.build(module, [], "One hop back")
+        finally:
+            module.unlink()
+        self.assertTrue(titled.startswith("# One hop back\n\n"))
+        self.assertEqual(ast.dump(ast.parse(titled)), ast.dump(ast.parse(untitled)))
 
     def test_a_missing_function_is_a_refusal(self):
         path = sample_file("owner.py", "VALUE = 1\n")
