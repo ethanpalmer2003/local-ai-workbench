@@ -61,6 +61,7 @@ def select_test_classes(
     if full:
         return Selection(test_classes, (), "--all")
     if change_set is None:
+        # The push-stage baseline: the working tree against `HEAD`, plus the commits the upstream lacks.
         try:
             changed = changed_since_upstream(root)
         except NoUpstreamError:
@@ -121,7 +122,9 @@ def _code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
     # Nothing to compare against: None when git failed, "" when the committed file is empty.
     if not previous_source:
         return True
+    # The committed copy as a tree: source text from git, or None when it is empty or unparsable.
     committed = ast_parse_text_or_file(previous_source)
+    # The working copy as a tree, parsed the same way, so the comparison is tree against tree.
     working = ast_parse_text_or_file(current)
     # A copy that will not parse is a real change as well, since nothing can be ruled out.
     if committed is None or working is None:
