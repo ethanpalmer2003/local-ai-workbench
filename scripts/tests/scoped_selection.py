@@ -26,7 +26,6 @@ from scripts.shared.import_graph import (
     ast_parse_text_or_file,
     find_affected_modules,
     import_graph,
-    module_name,
     module_names,
 )
 
@@ -143,7 +142,8 @@ def _module_deleted(paths: list[str], root: Path | None) -> bool:
 
 def _reach_reason(edges: ImportGraph, reachable: set[str], paths: list[str]) -> str:
     """The evidence a reader sees, including how many changed paths named no module."""
-    ignored = sum(module_name(path) is None for path in paths)
+    # The change set holds unique paths, so the difference is exactly the ones that named no module.
+    ignored = len(paths) - len(module_names(paths))
     detail = f" ({ignored} path(s) outside the module graph ignored)" if ignored else ""
     return f"{len(reachable)} of {len(edges)} modules reachable{detail}"
 

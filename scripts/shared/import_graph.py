@@ -65,7 +65,7 @@ def module_names(paths: Iterable[str]) -> set[str]:
     """The module names among these paths, leaving out every path that is not a module."""
     names: set[str] = set()
     for path in paths:
-        name = module_name(path)
+        name = _module_name(path)
         if name:
             names.add(name)
     return names
@@ -82,14 +82,14 @@ def git_module_files(root: Path | None = None) -> dict[str, Path]:
     for relative in git_text(
         "ls-files", "--cached", "--others", "--exclude-standard", "scripts", root=root
     ).splitlines():
-        name = module_name(relative)
+        name = _module_name(relative)
         path = base / relative
         if name and path.is_file():
             files[name] = path
     return files
 
 
-def module_name(path: str) -> str | None:
+def _module_name(path: str) -> str | None:
     """Convert `scripts/x/y.py` to `scripts.x.y`, package `__init__.py` to its package, or anything else to None.
 
     A document, template or config path is not a module even under `scripts/`, so it contributes no node.

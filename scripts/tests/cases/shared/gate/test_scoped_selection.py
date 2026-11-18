@@ -31,7 +31,7 @@ class TestSelection(unittest.TestCase):
             ("scripts/config/llamacpp/chat_template.jinja", None),
         )
         for path, expected in cases:
-            self.assertEqual(graph_api.module_name(path), expected, path)
+            self.assertEqual(graph_api._module_name(path), expected, path)
 
     def test_relative_imports_resolve_within_the_package(self):
         source = "from . import sibling\nfrom .sibling import thing\nfrom ..parent import other\n"
