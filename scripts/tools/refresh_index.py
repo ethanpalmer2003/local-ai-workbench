@@ -191,7 +191,7 @@ def run_graphify(commands: Sequence[Sequence[str]], root: Path, lock: Path | Non
 
 def default_paths(root: Path) -> list[str]:
     """What to judge with no change set given: the last commit plus anything uncommitted."""
-    return sorted(set(changes.committed_paths(root)) | set(changes.changed_paths(root)))
+    return sorted(set(changes.committed_paths(root)) | set(changes.changed_since_upstream(root)))
 
 
 def refresh(paths: list[str] | None = None, root: Path | None = None) -> int:

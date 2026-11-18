@@ -4,14 +4,14 @@ import argparse
 import subprocess
 
 from scripts.config import project_config as project_cfg
-from scripts.review.__main__ import changed_paths
+from scripts.review.__main__ import changed_since_upstream
 
 
 def python_targets(all_files: bool) -> list[str]:
     """Changed Python files, or the repository root when nothing changed or --all is given."""
     if all_files:
         return ["."]
-    files = [path for path in changed_paths() if path.endswith(".py")]
+    files = [path for path in changed_since_upstream() if path.endswith(".py")]
     return files or ["."]
 
 

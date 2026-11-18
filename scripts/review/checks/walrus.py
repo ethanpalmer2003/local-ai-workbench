@@ -12,19 +12,12 @@ import ast
 from collections import Counter
 from pathlib import Path
 
-from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
 from scripts.review.lists.sources import check_targets
+from scripts.shared.paths import display_path
 
 COMPREHENSIONS = ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp
 BANNED = "inside a comprehension"
-
-
-def _relative(path: Path) -> str:
-    """A path as the report prints it, relative to the repository where it can be."""
-    if path.is_relative_to(project_cfg.BASE_DIR):
-        return path.relative_to(project_cfg.BASE_DIR).as_posix()
-    return path.as_posix()
 
 
 def _context(node: ast.NamedExpr, parents: dict[ast.AST, ast.AST]) -> str:
@@ -61,7 +54,7 @@ def issues(path: Path) -> list[str]:
     if tree is None:
         return []
     return [
-        f"{_relative(path)}:{node.lineno}: walrus {BANNED} ({node.target.id})"
+        f"{display_path(path)}:{node.lineno}: walrus {BANNED} ({node.target.id})"
         for node, kind in _sites(tree)
         if kind == BANNED and isinstance(node.target, ast.Name)
     ]

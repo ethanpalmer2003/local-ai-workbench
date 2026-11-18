@@ -11,20 +11,20 @@ import builtins
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-
-
-def _relative(path: Path) -> str:
-    """A path as the sample prints it."""
-    return path.relative_to(project_cfg.BASE_DIR).as_posix() if path.is_absolute() else path.as_posix()
+from scripts.shared.paths import display_path
 
 
 def definition(path: Path, name: str) -> str:
-    """One top-level definition's own source, without the lines around it."""
+    """One top-level definition's own source, with the comment lines directly above it."""
     text = path.read_text(encoding="utf-8")
+    lines = text.splitlines()
     node = next((item for item in ast.parse(text).body if _defines(item, name)), None)
     if node is None:
         raise SystemExit(f"{path}: no top-level function or constant named {name}")
-    return "\n".join(text.splitlines()[node.lineno - 1 : node.end_lineno])
+    start = node.lineno - 1
+    while start and lines[start - 1].lstrip().startswith("#"):
+        start -= 1
+    return "\n".join(lines[start : node.end_lineno])
 
 
 def _defines(node: ast.stmt, name: str) -> bool:
@@ -102,7 +102,7 @@ def unaccounted(bodies: list[str], known: set[str], owners: list[Path]) -> list[
     origins: dict[str, str] = {}
     for owner in owners:
         tree = ast.parse(owner.read_text(encoding="utf-8"))
-        origins.update(dict.fromkeys(_top_level(tree), _relative(owner)))
+        origins.update(dict.fromkeys(_top_level(tree), display_path(owner)))
         origins.update(_imported(tree))
     used = set().union(*(_used(body) for body in bodies))
     local = set().union(*(_local(body) for body in bodies))
@@ -110,7 +110,7 @@ def unaccounted(bodies: list[str], known: set[str], owners: list[Path]) -> list[
     return [f"{name} from {origins.get(name, 'an owner not copied')}" for name in missing]
 
 
-def build(module: Path, includes: list[tuple[Path, str]], note: str) -> str:
+def build(module: Path, includes: list[tuple[Path, str]]) -> str:
     """The whole sample: the module, one block per owner, and the accounting."""
     text = module.read_text(encoding="utf-8")
     grouped: dict[Path, list[tuple[str, str]]] = {}
@@ -119,14 +119,13 @@ def build(module: Path, includes: list[tuple[Path, str]], note: str) -> str:
     bodies = [source for entries in grouped.values() for _name, source in entries]
     blocks = [text.rstrip("\n")]
     for path, entries in grouped.items():
-        reason = f" {note}" if note else ""
-        header = f"# - copied from {_relative(path)} so the rule above can be read without it.{reason}"
+        header = f"# - copied from {display_path(path)} so the rule above can be read without it."
         blocks.append(f"{header}\n" + "\n\n\n".join(source for _name, source in entries))
     copied = {name for _path, name in includes}
     known = _top_level(ast.parse(text)) | copied
     left_out = unconsumed(module, copied) + unaccounted(bodies, known, list(grouped))
     footer = [
-        f"# - copied in: {', '.join(name for name, _source in entries)} from {_relative(path)}"
+        f"# - copied in: {', '.join(name for name, _source in entries)} from {display_path(path)}"
         for path, entries in grouped.items()
     ]
     footer.extend(f"# - left out: {item}" for item in sorted(set(left_out)))
@@ -144,7 +143,6 @@ def main(argv: list[str] | None = None) -> int:
         metavar="FILE:NAME",
         help="definition to copy in after the module; repeats from one file share a header",
     )
-    parser.add_argument("--note", default="", help="one sentence on why the copied definitions are here")
     parser.add_argument("--out", required=True, help="text file to write, repo-relative")
     args = parser.parse_args(argv)
     includes = []
@@ -153,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
         if not name:
             raise SystemExit(f"--include wants FILE:NAME, not {item}")
         includes.append((project_cfg.BASE_DIR / path, name))
-    sample = build(project_cfg.BASE_DIR / args.module, includes, args.note)
+    sample = build(project_cfg.BASE_DIR / args.module, includes)
     target = project_cfg.BASE_DIR / args.out
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(sample, encoding="utf-8", newline="\n")
