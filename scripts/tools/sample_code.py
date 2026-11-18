@@ -110,8 +110,8 @@ def unaccounted(bodies: list[str], known: set[str], owners: list[Path]) -> list[
     return [f"{name} from {origins.get(name, 'an owner not copied')}" for name in missing]
 
 
-def build(module: Path, includes: list[tuple[Path, str]]) -> str:
-    """The whole sample: the module, one block per owner, and the accounting."""
+def build(module: Path, includes: list[tuple[Path, str]], title: str = "") -> str:
+    """The whole sample: an optional title line, the module, one block per owner, and the accounting."""
     text = module.read_text(encoding="utf-8")
     grouped: dict[Path, list[tuple[str, str]]] = {}
     for path, name in includes:
@@ -130,7 +130,9 @@ def build(module: Path, includes: list[tuple[Path, str]]) -> str:
     ]
     footer.extend(f"# - left out: {item}" for item in sorted(set(left_out)))
     tail = "\n".join(footer)
-    return "\n\n\n".join(blocks) + (f"\n\n{tail}" if footer else "") + "\n"
+    body = "\n\n\n".join(blocks) + (f"\n\n{tail}" if footer else "") + "\n"
+    # - a comment, so the sample stays valid Python even with a title for an attachment above it
+    return f"# {title}\n\n{body}" if title else body
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -143,6 +145,7 @@ def main(argv: list[str] | None = None) -> int:
         metavar="FILE:NAME",
         help="definition to copy in after the module; repeats from one file share a header",
     )
+    parser.add_argument("--title", default="", help="one line above the code, for a reader or an attachment")
     parser.add_argument("--out", required=True, help="text file to write, repo-relative")
     args = parser.parse_args(argv)
     includes = []
@@ -151,7 +154,7 @@ def main(argv: list[str] | None = None) -> int:
         if not name:
             raise SystemExit(f"--include wants FILE:NAME, not {item}")
         includes.append((project_cfg.BASE_DIR / path, name))
-    sample = build(project_cfg.BASE_DIR / args.module, includes)
+    sample = build(project_cfg.BASE_DIR / args.module, includes, args.title)
     target = project_cfg.BASE_DIR / args.out
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(sample, encoding="utf-8", newline="\n")
