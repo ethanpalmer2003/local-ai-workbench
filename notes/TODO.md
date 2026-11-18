@@ -46,3 +46,7 @@
   cause, and if it runs the fault is in the rewrite prompt or the grading path. [Result](../scripts/tests/notes/OUTCOMES.md).
   ~30 min
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The pair now exists on ROCm for `proverb` and `ledger` (27B 23.2 s and 59.3 s against Strata's 74.1 s and 144.0 s, Pi client), but the Vulkan arm still needs the b12422 crash resolved before it can be repeated on the default build. Turn-budget cleanup stays unverified. [Results](../scripts/tests/notes/OUTCOMES.md). ~1 h
+
+- [ ] Say why the suite's scope is empty where a person reads it: `Selection.reason` answers `no change set`, but the `[SCOPE]` line is printed by `scripts/tests/run.py`, which does not know whether the branch has an upstream ref. The gate already distinguishes the two with `changes.upstream_known()`; the runner could print the same sentence. Outside the scope modules, so it waits. ~15 min
+
+- [ ] Decide the smoke suite's two report keys: `class_selection` carries the selection reason while `scope` lists the kinds of checks, and the vocabulary pass left both because they answer different questions. Either name them for what they hold (`reason`, `checks`) or state in the report preamble that one is why and the other is what. Owner: [frameworks_smoke.py](../scripts/tests/cases/suites/frameworks_smoke.py). ~15 min
