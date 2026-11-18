@@ -27,8 +27,7 @@ from scripts.shared.import_graph import (
     import_graph,
     module_name,
     module_names,
-    parse_source,
-    parse_text,
+    parse,
 )
 
 FULL_TRIGGERS = frozenset(
@@ -119,8 +118,8 @@ def code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
     # `@{upstream}` is git's name for the branch this one tracks, not the tip of this branch.
     previous = git_text_or_empty("show", "@{upstream}:" + path, root=root)
     # `ast.parse` discards `#` comments automatically; `_dump_without_docstrings` strips docstrings.
-    before = parse_text(previous)
-    after = parse_source(current)
+    before = parse(previous)
+    after = parse(current)
     # No evidence from git is not proof of a prose edit: `git_text_or_empty` answers "" when the read failed, and
     # broken or unreadable file on either side is a real change too, since nothing can be ruled out.
     if not previous or before is None or after is None:

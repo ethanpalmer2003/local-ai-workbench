@@ -32,7 +32,7 @@ from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
 from scripts.review.lists.sources import maintained_files
 from scripts.shared.changes import git_text_or_empty
-from scripts.shared.import_graph import parse_source, parse_text
+from scripts.shared.import_graph import parse
 
 # - retired code awaiting a removal decision; the entry in notes/TODO.md owns that decision
 RETIRED = {"scripts/launchers/audiocpp/tts_legacy_buffered.py"}
@@ -99,8 +99,8 @@ def verdict_cannot_change(paths: list[str], root: Path | None = None) -> bool:
         if not current.is_file():
             return False
         previous = git_text_or_empty("show", f"@{{upstream}}:{path}", root=root)
-        before = parse_text(previous) if previous else None
-        after = parse_source(current)
+        before = parse(previous) if previous else None
+        after = parse(current)
         if before is None or after is None or identifiers(before) != identifiers(after):
             return False
     return True

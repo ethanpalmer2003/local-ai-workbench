@@ -34,7 +34,7 @@ def import_graph(root: Path | None = None) -> ImportGraph:
     for name, path in files.items():
         parts = name.split(".")
         targets = {".".join(parts[:end]) for end in range(1, len(parts))} & known
-        tree = parse_source(path)
+        tree = parse(path)
         if tree is not None:
             for raw in imported_names(tree, name, is_package=path.name == "__init__.py"):
                 target = _longest_known_prefix(raw, known)
@@ -108,19 +108,15 @@ def module_name(path: str) -> str | None:
     return ".".join(parts) if len(parts) > 1 else None
 
 
-def parse_text(text: str) -> ast.Module | None:
-    """Parse source text and return its syntax tree, or None when it cannot be parsed."""
+def parse(source: str | Path) -> ast.Module | None:
+    """Return the syntax tree of source text or of a file, or None when it cannot be read or parsed."""
+    try:
+        text = source if isinstance(source, str) else source.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
     try:
         return ast.parse(text)
     except (SyntaxError, ValueError):
-        return None
-
-
-def parse_source(path: Path) -> ast.Module | None:
-    """Parse and return the syntax tree of a source file, or None when it cannot be read or parsed."""
-    try:
-        return parse_text(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError):
         return None
 
 
