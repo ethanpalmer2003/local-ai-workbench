@@ -62,6 +62,8 @@ def select_test_classes(
     if full:
         return Selection(test_classes, (), "--all")
     changed = changed_since_upstream(root) if change_set is None else change_set
+    # Git listed nothing, which covers a clean tree, a branch with no upstream, a failed read and an
+    # ignored-only edit such as the state folder. Nothing to reason from, so keep every class.
     if not changed:
         return Selection(test_classes, (), "no change set")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
