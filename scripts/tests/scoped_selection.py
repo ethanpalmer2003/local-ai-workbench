@@ -8,6 +8,9 @@ touches no Python module.
 The walk is currently set to one hop because a second hop was tested and found to select close to a
 full run. A test two imports away waits for the full pre-push run.
 
+Each call into `changes` or `import_graph` carries one line saying what it contributes here, since those
+two modules own the detail; the rest of this file is the rule alone.
+
 Edges come from parsing source with `ast`; nothing is imported. The graph only knows modules, so a
 `.json`, template or config change selects nothing on its own, and dynamic imports and files reached
 through `subprocess`, `runpy` or `open` are not tracked. The full pre-push run covers all of these.
@@ -89,6 +92,7 @@ def select_test_classes(
     if not changed_modules:
         return Selection((), test_classes, "no Python change")
 
+    # One pass over the tree: every module name mapped to the modules it imports, parsed from source.
     edges = import_graph(root)
     # The walk is a breadth-first search over the reversed graph, one hop back, per `REACH_DEPTH`.
     reachable = find_affected_modules(edges, changed_modules, depth=REACH_DEPTH)
@@ -112,6 +116,7 @@ def _code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
         return True
     # Read the committed version from the remote tracking branch for comparison.
     # `@{upstream}` is git's name for the branch this one tracks, not the tip of this branch.
+    # The committed copy as text: one git command, answering None when it cannot be read.
     previous_source = git_text_or_none("show", "@{upstream}:" + path, root=root)
     # Nothing to compare against: None when git failed, "" when the committed file is empty.
     if not previous_source:
