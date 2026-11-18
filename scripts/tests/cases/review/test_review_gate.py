@@ -64,6 +64,19 @@ class GateScopeTests(unittest.TestCase):
         full.assert_not_called()
         touched.assert_not_called()
 
+    def test_a_push_with_a_clean_tree_skips(self):
+        from scripts.review import __main__ as gate
+
+        with (
+            patch.object(gate, "changed_since_upstream", return_value=[]),
+            patch.object(gate, "upstream_known", return_value=True),
+            patch.object(gate, "full_gate") as full,
+            patch.object(gate, "touched_gate") as touched,
+        ):
+            self.assertEqual(gate.main(["--push"]), 0)
+        full.assert_not_called()
+        touched.assert_not_called()
+
     def test_a_branch_without_an_upstream_runs_everything(self):
         from scripts.review import __main__ as gate
 
