@@ -14,7 +14,7 @@
 
 ## When
 
-- A commit checks what it is recording: `--commit` reads the working tree against `HEAD`, so earlier unpushed commits do not run again. The scoped gate and scoped suite follow ruff, codespell and the punctuation pass. About fifteen seconds for a code change, seconds for prose.
+- A commit checks what it is recording: `--commit` reads the working tree against `HEAD`, so earlier unpushed commits do not run again. The scoped gate and scoped suite follow ruff, codespell and the punctuation pass. About five seconds for a code change, seconds for prose.
 - A push checks everything: `--push` runs every section and every class when the unpushed commits touch Python, and the prose sections with no class when they do not; no Python behavior changed, and the last push was green.
 - Both commands also run by hand; there is no separate edit stage.
 - The suite is a feedback loop: one import hop from the change by default. No Python path runs none, a comment or docstring edit runs none, and the manifests keep every class on a code change; the launcher and proxy block is in the set; see [selection](../scripts/tests/scoped_selection.py).
