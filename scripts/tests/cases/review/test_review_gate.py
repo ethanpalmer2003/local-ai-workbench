@@ -77,7 +77,7 @@ class GateScopeTests(unittest.TestCase):
         from scripts.review import __main__ as gate
 
         with (
-            patch.object(gate, "uncommitted_paths", return_value=["scripts/shared/consent.py"]) as working,
+            patch.object(gate, "changed_since_head", return_value=["scripts/shared/consent.py"]) as working,
             patch.object(gate, "changed_since_upstream") as upstream,
             patch.object(gate, "touched_gate", return_value=0) as touched,
             patch.object(gate, "full_gate"),
@@ -97,7 +97,7 @@ class GateScopeTests(unittest.TestCase):
             return " M notes/TODO.md\n"
 
         with patch.object(changes, "git_text", side_effect=git_text):
-            self.assertEqual(changes.uncommitted_paths(), ["notes/TODO.md"])
+            self.assertEqual(changes.changed_since_head(), ["notes/TODO.md"])
         self.assertEqual(calls, ["status"])
 
     def test_all_runs_every_section_whatever_changed(self):

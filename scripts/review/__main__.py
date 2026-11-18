@@ -35,7 +35,7 @@ from scripts.review.checks import (
     walrus,
 )
 from scripts.shared import changes
-from scripts.shared.changes import changed_since_upstream, uncommitted_paths
+from scripts.shared.changes import changed_since_head, changed_since_upstream
 from scripts.shared.import_graph import (
     REACH_DEPTH,
     find_affected_modules,
@@ -569,7 +569,7 @@ def main(argv: list[str] | None = None) -> int:
     pushing = _flag(argv, "--push")
     committing = _flag(argv, "--commit")
     argv = [argument for argument in argv if argument not in ("--push", "--commit")]
-    changed = uncommitted_paths() if committing else changed_since_upstream()
+    changed = changed_since_head() if committing else changed_since_upstream()
     prose_only = pushing and not any(path.endswith(".py") for path in changed)
     if prose_only:
         print("[PUSH] no Python change since upstream; prose sections only", flush=True)
