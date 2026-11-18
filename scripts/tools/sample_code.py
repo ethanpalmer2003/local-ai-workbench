@@ -45,7 +45,7 @@ def build(module: Path, includes: list[tuple[Path, str]], title: str = "") -> st
     blocks = [text.rstrip("\n")]
     for path, entries in grouped.items():
         names = ", ".join(name for name, _source in entries)
-        header = f"# - {names} lives in {display_path(path)}, copied here so the rule above can be read without it."
+        header = f"# - {names} from {display_path(path)}, copied here for clarity."
         blocks.append(f"{header}\n" + "\n\n\n".join(source for _name, source in entries))
     body = "\n\n\n".join(blocks) + "\n"
     # - a comment, so the sample stays valid Python even with a title for an attachment above it
