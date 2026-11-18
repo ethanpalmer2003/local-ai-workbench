@@ -156,7 +156,7 @@ class TestSelection(unittest.TestCase):
                 chosen = scoped_selection.select_test_classes(groups, change_set=paths)
                 self.assertEqual(chosen.kept, ())
                 self.assertEqual(chosen.dropped, groups)
-                self.assertEqual(chosen.why, "no Python change")
+                self.assertEqual(chosen.reason, "no Python change")
 
     def test_the_manifests_keep_every_class(self):
         groups = (TestSelection,)
@@ -164,7 +164,7 @@ class TestSelection(unittest.TestCase):
             with self.subTest(path=path), patch.object(scoped_selection, "ast_matches_upstream", return_value=False):
                 chosen = scoped_selection.select_test_classes(groups, change_set=[path])
                 self.assertEqual(chosen.kept, groups)
-                self.assertIn("manifest changed", chosen.why)
+                self.assertIn("manifest changed", chosen.reason)
 
     def test_a_lock_config_or_package_init_runs_no_class(self):
         for path in ("pyproject.toml", "uv.lock", "scripts/__init__.py"):
@@ -172,7 +172,7 @@ class TestSelection(unittest.TestCase):
             with self.subTest(path=path), patch.object(scoped_selection, "ast_matches_upstream", return_value=False):
                 chosen = scoped_selection.select_test_classes((TestSelection,), change_set=[path])
                 self.assertEqual(chosen.kept, ())
-                self.assertEqual(chosen.why, "no Python change")
+                self.assertEqual(chosen.reason, "no Python change")
 
     def test_a_comment_edit_to_a_trigger_runs_nothing(self):
         with patch.object(scoped_selection, "ast_matches_upstream", return_value=True):
@@ -180,13 +180,13 @@ class TestSelection(unittest.TestCase):
                 (TestSelection,), change_set=["scripts/tests/scoped_selection.py"]
             )
         self.assertEqual(chosen.kept, ())
-        self.assertEqual(chosen.why, "no code change")
+        self.assertEqual(chosen.reason, "no code change")
 
     def test_a_comment_edit_to_an_ordinary_module_runs_nothing(self):
         with patch.object(scoped_selection, "ast_matches_upstream", return_value=True):
             chosen = scoped_selection.select_test_classes((TestSelection,), change_set=["scripts/shared/consent.py"])
         self.assertEqual(chosen.kept, ())
-        self.assertEqual(chosen.why, "no code change")
+        self.assertEqual(chosen.reason, "no code change")
 
     def test_a_cosmetic_module_beside_a_document_runs_nothing(self):
         with patch.object(scoped_selection, "ast_matches_upstream", return_value=True):
@@ -194,7 +194,7 @@ class TestSelection(unittest.TestCase):
                 (TestSelection,), change_set=["scripts/shared/consent.py", "notes/TODO.md"]
             )
         self.assertEqual(chosen.kept, ())
-        self.assertEqual(chosen.why, "no Python change")
+        self.assertEqual(chosen.reason, "no Python change")
 
     def test_a_docstring_only_trigger_beside_code_still_scopes(self):
         from scripts.tests.cases.review.checks.test_docs import PointerTests
@@ -217,7 +217,7 @@ class TestSelection(unittest.TestCase):
                 (PointerTests,), change_set=["scripts/tests/run.py", "scripts/review/checks/docs.py"]
             )
         self.assertEqual(chosen.kept, (PointerTests,))
-        self.assertEqual(chosen.why, "2 of 2 modules reachable")
+        self.assertEqual(chosen.reason, "2 of 2 modules reachable")
 
     def test_a_docstring_or_comment_edit_compares_equal(self):
         before = ast.parse('"""Old."""\n\n\ndef run() -> None:\n    """Doc."""\n    print(1)\n')
@@ -281,13 +281,13 @@ class TestSelection(unittest.TestCase):
     def test_an_empty_change_set_runs_every_class(self):
         chosen = scoped_selection.select_test_classes((TestSelection,), change_set=[])
         self.assertEqual(chosen.kept, (TestSelection,))
-        self.assertEqual(chosen.why, "no change set")
+        self.assertEqual(chosen.reason, "no change set")
 
     def test_all_keeps_every_class_and_never_asks_git(self):
         groups = (TestSelection,)
         with patch.object(scoped_selection, "changed_since_upstream", side_effect=AssertionError("git was asked")):
             self.assertEqual(scoped_selection.select_test_classes(groups, full=True).kept, groups)
-            self.assertEqual(scoped_selection.select_test_classes(groups, full=True).why, "--all")
+            self.assertEqual(scoped_selection.select_test_classes(groups, full=True).reason, "--all")
 
     def test_every_class_is_kept_or_dropped_exactly_once(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests

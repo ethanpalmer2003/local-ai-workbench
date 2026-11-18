@@ -48,7 +48,7 @@ class Selection(NamedTuple):
 
     kept: tuple[TestClass, ...]
     dropped: tuple[TestClass, ...]
-    why: str
+    reason: str
 
 
 def select_test_classes(
