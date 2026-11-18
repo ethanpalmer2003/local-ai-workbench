@@ -1,6 +1,6 @@
 import sys
 
-from scripts.shared.changes import NoUpstreamError, changed_since_head, changed_since_upstream
+from scripts.shared.changes import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
 from scripts.shared.timing import timed
 from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.registry import TEST_CLASSES
@@ -16,7 +16,7 @@ if __name__ == "__main__":
         # - --push is the pre-push stage: every class when Python changed, none when only prose did
         try:
             python_changed = any(path.endswith(".py") for path in changed_since_upstream())
-        except NoUpstreamError:
+        except (GitError, NoUpstreamError):
             # No baseline is no evidence, so the push stage runs every class rather than none
             python_changed = True
         if pushing and not python_changed:

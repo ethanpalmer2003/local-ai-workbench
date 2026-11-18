@@ -35,7 +35,7 @@ from scripts.review.checks import (
     walrus,
 )
 from scripts.shared import changes
-from scripts.shared.changes import NoUpstreamError, changed_since_head, changed_since_upstream
+from scripts.shared.changes import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
 from scripts.shared.import_graph import (
     REACH_DEPTH,
     find_affected_modules,
@@ -216,10 +216,18 @@ def advisory_check(fast: bool) -> int:
     return status
 
 
-def timed[T](name: str, function: Callable[..., T], *args: object) -> T:
-    """Run one gate section and keep its duration, so history answers cost questions without a rerun."""
+def timed[T](name: str, function: Callable[..., T], *args: object) -> T | int:
+    """Run one gate section and keep its duration, so history answers cost questions without a rerun.
+
+    A section that raises is a failed section rather than a lost run, so the failure is printed and the
+    timing log still records which one it was.
+    """
     started = time.perf_counter()
-    status = function(*args)
+    try:
+        status = function(*args)
+    except Exception as error:  # - a broken section must not take the whole gate down with it
+        print(f"[FAIL] {name} raised {type(error).__name__}: {error}")
+        status = 1
     TIMES.append({"section": name, "seconds": round(time.perf_counter() - started, 2), "status": status})
     return status
 
@@ -334,7 +342,7 @@ def write_timings() -> Path:
     path.write_text(
         json.dumps(
             {
-                "commit": changes.git_text("rev-parse", "HEAD").strip(),
+                "commit": changes.git_text_or_empty("rev-parse", "HEAD").strip(),
                 "dirty": bool(changed_since_upstream()),
                 "total_seconds": round(time.perf_counter() - _started_at, 2),
                 "work_seconds": round(sum(item["seconds"] for item in TIMES), 2),
@@ -573,6 +581,9 @@ def main(argv: list[str] | None = None) -> int:
     baseline = True
     try:
         changed = changed_since_head() if committing else changed_since_upstream()
+    except GitError as error:
+        print(f"[FAIL] git could not report the change: {error}")
+        return 1
     except NoUpstreamError:
         # Nothing to compare against, so no section can be narrowed on evidence; every one runs.
         baseline = False

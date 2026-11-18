@@ -7,6 +7,9 @@ to it. Two functions, one per stage:
   unpushed commits do not run again.
 - `changed_since_upstream()` is the push stage and a bare run: those paths plus the commits the upstream
   branch lacks, since anything unreviewed is in scope there.
+
+A git command that fails raises `GitError`, because a broken read is not the same answer as an empty one.
+The two callers that deliberately read failure as no evidence use `git_text_or_empty`.
 """
 
 import subprocess
@@ -15,21 +18,36 @@ from pathlib import Path
 from scripts.config import project_config as project_cfg
 
 
+class GitError(RuntimeError):
+    """A git command failed, so there is no answer rather than an empty one."""
+
+
 def git_text(*args: str, root: Path | None = None) -> str:
-    """The command's stdout, or an empty string when git fails; callers treat that as no evidence.
+    """The command's stdout, raising `GitError` when git fails.
 
     The bytes are decoded as UTF-8 here rather than by the locale, because `git show` returns file
-    content: a source file with an accented name or letter is not decodable by every console codec,
-    and a reader thread that raises leaves the caller with None instead of text.
+    content: a source file with an accented name or letter is not decodable by every console codec, and
+    a reader thread that raises leaves the caller with None instead of text.
     """
     base = project_cfg.BASE_DIR if root is None else root
     result = subprocess.run(["git", "-C", str(base), *args], capture_output=True, check=False)
-    return result.stdout.decode("utf-8", errors="replace") if result.returncode == 0 else ""
+    if result.returncode != 0:
+        detail = result.stderr.decode("utf-8", errors="replace").strip() or f"exit {result.returncode}"
+        raise GitError(f"git {' '.join(args)}: {detail}")
+    return result.stdout.decode("utf-8", errors="replace")
+
+
+def git_text_or_empty(*args: str, root: Path | None = None) -> str:
+    """The command's stdout, or an empty string when git fails; callers read that as no evidence."""
+    try:
+        return git_text(*args, root=root)
+    except GitError:
+        return ""
 
 
 def committed_paths(root: Path | None = None) -> list[str]:
     """The paths HEAD's commit touched, which is what a post-commit hook has to judge."""
-    lines = git_text("show", "--name-only", "--pretty=format:", "HEAD", root=root).splitlines()
+    lines = git_text_or_empty("show", "--name-only", "--pretty=format:", "HEAD", root=root).splitlines()
     return sorted({line.strip() for line in lines if line.strip()})
 
 
@@ -39,7 +57,7 @@ class NoUpstreamError(RuntimeError):
 
 def upstream_known(root: Path | None = None) -> bool:
     """Whether this branch has an upstream ref, which an empty change set cannot tell you."""
-    return bool(git_text("rev-parse", "--abbrev-ref", "@{upstream}", root=root).strip())
+    return bool(git_text_or_empty("rev-parse", "--abbrev-ref", "@{upstream}", root=root).strip())
 
 
 def changed_since_head(root: Path | None = None) -> list[str]:
