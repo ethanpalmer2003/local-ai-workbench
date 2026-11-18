@@ -28,4 +28,4 @@ if __name__ == "__main__":
             # - a change set with no Python module runs nothing; pytest with no node ids would collect all
             print("[SCOPE] nothing to run; pass --all for every class", flush=True)
             raise SystemExit(0)
-        raise SystemExit(frameworks_smoke.main(extra_classes=selection.kept, scope_note=selection.reason))
+        raise SystemExit(frameworks_smoke.main(extra_classes=selection.kept, reason=selection.reason))
