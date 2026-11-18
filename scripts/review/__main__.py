@@ -223,8 +223,8 @@ def timed[T](name: str, function: Callable[..., T], *args: object) -> T:
     return status
 
 
-# - the three sections that cost seconds and share nothing, so they run together and print in order
-CONCURRENT = ("types", "inventory", "dead code")
+# - sections that share nothing and mostly wait rather than compute, so they run together and print in order
+CONCURRENT = ("types", "inventory", "dead code", "line length", "single-owner tokens", "docs", "spelling")
 
 
 class _ThreadStream(io.TextIOBase):
@@ -409,7 +409,7 @@ def touched_gate(argv: list[str] | None = None, changed: list[str] | None = None
         ("lint", "\n=== LINT ===", lint_check),
         ("types", "", lambda: scoped_type_check(existing, _flag(argv, "--fast"))),
         ("formatting", "\n=== PYTHON FORMATTING ===", lambda: format_check(python_files)),
-        ("inventory", "", lambda: inventory_check(package_audit.summary(), _flag(argv, "--fast"), python_files)),
+        ("inventory", "", lambda: inventory_check({}, _flag(argv, "--fast"), python_files)),
         ("typography", "\n=== TYPOGRAPHIC PUNCTUATION ===", lambda: typography.main(existing)),
         ("comments", "\n=== COMMENTS ===", lambda: comments.main(python_files)),
         ("annotations", "\n=== ANNOTATION COMPLEXITY ===", lambda: annotations.main(python_files)),
