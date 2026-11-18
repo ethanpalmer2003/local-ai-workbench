@@ -3,7 +3,7 @@
 One owner for the answer, because the review gate, the formatter and the test scope all narrow their work
 to it. Two functions, one per stage:
 
-- `uncommitted_paths()` is the commit stage: the working tree and index against `HEAD`, so earlier
+- `changed_since_head()` is the commit stage: the working tree and index against `HEAD`, so earlier
   unpushed commits do not run again.
 - `changed_since_upstream()` is the push stage and a bare run: those paths plus the commits the upstream
   branch lacks, since anything unreviewed is in scope there.
@@ -33,7 +33,7 @@ def committed_paths(root: Path | None = None) -> list[str]:
     return sorted({line.strip() for line in lines if line.strip()})
 
 
-def uncommitted_paths(root: Path | None = None) -> list[str]:
+def changed_since_head(root: Path | None = None) -> list[str]:
     """Every path the working tree or the index has changed against `HEAD`; a rename gives both sides."""
     paths: list[str] = []
     for line in git_text("status", "--porcelain", root=root).splitlines():
@@ -45,7 +45,7 @@ def uncommitted_paths(root: Path | None = None) -> list[str]:
 
 def changed_since_upstream(root: Path | None = None) -> list[str]:
     """Every unreviewed path: the working tree against `HEAD`, plus commits the upstream lacks."""
-    paths = uncommitted_paths(root)
+    paths = changed_since_head(root)
     paths.extend(
         path for path in git_text("diff", "--name-only", "@{upstream}...HEAD", root=root).splitlines() if path.strip()
     )

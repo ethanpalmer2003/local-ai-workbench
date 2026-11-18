@@ -1,6 +1,6 @@
 import sys
 
-from scripts.shared.changes import changed_since_upstream, uncommitted_paths
+from scripts.shared.changes import changed_since_head, changed_since_upstream
 from scripts.shared.timing import timed
 from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.registry import TEST_CLASSES
@@ -21,7 +21,7 @@ if __name__ == "__main__":
         selection = select_test_classes(
             TEST_CLASSES,
             full="--all" in arguments or "--push" in arguments,
-            change_set=uncommitted_paths() if committing else None,
+            change_set=changed_since_head() if committing else None,
         )
         print(f"[SCOPE] {len(selection.kept)} of {len(TEST_CLASSES)} test classes ({selection.why})", flush=True)
         if not selection.kept:
