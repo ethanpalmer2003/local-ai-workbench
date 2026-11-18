@@ -1,8 +1,12 @@
-"""What this checkout has changed, measured from the last commit or from its upstream branch.
+"""What this checkout has changed, in the two sets the two stages need.
 
-One owner for the answer, because the review gate, the formatter and the test scope all narrow their
-work to it. A commit judges what it is about to record, so it reads the working tree against `HEAD`.
-A push judges every unreviewed change, so it also reads the commits made since the upstream branch.
+One owner for the answer, because the review gate, the formatter and the test scope all narrow their work
+to it. Two functions, one per stage:
+
+- `uncommitted_paths()` is the commit stage: the working tree and index against `HEAD`, so earlier
+  unpushed commits do not run again.
+- `changed_since_upstream()` is the push stage and a bare run: those paths plus the commits the upstream
+  branch lacks, since anything unreviewed is in scope there.
 """
 
 import subprocess
