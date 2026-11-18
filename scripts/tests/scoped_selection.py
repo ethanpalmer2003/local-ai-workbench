@@ -38,6 +38,7 @@ FULL_TRIGGERS = {"scripts/tests/registry.py", "scripts/tests/run.py", "scripts/t
 TestClass = type[unittest.TestCase]
 
 
+# Frozen because a `Selection` is only ever a returned answer, never state that a caller updates.
 @dataclass(frozen=True)
 class Selection:
     """The classes to run, the ones that stayed out, and the reason the scope is what it is."""
@@ -77,7 +78,8 @@ def select_test_classes(
     # Checked after the prose filter, so a comment edit inside `run.py` still runs nothing.
     triggers = FULL_TRIGGERS.intersection(code_changes)
     if triggers:
-        return Selection(test_classes, (), f"manifest changed: {sorted(triggers)[0]}")
+        first = sorted(triggers)[0]
+        return Selection(test_classes, (), f"manifest changed: {first}")
 
     # A deleted file is absent from the graph, so nothing links its importers to it and they would be missed.
     if _module_deleted(code_changes, root):
@@ -92,7 +94,8 @@ def select_test_classes(
     # The walk is a breadth-first search over the reversed graph, one hop back by default.
     reachable = find_affected_modules(edges, changed_modules, depth=REACH_DEPTH)
 
-    return _partition(test_classes, reachable, _reach_reason(edges, reachable, code_changes))
+    reason = _reach_reason(edges, reachable, code_changes)
+    return _partition(test_classes, reachable, reason)
 
 
 def code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
