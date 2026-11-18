@@ -15,9 +15,9 @@ from scripts.shared.changes import git_text
 
 # Each module name mapped to the set of module names it depends on.
 ImportGraph = dict[str, frozenset[str]]
-# One import hop is the only depth that is meaningfully cheaper than a full run: at depth 2 the suite costs
-# nearly three times as much and approaches a full run for a widely imported module, so everything past
-# here may as well be the full push run.
+# The deepest hop that is still much cheaper than a full run: depth 0 would miss the direct importers, and
+# depth 2 costs close to a full run for a widely imported module, so everything past here may as well be
+# the full push run.
 REACH_DEPTH = 1
 
 

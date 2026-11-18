@@ -230,7 +230,7 @@ class TestSelection(unittest.TestCase):
     def test_a_deleted_module_keeps_every_class(self):
         chosen = scoped_selection.select_test_classes((TestSelection,), change_set=["scripts/tools/removed.py"])
         self.assertEqual(chosen.kept, (TestSelection,))
-        self.assertEqual(chosen.reason, "module deleted")
+        self.assertEqual(chosen.reason, "Python file deleted")
 
     def test_every_trigger_path_exists(self):
         for path in scoped_selection.FULL_TRIGGERS:
