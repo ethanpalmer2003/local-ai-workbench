@@ -33,6 +33,11 @@ def committed_paths(root: Path | None = None) -> list[str]:
     return sorted({line.strip() for line in lines if line.strip()})
 
 
+def upstream_known(root: Path | None = None) -> bool:
+    """Whether this branch has an upstream ref, which an empty change set cannot tell you."""
+    return bool(git_text("rev-parse", "--abbrev-ref", "@{upstream}", root=root).strip())
+
+
 def changed_since_head(root: Path | None = None) -> list[str]:
     """Every path the working tree or the index has changed against `HEAD`; a rename gives both sides."""
     paths: list[str] = []
