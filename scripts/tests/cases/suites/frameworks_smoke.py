@@ -604,7 +604,7 @@ def _run_native_suite(suite: str, live_target: str | None, probe_names: list[str
             os.environ["AI_TEST_TITLE"] = previous_title
 
 
-DEFAULT_GROUPS: tuple[type[unittest.TestCase], ...] = (
+DEFAULT_CLASSES: tuple[type[unittest.TestCase], ...] = (
     DefaultPaths,
     DefaultPorts,
     LaunchCommands,
@@ -614,7 +614,7 @@ DEFAULT_GROUPS: tuple[type[unittest.TestCase], ...] = (
 )
 
 
-def main(extra_groups: tuple[type[unittest.TestCase], ...] = (), scope_note: str = "") -> int:
+def main(extra_classes: tuple[type[unittest.TestCase], ...] = (), scope_note: str = "") -> int:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--suite", choices=SUITES, help="native suite to run: launcher wiring, backend probes, or both")
@@ -645,7 +645,7 @@ def main(extra_groups: tuple[type[unittest.TestCase], ...] = (), scope_note: str
     if native_suite and not args.with_regressions:
         return _run_native_suite(native_suite, args.live, args.only)
     # - the caller's classes are the whole run when it has some; a direct call keeps the default block
-    groups = extra_groups or DEFAULT_GROUPS
+    classes = extra_classes or DEFAULT_CLASSES
     # - guard the tests themselves against accidental process/port side effects
     output = CasePaths(__file__).new_run()
     report = RunReport(
@@ -660,7 +660,7 @@ def main(extra_groups: tuple[type[unittest.TestCase], ...] = (), scope_note: str
     )
     report.save(output)
     log_path = output.logs / f"regression_{time.time_ns()}.log"
-    return _run_regressions(groups, output, report, log_path, native_suite, args.live, args.only)
+    return _run_regressions(classes, output, report, log_path, native_suite, args.live, args.only)
 
 
 class _PytestRun:
@@ -681,18 +681,18 @@ class _PytestRun:
             self.outcomes.append(("passed", report.nodeid, ""))
 
 
-def _pytest_nodeids(groups: tuple[type[unittest.TestCase], ...]) -> list[str]:
+def _pytest_nodeids(classes: tuple[type[unittest.TestCase], ...]) -> list[str]:
     """Explicit class selection: unregistered modules must never be collected."""
     nodeids = []
-    for group in groups:
-        module = sys.modules[group.__module__]
+    for test_class in classes:
+        module = sys.modules[test_class.__module__]
         source = Path(str(module.__file__)).as_posix()
-        nodeids.append(f"{source}::{group.__qualname__}")
+        nodeids.append(f"{source}::{test_class.__qualname__}")
     return nodeids
 
 
 def _run_regressions(
-    groups: tuple[type[unittest.TestCase], ...],
+    classes: tuple[type[unittest.TestCase], ...],
     output: RunPaths,
     report: RunReport,
     log_path: Path,
@@ -719,7 +719,7 @@ def _run_regressions(
             ),
         ):
             code = pytest.main(
-                ["-q", "-s", "-rs", "--no-header", "--tb=short", "-p", "no:cacheprovider", *_pytest_nodeids(groups)],
+                ["-q", "-s", "-rs", "--no-header", "--tb=short", "-p", "no:cacheprovider", *_pytest_nodeids(classes)],
                 plugins=[runner],
             )
     (output.artifacts / "timings.json").write_text(json.dumps(runner.seconds, indent=2), encoding="utf-8")

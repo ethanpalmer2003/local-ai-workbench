@@ -1,7 +1,7 @@
 """The test classes the suite runs, in the order it reports them.
 
 The registry is explicit because the suite's scope walks a static import graph: a class imported by
-name at run time would be invisible to it, so every module is imported here instead. `GROUPS` is what
+name at run time would be invisible to it, so every module is imported here instead. `TEST_CLASSES` is what
 the runner counts against and what the selector picks from.
 """
 
@@ -169,7 +169,7 @@ from scripts.tests.cases.suites.shared_contracts import SharedContracts
 from scripts.tests.cases.test_lemonade_launcher import LemonadeLauncherTests, LemonadeOwnedStartTests
 
 # The registry the runner counts and the selector picks from.
-GROUPS: tuple[type[unittest.TestCase], ...] = (
+TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     BenchmarkLifecycleTests,
     BenchmarkVramTests,
     StreamChatTests,
@@ -328,5 +328,5 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     ExitReportTests,
     # - the launcher and proxy block is scoped like everything else: a change to that wiring keeps it,
     #   a change elsewhere leaves it to the push, so no class sits outside the graph
-    *frameworks_smoke.DEFAULT_GROUPS,
+    *frameworks_smoke.DEFAULT_CLASSES,
 )

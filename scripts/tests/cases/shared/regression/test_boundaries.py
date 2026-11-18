@@ -203,17 +203,17 @@ class TestBoundaries(unittest.TestCase):
         self.assertIn("ming3-tts", quick_validation.PROBES)
 
     def test_every_test_case_class_is_registered(self):
-        """A module missing from groups.py is dead coverage; the suite selects classes by name."""
-        tree = ast.parse((project_cfg.TESTS_DIR / "groups.py").read_text(encoding="utf-8-sig"))
+        """A module missing from registry.py is dead coverage; the suite selects classes by name."""
+        tree = ast.parse((project_cfg.TESTS_DIR / "registry.py").read_text(encoding="utf-8-sig"))
         registered: set[str] = set()
         for node in tree.body:
             if not isinstance(node, ast.Assign | ast.AnnAssign) or node.value is None:
                 continue
             targets = node.targets if isinstance(node, ast.Assign) else [node.target]
-            if not any(isinstance(target, ast.Name) and target.id == "GROUPS" for target in targets):
+            if not any(isinstance(target, ast.Name) and target.id == "TEST_CLASSES" for target in targets):
                 continue
             registered = {element.id for element in ast.walk(node.value) if isinstance(element, ast.Name)}
-        self.assertTrue(registered, "groups.py no longer lists its classes in GROUPS")
+        self.assertTrue(registered, "registry.py no longer lists its classes in TEST_CLASSES")
         missing = []
         for path in sorted(project_cfg.TEST_CASES_DIR.rglob("test_*.py")):
             if {"retired", "output"} & set(path.parts):
@@ -225,7 +225,7 @@ class TestBoundaries(unittest.TestCase):
                     continue
                 if node.name not in registered:
                     missing.append(f"{path.relative_to(project_cfg.TEST_CASES_DIR).as_posix()}:{node.name}")
-        self.assertEqual(missing, [], "register the class in scripts/tests/groups.py")
+        self.assertEqual(missing, [], "register the class in scripts/tests/registry.py")
 
     def test_a_case_module_names_its_subject_once(self):
         """The file is `test_<subject>.py`; a subject that starts with "test" would read as test_test_."""
