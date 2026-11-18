@@ -66,7 +66,7 @@ def select_test_classes(
             return Selection(test_classes, (), "no upstream ref")
     else:
         changed = change_set
-    # An empty set from git means the tree is clean, and its absence of evidence was the error above.
+    # No changes means a clean tree; a missing baseline was already handled above.
     if not changed:
         return Selection((), test_classes, "nothing changed")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
@@ -78,7 +78,7 @@ def select_test_classes(
     # Checked after the prose filter, so a comment edit inside `run.py` still runs nothing.
     triggers = FULL_TRIGGERS.intersection(code_changes)
     if triggers:
-        first = sorted(triggers)[0]
+        first = min(triggers)
         return Selection(test_classes, (), f"manifest changed: {first}")
 
     # A deleted file is absent from the graph, so nothing links its importers to it and they would be missed.
@@ -91,11 +91,11 @@ def select_test_classes(
         return Selection((), test_classes, "no Python change")
 
     edges = import_graph(root)
-    # The walk is a breadth-first search over the reversed graph, one hop back by default.
+    # The walk is a breadth-first search over the reversed graph, one hop back, per `REACH_DEPTH`.
     reachable = find_affected_modules(edges, changed_modules, depth=REACH_DEPTH)
 
     reason = _reach_reason(edges, reachable, code_changes)
-    return _partition(test_classes, reachable, reason)
+    return _build_selection(test_classes, reachable, reason)
 
 
 def _code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
@@ -107,29 +107,27 @@ def _code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
     """
     if not path.endswith(".py"):
         return True
-    base = project_cfg.BASE_DIR if root is None else root
-    current = base / path
+    current = (root or project_cfg.BASE_DIR) / path
     # A path that is no longer on disk cannot be compared, so it counts as a real change.
     if not current.is_file():
         return True
     # Read the committed version from the remote tracking branch for comparison.
     # `@{upstream}` is git's name for the branch this one tracks, not the tip of this branch.
     previous_source = git_text_or_none("show", "@{upstream}:" + path, root=root)
-    # Nothing to compare against: git could not read the committed copy, or that copy is an empty file.
+    # Nothing to compare against: None when git failed, "" when the committed file is empty.
     if not previous_source:
         return True
     committed = ast_parse_text_or_file(previous_source)
-    # `ast.parse` discards `#` comments; `_dump_without_docstrings` strips docstrings, so the two trees hold
-    # only code.
     working = ast_parse_text_or_file(current)
     # A copy that will not parse is a real change as well, since nothing can be ruled out.
     if committed is None or working is None:
         return True
-    # Different trees after stripping prose means a test can observe the edit.
+    # `ast.parse` drops comments and `_dump_without_docstrings` drops docstrings, so the two dumps hold only
+    # code, and different dumps mean a test can observe the edit.
     return _dump_without_docstrings(committed) != _dump_without_docstrings(working)
 
 
-def _partition(test_classes: tuple[TestClass, ...], reachable: set[str], reason: str) -> Selection:
+def _build_selection(test_classes: tuple[TestClass, ...], reachable: set[str], reason: str) -> Selection:
     """The classes the reach covers, the ones it leaves out, and the sentence that explains it."""
     # `__module__` is the module a class was defined in, which is what the graph speaks.
     kept = tuple(test_class for test_class in test_classes if test_class.__module__ in reachable)
@@ -139,7 +137,7 @@ def _partition(test_classes: tuple[TestClass, ...], reachable: set[str], reason:
 
 def _module_deleted(paths: list[str], root: Path | None) -> bool:
     """Whether any changed Python file is gone from the tree, which hides its importers from the graph."""
-    base = project_cfg.BASE_DIR if root is None else root
+    base = root or project_cfg.BASE_DIR
     return any(path.endswith(".py") and not (base / path).is_file() for path in paths)
 
 

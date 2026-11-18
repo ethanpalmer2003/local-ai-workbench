@@ -109,7 +109,11 @@ def module_name(path: str) -> str | None:
 
 
 def ast_parse_text_or_file(source: str | Path) -> ast.Module | None:
-    """Return the syntax tree of source text or of a file, or None when it is empty or unparsable."""
+    """Return the syntax tree of source text or of a file, or None when it is empty or unparsable.
+
+    A `str` is read as source text and a `Path` as a file, so a path written as a string would be parsed as
+    code rather than read.
+    """
     try:
         text = source if isinstance(source, str) else source.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
