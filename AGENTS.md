@@ -11,7 +11,7 @@
 
 ## Clarify before acting
 - Ask at once when the request is ambiguous or assumes an invented detail; never guess intent to keep moving.
-- Do not ask permission to use a standard tool. Prefer a maintained dependency over a local substitute: add it, say what it was, and continue.
+- Do not ask permission to use a standard tool. Prefer a maintained dependency over a local substitute: add it, say what it was, and continue. The same goes for an algorithm: check an installed dependency and the standard library before hand-writing a traversal, and say why if you keep it.
 - When a problem needs the user's judgment, put it in [TODO](notes/TODO.md) with the options and start the next independent item instead of waiting.
 
 ## Work and permissions
