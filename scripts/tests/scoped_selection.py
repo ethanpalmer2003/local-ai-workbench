@@ -73,7 +73,7 @@ def select_test_classes(
     if not changed:
         return Selection((), test_classes, "nothing changed")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
-    code_changes = [path for path in changed if _may_change_code(path, root)]
+    code_changes = [path for path in changed if not ast_matches_upstream(path, root)]
     if not code_changes:
         return Selection((), test_classes, "no code change")
 
@@ -99,17 +99,14 @@ def select_test_classes(
     return Selection(tuple(kept), tuple(dropped), f"{len(reachable)} of {len(edges)} modules reachable")
 
 
-def _may_change_code(path: str, root: Path | None) -> bool:
-    """Whether the path could carry a change a test can observe."""
-    return not path.endswith(".py") or not ast_matches_upstream(path, root)
-
-
 def ast_matches_upstream(path: str, root: Path | None = None) -> bool:
     """Return whether a Python file's code matches its upstream branch, ignoring comments, docstrings and layout.
 
-    If upstream is missing or the comparison fails, it counts as a real change. New, deleted, unreadable,
-    or unparsable files also count as real changes.
+    Anything that is not Python source answers False, since there is no tree to compare, and so does a
+    file whose upstream copy is missing, unreadable or unparsable: each counts as a real change.
     """
+    if not path.endswith(".py"):
+        return False
     base = project_cfg.BASE_DIR if root is None else root
     current = base / path
     if not current.is_file():
