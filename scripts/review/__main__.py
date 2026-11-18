@@ -35,7 +35,7 @@ from scripts.review.checks import (
     walrus,
 )
 from scripts.shared import changes
-from scripts.shared.changes import changed_since_head, changed_since_upstream
+from scripts.shared.changes import changed_since_head, changed_since_upstream, upstream_known
 from scripts.shared.import_graph import (
     REACH_DEPTH,
     find_affected_modules,
@@ -570,6 +570,10 @@ def main(argv: list[str] | None = None) -> int:
     committing = _flag(argv, "--commit")
     argv = [argument for argument in argv if argument not in ("--push", "--commit")]
     changed = changed_since_head() if committing else changed_since_upstream()
+    # - an empty set is either a clean tree or a branch with no upstream, and the two read differently
+    if not changed:
+        where = "this branch has no upstream ref" if not upstream_known() else "nothing is uncommitted or unpushed"
+        print(f"[GATE] {where}; every section runs, and --fast skips the slow ones", flush=True)
     prose_only = pushing and not any(path.endswith(".py") for path in changed)
     if prose_only:
         print("[PUSH] no Python change since upstream; prose sections only", flush=True)

@@ -1,5 +1,7 @@
 """Gate scoping: an empty change set runs every section, a change runs only what it reaches."""
 
+import contextlib
+import io
 import subprocess
 import unittest
 from contextlib import redirect_stdout
@@ -54,12 +56,28 @@ class GateScopeTests(unittest.TestCase):
 
         with (
             patch.object(gate, "changed_since_upstream", return_value=[]),
+            patch.object(gate, "upstream_known", return_value=True),
             patch.object(gate, "full_gate", return_value=0) as full,
             patch.object(gate, "touched_gate") as touched,
         ):
             gate.main([])
         full.assert_called_once()
         touched.assert_not_called()
+
+    def test_an_empty_change_set_says_why_it_runs_everything(self):
+        from scripts.review import __main__ as gate
+
+        for known, expected in ((False, "no upstream ref"), (True, "nothing is uncommitted")):
+            with self.subTest(known=known):
+                buffer = io.StringIO()
+                with (
+                    patch.object(gate, "changed_since_upstream", return_value=[]),
+                    patch.object(gate, "upstream_known", return_value=known),
+                    patch.object(gate, "full_gate", return_value=0),
+                    contextlib.redirect_stdout(buffer),
+                ):
+                    gate.main([])
+                self.assertIn(expected, buffer.getvalue())
 
     def test_a_change_runs_only_the_touched_sections(self):
         from scripts.review import __main__ as gate
