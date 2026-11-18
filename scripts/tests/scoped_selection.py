@@ -1,13 +1,12 @@
 """Select test classes affected by local changes using a one-hop reverse import walk.
 
-Keeps test classes defined in a changed module or in a module that directly imports one. `--all`,
-code edits to `FULL_TRIGGERS`, and a branch with no upstream run the full suite; a clean tree, a
-non-Python change and an edit whose code is unchanged run no classes.
+Keeps test classes defined in a changed module or in a module that directly imports one. `--all`, code
+edits to `FULL_TRIGGERS`, a deleted Python file and a branch with no upstream run the full suite; a
+clean tree, a non-Python change and an edit whose code is unchanged run no classes.
 
-One hop is the deliberate trade: a second hop costs close to a full run, so a test two imports away
-waits for the full pre-push run. That run is also the backstop
-for data the graph cannot see: it knows modules, so a change to a `.json`, template or config path
-selects nothing on its own.
+One hop is the deliberate trade, since a second hop costs close to a full run: a test two imports away
+waits for the full pre-push run, which is also the backstop for data the graph cannot see. The graph
+knows modules, so a change to a `.json`, template or config path selects nothing on its own.
 
 Dependency edges come from [import_graph](../shared/import_graph.py), parsed statically with `ast`
 rather than imported. Dynamic imports and files executed via `subprocess`, `runpy`, or `open` are
@@ -23,6 +22,7 @@ from scripts.config import project_config as project_cfg
 from scripts.shared.changes import NoUpstreamError, changed_since_upstream, git_text
 from scripts.shared.import_graph import (
     REACH_DEPTH,
+    ImportGraph,
     find_affected_modules,
     import_graph,
     module_name,
@@ -82,9 +82,9 @@ def select_test_classes(
     if triggers:
         return Selection(test_classes, (), f"manifest changed: {sorted(triggers)[0]}")
 
-    # A deleted module takes its importers with it, and the graph cannot name them: the file is gone.
+    # A deleted file is absent from the graph, so nothing links its importers to it and they would be missed.
     if _module_deleted(code_changes, root):
-        return Selection(test_classes, (), "module deleted")
+        return Selection(test_classes, (), "Python file deleted")
 
     # A document, config or batch path contributes no module, and neither does a `.py` outside `scripts/`.
     changed_modules = module_names(code_changes)
@@ -96,28 +96,6 @@ def select_test_classes(
 
     kept, dropped = _partition(test_classes, reachable)
     return Selection(kept, dropped, _reach_reason(edges, reachable, code_changes))
-
-
-def _partition(
-    test_classes: tuple[TestClass, ...], reachable: frozenset[str]
-) -> tuple[tuple[TestClass, ...], tuple[TestClass, ...]]:
-    """The classes the reach covers, and the ones it leaves out."""
-    kept = tuple(test_class for test_class in test_classes if test_class.__module__ in reachable)
-    dropped = tuple(test_class for test_class in test_classes if test_class.__module__ not in reachable)
-    return kept, dropped
-
-
-def _module_deleted(paths: list[str], root: Path | None) -> bool:
-    """Whether any changed Python file is gone from the tree, which hides its importers from the graph."""
-    base = project_cfg.BASE_DIR if root is None else root
-    return any(path.endswith(".py") and not (base / path).is_file() for path in paths)
-
-
-def _reach_reason(edges: dict[str, frozenset[str]], reachable: frozenset[str], paths: list[str]) -> str:
-    """The evidence a reader sees, including how many changed paths named no module."""
-    ignored = sum(module_name(path) is None for path in paths)
-    detail = f" ({ignored} non-Python path(s) ignored)" if ignored else ""
-    return f"{len(reachable)} of {len(edges)} modules reachable{detail}"
 
 
 def code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
@@ -146,6 +124,28 @@ def code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
         return True
     # Different trees after stripping prose means a test can observe the edit.
     return _dump_without_docstrings(before) != _dump_without_docstrings(after)
+
+
+def _partition(
+    test_classes: tuple[TestClass, ...], reachable: frozenset[str]
+) -> tuple[tuple[TestClass, ...], tuple[TestClass, ...]]:
+    """The classes the reach covers, and the ones it leaves out."""
+    kept = tuple(test_class for test_class in test_classes if test_class.__module__ in reachable)
+    dropped = tuple(test_class for test_class in test_classes if test_class.__module__ not in reachable)
+    return kept, dropped
+
+
+def _module_deleted(paths: list[str], root: Path | None) -> bool:
+    """Whether any changed Python file is gone from the tree, which hides its importers from the graph."""
+    base = project_cfg.BASE_DIR if root is None else root
+    return any(path.endswith(".py") and not (base / path).is_file() for path in paths)
+
+
+def _reach_reason(edges: ImportGraph, reachable: frozenset[str], paths: list[str]) -> str:
+    """The evidence a reader sees, including how many changed paths named no module."""
+    ignored = sum(module_name(path) is None for path in paths)
+    detail = f" ({ignored} path(s) outside the module graph ignored)" if ignored else ""
+    return f"{len(reachable)} of {len(edges)} modules reachable{detail}"
 
 
 def _dump_without_docstrings(tree: ast.Module) -> str:
