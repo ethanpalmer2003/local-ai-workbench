@@ -58,11 +58,7 @@ def select_test_classes(
     change_set: list[str] | None = None,
     root: Path | None = None,
 ) -> Selection:
-    """Partition `test_classes` into kept and dropped test classes for the current change set.
-
-    Editing one test module keeps that module's classes, while editing `scripts/tests/shared/paths.py`
-    keeps every class in the modules that import it.
-    """
+    """Partition `test_classes` into kept and dropped test classes for the current change set."""
     if full:
         return Selection(test_classes, (), "--all")
     changed = changed_since_upstream(root) if change_set is None else change_set
