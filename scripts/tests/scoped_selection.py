@@ -34,6 +34,7 @@ from scripts.shared.import_graph import (
 FULL_TRIGGERS = frozenset(
     {
         # The files that decide what the suite is, and only when their code changes.
+        # `registry.py` lists the classes, `run.py` runs them, and this file holds the rule that picks from them.
         "scripts/tests/registry.py",
         "scripts/tests/run.py",
         "scripts/tests/scoped_selection.py",
@@ -74,10 +75,12 @@ def select_test_classes(
     if not changed:
         return Selection((), test_classes, "nothing changed")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
+    # Only `.py` paths can match upstream, so every other path stays for the module check below to judge.
     code_changes = [path for path in changed if code_changed_since_upstream(path, root)]
     if not code_changes:
         return Selection((), test_classes, "no code change")
 
+    # Checked after the prose filter, so a comment edit inside `run.py` still runs nothing.
     triggers = FULL_TRIGGERS.intersection(code_changes)
     if triggers:
         return Selection(test_classes, (), f"manifest changed: {sorted(triggers)[0]}")
@@ -130,6 +133,7 @@ def _partition(
     test_classes: tuple[TestClass, ...], reachable: frozenset[str]
 ) -> tuple[tuple[TestClass, ...], tuple[TestClass, ...]]:
     """The classes the reach covers, and the ones it leaves out."""
+    # `__module__` is the module a class was defined in, which is what the graph speaks.
     kept = tuple(test_class for test_class in test_classes if test_class.__module__ in reachable)
     dropped = tuple(test_class for test_class in test_classes if test_class.__module__ not in reachable)
     return kept, dropped
@@ -155,8 +159,10 @@ def _dump_without_docstrings(tree: ast.Module) -> str:
         if not isinstance(node, scopes) or not node.body:
             continue
         if _is_docstring(node.body[0]):
-            # Substitute `pass` when the docstring was the only statement in the body.
+            # Substitute `pass` when it was the only statement, so a docstring-only body compares equal to one
+            # holding `pass`.
             node.body = node.body[1:] or [ast.Pass()]
+    # `ast.dump` leaves out line and column numbers, which is why moving or reformatting code compares equal.
     return ast.dump(tree)
 
 
