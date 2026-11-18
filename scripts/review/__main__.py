@@ -35,7 +35,7 @@ from scripts.review.checks import (
     walrus,
 )
 from scripts.shared import changes
-from scripts.shared.changes import changed_since_upstream
+from scripts.shared.changes import changed_since_upstream, uncommitted_paths
 from scripts.shared.import_graph import (
     REACH_DEPTH,
     find_affected_modules,
@@ -389,10 +389,10 @@ def _flag(argv: list[str], name: str) -> bool:
     return name in argv
 
 
-def touched_gate(argv: list[str] | None = None) -> int:
-    """Run only the sections the working tree changed since upstream, cheapest first."""
+def touched_gate(argv: list[str] | None = None, changed: list[str] | None = None) -> int:
+    """Run only the sections the change reaches, cheapest first."""
     argv = list(sys.argv[1:] if argv is None else argv)
-    changed = changed_since_upstream()
+    changed = changed_since_upstream() if changed is None else changed
     # - a rename leaves the old name in the change set, and a deleted file has nothing to read
     existing = [path for path in changed if (project_cfg.BASE_DIR / path).is_file()]
     python_files = [path for path in existing if path.endswith(".py")]
@@ -556,8 +556,10 @@ def full_gate(argv: list[str] | None = None) -> int:
 def main(argv: list[str] | None = None) -> int:
     """Scope the gate to the change by default; `--all`, `--prune`, `--scrub` or a clean tree run every section.
 
-    `--push` is the pre-push stage: every section when the unpushed commits touch Python, and only the
-    prose sections when they do not, since no Python behavior changed and the last push was green.
+    `--commit` is the pre-commit stage, which judges what it is about to record: the working tree against
+    `HEAD`, not the commits already made. `--push` is the pre-push stage: every section when the unpushed
+    commits touch Python, and only the prose sections when they do not, since no Python behavior changed
+    and the last push was green.
     """
     argv = list(sys.argv[1:] if argv is None else argv)
     # - a run's status comes from its own sections, so no earlier run in this process can fail it
@@ -565,15 +567,16 @@ def main(argv: list[str] | None = None) -> int:
     TIMES.clear()
     _started_at = time.perf_counter()
     pushing = _flag(argv, "--push")
-    argv = [argument for argument in argv if argument != "--push"]
-    changed = changed_since_upstream()
+    committing = _flag(argv, "--commit")
+    argv = [argument for argument in argv if argument not in ("--push", "--commit")]
+    changed = uncommitted_paths() if committing else changed_since_upstream()
     prose_only = pushing and not any(path.endswith(".py") for path in changed)
     if prose_only:
         print("[PUSH] no Python change since upstream; prose sections only", flush=True)
     if prose_only or (
         not pushing and not (_flag(argv, "--all") or _flag(argv, "--prune") or _flag(argv, "--scrub")) and changed
     ):
-        return touched_gate(argv)
+        return touched_gate(argv, changed)
     return full_gate(argv)
 
 

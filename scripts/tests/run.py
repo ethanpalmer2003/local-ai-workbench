@@ -1,7 +1,7 @@
 import sys
 import unittest
 
-from scripts.shared.changes import changed_since_upstream
+from scripts.shared.changes import changed_since_upstream, uncommitted_paths
 from scripts.shared.timing import timed
 from scripts.tests.cases.asr.llamacpp.test_gemma_audio import GemmaAudioTests
 from scripts.tests.cases.asr.llamacpp.test_qwen_asr_profiles import QwenAsrProfiles
@@ -328,8 +328,9 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
 
 if __name__ == "__main__":
     pushing = "--push" in sys.argv[1:]
+    committing = "--commit" in sys.argv[1:]
     # - the suite's own parser must not see the stage flag
-    sys.argv = [sys.argv[0], *[argument for argument in sys.argv[1:] if argument != "--push"]]
+    sys.argv = [sys.argv[0], *[argument for argument in sys.argv[1:] if argument not in ("--push", "--commit")]]
     arguments = sys.argv[1:]
     with timed("default regressions"):
         # - --push is the pre-push stage: every class when Python changed, none when only prose did
@@ -337,7 +338,11 @@ if __name__ == "__main__":
             print("[PUSH] no Python change since upstream; the suite is unchanged", flush=True)
             raise SystemExit(0)
         # - the scope follows the change; --all and --push run every class, and run.py keeps it exhaustive
-        selection = select_test_classes(GROUPS, full="--all" in arguments or "--push" in arguments)
+        selection = select_test_classes(
+            GROUPS,
+            full="--all" in arguments or "--push" in arguments,
+            change_set=uncommitted_paths() if committing else None,
+        )
         print(f"[SCOPE] {len(selection.kept)} of {len(GROUPS)} test classes ({selection.why})", flush=True)
         if not selection.kept:
             # - a change set with no Python module runs nothing; pytest with no node ids would collect all

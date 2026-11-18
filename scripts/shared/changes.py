@@ -1,8 +1,8 @@
-"""What this checkout has changed since its upstream branch.
+"""What this checkout has changed, measured from the last commit or from its upstream branch.
 
-One owner for the answer, because the review gate, the formatter and the test scope all narrow
-their work to it. The working tree counts, and so does a commit made but not pushed, since that is
-still unreviewed work.
+One owner for the answer, because the review gate, the formatter and the test scope all narrow their
+work to it. A commit judges what it is about to record, so it reads the working tree against `HEAD`.
+A push judges every unreviewed change, so it also reads the commits made since the upstream branch.
 """
 
 import subprocess
@@ -29,13 +29,19 @@ def committed_paths(root: Path | None = None) -> list[str]:
     return sorted({line.strip() for line in lines if line.strip()})
 
 
-def changed_since_upstream(root: Path | None = None) -> list[str]:
-    """Every path changed since upstream, working tree included; a rename gives both sides."""
+def uncommitted_paths(root: Path | None = None) -> list[str]:
+    """Every path the working tree or the index has changed against `HEAD`; a rename gives both sides."""
     paths: list[str] = []
     for line in git_text("status", "--porcelain", root=root).splitlines():
         body = line[3:].strip().strip('"')
         if body:
             paths.extend(part.strip().strip('"') for part in body.split(" -> "))
+    return sorted(set(paths))
+
+
+def changed_since_upstream(root: Path | None = None) -> list[str]:
+    """Every unreviewed path: the working tree against `HEAD`, plus commits the upstream lacks."""
+    paths = uncommitted_paths(root)
     paths.extend(
         path for path in git_text("diff", "--name-only", "@{upstream}...HEAD", root=root).splitlines() if path.strip()
     )
