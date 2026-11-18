@@ -95,6 +95,7 @@ def select_test_classes(
         return Selection((), test_classes, "no Python change")
 
     edges = import_graph(root)
+    # The walk is a breadth-first search over the reversed graph, one hop back by default.
     reachable = find_affected_modules(edges, changed_modules, depth=REACH_DEPTH)
 
     kept, dropped = _partition(test_classes, reachable)
