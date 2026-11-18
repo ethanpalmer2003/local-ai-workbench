@@ -168,7 +168,7 @@ class TestSelection(unittest.TestCase):
 
     def test_a_lock_config_or_package_init_runs_no_class(self):
         for path in ("pyproject.toml", "uv.lock", "scripts/__init__.py"):
-            # - the package init is a code change here, so the reason is the missing module, not prose
+            # - the package init is a code change here, so the reason is the missing module, not the tree
             with self.subTest(path=path), patch.object(scoped_selection, "ast_matches_upstream", return_value=False):
                 chosen = scoped_selection.select_test_classes((TestSelection,), change_set=[path])
                 self.assertEqual(chosen.kept, ())
@@ -188,7 +188,7 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(chosen.kept, ())
         self.assertEqual(chosen.reason, "no code change")
 
-    def test_a_cosmetic_module_beside_a_document_runs_nothing(self):
+    def test_a_module_with_unchanged_code_beside_a_document_runs_nothing(self):
         with patch.object(scoped_selection, "ast_matches_upstream", return_value=True):
             chosen = scoped_selection.select_test_classes(
                 (TestSelection,), change_set=["scripts/shared/consent.py", "notes/TODO.md"]
@@ -244,7 +244,7 @@ class TestSelection(unittest.TestCase):
             scoped_selection._dump_without_docstrings(docstring), scoped_selection._dump_without_docstrings(pass_only)
         )
 
-    def test_a_cosmetic_change_is_read_from_upstream(self):
+    def test_unchanged_code_is_read_from_upstream(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
             (root / "scripts").mkdir()
