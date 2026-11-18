@@ -342,7 +342,7 @@ def write_timings() -> Path:
     path.write_text(
         json.dumps(
             {
-                "commit": changes.git_text_or_empty("rev-parse", "HEAD").strip(),
+                "commit": (changes.git_text_or_none("rev-parse", "HEAD") or "").strip(),
                 "dirty": bool(changed_since_upstream()),
                 "total_seconds": round(time.perf_counter() - _started_at, 2),
                 "work_seconds": round(sum(item["seconds"] for item in TIMES), 2),
