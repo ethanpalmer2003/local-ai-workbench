@@ -36,7 +36,7 @@ from scripts.tests.cases.personal.comfyui.test_verify_node import ProviderTests,
 from scripts.tests.cases.review.checks.test_annotations import DefaultTests, FindingsTests, ScoreTests
 from scripts.tests.cases.review.checks.test_bare_any import BareAnyTests
 from scripts.tests.cases.review.checks.test_comments import CommentPolicyTests
-from scripts.tests.cases.review.checks.test_dead_code import FindingTests
+from scripts.tests.cases.review.checks.test_dead_code import FindingTests, ScopedSkipTests
 from scripts.tests.cases.review.checks.test_docs import (
     GeneratedPageTests,
     LinkTests,
@@ -285,6 +285,7 @@ GROUPS: tuple[type[unittest.TestCase], ...] = (
     OwnedTokenTests,
     DuplicateReportTests,
     DynamicImportTests,
+    ScopedSkipTests,
     WalrusTests,
     ExamplesPageTests,
     FolderRuleTests,
