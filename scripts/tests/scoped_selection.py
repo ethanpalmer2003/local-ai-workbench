@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 from scripts.config import project_config as project_cfg
-from scripts.shared.changes import NoUpstreamError, changed_since_upstream, git_text
+from scripts.shared.changes import NoUpstreamError, changed_since_upstream, git_text_or_empty
 from scripts.shared.import_graph import (
     REACH_DEPTH,
     ImportGraph,
@@ -118,7 +118,7 @@ def code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
         return True
     # Read the committed version from the remote tracking branch for comparison.
     # `@{upstream}` is git's name for the branch this one tracks, not the tip of this branch.
-    previous = git_text("show", "@{upstream}:" + path, root=root)
+    previous = git_text_or_empty("show", "@{upstream}:" + path, root=root)
     # `ast.parse` discards `#` comments automatically; `_dump_without_docstrings` strips docstrings.
     before = parse_text(previous)
     after = parse_source(current)

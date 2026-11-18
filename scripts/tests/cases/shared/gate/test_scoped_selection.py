@@ -271,10 +271,10 @@ class TestSelection(unittest.TestCase):
             (root / "scripts").mkdir()
             target = root / "scripts" / "run.py"
             target.write_text('"""New docstring."""\nVALUE = 1\n', encoding="utf-8")
-            with patch.object(scoped_selection, "git_text", return_value='"""Old docstring."""\nVALUE = 1\n'):
+            with patch.object(scoped_selection, "git_text_or_empty", return_value='"""Old docstring."""\nVALUE = 1\n'):
                 self.assertFalse(scoped_selection.code_changed_since_upstream("scripts/run.py", root))
             target.write_text('"""New docstring."""\nVALUE = 2\n', encoding="utf-8")
-            with patch.object(scoped_selection, "git_text", return_value='"""Old docstring."""\nVALUE = 1\n'):
+            with patch.object(scoped_selection, "git_text_or_empty", return_value='"""Old docstring."""\nVALUE = 1\n'):
                 self.assertTrue(scoped_selection.code_changed_since_upstream("scripts/run.py", root))
 
     def test_a_python_change_beside_a_document_still_scopes(self):
