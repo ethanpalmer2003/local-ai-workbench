@@ -51,7 +51,7 @@ class GateScopeTests(unittest.TestCase):
                 ["bat/checks/a.bat", "bat/tests/a.bat", "notes/TODO.md", "scripts/tools/older.py"],
             )
 
-    def test_an_empty_change_set_falls_back_to_every_section(self):
+    def test_an_empty_change_set_checks_nothing(self):
         from scripts.review import __main__ as gate
 
         with (
@@ -61,23 +61,22 @@ class GateScopeTests(unittest.TestCase):
             patch.object(gate, "touched_gate") as touched,
         ):
             gate.main([])
-        full.assert_called_once()
+        full.assert_not_called()
         touched.assert_not_called()
 
-    def test_an_empty_change_set_says_why_it_runs_everything(self):
+    def test_a_branch_without_an_upstream_runs_everything(self):
         from scripts.review import __main__ as gate
 
-        for known, expected in ((False, "no upstream ref"), (True, "nothing is uncommitted")):
-            with self.subTest(known=known):
-                buffer = io.StringIO()
-                with (
-                    patch.object(gate, "changed_since_upstream", return_value=[]),
-                    patch.object(gate, "upstream_known", return_value=known),
-                    patch.object(gate, "full_gate", return_value=0),
-                    contextlib.redirect_stdout(buffer),
-                ):
-                    gate.main([])
-                self.assertIn(expected, buffer.getvalue())
+        buffer = io.StringIO()
+        with (
+            patch.object(gate, "changed_since_upstream", return_value=[]),
+            patch.object(gate, "upstream_known", return_value=False),
+            patch.object(gate, "full_gate", return_value=0) as full,
+            contextlib.redirect_stdout(buffer),
+        ):
+            gate.main([])
+        full.assert_called_once_with([])
+        self.assertIn("no upstream ref", buffer.getvalue())
 
     def test_a_change_runs_only_the_touched_sections(self):
         from scripts.review import __main__ as gate

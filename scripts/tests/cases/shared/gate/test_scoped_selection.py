@@ -278,10 +278,19 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(chosen.kept, (PointerTests,))
         self.assertEqual(chosen.dropped, (KoboldOptionTests,))
 
-    def test_an_empty_change_set_runs_every_class(self):
+    def test_an_empty_change_set_runs_no_class(self):
         chosen = scoped_selection.select_test_classes((TestSelection,), change_set=[])
+        self.assertEqual(chosen.kept, ())
+        self.assertEqual(chosen.reason, "nothing changed")
+
+    def test_a_branch_without_an_upstream_runs_every_class(self):
+        with (
+            patch.object(scoped_selection, "changed_since_upstream", return_value=[]),
+            patch.object(scoped_selection, "upstream_known", return_value=False),
+        ):
+            chosen = scoped_selection.select_test_classes((TestSelection,))
         self.assertEqual(chosen.kept, (TestSelection,))
-        self.assertEqual(chosen.reason, "no change set")
+        self.assertEqual(chosen.reason, "no upstream ref")
 
     def test_all_keeps_every_class_and_never_asks_git(self):
         groups = (TestSelection,)

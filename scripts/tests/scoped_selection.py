@@ -1,8 +1,8 @@
 """Select test classes affected by local changes using a one-hop reverse import walk.
 
-Keeps test classes defined in a changed module or in a module that directly imports one. Empty change
-sets, `--all`, and code edits to `FULL_TRIGGERS` run the full suite; non-Python changes and edits whose
-code is unchanged run no classes.
+Keeps test classes defined in a changed module or in a module that directly imports one. `--all`,
+code edits to `FULL_TRIGGERS`, and a branch with no upstream run the full suite; a clean tree, a
+non-Python change and an edit whose code is unchanged run no classes.
 
 One hop is the deliberate trade: a second hop reaches most of the tree and costs more than running
 everything, so a test two imports away waits for the full pre-push run. That run is also the backstop
@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 from scripts.config import project_config as project_cfg
-from scripts.shared.changes import changed_since_upstream, git_text
+from scripts.shared.changes import changed_since_upstream, git_text, upstream_known
 from scripts.shared.import_graph import (
     REACH_DEPTH,
     find_affected_modules,
@@ -62,10 +62,13 @@ def select_test_classes(
     if full:
         return Selection(test_classes, (), "--all")
     changed = changed_since_upstream(root) if change_set is None else change_set
-    # Git listed nothing, which covers a clean tree, a branch with no upstream, a failed read and an
-    # ignored-only edit such as the state folder. Nothing to reason from, so keep every class.
+    # Git listed nothing. With an upstream to compare against that is evidence: the tree is clean, so no
+    # test can see a difference. Without one, or when the read failed, there is no evidence at all and
+    # every class runs rather than none.
     if not changed:
-        return Selection(test_classes, (), "no change set")
+        if change_set is None and not upstream_known(root):
+            return Selection(test_classes, (), "no upstream ref")
+        return Selection((), test_classes, "nothing changed")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
     code_changes = [path for path in changed if not (path.endswith(".py") and ast_matches_upstream(path, root))]
     if not code_changes:

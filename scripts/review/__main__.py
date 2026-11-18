@@ -570,10 +570,12 @@ def main(argv: list[str] | None = None) -> int:
     committing = _flag(argv, "--commit")
     argv = [argument for argument in argv if argument not in ("--push", "--commit")]
     changed = changed_since_head() if committing else changed_since_upstream()
-    # - an empty set is either a clean tree or a branch with no upstream, and the two read differently
+    # - a clean tree is evidence that nothing needs checking; a branch without an upstream is not
     if not changed:
-        where = "this branch has no upstream ref" if not upstream_known() else "nothing is uncommitted or unpushed"
-        print(f"[GATE] {where}; every section runs, and --fast skips the slow ones", flush=True)
+        if upstream_known():
+            print("[GATE] nothing is uncommitted or unpushed; nothing to check, and --all runs every section")
+            return 0
+        print("[GATE] this branch has no upstream ref; every section runs, and --fast skips the slow ones", flush=True)
     prose_only = pushing and not any(path.endswith(".py") for path in changed)
     if prose_only:
         print("[PUSH] no Python change since upstream; prose sections only", flush=True)
