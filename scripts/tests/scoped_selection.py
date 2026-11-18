@@ -71,7 +71,7 @@ def select_test_classes(
         return Selection((), test_classes, "nothing changed")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
     # Only `.py` paths can match upstream, so every other path stays for the module check below to judge.
-    code_changes = [path for path in changed if code_changed_since_upstream(path, root)]
+    code_changes = [path for path in changed if _code_changed_since_upstream(path, root)]
     if not code_changes:
         return Selection((), test_classes, "no code change")
 
@@ -98,7 +98,7 @@ def select_test_classes(
     return _partition(test_classes, reachable, reason)
 
 
-def code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
+def _code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
     """Return whether a file's code differs from its upstream copy, comments, docstrings and layout aside.
 
     True means a test can see the difference, which is how the selector reads it. Anything that is not
