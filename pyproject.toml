@@ -36,6 +36,7 @@ dev = [
     "ruff",
     "vulture>=2.16",
     "pylint>=4.1.4",
+    "networkx>=3.7",
 ]
 
 [tool.uv]
@@ -111,5 +112,6 @@ known_first_party = ["scripts"]
 exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", ".venv", "data", "frameworks", "trash"]
 # - ComfyUI and Piper are imported inside their own runtimes, never from this venv;
 #   torch belongs to the ComfyUI interpreter that loads the synced node
-# - the regression harness imports pytest, which belongs in the dev group
-per_rule_ignores = { DEP001 = ["folder_paths", "piper", "torch"], DEP004 = ["pytest"] }
+# - the regression harness imports pytest and the gate imports networkx; both are tooling, so both belong in
+#   the dev group even though scripts/ imports them
+per_rule_ignores = { DEP001 = ["folder_paths", "piper", "torch"], DEP004 = ["networkx", "pytest"] }
