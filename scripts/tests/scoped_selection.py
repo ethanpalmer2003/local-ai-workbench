@@ -98,8 +98,7 @@ def select_test_classes(
     # The walk is a breadth-first search over the reversed graph, one hop back by default.
     reachable = find_affected_modules(edges, changed_modules, depth=REACH_DEPTH)
 
-    kept, dropped = _partition(test_classes, reachable)
-    return Selection(kept, dropped, _reach_reason(edges, reachable, code_changes))
+    return _partition(test_classes, reachable, _reach_reason(edges, reachable, code_changes))
 
 
 def code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
@@ -130,14 +129,12 @@ def code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
     return _dump_without_docstrings(before) != _dump_without_docstrings(after)
 
 
-def _partition(
-    test_classes: tuple[TestClass, ...], reachable: frozenset[str]
-) -> tuple[tuple[TestClass, ...], tuple[TestClass, ...]]:
-    """The classes the reach covers, and the ones it leaves out."""
+def _partition(test_classes: tuple[TestClass, ...], reachable: frozenset[str], reason: str) -> Selection:
+    """The classes the reach covers, the ones it leaves out, and the sentence that explains it."""
     # `__module__` is the module a class was defined in, which is what the graph speaks.
     kept = tuple(test_class for test_class in test_classes if test_class.__module__ in reachable)
     dropped = tuple(test_class for test_class in test_classes if test_class.__module__ not in reachable)
-    return kept, dropped
+    return Selection(kept=kept, dropped=dropped, reason=reason)
 
 
 def _module_deleted(paths: list[str], root: Path | None) -> bool:
