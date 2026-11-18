@@ -6,15 +6,16 @@ unparsable files yield no edges and are caught separately by `ruff` and `pyright
 """
 
 import ast
-from collections import deque
 from collections.abc import Iterable
 from pathlib import Path
+
+import networkx as nx
 
 from scripts.config import project_config as project_cfg
 from scripts.shared.changes import git_text
 
-# Each module name mapped to the set of module names it depends on.
-ImportGraph = dict[str, frozenset[str]]
+# A directed graph of module names, one edge per import and per parent package.
+ImportGraph = nx.DiGraph
 # The deepest hop that is still much cheaper than a full run: depth 0 would miss the direct importers, and
 # depth 2 costs close to a full run for a widely imported module, so everything past here may as well be
 # the full push run.
@@ -28,19 +29,19 @@ def import_graph(root: Path | None = None) -> ImportGraph:
     """
     files = git_module_files(root)
     known = set(files)
-    edges: ImportGraph = {}
+    graph: ImportGraph = nx.DiGraph()
+    graph.add_nodes_from(files)
     for name, path in files.items():
         parts = name.split(".")
-        parents = {".".join(parts[:end]) for end in range(1, len(parts))}
-        targets = parents & known
+        targets = {".".join(parts[:end]) for end in range(1, len(parts))} & known
         tree = parse_source(path)
         if tree is not None:
             for raw in imported_names(tree, name, is_package=path.name == "__init__.py"):
                 target = _longest_known_prefix(raw, known)
                 if target:
                     targets.add(target)
-        edges[name] = frozenset(targets - {name})
-    return edges
+        graph.add_edges_from((name, target) for target in targets - {name})
+    return graph
 
 
 def find_affected_modules(edges: ImportGraph, changed: Iterable[str], *, depth: int | None = None) -> frozenset[str]:
@@ -48,23 +49,15 @@ def find_affected_modules(edges: ImportGraph, changed: Iterable[str], *, depth: 
 
     `depth=1` keeps the changed modules and their direct importers, while `None` walks the whole chain.
     """
-    # Invert the forward dependency graph so each module maps to the modules that import it.
-    importers: dict[str, set[str]] = {}
-    for module, targets in edges.items():
-        for target in targets:
-            importers.setdefault(target, set()).add(module)
-
-    # Breadth-first search outward from `changed`, stopping at `depth` hops when specified.
+    # The edges point at dependencies, so the walk goes against them to reach the importers.
+    importers = edges.reverse(copy=False)
+    radius = len(importers) if depth is None else depth
     seen: set[str] = set()
-    queue = deque((module, 0) for module in changed)
-    while queue:
-        current, level = queue.popleft()
-        if current in seen:
-            continue
-        seen.add(current)
-        if depth is not None and level >= depth:
-            continue
-        queue.extend((importer, level + 1) for importer in importers.get(current, ()))
+    for module in changed:
+        if module in importers:
+            seen.update(nx.ego_graph(importers, module, radius=radius).nodes)
+        else:
+            seen.add(module)
     return frozenset(seen)
 
 

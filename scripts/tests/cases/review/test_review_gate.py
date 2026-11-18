@@ -9,6 +9,15 @@ from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
+import networkx
+
+
+def _digraph(edges: dict[str, tuple[str, ...]]) -> networkx.DiGraph[str]:
+    graph = networkx.DiGraph()
+    graph.add_nodes_from(edges)
+    graph.add_edges_from((name, target) for name, targets in edges.items() for target in targets)
+    return graph
+
 
 class GateScopeTests(unittest.TestCase):
     def test_a_batch_rename_only_needs_layout_and_docs(self):
@@ -171,7 +180,7 @@ class GateScopeTests(unittest.TestCase):
     def test_scoped_types_check_only_the_change_and_its_importers(self):
         from scripts.review import __main__ as gate
 
-        edges = {"scripts.a": (), "scripts.b": ("scripts.a",), "scripts.c": ("scripts.b",), "scripts.z": ()}
+        edges = _digraph({"scripts.a": (), "scripts.b": ("scripts.a",), "scripts.c": ("scripts.b",), "scripts.z": ()})
         completed = subprocess.CompletedProcess(args=[], returncode=0)
         with (
             patch.object(gate, "import_graph", return_value=edges),
@@ -185,7 +194,7 @@ class GateScopeTests(unittest.TestCase):
     def test_scoped_types_run_the_whole_project_when_the_reach_is_wide(self):
         from scripts.review import __main__ as gate
 
-        edges = {"scripts.a": (), **{f"scripts.m{index}": ("scripts.a",) for index in range(5)}}
+        edges = _digraph({"scripts.a": (), **{f"scripts.m{index}": ("scripts.a",) for index in range(5)}})
         with (
             patch.object(gate, "import_graph", return_value=edges),
             patch.object(gate, "git_module_files", return_value={name: Path(name) for name in edges}),

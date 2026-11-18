@@ -11,7 +11,10 @@ from scripts.tests.shared.paths import CasePaths
 
 
 def _graph(edges: dict[str, tuple[str, ...]]) -> graph_api.ImportGraph:
-    return {name: frozenset(targets) for name, targets in edges.items()}
+    graph = graph_api.ImportGraph()
+    graph.add_nodes_from(edges)
+    graph.add_edges_from((name, target) for name, targets in edges.items() for target in targets)
+    return graph
 
 
 class TestSelection(unittest.TestCase):
@@ -67,7 +70,7 @@ class TestSelection(unittest.TestCase):
             with patch.object(graph_api, "git_text", return_value=listing):
                 edges = graph_api.import_graph(root)
         # - `scripts/__init__.py` names no module, so `scripts` itself never becomes a parent package
-        self.assertEqual(edges["scripts.pkg.module"], frozenset({"scripts.pkg"}))
+        self.assertEqual(set(edges.successors("scripts.pkg.module")), {"scripts.pkg"})
 
     def test_an_unparsable_file_has_no_tree(self):
         with CasePaths(__file__).temporary_directory() as folder:
