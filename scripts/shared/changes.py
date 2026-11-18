@@ -33,6 +33,10 @@ def committed_paths(root: Path | None = None) -> list[str]:
     return sorted({line.strip() for line in lines if line.strip()})
 
 
+class NoUpstreamError(RuntimeError):
+    """This branch has no upstream ref, so there is nothing to compare against."""
+
+
 def upstream_known(root: Path | None = None) -> bool:
     """Whether this branch has an upstream ref, which an empty change set cannot tell you."""
     return bool(git_text("rev-parse", "--abbrev-ref", "@{upstream}", root=root).strip())
@@ -49,7 +53,12 @@ def changed_since_head(root: Path | None = None) -> list[str]:
 
 
 def changed_since_upstream(root: Path | None = None) -> list[str]:
-    """Every unreviewed path: the working tree against `HEAD`, plus commits the upstream lacks."""
+    """Every unreviewed path: the working tree against `HEAD`, plus commits the upstream lacks.
+
+    Raises NoUpstreamError when the branch has none, which is a different answer from an empty list.
+    """
+    if not upstream_known(root):
+        raise NoUpstreamError
     paths = changed_since_head(root)
     paths.extend(
         path for path in git_text("diff", "--name-only", "@{upstream}...HEAD", root=root).splitlines() if path.strip()

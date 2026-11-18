@@ -284,10 +284,9 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(chosen.reason, "nothing changed")
 
     def test_a_branch_without_an_upstream_runs_every_class(self):
-        with (
-            patch.object(scoped_selection, "changed_since_upstream", return_value=[]),
-            patch.object(scoped_selection, "upstream_known", return_value=False),
-        ):
+        from scripts.shared.changes import NoUpstreamError
+
+        with patch.object(scoped_selection, "changed_since_upstream", side_effect=NoUpstreamError):
             chosen = scoped_selection.select_test_classes((TestSelection,))
         self.assertEqual(chosen.kept, (TestSelection,))
         self.assertEqual(chosen.reason, "no upstream ref")

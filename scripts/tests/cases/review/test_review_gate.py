@@ -56,7 +56,6 @@ class GateScopeTests(unittest.TestCase):
 
         with (
             patch.object(gate, "changed_since_upstream", return_value=[]),
-            patch.object(gate, "upstream_known", return_value=True),
             patch.object(gate, "full_gate", return_value=0) as full,
             patch.object(gate, "touched_gate") as touched,
         ):
@@ -69,7 +68,6 @@ class GateScopeTests(unittest.TestCase):
 
         with (
             patch.object(gate, "changed_since_upstream", return_value=[]),
-            patch.object(gate, "upstream_known", return_value=True),
             patch.object(gate, "full_gate") as full,
             patch.object(gate, "touched_gate") as touched,
         ):
@@ -79,11 +77,11 @@ class GateScopeTests(unittest.TestCase):
 
     def test_a_branch_without_an_upstream_runs_everything(self):
         from scripts.review import __main__ as gate
+        from scripts.shared.changes import NoUpstreamError
 
         buffer = io.StringIO()
         with (
-            patch.object(gate, "changed_since_upstream", return_value=[]),
-            patch.object(gate, "upstream_known", return_value=False),
+            patch.object(gate, "changed_since_upstream", side_effect=NoUpstreamError),
             patch.object(gate, "full_gate", return_value=0) as full,
             contextlib.redirect_stdout(buffer),
         ):
