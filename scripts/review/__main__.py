@@ -54,7 +54,8 @@ SPELL_EXCLUDED = (
     "scripts/benchmarks/output/",
 )
 TIMES: list[dict[str, Any]] = []
-# - basedpyright threads on the whole project: six measured fastest on this 12-core box (7.6 s against 12.5 s on one)
+# - basedpyright threads on the whole project: six measured fastest on this 12-core box, at about two thirds
+#   of one thread
 TYPE_THREADS = 6
 # - wall clock from the first section to the last, since concurrent sections sum to more than the wait
 _started_at = 0.0
