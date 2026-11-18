@@ -15,8 +15,8 @@ through `subprocess`, `runpy` or `open` are not tracked. The full pre-push run c
 
 import ast
 import unittest
+from dataclasses import dataclass
 from pathlib import Path
-from typing import NamedTuple
 
 from scripts.config import project_config as project_cfg
 from scripts.shared.changes import NoUpstreamError, changed_since_upstream, git_text_or_none
@@ -38,7 +38,8 @@ FULL_TRIGGERS = {"scripts/tests/registry.py", "scripts/tests/run.py", "scripts/t
 TestClass = type[unittest.TestCase]
 
 
-class Selection(NamedTuple):
+@dataclass(frozen=True)
+class Selection:
     """The classes to run, the ones that stayed out, and the reason the scope is what it is."""
 
     kept: tuple[TestClass, ...]
