@@ -121,7 +121,7 @@ def code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
     # `ast.parse` discards `#` comments automatically; `_dump_without_docstrings` strips docstrings.
     before = parse_text(previous)
     after = parse_source(current)
-    # No evidence from git is not proof of a prose edit: `git_text` answers "" when the read failed, and a
+    # No evidence from git is not proof of a prose edit: `git_text_or_empty` answers "" when the read failed, and
     # broken or unreadable file on either side is a real change too, since nothing can be ruled out.
     if not previous or before is None or after is None:
         return True
