@@ -14,17 +14,25 @@ tree is 182 lines and almost none of them can be deleted:
 
 The retired TTS pipeline stays out of the report until the removal decision in notes/TODO.md
 lands: it is dead by design, and reporting it every run teaches the reader to skip the section.
+
+A commit is a different question from a push: a definition can only become dead when a reference to
+it disappears, so a change that names the same identifiers as its upstream copy cannot move vulture's
+verdict, and the scan is skipped.
 """
 
 import argparse
+import ast
 import re
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
 from scripts.review.lists.sources import maintained_files
+from scripts.shared.changes import git_text
+from scripts.shared.import_graph import parse_source, parse_text
 
 # - retired code awaiting a removal decision; the entry in notes/TODO.md owns that decision
 RETIRED = {"scripts/launchers/audiocpp/tts_legacy_buffered.py"}
@@ -57,6 +65,53 @@ def findings(output: str) -> list[str]:
             continue
         kept.append(line)
     return kept
+
+
+def identifiers(tree: ast.Module) -> Counter[str]:
+    """Every identifier a file defines, imports or names, which is all vulture can react to."""
+    names: Counter[str] = Counter()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name):
+            names[node.id] += 1
+        elif isinstance(node, ast.Attribute):
+            names[node.attr] += 1
+        elif isinstance(node, ast.Import | ast.ImportFrom):
+            names.update(alias.asname or alias.name.split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            names[node.name] += 1
+        elif isinstance(node, ast.arg):
+            names[node.arg] += 1
+    return names
+
+
+def verdict_cannot_change(paths: list[str], root: Path | None = None) -> bool:
+    """Whether every changed file names the same identifiers as its upstream copy.
+
+    A definition becomes dead only when a reference to it disappears, and a new one becomes dead only
+    when it arrives without a reference, so an unchanged identifier multiset means vulture has nothing
+    new to say. An unreadable file, a missing upstream copy or an empty change set answers False.
+    """
+    base = project_cfg.BASE_DIR if root is None else root
+    if not paths:
+        return False
+    for path in paths:
+        current = base / path
+        if not current.is_file():
+            return False
+        previous = git_text("show", f"@{{upstream}}:{path}", root=root)
+        before = parse_text(previous) if previous else None
+        after = parse_source(current)
+        if before is None or after is None or identifiers(before) != identifiers(after):
+            return False
+    return True
+
+
+def scoped(python_files: list[str], root: Path | None = None) -> int:
+    """Scan the tree unless the change cannot move the verdict, which keeps a commit cheap."""
+    if verdict_cannot_change(python_files, root):
+        print(f"[OK] Dead code: no identifier changed in {len(python_files)} file(s), the verdict cannot move")
+        return 0
+    return main([])
 
 
 def main(argv: list[str] | None = None) -> int:

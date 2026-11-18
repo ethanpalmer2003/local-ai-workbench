@@ -415,7 +415,7 @@ def touched_gate(argv: list[str] | None = None, changed: list[str] | None = None
         ("annotations", "\n=== ANNOTATION COMPLEXITY ===", lambda: annotations.main(python_files)),
         ("line length", "\n=== LINE LENGTH ===", lambda: line_length.main(python_files)),
         ("bare any", "\n=== BARE ANY ===", lambda: bare_any.main(python_files)),
-        ("dead code", "\n=== DEAD CODE ===", lambda: dead_code.main([])),
+        ("dead code", "\n=== DEAD CODE ===", lambda: dead_code.scoped(python_files)),
         ("dynamic imports", "\n=== DYNAMIC IMPORTS ===", lambda: dynamic_imports.main(python_files)),
         ("walrus", "\n=== WALRUS OPERATOR ===", lambda: walrus.main(python_files)),
         ("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main(existing)),
