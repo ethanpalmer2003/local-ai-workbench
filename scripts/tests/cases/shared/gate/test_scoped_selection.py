@@ -76,10 +76,10 @@ class TestSelection(unittest.TestCase):
         with CasePaths(__file__).temporary_directory() as folder:
             broken = Path(folder) / "broken.py"
             broken.write_text("def broken(:\n", encoding="utf-8")
-            self.assertIsNone(graph_api.parse_source(broken))
+            self.assertIsNone(graph_api.parse(broken))
 
     def test_text_with_a_null_byte_has_no_tree(self):
-        self.assertIsNone(graph_api.parse_text("x = 1\x00\n"))
+        self.assertIsNone(graph_api.parse("x = 1\x00\n"))
 
     def test_a_chain_of_importers_counts_one_hop_by_default(self):
         edges = _graph({"scripts.a": ("scripts.b",), "scripts.b": ("scripts.c",), "scripts.c": (), "scripts.z": ()})
