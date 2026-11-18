@@ -21,7 +21,7 @@ REACH_DEPTH = 1
 
 
 def import_graph(root: Path | None = None) -> ImportGraph:
-    """Build a map of module name to the modules it depends on for every module under `scripts/` on disk.
+    """Build a map of module name to the modules it depends on for every module under `scripts/` that git lists.
 
     A dependency is an imported module or a known parent package (whose `__init__.py` runs on import).
     """
@@ -148,7 +148,7 @@ def imported_names(tree: ast.Module, module: str, *, is_package: bool) -> set[st
 
 
 def module_paths(modules: Iterable[str], root: Path | None = None) -> list[str]:
-    """Return sorted repo-relative source paths for the given modules that exist on disk."""
+    """Return sorted repo-relative source paths for the given modules that git lists and the tree holds."""
     base = project_cfg.BASE_DIR if root is None else root
     files = git_module_files(root)
     return sorted(files[module].relative_to(base).as_posix() for module in modules if module in files)
