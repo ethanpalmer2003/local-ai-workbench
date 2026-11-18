@@ -125,7 +125,7 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(chosen.dropped, (KoboldOptionTests,))
 
     def test_the_launcher_block_is_in_the_graph_like_any_other_class(self):
-        from scripts.tests.cases.suites.frameworks_smoke import DEFAULT_GROUPS, ProxyHTTP
+        from scripts.tests.cases.suites.frameworks_smoke import DEFAULT_CLASSES, ProxyHTTP
 
         edges = _graph(
             {
@@ -138,9 +138,9 @@ class TestSelection(unittest.TestCase):
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             kept = scoped_selection.select_test_classes(
-                DEFAULT_GROUPS, change_set=["scripts/launchers/audiocpp/audiocpp_proxy.py"]
+                DEFAULT_CLASSES, change_set=["scripts/launchers/audiocpp/audiocpp_proxy.py"]
             )
-            dropped = scoped_selection.select_test_classes(DEFAULT_GROUPS, change_set=["scripts/tools/rename_path.py"])
+            dropped = scoped_selection.select_test_classes(DEFAULT_CLASSES, change_set=["scripts/tools/rename_path.py"])
         self.assertEqual(kept.kept, (ProxyHTTP,), "a proxy change keeps the loopback tests that drive it")
         self.assertEqual(dropped.kept, (), "nothing outside the launcher wiring keeps the block")
 
@@ -160,7 +160,7 @@ class TestSelection(unittest.TestCase):
 
     def test_the_manifests_keep_every_class(self):
         groups = (TestSelection,)
-        for path in ("scripts/tests/groups.py", "scripts/tests/run.py", "scripts/tests/scoped_selection.py"):
+        for path in ("scripts/tests/registry.py", "scripts/tests/run.py", "scripts/tests/scoped_selection.py"):
             with self.subTest(path=path), patch.object(scoped_selection, "ast_matches_upstream", return_value=False):
                 chosen = scoped_selection.select_test_classes(groups, change_set=[path])
                 self.assertEqual(chosen.kept, groups)
