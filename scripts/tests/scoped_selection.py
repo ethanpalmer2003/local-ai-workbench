@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 from scripts.config import project_config as project_cfg
-from scripts.shared.changes import changed_since_upstream, git_text, upstream_known
+from scripts.shared.changes import NoUpstreamError, changed_since_upstream, git_text
 from scripts.shared.import_graph import (
     REACH_DEPTH,
     find_affected_modules,
@@ -61,14 +61,16 @@ def select_test_classes(
     """Partition `test_classes` into kept and dropped test classes for the current change set."""
     if full:
         return Selection(test_classes, (), "--all")
-    from_git = change_set is None
-    changed = changed_since_upstream(root) if from_git else change_set
-    # Git listed nothing. With an upstream to compare against that is evidence: the tree is clean, so no
-    # test can see a difference. Without one, or when the read failed, there is no evidence at all and
-    # every class runs rather than none.
-    if not changed:
-        if from_git and not upstream_known(root):
+    if change_set is None:
+        try:
+            changed = changed_since_upstream(root)
+        except NoUpstreamError:
+            # There is no baseline to compare against, so there is no evidence and every class runs.
             return Selection(test_classes, (), "no upstream ref")
+    else:
+        changed = change_set
+    # An empty set from git means the tree is clean, and its absence of evidence was the error above.
+    if not changed:
         return Selection((), test_classes, "nothing changed")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
     code_changes = [path for path in changed if not (path.endswith(".py") and ast_matches_upstream(path, root))]

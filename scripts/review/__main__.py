@@ -35,7 +35,7 @@ from scripts.review.checks import (
     walrus,
 )
 from scripts.shared import changes
-from scripts.shared.changes import changed_since_head, changed_since_upstream, upstream_known
+from scripts.shared.changes import NoUpstreamError, changed_since_head, changed_since_upstream
 from scripts.shared.import_graph import (
     REACH_DEPTH,
     find_affected_modules,
@@ -569,13 +569,20 @@ def main(argv: list[str] | None = None) -> int:
     pushing = _flag(argv, "--push")
     committing = _flag(argv, "--commit")
     argv = [argument for argument in argv if argument not in ("--push", "--commit")]
-    changed = changed_since_head() if committing else changed_since_upstream()
-    # - a clean tree is evidence that nothing needs checking; a branch without an upstream is not
+    baseline = True
+    try:
+        changed = changed_since_head() if committing else changed_since_upstream()
+    except NoUpstreamError:
+        # Nothing to compare against, so no section can be narrowed on evidence; every one runs.
+        baseline = False
+        changed = []
+        print("[GATE] this branch has no upstream ref; every section runs, and --fast skips the slow ones", flush=True)
+    # - a clean tree is evidence that nothing needs checking
     if not changed:
-        if upstream_known():
+        if baseline:
             print("[GATE] nothing is uncommitted or unpushed; nothing to check, and --all runs every section")
             return 0
-        print("[GATE] this branch has no upstream ref; every section runs, and --fast skips the slow ones", flush=True)
+        return full_gate(argv)
     prose_only = pushing and not any(path.endswith(".py") for path in changed)
     if prose_only:
         print("[PUSH] no Python change since upstream; prose sections only", flush=True)

@@ -1,6 +1,6 @@
 import sys
 
-from scripts.shared.changes import changed_since_head, changed_since_upstream
+from scripts.shared.changes import NoUpstreamError, changed_since_head, changed_since_upstream
 from scripts.shared.timing import timed
 from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.registry import TEST_CLASSES
@@ -14,7 +14,12 @@ if __name__ == "__main__":
     arguments = sys.argv[1:]
     with timed("default regressions"):
         # - --push is the pre-push stage: every class when Python changed, none when only prose did
-        if pushing and not any(path.endswith(".py") for path in changed_since_upstream()):
+        try:
+            python_changed = any(path.endswith(".py") for path in changed_since_upstream())
+        except NoUpstreamError:
+            # No baseline is no evidence, so the push stage runs every class rather than none
+            python_changed = True
+        if pushing and not python_changed:
             print("[PUSH] no Python change since upstream; the suite is unchanged", flush=True)
             raise SystemExit(0)
         # - the scope follows the change; --all and --push run every class, and run.py keeps it exhaustive
