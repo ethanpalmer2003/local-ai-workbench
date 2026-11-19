@@ -90,7 +90,13 @@ def _over_area_cap(runs: list[Path], cited: set[str]) -> list[Path]:
 
 
 def _area_of(run: Path) -> str:
-    """The suite or area a run belongs to: the two folders above the case."""
+    """The area and case a run belongs to, read from the evidence root rather than by depth."""
+    for root in OUTPUT_ROOTS:
+        try:
+            parts = run.relative_to(root).parts
+        except ValueError:
+            continue
+        return "/".join(parts[:2])
     return "/".join(run.parts[-5:-3])
 
 

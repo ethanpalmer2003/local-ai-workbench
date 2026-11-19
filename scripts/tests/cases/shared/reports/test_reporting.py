@@ -36,8 +36,10 @@ class Reporting(unittest.TestCase):
             with patch.object(CasePaths, "output", new_callable=PropertyMock, return_value=Path(folder)):
                 default = CasePaths(__file__).new_run()
                 reviewed = CasePaths(__file__).new_run(Outcome.NO_GAIN)
-            self.assertEqual(default.root.parent.name, "unreviewed")
-            self.assertEqual(reviewed.root.parent.name, "no-gain")
+            # - a run sits under its date, so a day of evidence is one folder
+            self.assertEqual(default.root.parent.parent.name, "unreviewed")
+            self.assertRegex(default.root.parent.name, r"^\d{4}-\d{2}-\d{2}$")
+            self.assertEqual(reviewed.root.parent.parent.name, "no-gain")
             self.assertTrue(all(path.is_dir() for path in (reviewed.logs, reviewed.artifacts, reviewed.temp)))
 
     def test_failed_and_completed_runs_write_matching_reports(self):
