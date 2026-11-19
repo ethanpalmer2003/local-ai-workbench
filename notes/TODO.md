@@ -40,6 +40,8 @@ A rule or a shape to decide, where the code is already correct and the question 
 
 - [ ] Decide a retention rule for run evidence: `scripts/tests/output` holds 1.05 GB across 451,937 files and `scripts/benchmarks/output` 0.92 GB, and neither has a prune path; `state_cleanup` covers only logs and download leftovers (8 MB of old run logs today). Options: keep the latest run per area and archive the rest to `trash`, keep anything a tracked document cites, or leave it and rely on manual emptying. Owners: [tests/output](../scripts/tests/) and [benchmarks/output](../scripts/benchmarks/). ~1 h
 
+- [ ] Cap how many runs an area keeps, not only how many per case: the evidence roots hold 329,458 files, and the bulk is many cheap suite runs of two files each (`suites/frameworks_smoke` 11,250 runs, `suites/framework_updates` 13,668, `frameworks_smoke_proxy` 16,277 files), so per-case retention never bites because each suite writes one run per invocation. Options: keep the newest 20 runs per area, let a run write to temp and copy only `report.md`/`report.json` on success, or make the regression suites keep nothing and rely on the log. Also disposable and larger: `state/cache/uv/archive-v0` holds 30,211 files and 1.0 GB of regenerable uv cache, and `state/logs/shared/framework_updates` 5,540 tiny logs. Owner: [cleanup.py](../scripts/tools/cleanup.py). ~1 h
+
 ## Needs a model run or device
 Work that cannot be settled without a live run: weights, a device, a server or a human at the machine.
 
