@@ -59,6 +59,14 @@ class PolicyTests(unittest.TestCase):
                     [f"Empty package shell: {package.relative_to(project_cfg.BASE_DIR).as_posix()}"],
                 )
 
+    def test_a_batch_outside_the_entry_point_tree_is_reported(self):
+        stray = project_cfg.SCRIPTS_DIR / "tools" / "run_thing.bat"
+        wrapper = project_cfg.BASE_DIR / "scripts" / "review" / "check_repo.bat"
+        with patch.object(layout, "tracked_files", return_value=[stray, wrapper]):
+            self.assertEqual(
+                layout.batch_placement_issues(), ["Batch outside the entry-point tree: scripts/tools/run_thing.bat"]
+            )
+
     def test_a_root_folder_holding_no_tracked_file_is_a_leftover(self):
         from scripts.tests.shared.paths import CasePaths
 
