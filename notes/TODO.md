@@ -5,9 +5,12 @@
 - Each entry ends with a rough duration, shortest first.
 
 ## Reliability
+Defects and safety gaps: something behaves wrongly or can run away, and the fix is code or configuration.
 
+- [ ] Add an operating-system backstop for the deep-scan rule: a profile tool guard (`scripts/state/plugins/guard-deep-scan`, installed in the desktop profile) refuses a recursive shell scan, a glob or a grep under `data/` and `frameworks/`, but it only binds harnesses that load that plugin. An ACL that denies the agent process read access to those roots, or allows only named subpaths, is the only rule no tool call can bypass. Test with a fresh shell as the agent's user, then remove the guard if the ACL holds. ~45 min
 
 ## Standardization
+A rule or a shape to decide, where the code is already correct and the question is which convention to keep.
 
 - [ ] Decide whether the walrus ban reaches statement headers: `walrus.py` bans the comprehension form and six sites were rewritten to clear it, while `python -m scripts.review.checks.walrus --census` still counts 21 `if` headers, 4 `while` headers and 1 call argument. The four `while` headers are the idiom PEP 572 exists for, and `if preset := _preset_for(model):` reads fine, so widening needs one header shape shown to hide a value the way a comprehension does. ~20 min
 
@@ -29,7 +32,14 @@
 - [ ] Move the `codebase-memory-mcp` uv tool to Python 3.14 (`uv tool install --python 3.14 codebase-memory-mcp --force`), then uninstall the managed 3.13 interpreter; the tool currently runs on `cpython-3.13-windows-x86_64-none`, which blocked `uv python uninstall 3.13`. ~5 min
 - [ ] Find which update path keeps creating an empty `bin` directory; it was archived 70 times into `trash/` on 2026-11-15. `archive_path` now removes empty directories instead of trashing them, so the churn is invisible, but the source is still unknown. ~20 min
 
+- [ ] Say why the suite's scope is empty where a person reads it: `Selection.reason` answers `no change set`, but the `[SCOPE]` line is printed by `scripts/tests/run.py`, which does not know whether the branch has an upstream ref. The gate already distinguishes the two with `changes.upstream_known()`; the runner could print the same sentence. Outside the scope modules, so it waits. ~15 min
+- [ ] Decide the smoke suite's two report keys: `class_selection` carries the selection reason while `scope` lists the kinds of checks, and the vocabulary pass left both because they answer different questions. Either name them for what they hold (`reason`, `checks`) or state in the report preamble that one is why and the other is what. Owner: [frameworks_smoke.py](../scripts/tests/cases/suites/frameworks_smoke.py). ~15 min
+- [ ] Decide whether a single line can do too much, and what counts: the gate measures line width, function length and McCabe complexity, and nothing measures how many operations one expression packs (`[p for p in changed if not (p.endswith(".py") and code_matches_upstream(p, root))]` was three: a filter, a suffix test and a tree comparison). Candidates: count AST nodes per physical line with a cap around eight, or count boolean and comparison operators inside one condition, checked in `checks/comments.py` or a small `checks/expression.py`. Measure a census first, since a cap of eight may flag list comprehensions that read fine. ~30 min
+- [ ] Batch the upstream reads in the scope: `_code_changed_since_upstream` runs one `git show` per changed `.py` file, which is fine for a commit and slow for a large change set or a rebase. Options: one `git show` per file is already batched by path, or `git diff --name-only` first and only parse files whose text differs, or a read-cache keyed on the upstream ref. Measure a 50-file change set before deciding. ~30 min
+- [ ] Apply the no-nested-call rule repo-wide: a call is never an argument of another call. `scripts/tests/scoped_selection.py` had five by AST count (two direct, three inside `any`/`sum` generators); the two direct ones are fixed, and the rest of `scripts/` is unaudited. Decide whether the generator form counts before sweeping, then measure the total. ~1 h
+
 ## Needs a model run or device
+Work that cannot be settled without a live run: weights, a device, a server or a human at the machine.
 
 ### Requires user input
 
@@ -46,17 +56,5 @@
   cause, and if it runs the fault is in the rewrite prompt or the grading path. [Result](../scripts/tests/notes/OUTCOMES.md).
   ~30 min
 - [ ] Screen Strata against 27B on harder coding/output-format tasks; verify turn-budget cleanup. The pair now exists on ROCm for `proverb` and `ledger` (27B 23.2 s and 59.3 s against Strata's 74.1 s and 144.0 s, Pi client), but the Vulkan arm still needs the b12422 crash resolved before it can be repeated on the default build. Turn-budget cleanup stays unverified. [Results](../scripts/tests/notes/OUTCOMES.md). ~1 h
-
-- [ ] Say why the suite's scope is empty where a person reads it: `Selection.reason` answers `no change set`, but the `[SCOPE]` line is printed by `scripts/tests/run.py`, which does not know whether the branch has an upstream ref. The gate already distinguishes the two with `changes.upstream_known()`; the runner could print the same sentence. Outside the scope modules, so it waits. ~15 min
-
-- [ ] Decide the smoke suite's two report keys: `class_selection` carries the selection reason while `scope` lists the kinds of checks, and the vocabulary pass left both because they answer different questions. Either name them for what they hold (`reason`, `checks`) or state in the report preamble that one is why and the other is what. Owner: [frameworks_smoke.py](../scripts/tests/cases/suites/frameworks_smoke.py). ~15 min
-
-- [ ] Decide whether a single line can do too much, and what counts: the gate measures line width, function length and McCabe complexity, and nothing measures how many operations one expression packs (`[p for p in changed if not (p.endswith(".py") and code_matches_upstream(p, root))]` was three: a filter, a suffix test and a tree comparison). Candidates: count AST nodes per physical line with a cap around eight, or count boolean and comparison operators inside one condition, checked in `checks/comments.py` or a small `checks/expression.py`. Measure a census first, since a cap of eight may flag list comprehensions that read fine. ~30 min
-
-- [ ] Batch the upstream reads in the scope: `_code_changed_since_upstream` runs one `git show` per changed `.py` file, which is fine for a commit and slow for a large change set or a rebase. Options: one `git show` per file is already batched by path, or `git diff --name-only` first and only parse files whose text differs, or a read-cache keyed on the upstream ref. Measure a 50-file change set before deciding. ~30 min
-
-- [ ] Decide whether `git_text` should raise: it answers `""` for both a failed command and a genuinely empty output, which the scope reads as no evidence and the graph reads as no files. The principle in [code](../.agents/CODE.md) says abnormal state is raised; splitting it into `git_text` (raises) and `git_text_or_empty` (documented sentinel) would settle it, at the cost of touching every caller. ~30 min
-
-- [ ] Apply the no-nested-call rule repo-wide: a call is never an argument of another call. `scripts/tests/scoped_selection.py` had five by AST count (two direct, three inside `any`/`sum` generators); the two direct ones are fixed, and the rest of `scripts/` is unaudited. Decide whether the generator form counts before sweeping, then measure the total. ~1 h
 
 - [ ] Report the Loom 0.2.0 Windows device failure upstream, then retry the comparison: the SDK installs and serves on this box but the model cannot run. `--device=amdgpu`, `rdna`, `rdna://1` and `cdna` all answer `NOT_FOUND; no AMD endpoint matches the selected family and path` from `runtime/src/iree/hal/driver/amd/driver.c:843`, while `amdf-info` sees the RX 7800 XT as `rdna://1`, gfx1102, 60 CU. `--device=vulkan` creates the device, then the Qwen2.5-0.5B port fails to lower: `llm.loom:37054:5: LOWERING/045: select-templates cannot resolve template.apply against template family <sel11_g_attention_split>: target_mismatch` (10,224 errors). Baseline for the same GGUF on llama.cpp Vulkan 1.0.0-dev (12422, a681a53b6): 472 tok/s median over five 128-token runs. The run set (SDK venv, model package, logs) is preserved at `trash/2026-11-19/loom-0.2.0-experiment/`; a retry needs a registered component under `frameworks/` and `HF_HOME` pointed at its models dir, since a raw install trips the layout check. ~2 h
