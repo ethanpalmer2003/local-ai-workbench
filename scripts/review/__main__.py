@@ -438,7 +438,17 @@ def touched_gate(argv: list[str] | None = None, changed: list[str] | None = None
     slowest = sorted(TIMES, key=lambda item: float(str(item["seconds"])), reverse=True)[:3]
     summary = ", ".join(f"{item['section']} {item['seconds']}s" for item in slowest)
     print(f"\n[TIME] {write_timings()} (slowest: {summary})")
+    _prune_after_run()
     return report_sections()
+
+
+def _prune_after_run() -> None:
+    """Keep the newest gate runs and trash days, so the log this run wrote never becomes a backlog."""
+    # - imported here because the pruner belongs to the tools role, not to the gate
+    from scripts.tools.state_cleanup import prune_generated
+
+    for line in prune_generated(7, 30, 30, dry_run=False):
+        print(f"[PRUNE] {line}")
 
 
 def _package_summary(fast: bool) -> dict[str, int] | None:
