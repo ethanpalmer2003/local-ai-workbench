@@ -83,6 +83,7 @@ def rdna_tools() -> tuple[ToolSpec, ...]:
             manual_merge=True,
             in_use=False,
         ),
+        # - the patch set tracks its own releases; the RDNA build that consumes it is hand-run and parked
         rdna_release.TOOL,
     )
 
