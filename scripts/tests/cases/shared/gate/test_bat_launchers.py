@@ -1,4 +1,7 @@
-"""Every .bat resolves to a real module and its argparse entry point accepts --help."""
+"""Every .bat resolves to a real module and its argparse entry point accepts --help.
+
+The layout check owns which batches run alone instead of through the shared runner.
+"""
 
 import contextlib
 import importlib
@@ -11,6 +14,7 @@ import unittest
 from unittest.mock import patch
 
 from scripts.config import project_config as project_cfg
+from scripts.review.checks.layout import BATCH_RUNS_ALONE
 
 MODULE = re.compile(r"python(?:\.exe)?[\"']?\s+-m\s+([A-Za-z_][\w.]*)", re.IGNORECASE)
 RUN_MODULE = re.compile(r'^set\s+"?RUN_MODULE=([A-Za-z_][\w.]*)"?', re.MULTILINE)
@@ -22,15 +26,6 @@ SKIP_MODULES = {
     "scripts.tools.stage_runner": "takes a module path and forwards the rest of the command",
     "scripts.launchers.llamacpp.language_practice": "delegates argument parsing to workspace.main",
     "scripts.launchers.llamacpp.llamacpp_pi": "delegates argument parsing to llamacpp_coding.main",
-}
-
-# - Bats with no `python -m` target (external CLI or another bootstrap script).
-SKIP_BATCHES = {
-    "bat/_run.bat": "shared runner; the module is supplied by the calling batch",
-    "bat/resume_command_code_session.bat": "calls the framework-local cmdc shim",
-    "bat/models/sync_python_env.bat": "runs uv sync against the project environment",
-    "bat/browser/comfyui/comfyui_bootstrap.bat": "bootstraps ComfyUI's own python main.py",
-    "bat/browser/comfyui/launch_comfyui.bat": "delegates to comfyui_bootstrap.bat",
 }
 
 
@@ -51,7 +46,7 @@ class BatLaunchers(unittest.TestCase):
         self.assertTrue(batches)
         for path in batches:
             relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
-            if relative in SKIP_BATCHES:
+            if relative in BATCH_RUNS_ALONE:
                 continue
             modules = batch_modules(path)
             self.assertTrue(modules, f"{relative}: no python -m target")
@@ -61,7 +56,7 @@ class BatLaunchers(unittest.TestCase):
     def test_argparse_entry_points_accept_help(self):
         for path in sorted(project_cfg.BAT_DIR.rglob("*.bat")):
             relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
-            if relative in SKIP_BATCHES:
+            if relative in BATCH_RUNS_ALONE:
                 continue
             for module_name in sorted(batch_modules(path)):
                 if module_name in SKIP_MODULES:

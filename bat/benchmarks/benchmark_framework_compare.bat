@@ -1,9 +1,8 @@
 @echo off
-setlocal
-pushd "C:\AI"
-title Language practice comparison
-".venv\Scripts\python.exe" -m scripts.benchmarks.shared.framework_compare %* 2>&1 | "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -Command "$input | Tee-Object -FilePath 'scripts\benchmarks\output\shared\framework_compare.log'"
-set "BENCH_EXIT=%ERRORLEVEL%"
-popd
-pause
-exit /b %BENCH_EXIT%
+rem Practice stack vs Lemonade vs KoboldCpp: chat, Kokoro speech and recognition, one stack at a time.
+rem Reports land under scripts\benchmarks\output\; the module owns the log, so nothing is teed here.
+
+set "RUN_TITLE=Language practice comparison"
+set "RUN_MODULE=scripts.benchmarks.shared.framework_compare"
+call "%~dp0..\_run.bat" %*
+exit /b %ERRORLEVEL%

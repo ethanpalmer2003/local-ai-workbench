@@ -67,6 +67,38 @@ class PolicyTests(unittest.TestCase):
                 layout.batch_placement_issues(), ["Batch outside the entry-point tree: scripts/tools/run_thing.bat"]
             )
 
+    def test_a_batch_hands_its_run_to_the_shared_runner(self):
+        self.assertEqual(
+            layout._batch_runner_issue(
+                "bat/checks/test_full.bat", 'set "RUN_MODULE=scripts.tests.validate"\ncall "%~dp0..\\_run.bat" %*\n'
+            ),
+            [],
+        )
+        self.assertEqual(
+            layout._batch_runner_issue("bat/checks/test_full.bat", 'set "RUN_MODULE=scripts.tests.validate"\n'),
+            ["Batch hands no run to _run.bat: bat/checks/test_full.bat"],
+        )
+        self.assertEqual(
+            layout._batch_runner_issue(
+                "bat/checks/test_full.bat",
+                'call "%~dp0..\\_run.bat" %*\n".venv\\Scripts\\python.exe" -m scripts.tests.validate\n',
+            ),
+            ["Batch runs the venv python itself instead of only _run.bat: bat/checks/test_full.bat"],
+        )
+
+    def test_a_comment_mentioning_the_venv_is_not_an_invocation(self):
+        self.assertEqual(
+            layout._batch_runner_issue(
+                "bat/checks/test_full.bat",
+                'rem calls .venv\\Scripts\\python.exe -m scripts.tests.validate\ncall "%~dp0..\\_run.bat" %*\n',
+            ),
+            [],
+        )
+
+    def test_the_runner_and_the_batches_that_cannot_delegate_run_alone(self):
+        for relative in sorted(layout.BATCH_RUNS_ALONE):
+            self.assertEqual(layout._batch_runner_issue(relative, '".venv\\Scripts\\python.exe" -m x\n'), [])
+
     def test_a_root_folder_holding_no_tracked_file_is_a_leftover(self):
         from scripts.tests.shared.paths import CasePaths
 
