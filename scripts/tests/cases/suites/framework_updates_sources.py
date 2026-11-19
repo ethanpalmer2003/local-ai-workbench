@@ -3,6 +3,8 @@
 import contextlib
 import io
 import json
+import re
+import shutil
 import sys
 import unittest
 import zipfile
@@ -16,6 +18,8 @@ from scripts.download.frameworks import build_frameworks as build_all
 from scripts.download.frameworks import framework_catalog as cfg
 from scripts.download.frameworks import update_frameworks as entry
 from scripts.download.frameworks import update_shared as updater
+from scripts.download.frameworks.llamacpp import rdna_release
+from scripts.download.frameworks.loom import updates as loom_updates
 from scripts.download.frameworks.shared import other_updates
 from scripts.tests.shared.http_fixtures import http_response
 from scripts.tests.shared.paths import CasePaths
@@ -233,7 +237,6 @@ class FrameworkUpdateSources(unittest.TestCase):
                 "asr/whispercpp/vulkan",
                 "asr/parakeetcpp/cpu-stream",
                 "llamacpp/rdna",
-                "llamacpp/additions/llama-cpp-rdna-boosts",
                 "llamacpp/additions/hrx/llama.cpp",
                 "llamacpp/additions/hrx/hrx-system",
                 "llamacpp/additions/hrx/rocm-systems",
@@ -275,7 +278,93 @@ class FrameworkUpdateSources(unittest.TestCase):
         self.assertEqual(
             {tool.name for tool in cfg.rdna_tools()}, {"llamacpp/rdna", "llamacpp/additions/llama-cpp-rdna-boosts"}
         )
-        self.assertTrue(all(not tool.in_use for tool in cfg.rdna_tools()))
+        patches = next(tool for tool in cfg.rdna_tools() if tool.name == "llamacpp/additions/llama-cpp-rdna-boosts")
+        clone = next(tool for tool in cfg.rdna_tools() if tool.name == "llamacpp/rdna")
+        self.assertEqual(patches.release_type, cfg.ReleaseType.PATCHES)
+        self.assertTrue(patches.in_use)
+        self.assertFalse(clone.in_use)
+
+    def test_a_current_patch_set_is_not_downloaded(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            boosts = Path(folder) / "boosts"
+            boosts.mkdir()
+            (boosts / "release.json").write_text(json.dumps({"release": "v17-4f9dfa0e3-r321"}), encoding="utf-8")
+            summary = updater.UpdateSummary()
+            with (
+                patch.object(
+                    rdna_release.shared,
+                    "get_release",
+                    return_value=({"tag_name": "v17-4f9dfa0e3-r321", "assets": []}, {"name": "patches.tar.gz"}),
+                ),
+                patch.object(rdna_release, "install") as install,
+            ):
+                rdna_release.process_tool(rdna_release.TOOL, boosts, Path(folder), False, summary)
+        install.assert_not_called()
+        self.assertEqual(summary.current, [rdna_release.TOOL.name])
+
+    def test_the_release_tarball_is_unpacked_and_its_wrapper_dropped(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            tree = root / "tree" / "llama-cpp-rdna-boosts-v17"
+            (tree / "patches").mkdir(parents=True)
+            (tree / "release.json").write_text(json.dumps({"release": "v17-4f9dfa0e3-r321"}), encoding="utf-8")
+            (tree / "patches" / "0000-a.patch").write_text("patch\n", encoding="utf-8")
+            archive = Path(shutil.make_archive(str(root / "patches"), "gztar", root_dir=root / "tree"))
+            asset: updater.Asset = {"name": "patches.tar.gz", "browser_download_url": "https://example.test/patches"}
+            with (
+                patch.object(rdna_release.shared, "download_asset", return_value=archive),
+                patch.object(rdna_release.shared, "replace_installation") as replace,
+            ):
+                rdna_release.install(asset, root / "installed", root, "")
+            staged = replace.call_args.args[0]
+            self.assertEqual(
+                json.loads((staged / "release.json").read_text(encoding="utf-8"))["release"], "v17-4f9dfa0e3-r321"
+            )
+            self.assertTrue((staged / "patches" / "0000-a.patch").is_file())
+
+    def test_the_loom_catalog_takes_the_release_profile_assets_only(self):
+        sdk = next(tool for tool in cfg.TOOLS if tool.name == "loom/sdk")
+        serve = next(tool for tool in cfg.TOOLS if tool.name == "loom/serve")
+        info = next(tool for tool in cfg.TOOLS if tool.name == "loom/tools")
+        sdk_pattern, serve_pattern, info_pattern = (tool.asset_pattern or "" for tool in (sdk, serve, info))
+        self.assertTrue(re.search(sdk_pattern, "hrx_loom-0.2.0-py3-none-win_amd64.whl"))
+        for other in (
+            "hrx_loom-0.2.0+debug-py3-none-win_amd64.whl",
+            "hrx_loom-0.2.0+tracy-py3-none-win_amd64.whl",
+            "hrx_loom-0.2.0+asan-py3-none-win_amd64.whl",
+            "hrx_loom-0.2.0-py3-none-manylinux_2_39_x86_64.whl",
+        ):
+            self.assertFalse(re.search(sdk_pattern, other), other)
+        self.assertTrue(re.search(serve_pattern, "loom-serve-0.2.0-win_amd64.zip"))
+        self.assertTrue(re.search(info_pattern, "amdf-info-0.2.0-win_amd64.zip"))
+        self.assertTrue(
+            all(tool.category == "loom" and tool.in_use for tool in cfg.TOOLS if tool.name.startswith("loom/"))
+        )
+
+    def test_the_loom_sdk_install_records_where_pip_put_the_console_script(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            wheel = root / "hrx_loom-0.2.0-py3-none-win_amd64.whl"
+            wheel.write_bytes(b"wheel")
+            asset: updater.Asset = {"name": wheel.name, "browser_download_url": "https://example.test/loom.whl"}
+
+            def fake_install(command: list[str], **_kwargs: Any) -> None:
+                target = Path(command[command.index("--target") + 1])
+                (target / "hrx_loom").mkdir(parents=True)
+                (target / "hrx_loom" / "__init__.py").write_text("", encoding="utf-8")
+                (target / "Scripts").mkdir()
+                (target / "Scripts" / "loom-serve.exe").write_bytes(b"exe")
+
+            with (
+                patch.object(loom_updates.shutil, "which", return_value="uv"),
+                patch.object(loom_updates.shared, "download_asset", return_value=wheel),
+                patch.object(loom_updates.subprocess, "run", side_effect=fake_install),
+                patch.object(loom_updates.shared, "replace_installation") as replace,
+            ):
+                loom_updates.install_sdk(asset, root / "sdk", root, "hrx_loom/__init__.py")
+            staged = replace.call_args.args[0]
+            marker = json.loads((staged / "INSTALL.json").read_text(encoding="utf-8"))
+        self.assertEqual(marker["console_script"], "Scripts/loom-serve.exe")
 
     def test_benchmark_catalog_is_grouped_under_frameworks_benchmarks(self):
         tools = cfg.benchmark_tools()

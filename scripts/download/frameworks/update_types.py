@@ -16,6 +16,8 @@ class ReleaseType(str, Enum):
     BUILD = "build"
     NATIVE_BUILD = "native-build"
     WHEEL = "wheel"
+    SDK = "sdk"
+    PATCHES = "patches"
     STRATA = "strata"
     DESKTOP = "desktop"
 
@@ -43,6 +45,8 @@ KIND_OF_RELEASE = {
     ReleaseType.BAT: "vendor script",
     ReleaseType.SNAPSHOT: "git snapshot",
     ReleaseType.WHEEL: "pip wheel",
+    ReleaseType.SDK: "pip wheel",
+    ReleaseType.PATCHES: "github release",
     ReleaseType.BUILD: "local build",
     ReleaseType.NATIVE_BUILD: "local build",
     ReleaseType.MANUAL: "manual",

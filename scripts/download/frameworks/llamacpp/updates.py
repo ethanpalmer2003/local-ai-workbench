@@ -8,6 +8,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import update_shared as shared
+from scripts.download.frameworks.llamacpp import rdna_release
 from scripts.download.frameworks.update_types import ReleaseType, ToolSpec
 
 
@@ -82,13 +83,7 @@ def rdna_tools() -> tuple[ToolSpec, ...]:
             manual_merge=True,
             in_use=False,
         ),
-        ToolSpec(
-            "llamacpp/additions/llama-cpp-rdna-boosts",
-            "",
-            ReleaseType.SOURCE,
-            repo="stew675/llama-cpp-rdna-boosts",
-            in_use=False,
-        ),
+        rdna_release.TOOL,
     )
 
 

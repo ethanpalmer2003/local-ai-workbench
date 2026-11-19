@@ -131,6 +131,7 @@ COMPONENTS = {
         "tts/sherpa-onnx",
         "tts/shared",
         "llamacpp",
+        "loom",
         "koboldcpp",
         "sdcpp",
         "coding_agents/pi",
