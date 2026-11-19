@@ -15,8 +15,9 @@ symptom index is [upstream](../../../notes/UPSTREAM-INDEX.md).
 
 Selection: `LLAMACPP_DEFAULT_BUILD` is `vulkan-1.0.0`, so coding, the embedding server and the Kobold
 no-model arm all run the v1.0.0 pin. `LLAMACPP_CODING_BUILD` and `LLAMACPP_EMBEDDINGS_BUILD` override it
-per use, and the rolling `vulkan` and `rocm-lemonade` builds stay installed and update normally so the two
-faults can be retested by naming them.
+per use. The pin is the only Vulkan build installed: the rolling `vulkan` folder was archived to trash on
+2026-11-19, and its catalog entry still reports the newest tag, so applying that entry is what reinstalls a
+rolling build for a retest.
 
 The pattern worth keeping: a batched request is what both llama.cpp faults here have needed, so a screen that
 sends one prompt at a time says nothing about them.
