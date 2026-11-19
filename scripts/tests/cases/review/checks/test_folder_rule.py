@@ -77,6 +77,15 @@ class WorkspaceTotalTests(unittest.TestCase):
             self.assertEqual((rows["frameworks"].kind, rows["frameworks"].bytes), ("installs", 10))
             self.assertEqual((rows["data"].kind, rows["data"].bytes), ("weights", 10))
 
+    def test_a_file_past_the_section_prompt_is_named(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder) / "scripts"
+            (root / "pkg").mkdir(parents=True)
+            (root / "pkg" / "crowded.py").write_text("# --- one ---\n" * 7 + "VALUE = 1\n", encoding="utf-8")
+            (root / "pkg" / "calm.py").write_text("# --- one ---\n" * 2 + "VALUE = 1\n", encoding="utf-8")
+            prompts = inventory_code.section_group_prompts(root)
+        self.assertEqual(prompts, [("pkg/crowded.py", 7)])
+
     def test_the_report_shares_add_up_to_the_whole_folder(self):
         rows = [
             inventory_code.TreeTotal("frameworks", "installs", 75, 3 * 1024**3),
