@@ -12,9 +12,6 @@ tree is 182 lines and almost none of them can be deleted:
 - An `unused function` or `unused class` has no reader anywhere, and deleting it is the action this
   section exists to prompt. Unreachable blocks keep vulture's own full-confidence report.
 
-The retired TTS pipeline stays out of the report until the removal decision in notes/TODO.md
-lands: it is dead by design, and reporting it every run teaches the reader to skip the section.
-
 A commit is a different question from a push: a definition can only become dead when a reference to
 it disappears, so a change that names the same identifiers as its upstream copy cannot move vulture's
 verdict, and the scan is skipped.
@@ -34,24 +31,8 @@ from scripts.review.lists.sources import maintained_files
 from scripts.shared.changes import git_text_or_none
 from scripts.shared.import_graph import ast_parse_text_or_file
 
-# - retired code awaiting a removal decision; the entry in notes/TODO.md owns that decision
-RETIRED = {"scripts/launchers/audiocpp/tts_legacy_buffered.py"}
 MIN_CONFIDENCE = "60"
 ACTIONABLE = re.compile(r": (?:unused (?:function|class)|unreachable code)\b")
-LOCATION = re.compile(r"^(?P<name>.*?):(?P<line>\d+): ")
-
-
-def relative(line: str) -> str:
-    """Repo-relative posix path of the file a vulture line names, however vulture wrote it."""
-    match = LOCATION.match(line)
-    name = match.group("name") if match else line.split(":", 1)[0]
-    path = Path(name)
-    if path.is_absolute():
-        try:
-            return path.relative_to(project_cfg.BASE_DIR).as_posix()
-        except ValueError:
-            return path.as_posix()
-    return Path(name.replace("\\", "/")).as_posix()
 
 
 def findings(output: str) -> list[str]:
@@ -60,8 +41,6 @@ def findings(output: str) -> list[str]:
     for raw in output.splitlines():
         line = raw.strip()
         if not line or not ACTIONABLE.search(line):
-            continue
-        if relative(line) in RETIRED:
             continue
         kept.append(line)
     return kept
