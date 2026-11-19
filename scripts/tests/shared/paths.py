@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from scripts.benchmarks.shared.paths import Outcome, RunPaths, grouped
+from scripts.benchmarks.shared.paths import Outcome, RunPaths, dated_run, grouped
 from scripts.config import project_config as project_cfg
 
 
@@ -49,9 +49,9 @@ class CasePaths:
 
     def new_run(self, outcome: Outcome = Outcome.UNREVIEWED) -> RunPaths:
         relative = self.relative_source.with_suffix("")
-        run = RunPaths(self.output / outcome / str(time.time_ns()))
+        run = RunPaths(dated_run(self.output / outcome))
         run.create()
-        guide = run.root.parent / "README.md"
+        guide = self.output / outcome / "README.md"
         if not guide.exists():
             guide.write_text(
                 f"# {relative.stem}: {outcome}\n\nRuns in this folder have outcome `{outcome}`.\n\n"

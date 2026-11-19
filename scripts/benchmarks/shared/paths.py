@@ -3,6 +3,7 @@
 import json
 import time
 from dataclasses import dataclass
+from datetime import date
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,11 @@ from typing import Any
 from scripts.config import project_config as project_cfg
 
 PERSONAL_AREAS = frozenset({"sdcpp", "comfyui"})
+
+
+def dated_run(base: Path, stamp: str | None = None) -> Path:
+    """A run folder under its date, so a day of evidence is one folder and retention is a calendar rule."""
+    return base / date.today().strftime("%Y-%m-%d") / (stamp or str(time.time_ns()))
 
 
 def grouped(relative: Path) -> Path:
@@ -90,9 +96,9 @@ class BenchmarkPaths:
 
     def new_run(self, outcome: Outcome = Outcome.UNREVIEWED) -> RunPaths:
         relative = self.relative_source.with_suffix("")
-        run = RunPaths(self.output / outcome / str(time.time_ns()))
+        run = RunPaths(dated_run(self.output / outcome))
         run.create()
-        guide = run.root.parent / "README.md"
+        guide = self.output / outcome / "README.md"
         if not guide.exists():
             guide.write_text(
                 f"# {relative.stem}: {outcome}\n\nRuns in this folder have outcome `{outcome}`.\n\n"
