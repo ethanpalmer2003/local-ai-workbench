@@ -14,17 +14,20 @@ symptom index is [upstream](../../../notes/UPSTREAM-INDEX.md).
 | ROCm b1373, b1375 | Same abort with `ROCm error: unspecified launch failure`, `current device: -1` | Same escape hatch; b1372 tolerated the iGPU; [note](../../../notes/reviews/ROCM-DRIVER-TIMEOUT-2026-11-13.md) |
 
 Selection: `LLAMACPP_DEFAULT_BUILD` is `vulkan-1.0.0`, so coding, the embedding server and the Kobold
-no-model arm all run the v1.0.0 pin. `LLAMACPP_CODING_BUILD` and `LLAMACPP_EMBEDDINGS_BUILD` override it
-per use. The pin is the only Vulkan build installed: the rolling `vulkan` folder was archived to trash on
-2026-11-19, and its catalog entry still reports the newest tag, so applying that entry is what reinstalls a
-rolling build for a retest.
+no-model arm run the v1.0.0 pin; `LLAMACPP_CODING_BUILD` and `LLAMACPP_EMBEDDINGS_BUILD` override it per use.
+The pin is the only Vulkan build installed: the rolling `vulkan` folder was archived on 2026-11-19, and its
+catalog entry still reports the newest tag, so applying that entry reinstalls a rolling build for a retest.
 
-The pattern worth keeping: a batched request is what both llama.cpp faults here have needed, so a screen that
-sends one prompt at a time says nothing about them.
+The RDNA build (`rdna_build.py`) is hand-run and parked: the pin is the default and ROCm Lemonade covers the
+AMD arm. Its patches are HIP kernel work pinned to a source commit (`release.json` `base`), so they cannot
+ride a Vulkan release; a rebuild clones upstream and installs the patch set from its release.
+
+The pattern worth keeping: a batched request is what both faults here have needed, so a one-prompt screen
+says nothing about them.
 
 The nearest upstream report is [ggml-org/llama.cpp#12836](https://github.com/ggml-org/llama.cpp/issues/12836),
 "crash when `-b` > `-ub` with embeddings", closed by
-[#17912](https://github.com/ggml-org/llama.cpp/pull/17912), which clamps `n_batch` to `n_ubatch` at startup. That
-one raises a `GGML_ASSERT` about non-causal attention, so it does not describe b12421: this server runs with
-`-b` equal to `-ub`, and the failure is a silent access violation rather than an assertion.
+[#17912](https://github.com/ggml-org/llama.cpp/pull/17912), which clamps `n_batch` to `n_ubatch` at startup. It
+raises a `GGML_ASSERT` about non-causal attention, so it does not describe b12421: this server runs with `-b`
+equal to `-ub`, and the failure is a silent access violation.
 
