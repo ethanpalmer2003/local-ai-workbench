@@ -61,6 +61,7 @@ Live entries free their ports instead of refusing.
 - Repository review: [scripts/review/check_repo.bat](../scripts/review/check_repo.bat).
 - Markdown duplicates: [review_document_similarity.bat](checks/review_document_similarity.bat); opt-in, starts the embedding model, reports pairs to review.
 - Code duplicates: [review_code_similarity.bat](checks/review_code_similarity.bat); same model, one chunk per function, tests skipped.
+- Pasted blocks: [review_duplicates.bat](checks/review_duplicates.bat); pylint's verbatim report against a reviewed baseline, no model needed.
 
 ## Benchmarks
 

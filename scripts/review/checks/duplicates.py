@@ -3,10 +3,15 @@
 Pylint reports a copied block only while it stays textually close, so a renamed copy escapes it; the
 semantic [similarity](SIMILARITY.md) check is the one that sees a re-implemented rule. This covers
 the other half, the block that really was pasted. It is opt-in because pylint needs about forty
-seconds over `scripts`, which does not fit the gate.
+seconds over `scripts`, which does not fit the gate: [review_duplicates.bat](../../../bat/checks/review_duplicates.bat)
+runs it.
 
 A finding is a file pair plus how many blocks that pair shares, so a new block in an already-known
-pair still fails. `--update` accepts today's list into the baseline; review it before doing that.
+pair still fails and so does a block that lands in a pair the baseline does not hold. The one miss is a
+block that moves between two pairs the baseline already knows while both counts stay level, which pylint
+cannot distinguish because its report carries line ranges rather than block identity; the code mode of
+the similarity check is what reads a moved copy. `--update` accepts today's list into the baseline;
+review it before doing that.
 """
 
 import argparse
