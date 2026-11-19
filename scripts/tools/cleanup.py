@@ -25,6 +25,8 @@ MAX_DEPTH = 6
 EXPENSIVE = ("benchmarks/output", "tests/output/probes")
 EXPENSIVE_KEEP, EXPENSIVE_DAYS = 5, 90
 CHEAP_KEEP, CHEAP_DAYS = 1, 7
+# - a suite writes a run per invocation, so an area needs a ceiling of its own
+MAX_RUNS_PER_AREA = 20
 
 
 def run_directories(root: Path) -> list[Path]:
@@ -72,7 +74,24 @@ def superseded(
             if run.name in cited or _age_days(run) <= age:
                 continue
             stale.append(run)
-    return stale
+    return [*stale, *_over_area_cap(runs, cited)]
+
+
+def _over_area_cap(runs: list[Path], cited: set[str]) -> list[Path]:
+    """Runs beyond the per-area ceiling, newest kept first, with a cited run never dropped."""
+    by_area: dict[str, list[Path]] = {}
+    for run in runs:
+        by_area.setdefault(_area_of(run), []).append(run)
+    extra: list[Path] = []
+    for area in by_area.values():
+        ordered = sorted(area, key=lambda path: path.name, reverse=True)
+        extra.extend(run for run in ordered[MAX_RUNS_PER_AREA:] if run.name not in cited)
+    return extra
+
+
+def _area_of(run: Path) -> str:
+    """The suite or area a run belongs to: the two folders above the case."""
+    return "/".join(run.parts[-5:-3])
 
 
 def _expensive(run: Path) -> bool:
