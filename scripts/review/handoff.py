@@ -14,8 +14,9 @@ import argparse
 import ast
 import json
 import time
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TypedDict
+from typing import TypedDict, cast
 
 from scripts.config import project_config as project_cfg
 from scripts.review.checks.inventory_code import maintained_python
@@ -26,6 +27,8 @@ LONG_FUNCTION = 60
 WIDE_SURFACE = 12
 SILENT = (ast.Pass, ast.Continue, ast.Return)
 BUNDLE_NAME = "HANDOFF.md"
+DUPLICATE_BASELINE = project_cfg.SCRIPTS_DIR / "review" / "lists" / "duplicate-baseline.json"
+SIMILARITY_ROOT = project_cfg.GENERATED_DIR / "shared" / "similarity" / "code"
 
 
 class FunctionRecord(TypedDict):
@@ -48,6 +51,24 @@ class FileRecord(TypedDict):
     silent_excepts: list[int]
     broad_excepts: list[int]
     undocumented: list[int]
+
+
+class SimilarityFinding(TypedDict):
+    """One semantic pair, named by file and function, with the score that put it in the report."""
+
+    a: str
+    b: str
+    best: float
+
+
+@dataclass(frozen=True)
+class SimilarityEvidence:
+    """What the last code-similarity run found, so the brief never starts the embedding model itself."""
+
+    created: str
+    threshold: float
+    changed: int
+    findings: list[SimilarityFinding]
 
 
 def signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
@@ -120,15 +141,68 @@ def weight(record: FileRecord) -> int:
     )
 
 
-def index(workspace: Path) -> list[FileRecord]:
-    """One record per maintained Python file, heaviest first."""
+def index(workspace: Path, scope: Path | None = None) -> list[FileRecord]:
+    """One record per maintained Python file under `scope` (a subtree of `scripts`), heaviest first."""
     records = []
-    for path in maintained_python(workspace / "scripts"):
+    for path in maintained_python(scope or workspace / "scripts"):
         try:
             records.append(file_record(path, workspace))
         except (OSError, SyntaxError):
             continue
     return sorted(records, key=lambda record: (-weight(record), -int(record["lines"])))
+
+
+def area(record: FileRecord) -> str:
+    """The folder a file reports under, so a reader sees where the weight sits before the files."""
+    parts = Path(record["path"]).parts
+    return "/".join(parts[:3]) if len(parts) > 3 else "/".join(parts[:-1])
+
+
+def areas(records: list[FileRecord], shown: int = 8) -> list[tuple[str, int, int]]:
+    """(area, files, weight) for the heaviest folders, so one crowded area is visible as one line."""
+    totals: dict[str, list[int]] = {}
+    for record in records:
+        bucket = totals.setdefault(area(record), [0, 0])
+        bucket[0] += 1
+        bucket[1] += weight(record)
+    ordered = sorted(totals.items(), key=lambda item: (-item[1][1], item[0]))
+    return [(name, counts[0], counts[1]) for name, counts in ordered[:shown]]
+
+
+def duplicate_pairs(limit: int = 10) -> list[tuple[str, int]]:
+    """The verbatim pairs the baseline already accepts, heaviest first, straight from its reviewed list."""
+    try:
+        payload = json.loads(DUPLICATE_BASELINE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    pairs = payload.get("pairs") or {}
+    ordered = sorted(((pair, int(count)) for pair, count in pairs.items()), key=lambda item: (-item[1], item[0]))
+    return ordered[:limit]
+
+
+def similarity_evidence(limit: int = 10) -> SimilarityEvidence | None:
+    """What the newest code-similarity run found, or None when no run left findings behind.
+
+    The check needs the embedding model, so this reads whatever the last opt-in run wrote and starts
+    nothing itself.
+    """
+    reports = sorted(SIMILARITY_ROOT.glob("*/report.json")) if SIMILARITY_ROOT.is_dir() else []
+    for report in reversed(reports):
+        try:
+            payload = json.loads(report.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        findings = cast(list[SimilarityFinding], payload.get("findings") or [])
+        if not findings:
+            continue
+        changed = payload.get("changed_since_last") or []
+        return SimilarityEvidence(
+            created=str(payload.get("created") or "unknown"),
+            threshold=float(payload.get("threshold") or 0.0),
+            changed=len(changed) if isinstance(changed, list) else int(changed),
+            findings=findings[:limit],
+        )
+    return None
 
 
 def brief(records: list[FileRecord], ranked: int = 12) -> list[str]:
@@ -171,19 +245,30 @@ def brief(records: list[FileRecord], ranked: int = 12) -> list[str]:
         "caps, dead code and type errors all fail the gate. Do not spend judgment on them; if one is wrong, it",
         "is a gate defect and worth saying so once.",
         "",
-        "## Where to look first",
+        "## Where the weight sits",
         "",
-        "Ranked by how much judgment a file asks for, not by how long it is.",
-        "",
-        "| File | Lines | Public functions | Silent handlers | Broad handlers | Long functions |",
-        "| --- | ---: | ---: | ---: | ---: | ---: |",
+        "| Area | Files | Weight |",
+        "| --- | ---: | ---: |",
     ]
+    lines.extend(f"| {name} | {files} | {total} |" for name, files, total in areas(records))
+    lines.extend(
+        (
+            "",
+            "## Where to look first",
+            "",
+            "Ranked by how much judgment a file asks for, not by how long it is.",
+            "",
+            "| File | Lines | Public functions | Silent handlers | Broad handlers | Long functions |",
+            "| --- | ---: | ---: | ---: | ---: | ---: |",
+        )
+    )
     for record in records[:ranked]:
         long_functions = sum(1 for item in record["functions"] if int(item["span"]) > LONG_FUNCTION)
         lines.append(
             f"| {record['path']} | {record['lines']} | {len(record['functions'])} | "
             f"{len(record['silent_excepts'])} | {len(record['broad_excepts'])} | {long_functions} |"
         )
+    lines.extend(evidence_report())
     lines.extend(
         (
             "",
@@ -206,12 +291,58 @@ def brief(records: list[FileRecord], ranked: int = 12) -> list[str]:
     return lines
 
 
+def evidence_report() -> list[str]:
+    """What the opt-in checks already found, read from their last run rather than re-run here."""
+    lines = [
+        "",
+        "## Evidence the opt-in checks already hold",
+        "",
+        "Verbatim duplicate blocks the baseline accepts, so they are expected rather than new:",
+        "",
+    ]
+    pairs = duplicate_pairs()
+    if pairs:
+        lines.extend(
+            (
+                "| Pair | Blocks |",
+                "| --- | ---: |",
+                *(f"| {pair.replace('|', ' <-> ')} | {blocks} |" for pair, blocks in pairs),
+            )
+        )
+    else:
+        lines.append("None recorded; `bat/checks/review_duplicates.bat` writes the list.")
+    evidence = similarity_evidence()
+    lines.extend(("", "Semantic code pairs from the last `--code` similarity run:", ""))
+    if evidence is None:
+        lines.append(
+            "None available. That check needs the embedding model, so it is opt-in: "
+            "[similarity](SIMILARITY.md) names the command."
+        )
+    else:
+        lines.extend(
+            (
+                f"Report created {evidence.created} at threshold {evidence.threshold}, "
+                f"{evidence.changed} file(s) changed since.",
+                "",
+                "| Function A | Function B | Best |",
+                "| --- | --- | ---: |",
+                *(f"| {item['a']} | {item['b']} | {item['best']} |" for item in evidence.findings),
+            )
+        )
+    return lines
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ranked", type=int, default=12, help="how many files the brief names first")
+    parser.add_argument("--path", help="limit the index to a subtree, for example scripts/launchers")
     parser.add_argument("--out", help="folder for the bundle (default: the generated handoff tree)")
     args = parser.parse_args(argv)
-    records = index(project_cfg.BASE_DIR)
+    scope = project_cfg.BASE_DIR / args.path if args.path else None
+    if scope is not None and not scope.is_dir():
+        print(f"[FAIL] No such folder: {args.path}")
+        return 1
+    records = index(project_cfg.BASE_DIR, scope)
     destination = (
         Path(args.out) if args.out else project_cfg.component("shared").generated_dir / "handoff" / str(time.time_ns())
     )
