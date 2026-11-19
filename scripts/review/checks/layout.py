@@ -378,6 +378,22 @@ def empty_shell_issues() -> list[str]:
     return issues
 
 
+# - every batch lives in the entry-point tree; these two wrappers sit beside the review guide that owns them
+BATCH_WRAPPERS = ("scripts/review/check_repo.bat", "scripts/review/format_py.bat")
+
+
+def batch_placement_issues() -> list[str]:
+    """A batch outside the entry-point tree is only one of the wrappers its own guide links."""
+    issues = []
+    for path in tracked_files():
+        if path.suffix != ".bat" or path.is_relative_to(project_cfg.BAT_DIR):
+            continue
+        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+        if relative not in BATCH_WRAPPERS:
+            issues.append(f"Batch outside the entry-point tree: {relative}")
+    return issues
+
+
 def state_issues() -> list[str]:
     """Runtime state keeps folders; a loose script or output dump belongs in a run folder or trash."""
     issues: list[str] = []
@@ -418,6 +434,7 @@ def main() -> int:
         + naming_issues()
         + policy_limit_issues()
         + placement_issues()
+        + batch_placement_issues()
         + state_issues()
         + root_folder_issues()
     )

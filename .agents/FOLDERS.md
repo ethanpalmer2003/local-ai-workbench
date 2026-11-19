@@ -15,7 +15,7 @@
 | Repository review checks | `scripts/review/` |
 | Test source / UI | `scripts/tests/cases/`, `scripts/tests/ui/` |
 | Benchmark source / new results | `scripts/benchmarks/`, `scripts/benchmarks/output/` |
-| Batch entry | `bat/update_frameworks.bat`; coding-agent launchers may sit at the `bat/` root, other routines group by role |
+| Batch entry | `bat/update_frameworks.bat`; routines group by role, with root batches and the indexed wrappers excepted |
 | App state | `scripts/state/` for app data, with new logs, caches and generated pages under `scripts/state/{logs,cache,generated}/` |
 
 ## Local only
