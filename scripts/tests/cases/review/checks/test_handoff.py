@@ -91,8 +91,77 @@ class BundleTests(unittest.TestCase):
         self.assertNotIn("scripts/calm.py", text)
         self.assertIn("Do not spend judgment on them", text)
 
+    def test_a_path_option_narrows_the_index_to_one_subtree(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            workspace = Path(folder)
+            keep = workspace / "scripts" / "launchers" / "a.py"
+            keep.parent.mkdir(parents=True)
+            keep.write_text("VALUE = 1\n", encoding="utf-8")
+            other = workspace / "scripts" / "tools" / "b.py"
+            other.parent.mkdir(parents=True)
+            other.write_text("VALUE = 2\n", encoding="utf-8")
+            records = handoff.index(workspace, workspace / "scripts" / "launchers")
+        self.assertEqual([record["path"] for record in records], ["scripts/launchers/a.py"])
+
+    def test_the_brief_rolls_the_weight_up_by_area(self):
+        records: list[handoff.FileRecord] = [
+            {
+                "path": "scripts/launchers/a.py",
+                "lines": 10,
+                "functions": [],
+                "classes": [],
+                "silent_excepts": [1],
+                "broad_excepts": [],
+                "undocumented": [],
+            },
+            {
+                "path": "scripts/tools/b.py",
+                "lines": 10,
+                "functions": [],
+                "classes": [],
+                "silent_excepts": [],
+                "broad_excepts": [],
+                "undocumented": [],
+            },
+        ]
+        text = "\n".join(handoff.brief(records))
+        self.assertIn("| scripts/launchers | 1 | 3 |", text)
+        self.assertIn("| scripts/tools | 1 | 0 |", text)
+
+    def test_evidence_reads_the_accepted_pairs_and_the_similarity_report(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            baseline = root / "duplicate-baseline.json"
+            baseline.write_text('{"pairs": {"a.py|b.py": 2}}', encoding="utf-8")
+            report_folder = root / "similarity" / "1800000000000000000"
+            report_folder.mkdir(parents=True)
+            (report_folder / "report.json").write_text(
+                '{"created": "2026-11-16", "threshold": 0.95, "changed_since_last": [], '
+                '"findings": [{"a": "x.py :: run", "b": "y.py :: run", "best": 0.99}]}',
+                encoding="utf-8",
+            )
+            with (
+                unittest.mock.patch.object(handoff, "DUPLICATE_BASELINE", baseline),
+                unittest.mock.patch.object(handoff, "SIMILARITY_ROOT", root / "similarity"),
+            ):
+                text = "\n".join(handoff.evidence_report())
+        self.assertIn("| a.py <-> b.py | 2 |", text)
+        self.assertIn("| x.py :: run | y.py :: run | 0.99 |", text)
+        self.assertIn("0 file(s) changed since", text)
+
+    def test_evidence_says_so_when_the_opt_in_checks_have_not_run(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            missing = Path(folder) / "absent"
+            with (
+                unittest.mock.patch.object(handoff, "DUPLICATE_BASELINE", missing),
+                unittest.mock.patch.object(handoff, "SIMILARITY_ROOT", missing),
+            ):
+                text = "\n".join(handoff.evidence_report())
+        self.assertIn("None recorded", text)
+        self.assertIn("None available", text)
+
     def test_a_run_writes_the_brief_and_the_index(self):
-        record = {
+        record: handoff.FileRecord = {
             "path": "scripts/pkg/module.py",
             "lines": 3,
             "functions": [],
