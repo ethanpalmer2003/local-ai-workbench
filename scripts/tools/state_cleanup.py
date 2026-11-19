@@ -123,7 +123,7 @@ def prune_log_areas(dry_run: bool) -> tuple[int, int]:
         relative = str(area.relative_to(root)).replace("\\\\", "/")
         if any(relative == special or relative.startswith(special + "/") for special in SPECIAL_LOG_AREAS):
             continue
-        if len(area.relative_to(root).parts) > 3 or not any(entry.is_file() for entry in area.iterdir()):
+        if len(area.relative_to(root).parts) > 4 or not any(entry.is_file() for entry in area.iterdir()):
             continue
         entries = [*area.glob("*")]
         files = [entry for entry in entries if entry.is_file()]

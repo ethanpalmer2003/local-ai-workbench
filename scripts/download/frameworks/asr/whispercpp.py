@@ -5,9 +5,9 @@ import json
 import re
 import shutil
 import subprocess
-import time
 from pathlib import Path
 
+from scripts.benchmarks.shared.paths import dated_run
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import github, native_build
 from scripts.download.frameworks.native_build import run as run
@@ -111,7 +111,7 @@ def process(tool: ToolSpec, destination: Path, temporary: Path, check_only: bool
     if current or check_only:
         return not current
     context = dict(require_native_execution("Whisper native build/install"))
-    logs = project_cfg.component("asr/whispercpp").logs_dir / "builds" / str(time.time_ns())
+    logs = dated_run(project_cfg.component("asr/whispercpp").logs_dir / "builds")
     logs.mkdir(parents=True)
     print(f"[LOGS] {logs}", flush=True)
     manifest = {

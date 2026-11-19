@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 
 from scripts.benchmarks.shared import provenance
+from scripts.benchmarks.shared.paths import dated_run
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks.framework_catalog import hrx_tools
 from scripts.download.frameworks.llamacpp.hrx import prepare as prepare_hrx
@@ -234,7 +235,7 @@ def main() -> None:
     run_dir = (
         args.run_dir.resolve()
         if args.run_dir
-        else project_cfg.TEST_OUTPUT_DIR / "probes/hrx_updates/unreviewed" / str(time.time_ns())
+        else dated_run(project_cfg.TEST_OUTPUT_DIR / "probes/hrx_updates/unreviewed")
     )
     paths = RunPaths(run_dir)
     paths.create()
