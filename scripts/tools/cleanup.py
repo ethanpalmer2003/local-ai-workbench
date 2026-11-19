@@ -7,8 +7,10 @@ and emptying the trash is a separate, explicit flag.
 """
 
 import argparse
+import os
 import re
 import shutil
+import stat
 from datetime import date, datetime
 from pathlib import Path
 
@@ -147,6 +149,16 @@ def trash_days() -> list[tuple[Path, int]]:
     return days
 
 
+def remove_readonly(function, path: str, _error) -> None:
+    """Retry a removal a read-only file refused, which a moved git checkout leaves behind.
+
+    A `.git/objects` entry is read-only, and a test run's temp tree keeps one, so a plain `rmtree` stops
+    on it with `WinError 5` and leaves the rest of the trash folder in place.
+    """
+    os.chmod(path, stat.S_IWRITE)
+    function(path)
+
+
 def empty_trash(older_than: int) -> int:
     """Delete dated trash folders older than `older_than` days; this is the only deletion in the tool."""
     removed = 0
@@ -158,7 +170,7 @@ def empty_trash(older_than: int) -> int:
             continue
         if (today - day).days < older_than:
             continue
-        shutil.rmtree(folder)
+        shutil.rmtree(folder, onexc=remove_readonly)
         removed += 1
     return removed
 
