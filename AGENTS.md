@@ -10,10 +10,10 @@
 - Use text-safe `[OK]`, `[WARN]`, `[FAIL]`, `->`; bound searches and report truncation.
 
 ## Clarify before acting
-- Ask at once when the request is ambiguous or assumes an invented detail; never guess intent to keep moving.
+- Ask at once when a request is ambiguous or assumes an invented detail; never guess intent.
 - Prefer the plain form: write the simplest code that solves the problem. Immutability, generics, protocols or helpers nothing exercises are complexity, not quality.
-- Do not ask permission to use a standard tool. Prefer a maintained dependency over a local substitute: add it, say what it was, and continue. The same goes for an algorithm: check an installed dependency and the standard library before hand-writing a traversal, and say why if you keep it.
-- When a problem needs the user's judgment, put it in [TODO](notes/TODO.md) with the options and start the next independent item instead of waiting.
+- Do not ask permission to use a standard tool. Prefer a maintained dependency over a local substitute, and check an installed dependency and the standard library before hand-writing a traversal; say why if you keep it.
+- When a problem needs the user's judgment, put it in [TODO](notes/TODO.md) with the options and start the next item.
 
 ## Work and permissions
 - Routine reads, Git status/diff/log, static checks and task-owned runs under five minutes are allowed.
@@ -22,15 +22,15 @@
 - Respect explicit test deferrals; a TODO or saved result never authorizes a live test.
 - Fix a defect in code already being touched, then and there. Record a larger unrelated fix as a TODO entry.
 - Each invocation uses its current tool policy; earlier approval does not change later defaults.
-- Before native/GPU work or servers, state execution context with `python -m scripts.launchers.runtime.execution_context` and record it beside benchmark evidence.
+- Before native/GPU work or servers, state execution context via `scripts.launchers.runtime.execution_context` and record it beside the evidence.
 - Before manual llama-server startup, check `launch_util.llama_server_running()`. Manage only processes a run started and never stop an unrelated session. Port policy: [shared launcher helpers](scripts/launchers/shared/README.md).
 
 ## Structure and safety
-- Reuse one canonical component key wherever that component owns files; identity stays consistent across config, catalogs, tests and batches. Paths come from `project_config.component()`.
-- Change, move or remove a model through `python -m scripts.tools.model_admin` (`where`, `replace`, `remove`): it edits the owning catalog, regenerates `ids.py`, rewrites references and trashes the weights. Hand-editing a catalog misses the last two. [Tools](scripts/tools/README.md).
+- Reuse one canonical component key wherever that component owns files, so identity stays consistent across config, catalogs, tests and batches; paths come from `project_config.component()`.
+- Change, move or remove a model through `python -m scripts.tools.model_admin` (`where`, `replace`, `remove`): it edits the owning catalog, regenerates `ids.py`, rewrites references and trashes the weights. [Tools](scripts/tools/README.md).
 - [Folder rules](.agents/FOLDERS.md) own typed bindings, naming and the move checklist. Preserve model identity and shared assets through a move.
 - Preserve nonempty data by moving it to `C:/AI/trash`; delete only empty files and directories, and verify each resolved path first.
-- Preserve existing work and evidence. `.gitignore` entries cover whole folders.
+- Preserve the evidence a tracked decision cites and the newest run per case the capability matrix reads; an older run nobody references is redundant, and cleanup may move it to trash.
 - Use uv; the interpreter and the checks that run it are in [checks](.agents/CHECKS.md). Secrets are in `scripts/.env`, Hugging Face data in `data/huggingface/`.
 - Codex under [.agents/CODEX-HARNESS.md](.agents/CODEX-HARNESS.md): a command refusal is a hard stop; report what must be allowed.
 - Running under DeepSeek Harness: [.agents/DEEPSEEK-HARNESS.md](.agents/DEEPSEEK-HARNESS.md) covers its permissions, sandbox denials and the settled workarounds.
