@@ -1,6 +1,6 @@
 # Component maintenance
 
-Per-component install and update specifics; commands, categories and the HRX note stay in [UPDATES.md](UPDATES.md), applied under the shared check/apply, verification and logging rules described there.
+Per-component install and update specifics; commands, categories and the HRX note stay in [UPDATES.md](UPDATES.md), applied under the shared check/apply, verification and logging rules described there. What each family targets, and what this machine ran, is the [platform matrix](PLATFORMS.md).
 
 | Component | Maintenance |
 | --- | --- |
