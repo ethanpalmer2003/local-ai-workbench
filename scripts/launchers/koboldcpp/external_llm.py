@@ -48,7 +48,7 @@ def matching_options() -> dict[str, object]:
     }
 
 
-def command(build: str = "vulkan") -> list[str]:
+def command(build: str | None = None) -> list[str]:
     options = matching_options()
     command = [
         str(server_exe(build)),

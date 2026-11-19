@@ -18,6 +18,12 @@ def _graph(edges: dict[str, tuple[str, ...]]) -> graph_api.ImportGraph:
 
 
 class TestSelection(unittest.TestCase):
+    def setUp(self) -> None:
+        # - the selector reads upstream copies in one batch; these tests judge the walk, not git
+        patcher = patch.object(scoped_selection, "upstream_texts", return_value={})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_a_module_name_maps_files_and_packages(self):
         cases = (
             ("scripts/tools/model_admin.py", "scripts.tools.model_admin"),
@@ -271,11 +277,12 @@ class TestSelection(unittest.TestCase):
             (root / "scripts").mkdir()
             target = root / "scripts" / "run.py"
             target.write_text('"""New docstring."""\nVALUE = 1\n', encoding="utf-8")
-            with patch.object(scoped_selection, "git_text_or_none", return_value='"""Old docstring."""\nVALUE = 1\n'):
-                self.assertFalse(scoped_selection._code_changed_since_upstream("scripts/run.py", root))
+            previous = '"""Old docstring."""\nVALUE = 1\n'
+            self.assertFalse(scoped_selection._code_changed_since_upstream("scripts/run.py", previous, root))
             target.write_text('"""New docstring."""\nVALUE = 2\n', encoding="utf-8")
-            with patch.object(scoped_selection, "git_text_or_none", return_value='"""Old docstring."""\nVALUE = 1\n'):
-                self.assertTrue(scoped_selection._code_changed_since_upstream("scripts/run.py", root))
+            self.assertTrue(scoped_selection._code_changed_since_upstream("scripts/run.py", previous, root))
+            # - a path git cannot answer for is a real change, so a missing copy never hides the edit
+            self.assertTrue(scoped_selection._code_changed_since_upstream("scripts/run.py", None, root))
 
     def test_a_python_change_beside_a_document_still_scopes(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests

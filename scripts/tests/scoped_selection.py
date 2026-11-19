@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.shared.changes import NoUpstreamError, changed_since_upstream, git_text_or_none
+from scripts.shared.changes import GitError, NoUpstreamError, changed_since_upstream, upstream_texts
 from scripts.shared.import_graph import (
     REACH_DEPTH,
     ImportGraph,
@@ -74,7 +74,16 @@ def select_test_classes(
         return Selection((), test_classes, "nothing changed")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
     # Only `.py` paths can match upstream, so every other path stays for the module check below to judge.
-    code_changes = [path for path in changed if _code_changed_since_upstream(path, root)]
+    # The upstream copies come from one git call for the whole set; a read that fails is no evidence, so
+    # every path counts as a change then, which is the same answer a missing copy gives. A path that is
+    # gone from the tree is left out: it is a change by definition and git has nothing to show for it.
+    base = root or project_cfg.BASE_DIR
+    readable = [path for path in changed if path.endswith(".py") and (base / path).is_file()]
+    try:
+        previous = upstream_texts(readable, root)
+    except GitError:
+        previous = {}
+    code_changes = [path for path in changed if _code_changed_since_upstream(path, previous.get(path), root)]
     if not code_changes:
         return Selection((), test_classes, "no code change")
 
@@ -102,12 +111,12 @@ def select_test_classes(
     return _build_selection(test_classes, reachable, reason)
 
 
-def _code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
-    """Return whether a file's code differs from its upstream copy, comments, docstrings and layout aside.
+def _code_changed_since_upstream(path: str, previous_source: str | None, root: Path | None = None) -> bool:
+    """Return whether a file's code differs from `previous_source`, comments, docstrings and layout aside.
 
     True means a test can see the difference, which is how the selector reads it. Anything that is not
-    Python source answers True, and so does a file whose upstream copy is missing, unreadable or
-    unparsable: those count as real changes rather than invisible ones.
+    Python source answers True, and so does a file whose upstream copy is missing or empty: those count as
+    real changes rather than invisible ones.
     """
     if not path.endswith(".py"):
         return True
@@ -115,11 +124,7 @@ def _code_changed_since_upstream(path: str, root: Path | None = None) -> bool:
     # A path that is no longer on disk cannot be compared, so it counts as a real change.
     if not current.is_file():
         return True
-    # Read the committed version from the remote tracking branch for comparison.
-    # `@{upstream}` is git's name for the branch this one tracks, not the tip of this branch.
-    # The committed copy as text: one git command, answering None when it cannot be read.
-    previous_source = git_text_or_none("show", "@{upstream}:" + path, root=root)
-    # Nothing to compare against: None when git failed, "" when the committed file is empty.
+    # Nothing to compare against: None when git answered nothing, "" when the committed file is empty.
     if not previous_source:
         return True
     # The committed copy as a tree: source text from git, or None when it is empty or unparsable.
