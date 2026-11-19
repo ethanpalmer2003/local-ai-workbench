@@ -1,9 +1,8 @@
 @echo off
-setlocal
-pushd "C:\AI"
-title Strata vs Avalon
-".venv\Scripts\python.exe" -m scripts.benchmarks.inference_engines.benchmark_strata_avalon %* 2>&1 | "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -Command "$input | Tee-Object -FilePath 'scripts\benchmarks\output\run_strata_avalon.log'"
-set "BENCH_EXIT=%ERRORLEVEL%"
-popd
-pause
-exit /b %BENCH_EXIT%
+rem Strata vs Avalon on the same Strata weights: prefill, decode and TTFT. --engines, --samples pass through.
+rem Reports land under scripts\benchmarks\output\; the module owns the log, so nothing is teed here.
+
+set "RUN_TITLE=Strata vs Avalon"
+set "RUN_MODULE=scripts.benchmarks.inference_engines.benchmark_strata_avalon"
+call "%~dp0..\_run.bat" %*
+exit /b %ERRORLEVEL%

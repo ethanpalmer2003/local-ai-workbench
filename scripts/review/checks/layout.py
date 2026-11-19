@@ -394,6 +394,48 @@ def batch_placement_issues() -> list[str]:
     return issues
 
 
+# - every batch in the entry-point tree hands its run to the shared runner, which owns the venv path,
+#   working directory, title, pause and exit code. These four start something the runner cannot:
+#   the runner itself, the environment it installs into, and ComfyUI's own interpreter.
+BATCH_RUNS_ALONE = frozenset(
+    {
+        "bat/_run.bat",
+        "bat/models/sync_python_env.bat",
+        "bat/browser/comfyui/comfyui_bootstrap.bat",
+        "bat/browser/comfyui/launch_comfyui.bat",
+    }
+)
+RUNNER_CALL = re.compile(r'call\s+"%~dp0[^"]*_run\.bat"', re.IGNORECASE)
+VENV_PYTHON = re.compile(r"\.venv[\\/]Scripts[\\/]python\.exe", re.IGNORECASE)
+COMMENT_LINE = re.compile(r"^\s*(?:rem\b|::)", re.IGNORECASE)
+
+
+def _executed_lines(text: str) -> str:
+    return "\n".join(line for line in text.splitlines() if not COMMENT_LINE.match(line))
+
+
+def batch_runner_issues() -> list[str]:
+    """A batch sets RUN_MODULE and calls the runner; it never repeats what the runner owns."""
+    issues = []
+    for path in tracked_files():
+        if path.suffix != ".bat" or not path.is_relative_to(project_cfg.BAT_DIR):
+            continue
+        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+        issues += _batch_runner_issue(relative, path.read_text(encoding="utf-8-sig"))
+    return issues
+
+
+def _batch_runner_issue(relative: str, text: str) -> list[str]:
+    if relative in BATCH_RUNS_ALONE:
+        return []
+    executed = _executed_lines(text)
+    if not RUNNER_CALL.search(executed):
+        return [f"Batch hands no run to _run.bat: {relative}"]
+    if VENV_PYTHON.search(executed):
+        return [f"Batch runs the venv python itself instead of only _run.bat: {relative}"]
+    return []
+
+
 def state_issues() -> list[str]:
     """Runtime state keeps folders; a loose script or output dump belongs in a run folder or trash."""
     issues: list[str] = []
@@ -435,6 +477,7 @@ def main() -> int:
         + policy_limit_issues()
         + placement_issues()
         + batch_placement_issues()
+        + batch_runner_issues()
         + state_issues()
         + root_folder_issues()
     )
