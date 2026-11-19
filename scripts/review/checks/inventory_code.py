@@ -94,6 +94,10 @@ TREE_KINDS = {
 }
 EVIDENCE_TREES = ("scripts/state", "scripts/tests/output", "scripts/benchmarks/output")
 GIB = 1024**3
+# - a section header marks a stage, so a file past this many is a prompt to split, never a failure: the
+#   two files over it hold their groups by subject, and a hard cap would only move them around
+GROUP_PROMPT = 5
+SECTION_HEADER = re.compile(r"^# --- ", re.MULTILINE)
 FUNCTIONS = (ast.FunctionDef, ast.AsyncFunctionDef)
 INLINE_NOQA = re.compile(r"#\s*noqa\b", re.IGNORECASE)
 BLOCKS = (ast.If, ast.For, ast.AsyncFor, ast.While, ast.With, ast.AsyncWith, ast.Try, ast.TryStar, ast.Match)
@@ -337,6 +341,36 @@ def workspace_report(totals: list[TreeTotal], tracked: int) -> list[str]:
     return lines
 
 
+def section_group_prompts(root: Path) -> list[tuple[str, int]]:
+    """Files whose section headers pass the prompt, which asks for a split when the file is next touched."""
+    prompts: list[tuple[str, int]] = []
+    for path in maintained_python(root):
+        try:
+            count = len(SECTION_HEADER.findall(path.read_text(encoding="utf-8-sig", errors="replace")))
+        except OSError:
+            continue
+        if count > GROUP_PROMPT:
+            prompts.append((path.relative_to(root).as_posix(), count))
+    return sorted(prompts, key=lambda item: (-item[1], item[0]))
+
+
+def group_prompt_report(prompts: list[tuple[str, int]]) -> list[str]:
+    """Name the files over the prompt, with the reading that a group is a stage rather than a fault."""
+    lines = [
+        "",
+        f"## Section groups (prompt at more than {GROUP_PROMPT})",
+        "",
+        f"{len(prompts)} file(s) carry more named sections than the prompt. A section header marks a stage, so",
+        "these are prompts to split the next time the file is touched, not failures: a hard cap would only",
+        "regroup the same stages.",
+        "",
+        "| File | Sections |",
+        "| --- | ---: |",
+    ]
+    lines.extend(f"| {path} | {count} |" for path, count in prompts)
+    return lines
+
+
 def folder_inventory_report(
     folders: list[FolderRecord],
     single_folders: list[FolderRecord],
@@ -507,6 +541,7 @@ def report(
     single_folders, small_folders, crowded_folders = folder_validation(folders)
     baseline = load_file_baseline()
     lengths = file_lengths(source_files, baseline)
+    groups = section_group_prompts(project_cfg.SCRIPTS_DIR)
     largest = sorted(results, key=lambda item: (-item.code_lines, -item.depth, item.path, item.line))[
         :LARGEST_FUNCTIONS
     ]
@@ -522,6 +557,7 @@ def report(
         "files_to_split": lengths.blocked,
         "long_files": lengths.long,
         "source_file_lines": source_files,
+        "section_group_prompts": [{"path": path, "sections": count} for path, count in groups],
         "inline_suppressions": suppressions,
         "dependencies": dependencies or {},
         "workspace_totals": [item._asdict() for item in totals] if totals else [],
@@ -548,6 +584,7 @@ def report(
         lines.extend(workspace_report(totals, len(tracked_files())))
     lines.extend(f"| {item['path']} | {item['type']} | {item['lines']} |" for item in source_files[:100])
     lines.extend(folder_inventory_report(folders, single_folders, small_folders, crowded_folders))
+    lines.extend(group_prompt_report(groups))
     lines.extend(file_length_report(lengths, baseline))
     lines.extend(
         (
@@ -577,6 +614,8 @@ def report(
         for item in single_folders:
             print(f"[FAIL] {item['directory']}: 1 file")
     print_file_lengths(lengths)
+    if groups:
+        print(f"[INFO] {len(groups)} file(s) over {GROUP_PROMPT} section groups; split when next touched")
     if small_folders:
         print(f"[INFO] {len(small_folders)} merge candidate(s) at 2 to {MIN_FOLDER_ITEMS} direct files; see report.")
     print(f"Review report: {artifacts / 'review.md'}")
