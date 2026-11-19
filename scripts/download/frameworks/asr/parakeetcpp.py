@@ -3,8 +3,8 @@
 import json
 import shutil
 import subprocess
-import time
 
+from scripts.benchmarks.shared.paths import dated_run
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks.native_build import run, visual_studio_environment
 from scripts.launchers.runtime.execution_context import require_native_execution
@@ -16,7 +16,7 @@ def main():
     source = component.framework_dir / "additions/source-v0.6.1"
     build = component.framework_dir / "additions/build-v0.6.1-cpu-stream"
     destination = component.framework_dir / "cpu-stream"
-    logs = component.logs_dir / "builds" / str(time.time_ns())
+    logs = dated_run(component.logs_dir / "builds")
     logs.mkdir(parents=True, exist_ok=True)
     print(f"[LOGS] {logs}", flush=True)
     env = visual_studio_environment("asr/parakeetcpp")
