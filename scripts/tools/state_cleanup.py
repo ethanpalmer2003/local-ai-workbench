@@ -119,11 +119,11 @@ def prune_log_areas(dry_run: bool) -> tuple[int, int]:
     """Keep the two newest entries in each log area, so a per-run log cannot pile up."""
     root = project_cfg.LOGS_DIR
     count = freed = 0
-    for area in sorted(path for path in root.glob("*/*/*") if path.is_dir()):
+    for area in [root, *(path for path in root.rglob("*") if path.is_dir())]:
         relative = str(area.relative_to(root)).replace("\\\\", "/")
-        if any(relative.startswith(special) for special in SPECIAL_LOG_AREAS):
+        if any(relative == special or relative.startswith(special + "/") for special in SPECIAL_LOG_AREAS):
             continue
-        if not any(entry.is_file() for entry in area.iterdir()):
+        if len(area.relative_to(root).parts) > 3 or not any(entry.is_file() for entry in area.iterdir()):
             continue
         entries = [*area.glob("*")]
         files = [entry for entry in entries if entry.is_file()]
