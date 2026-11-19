@@ -2,21 +2,21 @@
 
 ## Environment
 
-- Interpreter `C:/AI/.venv/Scripts/python.exe`. If the uv cache is restricted, set `UV_CACHE_DIR=C:/AI/scripts/state/cache/shared/uv`.
+- Interpreter `C:/AI/.venv/Scripts/python.exe`; a restricted uv cache needs `UV_CACHE_DIR=C:/AI/scripts/state/cache/shared/uv`.
 - Dependencies are declared in `pyproject.toml` and locked in `uv.lock`; CPU torch/torchaudio use the PyTorch CPU index.
 
 ## Commands
 
-- `python -m scripts.review.checks.layout` checks structure; `.docs` documents; `.comments` rejects markers, banner rules and commented-out code.
+- `python -m scripts.review.checks.layout` checks structure; `.docs` documents; `.comments` rejects markers, banners and commented-out code; `.expression` rejects a condition nesting four operators.
 - `basedpyright --level error` catches type/name contracts; syntax compilation alone is not enough. Run from `C:/AI` with the project environment and a normal-token invocation, or dependency discovery reports false missing imports.
 - `python -m scripts.review` or `scripts/review/check_repo.bat` runs every static check; `--tests` adds the suite.
-- Import smoke checks must not start a suite, model, GPU workload or service.
+- An import smoke check starts no suite, model, GPU workload or service.
 
 ## When
 
 - A commit checks what it is recording: `--commit` reads the working tree against `HEAD`, so earlier unpushed commits do not run again. The scoped gate and scoped suite follow ruff, codespell and the punctuation pass. About five seconds for a code change, seconds for prose.
 - A push checks everything: `--push` runs every section and every class when the unpushed commits touch Python, and the prose sections with no class when they do not; no Python behavior changed, and the last push was green.
-- Both commands also run by hand; there is no separate edit stage.
+- Both commands run by hand too; there is no separate edit stage.
 - The suite is a feedback loop: one import hop from the change by default. No Python path runs none, a comment or docstring edit runs none, and the three manifest files ([registry](../scripts/tests/registry.py), runner and selection) keep every class on a code change; the launcher and proxy block is in the set.
 - The gate is scoped the same way: only the sections whose inputs changed, and the type check covers the changed modules plus their direct importers. A bare run adds the unpushed commits to the change set; `--commit` does not. `--fast` skips types, inventory, advisories and the package summary; an empty change set runs every section. Each section records its seconds under `scripts/state/logs/shared/review/`, so the cost of a check comes from history instead of a rerun.
 - Live and measure work is scheduled from [TODO](../notes/TODO.md), never part of a code change. Levels: [tool inventory](../scripts/review/TOOLS.md#levels).
