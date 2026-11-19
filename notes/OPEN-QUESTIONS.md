@@ -10,6 +10,13 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
   a number. Options: commit a curated subset of the `report.md`/`summary.txt` files behind each decision, move
   the numbers into the documents themselves, or keep the paths local-only. The two folders hold 1.4 GB in total,
   so a wholesale commit is out; a curated set would be a few MB.
+- **An operating-system backstop for the deep-scan rule.** The profile guard in
+  `scripts/state/plugins/guard-deep-scan` refuses a scan under or above the ignored trees and derives those
+  names from the ignore files, but it only binds harnesses that load that plugin. Options: an ACL that denies
+  the agent process read access to `data/` and `frameworks/`, which no tool call can bypass and needs a fresh
+  shell as the agent's user to prove; an ACL that allows only named subpaths, which is narrower but needs the
+  same proof; or keep the guard as the only rule and accept that another harness can walk those trees. The
+  first two change file permissions on 320 GB of installs, so the decision comes before any test.
 - A decision that would change work is added here with its options.
 - **How a run should be laid out on disk.** A run currently sits at `<root>/<area>/<case>/<outcome>/<epoch-id>/`, while the trash uses `YYYY-MM-DD` folders. Options: a date folder per run (`.../<outcome>/<YYYY-MM-DD>/<id>/`) so retention reads as calendar time and a whole day prunes at once; a build folder keyed on the engine commit (`.../<commit>/<id>/`) so a comparison across builds sits together and a superseded build is one folder; or keep the flat shape and let `cleanup.py` own the rule, which is what happens today. Cost of either change: every new run path moves, historical paths keep their current place because a tracked document may cite them, and a cited run id keeps working either way because the id does not change.
 

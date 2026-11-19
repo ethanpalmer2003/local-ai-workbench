@@ -7,7 +7,6 @@
 ## Reliability
 Defects and safety gaps: something behaves wrongly or can run away, and the fix is code or configuration.
 
-- [ ] Add an operating-system backstop for the deep-scan rule: a profile tool guard (`scripts/state/plugins/guard-deep-scan`, installed in the desktop profile) refuses a recursive shell scan, a glob or a grep under or above the ignored trees, and derives those names from the ignore files, but it only binds harnesses that load that plugin. An ACL that denies the agent process read access to those roots, or allows only named subpaths, is the only rule no tool call can bypass. Test with a fresh shell as the agent's user, then remove the guard if the ACL holds. ~45 min
 
 ## Standardization
 A rule or a shape to decide, where the code is already correct and the question is which convention to keep.
