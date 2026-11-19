@@ -53,7 +53,7 @@ from scripts.tests.cases.review.checks.test_docs import (
 from scripts.tests.cases.review.checks.test_duplicates import DuplicateReportTests
 from scripts.tests.cases.review.checks.test_dynamic_imports import DynamicImportTests
 from scripts.tests.cases.review.checks.test_expression import ExpressionDepthTests
-from scripts.tests.cases.review.checks.test_folder_rule import FolderRuleTests
+from scripts.tests.cases.review.checks.test_folder_rule import FolderRuleTests, WorkspaceTotalTests
 from scripts.tests.cases.review.checks.test_layout import PolicyTests
 from scripts.tests.cases.review.checks.test_line_length import LimitsReportTests, LineLengthTests
 from scripts.tests.cases.review.checks.test_network_timeouts import NetworkTimeoutTests
@@ -297,6 +297,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     WalrusTests,
     ExamplesPageTests,
     FolderRuleTests,
+    WorkspaceTotalTests,
     SpeechProfiles,
     WorkflowDefaultsTests,
     WhisperCompareTests,

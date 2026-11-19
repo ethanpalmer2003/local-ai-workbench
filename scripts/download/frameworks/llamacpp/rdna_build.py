@@ -17,12 +17,12 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.config.trash import archive_path
+from scripts.download.frameworks.llamacpp import rdna_release
 
 
 @dataclass(frozen=True)
 class RdnaSourceConfig:
     upstream_repo_url: str = "https://github.com/ggml-org/llama.cpp.git"
-    boosts_repo_url: str = "https://github.com/stew675/llama-cpp-rdna-boosts.git"
     branch_name: str = "rdna-boosts"
 
     frameworks_dir: Path = Path(project_cfg.FRAMEWORKS_DIR)
@@ -144,14 +144,11 @@ def setup_rdna_source(
 
     boosts_dir = source.boosts_dir
 
-    if not boosts_dir.exists():
-        print(f"Cloning patches repo {source.boosts_repo_url} -> {boosts_dir}")
-        boosts_dir.parent.mkdir(parents=True, exist_ok=True)
-        run_git(["clone", source.boosts_repo_url, str(boosts_dir)], cwd=boosts_dir.parent)
-    else:
-        print(f"Updating patches repo: {boosts_dir}")
-        run_git(["fetch", "origin"], cwd=boosts_dir)
-        run_git(["reset", "--hard", "origin/main"], cwd=boosts_dir)
+    # - the patch set comes from a release tarball, so a build records the tag it applied instead of
+    #   whatever the branch held when it ran
+    temporary = project_cfg.component("shared").cache_dir / "framework_updates"
+    temporary.mkdir(parents=True, exist_ok=True)
+    rdna_release.ensure(boosts_dir, temporary)
 
     baseline_commit = get_baseline_commit(boosts_dir)
 

@@ -5,9 +5,11 @@ from dataclasses import replace
 from scripts.download.frameworks import update_shared
 from scripts.download.frameworks.asr import updates as asr_updates
 from scripts.download.frameworks.audiocpp import updates as audiocpp_updates
+from scripts.download.frameworks.llamacpp import rdna_release
 from scripts.download.frameworks.llamacpp import updates as llamacpp_updates
 from scripts.download.frameworks.llamacpp.updates import hrx_tools as hrx_tools
 from scripts.download.frameworks.llamacpp.updates import rdna_tools as rdna_tools
+from scripts.download.frameworks.loom import updates as loom_updates
 from scripts.download.frameworks.shared import other_updates
 from scripts.download.frameworks.shared.other_updates import benchmark_tools as benchmark_tools
 from scripts.download.frameworks.shared.other_updates import pi_tools as pi_tools
@@ -21,6 +23,7 @@ CATALOGS = {
     "llamacpp": llamacpp_updates.TOOLS,
     "speech": [*audiocpp_updates.TOOLS, *tts_updates.TOOLS],
     "asr": asr_updates.TOOLS,
+    "loom": loom_updates.TOOLS,
     "other": other_updates.TOOLS,
 }
 TOOLS = [replace(tool, category=category) for category, tools in CATALOGS.items() for tool in tools]
@@ -32,12 +35,14 @@ update_shared.MANAGED_HANDLERS.update(
         ReleaseType.STRATA: other_updates.process_tool,
         ReleaseType.DESKTOP: other_updates.process_tool,
         ReleaseType.BUILD: audiocpp_updates.process_tool,
+        ReleaseType.PATCHES: rdna_release.process_tool,
     }
 )
 update_shared.POST_INSTALLERS["asr/handy/installer"] = asr_updates.install_handy
 update_shared.POST_INSTALL_PENDING["asr/handy/installer"] = asr_updates.install_handy_pending
 update_shared.MANAGED_HANDLERS[ReleaseType.NATIVE_BUILD] = asr_updates.process_whisper
 update_shared.RELEASE_INSTALLERS[ReleaseType.WHEEL] = tts_updates.install_wheel
+update_shared.RELEASE_INSTALLERS[ReleaseType.SDK] = loom_updates.install_sdk
 update_shared.SOURCE_PATCH_WRITER = llamacpp_updates.snapshot_source_patches
 update_shared.SOURCE_DIRTY_CHECK = llamacpp_updates.source_dirty
 update_shared.SOURCE_AHEAD_CHECK = llamacpp_updates.source_ahead

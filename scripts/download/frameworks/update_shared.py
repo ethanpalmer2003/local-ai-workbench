@@ -24,7 +24,13 @@ from scripts.download.frameworks import update_types as cfg
 
 MARKER_NAME = ".release_published_at"
 ASSET_MARKER_NAME = ".release_asset"
-CATEGORY_HEADINGS = (("llamacpp", "LLAMA.CPP"), ("speech", "TTS / ASR"), ("asr", "ASR"), ("other", "OTHER"))
+CATEGORY_HEADINGS = (
+    ("llamacpp", "LLAMA.CPP"),
+    ("speech", "TTS / ASR"),
+    ("asr", "ASR"),
+    ("loom", "LOOM"),
+    ("other", "OTHER"),
+)
 # - these name the exact entry; collapsing them would hide which one broke
 EXPANDED_STATUSES = ("CHECK FAILED", "SKIPPED BY OPTION")
 
@@ -642,7 +648,7 @@ def process_managed_tool(
 
 def _needs_update(tool: cfg.ToolSpec, release: Release, asset: Asset, dest_dir: Path, exe: Path) -> bool:
     remote_stamp = release["published_at"]
-    if tool.release_type in (cfg.ReleaseType.DATE, cfg.ReleaseType.WHEEL):
+    if tool.release_type in (cfg.ReleaseType.DATE, cfg.ReleaseType.WHEEL, cfg.ReleaseType.SDK):
         # Compare against the release timestamp recorded at install time,
         # not the exe's mtime (zip extraction can preserve old file dates).
         marker = dest_dir / MARKER_NAME
@@ -668,7 +674,7 @@ def _install_release(tool: cfg.ToolSpec, asset: Asset, dest_dir: Path, tmp_dir: 
     print("Status: UPDATING")
     installer = RELEASE_INSTALLERS.get(tool.release_type, update_tool)
     installer(asset, dest_dir, tmp_dir, tool.exe)
-    if tool.release_type in (cfg.ReleaseType.DATE, cfg.ReleaseType.WHEEL):
+    if tool.release_type in (cfg.ReleaseType.DATE, cfg.ReleaseType.WHEEL, cfg.ReleaseType.SDK):
         (dest_dir / MARKER_NAME).write_text(release["published_at"])
         (dest_dir / ASSET_MARKER_NAME).write_text(asset["name"], encoding="utf-8")
     print("Status: UPDATED")
