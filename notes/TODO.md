@@ -8,6 +8,7 @@
 Defects and safety gaps: something behaves wrongly or can run away, and the fix is code or configuration.
 
 - [ ] Add an operating-system backstop for the deep-scan rule: a profile tool guard (`scripts/state/plugins/guard-deep-scan`, installed in the desktop profile) refuses a recursive shell scan, a glob or a grep under `data/` and `frameworks/`, but it only binds harnesses that load that plugin. An ACL that denies the agent process read access to those roots, or allows only named subpaths, is the only rule no tool call can bypass. Test with a fresh shell as the agent's user, then remove the guard if the ACL holds. ~45 min
+- [ ] Read the guard's heavyweight list from `.gitignore` instead of keeping a copy: the plugin spells its own `HEAVY_SEGMENTS` and `HEAVY_TREES`, so a tree ignored in one place and unknown in the other stays scannable. The copy cost a walk of `scripts/state`: `Get-ChildItem -Path scripts -Recurse -Filter *.py -File | Select-String -Pattern 'strata'` returned 17 KB of truncated output and 22 access-denied lines, which is why the guard now refuses a recursion rooted above a tree as well as one that names it. An ignored folder is heavy the moment it is ignored, so the list cannot drift from the truth. ~30 min
 
 ## Standardization
 A rule or a shape to decide, where the code is already correct and the question is which convention to keep.
