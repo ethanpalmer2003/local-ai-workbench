@@ -132,6 +132,7 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
 from scripts.tests.cases.shared.tools.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
 from scripts.tests.cases.shared.tools.test_language_matrix import LanguageMatrixTests
 from scripts.tests.cases.shared.tools.test_local_overlay import LocalOverlayTests
+from scripts.tests.cases.shared.tools.test_locate_files import LocateFileTests
 from scripts.tests.cases.shared.tools.test_low_integrity import LowIntegrityTests
 from scripts.tests.cases.shared.tools.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.tools.test_preflight import PreflightTests
@@ -219,6 +220,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     TextProcessingTests,
     BatLaunchers,
     InferenceEngines,
+    LocateFileTests,
     ModelAdminTests,
     LowIntegrityTests,
     ConsentTests,
