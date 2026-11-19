@@ -1,4 +1,8 @@
-"""Review repository structure, source-file sizes and Python function complexity."""
+"""Review repository structure, source-file sizes and Python function complexity.
+
+`--measure` adds the whole-workspace table of file counts and bytes per tree, which needs one walk of every
+tree and is therefore not part of a gate run.
+"""
 
 import ast
 import io
@@ -14,6 +18,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from scripts.config import project_config as project_cfg
+from scripts.review.lists.sources import tracked_files
 
 # - a folder is validated at both ends: below the minimum it is a merge candidate, above the maximum it
 #   needs another level, and a folder holding one file and nothing else is neither, so it fails
@@ -75,6 +80,20 @@ REVIEW_EXCLUDED = EXCLUDED | {
     "old",
     "retired",
 }
+# - how the workspace root splits: our source, installed engines, weights, the interpreter, run evidence,
+#   trash and git history. A tree measured as evidence is subtracted from the source tree it sits in.
+TREE_KINDS = {
+    "frameworks": "installs",
+    "data": "weights",
+    ".venv": "environment",
+    ".git": "git history",
+    "trash": "trash",
+    ".pytest_cache": "caches",
+    ".zed": "editor state",
+    "graphify-out": "caches",
+}
+EVIDENCE_TREES = ("scripts/state", "scripts/tests/output", "scripts/benchmarks/output")
+GIB = 1024**3
 FUNCTIONS = (ast.FunctionDef, ast.AsyncFunctionDef)
 INLINE_NOQA = re.compile(r"#\s*noqa\b", re.IGNORECASE)
 BLOCKS = (ast.If, ast.For, ast.AsyncFor, ast.While, ast.With, ast.AsyncWith, ast.Try, ast.TryStar, ast.Match)
@@ -226,6 +245,96 @@ def repository_inventory(root: Path) -> FolderInventory:
     folders.sort(key=lambda item: str(item["directory"]).casefold())
     source_files.sort(key=lambda item: (-int(item["lines"]), str(item["path"]).casefold()))
     return FolderInventory(folders, source_files)
+
+
+class TreeTotal(NamedTuple):
+    """One measured tree: how many files and bytes it holds, and what kind of thing it is."""
+
+    tree: str
+    kind: str
+    files: int
+    bytes: int
+
+
+def tree_totals(root: Path) -> tuple[int, int]:
+    """File count and bytes under one tree, from one scandir pass that follows no links."""
+    files = 0
+    size = 0
+    pending = [root]
+    while pending:
+        try:
+            entries = list(os.scandir(pending.pop()))
+        except OSError:
+            continue
+        for entry in entries:
+            try:
+                if entry.is_dir(follow_symlinks=False):
+                    pending.append(Path(entry.path))
+                elif entry.is_file(follow_symlinks=False):
+                    files += 1
+                    size += entry.stat(follow_symlinks=False).st_size
+            except OSError:
+                continue
+    return files, size
+
+
+def workspace_totals(root: Path) -> list[TreeTotal]:
+    """Every top-level tree and loose root file, with the evidence trees split out of the source tree.
+
+    The evidence trees sit inside `scripts`, so `scripts` is reported without them: a row that mixed 29,000
+    run files into our source would hide both facts.
+    """
+    evidence = [
+        TreeTotal(name, "run evidence", *tree_totals(root / name)) for name in EVIDENCE_TREES if (root / name).is_dir()
+    ]
+    totals = []
+    for entry in sorted(root.iterdir()):
+        if not entry.is_dir():
+            continue
+        files, size = tree_totals(entry)
+        inside = [item for item in evidence if item.tree.startswith(f"{entry.name}/")]
+        totals.append(
+            TreeTotal(
+                entry.name,
+                TREE_KINDS.get(entry.name, "our source"),
+                files - sum(item.files for item in inside),
+                size - sum(item.bytes for item in inside),
+            )
+        )
+    loose = [entry for entry in root.iterdir() if entry.is_file()]
+    if loose:
+        totals.append(TreeTotal("(root files)", "our source", len(loose), sum(entry.stat().st_size for entry in loose)))
+    return totals + evidence
+
+
+def workspace_report(totals: list[TreeTotal], tracked: int) -> list[str]:
+    """Where the files and bytes of the whole workspace sit, in the order a reader looks for them."""
+    total_files = sum(item.files for item in totals)
+    total_bytes = sum(item.bytes for item in totals)
+    lines = [
+        "",
+        "## Whole workspace",
+        "",
+        f"{tracked} tracked files. Every tree below holds {total_files:,} files and {total_bytes / GIB:,.0f} GB;",
+        "the shares are of those totals, so the rows add up to the whole folder.",
+        "",
+        "| Tree | Holds | Files | Files % | GB | Bytes % |",
+        "| --- | --- | ---: | ---: | ---: | ---: |",
+    ]
+    lines.extend(
+        f"| {item.tree} | {item.kind} | {item.files:,} | {100 * item.files / total_files:.1f} | "
+        f"{item.bytes / GIB:,.2f} | {100 * item.bytes / total_bytes:.1f} |"
+        for item in sorted(totals, key=lambda row: (-row.files, row.tree))
+    )
+    lines.extend(
+        (
+            "",
+            "GB is GiB, the figure Explorer reports. One scandir pass per tree follows no links, so a folder",
+            "counted twice in the table is one that contains another row, and the evidence rows are already",
+            "subtracted from `scripts`.",
+        )
+    )
+    return lines
 
 
 def folder_inventory_report(
@@ -393,6 +502,7 @@ def report(
     artifacts: Path,
     suppressions: list[str],
     dependencies: dict[str, int] | None = None,
+    totals: list[TreeTotal] | None = None,
 ) -> int:
     single_folders, small_folders, crowded_folders = folder_validation(folders)
     baseline = load_file_baseline()
@@ -414,6 +524,7 @@ def report(
         "source_file_lines": source_files,
         "inline_suppressions": suppressions,
         "dependencies": dependencies or {},
+        "workspace_totals": [item._asdict() for item in totals] if totals else [],
     }
     lines = [
         "# Repository code review",
@@ -426,13 +537,15 @@ def report(
         "The function audit excludes the tests tree; benchmarks and probes are included. File/folder inventory excludes",
         "third-party installs, model data, generated state, trash and caches. JavaScript/TypeScript line counts are "
         "not",
-        "included.",
+        "included. The whole-workspace section needs `--measure`, which walks every tree once.",
         "",
         "## Largest Python and Markdown files",
         "",
         "| File | Type | Lines |",
         "| --- | --- | ---: |",
     ]
+    if totals is not None:
+        lines.extend(workspace_report(totals, len(tracked_files())))
     lines.extend(f"| {item['path']} | {item['type']} | {item['lines']} |" for item in source_files[:100])
     lines.extend(folder_inventory_report(folders, single_folders, small_folders, crowded_folders))
     lines.extend(file_length_report(lengths, baseline))
@@ -566,9 +679,10 @@ def main(dependencies: dict[str, int] | None = None, paths: list[Path] | None = 
     ]
     folders, source_files = repository_inventory(project_cfg.BASE_DIR)
     suppressions = suppression_issues(root)
+    totals = workspace_totals(project_cfg.BASE_DIR) if "--measure" in sys.argv[1:] else None
     artifacts = project_cfg.component("shared").generated_dir / "code_review" / str(time.time_ns())
     artifacts.mkdir(parents=True, exist_ok=False)
-    status = report(results, len(files), folders, source_files, artifacts, suppressions, dependencies)
+    status = report(results, len(files), folders, source_files, artifacts, suppressions, dependencies, totals)
     return int(bool(suppressions) or status)
 
 
