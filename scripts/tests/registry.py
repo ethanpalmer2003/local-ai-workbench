@@ -156,6 +156,7 @@ from scripts.tests.cases.shared.tools.test_stage_runner import StageRunnerTests
 from scripts.tests.cases.shared.tools.test_state_cleanup import StateCleanupTests
 from scripts.tests.cases.shared.tools.test_strata_profile import StrataProfileLinkTests
 from scripts.tests.cases.shared.tools.test_toolchains import ToolchainTests
+from scripts.tests.cases.shared.tools.test_tree_sizes import TreeSizeTests
 from scripts.tests.cases.shared.tools.test_yaml_table import YamlTableTests
 from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
 from scripts.tests.cases.shared.workflows.test_speech_profiles import SpeechProfiles
@@ -270,6 +271,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     LanguageMatrixTests,
     RocmInventoryTests,
     StageRunnerTests,
+    TreeSizeTests,
     StateCleanupTests,
     MoveParsingTests,
     ImportRewriteTests,
