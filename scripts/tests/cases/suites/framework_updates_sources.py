@@ -302,24 +302,31 @@ class FrameworkUpdateSources(unittest.TestCase):
         install.assert_not_called()
         self.assertEqual(summary.current, [rdna_release.TOOL.name])
 
-    def test_the_release_tarball_is_unpacked_and_its_wrapper_dropped(self):
+    def test_the_release_tarball_and_its_metadata_are_installed_together(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
-            tree = root / "tree" / "llama-cpp-rdna-boosts-v17"
-            (tree / "patches").mkdir(parents=True)
-            (tree / "release.json").write_text(json.dumps({"release": "v17-4f9dfa0e3-r321"}), encoding="utf-8")
-            (tree / "patches" / "0000-a.patch").write_text("patch\n", encoding="utf-8")
+            tree = root / "tree" / "patches"
+            tree.mkdir(parents=True)
+            (tree / "0000-a.patch").write_text("patch\n", encoding="utf-8")
             archive = Path(shutil.make_archive(str(root / "patches"), "gztar", root_dir=root / "tree"))
-            asset: updater.Asset = {"name": "patches.tar.gz", "browser_download_url": "https://example.test/patches"}
+            metadata = root / "release.json"
+            metadata.write_text(json.dumps({"release": "v17-4f9dfa0e3-r321", "base": "4f9dfa0e3"}), encoding="utf-8")
+            release: updater.Release = {
+                "tag_name": "v17-4f9dfa0e3-r321",
+                "published_at": "now",
+                "prerelease": False,
+                "assets": [
+                    {"name": "patches.tar.gz", "browser_download_url": "https://example.test/patches"},
+                    {"name": "release.json", "browser_download_url": "https://example.test/release.json"},
+                ],
+            }
             with (
-                patch.object(rdna_release.shared, "download_asset", return_value=archive),
+                patch.object(rdna_release.shared, "download_asset", side_effect=[archive, metadata]),
                 patch.object(rdna_release.shared, "replace_installation") as replace,
             ):
-                rdna_release.install(asset, root / "installed", root, "")
+                rdna_release.install(release, root / "installed", root)
             staged = replace.call_args.args[0]
-            self.assertEqual(
-                json.loads((staged / "release.json").read_text(encoding="utf-8"))["release"], "v17-4f9dfa0e3-r321"
-            )
+            self.assertEqual(json.loads((staged / "release.json").read_text(encoding="utf-8"))["base"], "4f9dfa0e3")
             self.assertTrue((staged / "patches" / "0000-a.patch").is_file())
 
     def test_the_loom_catalog_takes_the_release_profile_assets_only(self):
@@ -350,8 +357,8 @@ class FrameworkUpdateSources(unittest.TestCase):
 
             def fake_install(command: list[str], **_kwargs: Any) -> None:
                 target = Path(command[command.index("--target") + 1])
-                (target / "hrx_loom").mkdir(parents=True)
-                (target / "hrx_loom" / "__init__.py").write_text("", encoding="utf-8")
+                (target / "loom").mkdir(parents=True)
+                (target / "loom" / "__init__.py").write_text("", encoding="utf-8")
                 (target / "Scripts").mkdir()
                 (target / "Scripts" / "loom-serve.exe").write_bytes(b"exe")
 
@@ -361,7 +368,7 @@ class FrameworkUpdateSources(unittest.TestCase):
                 patch.object(loom_updates.subprocess, "run", side_effect=fake_install),
                 patch.object(loom_updates.shared, "replace_installation") as replace,
             ):
-                loom_updates.install_sdk(asset, root / "sdk", root, "hrx_loom/__init__.py")
+                loom_updates.install_sdk(asset, root / "sdk", root, "loom/__init__.py")
             staged = replace.call_args.args[0]
             marker = json.loads((staged / "INSTALL.json").read_text(encoding="utf-8"))
         self.assertEqual(marker["console_script"], "Scripts/loom-serve.exe")
