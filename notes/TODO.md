@@ -38,6 +38,8 @@ A rule or a shape to decide, where the code is already correct and the question 
 - [ ] Batch the upstream reads in the scope: `_code_changed_since_upstream` runs one `git show` per changed `.py` file, which is fine for a commit and slow for a large change set or a rebase. Options: one `git show` per file is already batched by path, or `git diff --name-only` first and only parse files whose text differs, or a read-cache keyed on the upstream ref. Measure a 50-file change set before deciding. ~30 min
 - [ ] Apply the no-nested-call rule repo-wide: a call is never an argument of another call. `scripts/tests/scoped_selection.py` had five by AST count (two direct, three inside `any`/`sum` generators); the two direct ones are fixed, and the rest of `scripts/` is unaudited. Decide whether the generator form counts before sweeping, then measure the total. ~1 h
 
+- [ ] Decide a retention rule for run evidence: `scripts/tests/output` holds 1.05 GB across 451,937 files and `scripts/benchmarks/output` 0.92 GB, and neither has a prune path; `state_cleanup` covers only logs and download leftovers (8 MB of old run logs today). Options: keep the latest run per area and archive the rest to `trash`, keep anything a tracked document cites, or leave it and rely on manual emptying. Owners: [tests/output](../scripts/tests/) and [benchmarks/output](../scripts/benchmarks/). ~1 h
+
 ## Needs a model run or device
 Work that cannot be settled without a live run: weights, a device, a server or a human at the machine.
 
