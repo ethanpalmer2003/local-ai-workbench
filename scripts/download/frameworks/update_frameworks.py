@@ -85,7 +85,7 @@ def main() -> int:
         summary.package_sync = [f"Install {name}" for name in additions] + [f"Remove {name}" for name in removals]
     cache = project_cfg.component("shared").cache_dir / "framework_updates"
     cache.mkdir(parents=True, exist_ok=True)
-    log_path = project_cfg.component("shared").logs_dir / "framework_updates" / f"{time.time_ns()}.log"
+    log_path = project_cfg.component("shared").logs_dir / "framework_updates" / f"{time.time_ns()}" / "update.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with (
         updater.staging_scope(cache, prefix="framework-updates-") as folder,

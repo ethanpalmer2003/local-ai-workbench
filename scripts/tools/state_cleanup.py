@@ -32,6 +32,10 @@ def _remove(path: Path) -> None:
         path.unlink(missing_ok=True)
 
 
+# - the current update and the last working one are all a repair needs
+KEEP_UPDATES = 2
+
+
 def prune(pattern: str, root: Path, cutoff: float, dry_run: bool, recursive: bool = True) -> tuple[int, int]:
     """Remove entries under `root` matching `pattern` whose mtime is older than `cutoff`."""
     if not root.is_dir():
@@ -49,6 +53,24 @@ def prune(pattern: str, root: Path, cutoff: float, dry_run: bool, recursive: boo
                 _remove(path)
             except OSError:
                 continue
+        count += 1
+        freed += size
+    return count, freed
+
+
+def prune_update_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
+    """Keep the two newest framework updates: the current one and the last working one."""
+    root = project_cfg.component("shared").logs_dir / "framework_updates"
+    if not root.is_dir():
+        return 0, 0
+    folders = sorted(path for path in root.iterdir() if path.is_dir())
+    legacy = sorted(path for path in root.iterdir() if path.is_file())
+    stale = [*folders[:-KEEP_UPDATES], *legacy[:-KEEP_UPDATES]]
+    count = freed = 0
+    for path in stale:
+        size = _size(path)
+        if not dry_run:
+            _remove(path)
         count += 1
         freed += size
     return count, freed
@@ -81,6 +103,9 @@ def prune_generated(days: int, log_days: int, cache_days: int, dry_run: bool) ->
         run_freed += freed
     if run_count:
         report.append(f"old suite run folders: {run_count} item(s), {run_freed / 1e6:.1f} MB")
+    update_count, update_freed = prune_update_logs(cutoff, dry_run)
+    if update_count:
+        report.append(f"old framework updates: {update_count} item(s), {update_freed / 1e6:.1f} MB")
     cache_root = cfg.LAUNCH.temp_dir / "audiocpp-gguf"
     count, freed = prune("*", cache_root, cache_cutoff, dry_run, recursive=False)
     if count:
