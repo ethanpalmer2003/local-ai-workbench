@@ -37,6 +37,10 @@ KEEP_UPDATES = 2
 # - the same shape for the gate history and the trash: the latest run and the one before it
 KEEP_REVIEW_LOGS = 2
 KEEP_TRASH_DAYS = 2
+# - every other log area keeps the latest entry and the one before it
+KEEP_LOG_ENTRIES = 2
+# - handled by their own rules above
+SPECIAL_LOG_AREAS = frozenset({"shared/review", "shared/framework_updates"})
 
 
 def prune(pattern: str, root: Path, cutoff: float, dry_run: bool, recursive: bool = True) -> tuple[int, int]:
@@ -111,6 +115,42 @@ def prune_trash(dry_run: bool) -> tuple[int, int]:
     return count, freed
 
 
+def prune_log_areas(dry_run: bool) -> tuple[int, int]:
+    """Keep the two newest entries in each log area, so a per-run log cannot pile up."""
+    root = project_cfg.LOGS_DIR
+    count = freed = 0
+    for area in sorted(path for path in root.glob("*/*/*") if path.is_dir()):
+        relative = str(area.relative_to(root)).replace("\\\\", "/")
+        if any(relative.startswith(special) for special in SPECIAL_LOG_AREAS):
+            continue
+        if not any(entry.is_file() for entry in area.iterdir()):
+            continue
+        entries = [*area.glob("*")]
+        files = [entry for entry in entries if entry.is_file()]
+        stale = stale_entries(files, KEEP_LOG_ENTRIES)
+        for path in stale:
+            size = _size(path)
+            if not dry_run:
+                _remove(path)
+            count += 1
+            freed += size
+    builds = root / "framework-builds"
+    if builds.is_dir():
+        for path in stale_entries([*builds.glob("*")], KEEP_LOG_ENTRIES):
+            size = _size(path)
+            if not dry_run:
+                _remove(path)
+            count += 1
+            freed += size
+    return count, freed
+
+
+def stale_entries(entries: list[Path], keep: int) -> list[Path]:
+    """Everything but the newest `keep` entries, ordered by name because a run name is a stamp."""
+    ordered = sorted(entries, key=lambda path: path.name)
+    return ordered[:-keep] if keep else ordered
+
+
 def prune_generated(days: int, log_days: int, cache_days: int, dry_run: bool) -> list[str]:
     now = time.time()
     cutoff = now - days * 86400
@@ -138,6 +178,9 @@ def prune_generated(days: int, log_days: int, cache_days: int, dry_run: bool) ->
         run_freed += freed
     if run_count:
         report.append(f"old suite run folders: {run_count} item(s), {run_freed / 1e6:.1f} MB")
+    area_count, area_freed = prune_log_areas(dry_run)
+    if area_count:
+        report.append(f"old area logs: {area_count} item(s), {area_freed / 1e6:.1f} MB")
     review_count, review_freed = prune_review_logs(cutoff, dry_run)
     if review_count:
         report.append(f"old gate runs: {review_count} item(s), {review_freed / 1e6:.1f} MB")
