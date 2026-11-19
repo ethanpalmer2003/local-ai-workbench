@@ -1,5 +1,7 @@
 # Batch entry points
 
+A batch exists for a run a person starts: it prepares the venv, prints a title, pauses at the end and returns the exit code, through [_run.bat](_run.bat). An agent, a pre-commit hook or another script calls the module directly instead, because a pause would hang it and the title is noise in a log. Placement follows the role folders below; the review wrappers beside their own tree are listed in [Review](#review) so this page stays the one index.
+
 Coding-agent entry points stay at the root. Browser, model, test, and benchmark batches are grouped by role; each launcher passes `%*` through to its Python module. Every batch that only runs a module delegates to [_run.bat](_run.bat), which owns the venv path, working directory, title, pause and exit code. Browser names state which HTML they open first: `launch_test*` is the shared `/test/` page, `launch_language*` is the shared `/practice` page, `launch_kobold*` is the KoboldCpp chat stack, and `launch_sdcpp` / `launch_comfyui` are each framework's own built-in UI. Naming rule: [folder rules](../.agents/FOLDERS.md).
 
 ## Root
@@ -62,6 +64,7 @@ Live entries free their ports instead of refusing.
 - Markdown duplicates: [review_document_similarity.bat](checks/review_document_similarity.bat); opt-in, starts the embedding model, reports pairs to review.
 - Code duplicates: [review_code_similarity.bat](checks/review_code_similarity.bat); same model, one chunk per function, tests skipped.
 - Pasted blocks: [review_duplicates.bat](checks/review_duplicates.bat); pylint's verbatim report against a reviewed baseline, no model needed.
+- Heavier-model handoff: [review_handoff.bat](checks/review_handoff.bat); writes `HANDOFF.md`, `REVIEW-REQUEST.md` and `ast_map.json` for a reviewer that should not read the tree ([guide](../scripts/review/HANDOFF.md)).
 
 ## Benchmarks
 
