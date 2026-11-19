@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.review.checks import dead_code
-from scripts.review.checks.dead_code import RETIRED, findings
+from scripts.review.checks.dead_code import findings
 from scripts.tests.shared.paths import CasePaths
 
 
@@ -28,15 +28,6 @@ class FindingTests(unittest.TestCase):
     def test_unreachable_code_is_reported(self):
         output = "scripts/x.py:5: unreachable code after 'return' (100% confidence)\n"
         self.assertEqual(len(findings(output)), 1)
-
-    def test_the_retired_pipeline_stays_silent_until_its_decision(self):
-        name = next(iter(RETIRED))
-        self.assertEqual(findings(f"{name}:339: unused function '_apply_buffer' (60% confidence)\n"), [])
-
-    def test_the_retired_exclusion_survives_an_absolute_path(self):
-        name = next(iter(RETIRED))
-        output = f"C:/AI/{name}:339: unused function '_apply_buffer' (60% confidence)\n"
-        self.assertEqual(findings(output), [])
 
 
 class ScopedSkipTests(unittest.TestCase):

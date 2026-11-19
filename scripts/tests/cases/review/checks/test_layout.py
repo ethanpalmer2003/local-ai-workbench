@@ -58,3 +58,21 @@ class PolicyTests(unittest.TestCase):
                     layout.empty_shell_issues(),
                     [f"Empty package shell: {package.relative_to(project_cfg.BASE_DIR).as_posix()}"],
                 )
+
+    def test_a_root_folder_holding_no_tracked_file_is_a_leftover(self):
+        from scripts.tests.shared.paths import CasePaths
+
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder) / "workspace"
+            (root / "bin").mkdir(parents=True)
+            (root / "data").mkdir()
+            (root / "notes").mkdir()
+            tracked = root / "notes" / "TODO.md"
+            tracked.touch()
+            with (
+                patch.object(project_cfg, "BASE_DIR", root),
+                patch.object(layout, "tracked_files", return_value=[tracked]),
+            ):
+                self.assertEqual(
+                    layout.root_folder_issues(), ["Unexpected root folder: bin (no tracked file, not a runtime root)"]
+                )

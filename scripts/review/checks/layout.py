@@ -1,4 +1,4 @@
-"""Check component ownership, install roots, folder naming and batch references."""
+"""Check component ownership, install roots, root folders, folder naming and batch references."""
 
 import re
 import tomllib
@@ -130,6 +130,19 @@ def batch_issues(path: Path, text: str) -> list[str]:
 ROOT_BATCHES = frozenset(
     {"update_frameworks.bat", "_run.bat", "launch_llamacpp_pi_agent.bat", "launch_strata_pi_agent.bat"}
 )
+# - root folders that hold runtime data or tool state rather than tracked files
+RUNTIME_ROOTS = {
+    "data",
+    "frameworks",
+    "trash",
+    "graphify-out",
+    ".git",
+    ".venv",
+    ".pytest_cache",
+    ".zed",
+    "node_modules",
+    "__pycache__",
+}
 
 OWNER_ROOTS = (
     project_cfg.CONFIG_DIR,
@@ -377,6 +390,16 @@ def state_issues() -> list[str]:
     return issues
 
 
+def root_folder_issues() -> list[str]:
+    """A workspace-root folder that holds no tracked file and is not a runtime root is a leftover."""
+    tracked_roots = {path.relative_to(project_cfg.BASE_DIR).parts[0] for path in tracked_files()}
+    return [
+        f"Unexpected root folder: {entry.name} (no tracked file, not a runtime root)"
+        for entry in sorted(project_cfg.BASE_DIR.iterdir())
+        if entry.is_dir() and entry.name not in RUNTIME_ROOTS and entry.name not in tracked_roots
+    ]
+
+
 def placement_issues() -> list[str]:
     """Every tracked file directly inside a high-level folder, whatever its type."""
 
@@ -396,6 +419,7 @@ def main() -> int:
         + policy_limit_issues()
         + placement_issues()
         + state_issues()
+        + root_folder_issues()
     )
     for path in files:
         issues += owner_issues(path)

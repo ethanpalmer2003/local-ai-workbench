@@ -8,10 +8,12 @@ from scripts.review.__main__ import changed_since_upstream
 
 
 def python_targets(all_files: bool) -> list[str]:
-    """Changed Python files, or the repository root when nothing changed or --all is given."""
+    """Changed Python files that still exist, or the repository root when nothing changed or --all is given."""
     if all_files:
         return ["."]
-    files = [path for path in changed_since_upstream() if path.endswith(".py")]
+    files = [
+        path for path in changed_since_upstream() if path.endswith(".py") and (project_cfg.BASE_DIR / path).is_file()
+    ]
     return files or ["."]
 
 

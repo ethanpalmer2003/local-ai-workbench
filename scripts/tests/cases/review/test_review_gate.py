@@ -235,11 +235,14 @@ class GateScopeTests(unittest.TestCase):
         full.assert_called_once_with([])
         touched.assert_not_called()
 
-    def test_formatting_targets_the_change_and_falls_back_to_the_tree(self):
+    def test_formatting_targets_the_change_and_drops_a_deleted_file(self):
         from scripts.review import format_py
 
-        with patch.object(format_py, "changed_since_upstream", return_value=["notes/TODO.md", "scripts/tools/a.py"]):
-            self.assertEqual(format_py.python_targets(False), ["scripts/tools/a.py"])
+        live = "scripts/review/format_py.py"
+        with patch.object(format_py, "changed_since_upstream", return_value=["notes/TODO.md", live]):
+            self.assertEqual(format_py.python_targets(False), [live])
+        with patch.object(format_py, "changed_since_upstream", return_value=["scripts/gone.py"]):
+            self.assertEqual(format_py.python_targets(False), ["."])
         with patch.object(format_py, "changed_since_upstream", return_value=["notes/TODO.md"]):
             self.assertEqual(format_py.python_targets(False), ["."])
         self.assertEqual(format_py.python_targets(True), ["."])
