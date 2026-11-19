@@ -7,11 +7,18 @@ need judgment rather than a diff.
 
 Two files:
 
-- `HANDOFF.md` carries the rules that decide quality, the shape of the repository, and the files ranked by how
-  much judgment they ask for: silent handlers, broad handlers, long functions and wide modules. It names the
-  questions to answer and says explicitly that mechanical fixes belong to the lighter model.
+- `HANDOFF.md` carries the rules that decide quality, the shape of the repository, where the weight sits per
+  folder, and the files ranked by how much judgment they ask for: silent handlers, broad handlers, long
+  functions and wide modules. It also holds the evidence the opt-in checks already produced - the duplicate
+  pairs the baseline accepts, and the last `--code` similarity run with the date it ran.
+- `REVIEW-REQUEST.md` is the instruction to give the heavier model: read the brief, then these files in full,
+  answer these four questions, and leave the gate's own findings alone.
 - `ast_map.json` holds every maintained Python file's public functions with their signature, span and whether
   they carry a docstring, so a reader can judge the shape without opening a file first.
+
+The similarity block warns when the screen no longer describes the tree: past 25 changed files, or older than
+seven days (`STALE_CHANGES`, `STALE_DAYS`). Either number is a reason to rerun that check rather than to trust
+a pair count from another day.
 
 The measurements are prompts, never findings: a silent `except` may be deliberate and a long function may be
 one switch. A reader answers per file with line numbers, says which findings are real and which are

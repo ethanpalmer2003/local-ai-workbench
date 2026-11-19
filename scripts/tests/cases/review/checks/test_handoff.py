@@ -160,7 +160,33 @@ class BundleTests(unittest.TestCase):
         self.assertIn("None recorded", text)
         self.assertIn("None available", text)
 
-    def test_a_run_writes_the_brief_and_the_index(self):
+    def test_a_stale_screen_is_flagged(self):
+        finding: handoff.SimilarityFinding = {"a": "x", "b": "y", "best": 0.99}
+        fresh = handoff.SimilarityEvidence(created="2026-11-19T00:00:00", threshold=0.95, changed=1, findings=[finding])
+        changed = handoff.SimilarityEvidence(created="2026-11-19T00:00:00", threshold=0.95, changed=40, findings=[])
+        old = handoff.SimilarityEvidence(created="2020-01-01T00:00:00", threshold=0.95, changed=1, findings=[])
+        self.assertIsNone(handoff.stale_note(fresh))
+        self.assertIn("40 changed file(s)", handoff.stale_note(changed) or "")
+        self.assertIn("days old", handoff.stale_note(old) or "")
+
+    def test_the_request_names_the_files_and_the_gate_it_leaves_alone(self):
+        records: list[handoff.FileRecord] = [
+            {
+                "path": "scripts/launchers/a.py",
+                "lines": 10,
+                "functions": [],
+                "classes": [],
+                "silent_excepts": [],
+                "broad_excepts": [],
+                "undocumented": [],
+            }
+        ]
+        text = "\n".join(handoff.review_request(records))
+        self.assertIn("- scripts/launchers/a.py", text)
+        self.assertIn("What not to spend judgment on", text)
+        self.assertIn("already runs", text)
+
+    def test_a_run_writes_the_brief_the_request_and_the_index(self):
         record: handoff.FileRecord = {
             "path": "scripts/pkg/module.py",
             "lines": 3,
@@ -175,5 +201,6 @@ class BundleTests(unittest.TestCase):
             with unittest.mock.patch.object(handoff, "index", return_value=[record]):
                 self.assertEqual(handoff.main(["--out", str(destination)]), 0)
             self.assertTrue((destination / "HANDOFF.md").is_file())
+            self.assertTrue((destination / "REVIEW-REQUEST.md").is_file())
             index = json.loads((destination / "ast_map.json").read_text(encoding="utf-8"))
         self.assertEqual(index["files"][0]["path"], "scripts/pkg/module.py")

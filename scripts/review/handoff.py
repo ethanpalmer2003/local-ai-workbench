@@ -15,6 +15,7 @@ import ast
 import json
 import time
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import TypedDict, cast
 
@@ -27,6 +28,10 @@ LONG_FUNCTION = 60
 WIDE_SURFACE = 12
 SILENT = (ast.Pass, ast.Continue, ast.Return)
 BUNDLE_NAME = "HANDOFF.md"
+REQUEST_NAME = "REVIEW-REQUEST.md"
+# - a screen older than this, or one that predates this many changed files, no longer describes the tree
+STALE_DAYS = 7
+STALE_CHANGES = 25
 DUPLICATE_BASELINE = project_cfg.SCRIPTS_DIR / "review" / "lists" / "duplicate-baseline.json"
 SIMILARITY_ROOT = project_cfg.GENERATED_DIR / "shared" / "similarity" / "code"
 
@@ -205,6 +210,73 @@ def similarity_evidence(limit: int = 10) -> SimilarityEvidence | None:
     return None
 
 
+def stale_note(evidence: SimilarityEvidence) -> str | None:
+    """Why a similarity screen no longer describes the tree, or None when it still does.
+
+    A reader judges what the report shows, so a screen older than the working tree answers the wrong
+    question: the count of files changed since it ran is the signal, and age catches a tree that moved in
+    ways the report could not count.
+    """
+    if evidence.changed >= STALE_CHANGES:
+        return (
+            f"[WARN] the similarity screen predates {evidence.changed} changed file(s); rerun "
+            "`python -m scripts.review.checks.similarity --code` before trusting its pairs"
+        )
+    try:
+        created = datetime.fromisoformat(evidence.created)
+    except ValueError:
+        return None
+    age = (datetime.now() - created).days
+    if age > STALE_DAYS:
+        return (
+            f"[WARN] the similarity screen is {age} days old, which predates the tree it describes; rerun "
+            "`python -m scripts.review.checks.similarity --code`"
+        )
+    return None
+
+
+def review_request(records: list[FileRecord], ranked: int = 12) -> list[str]:
+    """The instruction a heavier model is given, so the request does not drift from the bundle."""
+    lines = [
+        "# Review request",
+        "",
+        "Paste this and attach the bundle folder; `HANDOFF.md` beside it is the brief.",
+        "",
+        "## What to read",
+        "",
+        "1. `HANDOFF.md` in this folder.",
+        "2. Then these files, in full:",
+        "",
+    ]
+    lines.extend(f"- {record['path']}" for record in records[:ranked])
+    lines.extend(
+        (
+            "",
+            "## What you are deciding",
+            "",
+            "1. Is any abstraction in those files the wrong one: a wrapper that only forwards, a class whose",
+            "   state belongs to its caller, a module that owns two unrelated jobs?",
+            "2. Is a silent handler hiding a real failure that should raise, or deliberate and worth a line",
+            "   saying why?",
+            "3. Does a function past its length limit carry two ideas a reader cannot follow in one pass?",
+            "4. Is any rule from `.agents/CODE.md` re-implemented in a second place, so the two can drift?",
+            "",
+            "## What not to spend judgment on",
+            "",
+            "Formatting, lint, spelling, ASCII punctuation, duplicate blocks, line and file length, folder caps,",
+            "dead code and type errors all fail the gate a lighter model already runs. Say once if one of them",
+            "is wrong; otherwise leave them alone. Read nothing outside the list above unless a listed file",
+            "proves it owns something you cannot judge without it.",
+            "",
+            "## What to answer",
+            "",
+            "Per file: the path, the line numbers, what you would change, and whether the finding is real or",
+            "deliberate. Name which of the four questions each finding answers, and leave mechanical fixes out.",
+        )
+    )
+    return lines
+
+
 def brief(records: list[FileRecord], ranked: int = 12) -> list[str]:
     """The markdown a heavier model reads first, and the only thing it needs before opening files."""
     total_functions = sum(len(record["functions"]) for record in records)
@@ -323,6 +395,13 @@ def evidence_report() -> list[str]:
             (
                 f"Report created {evidence.created} at threshold {evidence.threshold}, "
                 f"{evidence.changed} file(s) changed since.",
+            )
+        )
+        note = stale_note(evidence)
+        if note:
+            lines.append(note)
+        lines.extend(
+            (
                 "",
                 "| Function A | Function B | Best |",
                 "| --- | --- | ---: |",
@@ -348,6 +427,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     destination.mkdir(parents=True, exist_ok=False)
     (destination / BUNDLE_NAME).write_text("\n".join(brief(records, args.ranked)) + "\n", encoding="utf-8")
+    (destination / REQUEST_NAME).write_text("\n".join(review_request(records, args.ranked)) + "\n", encoding="utf-8")
     (destination / "ast_map.json").write_text(json.dumps({"files": records}, indent=2) + "\n", encoding="utf-8")
     silent = sum(len(record["silent_excepts"]) for record in records)
     print(f"[OK] Handoff: {len(records)} files, {silent} silent handler(s)")
