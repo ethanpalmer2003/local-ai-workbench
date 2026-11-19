@@ -20,6 +20,11 @@ def removed_on_exit(folder: Path) -> Iterator[str]:
         shutil.rmtree(folder, ignore_errors=True)
 
 
+# - a suite runs on every commit, so its evidence is disposable: the run lands in the temp tree, which
+#   state_cleanup prunes on its ordinary window, and only benchmarks and probes keep permanent evidence
+FREQUENT_CATEGORIES = frozenset({"suites", "regression"})
+
+
 @dataclass(frozen=True)
 class CasePaths:
     source: str
@@ -30,7 +35,17 @@ class CasePaths:
 
     @property
     def output(self) -> Path:
-        return project_cfg.TEST_OUTPUT_DIR / grouped(self.relative_source).with_suffix("")
+        return self._root / grouped(self.relative_source).with_suffix("")
+
+    @property
+    def frequent(self) -> bool:
+        """Whether this case runs constantly, and so writes to the pruned temp tree rather than evidence."""
+        return self.relative_source.parts[0] in FREQUENT_CATEGORIES
+
+    @property
+    def _root(self) -> Path:
+        """Where runs land: the temp tree for a suite run, the evidence root for everything else."""
+        return project_cfg.STATE_DIR / "temp" / "runs" if self.frequent else project_cfg.TEST_OUTPUT_DIR
 
     def new_run(self, outcome: Outcome = Outcome.UNREVIEWED) -> RunPaths:
         relative = self.relative_source.with_suffix("")
