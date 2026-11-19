@@ -3,6 +3,7 @@
 import os
 import time
 import unittest
+import unittest.mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -61,3 +62,15 @@ class CleanupTests(unittest.TestCase):
 
     def test_a_vanished_run_counts_as_stale(self):
         self.assertGreater(cleanup._age_days(Path("nowhere") / "1"), 1000)
+
+    def test_a_read_only_file_inside_a_trash_day_does_not_stop_the_emptying(self):
+        with TemporaryDirectory() as temporary:
+            trash = Path(temporary) / "trash"
+            stale = trash / "2020-01-01" / "cleanup" / ".git" / "objects"
+            stale.mkdir(parents=True)
+            blocked = stale / "read-only-object"
+            blocked.write_text("object", encoding="utf-8")
+            os.chmod(blocked, 0o444)
+            with unittest.mock.patch.object(cleanup, "TRASH_DIR", trash):
+                self.assertEqual(cleanup.empty_trash(1), 1)
+            self.assertFalse((trash / "2020-01-01").exists())
