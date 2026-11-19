@@ -1,11 +1,13 @@
 """The rdna-boosts patch set, taken from a release tarball at a pinned tag instead of a branch.
 
-The repo publishes `patches/` plus `release.json` as `patches.tar.gz` beside a combined patch and a
-`SHA256SUMS` file, and tags every drop (`v17-4f9dfa0e3-r321`), so a build records the patch set it used.
-`release.json`'s `release` field is the tag and its `base` is the llama.cpp commit to check out.
+The repo publishes the patch tree as `patches.tar.gz` beside `release.json` and a combined patch, and tags
+every drop (`v17-4f9dfa0e3-r321`), so a build records the patch set it used. `release.json`'s `release` field
+is the tag and its `base` is the llama.cpp commit to check out; it is a separate asset, because the tarball
+holds only `patches/`.
 """
 
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -13,8 +15,9 @@ from scripts.download.frameworks import update_shared as shared
 from scripts.download.frameworks.update_types import ReleaseType, ToolSpec
 
 REPO = "stew675/llama-cpp-rdna-boosts"
-# - the combined patch beside it is one squashed file, which would lose the per-patch skip report
+# - the combined patch beside the tarball is one squashed file, which would lose the per-patch skip report
 PATCH_ASSET = r"^patches\.tar\.gz$"
+RELEASE_ASSET = r"^release\.json$"
 RELEASE_JSON = "release.json"
 TOOL = ToolSpec(
     "llamacpp/additions/llama-cpp-rdna-boosts", "", ReleaseType.PATCHES, repo=REPO, asset_pattern=PATCH_ASSET
@@ -30,17 +33,24 @@ def local_release(destination: Path) -> str | None:
     return str(release) if release else None
 
 
-def install(asset: shared.Asset, destination: Path, temporary: Path, exe_name: str) -> None:
-    """Unpack the patch tarball, keeping the layout of the tree it ships."""
-    archive = shared.download_asset(asset, temporary)
+def asset_named(release: shared.Release, pattern: str) -> shared.Asset:
+    """The one asset of a release whose name matches, named by the pattern that selected it."""
+    asset = next((item for item in release["assets"] if re.search(pattern, item["name"])), None)
+    if asset is None:
+        raise shared.UpdateError(f"{release['tag_name']} has no asset matching {pattern}")
+    return asset
+
+
+def install(release: shared.Release, destination: Path, temporary: Path) -> None:
+    """Unpack `patches/` and place the `release.json` that names it, in one staged tree."""
+    archive = shared.download_asset(asset_named(release, PATCH_ASSET), temporary)
+    metadata = shared.download_asset(asset_named(release, RELEASE_ASSET), temporary)
     staged = shared.staging_directory(temporary, prefix="rdna-patches-")
+    # - the tarball holds `patches/` at its root with no wrapper folder, so it is installed as shipped
     shutil.unpack_archive(str(archive), str(staged))
-    entries = list(staged.iterdir())
-    # - a GitHub tarball wraps its tree in one folder, and that folder is the patch set
-    if len(entries) == 1 and entries[0].is_dir():
-        staged = entries[0]
-    if not (staged / RELEASE_JSON).is_file():
-        raise shared.UpdateError(f"rdna-boosts release has no {RELEASE_JSON}")
+    if not (staged / "patches").is_dir():
+        raise shared.UpdateError("rdna-boosts patch tarball has no patches/ folder")
+    shutil.copy2(metadata, staged / RELEASE_JSON)
     shared.replace_installation(staged, destination)
 
 
@@ -48,7 +58,7 @@ def process_tool(
     tool: ToolSpec, dest_dir: Path, tmp_dir: Path, check_only: bool, summary: shared.UpdateSummary | None
 ) -> None:
     """Compare the installed patch set with the newest release, then install it unless this is a check."""
-    release, asset = shared.get_release(tool)
+    release, _asset = shared.get_release(tool)
     local = local_release(dest_dir)
     print(f"Local release : {local or 'NOT INSTALLED'}")
     print(f"Latest release: {release['tag_name']}")
@@ -62,7 +72,7 @@ def process_tool(
         summary.record(tool, "available")
     if check_only:
         return
-    install(asset, dest_dir, tmp_dir, tool.exe)
+    install(release, dest_dir, tmp_dir)
     print("Status: UPDATED")
 
 

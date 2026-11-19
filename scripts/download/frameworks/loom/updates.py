@@ -1,8 +1,9 @@
 """Loom SDK, server and device-tool releases from ROCm/hrx-system.
 
-The release ships three things this repo uses: the `hrx-loom` wheel (compiler, `loom-fetch`, `loom-serve`,
-`loom-benchmark`), a self-contained `loom-serve` executable, and `amdf-info` for device discovery. The
-instrumented wheels (`+tracy`, `+debug`, `+asan`) are separate assets and are not selected here.
+The release ships three things this repo uses: the `hrx-loom` wheel (the `loom` package plus `loom-fetch`,
+`loom-serve` and the other console scripts), a self-contained `loom-serve` executable, and `amdf-info` for
+device discovery. The instrumented wheels (`+tracy`, `+debug`, `+asan`) are separate assets and are not
+selected here.
 """
 
 import json
@@ -21,7 +22,7 @@ SERVE_ASSET = r"^loom-serve-.*-win_amd64\.zip$"
 INFO_ASSET = r"^amdf-info-.*-win_amd64\.zip$"
 
 TOOLS = [
-    ToolSpec("loom/sdk", "hrx_loom/__init__.py", ReleaseType.SDK, repo=REPO, asset_pattern=SDK_ASSET),
+    ToolSpec("loom/sdk", "loom/__init__.py", ReleaseType.SDK, repo=REPO, asset_pattern=SDK_ASSET),
     ToolSpec("loom/serve", "loom-serve.exe", ReleaseType.DATE, repo=REPO, asset_pattern=SERVE_ASSET),
     ToolSpec("loom/tools", "amdf-info.exe", ReleaseType.DATE, repo=REPO, asset_pattern=INFO_ASSET),
 ]
