@@ -130,9 +130,9 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
     SweepMessageTests,
 )
 from scripts.tests.cases.shared.tools.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
+from scripts.tests.cases.shared.tools.test_cleanup import CleanupTests
 from scripts.tests.cases.shared.tools.test_language_matrix import LanguageMatrixTests
 from scripts.tests.cases.shared.tools.test_local_overlay import LocalOverlayTests
-from scripts.tests.cases.shared.tools.test_locate_files import LocateFileTests
 from scripts.tests.cases.shared.tools.test_low_integrity import LowIntegrityTests
 from scripts.tests.cases.shared.tools.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.tools.test_preflight import PreflightTests
@@ -156,7 +156,6 @@ from scripts.tests.cases.shared.tools.test_stage_runner import StageRunnerTests
 from scripts.tests.cases.shared.tools.test_state_cleanup import StateCleanupTests
 from scripts.tests.cases.shared.tools.test_strata_profile import StrataProfileLinkTests
 from scripts.tests.cases.shared.tools.test_toolchains import ToolchainTests
-from scripts.tests.cases.shared.tools.test_tree_sizes import TreeSizeTests
 from scripts.tests.cases.shared.tools.test_yaml_table import YamlTableTests
 from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
 from scripts.tests.cases.shared.workflows.test_speech_profiles import SpeechProfiles
@@ -221,7 +220,6 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     TextProcessingTests,
     BatLaunchers,
     InferenceEngines,
-    LocateFileTests,
     ModelAdminTests,
     LowIntegrityTests,
     ConsentTests,
@@ -271,7 +269,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     LanguageMatrixTests,
     RocmInventoryTests,
     StageRunnerTests,
-    TreeSizeTests,
+    CleanupTests,
     StateCleanupTests,
     MoveParsingTests,
     ImportRewriteTests,
