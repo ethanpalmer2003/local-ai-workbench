@@ -36,22 +36,30 @@ The runner executes these checks:
 
 Reports go to `scripts/state/generated/shared/code_review/<run>/`. The inventory lists the largest functions and excludes generated output, caches, model data, installs and trash. Which checks run through a tool and which are this repository's own policy: [libraries](LIBRARIES.md). One mistake per check, the line it prints and the fix: [examples](EXAMPLES.md).
 
+## Handing off to a heavier model
+
+The optional embedding check and its code mode: [similarity](SIMILARITY.md). Front-end wiring: [frontend
+wiring](FRONTEND-WIRING.md). Both are in the gate. Bundle for a heavier model: [handoff](HANDOFF.md).
+
 ## Fixing and finding
 
 Two kinds of section, and the difference decides who acts. `ruff check --fix` and `ruff format` rewrite the
 file, and pre-commit applies them on every commit: what can be applied is applied. Every other
 section only reports, and the fix belongs to the reader.
 
-The bias is a false alarm over a missed defect, because a finding is reviewed before it is acted on. A repeated
-false alarm is a rule change: narrow the rule by kind, and when only the scope is wrong use a folder exclusion
-rather than a list of names.
+A false alarm costs less than a missed defect. A repeated one is a rule change: narrow it by kind, or exclude a
+folder rather than list names.
 
 ## Duplicate check
 
 The optional embedding check and its code mode: [similarity](SIMILARITY.md). Front-end wiring: [frontend
 wiring](FRONTEND-WIRING.md). Both are in the gate.
 
-Each check runs alone, for example `python -m scripts.review.checks.layout`. `docs --words` prints every document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers, repeats and unlinked documents. A link fails when it is absolute, uses a backslash, carries a space without angle brackets, points into an untracked path, or misses its target or heading; repeats are advisory. Add `--tests` to run the model-free suite after the gate. Document organization lives in [NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
+Each check runs alone, for example `python -m scripts.review.checks.layout`. `docs --words` prints every
+document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers,
+repeats and unlinked documents; a link fails when it is absolute, uses a backslash, points into an untracked
+path, or misses its target. Add `--tests` to run the model-free suite afterwards. Document organization:
+[NOTES-CONVENTIONS](../../.agents/NOTES-CONVENTIONS.md).
 
 ## Framework validation
 
