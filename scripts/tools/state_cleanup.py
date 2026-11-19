@@ -34,6 +34,9 @@ def _remove(path: Path) -> None:
 
 # - the current update and the last working one are all a repair needs
 KEEP_UPDATES = 2
+# - the same shape for the gate history and the trash: the latest run and the one before it
+KEEP_REVIEW_LOGS = 2
+KEEP_TRASH_DAYS = 2
 
 
 def prune(pattern: str, root: Path, cutoff: float, dry_run: bool, recursive: bool = True) -> tuple[int, int]:
@@ -76,6 +79,38 @@ def prune_update_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
     return count, freed
 
 
+def prune_review_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
+    """Keep the latest gate runs and the one before them; older timings are history nobody reads."""
+    root = project_cfg.LOGS_DIR / "shared" / "review"
+    if not root.is_dir():
+        return 0, 0
+    logs = sorted(root.glob("*.json"))
+    count = freed = 0
+    for path in logs[:-KEEP_REVIEW_LOGS]:
+        size = _size(path)
+        if not dry_run:
+            _remove(path)
+        count += 1
+        freed += size
+    return count, freed
+
+
+def prune_trash(dry_run: bool) -> tuple[int, int]:
+    """Keep the newest dated trash folders, so a cleanup run cannot leave the trash piling up."""
+    root = project_cfg.BASE_DIR / "trash"
+    if not root.is_dir():
+        return 0, 0
+    days = sorted(path for path in root.iterdir() if path.is_dir())
+    count = freed = 0
+    for path in days[:-KEEP_TRASH_DAYS]:
+        size = _size(path)
+        if not dry_run:
+            shutil.rmtree(path, ignore_errors=True)
+        count += 1
+        freed += size
+    return count, freed
+
+
 def prune_generated(days: int, log_days: int, cache_days: int, dry_run: bool) -> list[str]:
     now = time.time()
     cutoff = now - days * 86400
@@ -103,6 +138,12 @@ def prune_generated(days: int, log_days: int, cache_days: int, dry_run: bool) ->
         run_freed += freed
     if run_count:
         report.append(f"old suite run folders: {run_count} item(s), {run_freed / 1e6:.1f} MB")
+    review_count, review_freed = prune_review_logs(cutoff, dry_run)
+    if review_count:
+        report.append(f"old gate runs: {review_count} item(s), {review_freed / 1e6:.1f} MB")
+    trash_count, trash_freed = prune_trash(dry_run)
+    if trash_count:
+        report.append(f"old trash folders: {trash_count} item(s), {trash_freed / 1e6:.1f} MB")
     update_count, update_freed = prune_update_logs(cutoff, dry_run)
     if update_count:
         report.append(f"old framework updates: {update_count} item(s), {update_freed / 1e6:.1f} MB")
