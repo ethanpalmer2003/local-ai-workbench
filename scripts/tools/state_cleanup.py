@@ -72,6 +72,15 @@ def prune_generated(days: int, log_days: int, cache_days: int, dry_run: bool) ->
             report.append(f"{label}: {count} item(s), {freed / 1e6:.1f} MB")
     # - the framework fills this model cache on demand, so its hashed folders are the unit and a
     #   re-download is the cost; the longer window keeps a repeated comparison warm
+    # - suite runs land here rather than in the evidence root, so the ordinary window is all they get
+    run_root = project_cfg.STATE_DIR / "temp" / "runs"
+    run_count = run_freed = 0
+    for folder in run_root.glob("*/*") if run_root.is_dir() else ():
+        count, freed = prune("*", folder, cutoff, dry_run, recursive=False)
+        run_count += count
+        run_freed += freed
+    if run_count:
+        report.append(f"old suite run folders: {run_count} item(s), {run_freed / 1e6:.1f} MB")
     cache_root = cfg.LAUNCH.temp_dir / "audiocpp-gguf"
     count, freed = prune("*", cache_root, cache_cutoff, dry_run, recursive=False)
     if count:
