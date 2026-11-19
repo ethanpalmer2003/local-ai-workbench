@@ -653,8 +653,8 @@ def main(extra_classes: tuple[type[unittest.TestCase], ...] = (), reason: str = 
         "model-free",
         settings={
             "test_mode": "model_free",
-            "scope": ["mocked_unit", "loopback_integration", "local_assets"],
-            "class_selection": reason or "every class",
+            "checks": ["mocked_unit", "loopback_integration", "local_assets"],
+            "reason": reason or "every class",
             "native_suite_after_regressions": native_suite,
         },
     )
