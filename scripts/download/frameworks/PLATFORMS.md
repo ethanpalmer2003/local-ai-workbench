@@ -9,7 +9,7 @@ before relying on it.
 | --- | --- | --- | --- |
 | llama.cpp Vulkan | Windows, any GPU | A Vulkan 1.3 device with buffer device address | RX 7800 XT (gfx1102); b12363 is the last build that survives long prefill |
 | llama.cpp ROCm (Lemonade) | Windows, AMD | AMD `gfx110X`; a visible Ryzen iGPU must be hidden | RX 7800 XT at 51-56 tok/s |
-| llama.cpp RDNA build with rdna-boosts | Windows, AMD | RDNA3/RDNA4 compiled with ROCm and MSVC, `gfx1101` by default | Patch set v17 installed; no build from it yet |
+| llama.cpp RDNA build with rdna-boosts | Windows, AMD | RDNA3/RDNA4 compiled with ROCm and MSVC, `gfx1101` by default | Built for ROCm and Vulkan 2026-11-20; both slower than the plain Vulkan default, so parked |
 | HRX (hrx-system, HRX llama.cpp fork, rocm-systems) | Windows, AMD | AMD, source trees compiled by hand | Deferred; see [upstream](../../../notes/UPSTREAM-INDEX.md) |
 | sccache | Windows, CPU | none | Compiler cache for the RDNA build |
 | AudioCpp Vulkan | Windows, any GPU | Vulkan 1.3 | Active speech runtime |
