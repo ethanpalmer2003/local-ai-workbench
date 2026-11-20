@@ -176,11 +176,10 @@ class BundleTests(unittest.TestCase):
         self.assertIn("1 pair(s) name a file or symbol the tree no longer has", text)
 
     def test_the_changed_count_reads_the_manifest_the_report_stored(self):
-        with (
-            unittest.mock.patch.object(handoff.provenance, "source_manifest", return_value={"a.py": "2"}),
-            unittest.mock.patch.object(handoff.provenance, "changed_files", return_value=["a.py", "b.py"]),
-        ):
-            self.assertEqual(handoff.changed_since_report({"a.py": "1"}), 2)
+        with unittest.mock.patch.object(handoff.provenance, "source_manifest", return_value={"a.py": "2"}):
+            self.assertEqual(handoff.changed_since_report({"a.py": "1"}), 1)
+            self.assertEqual(handoff.changed_since_report({"a.py": "2"}), 0)
+            self.assertEqual(handoff.changed_since_report({"gone.py": "1"}), 1)
         self.assertEqual(handoff.changed_since_report({}), 0)
         self.assertEqual(handoff.changed_since_report(None), 0)
 

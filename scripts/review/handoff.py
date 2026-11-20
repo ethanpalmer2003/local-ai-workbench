@@ -232,6 +232,8 @@ def symbols(path: Path) -> frozenset[str]:
 def pair_exists(label: str, root: Path) -> bool:
     """Whether the tree still has the file a pair names, and the symbol when the label names one."""
     relative, _, symbol = label.partition(" :: ")
+    # - a code pair names the line as `name:line`, so a same-named method still resolves to its name
+    symbol = symbol.split(":")[0]
     path = root / relative
     if not path.is_file():
         return False
@@ -239,15 +241,16 @@ def pair_exists(label: str, root: Path) -> bool:
 
 
 def changed_since_report(recorded: object) -> int:
-    """How many maintained files changed after the report recorded them.
+    """How many of the files that report recorded have changed since it ran.
 
     The report's own `changed_since_last` counts what moved before that run, so reading it would describe
-    the wrong interval; the manifest the report stored is compared against the tree instead.
+    the wrong interval. The stored manifest covers a narrower path set than the tree (the code mode skips
+    tests), so only its own keys are compared instead of counting every file the tree gained since.
     """
     if not isinstance(recorded, dict) or not recorded:
         return 0
     current = provenance.source_manifest(maintained_files(), project_cfg.BASE_DIR)
-    return len(provenance.changed_files(recorded, current))
+    return sum(1 for relative, digest in recorded.items() if current.get(relative) != digest)
 
 
 def stale_note(evidence: SimilarityEvidence) -> str | None:
