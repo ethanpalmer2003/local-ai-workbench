@@ -4,6 +4,11 @@
 - Entries do not authorize live tests, package changes or long runs. Upstream defects stay in [UPSTREAM](UPSTREAM-INDEX.md), evidence in [STATUS](../scripts/tests/notes/STATUS-INDEX.md).
 - Each entry ends with a rough duration, shortest first.
 
+## Repository work
+Code and configuration a settled decision leaves behind.
+
+- [ ] Delete what the live suites stopped covering: Kokoro TTS (its `kokoro` probe is gone) and every coding harness but Pi (`dsh-headless` left the launcher target list, `little-coder` left the client loop), so each config entry, launcher and fingerprint is removed rather than left looking supported; the parked rows are in [deferred](../scripts/config/shared/deferred.yaml). ~1 h
+
 ## Needs a model run or device
 Work that cannot be settled without a live run: weights, a device, a server or a human at the machine.
 

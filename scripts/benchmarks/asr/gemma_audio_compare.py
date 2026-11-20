@@ -29,9 +29,12 @@ from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.shared import consent
 from scripts.shared.resources import summarize_resources, watch_resources
 
+# - the two runtimes that can serve the same Gemma audio weights; a check measures one arm, a comparison both
+ENGINES = ("llamacpp", "koboldcpp")
+
 
 def run_arm(
-    engine: str, clips: list[dict[str, Any]], paths: RunPaths, context: dict[str, Any], deadline: float
+    engine: str, clips: list[dict[str, Any]], paths: RunPaths, context: dict[str, Any], deadline: float, rounds: int = 2
 ) -> dict[str, Any]:
     import psutil
 
@@ -76,7 +79,8 @@ def run_arm(
                 daemon=True,
             )
             watcher.start()
-            for index, clip in enumerate([clips[0], *clips, *clips]):
+            plan = [clips[0], *(clip for _ in range(rounds) for clip in clips)]
+            for index, clip in enumerate(plan):
                 memory.stage = "warmup" if index == 0 else "measured"
                 body = json.dumps(
                     {
@@ -135,10 +139,18 @@ def run_arm(
 
 
 def main() -> None:
+    import argparse
+
     import numpy as np
     import psutil
     import soundfile as sf
 
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--engines", nargs="+", choices=ENGINES, default=list(ENGINES), help="engines to measure (default: every arm)"
+    )
+    parser.add_argument("--rounds", type=int, choices=(1, 2, 3), default=2, help="measured rounds per arm")
+    args = parser.parse_args()
     context = dict(require_native_execution("Gemma audio runtime comparison"))
     if launch_util.llama_server_running():
         raise RuntimeError("Existing llama.cpp session retained; close it before this isolated comparison")
@@ -190,10 +202,10 @@ def main() -> None:
             "temperature 0, one warmup excluded; runtime revisions and kernels differ",
         },
     ) as report:
-        for engine in ("llamacpp", "koboldcpp"):
+        for engine in args.engines:
             paths = RunPaths(run.root / engine)
             paths.create()
-            report.results.append(run_arm(engine, clips, paths, context, deadline))
+            report.results.append(run_arm(engine, clips, paths, context, deadline, args.rounds))
             report.save(run)
         reporting.record_inputs(
             report,

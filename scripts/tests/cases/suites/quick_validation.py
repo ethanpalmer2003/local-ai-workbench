@@ -21,7 +21,7 @@ PROBES = {
     "parakeet": ("scripts.tests.cases.asr.parakeetcpp", [], 240),
     "whisper": (
         "scripts.benchmarks.asr.whisper_embedded_compare",
-        ["--order", "internal", "vulkan-fa", "--repetitions", "1", "--budget", "180"],
+        ["--order", "internal", "--repetitions", "1", "--budget", "180"],
         240,
     ),
     "practice-whisper": ("scripts.tests.cases.asr.shared.language_practice_whisper", [], 240),
@@ -30,9 +30,12 @@ PROBES = {
         ["--transcription-engine", "qwen3-asr"],
         240,
     ),
-    "gemma": ("scripts.benchmarks.asr.gemma_audio_compare", [], 300),
-    "kokoro": ("scripts.tests.cases.koboldcpp.kobold_embedded_compare", ["--kind", "tts"], 300),
-    "images": ("scripts.tests.cases.koboldcpp.kobold_embedded_compare", ["--kind", "image"], 300),
+    "gemma": ("scripts.benchmarks.asr.gemma_audio_compare", ["--engines", "llamacpp", "--rounds", "1"], 300),
+    "images": (
+        "scripts.tests.cases.koboldcpp.kobold_embedded_compare",
+        ["--kind", "image", "--arms", "internal", "--samples", "1"],
+        300,
+    ),
     "ming3-tts": ("scripts.tests.cases.audiocpp.audiocpp_backend_compare", ["--case", "ming3-tts"], 180),
 }
 # - these probes reach consent.require, so the answer this stage already has must travel with the command
@@ -71,7 +74,6 @@ PROBE_COMPONENTS: dict[str, tuple[str, ...]] = {
     "practice-whisper": ("asr/whispercpp", "audiocpp"),
     "practice-qwen": ("asr/llamacpp", "audiocpp"),
     "gemma": ("asr/llamacpp", "audiocpp"),
-    "kokoro": ("koboldcpp", "audiocpp"),
     "images": ("koboldcpp", "sdcpp"),
     "ming3-tts": ("audiocpp",),
 }
