@@ -5,7 +5,7 @@ import json
 import threading
 import time
 from contextlib import nullcontext
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -168,8 +168,35 @@ def _final_transcript(events):
     return finals[0]
 
 
+@dataclass(frozen=True)
+class SavedPcmPass:
+    """What one saved-PCM pass produced, so the report reads by name rather than by position."""
+
+    timing: Any
+    started: float
+    events: list[dict[str, Any]]
+    final: dict[str, Any]
+    text: str
+    audio: bytes
+
+
+def _saved_pcm_pass(base: str, token: str | None, pcm: bytes, timer: BenchmarkLifecycle) -> SavedPcmPass:
+    """One saved-PCM pass: stream, transcribe, answer and speak; returns what the report records."""
+    with timer.request() as timing:
+        started = time.perf_counter()
+        events = _stream_pcm(base, token, pcm)
+        final = _final_transcript(events)
+        text = _chat_reply(base, final["text"] + " Reply in one short English sentence.")
+        audio = _speech(base, text)
+    return SavedPcmPass(timing, started, events, final, text, audio)
+
+
 def exercise(
-    runtime: str, pcm: bytes, report: dict[str, Any], engine: cfg.AsrStartupEngine = cfg.AsrStartupEngine.AUDIOCPP
+    runtime: str,
+    pcm: bytes,
+    report: dict[str, Any],
+    engine: cfg.AsrStartupEngine = cfg.AsrStartupEngine.AUDIOCPP,
+    repeats: int = 1,
 ):
     chat_port, proxy_port = 19194, 19195
     process, gateway, thread = None, None, None
@@ -212,12 +239,15 @@ def exercise(
             timer.warmup(lambda: http_ready(base + "/health"))
             vad_timer.prepare(start_vad, combined=True)
             vad_timer.warmup(lambda: post(base, f"/asr/live/{token}/audio", bytes(1024), True))
-            with timer.request() as timing:
-                started = time.perf_counter()
-                events = _stream_pcm(base, token, pcm)
-                final = _final_transcript(events)
-                text = _chat_reply(base, final["text"] + " Reply in one short English sentence.")
-                audio = _speech(base, text)
+            passes = [_saved_pcm_pass(base, token, pcm, timer) for _ in range(repeats)]
+            timing, started, events, final, text, audio = (
+                passes[-1].timing,
+                passes[-1].started,
+                passes[-1].events,
+                passes[-1].final,
+                passes[-1].text,
+                passes[-1].audio,
+            )
             report.update(
                 status="completed",
                 transcript=final["text"],
@@ -261,6 +291,7 @@ def main():
         default="audiocpp-nemotron",
     )
     parser.add_argument("--resources", action="store_true", help="Sample ASR process CPU/RSS and GPU memory")
+    parser.add_argument("--repeats", type=int, choices=range(1, 4), default=1, help="saved-PCM passes per runtime")
     args = parser.parse_args()
     engine = cfg.AsrStartupEngine(args.engine)
     context = require_native_execution("Practice gateway smoke")
@@ -365,7 +396,7 @@ def main():
             with monitor as resources:
                 for runtime in args.runtimes:
                     row = report["runtimes"][runtime] = {}
-                    exercise(runtime, pcm, row, engine)
+                    exercise(runtime, pcm, row, engine, args.repeats)
             report["asr_resources"] = resources
     finally:
         report.update(

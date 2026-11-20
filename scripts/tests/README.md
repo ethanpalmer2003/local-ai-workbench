@@ -15,7 +15,7 @@
 | Lint, structure/docs, types and the repository review | `C:/AI/scripts/review/check_repo.bat` or `python -m scripts.review` |
 | Model-free suite (no VRAM) | `C:/AI/bat/checks/test_model_free.bat` |
 | Live launcher/proxy wiring (VRAM) | `C:/AI/bat/checks/test_live_launchers.bat`: `sdcpp`, `audiocpp`, `llamacpp` (Pi), `kobold` (+ proxy readiness), `practice` |
-| Live backend probes (VRAM) | `C:/AI/bat/checks/test_live_backends.bat`: `parakeet`, `whisper`, `practice-whisper`, `practice-qwen`, `gemma`, `images`, `ming3-tts`; one arm each, `--only NAME...` narrows |
+| Live backend probes (VRAM) | `C:/AI/bat/checks/test_live_backends.bat`: `parakeet`, `whisper`, `practice-whisper`, `practice-qwen`, `gemma`, `images`, `ming3-tts`; one arm each; calls: [suite calls](shared/suite_calls.py) |
 | Both native suites | `C:/AI/bat/checks/test_live_all.bat` |
 | Everything, skip-aware, one progress bar | `C:/AI/bat/checks/test_full.bat`: updates frameworks, then the gate, the suite (model and install checks on) and both live suites; `--models` adds the catalog source check, `--no-update` drops the preflight; expected ranges live in [stage_times](../tools/stage_times.py) |
 | One long model test | `python -m scripts.tests.model_run --label NAME --minutes 20 MODULE -- --module-args` [owner](model_run.py): `--dry-run` proves inputs and ports first; the run kills the tree after the cap or after `--silence` seconds without output and CPU |
@@ -28,6 +28,6 @@
 | Audio streaming UI | [page](ui/speech.html), [procedure](../launchers/audiocpp/README.md) |
 | ComfyUI video | [procedure](../benchmarks/personal/comfyui/README.md) |
 
-Native partition: launchers own user-facing start/stop, ports and proxy wiring; backends own direct engine/model probes. The sets are disjoint: AudioCpp Breeze2 is launcher-only and `ming3-tts` is the remaining AudioCpp backend case. Additional coding clients and Strata live runs belong to the coding benchmark; ComfyUI is vendor-managed. Both suites skip when the sources, installed models and frameworks are unchanged since their last pass (metadata only; `AI_LIVE_FORCE=1` reruns) and refuse an occupied port instead of stopping a session, show a per-target progress bar, and write the same `results.json`/`report.json` shape. All native workers join the kill-on-close job; closing the test terminal stops everything the run started. An automated run opens no browser window: a page is driven in place or left to a live check.
+Native partition: launchers own user-facing start/stop, ports and proxy wiring; backends own direct engine/model probes. The sets are disjoint: AudioCpp Breeze2 is launcher-only and `ming3-tts` is the remaining AudioCpp backend case. Both suites skip when the sources, installed models and frameworks are unchanged since their last pass (metadata only; `AI_LIVE_FORCE=1` reruns) and refuse an occupied port instead of stopping a session, show a per-target progress bar, and write the same `results.json`/`report.json` shape. All native workers join the kill-on-close job; closing the test terminal stops everything the run started. An automated run opens no browser window: a page is driven in place or left to a live check.
 
 Execution rules, evidence conventions and report/status categories are documented in [EXECUTION-AND-REPORTING.md](EXECUTION-AND-REPORTING.md).

@@ -4,7 +4,7 @@
   engine means the same thing as a row from another
 - Each task is sent once cold (a unique nonce defeats the prompt cache, which is
   the real prefill measurement), then once unmeasured to warm the prefix and the
-  draft model, then `--samples` times warm (cache reuse)
+  draft model, then `--repeats` times warm (cache reuse)
 - Decode and TTFT report the median of the per-task medians with the observed
   range; pooling the raw samples mixed the ramp into the rate, which is what made
   one task read 31 and 67 tok/s in the same run
@@ -160,13 +160,13 @@ def task_rows(session: EngineSession, args: argparse.Namespace, context: str) ->
         #   first measured sample carries the ramp and pulls the reported rate down
         stream_chat(session.connection, request_body(model, prompt, args.tokens), timeout=args.timeout)
         warm[label] = []
-        for sample in range(args.samples):
+        for sample in range(args.repeats):
             warm[label].append(
                 stream_chat(session.connection, request_body(model, prompt, args.tokens), timeout=args.timeout)
             )
             metrics = stream_metrics(warm[label])
             print(
-                f"  {label} sample {sample + 1}/{args.samples}: "
+                f"  {label} sample {sample + 1}/{args.repeats}: "
                 f"prefill {metrics['prefill_tokens_per_second']} tok/s, "
                 f"decode {metrics['decode_tokens_per_second']} tok/s, "
                 f"TTFT {metrics['ttft_seconds']} s",
@@ -276,7 +276,7 @@ def main() -> None:
     parser.add_argument("--api-key", default="", help="Bearer token for --endpoint")
     parser.add_argument("--model", default="", help="Model name a server requires in the request body")
     parser.add_argument("--tokens", type=int, default=128, help="Tokens generated per measured request")
-    parser.add_argument("--samples", type=int, default=3, help="Warm measured requests per task")
+    parser.add_argument("--repeats", type=int, default=3, help="Warm measured requests per task")
     parser.add_argument("--context", choices=("prefix", "none"), default="prefix", help="Code context before each task")
     parser.add_argument("--startup-timeout", type=float, default=180)
     parser.add_argument("--timeout", type=float, default=600, help="Per-request timeout in seconds")

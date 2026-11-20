@@ -95,14 +95,14 @@ def run_arm(label: str, source: strata_pi.StrataConnection, arm: RunPaths, args:
         # - the issue discards its first 200-token run: cold expert pages dominate it
         lifecycle.warmup(lambda: request(connection, [{"role": "user", "content": WARMUP_PROMPT}], args.decode_tokens))
         samples = []
-        for index in range(args.samples):
+        for index in range(args.repeats):
             row, timing = lifecycle.measure(
                 lambda: request(connection, [{"role": "user", "content": WARMUP_PROMPT}], args.decode_tokens)
             )
             row.update(timing)
             samples.append(row)
             speed = (row.get("accounting") or {}).get("decode_tokens_per_second")
-            print(f"  decode {index + 1}/{args.samples}: {speed:.2f} tok/s", flush=True)
+            print(f"  decode {index + 1}/{args.repeats}: {speed:.2f} tok/s", flush=True)
         rates = []
         for row in samples:
             rate = (row.get("accounting") or {}).get("decode_tokens_per_second")
@@ -158,7 +158,7 @@ def run_arm(label: str, source: strata_pi.StrataConnection, arm: RunPaths, args:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--strata-config", type=Path, action="append", default=[])
-    parser.add_argument("--samples", type=int, default=5)
+    parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--decode-tokens", type=int, default=200)
     parser.add_argument("--cold-tokens", type=int, default=32000)
     parser.add_argument("--cold-output-tokens", type=int, default=32)

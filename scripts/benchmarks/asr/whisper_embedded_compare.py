@@ -83,12 +83,7 @@ def transcribe(engine: str, clip: dict[str, Any], deadline: float) -> dict[str, 
 
 
 def run_block(
-    engine: str,
-    clips: list[dict[str, Any]],
-    paths: RunPaths,
-    context: dict[str, Any],
-    repetitions: int,
-    deadline: float,
+    engine: str, clips: list[dict[str, Any]], paths: RunPaths, context: dict[str, Any], repeats: int, deadline: float
 ) -> dict[str, Any]:
     import psutil
 
@@ -142,16 +137,16 @@ def run_block(
             )
             watcher.start()
             memory.stage = "warmup"
-            for clip in clips:
-                lifecycle.warmup(lambda: result["warmups"].append(transcribe(engine, clip, deadline)))
+            # - one warmup per arm: warming every clip multiplies the run's calls for no extra signal
+            lifecycle.warmup(lambda: result["warmups"].append(transcribe(engine, clips[0], deadline)))
             memory.stage = "measured"
-            for repetition in range(repetitions):
+            for repetition in range(repeats):
                 for clip in clips:
                     row, timing = lifecycle.measure(lambda: transcribe(engine, clip, deadline))
                     row.update(timing)
                     row["repetition"] = repetition
                     result["samples"].append(row)
-                print(f"[{engine}] repetition {repetition + 1}/{repetitions} completed", flush=True)
+                print(f"[{engine}] repetition {repetition + 1}/{repeats} completed", flush=True)
             result["status"] = "completed"
             result["benchmark"] = lifecycle.record()
         except Exception as error:
@@ -240,7 +235,7 @@ def main() -> None:
     parser.add_argument(
         "--order", nargs="+", choices=ENGINES, default=["internal", "vulkan-fa", "vulkan-fa", "internal"]
     )
-    parser.add_argument("--repetitions", type=int, choices=range(1, 5), default=2)
+    parser.add_argument("--repeats", type=int, choices=range(1, 5), default=2)
     parser.add_argument("--budget", type=int, choices=range(60, 901), default=240, help="Whole-run budget in seconds")
     args = parser.parse_args()
     context = dict(require_native_execution("Whisper embedded/standalone comparison"))
@@ -284,7 +279,7 @@ def main() -> None:
         "flash_attention": "enabled for vulkan-fa only",
         "language": "en",
         "order": args.order,
-        "repetitions_per_block": args.repetitions,
+        "repeats_per_block": args.repeats,
         "budget_seconds": args.budget,
         "corpus": clips,
         "controls": "Kobold hardcodes four decoder threads, greedy best_of=-1, beam_size=-1, max_len=100, split_on_word, "
@@ -296,7 +291,7 @@ def main() -> None:
         for index, engine in enumerate(args.order):
             paths = RunPaths(run.root / f"{index}-{engine}")
             paths.create()
-            result = run_block(engine, clips, paths, context, args.repetitions, deadline)
+            result = run_block(engine, clips, paths, context, args.repeats, deadline)
             report.results.append(result)
             report.save(run)
             if result["status"] != "completed":

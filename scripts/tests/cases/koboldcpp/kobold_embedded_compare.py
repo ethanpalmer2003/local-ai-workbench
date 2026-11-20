@@ -441,7 +441,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--kind", choices=("tts", "image"), required=True)
     parser.add_argument("--arms", nargs="+", choices=("internal", "external"), default=["internal", "external"])
-    parser.add_argument("--samples", type=int, choices=range(1, 5), default=2)
+    parser.add_argument("--repeats", type=int, choices=range(1, 5), default=2)
     parser.add_argument(
         "--with-chat", action="store_true", help="Also load Gemma and Whisper and check a spoken conversation"
     )
@@ -470,7 +470,7 @@ def main() -> None:
             "execution_context": context,
             "threads": cfg.KOKORO_TTS.threads,
             "voice": cfg.KOKORO_TTS.voice,
-            "samples": args.samples,
+            "samples": args.repeats,
             "image": IMAGE,
             "limits": "Check with_chat for LLM/STT residency; TTS uses different Q4/Q8 packages/phonemizers. "
             "Buffered WAV completion, not browser playback or streaming first-audio latency. "
@@ -481,7 +481,7 @@ def main() -> None:
         for arm in args.arms:
             paths = RunPaths(run.root / arm)
             paths.create()
-            result = run_arm(args.kind, arm, paths, context, args.samples, deadline, args.with_chat)
+            result = run_arm(args.kind, arm, paths, context, args.repeats, deadline, args.with_chat)
             report.results.append(result)
             report.save(run)
             if result["status"] != "completed":

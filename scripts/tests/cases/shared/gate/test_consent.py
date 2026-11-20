@@ -69,9 +69,9 @@ class ConsentTests(unittest.TestCase):
             consent.require(900)
 
     def test_require_accepts_yes_anywhere_and_keeps_help_free(self):
-        with patch.object(sys, "argv", ["benchmark", "--yes", "--rounds", "1"]):
+        with patch.object(sys, "argv", ["benchmark", "--yes", "--repeats", "1"]):
             consent.require(900)
-            self.assertEqual(sys.argv[1:], ["--rounds", "1"])
+            self.assertEqual(sys.argv[1:], ["--repeats", "1"])
         with patch.object(sys, "argv", ["benchmark", "--help"]), patch("scripts.shared.consent.sys.stdin") as stdin:
             consent.require(900)
         stdin.isatty.assert_not_called()

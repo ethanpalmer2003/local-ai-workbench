@@ -47,7 +47,7 @@ python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case ming3-aud
 ```
 
 - Omit `--backend` to check both official builds sequentially. Default: one short warmup and one
-  measured request. `--text`, `--samples`, `--timeout` are available.
+  measured request. `--text`, `--repeats`, `--timeout` are available.
 - Generated smoke configs contain only the selected model. Existing services on test ports are
   preserved or refused.
 - A single sentence is a compatibility screen, not a quality or ranking benchmark.

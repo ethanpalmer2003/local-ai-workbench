@@ -244,7 +244,7 @@ def run_candidate(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rounds", type=int, default=1)
+    parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument("--context-tokens", type=int, default=1024)
     parser.add_argument("--output-tokens", type=int, default=128)
     parser.add_argument("--candidates", nargs="+", choices=[candidate.name for candidate in CANDIDATES])
@@ -252,7 +252,7 @@ def main() -> None:
     parser.add_argument("--mtp-depths", nargs="+", type=int, help="sweep spec-draft-n-max over these depths")
     parser.add_argument("--mtp-p-mins", nargs="+", type=float, help="sweep spec-draft-p-min over these gates")
     args = parser.parse_args()
-    settings = Settings(args.rounds, args.context_tokens, args.output_tokens)
+    settings = Settings(args.repeats, args.context_tokens, args.output_tokens)
     if args.mtp_depths or args.mtp_p_mins:
         depths = args.mtp_depths or [2]
         gates = args.mtp_p_mins or [0.0]

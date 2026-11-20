@@ -130,7 +130,7 @@ def compare(evidence: dict[str, Any], selected: tuple[Candidate, ...], baseline:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mtp-depths", nargs="+", type=int)
-    parser.add_argument("--rounds", type=int, default=4)
+    parser.add_argument("--repeats", type=int, default=4)
     parser.add_argument("--seconds", type=float, default=600)
     args = parser.parse_args()
     selected = (
@@ -160,7 +160,7 @@ def main() -> None:
         print(f"[OUTPUT] {output.root}", flush=True)
         started = time.perf_counter()
         previous_pair_seconds = 0.0
-        for round_index in range(args.rounds):
+        for round_index in range(args.repeats):
             if round_index and time.perf_counter() - started + previous_pair_seconds > args.seconds:
                 break
             pair_started = time.perf_counter()
@@ -168,7 +168,7 @@ def main() -> None:
             pair = {}
             for candidate in selected[offset:] + selected[:offset]:
                 pair[candidate.name] = run_candidate(
-                    conf, output, bench, samples, inputs, candidate, round_index, args.rounds
+                    conf, output, bench, samples, inputs, candidate, round_index, args.repeats
                 )
             evidence["rounds"].append(pair)
             (output.artifacts / "results.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
