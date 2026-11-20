@@ -8,6 +8,7 @@ ranges live in `scripts/tests/shared/stage_times.py`.
 
 import argparse
 import os
+from dataclasses import replace
 
 from scripts.shared import consent
 from scripts.tools import stage_runner, stage_times
@@ -34,10 +35,22 @@ def _stage(key: str) -> stage_runner.Stage:
     )
 
 
-def plan(only: list[str] | None = None, models: bool = False) -> tuple[stage_runner.Stage, ...]:
-    """The stages for this run, in execution order; `only` narrows, `models` adds the source check."""
+def plan(
+    only: list[str] | None = None, models: bool = False, build: str | None = None
+) -> tuple[stage_runner.Stage, ...]:
+    """The stages for this run, in execution order; `only` narrows, `models` adds the source check.
+
+    `build` names a parked build the framework preflight should rebuild, so one validation can produce a
+    fresh binary instead of the build staying hand-run.
+    """
     keys = list(only) if only else [key for key in ALL_KEYS if models or key in DEFAULT_KEYS]
-    return tuple(_stage(key) for key in keys)
+    stages = []
+    for key in keys:
+        stage = _stage(key)
+        if key == "frameworks" and build:
+            stage = replace(stage, arguments=(*stage.arguments, "--build", build))
+        stages.append(stage)
+    return tuple(stages)
 
 
 def _arguments(argv: list[str] | None) -> argparse.Namespace:
@@ -46,6 +59,7 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--models", action="store_true", help="also check catalog sources against the Hub")
     parser.add_argument("--force", action="store_true", help="rerun live suites even when they are unchanged")
     parser.add_argument("--no-update", action="store_true", help="skip the framework update preflight")
+    parser.add_argument("--build", choices=("rdna",), help="rebuild this parked build in the frameworks stage")
     parser.add_argument("--dry-run", action="store_true", help="print the plan and expected ranges")
     parser.add_argument("--verbose", action="store_true", help="stream every child line instead of the tagged ones")
     consent.flag(parser)
@@ -59,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
     selected = list(args.only) if args.only else None
     if args.no_update:
         selected = [key for key in (selected or ALL_KEYS) if key != "frameworks"]
-    stages = plan(selected, args.models)
+    stages = plan(selected, args.models, args.build)
     if args.dry_run:
         print("Full validation plan; frameworks update first and live stages skip when unchanged:")
         for stage in stages:

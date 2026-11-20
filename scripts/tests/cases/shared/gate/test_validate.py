@@ -49,6 +49,12 @@ class ValidatePlanTests(unittest.TestCase):
         self.assertIn("models", output.getvalue())
         self.assertIn("backends", output.getvalue())
 
+    def test_a_parked_build_is_forwarded_to_the_framework_preflight(self) -> None:
+        stages = {stage.key: stage for stage in validate.plan(build="rdna")}
+        self.assertIn("--build", stages["frameworks"].arguments)
+        self.assertIn("rdna", stages["frameworks"].arguments)
+        self.assertNotIn("--build", stages["gate"].arguments)
+
     def test_no_update_drops_the_framework_preflight(self) -> None:
         output = io.StringIO()
         with contextlib.redirect_stdout(output):

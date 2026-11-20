@@ -121,12 +121,12 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
 }
 
 # - One llama.cpp default for every use: coding, embeddings and the Kobold external arm all resolve
-#   through `llamacpp_build()`, so the stable pin is what runs unless a use case overrides it.
-# - v1.0.0 (nightly b12359) is the fallback pin, and it is the default right now because both rolling
-#   builds are faulty here: Vulkan b12422 crashes on a batched embedding request and during 27B prefill,
-#   and ROCm collapses past a 64K read ([builds](../config/llamacpp/BUILDS.md)).
-# - The rolling `vulkan` and `rocm-lemonade` builds keep updating, so retesting them is one command.
-LLAMACPP_DEFAULT_BUILD = "vulkan-1.0.0"
+#   through `llamacpp_build()`, so one build runs unless a use case overrides it.
+# - The rolling `vulkan` build is the default from b12590: a 24-text embedding request and a 27B
+#   re-prefill both answered 200 on it, which are the two faults that held the v1.0.0 pin.
+# - v1.0.0 stays installed as the fallback, and ROCm still collapses past a 64K read
+#   ([builds](../config/llamacpp/BUILDS.md)).
+LLAMACPP_DEFAULT_BUILD = "vulkan"
 # - Per-use overrides; None means "follow the llama.cpp default".
 LLAMACPP_CODING_BUILD: str | None = None
 LLAMACPP_EMBEDDINGS_BUILD: str | None = None

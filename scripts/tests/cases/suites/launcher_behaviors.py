@@ -169,7 +169,7 @@ class LauncherBehaviors(unittest.TestCase):
     def test_one_llamacpp_default_serves_every_use_and_an_override_wins(self):
         from scripts.launchers import launcher_config as cfg
 
-        self.assertEqual(cfg.LLAMACPP_DEFAULT_BUILD, "vulkan-1.0.0")
+        self.assertEqual(cfg.LLAMACPP_DEFAULT_BUILD, "vulkan")
         self.assertEqual(cfg.llamacpp_build("coding"), cfg.LLAMACPP_DEFAULT_BUILD)
         self.assertEqual(cfg.llamacpp_build("embeddings"), cfg.LLAMACPP_DEFAULT_BUILD)
         with patch.dict(cfg._BUILD_OVERRIDES, {"embeddings": "rocm-lemonade"}):
