@@ -15,7 +15,7 @@ import requests
 from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.asr.requests import multipart
 from scripts.benchmarks.shared import provenance
-from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
+from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle, RequestTiming
 from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.config import project_config as project_cfg
@@ -47,7 +47,7 @@ def assert_resident(value):
         raise RuntimeError(f"Both requested models must remain loaded: {value}")
 
 
-def tts(timing=None):
+def tts(timing: RequestTiming | None = None):
     from scripts.launchers.asr.shared.practice_models import speech_body
 
     body = speech_body(
@@ -76,7 +76,13 @@ def tts(timing=None):
     return bytes(reader.pcm)
 
 
-def execute(kind, timer, server, upload, barrier=None) -> tuple[dict[str, Any], Any]:
+def execute(
+    kind: str,
+    timer: BenchmarkLifecycle,
+    server: ResidentHttp,
+    upload: tuple[bytes, str],
+    barrier: threading.Barrier | None = None,
+) -> tuple[dict[str, Any], Any]:
     if barrier:
         barrier.wait(timeout=10)
     started = time.perf_counter()

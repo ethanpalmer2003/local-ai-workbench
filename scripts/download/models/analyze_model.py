@@ -6,6 +6,7 @@ import shutil
 import struct
 import subprocess
 import time
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
@@ -19,7 +20,7 @@ from scripts.download.models import metadata_evidence, metadata_formats, metadat
 VERSION = 1
 
 
-def discover(groups=None, paths=()):
+def discover(groups: Sequence[str] | None = None, paths: Sequence[Path] = ()) -> dict[str, dict[str, Any]]:
     roots = {
         key: root
         for key, root in model_sync.MODEL_ROOTS.items()
@@ -56,7 +57,15 @@ def discover(groups=None, paths=()):
     return records
 
 
-def inspect_record(row, previous, *, refresh=False, full_arrays=False, tensor_index=False, native=False):
+def inspect_record(
+    row: dict[str, Any],
+    previous: dict[str, Any],
+    *,
+    refresh: bool = False,
+    full_arrays: bool = False,
+    tensor_index: bool = False,
+    native: bool = False,
+) -> dict[str, Any]:
     path = Path(row["path"])
     record = {**row, "checked_at": datetime.now(UTC).isoformat()}
     record.update(
@@ -150,7 +159,7 @@ def save_inventory(path: Path, data):
     temporary.replace(path)
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--group", nargs="+", help="Canonical group prefixes: asr, audiocpp, tts, llamacpp, ...")
     parser.add_argument("--model", nargs="+", help="Canonical ID/name substring; unselected saved records are retained")

@@ -8,7 +8,7 @@ from pathlib import Path
 from scripts.tools import rocm_inventory
 
 
-def _tree(folder: str, name: str = "install", dlls=("amdhip64_7.dll",)) -> Path:
+def _tree(folder: str, name: str = "install", dlls: tuple[str, ...] = ("amdhip64_7.dll",)) -> Path:
     root = Path(folder) / name
     (root / "bin").mkdir(parents=True)
     for dll in dlls:

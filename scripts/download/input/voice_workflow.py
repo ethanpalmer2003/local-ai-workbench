@@ -137,7 +137,13 @@ def transcribe(files, mapping, cache, durations, excluded):
     return mapping
 
 
-def build_wav(files, mapping, workspace, count, duration_target=None):
+def build_wav(
+    files: list[Path],
+    mapping: dict[str, str],
+    workspace: CharacterWorkspace,
+    count: int,
+    duration_target: DurationTarget | None = None,
+) -> tuple[Path, float]:
     if not files:
         raise ValueError("No files selected. Candidates may exceed the max duration budget.")
 
@@ -287,13 +293,20 @@ def prepare_sources(
     return VoiceInventory(files, mapping, durations)
 
 
-def prepare(char, preferred, fallback, count, do_transcribe, duration_target=None, top_n=0):
+def prepare(
+    char: str,
+    preferred: str,
+    fallback: str,
+    count: int | None,
+    do_transcribe: bool,
+    duration_target: DurationTarget | None = None,
+    top_n: int = 0,
+) -> PreparationResult:
     config = CHARACTER_CONFIGS[char]
     count = config.count if count is None else count
-    name = getattr(char, "value", char)
     if config.superseded_by:
-        print(f"NOTE: {name} is superseded by {config.superseded_by}; preparing its own clips anyway.")
-    workspace = CharacterWorkspace(DATA, name, config.category)
+        print(f"NOTE: {char} is superseded by {config.superseded_by}; preparing its own clips anyway.")
+    workspace = CharacterWorkspace(DATA, char, config.category)
     excluded = set(config.exclude)
     selected_dir = workspace.selected
     cache = workspace.cache
@@ -368,7 +381,7 @@ def prepare(char, preferred, fallback, count, do_transcribe, duration_target=Non
         status = "OK"
 
     return PreparationResult(
-        character=name,
+        character=char,
         status=status,
         selected=len(selected_files),
         method=method,
@@ -455,19 +468,19 @@ def transcribe_top(files, mapping, cache, durations, excluded, n, empty_path):
     return mapping, len(done)
 
 
-def source_files(char):
+def source_files(char: str):
     """(workspace, config, files) for a character without downloading anything; files is None if no audio."""
     config = CHARACTER_CONFIGS[char]
-    workspace = CharacterWorkspace(DATA, char.value, config.category)
+    workspace = CharacterWorkspace(DATA, char, config.category)
     return workspace, config, _source_files(workspace, set(config.exclude))
 
 
-def cleanup_character(char, drop_orphans=False):
+def cleanup_character(char: str, drop_orphans: bool = False) -> dict[str, Any]:
     """Rewrite one character's subtitles.json cleanly: normalized keys, cleaned text, filename transcripts
     filled in. Original is kept once as subtitles.json.bak. Orphans are kept unless drop_orphans."""
     workspace, config, files = source_files(char)
     result: dict[str, Any] = {
-        "character": char.value,
+        "character": char,
         "status": "NO SOURCES",
         "keys": 0,
         "texts": 0,
@@ -525,11 +538,11 @@ def print_cleanup(rows):
             print(f"  Orphan transcripts kept: {r['orphans']} (use --drop-orphans to remove them)")
 
 
-def plan_character(char, preferred, fallback, count, targets, top_n):
+def plan_character(char: str, preferred, fallback, count, targets, top_n):
     """Dry run for one character: what --transcribe / --transcribe-top would transcribe. Writes nothing."""
     workspace, config, files = source_files(char)
     plan: dict[str, Any] = {
-        "character": char.value,
+        "character": char,
         "status": "OK",
         "files": 0,
         "with_text": 0,
@@ -647,12 +660,12 @@ def _validation_status(row) -> str:
     return "OK"
 
 
-def validate_character(char):
+def validate_character(char: str):
     """Read-only health check for one character: never downloads, transcribes or writes anything.
     Returns a dict describing key-matching / transcript problems.
     """
     config = CHARACTER_CONFIGS[char]
-    name = str(getattr(char, "value", char))
+    name = char
     workspace = CharacterWorkspace(DATA, name, config.category)
     directory = workspace.directory
     excluded = set(config.exclude)

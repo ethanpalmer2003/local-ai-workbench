@@ -19,17 +19,17 @@ from scripts.launchers.audiocpp.kokoro import audio_environment
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.tests.cases.audiocpp import single_server_speech as shared
-from scripts.tests.shared.paths import CasePaths
+from scripts.tests.shared.paths import CasePaths, RunPaths
 
 
-def replay(name, pcm, expected, run, server, speak=False):
+def replay(name: str, pcm: bytes, expected: int, run: RunPaths, server: ResidentHttp, speak: bool = False):
     events = []
     turns = Turns(f"http://127.0.0.1:{shared.PORT}", run.logs / f"{name}-silero.log")
     timer = BenchmarkLifecycle(
         lambda: server.identity() + f":{turns.vad.process.pid}" if server.identity() and turns.vad.process else "",
         turns.close,
     )
-    row = {"case": name, "expected_turns": expected, "status": "running"}
+    row: dict[str, Any] = {"case": name, "expected_turns": expected, "status": "running"}
     try:
         with timer:
             timer.prepare(turns.start)

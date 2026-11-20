@@ -28,7 +28,7 @@ class BenchmarkLifecycleTests(unittest.TestCase):
         self.cleaned = True
         self.advance(50)
 
-    def lifecycle(self, resident=True):
+    def lifecycle(self, resident: bool = True):
         return BenchmarkLifecycle(lambda: self.identity, self.cleanup, resident=resident, clock=lambda: self.now)
 
     def test_request_excludes_startup_load_warmup_and_cleanup(self):

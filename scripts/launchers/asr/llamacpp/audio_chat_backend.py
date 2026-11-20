@@ -39,5 +39,5 @@ class AudioChatBackend:
             component_key="asr/llamacpp",
         )
 
-    def transcribe(self, body, content_type, headers=None):
+    def transcribe(self, body: bytes, content_type: str, headers: dict[str, str] | None = None):
         return gemma_audio.transcribe(body, content_type, headers, server_url=self.url())

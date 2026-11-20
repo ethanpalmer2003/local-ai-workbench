@@ -7,13 +7,14 @@ tree is the only exemption and only because fixtures double for arbitrary double
 
 import argparse
 import ast
+from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
 from scripts.review.lists.sources import check_targets, maintained_files
 
 
-def bare_any(path) -> list[tuple[str, int, str]]:
+def bare_any(path: Path) -> list[tuple[str, int, str]]:
     """(path, line, signature text) for every parameter or return annotated exactly `Any`."""
     found = []
     try:
@@ -41,7 +42,7 @@ def bare_any(path) -> list[tuple[str, int, str]]:
     return found
 
 
-def findings(paths=None) -> list[tuple[str, int, str]]:
+def findings(paths: list[Path] | None = None) -> list[tuple[str, int, str]]:
     """Every bare `Any` outside the tests tree."""
     found = []
     for path in maintained_files() if paths is None else paths:

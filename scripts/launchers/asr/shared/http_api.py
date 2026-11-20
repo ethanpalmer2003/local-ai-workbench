@@ -3,6 +3,8 @@
 import json
 import os
 from dataclasses import replace
+from http.server import BaseHTTPRequestHandler
+from typing import Any
 
 import requests
 
@@ -31,14 +33,14 @@ def transcribe(handler, body: bytes, engine: cfg.AsrStartupEngine) -> None:
 
 
 def static_get(
-    handler,
+    handler: BaseHTTPRequestHandler,
     path: str,
     engine: cfg.AsrStartupEngine | None,
     chat_runtime: str,
     on_demand: bool = False,
     llm_model: str | None = None,
     chat_ui_url: str | None = None,
-    delivery_plan=None,
+    delivery_plan: dict[str, Any] | None = None,
 ) -> bool:
     if (asset := tts_proxy._test_asset(path)) is not None:
         send_bytes(handler, 200, asset[0], asset[1])

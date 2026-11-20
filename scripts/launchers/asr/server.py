@@ -3,7 +3,9 @@
 import argparse
 import json
 import threading
+from collections.abc import Callable
 from contextlib import nullcontext
+from http.server import ThreadingHTTPServer
 from typing import Any, ClassVar
 from urllib.parse import urlsplit
 
@@ -11,6 +13,7 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector
 from scripts.launchers.asr.shared import delivery, http_api, lifecycle_http, practice_models
+from scripts.launchers.asr.shared.practice_selection import Selection
 from scripts.launchers.asr.shared.streaming import live
 from scripts.launchers.llamacpp import speech_ui
 from scripts.launchers.proxy_util import (
@@ -186,9 +189,10 @@ def run_proxy(
     port: int,
     chat_upstream: str | None = None,
     speech_upstream: str | None = None,
-    on_server=None,
-    controls=None,
-    runtime=None,
+    on_server: Callable[[ThreadingHTTPServer], None] | None = None,
+    controls: Selection | None = None,
+    # - the route tests pass their own runtime double, so this stays the shape run_proxy itself needs
+    runtime: object | None = None,
 ) -> bool:
     sessions = live.Sessions(engine)
     handler = type(

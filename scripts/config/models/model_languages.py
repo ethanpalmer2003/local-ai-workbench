@@ -8,6 +8,7 @@ ships in, so an installed model's declared locales are compared against it inste
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 CATALOG_PATH = Path(__file__).with_suffix(".json")
 
@@ -36,7 +37,9 @@ def packaged_locales(model_id: str) -> list[str] | None:
     return [str(code) for code in spec.get("languages", [])] or None
 
 
-def select(catalog, *, task=None, model=None, language=None):
+def select(
+    catalog: dict[str, Any], *, task: str | None = None, model: str | None = None, language: str | None = None
+) -> list[dict[str, Any]]:
     query = normalized(language) if language else None
     if query:
         query = next((code for code, name in catalog["language_names"].items() if name.lower() == query), query)
@@ -89,7 +92,7 @@ def details(row, names):
     print("Sources: " + ", ".join(source["url"] for source in row["sources"]))
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--task", choices=("asr", "tts"))
     parser.add_argument("--model", help="Model family/name or canonical download ID (substring)")

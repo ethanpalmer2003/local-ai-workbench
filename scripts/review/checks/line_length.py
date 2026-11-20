@@ -10,6 +10,7 @@ import argparse
 import io
 import re
 import tokenize
+from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
@@ -68,7 +69,7 @@ def classify(line: str, number: int, spans: list[tuple[int, int, str]]) -> str:
     return "code"
 
 
-def audit(paths=None) -> list[tuple[str, int, int, str]]:
+def audit(paths: list[Path] | None = None) -> list[tuple[str, int, int, str]]:
     """(path, line, length, kind) for every line over the limit."""
     found = []
     for path in maintained_files() if paths is None else paths:
@@ -88,12 +89,12 @@ def audit(paths=None) -> list[tuple[str, int, int, str]]:
     return found
 
 
-def findings(paths=None) -> list[tuple[str, int, int, str]]:
+def findings(paths: list[Path] | None = None) -> list[tuple[str, int, int, str]]:
     """Long lines that a reader should fix: code and prose, not templates or long tokens."""
     return [item for item in audit(paths) if item[3] in {"code", "prose"}]
 
 
-def accepted(paths=None) -> dict[str, int]:
+def accepted(paths: list[Path] | None = None) -> dict[str, int]:
     """How many long lines are accepted, by kind."""
     counts = {"template": 0, "token": 0}
     for item in audit(paths):

@@ -10,8 +10,10 @@ from unittest.mock import MagicMock, patch
 
 from scripts.benchmarks.coding_agents.shared import benchmark_agents as benchmark
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint, benchmark_llama_config
-from scripts.benchmarks.coding_agents.shared.framework_tasks import TASKS
+from scripts.benchmarks.coding_agents.shared.benchmark_requests import BenchmarkRelay
+from scripts.benchmarks.coding_agents.shared.framework_tasks import TASKS, CodingTask
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.llamacpp import llamacpp
 from scripts.tests.shared.paths import CasePaths, RunPaths
 
 
@@ -41,7 +43,17 @@ class BenchmarkMatrixTests(unittest.TestCase):
                 name, name + "-model", "http://127.0.0.1:18501/v1", "secret", metadata={"startup_seconds": 0}
             )
 
-        def trial(client, task, repeat, output, conf, timeout, turns, relay, pi_extensions=False):
+        def trial(
+            client: str,
+            task: CodingTask,
+            repeat: int,
+            output: RunPaths,
+            conf: llamacpp.LlamaConfig,
+            timeout: float | None,
+            turns: int,
+            relay: BenchmarkRelay,
+            pi_extensions: bool = False,
+        ):
             trials.append((relay.endpoint.backend, client, repeat))
             return benchmark.Result(
                 client,

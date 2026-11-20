@@ -9,6 +9,7 @@ import requests
 
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import observe_chunk
 from scripts.benchmarks.shared import provenance
+from scripts.benchmarks.shared.benchmark import RequestTiming
 from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
@@ -80,7 +81,7 @@ def command(engine: str, port: int) -> list[str]:
     ]
 
 
-def generate(port: int, prompt: str, timing=None) -> dict[str, Any]:
+def generate(port: int, prompt: str, timing: RequestTiming | None = None) -> dict[str, Any]:
     body = {
         "model": "gemma",
         "messages": [{"role": "user", "content": prompt}],

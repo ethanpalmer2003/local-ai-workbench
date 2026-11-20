@@ -1,6 +1,7 @@
 """Model-free Popen fixtures with explicit state and inspectable mock calls."""
 
 import subprocess
+from collections.abc import Sequence
 from unittest.mock import MagicMock
 
 _POPEN_SPEC = subprocess.Popen
@@ -42,7 +43,9 @@ def exited_process(*, pid: int = 12345, exit_code: int = 0) -> MagicMock:
     return fake_process(pid=pid, running=False, exit_code=exit_code)
 
 
-def inspected_process(*, pid: int, parent: int = 0, command=(), children=()) -> MagicMock:
+def inspected_process(
+    *, pid: int, parent: int = 0, command: Sequence[str] = (), children: Sequence[MagicMock] = ()
+) -> MagicMock:
     """Explicit psutil inspection fixture; distinct from Popen lifecycle behavior."""
     import psutil
 
