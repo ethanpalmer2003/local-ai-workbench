@@ -240,6 +240,10 @@ class FrameworkUpdateSources(unittest.TestCase):
                 "llamacpp/additions/hrx/llama.cpp",
                 "llamacpp/additions/hrx/hrx-system",
                 "llamacpp/additions/hrx/rocm-systems",
+                "coding_agents/littlecoder",
+                "coding_agents/nanocoder",
+                "coding_agents/ohmypi",
+                "coding_agents/deepseek",
             },
         )
 

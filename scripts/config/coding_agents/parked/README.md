@@ -30,6 +30,22 @@ clients. The DeepSeek Harness settings and its kill root in `scripts/launchers/k
 stay, so the service can still be stopped. Moving any of that here needs the benchmark's client arms retired
 first; that work is in the TODO.
 
+## Why these were retired
+
+The [coding benchmark](../../../benchmarks/coding_agents/README.md) compared these harnesses against Pi on
+the same weights, and Pi is what this host kept. None of them failed a check, so their evidence still stands
+and any of them can be re-benchmarked rather than reconstructed.
+
+## Re-benchmarking
+
+1. A parked harness: move its entry point back, restore its arm in `CLIENTS` in
+   `scripts/benchmarks/coding_agents/shared/benchmark_agents.py`, and set `in_use=True` on its updater row in
+   `scripts/download/frameworks/shared/other_updates.py`.
+2. A new harness: add its settings to `scripts/launchers/launcher_base.py`, one arm to `CLIENTS`, and a
+   `ToolSpec` row so the updater tracks it.
+3. Run `bat/benchmarks/benchmark_coding_agents.bat`; every arm is measured on the same weights and the run
+   records its provenance, so the comparison is repeatable later.
+
 ## Unparking
 
 1. Move the file back into `scripts/launchers/llamacpp/` and add it to the table's removal.
