@@ -19,11 +19,11 @@ Selection: `LLAMACPP_DEFAULT_BUILD` is the rolling `vulkan` build: b12590 return
 `LLAMACPP_CODING_BUILD` and `LLAMACPP_EMBEDDINGS_BUILD` override it per use; `vulkan-1.0.0` stays as the
 fallback.
 
-The RDNA build runs from an explicit flag: `update_frameworks --build rdna` rebuilds it after the update pass,
-and `test_full.bat --build rdna` forwards that. It builds llama.cpp at the patch set's `release.json` `base`
-(4f9dfa0e3 for v17-r327) with `-DGGML_HIP=ON -DGPU_TARGETS=gfx1101`, and needs the Windows SDK bin on PATH for
-the link's `mt.exe`. On the 27B, Vulkan wins wall time (21.2 against 32.6 s, 51.0 against 100.2 s): this build
-prefills at under half the rate, though it decodes faster; [outcomes](../../tests/notes/OUTCOMES.md).
+The RDNA-boosts builds are parked: both lost to the plain Vulkan default on the 27B pair (2026-11-20).
+The ROCm build took 32.6 s and 100.2 s against 21.2 s and 51.0 s; the same patches built for Vulkan were
+mixed, 30.4 s against 21.7 s on `whitespace` and 50.7 s against 60.1 s on `ledger`. They stay installed as
+`rocm-rdna` and `rdna-vulkan` in `LLAMACPP_DEFERRED_BUILDS`, so nothing selects them;
+`update_frameworks --build rdna` rebuilds, needing the SDK bin on PATH for `mt.exe`.
 
 Both faults here needed a batched request, so a one-prompt screen says nothing about them. The nearest upstream
 report is

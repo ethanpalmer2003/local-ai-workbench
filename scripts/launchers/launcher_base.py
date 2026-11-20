@@ -115,8 +115,10 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
         #   the discrete card in --list-devices order.
         env={"HIP_VISIBLE_DEVICES": "0"},
     ),
-    "rocm-rdna": LlamacppStartupBuild(  # went from 34 to 41t/s with adaptive mtp over 4k tokens (swift15), has other issues potentially
-        bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rdna/build/bin", extra_args={}
+    # - both RDNA-boosts builds are parked: measured slower than the plain Vulkan default on the 27B pair
+    "rocm-rdna": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rdna/build/bin", extra_args={}),
+    "rdna-vulkan": LlamacppStartupBuild(
+        bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "rdna/build-vulkan/bin", extra_args={}
     ),
 }
 
@@ -144,7 +146,8 @@ def llamacpp_build(use: str = "coding") -> str:
 LLAMACPP_ACTIVE_CODING_AGENT_PROFILE = "swift15"
 # - deferred work: wired so a re-enable is one edit, never selectable by a launcher or a benchmark
 LLAMACPP_DEFERRED_PROFILES = frozenset({"swift15-hrx"})
-LLAMACPP_DEFERRED_BUILDS = frozenset({"hrx"})
+# - parked builds stay installed but are not selectable by a launcher or a benchmark
+LLAMACPP_DEFERRED_BUILDS = frozenset({"hrx", "rocm-rdna", "rdna-vulkan"})
 
 
 @dataclass(kw_only=True)

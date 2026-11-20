@@ -51,6 +51,10 @@
   kind: model
   revisit: Kokoro is enabled again
   source: notes/TODO.md
+- thing: RDNA-boosts llama.cpp builds (ROCm and Vulkan)
+  kind: build
+  revisit: a patch set rebased on the current llama.cpp wins a paired screen
+  source: scripts/config/llamacpp/BUILDS.md
 - thing: Coding harnesses other than Pi (little-coder, ohmypi, nanocoder, DeepSeek Harness)
   kind: work
   revisit: another harness becomes the client again
