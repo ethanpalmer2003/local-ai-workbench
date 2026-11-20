@@ -43,6 +43,10 @@
   kind: work
   revisit: a measured reason appears
   source: scripts/benchmarks/personal/comfyui/README.md
+- thing: Unsloth quants for the two large coding models
+  kind: model
+  revisit: a Qwen4 build of either model exists
+  source: notes/TODO.md
 - thing: ASR test execution, Handy and Kobold coverage
   kind: work
   revisit: an explicit instruction

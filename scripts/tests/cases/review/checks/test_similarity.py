@@ -97,8 +97,31 @@ class SimilarityCodeTests(unittest.TestCase):
     def test_a_function_is_one_unit_and_a_stub_is_skipped(self):
         source = "def long_one(value):\n    total = sun = value + 1\n    return total + sun\n\ndef stub():\n    pass\n"
         found = self._functions(source)
-        self.assertEqual([unit["heading"] for unit in found], ["long_one"])
+        self.assertEqual([unit["heading"] for unit in found], ["long_one:1"])
         self.assertEqual(found[0]["doc"], "module.py")
+
+    def test_two_methods_with_one_name_get_distinct_labels(self):
+        source = (
+            "class Left:\n"
+            "    def scope(self, value):\n"
+            "        total = value + 1\n"
+            "        return total\n\n\n"
+            "class Right:\n"
+            "    def scope(self, value):\n"
+            "        total = value + 2\n"
+            "        return total\n"
+        )
+        self.assertEqual([unit["heading"] for unit in self._functions(source)], ["scope:2", "scope:8"])
+
+    def test_a_nested_function_is_not_a_second_unit_beside_its_parent(self):
+        source = (
+            "def outer(value):\n"
+            "    def inner(step):\n"
+            "        total = step + 1\n"
+            "        return total\n"
+            "    return inner(value)\n"
+        )
+        self.assertEqual([unit["heading"] for unit in self._functions(source)], ["outer:1"])
 
     def test_an_unparsable_module_yields_nothing(self):
         self.assertEqual(self._functions("def broken(:\n"), [])

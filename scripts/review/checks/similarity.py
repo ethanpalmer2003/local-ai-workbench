@@ -186,23 +186,49 @@ def findings(
     return sorted(reported, key=lambda row: (-row["matches"], -row["best"]))
 
 
+def dispatchable(node: ast.AST) -> list[ast.FunctionDef | ast.AsyncFunctionDef]:
+    """Every module-level function and every method, but never a function nested inside another.
+
+    A nested function is embedded as part of its parent's text, so embedding it again as its own unit
+    reports the parent and its inner helper as a duplicate pair.
+    """
+    found: list[ast.FunctionDef | ast.AsyncFunctionDef] = []
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef):
+            found.append(child)
+        else:
+            found.extend(dispatchable(child))
+    return found
+
+
 def functions(path: Path, relative: str) -> list[dict[str, Any]]:
-    """One unit per function or method: the body is embedded verbatim, decorators dropped."""
+    """One unit per function or method: the body is embedded verbatim, decorators dropped.
+
+    The label carries the line, because two methods in one file can share a name: without it a pair
+    between them reads as a function compared with itself.
+    """
     text = path.read_text(encoding="utf-8-sig", errors="replace")
     try:
         tree = ast.parse(text)
     except SyntaxError:
         return []
     found = []
-    for node in ast.walk(tree):
-        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) or node.end_lineno is None:
+    for node in dispatchable(tree):
+        if node.end_lineno is None:
             continue
         if node.end_lineno - node.lineno + 1 < CODE_MIN_LINES:
             continue
         segment = ast.get_source_segment(text, node) or ""
         if len(segment) < CODE_MIN_CHARS:
             continue
-        found.append({"doc": relative, "heading": node.name, "text": segment[:CODE_TEXT_LIMIT], "kind": "function"})
+        found.append(
+            {
+                "doc": relative,
+                "heading": f"{node.name}:{node.lineno}",
+                "text": segment[:CODE_TEXT_LIMIT],
+                "kind": "function",
+            }
+        )
     return found
 
 
