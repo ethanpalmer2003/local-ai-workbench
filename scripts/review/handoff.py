@@ -24,6 +24,8 @@ from scripts.benchmarks.shared import provenance
 from scripts.config import project_config as project_cfg
 from scripts.review.checks.inventory_code import maintained_python
 from scripts.review.lists.sources import maintained_files
+from scripts.shared import changes
+from scripts.tools import stage_runner
 
 # - a function past this many lines carries more than one idea, which a reader has to judge rather than fix
 LONG_FUNCTION = 60
@@ -37,6 +39,8 @@ STALE_DAYS = 7
 STALE_CHANGES = 25
 DUPLICATE_BASELINE = project_cfg.SCRIPTS_DIR / "review" / "lists" / "duplicate-baseline.json"
 SIMILARITY_ROOT = project_cfg.GENERATED_DIR / "shared" / "similarity" / "code"
+# - the stage runner titles its full-validation run, and its summary is the only record of that verdict
+VALIDATION_TITLE = "validate"
 
 
 class FunctionRecord(TypedDict):
@@ -78,6 +82,15 @@ class SimilarityEvidence:
     changed: int
     findings: list[SimilarityFinding]
     dropped: int = 0
+
+
+@dataclass(frozen=True)
+class FullRun:
+    """The last recorded full validation: when it ran, what each stage returned, and how long it took."""
+
+    created: str
+    total_seconds: float
+    stages: list[tuple[str, str, float]]
 
 
 def signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
@@ -315,12 +328,86 @@ def review_request(records: list[FileRecord], ranked: int = 12) -> list[str]:
             "is wrong; otherwise leave them alone. Read nothing outside the list above unless a listed file",
             "proves it owns something you cannot judge without it.",
             "",
-            "## What to answer",
+            "## How to answer",
             "",
-            "Per file: the path, the line numbers, what you would change, and whether the finding is real or",
-            "deliberate. Name which of the four questions each finding answers, and leave mechanical fixes out.",
+            "Take the reviewer role in `.agents/skills/code-review/SKILL.md`: strengths first, then issues by",
+            "severity (Critical, Important, Minor) with the file and line, then a verdict of ready to merge or not.",
+            "Per file: the line numbers, what you would change, and whether the finding is real or deliberate.",
+            "Name which of the four questions each finding answers, and leave mechanical fixes out: the light",
+            "model applies those.",
         )
     )
+    return lines
+
+
+def last_full_run(directory: Path | None = None) -> FullRun | None:
+    """The newest recorded validation run, or None when none left a summary behind.
+
+    The logs hold each child's output but not its verdict, so the runner writes one summary beside them;
+    this reads that instead of guessing from a log tail.
+    """
+    folder = directory or stage_runner.runs_dir(VALIDATION_TITLE)
+    summaries = sorted(folder.glob("*/summary.json")) if folder.is_dir() else []
+    for path in reversed(summaries):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        return FullRun(
+            created=str(payload.get("created") or "unknown"),
+            total_seconds=float(payload.get("total_seconds") or 0.0),
+            stages=[
+                (str(row.get("key") or "?"), str(row.get("status") or "?"), float(row.get("seconds") or 0.0))
+                for row in payload.get("stages") or []
+            ],
+        )
+    return None
+
+
+def newest_commit_time() -> float | None:
+    """When the tree last moved, in epoch seconds, so a run older than it predates the tree."""
+    try:
+        return float(changes.git_text("log", "-1", "--format=%ct"))
+    except changes.GitError:
+        return None
+    except ValueError:
+        return None
+
+
+def full_run_issues(run: FullRun | None, commit_time: float | None = None) -> list[str]:
+    """Why this bundle may not be handed off yet: no recorded run, a failed stage, or a run the tree outgrew."""
+    if run is None:
+        return ["No recorded full validation; run `bat/checks/test_full.bat` before handing off"]
+    if not run.stages:
+        return ["The last full validation recorded no stage; rerun `bat/checks/test_full.bat`"]
+    failed = [key for key, status, _ in run.stages if status == "failed"]
+    if failed:
+        return [f"The last full validation failed at {', '.join(failed)}; fix it before handing off"]
+    try:
+        created = datetime.fromisoformat(run.created).timestamp()
+    except ValueError:
+        return [f"The last full validation has no readable date ({run.created}); rerun it"]
+    commit = newest_commit_time() if commit_time is None else commit_time
+    if commit is not None and commit > created:
+        return ["The tree changed after the last full validation; rerun `bat/checks/test_full.bat`"]
+    if changes.changed_since_head():
+        return ["The tree has uncommitted changes; the full validation describes a different tree"]
+    return []
+
+
+def full_run_report(run: FullRun | None) -> list[str]:
+    """The block at the top of the brief: when the full test ran and what every stage returned."""
+    lines = ["## The full test behind this bundle", ""]
+    if run is None:
+        lines.append("No recorded run. `bat/checks/test_full.bat` records one and this bundle needs it.")
+        return lines
+    stages = ", ".join(f"{key} {status}" for key, status, _ in run.stages)
+    lines.append(
+        f"`python -m scripts.tests.validate` ran {run.created} and finished {len(run.stages)} stage(s) "
+        f"in {run.total_seconds:.0f} s: {stages}."
+    )
+    lines.append("")
+    lines.append("A skipped live stage had no changed source or install to re-test, which is a pass rather than a gap.")
     return lines
 
 
@@ -335,6 +422,8 @@ def brief(records: list[FileRecord], ranked: int = 12) -> list[str]:
         "",
         "Read this, then the files under **Where to look first**. The rest of the repository does not have to",
         "be read to judge them: the mechanical findings are already the gate's job, and this bundle omits them.",
+        "",
+        *full_run_report(last_full_run()),
         "",
         "## What this is",
         "",
@@ -400,8 +489,11 @@ def brief(records: list[FileRecord], ranked: int = 12) -> list[str]:
             "3. Does a function past its length limit carry two ideas that a reader cannot follow in one pass?",
             "4. Is any rule from `.agents/CODE.md` re-implemented in a second place, so the two can drift?",
             "",
-            "Answer per file with the line numbers, say which findings are real and which are deliberate, and",
-            "leave mechanical fixes out: the light model applies those.",
+            "## How to answer",
+            "",
+            "Take the reviewer role in `.agents/skills/code-review/SKILL.md`: strengths first, then issues by",
+            "severity with the file and line, then a verdict of ready to merge or not. Say which findings are real",
+            "and which are deliberate, and leave mechanical fixes out: the light model applies those.",
             "",
             "`ast_map.json` beside this file holds every file's public functions, signatures and span, for a",
             "reader that wants the shape without opening a single file.",
@@ -474,6 +566,11 @@ def main(argv: list[str] | None = None) -> int:
     scope = project_cfg.BASE_DIR / args.path if args.path else None
     if scope is not None and not scope.is_dir():
         print(f"[FAIL] No such folder: {args.path}")
+        return 1
+    issues = full_run_issues(last_full_run())
+    if issues:
+        for issue in issues:
+            print(f"[FAIL] {issue}")
         return 1
     records = index(project_cfg.BASE_DIR, scope)
     destination = (

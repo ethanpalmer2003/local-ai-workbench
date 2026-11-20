@@ -58,6 +58,20 @@ class StageRunnerTests(unittest.TestCase):
         stage = stage_runner._stage_from_argv(["pkg.module", "--stage-limit", "90", "--check"])
         self.assertEqual((stage.key, stage.limit, stage.arguments), ("module", 90.0, ("--check",)))
 
+    def test_a_finished_run_records_its_stage_verdicts_beside_the_logs(self) -> None:
+        import json
+        import tempfile
+        from pathlib import Path
+
+        stages = (stage_runner.Stage("gate", "scripts.review", typical=55, high=80),)
+        results = [stage_runner.Result("gate", "ok", 12.5)]
+        with tempfile.TemporaryDirectory() as folder:
+            stage_runner.write_summary(Path(folder), "validate", results, stages)
+            payload = json.loads((Path(folder) / "summary.json").read_text(encoding="utf-8"))
+        self.assertEqual(payload["title"], "validate")
+        self.assertEqual(payload["total_seconds"], 12.5)
+        self.assertEqual(payload["stages"], [{"key": "gate", "status": "ok", "seconds": 12.5, "high": 80}])
+
     def test_an_empty_plan_runs_nothing(self) -> None:
         self.assertEqual(stage_runner.run(()), [])
 

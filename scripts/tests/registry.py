@@ -54,7 +54,7 @@ from scripts.tests.cases.review.checks.test_duplicates import DuplicateReportTes
 from scripts.tests.cases.review.checks.test_dynamic_imports import DynamicImportTests
 from scripts.tests.cases.review.checks.test_expression import ExpressionDepthTests
 from scripts.tests.cases.review.checks.test_folder_rule import FolderRuleTests, WorkspaceTotalTests
-from scripts.tests.cases.review.checks.test_handoff import BundleTests, HandlerTests
+from scripts.tests.cases.review.checks.test_handoff import BundleTests, FullRunTests, HandlerTests
 from scripts.tests.cases.review.checks.test_layout import PolicyTests
 from scripts.tests.cases.review.checks.test_line_length import LimitsReportTests, LineLengthTests
 from scripts.tests.cases.review.checks.test_network_timeouts import NetworkTimeoutTests
@@ -124,6 +124,7 @@ from scripts.tests.cases.shared.reports.test_reports import ReportOutputs
 from scripts.tests.cases.shared.runtime.test_backend_sessions import BackendSessions
 from scripts.tests.cases.shared.runtime.test_gpu_memory_monitor import MemoryMonitorTests
 from scripts.tests.cases.shared.runtime.test_image_on_demand import NativePassthroughTests, ResidencyTests
+from scripts.tests.cases.shared.runtime.test_native_probes import ProbeCommandTests
 from scripts.tests.cases.shared.runtime.test_resources import ResourceTests
 from scripts.tests.cases.shared.runtime.test_shared_runtime import (
     ExitReportTests,
@@ -302,6 +303,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     FolderRuleTests,
     WorkspaceTotalTests,
     BundleTests,
+    FullRunTests,
     HandlerTests,
     SpeechProfiles,
     WorkflowDefaultsTests,
@@ -334,6 +336,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     StackProbeTests,
     TransportBenchmark,
     BackendSessions,
+    ProbeCommandTests,
     TestSelection,
     UpstreamTextTests,
     ExitReportTests,
