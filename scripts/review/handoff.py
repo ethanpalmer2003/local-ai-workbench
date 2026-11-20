@@ -406,8 +406,9 @@ def full_run_report(run: FullRun | None) -> list[str]:
         f"`python -m scripts.tests.validate` ran {run.created} and finished {len(run.stages)} stage(s) "
         f"in {run.total_seconds:.0f} s: {stages}."
     )
-    lines.append("")
-    lines.append("A skipped live stage had no changed source or install to re-test, which is a pass rather than a gap.")
+    if any(status == "skipped" for _, status, _ in run.stages):
+        lines.append("")
+        lines.append("A skipped live stage had no changed source or install to re-test, which is a pass.")
     return lines
 
 

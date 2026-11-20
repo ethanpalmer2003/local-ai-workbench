@@ -102,6 +102,8 @@ class FullRunTests(unittest.TestCase):
         self.assertIn("2026-11-20T13:31:00", text)
         self.assertIn("gate ok, launchers skipped", text)
         self.assertIn("skipped live stage had no changed source", text)
+        clean = handoff.FullRun(created="2026-11-20T13:31:00", total_seconds=653.0, stages=[("gate", "ok", 55.0)])
+        self.assertNotIn("skipped live stage", "\n".join(handoff.full_run_report(clean)))
 
     def test_the_brief_points_at_the_reviewer_role(self):
         record: handoff.FileRecord = {
