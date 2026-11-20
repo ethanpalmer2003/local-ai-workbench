@@ -54,3 +54,13 @@ class ValidatePlanTests(unittest.TestCase):
         with contextlib.redirect_stdout(output):
             self.assertEqual(validate.main(["--dry-run", "--no-update"]), 0)
         self.assertNotIn("\n  frameworks", output.getvalue())
+
+    def test_a_real_run_enables_the_model_and_install_checks(self) -> None:
+        with (
+            patch.object(validate.stage_runner, "run", return_value=[]),
+            patch.object(validate.consent, "ask", return_value=True),
+            patch.dict(validate.os.environ, {}, clear=False),
+        ):
+            validate.os.environ.pop("AI_MODEL_CHECKS", None)
+            self.assertEqual(validate.main(["--only", "suite"]), 0)
+            self.assertEqual(validate.os.environ["AI_MODEL_CHECKS"], "1")
