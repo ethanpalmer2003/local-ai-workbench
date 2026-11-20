@@ -70,6 +70,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if not consent.ask("Full validation", sum(stage.typical for stage in stages), args.yes):
         return 1
+    # - the preflight updated the frameworks, so the model and install checks are the point of this run
+    os.environ["AI_MODEL_CHECKS"] = "1"
     results = stage_runner.run(stages, title="validate", stream=args.verbose)
     return 0 if all(result.status != "failed" for result in results) else 1
 
