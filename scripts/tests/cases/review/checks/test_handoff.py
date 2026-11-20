@@ -4,6 +4,7 @@ import ast
 import json
 import unittest
 import unittest.mock
+from datetime import datetime
 from pathlib import Path
 
 from scripts.review import handoff
@@ -39,6 +40,82 @@ class HandlerTests(unittest.TestCase):
         self.assertTrue(handoff.broad_except(handler("try:\n    f()\nexcept:\n    pass\n")))
         self.assertTrue(handoff.broad_except(handler("try:\n    f()\nexcept Exception:\n    pass\n")))
         self.assertFalse(handoff.broad_except(handler("try:\n    f()\nexcept OSError:\n    pass\n")))
+
+
+class FullRunTests(unittest.TestCase):
+    def run_record(self, folder: Path, created: str, stages: str) -> Path:
+        summary = folder / "20261120-133000"
+        summary.mkdir(parents=True)
+        payload = f'{{"title": "validate", "created": "{created}", "total_seconds": 653.0, "stages": {stages}}}'
+        (summary / "summary.json").write_text(payload, encoding="utf-8")
+        return folder
+
+    def test_a_recorded_run_is_read_with_every_stage_verdict(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            self.run_record(
+                root,
+                "2026-11-20T13:31:00",
+                '[{"key": "gate", "status": "ok", "seconds": 55.0, "high": 80},'
+                ' {"key": "launchers", "status": "skipped", "seconds": 1.0, "high": 380}]',
+            )
+            run = handoff.last_full_run(root)
+        self.assertIsNotNone(run)
+        assert run is not None
+        self.assertEqual(run.created, "2026-11-20T13:31:00")
+        self.assertEqual([key for key, _, _ in run.stages], ["gate", "launchers"])
+        self.assertEqual([status for _, status, _ in run.stages], ["ok", "skipped"])
+
+    def test_an_absent_record_leaves_the_bundle_blocked(self):
+        self.assertEqual(handoff.last_full_run(Path("missing")), None)
+        issues = handoff.full_run_issues(None)
+        self.assertEqual(len(issues), 1)
+        self.assertIn("No recorded full validation", issues[0])
+
+    def test_a_failed_stage_blocks_the_bundle_and_is_named(self):
+        run = handoff.FullRun(
+            created="2026-11-20T13:31:00", total_seconds=90.0, stages=[("gate", "ok", 55.0), ("suite", "failed", 30.0)]
+        )
+        self.assertIn("failed at suite", handoff.full_run_issues(run, commit_time=0.0)[0])
+
+    def test_a_run_older_than_the_newest_commit_blocks_the_bundle(self):
+        run = handoff.FullRun(created="2026-11-20T13:31:00", total_seconds=653.0, stages=[("gate", "ok", 55.0)])
+        created = datetime.fromisoformat(run.created).timestamp()
+        with unittest.mock.patch.object(handoff.changes, "changed_since_head", return_value=[]):
+            self.assertEqual(handoff.full_run_issues(run, commit_time=created - 60), [])
+            self.assertIn("tree changed", handoff.full_run_issues(run, commit_time=created + 60)[0])
+
+    def test_uncommitted_changes_block_the_bundle(self):
+        run = handoff.FullRun(created="2026-11-20T13:31:00", total_seconds=653.0, stages=[("gate", "ok", 55.0)])
+        created = datetime.fromisoformat(run.created).timestamp()
+        dirty = ["scripts/review/handoff.py"]
+        with unittest.mock.patch.object(handoff.changes, "changed_since_head", return_value=dirty):
+            self.assertIn("uncommitted changes", handoff.full_run_issues(run, commit_time=created - 60)[0])
+
+    def test_the_brief_states_the_run_and_every_stage(self):
+        run = handoff.FullRun(
+            created="2026-11-20T13:31:00",
+            total_seconds=653.0,
+            stages=[("gate", "ok", 55.0), ("launchers", "skipped", 1.0)],
+        )
+        text = "\n".join(handoff.full_run_report(run))
+        self.assertIn("2026-11-20T13:31:00", text)
+        self.assertIn("gate ok, launchers skipped", text)
+        self.assertIn("skipped live stage had no changed source", text)
+
+    def test_the_brief_points_at_the_reviewer_role(self):
+        record: handoff.FileRecord = {
+            "path": "scripts/pkg/module.py",
+            "lines": 3,
+            "functions": [],
+            "classes": [],
+            "silent_excepts": [],
+            "broad_excepts": [],
+            "undocumented": [],
+        }
+        text = "\n".join(handoff.brief([record]))
+        self.assertIn("## The full test behind this bundle", text)
+        self.assertIn(".agents/skills/code-review/SKILL.md", text)
 
 
 class BundleTests(unittest.TestCase):
@@ -254,9 +331,22 @@ class BundleTests(unittest.TestCase):
         }
         with CasePaths(__file__).temporary_directory() as folder:
             destination = Path(folder) / "bundle"
-            with unittest.mock.patch.object(handoff, "index", return_value=[record]):
+            run = handoff.FullRun(created="2026-11-20T13:31:00", total_seconds=653.0, stages=[("gate", "ok", 55.0)])
+            with (
+                unittest.mock.patch.object(handoff, "index", return_value=[record]),
+                unittest.mock.patch.object(handoff, "last_full_run", return_value=run),
+                unittest.mock.patch.object(handoff, "newest_commit_time", return_value=0.0),
+                unittest.mock.patch.object(handoff.changes, "changed_since_head", return_value=[]),
+            ):
                 self.assertEqual(handoff.main(["--out", str(destination)]), 0)
             self.assertTrue((destination / "HANDOFF.md").is_file())
             self.assertTrue((destination / "REVIEW-REQUEST.md").is_file())
             index = json.loads((destination / "ast_map.json").read_text(encoding="utf-8"))
         self.assertEqual(index["files"][0]["path"], "scripts/pkg/module.py")
+
+    def test_a_run_without_a_full_validation_writes_nothing(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            destination = Path(folder) / "bundle"
+            with unittest.mock.patch.object(handoff, "last_full_run", return_value=None):
+                self.assertEqual(handoff.main(["--out", str(destination)]), 1)
+            self.assertFalse(destination.exists())

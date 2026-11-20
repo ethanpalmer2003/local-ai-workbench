@@ -5,12 +5,25 @@ model that should not read the tree. It exists because the prompt sent to a larg
 mechanical findings already fail the gate, so they are not worth its attention, and the remaining questions
 need judgment rather than a diff.
 
+## A passing full test comes first
+
+The bundle is only written after the full validation has recorded a clean run, and the brief opens with that
+run. `python -m scripts.tests.validate` (or [test_full.bat](../../bat/checks/test_full.bat)) updates the
+frameworks, runs the gate and the model-free suite, then both live suites; it takes about eleven minutes with
+live work to do and about two when they skip, with the per-stage ranges in [stage times](../tools/stage_times.py).
+The stage runner writes `summary.json` beside the run's logs, and the handoff refuses to build when no run left
+one, when a stage failed, or when the tree moved after the run.
+
+The reviewer role, output shape and read-only rules come from the [code-review skill](../../.agents/skills/code-review/SKILL.md),
+which vendors obra/superpowers' prompt; the brief repeats the essentials because a pasted bundle has no
+repository to open.
+
 Two files:
 
 - `HANDOFF.md` carries the rules that decide quality, the shape of the repository, where the weight sits per
-  folder, and the files ranked by how much judgment they ask for: silent handlers, broad handlers, long
-  functions and wide modules. It also holds the evidence the opt-in checks already produced - the duplicate
-  pairs the baseline accepts, and the last `--code` similarity run with the date it ran.
+  folder, the files ranked by how much judgment they ask for, and the full test behind the bundle. It also
+  holds the evidence the opt-in checks already produced - the duplicate pairs the baseline accepts, and the
+  last `--code` similarity run with the date it ran.
 - `REVIEW-REQUEST.md` is the instruction to give the heavier model: read the brief, then these files in full,
   answer these four questions, and leave the gate's own findings alone.
 - `ast_map.json` holds every maintained Python file's public functions with their signature, span and whether

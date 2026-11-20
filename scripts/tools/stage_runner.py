@@ -6,6 +6,7 @@ and a stage that ends above its high mark is reported as slow. Child output goes
 tagged lines (`[OK]`, `[FAIL]`, `[SKIP]`, `[TIME]`, ...) are shown as they happen.
 """
 
+import json
 import os
 import queue
 import re
@@ -259,6 +260,35 @@ def summary(results: list[Result], stages: tuple[Stage, ...]) -> None:
     print(f"{'total':<12} {'':<8} {spent:>7.1f} s  planned about {sum(s.typical for s in stages):.0f} s")
 
 
+def runs_dir(title: str) -> Path:
+    """Where one runner's stage logs live, so a later reader can date the run and repeat it."""
+    return project_cfg.STATE_DIR / "shared" / "logs" / "runs" / title
+
+
+def write_summary(log_dir: Path, title: str, results: list[Result], stages: tuple[Stage, ...]) -> None:
+    """One JSON record beside the logs: when this run happened and what every stage returned.
+
+    A log holds the child's output, not its verdict, so a reader that was not in this terminal had no way
+    to tell a passing run from an abandoned one.
+    """
+    by_key = {stage.key: stage for stage in stages}
+    payload = {
+        "title": title,
+        "created": datetime.now().isoformat(timespec="seconds"),
+        "total_seconds": round(sum(result.seconds for result in results), 1),
+        "stages": [
+            {
+                "key": result.key,
+                "status": result.status,
+                "seconds": round(result.seconds, 1),
+                "high": by_key[result.key].high,
+            }
+            for result in results
+        ],
+    }
+    (log_dir / "summary.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
 def run(stages: tuple[Stage, ...], *, title: str = "stages", stream: bool = False) -> list[Result]:
     """Run every stage in order behind one bar and print a per-stage summary.
 
@@ -267,7 +297,7 @@ def run(stages: tuple[Stage, ...], *, title: str = "stages", stream: bool = Fals
     if not stages:
         return []
     total = sum(stage.typical for stage in stages)
-    log_dir = project_cfg.STATE_DIR / "shared" / "logs" / "runs" / title / datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_dir = runs_dir(title) / datetime.now().strftime("%Y%m%d-%H%M%S")
     log_dir.mkdir(parents=True, exist_ok=True)
     results: list[Result] = []
     with tqdm(total=total, unit="s", ascii=True, desc=title, bar_format=BAR_FORMAT) as bar:
@@ -280,6 +310,7 @@ def run(stages: tuple[Stage, ...], *, title: str = "stages", stream: bool = Fals
             bar.n = prefix
             bar.refresh()
     summary(results, stages)
+    write_summary(log_dir, title, results, stages)
     print(f"[LOG] {log_dir}")
     return results
 

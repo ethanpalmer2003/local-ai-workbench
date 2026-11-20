@@ -35,9 +35,17 @@ PROBES = {
     "images": ("scripts.tests.cases.koboldcpp.kobold_embedded_compare", ["--kind", "image"], 300),
     "ming3-tts": ("scripts.tests.cases.audiocpp.audiocpp_backend_compare", ["--case", "ming3-tts"], 180),
 }
+# - these probes reach consent.require, so the answer this stage already has must travel with the command
+NEEDS_CONSENT = frozenset({"whisper", "gemma"})
 
 
-def run_probes(names: list[str]) -> bool:
+def probe_command(name: str, yes: bool) -> list[str]:
+    """The command that starts one probe, carrying the consent this stage was given."""
+    module, arguments, _ = PROBES[name]
+    return [sys.executable, "-m", module, *consent.forward(yes and name in NEEDS_CONSENT, list(arguments))]
+
+
+def run_probes(names: list[str], yes: bool = False) -> bool:
     from scripts.tests.shared.native_suites import native_policy, refuse_existing_sessions
 
     if live_stamp.unchanged("backends", names):
@@ -51,7 +59,7 @@ def run_probes(names: list[str]) -> bool:
     with native_policy():
         launch_util.assign_current_process_to_job()
         refuse_existing_sessions()
-        passed = _run_probes(names, context)
+        passed = _run_probes(names, context, yes)
     if passed:
         live_stamp.record("backends", names)
     return passed
@@ -69,7 +77,7 @@ PROBE_COMPONENTS: dict[str, tuple[str, ...]] = {
 }
 
 
-def _run_probes(names: list[str], context: dict[str, object]) -> bool:
+def _run_probes(names: list[str], context: dict[str, object], yes: bool) -> bool:
     run = CasePaths(__file__).new_run()
     print(f"[OUTPUT] {run.root}", flush=True)
     report = RunReport("native/backends", "native-backends")
@@ -87,8 +95,8 @@ def _run_probes(names: list[str], context: dict[str, object]) -> bool:
     launch_util.set_console_title(console_title)
     env = {**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"}
     for name in names:
-        module, arguments, timeout = PROBES[name]
-        command = [sys.executable, "-m", module, *arguments]
+        timeout = PROBES[name][2]
+        command = probe_command(name, yes)
         tick = time.monotonic()
         progress.update(name)
         print(f"[START] {name}", flush=True)
@@ -142,7 +150,7 @@ def main() -> int:
     args = parser.parse_args()
     if not consent.ask("Native backend probes", stage_times.typical("backends"), args.yes):
         return 1
-    return 0 if run_probes(args.only) else 1
+    return 0 if run_probes(args.only, args.yes) else 1
 
 
 if __name__ == "__main__":
