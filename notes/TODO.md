@@ -7,17 +7,10 @@
 ## Reliability
 Defects and safety gaps: something behaves wrongly or can run away, and the fix is code or configuration.
 
-
 ## Standardization
 A rule or a shape to decide, where the code is already correct and the question is which convention to keep.
 
-
-
-
-- [ ] Decide what to do with the 661 parameter defaults the census counts (`python -m scripts.review.checks.annotations --census`: 238 carried, 227 literal, 89 derived, 52 argv): keep `argv`, decide whether a derived default becomes a required argument, and audit the carried ones where `None` is also a legal value, which needs a sentinel. Owner: [annotations check](../scripts/review/checks/annotations.py). ~2 h
-
-- [ ] Decide the docstring voice repo-wide: PEP 257 asks for imperative mood ("Return the path"). Of the 1,238 module, class and function docstrings, the first word is a determiner ("The path...") in 287, an imperative verb in 211, and neither in 740, so a first-word gate would judge under half of them and the rule is a decision before it is a check. `scripts/shared/import_graph.py` and `scripts/tests/scoped_selection.py` are on the standard as the reference. The same pass settles the `# - ` comment marker, 517 lines of which the two files no longer use. Migrate area by area, then state the rule in [code](../.agents/CODE.md) and add a check in `scripts/review/checks/comments.py` only if the opening word can be measured. ~3 h
-
+- [ ] Annotate the 71 defaults that sit on a parameter with no type (`python -m scripts.review.checks.annotations --unannotated`), so the signature states the optionality the default already implies; the rule for `None` is settled in [annotations](../scripts/review/checks/annotations.py). ~1 h
 
 ## Needs a model run or device
 Work that cannot be settled without a live run: weights, a device, a server or a human at the machine.
