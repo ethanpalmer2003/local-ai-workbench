@@ -10,6 +10,13 @@ The second rule is about the default beside the annotation. A default may be a l
 literals, `None`, or an empty `frozenset`; it may not be a mutable container, a call, or a read of a
 settings object, because every one of those is evaluated once when the module is imported. Pass `None`
 and resolve it in the body instead, where a test can replace it.
+
+A `None` default means "not supplied", and the annotation's `| None` says the same thing, so the two agree
+and no sentinel is needed. The 240 carried and 90 derived defaults were audited: none of them has to tell
+"not supplied" from a real `None`, because a caller cannot express that difference in the first place, and
+a sentinel earns its place only when one must. `argv` keeps the argparse convention, and a derived default
+stays a default, because the body resolving `None` is the documented behavior rather than a hidden
+argument.
 """
 
 import argparse
@@ -286,6 +293,32 @@ def default_census(paths: list[Path] | None = None) -> Counter[str]:
     return census
 
 
+def unannotated_defaults(paths: list[Path] | None = None) -> list[tuple[str, int, str, str]]:
+    """Path, line, function and parameter for every default beside a parameter that states no type.
+
+    A default implies the parameter is optional, so the annotation has to say so as well; this lists the
+    signatures where only the default states it.
+    """
+    rows = []
+    sources = [path for path in (maintained_files() if paths is None else paths) if path.suffix == ".py"]
+    for path in sources:
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
+        except (OSError, SyntaxError):
+            continue
+        try:
+            relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+        except ValueError:
+            relative = path.as_posix()
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                continue
+            for argument, default in _parameters(node):
+                if argument.annotation is None:
+                    rows.append((relative, default.lineno, node.name, argument.arg))
+    return rows
+
+
 def default_findings(paths: list[Path] | None = None) -> list[tuple[str, int, str]]:
     """Repo-relative path, line and reason for every default that is computed when the module loads."""
     sources = [path for path in (maintained_files() if paths is None else paths) if path.suffix == ".py"]
@@ -318,8 +351,19 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("paths", nargs="*", help="files to check (default: every maintained Python file)")
     parser.add_argument("--census", action="store_true", help="count defaults by category instead of checking")
+    parser.add_argument(
+        "--unannotated", action="store_true", help="list defaults beside a parameter that states no type"
+    )
     args = parser.parse_args(argv)
     targets = check_targets(args.paths, (".py",))
+    if args.unannotated:
+        rows = unannotated_defaults(targets)
+        for relative, line, function, parameter in rows[:MAX_REPORTED]:
+            print(f"[LIST] {relative}:{line} {function}({parameter})")
+        if len(rows) > MAX_REPORTED:
+            print(f"[WARN] {len(rows) - MAX_REPORTED} further sites; output bounded at {MAX_REPORTED}")
+        print(f"[OK] Unannotated: {len(rows)} default(s) beside a parameter with no annotation")
+        return 0
     if args.census:
         census = default_census(targets)
         for kind, count in sorted(census.items(), key=lambda item: (-item[1], item[0])):

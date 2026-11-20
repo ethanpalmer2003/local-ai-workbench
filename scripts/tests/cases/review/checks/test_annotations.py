@@ -112,6 +112,17 @@ class DefaultTests(unittest.TestCase):
         finally:
             path.unlink()
 
+    def test_a_default_beside_an_unannotated_parameter_is_listed(self):
+        directory = Path(project_cfg.BASE_DIR) / "scripts/tests/output/annotation-unannotated"
+        directory.mkdir(parents=True, exist_ok=True)
+        path = directory / "sample.py"
+        path.write_text("def f(count=1, name: str | None = None) -> None: ...\n", encoding="utf-8")
+        try:
+            rows = annotations.unannotated_defaults([path])
+        finally:
+            path.unlink()
+        self.assertEqual([(function, parameter) for _, _, function, parameter in rows], [("f", "count")])
+
 
 class FindingsTests(unittest.TestCase):
     def test_the_future_import_is_refused(self):

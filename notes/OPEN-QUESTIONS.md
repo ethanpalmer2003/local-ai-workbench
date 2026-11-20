@@ -17,9 +17,20 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
   shell as the agent's user to prove; an ACL that allows only named subpaths, which is narrower but needs the
   same proof; or keep the guard as the only rule and accept that another harness can walk those trees. The
   first two change file permissions on 320 GB of installs, so the decision comes before any test.
-- A decision that would change work is added here with its options.
+- **The docstring voice and the `# - ` marker.** The standard already exists:
+  [PEP 257](https://peps.python.org/pep-0257/) asks for an imperative summary line ("Return the path") and
+  ruff's pydocstyle rules measure it, so the question is which subset to adopt, not which style to invent.
+  Measured today: `D401` reports 168 sites; the whole `D` family reports 3,069, almost all of them missing
+  docstrings (`D102` 1,338 methods, `D103` 888 functions, `D101` 320 classes). Of the 1,238 docstrings, the
+  first word is a determiner in 287, an imperative verb in 211 and neither in 740, though only function
+  docstrings fall under the mood rule. Options: adopt `D401` alone and rewrite the 168 summary lines, which
+  covers what PEP 257 actually names; adopt the mechanical rules that already hold (`D400`/`D415` terminal
+  punctuation, 65 + 65, and `D205` 48) and leave the mood descriptive; or enable the whole family and document
+  2,546 public functions, methods and classes over months. The same pass settles the `# - ` comment marker,
+  which 517 lines still carry and `scripts/shared/import_graph.py` and `scripts/tests/scoped_selection.py`
+  have dropped; that marker is house style, not a Python standard, so it may be kept as it is.
 - **How a run should be laid out on disk.** A run currently sits at `<root>/<area>/<case>/<outcome>/<epoch-id>/`, while the trash uses `YYYY-MM-DD` folders. Options: a date folder per run (`.../<outcome>/<YYYY-MM-DD>/<id>/`) so retention reads as calendar time and a whole day prunes at once; a build folder keyed on the engine commit (`.../<commit>/<id>/`) so a comparison across builds sits together and a superseded build is one folder; or keep the flat shape and let `cleanup.py` own the rule, which is what happens today. Cost of either change: every new run path moves, historical paths keep their current place because a tracked document may cite them, and a cited run id keeps working either way because the id does not change.
-
+- A decision that would change work is added here with its options.
 
 ## Superseded
 
