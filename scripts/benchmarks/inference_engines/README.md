@@ -6,7 +6,7 @@
 
 ```powershell
 C:/AI/bat/benchmarks/benchmark_strata_avalon.bat
-C:/AI/bat/benchmarks/benchmark_strata_avalon.bat --engines strata --samples 5
+C:/AI/bat/benchmarks/benchmark_strata_avalon.bat --engines strata --repeats 5
 C:/AI/bat/benchmarks/benchmark_strata_avalon.bat --conversation --strata-resident-experts
 python -m scripts.benchmarks.inference_engines.benchmark_coding_engines --engine llamacpp --profile swift15
 ```

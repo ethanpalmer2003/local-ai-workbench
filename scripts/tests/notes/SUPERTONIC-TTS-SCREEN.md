@@ -3,7 +3,7 @@
 First timing pair for the practice TTS model and the Kokoro baseline it replaced. One sentence, one
 Vulkan build, three measured requests after one warmup, WAV output.
 
-Run: `python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case supertonic --backend vulkan --samples 3`
+Run: `python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case supertonic --backend vulkan --repeats 3`
 and the same with `--case kokoro`.
 
 ## Setup

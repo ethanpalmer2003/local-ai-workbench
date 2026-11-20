@@ -1,5 +1,6 @@
 """Bounded CPU/Vulkan file transcription and Silero VAD checks on saved speech."""
 
+import argparse
 import hashlib
 import json
 import os
@@ -52,6 +53,11 @@ def invoke(command: list[str], env: dict[str, str], paths: RunPaths, deadline: f
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--repeats", type=int, choices=range(1, 4), default=1, help="measured passes per build and VAD mode"
+    )
+    args = parser.parse_args()
     context = dict(require_native_execution("Parakeet CPU/Vulkan smoke"))
     run = CasePaths(__file__).new_run()
     print(f"[OUTPUT] {run.root}", flush=True)
@@ -95,16 +101,23 @@ def main() -> None:
                 ]
                 if vad:
                     command += ["--vad", "--vad-model", str(settings.vad_model)]
-                result = invoke(command, env, paths, deadline, context)
-                text = result["output"]["text"]
-                if not text.strip():
-                    raise RuntimeError("Empty transcription")
-                result.update(
-                    build=build, vad=vad, clip=clip["id"], status="completed", **word_errors(clip["reference"], text)
-                )
-                report.results.append(result)
-                report.save(run)
-                print(f"[OK] {build} vad={vad}: {result['seconds']:.3f}s, WER {result['wer']:.1%}: {text}", flush=True)
+                for _pass in range(args.repeats):
+                    result = invoke(command, env, paths, deadline, context)
+                    text = result["output"]["text"]
+                    if not text.strip():
+                        raise RuntimeError("Empty transcription")
+                    result.update(
+                        build=build,
+                        vad=vad,
+                        clip=clip["id"],
+                        status="completed",
+                        **word_errors(clip["reference"], text),
+                    )
+                    report.results.append(result)
+                    report.save(run)
+                    print(
+                        f"[OK] {build} vad={vad}: {result['seconds']:.3f}s, WER {result['wer']:.1%}: {text}", flush=True
+                    )
             paths = RunPaths(run.root / f"{build}-vad-only")
             paths.create()
             result = invoke(

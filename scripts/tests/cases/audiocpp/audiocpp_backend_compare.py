@@ -346,7 +346,7 @@ def _arguments() -> tuple[argparse.Namespace, Any]:
     selection.add_argument("--all", action="store_true", help="run every configured build")
     selection.add_argument("--backend", choices=tuple(BUILDS), help="run only this build")
     parser.add_argument("--case", choices=tuple(PROFILES), default="breeze2")
-    parser.add_argument("--samples", type=int, choices=range(1, 5), default=1)
+    parser.add_argument("--repeats", type=int, choices=range(1, 5), default=1)
     parser.add_argument("--text", default=TEXT)
     parser.add_argument("--timeout", type=int, choices=range(10, 121), default=45)
     parser.add_argument("--loaders-only", action="store_true", help="check family registration without loading weights")
@@ -394,7 +394,7 @@ def _document(
         "instruction": "not supplied; explicit voice/language options are recorded per profile",
         "mode": "offline",
         "warmups_per_backend": 1,
-        "measured_runs_per_backend": args.samples,
+        "measured_runs_per_backend": args.repeats,
         "builds": {name: str(path) for name, path in BUILDS.items()},
         "selected_backends": selected,
         "execution_context": context,
@@ -432,7 +432,7 @@ def _collect_backend(
     """Run one build; returns True when the remaining builds should be skipped."""
     try:
         result["results"][backend] = _backend_summary(
-            run_backend(backend, run.root, profile, args.samples, args.text, args.timeout)
+            run_backend(backend, run.root, profile, args.repeats, args.text, args.timeout)
         )
     except Exception as error:
         message = f"{type(error).__name__}: {error}"

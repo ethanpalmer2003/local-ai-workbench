@@ -168,7 +168,7 @@ def worker(engine: str, samples: int, run: RunPaths, texts: list[str] | None = N
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--engine", choices=("piper", "sherpa-onnx"))
-    parser.add_argument("--samples", type=int, choices=range(1, 4), default=2)
+    parser.add_argument("--repeats", type=int, choices=range(1, 4), default=2)
     parser.add_argument("--root", type=Path)
     parser.add_argument("--texts", nargs="+", help="Explicit matching inputs for cross-framework screens")
     parser.add_argument(
@@ -184,7 +184,7 @@ def main():
     run = RunPaths(args.root) if args.root else BenchmarkPaths(__file__).new_run()
     run.create()
     if args.engine:
-        worker(args.engine, args.samples, run, args.texts, args.profile)
+        worker(args.engine, args.repeats, run, args.texts, args.profile)
         return 0
     context = dict(require_native_execution("Resident Piper/Sherpa comparison"))
     failures = []
@@ -195,8 +195,8 @@ def main():
             "scripts.benchmarks.tts_engines.resident",
             "--engine",
             engine,
-            "--samples",
-            str(args.samples),
+            "--repeats",
+            str(args.repeats),
             "--root",
             str(run.root),
         ]
@@ -218,7 +218,7 @@ def main():
         payload["status"] = "failed" if failures else "completed"
         payload["provenance"] = provenance.block(
             subject=str(payload.get("name", "tts_engines/resident")),
-            config={"profile": "lessac-medium", "samples": args.samples, "execution_context": context},
+            config={"profile": "lessac-medium", "samples": args.repeats, "execution_context": context},
             frameworks=[provenance.framework_state("tts/piper"), provenance.framework_state("tts/sherpa-onnx")],
             models=[provenance.file_identity("voice", voice_assets("lessac-medium")[0])],
         )

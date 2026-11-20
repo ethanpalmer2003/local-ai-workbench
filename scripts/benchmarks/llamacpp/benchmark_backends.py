@@ -123,7 +123,7 @@ def summarize_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rounds", type=int, default=2)
+    parser.add_argument("--repeats", type=int, default=2)
     parser.add_argument("--tokens", type=int, default=64)
     parser.add_argument("--context", type=int, default=8192)
     parser.add_argument("--cache", choices=("f16", "q8_0"), default="f16")
@@ -144,7 +144,7 @@ def main() -> None:
     model: Path | None = None
     start = time.monotonic()
     try:
-        for round_index in range(args.rounds):
+        for round_index in range(args.repeats):
             order = ("rocm-lemonade", "hrx") if round_index % 2 == 0 else ("hrx", "rocm-lemonade")
             for build in order:
                 model = run_trial(evidence, paths, round_index, build, prompts, args, port)

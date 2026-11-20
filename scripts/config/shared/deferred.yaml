@@ -51,7 +51,7 @@
   kind: model
   revisit: Kokoro is enabled again
   source: notes/TODO.md
-- thing: Coding harnesses other than Pi
+- thing: Coding harnesses other than Pi (little-coder, ohmypi, nanocoder, DeepSeek Harness)
   kind: work
   revisit: another harness becomes the client again
   source: notes/TODO.md

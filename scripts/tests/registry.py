@@ -133,6 +133,7 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
     SharedRuntimeTests,
     SweepMessageTests,
 )
+from scripts.tests.cases.shared.runtime.test_suite_calls import SuiteCallTests
 from scripts.tests.cases.shared.tools.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
 from scripts.tests.cases.shared.tools.test_cleanup import CleanupTests
 from scripts.tests.cases.shared.tools.test_language_matrix import LanguageMatrixTests
@@ -337,6 +338,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     TransportBenchmark,
     BackendSessions,
     ProbeCommandTests,
+    SuiteCallTests,
     TestSelection,
     UpstreamTextTests,
     ExitReportTests,

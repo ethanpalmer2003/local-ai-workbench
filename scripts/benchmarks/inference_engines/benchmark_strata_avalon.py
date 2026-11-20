@@ -158,7 +158,7 @@ def measure(
     warmup = stream_chat(base_url, api_key, model, warmup_msgs, 32, args.request_timeout)
     discarded = []
     samples = []
-    total = args.warmup_samples + args.samples
+    total = args.warmup_samples + args.repeats
     for index in range(total):
         # - in conversation mode the warmup already sent turn 0, so measured turns
         #   continue from it: the earlier turns are a byte-exact prefix of this one
@@ -174,7 +174,7 @@ def measure(
         samples.append(row)
         timings = row.get("native_timings") or {}
         print(
-            f"  {name} sample {row['sample'] + 1}/{args.samples}: {row['seconds']:.2f}s"
+            f"  {name} sample {row['sample'] + 1}/{args.repeats}: {row['seconds']:.2f}s"
             f" | prefill {timings.get('prompt_per_second', 0):.1f} tok/s"
             f" | decode {timings.get('predicted_per_second', 0):.2f} tok/s"
             f" | ttft {row.get('first_token_seconds') or 0:.1f}s",
@@ -366,7 +366,7 @@ def avalon_arm(output: RunPaths, args: argparse.Namespace) -> tuple[dict[str, An
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--samples", type=int, default=5)
+    parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument(
         "--warmup-samples", type=int, default=1, help="Measured-prompt samples to run and discard (cold pages)."
     )

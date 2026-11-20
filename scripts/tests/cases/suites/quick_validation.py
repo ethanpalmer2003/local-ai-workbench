@@ -21,7 +21,7 @@ PROBES = {
     "parakeet": ("scripts.tests.cases.asr.parakeetcpp", [], 240),
     "whisper": (
         "scripts.benchmarks.asr.whisper_embedded_compare",
-        ["--order", "internal", "--repetitions", "1", "--budget", "180"],
+        ["--order", "internal", "--repeats", "1", "--budget", "180"],
         240,
     ),
     "practice-whisper": ("scripts.tests.cases.asr.shared.language_practice_whisper", [], 240),
@@ -30,10 +30,10 @@ PROBES = {
         ["--transcription-engine", "qwen3-asr"],
         240,
     ),
-    "gemma": ("scripts.benchmarks.asr.gemma_audio_compare", ["--engines", "llamacpp", "--rounds", "1"], 300),
+    "gemma": ("scripts.benchmarks.asr.gemma_audio_compare", ["--engines", "llamacpp", "--repeats", "1"], 300),
     "images": (
         "scripts.tests.cases.koboldcpp.kobold_embedded_compare",
-        ["--kind", "image", "--arms", "internal", "--samples", "1"],
+        ["--kind", "image", "--arms", "internal", "--repeats", "1"],
         300,
     ),
     "ming3-tts": ("scripts.tests.cases.audiocpp.audiocpp_backend_compare", ["--case", "ming3-tts"], 180),

@@ -165,14 +165,14 @@ def run_arm(
                 lambda: result.update(warmup=request(connection, "Describe a red ball in one sentence.", 32, deadline))
             )
             vram.stage = "measured"
-            for index in range(args.samples):
+            for index in range(args.repeats):
                 prompt = PREFIX + f"\nSample {index}: explain Python lists versus tuples in at least 300 words."
                 row, timing = lifecycle.measure(lambda: request(connection, prompt, args.tokens, deadline))
                 row.update(timing)
                 row["sample"] = index
                 result["requests"].append(row)
                 save_arm(output, result)
-                print(f"  sample {index + 1}/{args.samples}: {row['seconds']:.2f}s", flush=True)
+                print(f"  sample {index + 1}/{args.repeats}: {row['seconds']:.2f}s", flush=True)
             quality = request(connection, QUALITY, 128, deadline)
             result["quality"] = {"request": quality, **grade(quality["content"])}
             result["status"] = "completed"
@@ -202,7 +202,7 @@ def save_arm(output: RunPaths, result: dict[str, Any]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("profiles", nargs="+", type=Path)
-    parser.add_argument("--samples", type=int, default=5)
+    parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--tokens", type=int, default=128)
     parser.add_argument("--budget-seconds", type=int, default=270)
     parser.add_argument("--startup-timeout", type=int, default=110)

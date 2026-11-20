@@ -218,7 +218,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--language", help="Explicit corpus language for every engine; omit to retain manifest language"
     )
-    parser.add_argument("--samples", type=int, choices=range(1, 5), default=2)
+    parser.add_argument("--repeats", type=int, choices=range(1, 5), default=2)
     parser.add_argument("--clips", type=int, choices=range(1, 21), default=2)
     parser.add_argument("--corpus", type=Path)
     parser.add_argument("--port", type=int, default=18941)
@@ -241,7 +241,7 @@ def _engine_result(name, command, model, clips, args, run, deadline) -> dict[str
     try:
         if time.monotonic() >= deadline:
             raise TimeoutError("Whole-run budget exhausted; engine not omitted")
-        return run_engine(name, command, model, clips, args.samples, run, args.port, deadline, args.resources)
+        return run_engine(name, command, model, clips, args.repeats, run, args.port, deadline, args.resources)
     except Exception as error:
         return {"engine": name, "status": "failed", "error": str(error), "summary": summarize_requests([])}
 

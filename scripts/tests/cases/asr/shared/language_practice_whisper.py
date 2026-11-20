@@ -146,6 +146,7 @@ def _stop_services(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--transcription-engine", choices=("whisper-vulkan", "qwen3-asr"), default="whisper-vulkan")
+    parser.add_argument("--repeats", type=int, choices=range(1, 4), default=1, help="measured transcription passes")
     args = parser.parse_args()
     context = dict(require_native_execution("Language-practice ASR integration"))
     _require_free_sessions()
@@ -202,7 +203,7 @@ def main() -> None:
                 page.raise_for_status()
                 html = page.text
                 assert "kobold_streaming.js" in html
-                transcripts = _transcribe(lite, clips)
+                transcripts = [row for _pass in range(args.repeats) for row in _transcribe(lite, clips)]
                 reply = _chat(lite, transcripts)
                 assert reply["choices"][0]["message"]["content"].strip()
                 assert (

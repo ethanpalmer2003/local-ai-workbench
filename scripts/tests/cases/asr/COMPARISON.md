@@ -2,7 +2,7 @@
 
 High-ranking group: [selection](../../../config/asr/leaderboard_group.json),
 [dated published quality/speed snapshot](../../notes/asr/leaderboards-2026-10-29/README.md).
-Use `--group leaderboard-high-ranking --resources --language en --run --samples 3 --clips 2`
+Use `--group leaderboard-high-ranking --resources --language en --run --repeats 3 --clips 2`
 with the resident runner. All five candidates remain visible, including missing
 assets/runtime failures. Isolated resources do not establish LLM/TTS coexistence
 capacity. Publisher RTFx remains separate from local speed.
@@ -17,7 +17,7 @@ unknown; no estimated loading cost is subtracted.
 
 ```powershell
 C:/AI/bat/benchmarks/benchmark_asr_compare.bat
-C:/AI/bat/benchmarks/benchmark_asr_compare.bat --run --samples 2 --clips 2
+C:/AI/bat/benchmarks/benchmark_asr_compare.bat --run --repeats 2 --clips 2
 python -m scripts.benchmarks.asr.coverage
 ```
 

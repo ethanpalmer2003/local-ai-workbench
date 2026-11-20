@@ -36,7 +36,7 @@ class NgramWorkloads(unittest.TestCase):
             conf.build_cmd.return_value = ["unused"]
             runner = Mock(side_effect=[Result(), Result(), KeyboardInterrupt()])
             with (
-                patch.object(sys, "argv", ["benchmark", "--rounds", "2"]),
+                patch.object(sys, "argv", ["benchmark", "--repeats", "2"]),
                 patch.object(trial.launch_util, "llama_server_running", return_value=False),
                 patch.object(trial.launch_util, "port_listening", return_value=False),
                 patch.object(trial.launch_util, "kill_process_tree"),

@@ -7,7 +7,7 @@
 ## Repository work
 Code and configuration a settled decision leaves behind.
 
-- [ ] Delete what the live suites stopped covering: Kokoro TTS (its `kokoro` probe is gone) and every coding harness but Pi (`dsh-headless` left the launcher target list, `little-coder` left the client loop), so each config entry, launcher and fingerprint is removed rather than left looking supported; the parked rows are in [deferred](../scripts/config/shared/deferred.yaml). ~1 h
+- [ ] Move what the live suites stopped covering into the parked home rather than deleting it: Kokoro TTS (its `kokoro` probe is gone) and the coding harnesses other than Pi (little-coder, ohmypi, nanocoder, DeepSeek Harness; `dsh-headless` left the launcher targets and `little-coder` left the client loop). Their config entries, launchers and fingerprints should sit in one parked place a reader can find, the way Fish Audio Drama 3 is recorded, with a row per item in [deferred](../scripts/config/shared/deferred.yaml). ~1 h
 
 ## Needs a model run or device
 Work that cannot be settled without a live run: weights, a device, a server or a human at the machine.
