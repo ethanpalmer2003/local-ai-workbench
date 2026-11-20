@@ -19,13 +19,14 @@ Selection: `LLAMACPP_DEFAULT_BUILD` is the rolling `vulkan` build: b12590 return
 `LLAMACPP_CODING_BUILD` and `LLAMACPP_EMBEDDINGS_BUILD` override it per use; `vulkan-1.0.0` stays as the
 fallback.
 
-The RDNA build (`rdna_build.py`) is parked behind an explicit flag: `update_frameworks --build rdna` rebuilds
-it after the update pass, and `test_full.bat --build rdna` forwards that to the preflight. Its patches are HIP
-kernel work pinned to a source commit (`release.json` `base`), so they cannot ride a Vulkan release; a rebuild
-clones upstream and installs the patch set from its release.
+The RDNA build runs from an explicit flag: `update_frameworks --build rdna` rebuilds it after the update pass,
+and `test_full.bat --build rdna` forwards that. It builds llama.cpp at the patch set's `release.json` `base`
+(4f9dfa0e3 for v17-r327) with `-DGGML_HIP=ON -DGPU_TARGETS=gfx1101`, and needs the Windows SDK bin on PATH for
+the link's `mt.exe`. On the 27B, Vulkan wins wall time (21.2 against 32.6 s, 51.0 against 100.2 s): this build
+prefills at under half the rate, though it decodes faster; [outcomes](../../tests/notes/OUTCOMES.md).
 
-The pattern worth keeping: a batched request is what both faults here have needed, so a one-prompt screen
-says nothing about them. The nearest upstream report is
+Both faults here needed a batched request, so a one-prompt screen says nothing about them. The nearest upstream
+report is
 [ggml-org/llama.cpp#12836](https://github.com/ggml-org/llama.cpp/issues/12836) with
 [#17912](https://github.com/ggml-org/llama.cpp/pull/17912) closing it: a `-b` > `-ub` assert, not this silent
 access violation.

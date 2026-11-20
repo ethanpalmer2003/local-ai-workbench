@@ -224,7 +224,9 @@ def build_rdna(
     env["HIP_PATH"] = str(rocm_path)
     env["LLVM_PATH"] = str(llvm_path)
     env["HIP_PLATFORM"] = "amd"
-    env["PATH"] = f"{rocm_path}\\bin;{llvm_path}\\bin;" + env.get("PATH", "")
+    # - the link step embeds a manifest and calls mt.exe, which ships beside rc.exe rather than on PATH
+    sdk_bin = Path(defaults.rc_compiler).parent
+    env["PATH"] = f"{rocm_path}\\bin;{llvm_path}\\bin;{sdk_bin};" + env.get("PATH", "")
     env["SCCACHE_DIR"] = str(source.sccache_dir)
 
     configure_cmd = [
@@ -240,6 +242,7 @@ def build_rdna(
         f"-DCMAKE_C_COMPILER={llvm_path / 'bin' / 'amdclang.exe'}",
         f"-DCMAKE_CXX_COMPILER={llvm_path / 'bin' / 'amdclang++.exe'}",
         f"-DCMAKE_RC_COMPILER={defaults.rc_compiler}",
+        f"-DCMAKE_MT={sdk_bin / 'mt.exe'}",
         "-DCMAKE_BUILD_TYPE=Release",
     ]
 
