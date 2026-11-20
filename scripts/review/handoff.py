@@ -14,7 +14,7 @@ import argparse
 import ast
 import json
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from functools import cache
 from pathlib import Path
@@ -24,7 +24,7 @@ from scripts.benchmarks.shared import provenance
 from scripts.config import project_config as project_cfg
 from scripts.review.checks.inventory_code import maintained_python
 from scripts.review.lists.sources import maintained_files
-from scripts.shared import changes
+from scripts.tests import validate
 from scripts.tools import stage_runner
 
 # - a function past this many lines carries more than one idea, which a reader has to judge rather than fix
@@ -86,11 +86,12 @@ class SimilarityEvidence:
 
 @dataclass(frozen=True)
 class FullRun:
-    """The last recorded full validation: when it ran, what each stage returned, and how long it took."""
+    """The last recorded full validation: when it ran, what each stage returned, and what it read."""
 
     created: str
     total_seconds: float
     stages: list[tuple[str, str, float]]
+    fingerprints: dict[str, str] = field(default_factory=dict)
 
 
 def signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
@@ -353,29 +354,26 @@ def last_full_run(directory: Path | None = None) -> FullRun | None:
             payload = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
+        rows = payload.get("stages") or []
         return FullRun(
             created=str(payload.get("created") or "unknown"),
             total_seconds=float(payload.get("total_seconds") or 0.0),
             stages=[
                 (str(row.get("key") or "?"), str(row.get("status") or "?"), float(row.get("seconds") or 0.0))
-                for row in payload.get("stages") or []
+                for row in rows
             ],
+            fingerprints={str(row.get("key")): str(row.get("fingerprint") or "") for row in rows},
         )
     return None
 
 
-def newest_commit_time() -> float | None:
-    """When the tree last moved, in epoch seconds, so a run older than it predates the tree."""
-    try:
-        return float(changes.git_text("log", "-1", "--format=%ct"))
-    except changes.GitError:
-        return None
-    except ValueError:
-        return None
+def full_run_issues(run: FullRun | None, current: dict[str, str] | None = None) -> list[str]:
+    """Why this bundle may not be handed off yet: no run, a failed stage, or a stage whose inputs moved.
 
-
-def full_run_issues(run: FullRun | None, commit_time: float | None = None) -> list[str]:
-    """Why this bundle may not be handed off yet: no recorded run, a failed stage, or a run the tree outgrew."""
+    Comparison is by content, not by clock: a stage whose recorded fingerprint still matches what it reads is
+    covered even when a later commit touched a document the stage does not read, which is what the cache is
+    for. The gate reads every maintained file, so a documentation change shows up there and only there.
+    """
     if run is None:
         return ["No recorded full validation; run `bat/checks/test_full.bat` before handing off"]
     if not run.stages:
@@ -383,15 +381,17 @@ def full_run_issues(run: FullRun | None, commit_time: float | None = None) -> li
     failed = [key for key, status, _ in run.stages if status == "failed"]
     if failed:
         return [f"The last full validation failed at {', '.join(failed)}; fix it before handing off"]
-    try:
-        created = datetime.fromisoformat(run.created).timestamp()
-    except ValueError:
-        return [f"The last full validation has no readable date ({run.created}); rerun it"]
-    commit = newest_commit_time() if commit_time is None else commit_time
-    if commit is not None and commit > created:
-        return ["The tree changed after the last full validation; rerun `bat/checks/test_full.bat`"]
-    if changes.changed_since_head():
-        return ["The tree has uncommitted changes; the full validation describes a different tree"]
+    fingerprints = validate.stage_fingerprints() if current is None else current
+    stale = [
+        key
+        for key, status, _ in run.stages
+        if status != "failed" and run.fingerprints.get(key) != fingerprints.get(key)
+    ]
+    if stale:
+        return [
+            f"The inputs of {', '.join(stale)} changed after the last full validation; rerun "
+            "`bat/checks/test_full.bat` (unchanged stages are skipped)"
+        ]
     return []
 
 

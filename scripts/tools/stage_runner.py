@@ -6,6 +6,7 @@ and a stage that ends above its high mark is reported as slow. Child output goes
 tagged lines (`[OK]`, `[FAIL]`, `[SKIP]`, `[TIME]`, ...) are shown as they happen.
 """
 
+import hashlib
 import json
 import os
 import queue
@@ -45,6 +46,8 @@ class Stage:
     arguments: tuple[str, ...] = ()
     stream: bool = False
     limit: float | None = None
+    # - digest of what the stage reads; with it, a stage whose inputs are unchanged is skipped
+    fingerprint: str = ""
 
 
 def limit_for(stage: Stage) -> float:
@@ -61,6 +64,7 @@ class Result:
     seconds: float
     note: str = ""
     log: Path | None = None
+    fingerprint: str = ""
 
 
 @dataclass
@@ -242,6 +246,8 @@ def _describe(result: Result, stage: Stage) -> str:
 
 
 def _mark(result: Result, stage: Stage) -> str:
+    if result.status == "cached":
+        return "CACHE"
     if result.status == "skipped":
         return "SKIP"
     if result.status == "failed":
@@ -265,6 +271,51 @@ def runs_dir(title: str) -> Path:
     return project_cfg.STATE_DIR / "shared" / "logs" / "runs" / title
 
 
+def files_fingerprint(paths: list[Path], root: Path) -> str:
+    """Stable digest of the files a stage reads, so an unchanged stage can be skipped.
+
+    Content, not modification time: a rewrite that changes nothing must not buy a rerun.
+    """
+    digest = hashlib.sha256()
+    for path in sorted(paths):
+        digest.update(path.relative_to(root).as_posix().encode())
+        digest.update(b"\0")
+        try:
+            digest.update(hashlib.sha256(path.read_bytes()).digest())
+        except OSError:
+            digest.update(b"missing")
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _previous_summaries(title: str) -> list[dict[str, Any]]:
+    """Every recorded run of this title, newest last, for the cache comparison."""
+    folder = runs_dir(title)
+    summaries: list[dict[str, Any]] = []
+    for path in sorted(folder.glob("*/summary.json")) if folder.is_dir() else []:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(payload, dict):
+            summaries.append(payload)
+    return summaries
+
+
+def _cached_stage(title: str, stage: Stage) -> str | None:
+    """Where the last passing record of this stage still matches its inputs, else None."""
+    if not stage.fingerprint:
+        return None
+    for summary in reversed(_previous_summaries(title)):
+        for row in summary.get("stages") or []:
+            if row.get("key") != stage.key:
+                continue
+            if row.get("status") in ("ok", "skipped", "cached") and row.get("fingerprint") == stage.fingerprint:
+                return str(summary.get("created") or "the last run")
+            return None
+    return None
+
+
 def write_summary(log_dir: Path, title: str, results: list[Result], stages: tuple[Stage, ...]) -> None:
     """One JSON record beside the logs: when this run happened and what every stage returned.
 
@@ -282,6 +333,7 @@ def write_summary(log_dir: Path, title: str, results: list[Result], stages: tupl
                 "status": result.status,
                 "seconds": round(result.seconds, 1),
                 "high": by_key[result.key].high,
+                "fingerprint": result.fingerprint,
             }
             for result in results
         ],
@@ -303,7 +355,16 @@ def run(stages: tuple[Stage, ...], *, title: str = "stages", stream: bool = Fals
     with tqdm(total=total, unit="s", ascii=True, desc=title, bar_format=BAR_FORMAT) as bar:
         prefix = 0.0
         for stage in stages:
+            cached_at = None if os.environ.get("AI_LIVE_FORCE") == "1" else _cached_stage(title, stage)
+            if cached_at is not None:
+                bar.write(f"[SKIP] {stage.key}: unchanged since {cached_at}")
+                results.append(Result(stage.key, "cached", 0.0, fingerprint=stage.fingerprint))
+                prefix += stage.typical
+                bar.n = prefix
+                bar.refresh()
+                continue
             result = _run_stage(stage, log_dir / f"{stage.key}.log", bar, prefix, stream or stage.stream)
+            result.fingerprint = stage.fingerprint
             bar.write(_describe(result, stage))
             results.append(result)
             prefix += stage.typical

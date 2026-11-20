@@ -70,7 +70,9 @@ class StageRunnerTests(unittest.TestCase):
             payload = json.loads((Path(folder) / "summary.json").read_text(encoding="utf-8"))
         self.assertEqual(payload["title"], "validate")
         self.assertEqual(payload["total_seconds"], 12.5)
-        self.assertEqual(payload["stages"], [{"key": "gate", "status": "ok", "seconds": 12.5, "high": 80}])
+        self.assertEqual(
+            payload["stages"], [{"key": "gate", "status": "ok", "seconds": 12.5, "high": 80, "fingerprint": ""}]
+        )
 
     def test_an_empty_plan_runs_nothing(self) -> None:
         self.assertEqual(stage_runner.run(()), [])

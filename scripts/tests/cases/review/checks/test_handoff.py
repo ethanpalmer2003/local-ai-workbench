@@ -4,7 +4,6 @@ import ast
 import json
 import unittest
 import unittest.mock
-from datetime import datetime
 from pathlib import Path
 
 from scripts.review import handoff
@@ -76,21 +75,27 @@ class FullRunTests(unittest.TestCase):
         run = handoff.FullRun(
             created="2026-11-20T13:31:00", total_seconds=90.0, stages=[("gate", "ok", 55.0), ("suite", "failed", 30.0)]
         )
-        self.assertIn("failed at suite", handoff.full_run_issues(run, commit_time=0.0)[0])
+        self.assertIn("failed at suite", handoff.full_run_issues(run, current={})[0])
 
-    def test_a_run_older_than_the_newest_commit_blocks_the_bundle(self):
-        run = handoff.FullRun(created="2026-11-20T13:31:00", total_seconds=653.0, stages=[("gate", "ok", 55.0)])
-        created = datetime.fromisoformat(run.created).timestamp()
-        with unittest.mock.patch.object(handoff.changes, "changed_since_head", return_value=[]):
-            self.assertEqual(handoff.full_run_issues(run, commit_time=created - 60), [])
-            self.assertIn("tree changed", handoff.full_run_issues(run, commit_time=created + 60)[0])
+    def test_matching_fingerprints_accept_a_run_a_later_commit_followed(self):
+        run = handoff.FullRun(
+            created="2026-11-20T13:31:00",
+            total_seconds=653.0,
+            stages=[("gate", "ok", 55.0), ("suite", "ok", 30.0)],
+            fingerprints={"gate": "a", "suite": "b"},
+        )
+        self.assertEqual(handoff.full_run_issues(run, current={"gate": "a", "suite": "b"}), [])
 
-    def test_uncommitted_changes_block_the_bundle(self):
-        run = handoff.FullRun(created="2026-11-20T13:31:00", total_seconds=653.0, stages=[("gate", "ok", 55.0)])
-        created = datetime.fromisoformat(run.created).timestamp()
-        dirty = ["scripts/review/handoff.py"]
-        with unittest.mock.patch.object(handoff.changes, "changed_since_head", return_value=dirty):
-            self.assertIn("uncommitted changes", handoff.full_run_issues(run, commit_time=created - 60)[0])
+    def test_a_stage_whose_inputs_moved_blocks_the_bundle(self):
+        run = handoff.FullRun(
+            created="2026-11-20T13:31:00",
+            total_seconds=653.0,
+            stages=[("gate", "ok", 55.0), ("suite", "ok", 30.0)],
+            fingerprints={"gate": "a", "suite": "b"},
+        )
+        issues = handoff.full_run_issues(run, current={"gate": "moved", "suite": "b"})
+        self.assertIn("inputs of gate changed", issues[0])
+        self.assertIn("skipped", issues[0])
 
     def test_the_brief_states_the_run_and_every_stage(self):
         run = handoff.FullRun(
@@ -333,12 +338,16 @@ class BundleTests(unittest.TestCase):
         }
         with CasePaths(__file__).temporary_directory() as folder:
             destination = Path(folder) / "bundle"
-            run = handoff.FullRun(created="2026-11-20T13:31:00", total_seconds=653.0, stages=[("gate", "ok", 55.0)])
+            run = handoff.FullRun(
+                created="2026-11-20T13:31:00",
+                total_seconds=653.0,
+                stages=[("gate", "ok", 55.0)],
+                fingerprints={"gate": ""},
+            )
             with (
                 unittest.mock.patch.object(handoff, "index", return_value=[record]),
                 unittest.mock.patch.object(handoff, "last_full_run", return_value=run),
-                unittest.mock.patch.object(handoff, "newest_commit_time", return_value=0.0),
-                unittest.mock.patch.object(handoff.changes, "changed_since_head", return_value=[]),
+                unittest.mock.patch.object(handoff.validate, "stage_fingerprints", return_value={"gate": ""}),
             ):
                 self.assertEqual(handoff.main(["--out", str(destination)]), 0)
             self.assertTrue((destination / "HANDOFF.md").is_file())

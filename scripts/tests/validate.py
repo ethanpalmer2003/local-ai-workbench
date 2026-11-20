@@ -10,7 +10,10 @@ import argparse
 import os
 from dataclasses import replace
 
+from scripts.config import project_config as project_cfg
+from scripts.review.lists.sources import maintained_files
 from scripts.shared import consent
+from scripts.tests.shared import live_stamp
 from scripts.tools import stage_runner, stage_times
 
 MODULES: dict[str, tuple[str, tuple[str, ...]]] = {
@@ -26,12 +29,46 @@ ALL_KEYS = ("frameworks", "models", "gate", "suite", "launchers", "backends")
 DEFAULT_KEYS = tuple(key for key in ALL_KEYS if key != "models")
 
 
-def _stage(key: str) -> stage_runner.Stage:
+def stage_fingerprints() -> dict[str, str]:
+    """What each stage reads, hashed: a stage whose digest still matches is skipped.
+
+    The gate reads every maintained file, the suite reads the Python ones, the preflights read the updater
+    and config trees, and both live suites read what `live_stamp` already hashes. Documentation therefore
+    invalidates only the gate.
+    """
+    files = maintained_files()
+    python = [path for path in files if path.suffix == ".py"]
+    updaters = [
+        path
+        for path in files
+        if path.is_relative_to(project_cfg.SCRIPTS_DIR / "download") or path.is_relative_to(project_cfg.CONFIG_DIR)
+    ]
+    digests = {
+        "frameworks": stage_runner.files_fingerprint(updaters, project_cfg.BASE_DIR),
+        "models": stage_runner.files_fingerprint(
+            [path for path in updaters if path.suffix == ".py"], project_cfg.BASE_DIR
+        ),
+        "gate": stage_runner.files_fingerprint(files, project_cfg.BASE_DIR),
+        "suite": stage_runner.files_fingerprint(python, project_cfg.BASE_DIR),
+    }
+    live = live_stamp.fingerprint()
+    digests["launchers"] = live
+    digests["backends"] = live
+    return digests
+
+
+def _stage(key: str, fingerprints: dict[str, str]) -> stage_runner.Stage:
     module, arguments = MODULES[key]
     _, typical, high = stage_times.RANGES[key]
     # - update stages keep every line; the checks and live suites keep their tagged summaries
     return stage_runner.Stage(
-        key=key, module=module, arguments=arguments, typical=typical, high=high, stream=key in ("frameworks", "models")
+        key=key,
+        module=module,
+        arguments=arguments,
+        typical=typical,
+        high=high,
+        stream=key in ("frameworks", "models"),
+        fingerprint=fingerprints[key],
     )
 
 
@@ -44,9 +81,10 @@ def plan(
     fresh binary instead of the build staying hand-run.
     """
     keys = list(only) if only else [key for key in ALL_KEYS if models or key in DEFAULT_KEYS]
+    fingerprints = stage_fingerprints()
     stages = []
     for key in keys:
-        stage = _stage(key)
+        stage = _stage(key, fingerprints)
         if key == "frameworks" and build:
             stage = replace(stage, arguments=(*stage.arguments, "--build", build))
         stages.append(stage)
