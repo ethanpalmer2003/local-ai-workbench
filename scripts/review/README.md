@@ -7,7 +7,7 @@ python -m scripts.review
 C:/AI/scripts/review/check_repo.bat
 ```
 
-The default run is scoped to what changed since upstream. `--all` checks every section in about a minute, so it never asks; the runs that ask for agreement are the ones expected to pass five minutes, through [consent](../shared/consent.py).
+The default run is scoped to what changed since upstream. `--all` checks every section in a minute, so it never asks; runs expected to pass five minutes ask, through [consent](../shared/consent.py). `--summary` prints one line per section.
 
 The runner executes these checks:
 

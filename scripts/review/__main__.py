@@ -289,10 +289,11 @@ class Section(NamedTuple):
     after: Callable[[int], None] | None = None
 
 
-def run_sections(sections: list[Section]) -> None:
+def run_sections(sections: list[Section], quiet: bool = False) -> dict[str, str]:
     """Run the sections in table order, starting the expensive independent ones together.
 
-    Each concurrent section writes into its own buffer, so the terminal still reads top to bottom.
+    Each concurrent section writes into its own buffer, so the terminal still reads top to bottom. With
+    `quiet`, every section's transcript is kept for the summary instead of printed as it arrives.
     """
     outcomes: dict[str, tuple[int, str]] = {}
     alongside = [section for section in sections if section.name in CONCURRENT]
@@ -307,18 +308,54 @@ def run_sections(sections: list[Section]) -> None:
                 worker.start()
             for worker in workers:
                 worker.join()
+    printed: dict[str, str] = {}
     for section in sections:
         if section.name in outcomes:
             status, output = outcomes[section.name]
+        else:
+            buffer = io.StringIO()
+            with contextlib.redirect_stdout(buffer):
+                status = timed(section.name, section.run)
+            output = buffer.getvalue()
+            outcomes[section.name] = (status, output)
+        if section.after is not None:
+            extra = io.StringIO()
+            with contextlib.redirect_stdout(extra):
+                section.after(status)
+            output += extra.getvalue()
+            outcomes[section.name] = (status, output)
+        printed[section.name] = output
+        if not quiet:
             if section.banner:
                 print(section.banner, flush=True)
             print(output, end="")
-        else:
-            if section.banner:
-                print(section.banner, flush=True)
-            status = timed(section.name, section.run)
-        if section.after is not None:
-            section.after(status)
+    return printed
+
+
+def verdict_line(output: str) -> str:
+    """The last line a section printed, without its tag: the tally a summary stands on."""
+    for line in reversed(output.splitlines()):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith(("[OK]", "[FAIL]", "[WARN]", "[INFO]", "[SKIP]")) and "] " in stripped:
+            return stripped.split("] ", 1)[1]
+        return stripped
+    return ""
+
+
+def print_summary(printed: dict[str, str]) -> None:
+    """One line per section: what it reported, how long it took, and the run's totals."""
+    print("\n=== SUMMARY ===")
+    print(f"{'result':<7}{'section':<22}{'time':>8}  reported")
+    for item in TIMES:
+        name = str(item["section"])
+        result = "FAIL" if item["status"] else "ok"
+        reporter = verdict_line(printed.get(name, ""))
+        print(f"{result:<7}{name:<22}{float(str(item['seconds'])):>7.1f}s  {reporter[:96]}")
+    failed = [str(item["section"]) for item in TIMES if item["status"]]
+    spent = sum(float(str(item["seconds"])) for item in TIMES)
+    print(f"{'total':<7}{len(TIMES)} section(s){spent:>9.1f}s  {len(failed)} failed")
 
 
 def report_sections() -> int:
@@ -333,6 +370,14 @@ def report_sections() -> int:
         return 0
     print(f"[FAIL] {len(failed)} section(s) failed: {', '.join(failed)}")
     return 1
+
+
+def run_and_report(sections: list[Section], summary: bool) -> dict[str, str]:
+    """Run the sections and, when the run asked for it, print the one-line-per-section view."""
+    printed = run_sections(sections, quiet=summary)
+    if summary:
+        print_summary(printed)
+    return printed
 
 
 def write_timings() -> Path:
@@ -437,7 +482,7 @@ def touched_gate(argv: list[str] | None = None, changed: list[str] | None = None
         ("deptry", "", declaration_check),
     )
     chosen = [Section(name, banner, function) for name, banner, function in table if name in selected]
-    run_sections(chosen)
+    run_and_report(chosen, _flag(argv, "--summary"))
     slowest = sorted(TIMES, key=lambda item: float(str(item["seconds"])), reverse=True)[:3]
     summary = ", ".join(f"{item['section']} {item['seconds']}s" for item in slowest)
     print(f"\n[TIME] {write_timings()} (slowest: {summary})")
@@ -469,6 +514,7 @@ def full_gate(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--no-format-check", action="store_true", help="skip the ruff format comparison")
     parser.add_argument("--tests", action="store_true", help="also run the model-free test suite")
+    parser.add_argument("--summary", action="store_true", help="one line per section instead of the transcript")
     parser.add_argument("--prune", action="store_true", help="list installed packages nothing imports or declares")
     parser.add_argument("--remove", action="store_true", help="with --prune: uninstall those leftovers")
     parser.add_argument("--scrub", action="store_true", help="scan the tree and history for personal terms")
@@ -555,7 +601,7 @@ def full_gate(argv: list[str] | None = None) -> int:
             Section("deptry", "", declaration_check, report_declaration),
         ]
     )
-    run_sections(sections)
+    run_and_report(sections, args.summary)
 
     tests_status = 0
     if args.tests:
