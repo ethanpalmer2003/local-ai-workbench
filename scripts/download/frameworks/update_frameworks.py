@@ -9,10 +9,13 @@ from scripts.download.frameworks import build_frameworks, toolchains
 from scripts.download.frameworks import framework_catalog as cfg
 from scripts.download.frameworks import update_shared as updater
 from scripts.download.frameworks.coding_agents.pi import packages as pi_packages
+from scripts.download.frameworks.llamacpp import rdna_build
 from scripts.shared import consent
 
 # - a check plus the installs it decides on is minutes of network and unpacking
 UPDATE_SECONDS = 600
+# - the RDNA build compiles llama.cpp, so it asks separately
+RDNA_BUILD_SECONDS = 1500
 
 
 def missing_builds(tools: list[cfg.ToolSpec]) -> list[cfg.ToolSpec]:
@@ -43,6 +46,30 @@ def build_missing(missing: list[cfg.ToolSpec], *, assume_yes: bool) -> int:
     return build_frameworks.run_builds(missing, foreground=True)
 
 
+def run_requested_build(args: argparse.Namespace) -> bool:
+    """Run the parked build this run asked for, if any; True when it failed."""
+    if args.check_only or args.build != "rdna":
+        return False
+    print("\n=== RDNA BUILD ===")
+    return build_rdna(args.yes)
+
+
+def build_rdna(assume_yes: bool) -> bool:
+    """Run the parked RDNA-boosts build, which the update loop never starts on its own; True on failure."""
+    if not consent.ask("RDNA llama.cpp build", RDNA_BUILD_SECONDS, assume_yes):
+        return True
+    parser = argparse.ArgumentParser(add_help=False)
+    rdna_build.add_arguments(parser)
+    namespace = parser.parse_args([])
+    namespace.build_llamacpp_rdna = True
+    try:
+        rdna_build.run(namespace)
+    except rdna_build.UpdateError as error:
+        print(f"[FAIL] rdna build: {error}")
+        return True
+    return False
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--skip-comfyui", action="store_true")
@@ -55,6 +82,11 @@ def main() -> int:
         "--build-missing",
         action="store_true",
         help="build every missing source install without asking; otherwise it asks once",
+    )
+    parser.add_argument(
+        "--build",
+        choices=("rdna",),
+        help="run a parked build after updating: rdna compiles llama.cpp with the RDNA-boosts patch set",
     )
     consent.flag(parser)
     args = parser.parse_args()
@@ -116,6 +148,7 @@ def main() -> int:
                     pi_packages.sync(apply=True)
                 failed = updater.apply_updates(tools, Path(folder), summary, log) or failed
                 failed = toolchains.apply(toolchain_rows) or failed
+    failed = run_requested_build(args) or failed
     print(f"\nDetails: {log_path}")
     print("\n=== COMPLETE ===")
     return int(failed)
