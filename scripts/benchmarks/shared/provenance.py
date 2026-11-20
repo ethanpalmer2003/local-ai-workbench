@@ -15,6 +15,7 @@ from typing import Any, NotRequired, TypedDict
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers.runtime.execution_context import ExecutionContext, execution_context
+from scripts.shared import staleness
 
 SHARED_DIR = Path(__file__).resolve().parent
 
@@ -145,25 +146,6 @@ def file_identity(label: str, path: Path) -> ModelIdentity:
     }
 
 
-def content_digest(path: Path) -> str:
-    """SHA256 of a file's bytes: what a generated artifact must compare to notice a changed source."""
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def source_manifest(paths: list[Path], root: Path) -> dict[str, str]:
-    """Content digest per file relative to `root`: the cache key a generated artifact compares."""
-    return {path.relative_to(root).as_posix(): content_digest(path) for path in paths}
-
-
-def changed_files(previous: dict[str, str], current: dict[str, str]) -> list[str]:
-    """Files whose content differs from a recorded manifest, or that are new."""
-    return sorted(path for path, digest in current.items() if previous.get(path) != digest)
-
-
 def producer_state() -> dict[str, str]:
     """Digest of the script that produced a number: the nearest caller outside the shared helpers.
 
@@ -176,7 +158,7 @@ def producer_state() -> dict[str, str]:
         if path.suffix == ".py" and path.is_file():
             resolved = path.resolve()
             if resolved.is_relative_to(project_cfg.BASE_DIR) and SHARED_DIR not in resolved.parents:
-                return source_manifest([resolved], project_cfg.BASE_DIR)
+                return staleness.manifest([resolved], project_cfg.BASE_DIR)
         frame = frame.f_back
     return {}
 
@@ -186,7 +168,8 @@ def changed_manifest(recorded: dict[str, str]) -> list[str]:
     return sorted(
         name
         for name, digest in recorded.items()
-        if not (project_cfg.BASE_DIR / name).is_file() or content_digest(project_cfg.BASE_DIR / name) != digest
+        if not (project_cfg.BASE_DIR / name).is_file()
+        or staleness.content_digest(project_cfg.BASE_DIR / name) != digest
     )
 
 

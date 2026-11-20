@@ -12,7 +12,7 @@ from dataclasses import replace
 
 from scripts.config import project_config as project_cfg
 from scripts.review.lists.sources import maintained_files
-from scripts.shared import consent
+from scripts.shared import consent, staleness
 from scripts.tests.shared import live_stamp
 from scripts.tools import stage_runner, stage_times
 
@@ -44,12 +44,10 @@ def stage_fingerprints() -> dict[str, str]:
         if path.is_relative_to(project_cfg.SCRIPTS_DIR / "download") or path.is_relative_to(project_cfg.CONFIG_DIR)
     ]
     digests = {
-        "frameworks": stage_runner.files_fingerprint(updaters, project_cfg.BASE_DIR),
-        "models": stage_runner.files_fingerprint(
-            [path for path in updaters if path.suffix == ".py"], project_cfg.BASE_DIR
-        ),
-        "gate": stage_runner.files_fingerprint(files, project_cfg.BASE_DIR),
-        "suite": stage_runner.files_fingerprint(python, project_cfg.BASE_DIR),
+        "frameworks": staleness.fingerprint(updaters, project_cfg.BASE_DIR),
+        "models": staleness.fingerprint([path for path in updaters if path.suffix == ".py"], project_cfg.BASE_DIR),
+        "gate": staleness.fingerprint(files, project_cfg.BASE_DIR),
+        "suite": staleness.fingerprint(python, project_cfg.BASE_DIR),
     }
     live = live_stamp.fingerprint()
     digests["launchers"] = live

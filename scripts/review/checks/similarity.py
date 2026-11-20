@@ -18,11 +18,11 @@ from typing import Any
 import numpy as np
 import requests
 
-from scripts.benchmarks.shared import provenance
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.launchers import embeddings as server
 from scripts.review.lists.sources import maintained_files
+from scripts.shared import staleness
 
 LABEL = "embeddings/embeddinggemma-2-Q8_0"
 DEFAULT_THRESHOLD = 0.90
@@ -234,7 +234,7 @@ def functions(path: Path, relative: str) -> list[dict[str, Any]]:
 
 def changed_sources(previous: dict[str, str], current: dict[str, str]) -> list[str]:
     """Documents whose content differs from the previous report, or that are new."""
-    return provenance.changed_files(previous, current)
+    return staleness.changed_since(previous, current)
 
 
 def latest_report(mode: str) -> dict[str, Any] | None:
@@ -266,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[FAIL] Embedding model missing: {model}. Download it with the model tooling.")
         return 1
     expected = next((row.sha256 for row in model_cfg.MODELS if row.label == LABEL), None)
-    digest = provenance.content_digest(model)
+    digest = staleness.content_digest(model)
     if expected and digest != expected:
         print(f"[FAIL] {LABEL} differs from the cataloged sha256; refusing to report.")
         return 1
@@ -280,7 +280,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         paths = [item for item in maintained_files() if item.suffix.lower() == ".md"]
     chunker = functions if args.code else units
-    sources = provenance.source_manifest(paths, project_cfg.BASE_DIR)
+    sources = staleness.manifest(paths, project_cfg.BASE_DIR)
     previous = latest_report(mode) or {}
     recorded = previous.get("sources")
     changed = changed_sources(recorded or {}, sources)

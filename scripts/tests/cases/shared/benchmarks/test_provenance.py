@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 from scripts.benchmarks.shared import provenance
 from scripts.config import project_config
+from scripts.shared import staleness
 
 COMMIT = "a" * 40
 
@@ -129,7 +130,7 @@ class ProducerTests(unittest.TestCase):
 
     def test_a_matching_producer_is_not_reported(self):
         path = Path(project_config.BASE_DIR) / "scripts/tools/capability_matrix.py"
-        recorded = provenance.source_manifest([path], Path(project_config.BASE_DIR))
+        recorded = staleness.manifest([path], Path(project_config.BASE_DIR))
         self.assertEqual(provenance.changed_manifest(recorded), [])
 
     def test_a_changed_or_removed_producer_is_reported(self):
