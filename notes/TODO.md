@@ -7,7 +7,7 @@
 ## Repository work
 Code and configuration a settled decision leaves behind.
 
-- [ ] Move what the live suites stopped covering into the parked home rather than deleting it: Kokoro TTS (its `kokoro` probe is gone) and the coding harnesses other than Pi (little-coder, ohmypi, nanocoder, DeepSeek Harness; `dsh-headless` left the launcher targets and `little-coder` left the client loop). Their config entries, launchers and fingerprints should sit in one parked place a reader can find, the way Fish Audio Drama 3 is recorded, with a row per item in [deferred](../scripts/config/shared/deferred.yaml). ~1 h
+- [ ] Finish parking the coding harnesses other than Pi: their launcher entry points are already in [parked](../scripts/config/coding_agents/parked/README.md), but the client settings in `launcher_base.py`, `coding_clients.py` and the coding benchmark's client arms still name them, so decide whether the benchmark keeps comparing clients or drops to Pi and then move the rest. Kokoro TTS needs the same call: its live probe is gone, and Supertonic 3 is the intended practice voice. ~1 h
 
 ## Needs a model run or device
 Work that cannot be settled without a live run: weights, a device, a server or a human at the machine.

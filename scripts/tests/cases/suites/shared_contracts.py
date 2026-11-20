@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 from scripts.download.input import split_from_csv, voice_model, voice_workflow
 from scripts.download.models import cli_download
 from scripts.launchers import launch_util, proxy_util
-from scripts.launchers.llamacpp import llamacpp, llamacpp_dsh, llamacpp_proxy
+from scripts.launchers.llamacpp import llamacpp, llamacpp_proxy
 from scripts.launchers.runtime import gpu_memory
 from scripts.review.checks.inventory_code import inspect_source
 from scripts.shared.timing import timed
@@ -159,18 +159,6 @@ class SharedContracts(unittest.TestCase):
             "llama.attention.value_length": 128,
         }
         self.assertEqual(kv_cache_mib(metadata, 1024, 2), 4.0)
-
-    def test_dsh_custom_port_is_forwarded_to_direct_launch(self):
-        with (
-            patch.object(sys, "argv", ["dsh", "--dry-run", "--port", "9988"]),
-            patch.object(llamacpp_dsh, "backend_running", return_value=False),
-            patch.object(llamacpp_dsh.cfg.LLAMACPP_SERVICE, "mode", llamacpp_dsh.cfg.ServiceMode.SERVER),
-            patch.object(
-                llamacpp_dsh.llamacpp, "config_from_args", wraps=llamacpp_dsh.llamacpp.config_from_args
-            ) as config,
-        ):
-            self.assertEqual(llamacpp_dsh.main(), 0)
-            self.assertEqual(config.call_args.kwargs["port"], 9988)
 
     def test_proxy_start_forwards_custom_port(self):
         with (

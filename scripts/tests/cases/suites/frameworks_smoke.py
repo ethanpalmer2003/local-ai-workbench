@@ -24,7 +24,7 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp, audiocpp_catalog, audiocpp_proxy
 from scripts.launchers.koboldcpp import kobold
-from scripts.launchers.llamacpp import llamacpp, llamacpp_coding, llamacpp_dsh, llamacpp_littlecoder
+from scripts.launchers.llamacpp import llamacpp, llamacpp_coding
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
 from scripts.shared import consent, wait
@@ -222,19 +222,6 @@ class LaunchCommands(unittest.TestCase):
             self.assertEqual(run.call_args.kwargs["cwd"], project_cfg.BASE_DIR)
             self.assertEqual(run.call_args.kwargs["env"]["PI_CODING_AGENT_DIR"], str(cfg.PI_CLIENT.agent_dir))
             self.assertTrue(run.call_args.kwargs["check"])
-
-    def test_littlecoder_default_client_command(self):
-        with CasePaths(__file__).temporary_directory() as folder, contextlib.ExitStack() as stack:
-            client = replace(cfg.LITTLECODER_CLIENT, agent_dir=Path(folder) / "agent")
-            stack.enter_context(patch.object(cfg, "LITTLECODER_CLIENT", client))
-            stack.enter_context(patch.object(llamacpp, "launch", autospec=True))
-            run = stack.enter_context(patch.object(llamacpp_coding.subprocess, "run", autospec=True))
-            stack.enter_context(patch.object(sys, "argv", ["llamacpp_littlecoder", "--", "-p", "hello"]))
-            llamacpp_littlecoder.main()
-            cmd = run.call_args.args[0]
-            self.assertEqual(cmd[:2], [client.node_cmd, str(client.entry)])
-            self.assertEqual(cmd[-2:], ["-p", "hello"])
-            self.assertEqual(run.call_args.kwargs["env"]["PI_CODING_AGENT_DIR"], str(client.agent_dir))
 
     def test_kobold_native_config_and_cli_launch(self):
         original = cfg.KOBOLDCPP_SERVICE.config.read_bytes()
@@ -491,23 +478,6 @@ class StateAndReadiness(unittest.TestCase):
         self.assertEqual(posted.call_args.args[0], "http://proxy/speech")
         self.assertEqual(posted.call_args.kwargs["json"], {"text": "hi"})
 
-    def test_dsh_attaches_to_existing_server(self):
-        with (
-            patch.object(sys, "argv", ["llamacpp_dsh", "--no-open"]),
-            patch.object(llamacpp_dsh, "backend_running", return_value=True),
-            patch.object(llamacpp, "launch", autospec=True) as launch,
-        ):
-            self.assertEqual(llamacpp_dsh.main(), 0)
-            launch.assert_not_called()
-
-    def test_dsh_patch_preserves_other_entries_and_is_stable(self):
-        original = "# Custom entry\n- id: custom\n  config: !!js process.env.CUSTOM\n"
-        block = llamacpp_dsh.render_entry(["model: quoted # id"], cfg.LLAMACPP_SERVICE.port)
-        updated = llamacpp_dsh.upsert_entry(original, block)
-        self.assertTrue(updated.startswith(original))
-        self.assertEqual(llamacpp_dsh.upsert_entry(updated, block), updated)
-        self.assertEqual(updated.count("- id: llm-pi-ai\n"), 1)
-
     def test_pi_migration_preserves_local_changes(self):
         with CasePaths(__file__).temporary_directory() as folder:
             old, new = Path(folder) / "old", Path(folder) / "new"
@@ -533,26 +503,6 @@ class StateAndReadiness(unittest.TestCase):
             self.assertTrue(launch_util.wait_for_backend(12345, 1, interval_s=0))
             self.assertEqual(health.call_count, 3)
         self.assertFalse(launch_util.wait_for_backend(12345, 0))
-
-    @requires_model_check
-    def test_deepseek_launch_environment(self):
-        with (
-            CasePaths(__file__).temporary_directory() as folder,
-            patch.object(cfg, "DEEPSEEK_CLIENT", replace(cfg.DEEPSEEK_CLIENT, home=Path(folder) / "state")),
-        ):
-            env = llamacpp_dsh.prepare_dsh_env()
-            self.assertEqual(env["DSH_HOME"], str(cfg.DEEPSEEK_CLIENT.home))
-            self.assertTrue(cfg.DEEPSEEK_CLIENT.patch_path().is_file())
-
-    def test_dsh_wrapper_does_not_open_desktop(self):
-        with (
-            patch.object(sys, "argv", ["llamacpp_dsh"]),
-            patch.object(llamacpp_dsh, "prepare_dsh_env"),
-            patch.object(llamacpp_dsh, "backend_running", return_value=True),
-            patch.object(subprocess, "Popen", autospec=True) as spawn,
-        ):
-            self.assertEqual(llamacpp_dsh.main(), 0)
-            spawn.assert_not_called()
 
 
 class _Tee:
