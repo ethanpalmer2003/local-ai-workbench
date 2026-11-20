@@ -76,10 +76,12 @@ TOOLS = [
     ),
     *benchmark_tools(),
     *pi_tools(),
-    # - Benchmark and launcher clients stay tracked: they are exercised on this host,
-    #   so a stale install shows up as a failed task rather than an update notice.
-    ToolSpec("coding_agents/littlecoder", "", ReleaseType.NPM, package="little-coder"),
-    ToolSpec("coding_agents/nanocoder", "", ReleaseType.NPM, package="@nanocollective/nanocoder"),
+    # - These four harnesses were retired after the coding benchmark compared them with Pi, which is
+    #   the only client this host launches; their launchers live in scripts/config/coding_agents/parked.
+    #   Any of them, or a new harness, is re-benchmarked by restoring its arm in that benchmark and
+    #   setting `in_use=True` here again.
+    ToolSpec("coding_agents/littlecoder", "", ReleaseType.NPM, package="little-coder", in_use=False),
+    ToolSpec("coding_agents/nanocoder", "", ReleaseType.NPM, package="@nanocollective/nanocoder", in_use=False),
     ToolSpec(
         "coding_agents/ohmypi",
         "omp-windows-x64.exe",
@@ -88,6 +90,7 @@ TOOLS = [
         asset_pattern=r"^omp-windows-x64\.exe$",
         version_regex=r"(\d+\.\d+\.\d+)",
         version_prefix="v",
+        in_use=False,
     ),
     ToolSpec(
         "coding_agents/deepseek",
@@ -95,6 +98,7 @@ TOOLS = [
         ReleaseType.DESKTOP,
         feed="https://download.deepseek.com/dsh-desk/feeds/win-x64",
         channel="nightly",
+        in_use=False,
     ),
     ToolSpec("lemonade_server", "", ReleaseType.MANUAL, in_use=False),
     # - Model servers stay parked until one is installed and exercised: each ships its own
