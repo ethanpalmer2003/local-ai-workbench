@@ -16,8 +16,10 @@ Two files:
 - `ast_map.json` holds every maintained Python file's public functions with their signature, span and whether
   they carry a docstring, so a reader can judge the shape without opening a file first.
 
-The similarity block warns when the screen no longer describes the tree: past 25 changed files, or older than
-seven days (`STALE_CHANGES`, `STALE_DAYS`). Either number is a reason to rerun that check rather than to trust
+The similarity block warns when the screen no longer describes the tree: past 25 changed files, older than
+seven days (`STALE_CHANGES`, `STALE_DAYS`), or one pair naming a file or symbol the tree has since dropped.
+The change count is recomputed from the manifest the report stored, because the report's own `changed_since_last`
+counts what moved before that run instead. Either number is a reason to rerun that check rather than to trust
 a pair count from another day.
 
 The measurements are prompts, never findings: a silent `except` may be deliberate and a long function may be

@@ -128,26 +128,67 @@ class BundleTests(unittest.TestCase):
         self.assertIn("| scripts/launchers | 1 | 3 |", text)
         self.assertIn("| scripts/tools | 1 | 0 |", text)
 
-    def test_evidence_reads_the_accepted_pairs_and_the_similarity_report(self):
+    def test_evidence_reads_the_accepted_pairs_and_a_live_similarity_report(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
             baseline = root / "duplicate-baseline.json"
             baseline.write_text('{"pairs": {"a.py|b.py": 2}}', encoding="utf-8")
+            (root / "x.py").write_text("def run():\n    pass\n", encoding="utf-8")
+            (root / "y.py").write_text("def run():\n    pass\n", encoding="utf-8")
             report_folder = root / "similarity" / "1800000000000000000"
             report_folder.mkdir(parents=True)
             (report_folder / "report.json").write_text(
-                '{"created": "2026-11-16", "threshold": 0.95, "changed_since_last": [], '
+                '{"created": "2026-11-16", "threshold": 0.95, "sources": {"x.py": "1"}, '
                 '"findings": [{"a": "x.py :: run", "b": "y.py :: run", "best": 0.99}]}',
                 encoding="utf-8",
             )
             with (
                 unittest.mock.patch.object(handoff, "DUPLICATE_BASELINE", baseline),
                 unittest.mock.patch.object(handoff, "SIMILARITY_ROOT", root / "similarity"),
+                unittest.mock.patch.object(handoff, "changed_since_report", return_value=0),
             ):
-                text = "\n".join(handoff.evidence_report())
+                text = "\n".join(handoff.evidence_report(root=root))
         self.assertIn("| a.py <-> b.py | 2 |", text)
         self.assertIn("| x.py :: run | y.py :: run | 0.99 |", text)
         self.assertIn("0 file(s) changed since", text)
+
+    def test_a_pair_naming_a_symbol_the_tree_lost_is_dropped_and_flagged(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            (root / "x.py").write_text("def run():\n    pass\n", encoding="utf-8")
+            (root / "y.py").write_text("def run():\n    pass\n", encoding="utf-8")
+            report_folder = root / "similarity" / "1800000000000000000"
+            report_folder.mkdir(parents=True)
+            (report_folder / "report.json").write_text(
+                '{"created": "2026-11-16", "threshold": 0.95, "findings": ['
+                '{"a": "x.py :: run", "b": "y.py :: run", "best": 0.99}, '
+                '{"a": "x.py :: gone", "b": "y.py :: run", "best": 0.98}]}',
+                encoding="utf-8",
+            )
+            with (
+                unittest.mock.patch.object(handoff, "DUPLICATE_BASELINE", root / "absent.json"),
+                unittest.mock.patch.object(handoff, "SIMILARITY_ROOT", root / "similarity"),
+                unittest.mock.patch.object(handoff, "changed_since_report", return_value=0),
+            ):
+                text = "\n".join(handoff.evidence_report(root=root))
+        self.assertIn("| x.py :: run | y.py :: run | 0.99 |", text)
+        self.assertNotIn("x.py :: gone", text)
+        self.assertIn("1 pair(s) name a file or symbol the tree no longer has", text)
+
+    def test_the_changed_count_reads_the_manifest_the_report_stored(self):
+        with (
+            unittest.mock.patch.object(handoff.provenance, "source_manifest", return_value={"a.py": "2"}),
+            unittest.mock.patch.object(handoff.provenance, "changed_files", return_value=["a.py", "b.py"]),
+        ):
+            self.assertEqual(handoff.changed_since_report({"a.py": "1"}), 2)
+        self.assertEqual(handoff.changed_since_report({}), 0)
+        self.assertEqual(handoff.changed_since_report(None), 0)
+
+    def test_a_dropped_pair_is_its_own_reason_to_rerun_the_screen(self):
+        evidence = handoff.SimilarityEvidence(
+            created="2026-11-19T00:00:00", threshold=0.95, changed=0, findings=[], dropped=2
+        )
+        self.assertIn("2 pair(s) name a file or symbol", handoff.stale_note(evidence) or "")
 
     def test_evidence_says_so_when_the_opt_in_checks_have_not_run(self):
         with CasePaths(__file__).temporary_directory() as folder:

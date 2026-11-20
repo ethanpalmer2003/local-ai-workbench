@@ -16,11 +16,14 @@ import json
 import time
 from dataclasses import dataclass
 from datetime import datetime
+from functools import cache
 from pathlib import Path
 from typing import TypedDict, cast
 
+from scripts.benchmarks.shared import provenance
 from scripts.config import project_config as project_cfg
 from scripts.review.checks.inventory_code import maintained_python
+from scripts.review.lists.sources import maintained_files
 
 # - a function past this many lines carries more than one idea, which a reader has to judge rather than fix
 LONG_FUNCTION = 60
@@ -74,6 +77,7 @@ class SimilarityEvidence:
     threshold: float
     changed: int
     findings: list[SimilarityFinding]
+    dropped: int = 0
 
 
 def signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
@@ -185,12 +189,14 @@ def duplicate_pairs(limit: int = 10) -> list[tuple[str, int]]:
     return ordered[:limit]
 
 
-def similarity_evidence(limit: int = 10) -> SimilarityEvidence | None:
-    """What the newest code-similarity run found, or None when no run left findings behind.
+def similarity_evidence(limit: int = 10, root: Path | None = None) -> SimilarityEvidence | None:
+    """What the newest code-similarity run still describes, or None when no run left findings behind.
 
     The check needs the embedding model, so this reads whatever the last opt-in run wrote and starts
-    nothing itself.
+    nothing itself. A pair whose file or symbol the tree no longer has is dropped rather than shown: a
+    reader would otherwise hunt for a function that was renamed in the commit after the run.
     """
+    directory = root or project_cfg.BASE_DIR
     reports = sorted(SIMILARITY_ROOT.glob("*/report.json")) if SIMILARITY_ROOT.is_dir() else []
     for report in reversed(reports):
         try:
@@ -200,23 +206,62 @@ def similarity_evidence(limit: int = 10) -> SimilarityEvidence | None:
         findings = cast(list[SimilarityFinding], payload.get("findings") or [])
         if not findings:
             continue
-        changed = payload.get("changed_since_last") or []
+        live = [row for row in findings if pair_exists(row["a"], directory) and pair_exists(row["b"], directory)]
         return SimilarityEvidence(
             created=str(payload.get("created") or "unknown"),
             threshold=float(payload.get("threshold") or 0.0),
-            changed=len(changed) if isinstance(changed, list) else int(changed),
-            findings=findings[:limit],
+            changed=changed_since_report(payload.get("sources")),
+            findings=live[:limit],
+            dropped=len(findings) - len(live),
         )
     return None
+
+
+@cache
+def symbols(path: Path) -> frozenset[str]:
+    """Every function and class name one file holds, at any depth, so a named symbol can be looked up."""
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
+    except (OSError, SyntaxError):
+        return frozenset()
+    return frozenset(
+        node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
+    )
+
+
+def pair_exists(label: str, root: Path) -> bool:
+    """Whether the tree still has the file a pair names, and the symbol when the label names one."""
+    relative, _, symbol = label.partition(" :: ")
+    path = root / relative
+    if not path.is_file():
+        return False
+    return not symbol or symbol in symbols(path)
+
+
+def changed_since_report(recorded: object) -> int:
+    """How many maintained files changed after the report recorded them.
+
+    The report's own `changed_since_last` counts what moved before that run, so reading it would describe
+    the wrong interval; the manifest the report stored is compared against the tree instead.
+    """
+    if not isinstance(recorded, dict) or not recorded:
+        return 0
+    current = provenance.source_manifest(maintained_files(), project_cfg.BASE_DIR)
+    return len(provenance.changed_files(recorded, current))
 
 
 def stale_note(evidence: SimilarityEvidence) -> str | None:
     """Why a similarity screen no longer describes the tree, or None when it still does.
 
     A reader judges what the report shows, so a screen older than the working tree answers the wrong
-    question: the count of files changed since it ran is the signal, and age catches a tree that moved in
-    ways the report could not count.
+    question: a pair naming a removed symbol proves the tree moved, the manifest count measures how far,
+    and age catches a tree that moved in ways the report could not count.
     """
+    if evidence.dropped:
+        return (
+            f"[WARN] {evidence.dropped} pair(s) name a file or symbol the tree no longer has; rerun "
+            "`python -m scripts.review.checks.similarity --code` before trusting the rest"
+        )
     if evidence.changed >= STALE_CHANGES:
         return (
             f"[WARN] the similarity screen predates {evidence.changed} changed file(s); rerun "
@@ -363,7 +408,7 @@ def brief(records: list[FileRecord], ranked: int = 12) -> list[str]:
     return lines
 
 
-def evidence_report() -> list[str]:
+def evidence_report(root: Path | None = None) -> list[str]:
     """What the opt-in checks already found, read from their last run rather than re-run here."""
     lines = [
         "",
@@ -383,7 +428,7 @@ def evidence_report() -> list[str]:
         )
     else:
         lines.append("None recorded; `bat/checks/review_duplicates.bat` writes the list.")
-    evidence = similarity_evidence()
+    evidence = similarity_evidence(root=root)
     lines.extend(("", "Semantic code pairs from the last `--code` similarity run:", ""))
     if evidence is None:
         lines.append(
@@ -400,14 +445,17 @@ def evidence_report() -> list[str]:
         note = stale_note(evidence)
         if note:
             lines.append(note)
-        lines.extend(
-            (
-                "",
-                "| Function A | Function B | Best |",
-                "| --- | --- | ---: |",
-                *(f"| {item['a']} | {item['b']} | {item['best']} |" for item in evidence.findings),
+        if evidence.findings:
+            lines.extend(
+                (
+                    "",
+                    "| Function A | Function B | Best |",
+                    "| --- | --- | ---: |",
+                    *(f"| {item['a']} | {item['b']} | {item['best']} |" for item in evidence.findings),
+                )
             )
-        )
+        else:
+            lines.append("Every pair it recorded names a file or symbol the tree has since changed.")
     return lines
 
 
