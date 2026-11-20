@@ -402,10 +402,15 @@ def full_run_report(run: FullRun | None) -> list[str]:
         lines.append("No recorded run. `bat/checks/test_full.bat` records one and this bundle needs it.")
         return lines
     stages = ", ".join(f"{key} {status}" for key, status, _ in run.stages)
-    lines.append(
-        f"`python -m scripts.tests.validate` ran {run.created} and finished {len(run.stages)} stage(s) "
-        f"in {run.total_seconds:.0f} s: {stages}."
-    )
+    if all(status == "cached" for _, status, _ in run.stages):
+        lines.append(
+            f"No stage needed rerunning: the last pass still covers this tree, checked {run.created} ({stages})."
+        )
+    else:
+        lines.append(
+            f"`python -m scripts.tests.validate` ran {run.created} and finished {len(run.stages)} stage(s) "
+            f"in {run.total_seconds:.0f} s: {stages}."
+        )
     if any(status == "skipped" for _, status, _ in run.stages):
         lines.append("")
         lines.append("A skipped live stage had no changed source or install to re-test, which is a pass.")
