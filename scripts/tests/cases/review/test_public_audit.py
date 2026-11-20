@@ -17,7 +17,7 @@ class PublicAuditTests(unittest.TestCase):
         with patch.object(public_audit, "local_words", return_value=("zzfixture",)):
             findings = public_audit.scan_text("scripts/config/example.json", text, ())
         categories = {finding.category for finding in findings}
-        self.assertEqual(categories, {"secrets", "home-path", "ocabulary"})
+        self.assertEqual(categories, {"secrets", "home-path", "vocabulary"})
 
     def test_self_referential_files_are_still_screened_for_vocabulary(self):
         with (
@@ -29,7 +29,7 @@ class PublicAuditTests(unittest.TestCase):
             target.parent.mkdir(parents=True)
             target.write_text("# zzfixture\n", encoding="utf-8")
             findings = public_audit.audit(Path(folder))
-        self.assertEqual([finding.category for finding in findings], ["ocabulary"])
+        self.assertEqual([finding.category for finding in findings], ["vocabulary"])
 
     @fixture_processes()
     def test_history_scan_uses_a_dialect_that_can_match(self):

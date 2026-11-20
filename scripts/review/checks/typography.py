@@ -4,6 +4,9 @@
   insert by default; they read as prose flourishes and survive copy-paste into code
 - The same flourish in ASCII is a spaced dash between two words, so a Python docstring or comment
   is refused for it as well; a list bullet and the `# -` comment marker put the dash at the start
+- A control character is an escape a shell expanded on the way in: BEL stands where an `a` was, VT
+  where a `v` was, a tab where a `t` was. The line endings and an indent tab stay legal, and a
+  patch keeps whatever the upstream file already contained
 - The pinned corpus quotes third-party transcript text verbatim, so its reference values are
   masked before scanning: the quoted sentences are data, not our prose
 """
@@ -33,7 +36,16 @@ BANNED = {
     "\u202f": "narrow-no-break-space",
     "\u00ad": "soft-hyphen",
 }
-BANNED_PATTERN = re.compile("|".join(re.escape(character) for character in BANNED))
+# - every control character except tab, line feed and carriage return; a generic escape corrupts a word
+CONTROL = {
+    **{chr(code): f"control-character U+{code:04X}" for code in range(0x00, 0x09)},
+    "\u000b": "control-character U+000B",
+    "\u000c": "control-character U+000C",
+    **{chr(code): f"control-character U+{code:04X}" for code in range(0x0E, 0x20)},
+    "\u007f": "control-character U+007F",
+}
+SUSPECT = BANNED | CONTROL
+SUSPECT_PATTERN = re.compile("|".join(re.escape(character) for character in SUSPECT))
 # - escaped characters stay inside the value, so the mask keeps the exact width of what it hides
 REFERENCE_VALUE = re.compile(r'("reference"\s*:\s*")([^"\\]*(?:\\.[^"\\]*)*)(")')
 REFERENCE_FILE = "scripts/config/benchmarks/language_corpus.json"
@@ -47,10 +59,14 @@ def masked(text: str, path: str) -> str:
 
 
 def scan_text(path: str, text: str) -> list[tuple[int, str]]:
-    """Line and kind for every typographic substitute this file would publish."""
+    """Line and kind for every substitute or control character this file would publish.
+
+    The text splits on the line feed alone: `splitlines` also breaks on a vertical tab and a form
+    feed, which is how a corrupted word would vanish from the scan instead of being reported.
+    """
     findings = []
-    for number, line in enumerate(masked(text, path).splitlines(), 1):
-        findings.extend((number, BANNED[match.group(0)]) for match in BANNED_PATTERN.finditer(line))
+    for number, line in enumerate(masked(text, path).split("\n"), 1):
+        findings.extend((number, SUSPECT[match.group(0)]) for match in SUSPECT_PATTERN.finditer(line))
     return findings
 
 
@@ -101,7 +117,7 @@ def check(root: Path, paths: list[str]) -> int:
         findings.extend((path, number, kind) for number, kind in prose_dashes(path, text))
     for path, number, kind in findings:
         print(f"[FAIL] {path}:{number}: {kind}")
-    print(f"{len(findings)} typographic character(s); straight quotes, three dots and single spaces are fine")
+    print(f"{len(findings)} unpublishable character(s); straight quotes, three dots and single spaces are fine")
     return 1 if findings else 0
 
 

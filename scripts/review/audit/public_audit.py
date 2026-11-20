@@ -112,7 +112,7 @@ def _path_findings(path: str, text: str) -> list[Finding]:
 
 def _word_findings(path: str, text: str, words: tuple[str, ...]) -> list[Finding]:
     findings = [
-        Finding("ocabulary", path, word) for word in local_words() if re.search(voice_patterns((word,)), text, re.I)
+        Finding("vocabulary", path, word) for word in local_words() if re.search(voice_patterns((word,)), text, re.I)
     ]
     findings.extend(
         Finding("input-name", path, word) for word in words if re.search(voice_patterns((word,)), text, re.I)

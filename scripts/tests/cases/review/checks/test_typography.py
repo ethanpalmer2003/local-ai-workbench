@@ -32,6 +32,15 @@ class ScanTests(unittest.TestCase):
     def test_plain_ascii_punctuation_passes(self):
         self.assertEqual(typography.scan_text("notes.md", '27.6-34.1, "quoted", three dots... and a space\n'), [])
 
+    def test_a_control_character_is_named_by_its_code_point(self):
+        self.assertEqual(
+            typography.scan_text("notes.md", "keep \u0007rgv and \u000bocabulary\n"),
+            [(1, "control-character U+0007"), (1, "control-character U+000B")],
+        )
+
+    def test_an_indent_tab_passes_because_a_patch_and_a_ts_file_keep_one(self):
+        self.assertEqual(typography.scan_text("scripts/config/coding_agents/pi/x.ts", "\tlet p = 1;\n"), [])
+
     def test_quoted_corpus_references_are_masked_and_the_rest_of_the_file_is_not(self):
         text = '{"clips": [{"reference": "a \u2014 b"}],\n "note": "kept \u2013 scan"\n}'
         self.assertEqual(typography.scan_text(typography.REFERENCE_FILE, text), [(2, "en-dash")])
@@ -71,7 +80,7 @@ class CheckTests(unittest.TestCase):
     def test_a_clean_file_passes(self):
         status, printed = self.run_check(["scripts/review/checks/typography.py"])
         self.assertEqual(status, 0)
-        self.assertIn("0 typographic character(s)", printed)
+        self.assertIn("0 unpublishable character(s)", printed)
 
     def test_a_file_with_an_ellipsis_fails_and_names_the_line(self):
         target = Path(project_cfg.BASE_DIR) / "scripts/tests/output/typography-fixture.md"
