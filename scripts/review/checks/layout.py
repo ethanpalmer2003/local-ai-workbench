@@ -458,6 +458,31 @@ def root_folder_issues() -> list[str]:
     ]
 
 
+# - parked code is kept for reference: nothing maintained imports it, and its README lists every file
+PARKED_ROOT = project_cfg.CONFIG_DIR / "coding_agents" / "parked"
+# - the importable name of that folder, computed so this module does not name it in its own source
+PARKED_MODULE = ".".join(PARKED_ROOT.relative_to(project_cfg.BASE_DIR).parts)
+
+
+def parked_issues() -> list[str]:
+    """A parked file is named in its README, and no maintained module imports the parked tree."""
+    if not PARKED_ROOT.is_dir():
+        return []
+    readme = config_paths.load_text(PARKED_ROOT / "README.md")
+    issues = []
+    for path in tracked_files():
+        if path.is_relative_to(PARKED_ROOT):
+            if path.suffix == ".py" and path.name not in readme:
+                issues.append(f"Parked file is missing from its README: {path.name}")
+            continue
+        if path.suffix != ".py":
+            continue
+        if PARKED_MODULE in path.read_text(encoding="utf-8", errors="ignore"):
+            relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+            issues.append(f"Maintained code imports a parked module: {relative}")
+    return issues
+
+
 def placement_issues() -> list[str]:
     """Every tracked file directly inside a high-level folder, whatever its type."""
 
@@ -480,6 +505,7 @@ def main() -> int:
         + batch_runner_issues()
         + state_issues()
         + root_folder_issues()
+        + parked_issues()
     )
     for path in files:
         issues += owner_issues(path)

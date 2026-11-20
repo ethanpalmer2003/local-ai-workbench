@@ -5,7 +5,19 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 
-EXCLUDED = {".git", ".venv", "node_modules", "__pycache__", "state", "output", "old", "retired", "comfyui-archive"}
+# - parked trees hold code kept for reference: not maintained, not imported, not checked
+EXCLUDED = {
+    ".git",
+    ".venv",
+    "node_modules",
+    "__pycache__",
+    "state",
+    "output",
+    "old",
+    "retired",
+    "parked",
+    "comfyui-archive",
+}
 
 
 def tracked_files() -> list[Path]:
