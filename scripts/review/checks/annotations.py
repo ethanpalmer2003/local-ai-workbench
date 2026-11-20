@@ -261,11 +261,10 @@ def _none_kind(argument: ast.arg, function: ast.FunctionDef | ast.AsyncFunctionD
 def default_kind(argument: ast.arg, default: ast.expr, function: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
     """The category a default belongs to, which is what a census counts.
 
-        None has three shapes: rgv follows the CLI convention, derived resolves inside the body, and
-        carried is an optional value stored or forwarded untouched. The rest are the value's syntax:
-        literal,
-    ame, 	uple, lambda, ttribute, 	able, rithmetic, immutable, then the three
-        refused ones, mutable, call and config.
+    None has three shapes: argv follows the CLI convention, derived resolves inside the body, and
+    carried is an optional value stored or forwarded untouched. The rest are the value's syntax:
+    literal, name, tuple, lambda, attribute, table, arithmetic, immutable, then the three
+    refused ones, mutable, call and config.
     """
     if isinstance(default, ast.Constant) and default.value is None:
         return _none_kind(argument, function)
