@@ -25,7 +25,7 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp, audiocpp_proxy
 from scripts.launchers.koboldcpp import kobold
-from scripts.launchers.llamacpp import llamacpp, llamacpp_coding, llamacpp_dsh
+from scripts.launchers.llamacpp import llamacpp, llamacpp_coding
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
@@ -41,28 +41,18 @@ from scripts.tools import stage_times
 live_timeout = 300.0
 # - One target per user-facing launch entry. Backend probes cover engines/models
 #   that launchers do not exercise; the two sets must stay disjoint.
-LAUNCHER_TARGETS: tuple[str, ...] = ("sdcpp", "audiocpp", "llamacpp", "kobold", "dsh-headless", "practice")
+LAUNCHER_TARGETS: tuple[str, ...] = ("sdcpp", "audiocpp", "llamacpp", "kobold", "practice")
 # - the processes a launcher target may need in its own console; `dsh` is the desktop client the
 #   headless target drives, and `practice` runs in this process instead of spawning a worker
-WORKER_TARGETS: tuple[str, ...] = ("sdcpp", "audiocpp", "llamacpp", "kobold", "dsh", "dsh-headless")
+WORKER_TARGETS: tuple[str, ...] = ("sdcpp", "audiocpp", "llamacpp", "kobold")
 # - the installed tree each target launches from, so a moved build marks the row stale
 TARGET_COMPONENTS: dict[str, str] = {
     "sdcpp": "sdcpp",
     "audiocpp": "audiocpp",
     "llamacpp": "llamacpp",
     "kobold": "koboldcpp",
-    "dsh-headless": "coding_agents/deepseek",
     "practice": "audiocpp",
 }
-
-
-def target_available(name: str) -> tuple[bool, str]:
-    if name == "dsh-headless":
-        archive = cfg.DEEPSEEK_CLIENT.exe.parent / "resources/app.asar"
-        # - The headless entry lives inside app.asar, which is a file, not a directory.
-        if not cfg.DEEPSEEK_CLIENT.exe.is_file() or not archive.is_file():
-            return False, "DeepSeek Harness headless entry is not installed"
-    return True, ""
 
 
 def audiocpp_payload() -> dict[str, object]:
@@ -77,50 +67,6 @@ def audiocpp_payload() -> dict[str, object]:
 
 
 class LiveFrameworks(unittest.TestCase):
-    def test_dsh(self):
-        self.assertIn(llamacpp.LlamaConfig().alias, llamacpp_dsh.discover_models(cfg.LLAMACPP_SERVICE.port))
-        sessions = cfg.DEEPSEEK_CLIENT.home / "sessions"
-        before = {path: path.stat().st_mtime_ns for path in sessions.rglob("*") if path.is_file()}
-        env = llamacpp_dsh.prepare_dsh_env()
-        env["ELECTRON_RUN_AS_NODE"] = "1"
-        entry = (
-            cfg.DEEPSEEK_CLIENT.exe.parent
-            / "resources/app.asar/dsh/node_modules/@deepseek-ai/dsh-desktop-host/lib/cli.js"
-        )
-        cmd = [
-            str(cfg.DEEPSEEK_CLIENT.exe),
-            "--expose-internals",
-            str(entry),
-            "--profile",
-            "headless",
-            "--patch",
-            str(cfg.DEEPSEEK_CLIENT.patch_path()),
-            "Reply with exactly FRAMEWORK_TEST_OK. Do not call any tools.",
-        ]
-        with subprocess.Popen(
-            cmd,
-            cwd=project_cfg.SCRIPTS_DIR,
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-        ) as process:
-            try:
-                launch_util.assign_process_to_job(process.pid)
-                output, errors = process.communicate(timeout=live_timeout)
-            finally:
-                if process.poll() is None:
-                    launch_util.kill_process_tree(process.pid)
-                    process.communicate(timeout=10)
-        self.assertEqual(process.returncode, 0, errors[-3000:])
-        self.assertNotIn("EPERM", output + errors)
-        self.assertIn("FRAMEWORK_TEST_OK", output)
-        self.assertTrue(
-            any(path.is_file() and path.stat().st_mtime_ns != before.get(path) for path in sessions.rglob("*")),
-            "Harness did not persist its session",
-        )
-
     def test_sdcpp(self):
         url = f"http://127.0.0.1:{cfg.SDCPP_SERVICE.port}"
         status, body, _ = request(
@@ -159,14 +105,9 @@ class LiveFrameworks(unittest.TestCase):
         status, body, _ = request(cfg.llama_base_url() + "/models", timeout=10)
         self.assertEqual(status, 200, body[:1000])
         self.assertIn(llamacpp.LlamaConfig().alias, [entry["id"] for entry in json.loads(body)["data"]])
-        for client in (cfg.PI_CLIENT, cfg.LITTLECODER_CLIENT):
-            with self.subTest(client=str(client.entry)):
-                env = llamacpp_coding.prepare_pi_env(client)
-                if client is cfg.PI_CLIENT:
-                    cmd = llamacpp_coding.pi_command(llamacpp.LlamaConfig())
-                else:
-                    cmd = [client.node_cmd, str(client.entry), "--no-update-check", "--model", client.model]
-                self.check_coding_client(client, cmd, env)
+        # - Pi is the coding client this repository starts, tests and updates; the rest are parked
+        env = llamacpp_coding.prepare_pi_env(cfg.PI_CLIENT)
+        self.check_coding_client(cfg.PI_CLIENT, llamacpp_coding.pi_command(llamacpp.LlamaConfig()), env)
 
     def check_coding_client(
         self, client: cfg.SharedStartupRequestCodingClientSettings, cmd: list[str], env: dict[str, str]
@@ -236,7 +177,7 @@ def kobold_port() -> int:
 
 
 def workflow_ports(framework: str) -> list[int]:
-    if framework in ("llamacpp", "dsh", "dsh-headless"):
+    if framework == "llamacpp":
         return [cfg.LLAMACPP_SERVICE.port] + (
             [cfg.LLAMACPP_SERVICE.internal_port] if cfg.LLAMACPP_SERVICE.mode == cfg.ServiceMode.PROXY else []
         )
@@ -256,16 +197,12 @@ def launch_worker(framework: str, ini_set: list[str] | None = None) -> None:
     sys.argv = ["framework-test-worker", *(["--client", "none"] if framework == "llamacpp" else [])]
     for setting in ini_set or []:
         sys.argv.extend(["--ini-set", setting])
-    if framework == "dsh-headless":
-        sys.argv.append("--no-open")
     if framework == "sdcpp":
         sdcpp_proxy.main()
     elif framework == "audiocpp":
         audiocpp_proxy.main()
     elif framework == "llamacpp":
         llamacpp_coding.main()
-    elif framework in ("dsh", "dsh-headless"):
-        llamacpp_dsh.main()
     else:
         kobold.main()
 
@@ -307,7 +244,7 @@ def worker_main(framework: str, ini_set: list[str] | None = None) -> int:
 
     launch_worker(framework, ini_set)
     # - --client none returns with llama-server running; retain the worker's job handle
-    if framework in ("llamacpp", "dsh", "dsh-headless"):
+    if framework == "llamacpp":
         threading.Event().wait()
     return 1
 
@@ -316,7 +253,7 @@ def _require_free_ports(framework: str, ports: list[int]) -> set[str]:
     old_pids = {pid for _, pid in launch_util._listening_pids({str(port) for port in ports})}
     if old_pids:
         raise RuntimeError(f"Existing {framework} ports are occupied; sessions retained: {sorted(old_pids)}")
-    if framework in ("llamacpp", "dsh", "dsh-headless") and launch_util.llama_server_running():
+    if framework == "llamacpp" and launch_util.llama_server_running():
         raise RuntimeError("Existing llama.cpp session retained; isolated workflow check requires free runtimes")
     return old_pids
 
@@ -477,32 +414,27 @@ def _run_live(frameworks: list[str], context: dict[str, Any]) -> bool:
     launch_util.set_console_title(console_title)
     passed = True
     for name in frameworks:
-        available, reason = target_available(name)
         started = time.perf_counter()
         progress.update(name)
         row: dict[str, Any] = {"target": name, "kind": "launcher", "status": "running"}
-        if not available:
-            row.update(status="skipped", reason=reason)
-            print(f"[SKIP] {name}: {reason}", flush=True)
-        else:
-            try:
-                if name == "practice":
-                    ok, log_path = run_practice(output)
-                    row.update(status="completed" if ok else "failed", log=str(log_path))
-                else:
-                    with running_framework(name, output) as log_path:
-                        method = "test_dsh" if name == "dsh-headless" else f"test_{name}"
-                        suite = unittest.TestSuite([LiveFrameworks(method)])
-                        if name == "kobold":
-                            suite.addTest(LiveFrameworks("test_combined_proxies"))
-                        result = unittest.TextTestRunner(verbosity=2, resultclass=TimedTextTestResult).run(suite)
-                        row["tests"] = getattr(result, "case_seconds", {})
-                        row.update(status="completed" if result.wasSuccessful() else "failed", log=str(log_path))
-                passed = row["status"] != "failed" and passed
-            except Exception as error:
-                print(f"[FAIL] {name}: {error}", file=sys.stderr)
-                row.update(status="failed", reason=str(error))
-                passed = False
+        try:
+            if name == "practice":
+                ok, log_path = run_practice(output)
+                row.update(status="completed" if ok else "failed", log=str(log_path))
+            else:
+                with running_framework(name, output) as log_path:
+                    method = f"test_{name}"
+                    suite = unittest.TestSuite([LiveFrameworks(method)])
+                    if name == "kobold":
+                        suite.addTest(LiveFrameworks("test_combined_proxies"))
+                    result = unittest.TextTestRunner(verbosity=2, resultclass=TimedTextTestResult).run(suite)
+                    row["tests"] = getattr(result, "case_seconds", {})
+                    row.update(status="completed" if result.wasSuccessful() else "failed", log=str(log_path))
+            passed = row["status"] != "failed" and passed
+        except Exception as error:
+            print(f"[FAIL] {name}: {error}", file=sys.stderr)
+            row.update(status="failed", reason=str(error))
+            passed = False
         row["seconds"] = round(time.perf_counter() - started, 3)
         rows.append(row)
         report.results = rows

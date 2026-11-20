@@ -14,8 +14,8 @@
 | --- | --- |
 | Lint, structure/docs, types and the repository review | `C:/AI/scripts/review/check_repo.bat` or `python -m scripts.review` |
 | Model-free suite (no VRAM) | `C:/AI/bat/checks/test_model_free.bat` |
-| Live launcher/proxy wiring (VRAM) | `C:/AI/bat/checks/test_live_launchers.bat`: `sdcpp`, `audiocpp`, `llamacpp` (Pi), `kobold` (+ combined-proxy readiness), `dsh-headless`, `practice` gateway |
-| Live backend probes (VRAM) | `C:/AI/bat/checks/test_live_backends.bat`: `parakeet`, `whisper`, `practice-whisper`, `practice-qwen`, `gemma`, `kokoro`, `images`, `ming3-tts`; `--only NAME...` narrows |
+| Live launcher/proxy wiring (VRAM) | `C:/AI/bat/checks/test_live_launchers.bat`: `sdcpp`, `audiocpp`, `llamacpp` (Pi), `kobold` (+ proxy readiness), `practice` |
+| Live backend probes (VRAM) | `C:/AI/bat/checks/test_live_backends.bat`: `parakeet`, `whisper`, `practice-whisper`, `practice-qwen`, `gemma`, `images`, `ming3-tts`; one arm each, `--only NAME...` narrows |
 | Both native suites | `C:/AI/bat/checks/test_live_all.bat` |
 | Everything, skip-aware, one progress bar | `C:/AI/bat/checks/test_full.bat`: updates frameworks, then the gate, the suite (model and install checks on) and both live suites; `--models` adds the catalog source check, `--no-update` drops the preflight; expected ranges live in [stage_times](../tools/stage_times.py) |
 | One long model test | `python -m scripts.tests.model_run --label NAME --minutes 20 MODULE -- --module-args` [owner](model_run.py): `--dry-run` proves inputs and ports first; the run kills the tree after the cap or after `--silence` seconds without output and CPU |

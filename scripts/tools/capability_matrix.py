@@ -39,7 +39,7 @@ CAPABILITIES = (
     ("asr/whisper_embedded_compare", "Embedded Whisper comparison"),
     ("asr/gemma_audio_compare", "Gemma audio comparison"),
     ("asr/parakeetcpp/smoke", "Parakeet Vulkan smoke"),
-    ("koboldcpp/kobold_embedded_compare", "Kobold embedded speech comparison"),
+    ("koboldcpp/kobold_embedded_compare", "Kobold embedded image comparison"),
     ("koboldcpp/kobold_audiocpp_modes", "Kobold speech modes"),
     ("koboldcpp/kobold_stack_vram", "Kobold stacked VRAM"),
     ("llamacpp/benchmark_specspeed", "Speculative decoding benchmark"),

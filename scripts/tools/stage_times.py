@@ -10,8 +10,8 @@ RANGES: dict[str, tuple[int, int, int]] = {
     "models": (10, 30, 120),
     "gate": (45, 55, 80),
     "suite": (20, 45, 80),
-    "launchers": (240, 275, 380),
-    "backends": (230, 260, 360),
+    "launchers": (70, 110, 200),
+    "backends": (90, 150, 280),
 }
 
 

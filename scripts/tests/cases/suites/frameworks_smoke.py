@@ -27,7 +27,7 @@ from scripts.launchers.koboldcpp import kobold
 from scripts.launchers.llamacpp import llamacpp, llamacpp_coding, llamacpp_dsh, llamacpp_littlecoder
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
-from scripts.shared import wait
+from scripts.shared import consent, wait
 from scripts.shared.timing import timed
 from scripts.shared.wait import http_ready
 from scripts.tests.cases.suites import live_frameworks, quick_validation
@@ -360,7 +360,6 @@ class LaunchCommands(unittest.TestCase):
             ("audiocpp", audiocpp_proxy),
             ("llamacpp", llamacpp_coding),
             ("kobold", kobold),
-            ("dsh", llamacpp_dsh),
         ):
             with (
                 self.subTest(framework=name),
@@ -579,7 +578,7 @@ class _Tee:
         return getattr(self._streams[0], name)
 
 
-def _run_native_suite(suite: str, live_target: str | None, probe_names: list[str]) -> int:
+def _run_native_suite(suite: str, live_target: str | None, probe_names: list[str], yes: bool = False) -> int:
     names: list[str] = list(live_frameworks.LAUNCHER_TARGETS) if live_target in (None, "all") else [live_target]
     title = {"launchers": "Live Launchers", "backends": "Live Backends", "all": "Live All"}[suite]
     previous_title = os.environ.get("AI_TEST_TITLE")
@@ -587,11 +586,11 @@ def _run_native_suite(suite: str, live_target: str | None, probe_names: list[str
     launch_util.set_console_title(title)
     try:
         if suite == "backends":
-            return 0 if quick_validation.run_probes(probe_names) else 1
+            return 0 if quick_validation.run_probes(probe_names, yes) else 1
         if suite == "launchers":
             return 0 if live_frameworks.run_live(names) else 1
         launchers_ok = live_frameworks.run_live(names)
-        backends_ok = quick_validation.run_probes(probe_names)
+        backends_ok = quick_validation.run_probes(probe_names, yes)
         return 0 if launchers_ok and backends_ok else 1
     except RuntimeError as error:
         print(f"[REFUSE] {error}", file=sys.stderr)
@@ -637,13 +636,14 @@ def main(extra_classes: tuple[type[unittest.TestCase], ...] = (), reason: str = 
     parser.add_argument("--ini-set", action="append", default=[], help=argparse.SUPPRESS)
     parser.add_argument("--all", action="store_true", help="run every test class, not just the ones the change reaches")
     parser.add_argument("--worker", choices=live_frameworks.WORKER_TARGETS, help=argparse.SUPPRESS)
+    consent.flag(parser)
     args = parser.parse_args()
     live_frameworks.live_timeout = args.timeout
     if args.worker:
         return live_frameworks.worker_main(args.worker, args.ini_set)
     native_suite = args.suite or ("launchers" if args.live else None)
     if native_suite and not args.with_regressions:
-        return _run_native_suite(native_suite, args.live, args.only)
+        return _run_native_suite(native_suite, args.live, args.only, args.yes)
     # - the caller's classes are the whole run when it has some; a direct call keeps the default block
     classes = extra_classes or DEFAULT_CLASSES
     # - guard the tests themselves against accidental process/port side effects

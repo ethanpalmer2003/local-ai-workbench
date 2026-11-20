@@ -47,6 +47,14 @@
   kind: model
   revisit: a Qwen4 build of either model exists
   source: notes/TODO.md
+- thing: Kokoro TTS and the Kokoro live probe
+  kind: model
+  revisit: Kokoro is enabled again
+  source: notes/TODO.md
+- thing: Coding harnesses other than Pi
+  kind: work
+  revisit: another harness becomes the client again
+  source: notes/TODO.md
 - thing: ASR test execution, Handy and Kobold coverage
   kind: work
   revisit: an explicit instruction

@@ -6,13 +6,11 @@ import os
 import subprocess
 import sys
 import unittest
-from pathlib import Path
 from threading import Thread
 from unittest.mock import patch
 
 from scripts.config import project_config as project_cfg
 from scripts.tests.shared.model_free import fixture_processes, model_free_boundary
-from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.process_fixtures import running_process
 
 
@@ -147,21 +145,6 @@ class TestBoundaries(unittest.TestCase):
         web_open.assert_not_called()
         start_file.assert_not_called()
 
-    def test_dsh_availability_checks_the_asar_archive(self):
-        from scripts.tests.cases.suites import live_frameworks
-
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = Path(folder)
-            resources = root / "resources"
-            resources.mkdir()
-            (resources / "app.asar").write_bytes(b"")
-            exe = root / "DeepSeek Harness.exe"
-            exe.write_bytes(b"")
-            with patch.object(live_frameworks.cfg.DEEPSEEK_CLIENT, "exe", exe):
-                self.assertEqual(live_frameworks.target_available("dsh-headless"), (True, ""))
-                (resources / "app.asar").unlink()
-                self.assertFalse(live_frameworks.target_available("dsh-headless")[0])
-
     def test_audiocpp_probe_requests_complete_wav(self):
         from scripts.tests.cases.suites import live_frameworks
 
@@ -188,11 +171,11 @@ class TestBoundaries(unittest.TestCase):
             patch.object(owner.quick_validation, "run_probes", return_value=True) as probes,
         ):
             self.assertEqual(owner._run_native_suite("launchers", None, ["ming3-tts"]), 0)
-            live.assert_called_once_with(["sdcpp", "audiocpp", "llamacpp", "kobold", "dsh-headless", "practice"])
+            live.assert_called_once_with(["sdcpp", "audiocpp", "llamacpp", "kobold", "practice"])
             probes.assert_not_called()
             live.reset_mock()
             self.assertEqual(owner._run_native_suite("backends", None, ["ming3-tts"]), 0)
-            probes.assert_called_once_with(["ming3-tts"])
+            probes.assert_called_once_with(["ming3-tts"], False)
             live.assert_not_called()
 
     def test_native_targets_are_disjoint(self):
