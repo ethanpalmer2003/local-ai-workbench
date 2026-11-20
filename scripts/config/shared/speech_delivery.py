@@ -2,6 +2,8 @@
 
 import json
 import threading
+from collections.abc import Sequence
+from typing import Any
 
 from scripts.config import project_config as project_cfg
 
@@ -54,7 +56,7 @@ def save(stage, model, mode):
         temporary.replace(path)
 
 
-def resolve(stage, model, supported, values=None):
+def resolve(stage: str, model: str, supported: Sequence[str], values: dict[str, str] | None = None) -> dict[str, Any]:
     requested = (overrides() if values is None else values).get(f"{stage}:{model}", "auto")
     order = MODES[MODES.index(requested) :] if requested in MODES else MODES
     chain = [mode for mode in order if mode in supported]

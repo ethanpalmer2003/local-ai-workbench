@@ -2,6 +2,7 @@
 
 import statistics
 import time
+from collections.abc import Callable
 from contextlib import contextmanager
 from typing import Any
 
@@ -10,7 +11,14 @@ from scripts.shared import benchmark_config as benchmark_cfg
 
 
 @contextmanager
-def monitor_process(process, gpu_log, *, seconds=240, phase=lambda: "resident", worker_module=None):
+def monitor_process(
+    process,
+    gpu_log,
+    *,
+    seconds: float = 240,
+    phase: Callable[[], str] = lambda: "resident",
+    worker_module: str | None = None,
+):
     """Reuse CPU/RSS and GPU samplers for one owned process; absent counters stay unknown."""
     import threading
 
@@ -40,7 +48,9 @@ def monitor_process(process, gpu_log, *, seconds=240, phase=lambda: "resident", 
         )
 
 
-def watch_resources(process, stop, samples, deadline, phase=lambda: "unknown", clock_origin=None):
+def watch_resources(
+    process, stop, samples, deadline, phase: Callable[[], str] = lambda: "unknown", clock_origin: float | None = None
+):
     import psutil
 
     logical = psutil.cpu_count() or 1

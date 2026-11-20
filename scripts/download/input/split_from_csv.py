@@ -24,6 +24,8 @@ import csv
 import json
 import re
 import subprocess
+from collections.abc import Sequence
+from typing import Any
 
 from scripts.config import local_overlay
 from scripts.download.input.audio_workflow import MAX_MERGED_DUR, SILENCE_MIN_DUR, SILENCE_NOISE_DB, source_paths
@@ -70,7 +72,9 @@ def has_silence_between(t1, t2, silences):
     return any(s_start < t2 and s_end > t1 for s_start, s_end in silences)
 
 
-def merge_rows(rows, silences, max_dur=MAX_MERGED_DUR):
+def merge_rows(
+    rows: Sequence[dict[str, Any]], silences: Sequence[tuple[float, float]], max_dur: float = MAX_MERGED_DUR
+) -> tuple[list[tuple[float, float, str]], int, int]:
     """Collapse consecutive CSV rows into sentence-ish groups.
 
     - Boundary placed between two rows if:

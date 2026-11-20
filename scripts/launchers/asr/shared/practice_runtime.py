@@ -2,19 +2,24 @@
 
 import json
 import time
+from collections.abc import Callable
 from typing import Any
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector
 from scripts.launchers.asr.shared import practice_models
+from scripts.launchers.asr.shared.practice_selection import Selection
 from scripts.launchers.audiocpp import asr, model_management
 from scripts.launchers.llamacpp import chat_models
+from scripts.launchers.runtime.execution_context import ExecutionContext
 from scripts.launchers.shared.services.service_lifecycle import Service, ServiceLifecycle
 
 
 class PracticeRuntime:
-    def __init__(self, controls, start_chat, context, no_tts=False):
+    def __init__(
+        self, controls: Selection, start_chat: Callable[[str], Any], context: ExecutionContext, no_tts: bool = False
+    ):
         self.controls, self.start_chat, self.context = controls, start_chat, context
         self.no_tts = no_tts
         folder = project_cfg.component("asr/shared").logs_dir
@@ -110,7 +115,7 @@ class PracticeRuntime:
     def snapshot(self):
         return {**self.lifecycle.snapshot(), "log": str(self.log), "on_demand": True}
 
-    def select(self, value, before_change=lambda: None):
+    def select(self, value: dict[str, Any], before_change: Callable[[], None] = lambda: None):
         selected = self.controls.select(value)
         try:
             with self.lifecycle.lock:

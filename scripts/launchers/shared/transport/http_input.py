@@ -1,7 +1,7 @@
 """Bounded exact reads for local chunked PCM uploads; no model-specific framing."""
 
 
-def chunks(handler, *, limit=16000 * 2 * 32):
+def chunks(handler, *, limit: int = 16000 * 2 * 32):
     if handler.headers.get("Transfer-Encoding", "").lower() != "chunked":
         raise ValueError("Expected chunked PCM upload")
     total = 0

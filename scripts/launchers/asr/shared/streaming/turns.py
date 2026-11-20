@@ -2,12 +2,15 @@
 
 import queue
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
 
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr.shared.streaming.segment_stream import SegmentStream
 from scripts.launchers.asr.shared.streaming.vad import Silero
+from scripts.launchers.asr.shared.streaming.websocket_stream import WebSocketBridge, WebSocketStream
 from scripts.launchers.shared.transport.streaming_http import StreamingPost
 
 
@@ -17,11 +20,11 @@ class Turns:
         base_url: str,
         log: Path,
         *,
-        model="benchmark-asr",
-        language="en-US",
-        settings=None,
-        stream_factory=None,
-        transport=None,
+        model: str = "benchmark-asr",
+        language: str = "en-US",
+        settings: cfg.AudiocppVadSettings | None = None,
+        stream_factory: Callable[[], StreamingPost | SegmentStream | WebSocketStream] | None = None,
+        transport: WebSocketBridge | None = None,
     ):
         settings = cfg.AUDIOCPP_VAD if settings is None else settings
         self.transport = transport

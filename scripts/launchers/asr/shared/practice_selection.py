@@ -4,12 +4,15 @@ import threading
 from contextlib import contextmanager
 from typing import Any
 
+from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import practice_asr, practice_models
 from scripts.launchers.llamacpp import chat_models
 
 
 class Selection:
-    def __init__(self, engine, tts=None, llm=None):
+    def __init__(self, engine: cfg.AsrStartupEngine, tts: str | None = None, llm=None):
+        # - llm stays bare because the chat catalog declares an id as `str | bool`, so no single
+        #   annotation fits both that caller and the plain-id callers
         self.engine, self.tts = engine, tts or practice_models.tts_id()
         self.llm = llm or chat_models.default_id()
         self.pending = None

@@ -39,7 +39,7 @@ class FrameworkUpdates(unittest.TestCase):
             cfg.ToolSpec("tts/demo", "tool.exe", cfg.ReleaseType.DATE, category="speech"),
         ]
 
-        def check(tool, directory, check_only, summary=None):
+        def check(tool: cfg.ToolSpec, directory: Path, check_only: bool, summary: updater.UpdateSummary | None = None):
             self.assertTrue(check_only)
             assert summary is not None
             summary.record(tool, "current")
@@ -187,7 +187,7 @@ class FrameworkUpdates(unittest.TestCase):
             cfg.ToolSpec("unused-b", "", cfg.ReleaseType.MANUAL, in_use=False),
         ]
 
-        def process(tool, _folder, _check, summary=None):
+        def process(tool: cfg.ToolSpec, _folder: Path, _check: bool, summary: updater.UpdateSummary | None = None):
             updater.report_rebuild(tool, summary)
             return True
 
@@ -414,7 +414,7 @@ class FrameworkUpdates(unittest.TestCase):
         tools.append(cfg.ToolSpec("unused", "", cfg.ReleaseType.MANUAL, in_use=False))
         events = []
 
-        def process(tool, _folder, check_only, summary=None):
+        def process(tool: cfg.ToolSpec, _folder: Path, check_only: bool, summary: updater.UpdateSummary | None = None):
             events.append((tool.name, check_only))
             if check_only:
                 print("Status: SOURCE UP TO DATE")
@@ -509,7 +509,7 @@ class FrameworkUpdates(unittest.TestCase):
 
         events = []
 
-        def process(tool, _folder, check_only, summary=None):
+        def process(tool: cfg.ToolSpec, _folder: Path, check_only: bool, summary: updater.UpdateSummary | None = None):
             events.append("check")
             self.assertTrue(check_only)
             assert summary is not None

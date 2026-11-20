@@ -10,6 +10,7 @@ passing review unnoticed.
 import argparse
 import ast
 from dataclasses import dataclass
+from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.review.lists.sources import maintained_files
@@ -69,7 +70,7 @@ def _text_lines(path) -> list[tuple[str, int]]:
     return [(line, number) for number, line in enumerate(text.splitlines(), start=1)]
 
 
-def findings(paths=None, rules: tuple[Rule, ...] = RULES) -> list[tuple[str, str, int]]:
+def findings(paths: list[Path] | None = None, rules: tuple[Rule, ...] = RULES) -> list[tuple[str, str, int]]:
     """Every mention of a single-owner token outside its owners, as (token, path, line)."""
     found: list[tuple[str, str, int]] = []
     for path in maintained_files() if paths is None else paths:

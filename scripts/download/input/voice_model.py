@@ -7,6 +7,7 @@ import math
 import re
 import subprocess
 import urllib.parse
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -172,7 +173,12 @@ def load_character_configs() -> dict[str, CharacterConfig]:
 CHARACTER_CONFIGS: dict[str, CharacterConfig] = load_character_configs()
 
 
-def load_json(path, default=None):
+def load_json(path: Path, default=None):
+    """Read one JSON file, or `default` when it is absent.
+
+    `default` stays bare because the callers pass a dict for a cache and a list for the empty-transcript
+    set, so a single annotation would widen the return type for every caller.
+    """
     if default is None:
         default = {}
     try:
@@ -285,7 +291,13 @@ def get_duration(f, durations):
     return durations[key]
 
 
-def accumulate(candidates, durations, dur_mode, target, start_total=0.0):
+def accumulate(
+    candidates: Sequence[Path],
+    durations: dict[str, float],
+    dur_mode: Literal["min", "max"],
+    target: float,
+    start_total: float = 0.0,
+) -> tuple[list[Path], float, bool]:
     """Walk candidates in order, summing duration until the min/max target is satisfied.
     - "min": keep adding until the running total is >= target (the clip that crosses the line is included)
     - "max": stop at the first clip that would push the total over the target (no skipping ahead

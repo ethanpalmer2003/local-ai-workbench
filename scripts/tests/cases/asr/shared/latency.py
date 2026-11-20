@@ -11,7 +11,7 @@ from typing import Any, TextIO
 
 from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.shared import provenance
-from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
+from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle, RequestTiming
 from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
@@ -93,7 +93,7 @@ class Client:
         if self.messages.get(timeout=10).get("kind") != "ready":
             raise RuntimeError("Transport did not become ready")
 
-    def replay(self, command, timing=None):
+    def replay(self, command: dict[str, Any], timing: RequestTiming | None = None):
         assert self.process is not None and self.process.stdin is not None
         self.process.stdin.write(json.dumps(command) + "\n")
         self.process.stdin.flush()

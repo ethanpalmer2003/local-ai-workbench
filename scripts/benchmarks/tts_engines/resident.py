@@ -14,7 +14,7 @@ from typing import Any
 
 from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle, summarize_requests
-from scripts.benchmarks.shared.paths import BenchmarkPaths
+from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.tts_engines.fixtures import TEXT, voice_assets
 from scripts.config import models as model_cfg
 from scripts.config import project_config as cfg
@@ -32,7 +32,7 @@ def sherpa_types(root):
 
 
 class SherpaVoice:
-    def __init__(self, profile="lessac-medium"):
+    def __init__(self, profile: str = "lessac-medium"):
         import numpy as np
 
         self.np = np
@@ -94,7 +94,7 @@ class SherpaVoice:
         self.library.close()
 
 
-def worker(engine, samples, run, texts=None, profile="lessac-medium"):
+def worker(engine: str, samples: int, run: RunPaths, texts: list[str] | None = None, profile: str = "lessac-medium"):
     import numpy as np
 
     context = dict(require_native_execution("Resident TTS benchmark"))
@@ -111,7 +111,7 @@ def worker(engine, samples, run, texts=None, profile="lessac-medium"):
 
     texts = texts or [TEXT]
 
-    def infer(text=TEXT):
+    def infer(text: str = TEXT):
         if engine == "sherpa-onnx":
             return voice.generate(text)
         chunks = list(voice.synthesize(text))

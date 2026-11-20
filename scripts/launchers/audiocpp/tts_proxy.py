@@ -8,6 +8,7 @@ import uuid
 import wave
 from collections.abc import Callable
 from dataclasses import dataclass
+from http.server import ThreadingHTTPServer
 from io import BytesIO
 from threading import Lock
 from urllib.parse import parse_qs, urlsplit
@@ -381,7 +382,7 @@ def run_tts_json_proxy(
     tag: str = "audiocpp-proxy",
     restart_controller: ProxyRestartController | None = None,
     request_scope: RequestScope | None = None,
-    on_server=None,
+    on_server: Callable[[ThreadingHTTPServer], None] | None = None,
     test_page_redirect: str | None = None,
 ):
     """Relay TTS requests; serialize stateful text preparation, leaving playback to clients."""

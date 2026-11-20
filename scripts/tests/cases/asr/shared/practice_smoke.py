@@ -49,7 +49,7 @@ ENGINE_COMPONENTS = {
 }
 
 
-def post(base, path, body, binary=False) -> Any:
+def post(base: str, path: str, body: dict[str, Any] | bytes, binary: bool = False) -> Any:
     data = body if binary else json.dumps(body).encode()
     response = requests.post(
         base + path,
@@ -168,7 +168,9 @@ def _final_transcript(events):
     return finals[0]
 
 
-def exercise(runtime, pcm, report, engine=cfg.AsrStartupEngine.AUDIOCPP):
+def exercise(
+    runtime: str, pcm: bytes, report: dict[str, Any], engine: cfg.AsrStartupEngine = cfg.AsrStartupEngine.AUDIOCPP
+):
     chat_port, proxy_port = 19194, 19195
     process, gateway, thread = None, None, None
     token = None

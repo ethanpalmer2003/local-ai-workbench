@@ -17,7 +17,7 @@ from scripts.benchmarks.asr.metrics import unicode_errors
 from scripts.benchmarks.asr.requests import multipart
 from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
 from scripts.benchmarks.shared.benchmark import summarize_requests
-from scripts.benchmarks.shared.paths import BenchmarkPaths
+from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
@@ -182,7 +182,17 @@ def _run_engine(name, command, clips, samples, run, port, deadline, resources, r
     result["summary"] = summarize_requests(result["samples"])
 
 
-def run_engine(name, command, model, clips, samples, run, port, deadline, resources=False):
+def run_engine(
+    name: str,
+    command: list[str],
+    model: Path,
+    clips: list[dict[str, Any]],
+    samples: int,
+    run: RunPaths,
+    port: int,
+    deadline: float,
+    resources: bool = False,
+):
     digest = _file_sha256(model)
     result: dict[str, Any] = {
         "engine": name,

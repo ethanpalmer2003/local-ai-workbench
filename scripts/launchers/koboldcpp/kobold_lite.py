@@ -3,6 +3,8 @@
 import argparse
 import difflib
 import json
+from collections.abc import Callable
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, ClassVar
 from urllib.parse import urlsplit
@@ -414,7 +416,7 @@ class _KoboldLiteHandler(ProxyHandlerMixin):
 def run_proxy(
     variant: str = "local",
     request_scope: RequestScope | None = None,
-    on_server=None,
+    on_server: Callable[[ThreadingHTTPServer], None] | None = None,
     external: tuple[str, str] | None = None,
 ) -> None:
     upstream = f"http://127.0.0.1:{cfg.KOBOLDCPP_KCPPS_ARGS['port']}"

@@ -6,6 +6,7 @@ import html
 import json
 import re
 from datetime import UTC, datetime
+from typing import Any
 
 import requests
 
@@ -14,7 +15,7 @@ from scripts.config import project_config as project_cfg
 BASE = "https://hf-audio-open-asr-leaderboard.hf.space"
 
 
-def fetch(path, data=None):
+def fetch(path: str, data: dict[str, Any] | None = None) -> str:
     if data is None:
         response = requests.get(BASE + path, timeout=45)
     else:

@@ -25,7 +25,7 @@ class ServiceLifecycle:
         self,
         services: dict[str, Service],
         groups: dict[str, str],
-        sink=lambda event: None,
+        sink: Callable[[dict[str, Any]], None] = lambda event: None,
         models: dict[str, str] | None = None,
     ):
         self.services, self.groups, self.sink = services, groups, sink
