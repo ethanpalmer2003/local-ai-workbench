@@ -105,6 +105,7 @@ from scripts.tests.cases.shared.gate.test_label_vocabulary import LabelVocabular
 from scripts.tests.cases.shared.gate.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.gate.test_model_run import ModelRunTests
 from scripts.tests.cases.shared.gate.test_scoped_selection import TestSelection
+from scripts.tests.cases.shared.gate.test_staleness import StalenessTests
 from scripts.tests.cases.shared.gate.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
 from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
@@ -340,6 +341,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     ProbeCommandTests,
     SuiteCallTests,
     TestSelection,
+    StalenessTests,
     UpstreamTextTests,
     ExitReportTests,
     # - the launcher and proxy block is scoped like everything else: a change to that wiring keeps it,

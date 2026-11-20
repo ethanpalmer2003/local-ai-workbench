@@ -20,10 +20,10 @@ from functools import cache
 from pathlib import Path
 from typing import TypedDict, cast
 
-from scripts.benchmarks.shared import provenance
 from scripts.config import project_config as project_cfg
 from scripts.review.checks.inventory_code import maintained_python
 from scripts.review.lists.sources import maintained_files
+from scripts.shared import staleness
 from scripts.tests import validate
 from scripts.tools import stage_runner
 
@@ -262,7 +262,7 @@ def changed_since_report(recorded: object) -> int:
     """
     if not isinstance(recorded, dict) or not recorded:
         return 0
-    current = provenance.source_manifest(maintained_files(), project_cfg.BASE_DIR)
+    current = staleness.manifest(maintained_files(), project_cfg.BASE_DIR)
     return sum(1 for relative, digest in recorded.items() if current.get(relative) != digest)
 
 

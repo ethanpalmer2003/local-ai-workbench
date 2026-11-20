@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.benchmarks.shared import language_corpus
+from scripts.shared import staleness
 from scripts.tools import capability_matrix as matrix
 
 
@@ -95,7 +96,7 @@ class FreshnessTests(unittest.TestCase):
     def test_a_matching_producer_leaves_the_row_current(self):
         producer = matrix.project_cfg.BASE_DIR / "scripts/tools/capability_matrix.py"
         block = provenanced()
-        block["producer"] = matrix.provenance.source_manifest([producer], matrix.project_cfg.BASE_DIR)
+        block["producer"] = staleness.manifest([producer], matrix.project_cfg.BASE_DIR)
         self.assertEqual(matrix.freshness({"provenance": block}), "[OK]")
 
 

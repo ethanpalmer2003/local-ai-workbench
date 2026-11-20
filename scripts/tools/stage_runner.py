@@ -6,7 +6,6 @@ and a stage that ends above its high mark is reported as slow. Child output goes
 tagged lines (`[OK]`, `[FAIL]`, `[SKIP]`, `[TIME]`, ...) are shown as they happen.
 """
 
-import hashlib
 import json
 import os
 import queue
@@ -24,6 +23,7 @@ from tqdm import tqdm
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
+from scripts.shared import staleness
 from scripts.tools import stage_times
 
 STEP_RE = re.compile(r"^=== (.+) ===$")
@@ -271,23 +271,6 @@ def runs_dir(title: str) -> Path:
     return project_cfg.STATE_DIR / "shared" / "logs" / "runs" / title
 
 
-def files_fingerprint(paths: list[Path], root: Path) -> str:
-    """Stable digest of the files a stage reads, so an unchanged stage can be skipped.
-
-    Content, not modification time: a rewrite that changes nothing must not buy a rerun.
-    """
-    digest = hashlib.sha256()
-    for path in sorted(paths):
-        digest.update(path.relative_to(root).as_posix().encode())
-        digest.update(b"\0")
-        try:
-            digest.update(hashlib.sha256(path.read_bytes()).digest())
-        except OSError:
-            digest.update(b"missing")
-        digest.update(b"\0")
-    return digest.hexdigest()
-
-
 def _previous_summaries(title: str) -> list[dict[str, Any]]:
     """Every recorded run of this title, newest last, for the cache comparison."""
     folder = runs_dir(title)
@@ -310,7 +293,9 @@ def _cached_stage(title: str, stage: Stage) -> str | None:
         for row in summary.get("stages") or []:
             if row.get("key") != stage.key:
                 continue
-            if row.get("status") in ("ok", "skipped", "cached") and row.get("fingerprint") == stage.fingerprint:
+            if row.get("status") in ("ok", "skipped", "cached") and staleness.matched(
+                str(row.get("fingerprint") or ""), stage.fingerprint
+            ):
                 return str(summary.get("created") or "the last run")
             return None
     return None
