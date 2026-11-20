@@ -18,9 +18,9 @@ from scripts.launchers.launch_util import (
     launch_process,
     print_ready,
     report_exit,
+    run_console_launcher,
     trigger_preload,
     wait_for_backend,
-    wait_for_exit,
 )
 from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 from scripts.launchers.llamacpp import llamacpp_profiles as profiles
@@ -356,8 +356,7 @@ def launch(
 
 
 def main() -> None:
-    proc = launch(extra_args=sys.argv[1:], mode=ConsoleTerminalLaunchMode.MERGE)
-    wait_for_exit(proc)
+    run_console_launcher(launch)
 
 
 if __name__ == "__main__":

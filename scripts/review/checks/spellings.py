@@ -6,12 +6,10 @@
 - A word in the pinned corpus is third-party text and stays as written
 """
 
-import argparse
 import re
-import subprocess
 from pathlib import Path
 
-from scripts.review.lists.text_files import tracked_text_files
+from scripts.review.lists import text_files
 
 # - British form -> American form; each entry is matched as a whole word, case preserved
 VARIANTS: dict[str, str] = {
@@ -199,15 +197,8 @@ def check(root: Path, paths: list[str]) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("paths", nargs="*", help="files to check (default: every tracked text file)")
-    args = parser.parse_args(argv)
-    top = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
-    root = Path(top.stdout.strip())
-    # - a scoped run is given paths directly, so it drops the check's own fixtures the same way
-    if args.paths:
-        return check(root, [path for path in args.paths if path not in SELF_REFERENTIAL])
-    return check(root, tracked_text_files(root, SELF_REFERENTIAL))
+    root, paths = text_files.text_check_targets(argv, __doc__, SELF_REFERENTIAL)
+    return check(root, paths)
 
 
 if __name__ == "__main__":

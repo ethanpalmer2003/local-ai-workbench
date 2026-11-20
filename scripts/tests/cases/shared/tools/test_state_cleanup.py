@@ -33,6 +33,16 @@ class StateCleanupTests(unittest.TestCase):
         self.assertFalse(old.exists())
         self.assertTrue(new.exists())
 
+    def test_path_size_counts_a_file_and_a_tree_and_survives_a_missing_path(self):
+        root = self.root()
+        (root / "one.bin").write_bytes(b"x" * 4)
+        nested = root / "tree" / "deeper"
+        nested.mkdir(parents=True)
+        (nested / "two.bin").write_bytes(b"y" * 6)
+        self.assertEqual(state_cleanup.path_size(root / "one.bin"), 4)
+        self.assertEqual(state_cleanup.path_size(root / "tree"), 6)
+        self.assertEqual(state_cleanup.path_size(root / "absent"), 0)
+
     def test_a_dry_run_reports_without_removing(self):
         root = self.root()
         folder = root / "_MEI3"

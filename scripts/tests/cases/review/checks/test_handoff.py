@@ -175,6 +175,22 @@ class BundleTests(unittest.TestCase):
         self.assertNotIn("x.py :: gone", text)
         self.assertIn("1 pair(s) name a file or symbol the tree no longer has", text)
 
+    def test_a_clean_screen_is_the_answer_even_with_no_pair(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            report_folder = root / "similarity" / "1800000000000000000"
+            report_folder.mkdir(parents=True)
+            (report_folder / "report.json").write_text(
+                '{"created": "2026-11-19", "threshold": 0.95, "findings": []}', encoding="utf-8"
+            )
+            with (
+                unittest.mock.patch.object(handoff, "DUPLICATE_BASELINE", root / "absent.json"),
+                unittest.mock.patch.object(handoff, "SIMILARITY_ROOT", root / "similarity"),
+            ):
+                text = "\n".join(handoff.evidence_report(root=root))
+        self.assertIn("No pair cleared the threshold in that run.", text)
+        self.assertNotIn("None available", text)
+
     def test_the_changed_count_reads_the_manifest_the_report_stored(self):
         with unittest.mock.patch.object(handoff.provenance, "source_manifest", return_value={"a.py": "2"}):
             self.assertEqual(handoff.changed_since_report({"a.py": "1"}), 1)

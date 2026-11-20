@@ -11,15 +11,13 @@
   masked before scanning: the quoted sentences are data, not our prose
 """
 
-import argparse
 import ast
 import io
 import re
-import subprocess
 import tokenize
 from pathlib import Path
 
-from scripts.review.lists.text_files import tracked_text_files
+from scripts.review.lists import text_files
 
 # - character -> readable kind; every one has a plain ASCII replacement
 BANNED = {
@@ -122,12 +120,8 @@ def check(root: Path, paths: list[str]) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("paths", nargs="*", help="files to check (default: every tracked text file)")
-    args = parser.parse_args(argv)
-    top = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
-    root = Path(top.stdout.strip())
-    return check(root, args.paths or tracked_text_files(root))
+    root, paths = text_files.text_check_targets(argv, __doc__)
+    return check(root, paths)
 
 
 if __name__ == "__main__":

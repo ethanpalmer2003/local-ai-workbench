@@ -22,6 +22,14 @@ from scripts.tests.shared.process_fixtures import running_process
 
 
 class LauncherBehaviors(unittest.TestCase):
+    def test_a_console_entry_point_launches_in_the_merged_terminal_and_waits(self):
+        started, waited = Mock(), Mock()
+        with patch.object(sys, "argv", ["launcher", "--flag"]), patch.object(launch_util, "wait_for_exit", waited):
+            launch_util.run_console_launcher(started)
+        self.assertEqual(started.call_args.kwargs["extra_args"], ["--flag"])
+        self.assertEqual(started.call_args.kwargs["mode"], launch_util.ConsoleTerminalLaunchMode.MERGE)
+        waited.assert_called_once_with(started.return_value)
+
     def test_console_launch_values_control_window_and_process_ownership(self):
         for value, split, dependent in (
             ("split-independent", True, False),

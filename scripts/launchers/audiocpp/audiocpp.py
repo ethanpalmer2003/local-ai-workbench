@@ -1,11 +1,10 @@
 import argparse
-import sys
 from pathlib import Path
 
 from scripts.config import paths
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.launch_util import build_cli_args, launch_process, print_ready, wait_for_exit
+from scripts.launchers.launch_util import build_cli_args, launch_process, print_ready, run_console_launcher
 from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 from scripts.launchers.runtime import shared_gpu
 
@@ -44,9 +43,8 @@ def launch(
     return proc
 
 
-def main():
-    proc = launch(extra_args=sys.argv[1:], mode=ConsoleTerminalLaunchMode.MERGE)
-    wait_for_exit(proc)
+def main() -> None:
+    run_console_launcher(launch)
 
 
 if __name__ == "__main__":
