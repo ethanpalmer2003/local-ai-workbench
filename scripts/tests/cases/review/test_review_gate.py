@@ -177,6 +177,32 @@ class GateScopeTests(unittest.TestCase):
             gate.TIMES[:] = saved
         self.assertIn("[OK] every section passed", output.getvalue())
 
+    def test_the_summary_names_each_section_its_verdict_and_the_totals(self):
+        from scripts.review import __main__ as gate
+
+        saved = list(gate.TIMES)
+        gate.TIMES[:] = [
+            {"section": "lint", "seconds": 0.2, "status": 0},
+            {"section": "types", "seconds": 9.4, "status": 1},
+        ]
+        printed = {"lint": "All checks passed!\n[OK] Lint clean\n", "types": "c:/x.py:1: error\n[FAIL] 1 error\n"}
+        try:
+            with redirect_stdout(StringIO()) as output:
+                gate.print_summary(printed)
+        finally:
+            gate.TIMES[:] = saved
+        self.assertIn("Lint clean", output.getvalue())
+        self.assertIn("FAIL", output.getvalue())
+        self.assertIn("2 section(s)", output.getvalue())
+        self.assertIn("1 failed", output.getvalue())
+
+    def test_a_verdict_line_falls_back_to_the_last_line_it_has(self):
+        from scripts.review import __main__ as gate
+
+        self.assertEqual(gate.verdict_line("noise\n[OK] Layout: 3 files, 0 issues\n"), "Layout: 3 files, 0 issues")
+        self.assertEqual(gate.verdict_line("first\nlast line\n"), "last line")
+        self.assertEqual(gate.verdict_line(""), "")
+
     def test_scoped_types_check_only_the_change_and_its_importers(self):
         from scripts.review import __main__ as gate
 

@@ -38,4 +38,4 @@
 ## Guides and checks
 - One owner per procedure, implementation or document; every other mention links to it with an example. Budgets and the review list: [notes conventions](.agents/NOTES-CONVENTIONS.md). Every label family is indexed in [labels](notes/GROUPINGS-INDEX.md), which links the owning constant.
 - Run the structure and docs checks plus allowed import/type checks after structural edits; commands and levels are in [checks](.agents/CHECKS.md). Live, slow or paid checks are opt-in; model-free checks are the default.
-- Detailed rules: [code](.agents/CODE.md), [checks](.agents/CHECKS.md), [review](.agents/REVIEW.md), [skills](.agents/SKILLS.md).
+- Detailed rules: [code](.agents/CODE.md), [checks](.agents/CHECKS.md), [review](.agents/REVIEW.md), [skills](.agents/SKILLS.md); agent limits: [restrictions](.agents/RESTRICTIONS.md).
