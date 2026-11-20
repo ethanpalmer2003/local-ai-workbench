@@ -4,6 +4,7 @@ import io
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 from scripts.config import project_config as project_cfg
 from scripts.review.checks import typography
@@ -92,6 +93,21 @@ class CheckTests(unittest.TestCase):
             target.unlink()
         self.assertEqual(status, 1)
         self.assertIn("typography-fixture.md:2: ellipsis", printed)
+
+
+class TargetTests(unittest.TestCase):
+    def targets(self, argv: list[str], skip: set[str] | None = None) -> tuple[Path, list[str]]:
+        with (
+            patch.object(text_files, "git_root", return_value=Path("/repo")),
+            patch.object(text_files, "tracked_text_files", return_value=["a.md", "b.py"]),
+        ):
+            return text_files.text_check_targets(argv, "check", skip or set())
+
+    def test_no_paths_means_every_tracked_text_file(self):
+        self.assertEqual(self.targets([]), (Path("/repo"), ["a.md", "b.py"]))
+
+    def test_named_paths_replace_the_default_set_and_still_drop_a_skipped_one(self):
+        self.assertEqual(self.targets(["a.md", "own.py"], {"own.py"}), (Path("/repo"), ["a.md"]))
 
 
 class SuffixTests(unittest.TestCase):

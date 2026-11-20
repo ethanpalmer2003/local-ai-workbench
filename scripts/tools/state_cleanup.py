@@ -9,7 +9,8 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 
 
-def _size(path: Path) -> int:
+def path_size(path: Path) -> int:
+    """Bytes a file or a folder tree holds; an unreadable entry counts as zero."""
     if path.is_file():
         try:
             return path.stat().st_size
@@ -54,7 +55,7 @@ def prune(pattern: str, root: Path, cutoff: float, dry_run: bool, recursive: boo
                 continue
         except OSError:
             continue
-        size = _size(path)
+        size = path_size(path)
         if not dry_run:
             try:
                 _remove(path)
@@ -75,7 +76,7 @@ def prune_update_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
     stale = [*folders[:-KEEP_UPDATES], *legacy[:-KEEP_UPDATES]]
     count = freed = 0
     for path in stale:
-        size = _size(path)
+        size = path_size(path)
         if not dry_run:
             _remove(path)
         count += 1
@@ -91,7 +92,7 @@ def prune_review_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
     logs = sorted(root.glob("*.json"))
     count = freed = 0
     for path in logs[:-KEEP_REVIEW_LOGS]:
-        size = _size(path)
+        size = path_size(path)
         if not dry_run:
             _remove(path)
         count += 1
@@ -107,7 +108,7 @@ def prune_trash(dry_run: bool) -> tuple[int, int]:
     days = sorted(path for path in root.iterdir() if path.is_dir())
     count = freed = 0
     for path in days[:-KEEP_TRASH_DAYS]:
-        size = _size(path)
+        size = path_size(path)
         if not dry_run:
             shutil.rmtree(path, ignore_errors=True)
         count += 1
@@ -129,7 +130,7 @@ def prune_log_areas(dry_run: bool) -> tuple[int, int]:
         files = [entry for entry in entries if entry.is_file()]
         stale = stale_entries(files, KEEP_LOG_ENTRIES)
         for path in stale:
-            size = _size(path)
+            size = path_size(path)
             if not dry_run:
                 _remove(path)
             count += 1
@@ -137,7 +138,7 @@ def prune_log_areas(dry_run: bool) -> tuple[int, int]:
     builds = root / "framework-builds"
     if builds.is_dir():
         for path in stale_entries([*builds.glob("*")], KEEP_LOG_ENTRIES):
-            size = _size(path)
+            size = path_size(path)
             if not dry_run:
                 _remove(path)
             count += 1

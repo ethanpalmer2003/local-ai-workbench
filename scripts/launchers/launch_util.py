@@ -641,6 +641,16 @@ def wait_for_exit(proc: subprocess.Popen[Any]) -> None:
         proc.terminate()
 
 
+def run_console_launcher(launch: Callable[..., subprocess.Popen[Any]]) -> None:
+    """Run one launcher's `launch()` in the merged console terminal and wait for it to exit.
+
+    Every console entry point ends this way: the merged terminal means the server owns the window, and
+    the wait keeps a crash visible instead of letting the window close on it.
+    """
+    proc = launch(extra_args=sys.argv[1:], mode=ConsoleTerminalLaunchMode.MERGE)
+    wait_for_exit(proc)
+
+
 def print_ready(tag: str, port: int | str, args: list[str] | None = None, **config: object) -> None:
     """
     - Standard startup line: port, full CLI command, and config details

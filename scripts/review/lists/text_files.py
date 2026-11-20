@@ -1,5 +1,6 @@
 """One vocabulary for the text files the review checks read; a new suffix is added here."""
 
+import argparse
 import subprocess
 from pathlib import Path
 
@@ -40,3 +41,26 @@ def tracked_text_files(root: Path, skip: set[str] | frozenset[str] = frozenset()
         for path in result.stdout.splitlines()
         if path and is_text(path) and path not in skip and (root / path).is_file()
     ]
+
+
+def git_root() -> Path:
+    """The repository root git reports, which a text check resolves its paths against."""
+    top = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
+    return Path(top.stdout.strip())
+
+
+def text_check_targets(
+    argv: list[str] | None, description: str | None, skip: set[str] | frozenset[str] = frozenset()
+) -> tuple[Path, list[str]]:
+    """The repository root and the files to scan: the paths given, or every tracked text file.
+
+    The two text checks read the same arguments and the same default set, so their entry point is owned
+    once; a file a check must not scan itself is dropped whether it was named or discovered.
+    """
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("paths", nargs="*", help="files to check (default: every tracked text file)")
+    args = parser.parse_args(argv)
+    root = git_root()
+    if args.paths:
+        return root, [path for path in args.paths if path not in skip]
+    return root, tracked_text_files(root, skip)

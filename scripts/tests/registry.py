@@ -68,7 +68,7 @@ from scripts.tests.cases.review.checks.test_similarity import (
     SimilarityUnitTests,
 )
 from scripts.tests.cases.review.checks.test_spellings import AmericanSpellingTests
-from scripts.tests.cases.review.checks.test_typography import CheckTests, ScanTests, SuffixTests
+from scripts.tests.cases.review.checks.test_typography import CheckTests, ScanTests, SuffixTests, TargetTests
 from scripts.tests.cases.review.checks.test_walrus import WalrusTests
 from scripts.tests.cases.review.test_examples import ExamplesPageTests
 from scripts.tests.cases.review.test_public_audit import PublicAuditTests
@@ -198,6 +198,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     CheckTests,
     ScanTests,
     SuffixTests,
+    TargetTests,
     FindingTests,
     ExternalSeedTests,
     GeneratedPageTests,

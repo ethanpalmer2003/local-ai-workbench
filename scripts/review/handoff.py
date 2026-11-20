@@ -190,11 +190,12 @@ def duplicate_pairs(limit: int = 10) -> list[tuple[str, int]]:
 
 
 def similarity_evidence(limit: int = 10, root: Path | None = None) -> SimilarityEvidence | None:
-    """What the newest code-similarity run still describes, or None when no run left findings behind.
+    """What the newest code-similarity run still describes, or None when no run wrote a report.
 
     The check needs the embedding model, so this reads whatever the last opt-in run wrote and starts
-    nothing itself. A pair whose file or symbol the tree no longer has is dropped rather than shown: a
-    reader would otherwise hunt for a function that was renamed in the commit after the run.
+    nothing itself. The newest run is the answer even when it found no pair, because that is what a clean
+    screen reports; a pair whose file or symbol the tree no longer has is dropped rather than shown, since a
+    reader would otherwise hunt for a function renamed in the commit after the run.
     """
     directory = root or project_cfg.BASE_DIR
     reports = sorted(SIMILARITY_ROOT.glob("*/report.json")) if SIMILARITY_ROOT.is_dir() else []
@@ -204,8 +205,6 @@ def similarity_evidence(limit: int = 10, root: Path | None = None) -> Similarity
         except (OSError, ValueError):
             continue
         findings = cast(list[SimilarityFinding], payload.get("findings") or [])
-        if not findings:
-            continue
         live = [row for row in findings if pair_exists(row["a"], directory) and pair_exists(row["b"], directory)]
         return SimilarityEvidence(
             created=str(payload.get("created") or "unknown"),
@@ -458,7 +457,11 @@ def evidence_report(root: Path | None = None) -> list[str]:
                 )
             )
         else:
-            lines.append("Every pair it recorded names a file or symbol the tree has since changed.")
+            lines.append(
+                "Every pair it recorded names a file or symbol the tree has since changed."
+                if evidence.dropped
+                else "No pair cleared the threshold in that run."
+            )
     return lines
 
 

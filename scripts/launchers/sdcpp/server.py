@@ -11,7 +11,7 @@ from scripts.launchers.launch_util import (
     launch_process,
     prepare_service_port,
     print_ready,
-    wait_for_exit,
+    run_console_launcher,
 )
 from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 from scripts.launchers.proxy_util import run_json_proxy
@@ -120,8 +120,7 @@ def main() -> None:
         run_saving_proxy(extra_args=sys.argv[1:])
         return
 
-    proc = launch(extra_args=sys.argv[1:], mode=ConsoleTerminalLaunchMode.MERGE)
-    wait_for_exit(proc)
+    run_console_launcher(launch)
 
 
 if __name__ == "__main__":

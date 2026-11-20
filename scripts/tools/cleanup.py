@@ -145,7 +145,7 @@ def trash_days() -> list[tuple[Path, int]]:
         return days
     for folder in sorted(TRASH_DIR.iterdir(), reverse=True):
         if folder.is_dir() and folder.name[:10].count("-") == 2:
-            days.append((folder, _bytes(folder)))
+            days.append((folder, state_cleanup.path_size(folder)))
     return days
 
 
@@ -237,17 +237,6 @@ def _walk(root: Path, depth: int):
         if entry.is_dir() and not entry.is_symlink():
             yield entry
             yield from _walk(entry, depth - 1)
-
-
-def _bytes(path: Path) -> int:
-    total = 0
-    for item in path.rglob("*"):
-        try:
-            if item.is_file():
-                total += item.stat().st_size
-        except OSError:
-            continue
-    return total
 
 
 if __name__ == "__main__":
