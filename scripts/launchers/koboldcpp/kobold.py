@@ -12,7 +12,7 @@ from scripts.config import paths
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector as transcription
-from scripts.launchers.koboldcpp import external_llm, kokoro
+from scripts.launchers.koboldcpp import external_llm, speech
 from scripts.launchers.launch_util import backend_running, launch_module, launch_process, port_listening
 from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 from scripts.launchers.runtime import shared_gpu
@@ -46,9 +46,9 @@ def _service_config() -> dict[str, Any]:
     return base
 
 
-def _server_options(usage_profile: str) -> dict[str, Any]:
-    options = {**cfg.KOBOLDCPP_KCPPS_ARGS, **model_overrides(usage_profile), **kokoro.model_options()}
-    if cfg.KOBOLDCPP_SERVICE.transcription_engine != cfg.AsrStartupEngine.EMBEDDED:
+def _server_options(usage_profile: str, embedded_whisper: bool = False) -> dict[str, Any]:
+    options = {**cfg.KOBOLDCPP_KCPPS_ARGS, **model_overrides(usage_profile)}
+    if not embedded_whisper and cfg.KOBOLDCPP_SERVICE.transcription_engine != cfg.AsrStartupEngine.EMBEDDED:
         # - Only the embedded engine loads Kobold's own Whisper model; every other setting either owns
         #   its own process or turns transcription off, so the flag is dropped and the config's empty
         #   whispermodel keeps the weight unloaded.
@@ -84,9 +84,12 @@ def _override_arguments(options: dict[str, Any]) -> list[str]:
     return command
 
 
-def server_command(usage_profile: str = "standalone", no_model: bool = False) -> list[str]:
+def server_command(
+    usage_profile: str = "standalone", no_model: bool = False, embedded_whisper: bool = False
+) -> list[str]:
+    """The Kobold command line; `embedded_whisper` loads Kobold's own Whisper model beside a separate engine."""
     _ = _service_config()
-    options = _server_options(usage_profile)
+    options = _server_options(usage_profile, embedded_whisper)
     alias_port = options.pop("port_param", options.get("port"))
     if alias_port != options.get("port"):
         raise ValueError("Kobold port and port_param overrides must agree")
@@ -117,7 +120,7 @@ def start_kobold(
         title="KoboldCpp Server",
         cwd=str(project_cfg.SCRIPTS_DIR),
         kill_ports=None
-        if transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine) or kokoro.selected()
+        if transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine) or speech.selected()
         else cast(int, cfg.KOBOLDCPP_KCPPS_ARGS["port"]),
         report_vram=True,
         log_file=str(log_path),
@@ -140,7 +143,7 @@ def print_summary(log_path: Path, usage_profile: str = "standalone") -> None:
     else:
         print(f"Whisper:   {cfg.KOBOLDCPP_KCPPS_ARGS['whispermodel']} (built-in)")
     print(f"Speech:    {cfg.KOBOLDCPP_SERVICE.speech_engine.value}")
-    if kokoro.selected():
+    if speech.selected():
         backend = "CPU"
         if cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP:
             backend = "shared Vulkan"
@@ -152,10 +155,10 @@ def print_summary(log_path: Path, usage_profile: str = "standalone") -> None:
             cfg.AsrStartupEngine.PARAKEET_V3,
         ):
             backend = "Vulkan"
-        print(f"Kokoro:    {backend}, {cfg.KOKORO_TTS.threads} threads, voice {cfg.KOKORO_TTS.voice}")
+        print(f"TTS:       {speech.family()} on {backend}, {cfg.AUDIOCPP_SPEECH.threads} threads")
     print(f"Extra args: {extra_args or 'none'}")
     print(f"Log:       {log_path}")
-    audio_enabled = not kokoro.internal() and (kokoro.selected() or cfg.AUDIOCPP_SERVICE.enabled)
+    audio_enabled = speech.selected() or cfg.AUDIOCPP_SERVICE.enabled
     print(f"Audiocpp:  {'on' if audio_enabled else 'off'}")
     print(f"Sdcpp:     {'on' if cfg.SDCPP_SERVICE.enabled else 'off'}")
 
@@ -182,34 +185,33 @@ def open_streaming_ui() -> None:
 def start_proxy_services(processes: list[tuple[str, subprocess.Popen[Any]]], usage_profile: str) -> None:
     for name, script, title, service in PROXY_SERVICES:
         if name == "Audiocpp" and cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP:
-            continue  # ASR and Kokoro share the already-started server.
-        if name == "Audiocpp" and kokoro.selected():
-            if not kokoro.internal():
-                if backend_running(service.internal_port):
-                    raise RuntimeError("AudioCpp port is occupied; close the existing audio session first")
-                processes.append(
-                    (
-                        "Kokoro AudioCpp",
-                        launch_process(
-                            kokoro.audio_command(
-                                service.internal_port,
-                                backend="vulkan"
-                                if cfg.KOBOLDCPP_SERVICE.transcription_engine
-                                in (
-                                    cfg.AsrStartupEngine.PARAKEET_STREAM,
-                                    cfg.AsrStartupEngine.NEMO,
-                                    cfg.AsrStartupEngine.SPEECHCPP,
-                                    cfg.AsrStartupEngine.WHISPER_VULKAN,
-                                    cfg.AsrStartupEngine.PARAKEET_V3,
-                                )
-                                else "cpu",
-                            ),
-                            title="Kokoro AudioCpp",
-                            cwd=str(project_cfg.AUDIOCPP_BIN_DIR),
-                            env=kokoro.audio_environment(),
+            continue  # ASR and speech share the already-started server.
+        if name == "Audiocpp" and speech.selected():
+            if backend_running(service.internal_port):
+                raise RuntimeError("AudioCpp port is occupied; close the existing audio session first")
+            processes.append(
+                (
+                    "AudioCpp TTS",
+                    launch_process(
+                        speech.audio_command(
+                            service.internal_port,
+                            backend="vulkan"
+                            if cfg.KOBOLDCPP_SERVICE.transcription_engine
+                            in (
+                                cfg.AsrStartupEngine.PARAKEET_STREAM,
+                                cfg.AsrStartupEngine.NEMO,
+                                cfg.AsrStartupEngine.SPEECHCPP,
+                                cfg.AsrStartupEngine.WHISPER_VULKAN,
+                                cfg.AsrStartupEngine.PARAKEET_V3,
+                            )
+                            else "cpu",
                         ),
-                    )
+                        title="AudioCpp TTS",
+                        cwd=str(project_cfg.AUDIOCPP_BIN_DIR),
+                        env=speech.audio_environment(),
+                    ),
                 )
+            )
             continue
         if service.enabled and service.mode == cfg.ServiceMode.PROXY:
             print(f"Starting {name} proxy...")
@@ -277,8 +279,8 @@ def apply_options(args: argparse.Namespace, parser: argparse.ArgumentParser) -> 
         not cfg.KOBOLDCPP_SERVICE.streaming_ui or args.image_on_demand
     ):
         parser.error("External transcription requires the Lite proxy and the normal language-practice lifecycle")
-    if kokoro.selected() and args.image_on_demand:
-        parser.error("Kokoro comparison profiles use their own speech lifecycle; omit --image-on-demand")
+    if speech.selected() and args.image_on_demand:
+        parser.error("An AudioCpp speech profile uses its own lifecycle; omit --image-on-demand")
     external = args.llm == "external"
     if external and not cfg.KOBOLDCPP_SERVICE.streaming_ui:
         parser.error("External LLM needs the Lite proxy so the page can point at llama.cpp")
@@ -289,16 +291,12 @@ def apply_options(args: argparse.Namespace, parser: argparse.ArgumentParser) -> 
 
 def check_profile_ports() -> None:
     """Refuse an occupied port instead of starting a second session on the same profile."""
-    if not (kokoro.selected() or transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine)):
+    if not (speech.selected() or transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine)):
         return
     ports = [cast(int, cfg.KOBOLDCPP_KCPPS_ARGS["port"])]
     if cfg.KOBOLDCPP_SERVICE.streaming_ui:
         ports.append(cfg.KOBOLDCPP_SERVICE.streaming_ui_port)
-    if (
-        kokoro.selected()
-        and not kokoro.internal()
-        and cfg.KOBOLDCPP_SERVICE.transcription_engine != cfg.AsrStartupEngine.AUDIOCPP
-    ):
+    if speech.selected() and cfg.KOBOLDCPP_SERVICE.transcription_engine != cfg.AsrStartupEngine.AUDIOCPP:
         ports.append(cfg.AUDIOCPP_SERVICE.internal_port)
     occupied = [port for port in ports if backend_running(port) or port_listening(port)]
     if occupied:

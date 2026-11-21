@@ -52,7 +52,7 @@ python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case ming3-aud
   preserved or refused.
 - A single sentence is a compatibility screen, not a quality or ranking benchmark.
 - Supertonic synthesized English, French and Japanese on the Vulkan backend in a one-request
-  check. Its first timing pair against Kokoro is recorded in
+  check. Its first timing pair against the parked Kokoro packages is recorded in
   [the TTS screen](../../tests/notes/SUPERTONIC-TTS-SCREEN.md): RTF 0.027 against 0.033, 481 MiB
   against 694 MiB peak process VRAM.
 

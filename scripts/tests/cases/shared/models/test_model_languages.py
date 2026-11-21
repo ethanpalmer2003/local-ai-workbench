@@ -55,7 +55,7 @@ class ModelLanguages(unittest.TestCase):
     def test_exact_model_identity_and_language_filters_preserve_unknowns(self):
         catalog = model_languages.read_catalog()
         self.assertEqual(
-            model_languages.select(catalog, model="audiocpp/kokoro-kobold-q4")[0]["distribution"], "kokoro-v1"
+            model_languages.select(catalog, model="audiocpp/supertonic-3-q8_0")[0]["distribution"], "supertonic-3"
         )
         french = model_languages.select(catalog, task="tts", language="French")
         ids = {row["distribution"] for row in french}

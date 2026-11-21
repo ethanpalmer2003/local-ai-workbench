@@ -57,10 +57,8 @@ class SharedTtsStreamingRequestSettings:
 
 class KoboldcppSpeechStartupEngine(str, Enum):
     CONFIGURED = "configured"
-    KOKORO_INTERNAL = "kokoro-internal"
     # - Any AudioCpp model, including Supertonic; the old name stays for saved commands.
     AUDIOCPP = "audiocpp"
-    KOKORO_AUDIOCPP = "kokoro-audiocpp"
 
 
 class AsrStartupEngine(str, Enum):
@@ -143,13 +141,6 @@ class SpeechWorkflowDefaults:
 # - A default may be replaced from the overlay, so the shipped stacks are checked against their profile's
 #   speech requirement by the label vocabulary test, not on every dataclass change.
 
-
-# - Kokoro TTS packages: the selected package is the single source of the practice TTS default.
-KOKORO_TTS_PACKAGES = {
-    "small": "audiocpp/kokoro-audiocpp-q8_0",
-    "multilingual": "audiocpp/kokoro-audiocpp-multilingual-q8_0",
-}
-DEFAULT_KOKORO_PACKAGE = "multilingual"
 
 # - Supertonic 3: one self-contained GGUF, 31 languages, preset voices M1-M5/F1-F5, no cloning.
 SUPERTONIC_MODEL = "audiocpp/supertonic-3-q8_0"
@@ -299,22 +290,20 @@ LLAMACPP_PRACTICE = LlamacppLanguagePracticeStartupSettings()
 
 
 @dataclass
-class SharedKokoroStartupRequestSettings:
-    koboldcpp_model: Path = model_cfg.path("audiocpp/kokoro-kobold-q4")
-    audiocpp_package: str = DEFAULT_KOKORO_PACKAGE  # 'small' retains the compact package.
-    # - Kokoro's own default; the practice stack now defaults to a Supertonic preset and must not move it.
-    voice: str = "af_heart"
+class AudiocppSpeechStartupRequestSettings:
+    """Request and runtime defaults every AudioCpp speech model shares.
+
+    The server links eSpeak NG and MeCab for its own frontends, so both paths travel with any
+    model launch; the language is the practice default a request falls back to.
+    """
+
     language: str = "en-us"
     threads: int = 5
     espeak_dir: Path = project_cfg.component("audiocpp/additions/espeak-ng").framework_dir / "eSpeak NG"
     mecab_library: Path = project_cfg.component("audiocpp/additions/mecab").framework_dir / "libmecab.dll"
 
-    @property
-    def audiocpp_model(self) -> Path:
-        return model_cfg.path(KOKORO_TTS_PACKAGES[self.audiocpp_package])
 
-
-KOKORO_TTS = SharedKokoroStartupRequestSettings()
+AUDIOCPP_SPEECH = AudiocppSpeechStartupRequestSettings()
 
 
 @dataclass(frozen=True)
@@ -328,9 +317,8 @@ class SharedSupertonicStartupRequestSettings:
 
 SUPERTONIC_TTS = SharedSupertonicStartupRequestSettings()
 
-# - Each TTS family takes its own request fields: Kokoro negotiates a locale frontend per request,
-#   while Supertonic reads the language from the text and takes only a preset voice id.
-TTS_FAMILY_DEFAULT_VOICE = {"kokoro_tts": KOKORO_TTS.voice, "supertonic": SUPERTONIC_TTS.voice}
+# - Supertonic reads the language from the text and takes only a preset voice id.
+TTS_FAMILY_DEFAULT_VOICE = {"supertonic": SUPERTONIC_TTS.voice}
 
 
 @dataclass(frozen=True)

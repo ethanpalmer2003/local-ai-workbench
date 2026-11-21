@@ -157,7 +157,7 @@ def _speech(base, text):
         base, "/v1/audio/speech", {"input": text, "voice": "af_heart", "response_format": "wav", "stream": False}
     )
     if audio[:4] != b"RIFF":
-        raise RuntimeError("Empty chat reply or invalid Kokoro WAV")
+        raise RuntimeError("Empty chat reply or invalid speech WAV")
     return audio
 
 
@@ -352,7 +352,7 @@ def main():
             patch.object(cfg.AUDIOCPP_SERVICE, "internal_port", 19193),
             patch.object(cfg, "AUDIOCPP_VAD", replace(cfg.AUDIOCPP_VAD, server_port=19193)),
             patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", engine),
-            patch.object(cfg.KOBOLDCPP_SERVICE, "speech_engine", cfg.KoboldcppSpeechStartupEngine.KOKORO_AUDIOCPP),
+            patch.object(cfg.KOBOLDCPP_SERVICE, "speech_engine", cfg.KoboldcppSpeechStartupEngine.AUDIOCPP),
             patch.object(cfg.KOBOLDCPP_SERVICE, "model", "llamacpp/gemma-4-E4B-it-Q4_0"),
             patch.dict(cfg.KOBOLDCPP_KCPPS_ARGS, port=19194, port_param=19194),
             patch.object(cfg.KOBOLDCPP_SERVICE, "streaming_ui_port", 19195),

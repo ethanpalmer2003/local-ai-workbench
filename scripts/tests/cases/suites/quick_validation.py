@@ -19,11 +19,6 @@ from scripts.tools import stage_times
 
 PROBES = {
     "parakeet": ("scripts.tests.cases.asr.parakeetcpp", [], 240),
-    "whisper": (
-        "scripts.benchmarks.asr.whisper_embedded_compare",
-        ["--order", "internal", "--repeats", "1", "--budget", "180"],
-        240,
-    ),
     "practice-whisper": ("scripts.tests.cases.asr.shared.language_practice_whisper", [], 240),
     "practice-qwen": (
         "scripts.tests.cases.asr.shared.language_practice_whisper",
@@ -31,15 +26,11 @@ PROBES = {
         240,
     ),
     "gemma": ("scripts.benchmarks.asr.gemma_audio_compare", ["--engines", "llamacpp", "--repeats", "1"], 300),
-    "images": (
-        "scripts.tests.cases.koboldcpp.kobold_embedded_compare",
-        ["--kind", "image", "--arms", "internal", "--repeats", "1"],
-        300,
-    ),
+    "images": ("scripts.tests.cases.koboldcpp.kobold_embedded_compare", ["--arms", "internal", "--repeats", "1"], 300),
     "ming3-tts": ("scripts.tests.cases.audiocpp.audiocpp_backend_compare", ["--case", "ming3-tts"], 180),
 }
 # - these probes reach consent.require, so the answer this stage already has must travel with the command
-NEEDS_CONSENT = frozenset({"whisper", "gemma"})
+NEEDS_CONSENT = frozenset({"gemma"})
 
 
 def probe_command(name: str, yes: bool) -> list[str]:
@@ -70,8 +61,7 @@ def run_probes(names: list[str], yes: bool = False) -> bool:
 
 PROBE_COMPONENTS: dict[str, tuple[str, ...]] = {
     "parakeet": ("asr/parakeetcpp",),
-    "whisper": ("asr/whispercpp",),
-    "practice-whisper": ("asr/whispercpp", "audiocpp"),
+    "practice-whisper": ("asr/whispercpp", "audiocpp", "koboldcpp"),
     "practice-qwen": ("asr/llamacpp", "audiocpp"),
     "gemma": ("asr/llamacpp", "audiocpp"),
     "images": ("koboldcpp", "sdcpp"),

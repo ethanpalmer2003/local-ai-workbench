@@ -10,14 +10,14 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import requests
 from scripts.launchers.asr.shared.resident_profiles import audio_config
-from scripts.launchers.audiocpp.kokoro import audio_environment
+from scripts.launchers.audiocpp.tts_server import audio_environment
 from scripts.launchers.shared.services import native
 from scripts.launchers.shared.transport.streaming_http import StreamingPost
 from scripts.shared.wait import http_ready
 
 # - The practice server hosts one ASR model plus TTS; the profile picks which recognizer
 DEFAULT_ENGINE = "audiocpp-vulkan"
-LABELS = {"audiocpp-vulkan": "Nemotron + Kokoro AudioCpp", "audiocpp-qwen3": "Qwen3 + Kokoro AudioCpp"}
+LABELS = {"audiocpp-vulkan": "Nemotron + AudioCpp TTS", "audiocpp-qwen3": "Qwen3 + AudioCpp TTS"}
 
 
 def speech_config(port: int, engine: str = DEFAULT_ENGINE):
@@ -42,7 +42,7 @@ def command(port: int | None = None, engine: str = DEFAULT_ENGINE) -> list[str]:
     text = json.dumps(speech_config(port, engine), indent=2)
     folder = project_cfg.component("audiocpp").generated_dir
     folder.mkdir(parents=True, exist_ok=True)
-    path = folder / f"asr-kokoro-{hashlib.sha256(text.encode()).hexdigest()[:12]}.json"
+    path = folder / f"asr-tts-{hashlib.sha256(text.encode()).hexdigest()[:12]}.json"
     path.write_text(text, encoding="utf-8")
     return [str(project_cfg.AUDIOCPP_SERVER_EXE), "--config", str(path), "--port", str(port), "--no-ui"]
 

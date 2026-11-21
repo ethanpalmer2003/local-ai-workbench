@@ -1,4 +1,4 @@
-"""Brief automatic Silero/Nemotron turns with one Kokoro/ASR server; no microphone."""
+"""Brief automatic Silero/Nemotron turns with one speech/ASR server; no microphone."""
 
 import argparse
 import json
@@ -15,7 +15,7 @@ from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp.asr_turns import Turns, speech_config
-from scripts.launchers.audiocpp.kokoro import audio_environment
+from scripts.launchers.audiocpp.tts_server import audio_environment
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.tests.cases.audiocpp import single_server_speech as shared
@@ -55,7 +55,7 @@ def replay(name: str, pcm: bytes, expected: int, run: RunPaths, server: Resident
                 if any(item.get("end_reason") != "silence" or not item.get("text", "").strip() for item in completed):
                     raise ValueError("A turn was incomplete or did not end through VAD silence")
                 if future:
-                    row["kokoro"] = shared.save_audio(run, name + "-kokoro", future.result(timeout=15))
+                    row["speech"] = shared.save_audio(run, name + "-speech", future.result(timeout=15))
                 for item in completed:
                     item["final_after_vad_speech_end_seconds"] = (
                         item["observed_at"] - started - (item["speech_end_sample"] - initial_samples) / 16000
@@ -87,7 +87,7 @@ def main():
         ("short-pause", np.concatenate((trimmed, np.zeros(5600), trimmed, np.zeros(24000))), 1, False),
     ]
     config = speech_config(shared.PORT)
-    path = run.temp / "asr-kokoro.json"
+    path = run.temp / "asr-speech.json"
     path.write_text(json.dumps(config, indent=2), encoding="utf-8")
     server = ResidentHttp(
         [str(project_cfg.AUDIOCPP_SERVER_EXE), "--config", str(path), "--port", str(shared.PORT), "--no-ui"],

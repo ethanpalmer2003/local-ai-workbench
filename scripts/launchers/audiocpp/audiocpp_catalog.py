@@ -213,12 +213,7 @@ def builtin_voices(path: Path) -> list[dict[str, object]]:
 def voice_data(model: str, spec: dict[str, Any] | None) -> dict[str, object]:
     if spec and spec.get("family") in cfg.TTS_FAMILY_DEFAULT_VOICE:
         path = Path(spec["path"])
-        if spec["family"] == "kokoro_tts":
-            from scripts.launchers.audiocpp.kokoro import available_voices
-
-            voices = available_voices(path) if path.is_file() else []
-        else:
-            voices = builtin_voices(path) if path.is_file() else []
+        voices = builtin_voices(path) if path.is_file() else []
         return {
             "voice_mode": "builtin",
             "voices": voices,

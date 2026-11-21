@@ -44,7 +44,7 @@ def start_tts():
     from scripts.launchers.audiocpp import model_management
 
     return model_management.start(
-        {"backend": "vulkan", "threads": cfg.KOKORO_TTS.threads, "models": [practice_models.tts_spec()]},
+        {"backend": "vulkan", "threads": cfg.AUDIOCPP_SPEECH.threads, "models": [practice_models.tts_spec()]},
         cfg.AUDIOCPP_SERVICE.internal_port,
     )
 

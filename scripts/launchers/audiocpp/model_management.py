@@ -8,7 +8,7 @@ from typing import Any
 import requests
 
 from scripts.config import project_config as project_cfg
-from scripts.launchers.audiocpp.kokoro import audio_environment
+from scripts.launchers.audiocpp.tts_server import audio_environment
 from scripts.launchers.shared.services import native
 from scripts.shared.wait import http_ready
 

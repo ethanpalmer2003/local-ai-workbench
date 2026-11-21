@@ -86,7 +86,7 @@ class StreamingPatch(unittest.TestCase):
         from scripts.launchers.asr.shared import practice_models
         from scripts.launchers.koboldcpp import kobold_lite
 
-        spec = {"id": cfg.LANGUAGE_PRACTICE.tts_model, "family": "kokoro_tts", "path": "unused", "mode": "streaming"}
+        spec = {"id": cfg.LANGUAGE_PRACTICE.tts_model, "family": "supertonic", "path": "unused", "mode": "streaming"}
         with (
             patch.object(practice_models, "active_tts_id", None),
             patch.object(practice_models, "tts_spec", return_value=spec),
@@ -99,7 +99,6 @@ class StreamingPatch(unittest.TestCase):
                     speech_delivery, "overrides", return_value={f"tts:{practice_models.tts_id()}": "whole"}
                 ):
                     self.assertEqual(kobold_lite.audio_delivery_plan()["mode"], "whole")
-                with patch.object(kobold_lite.kokoro, "internal", return_value=True):
                     self.assertEqual(kobold_lite.audio_delivery_plan()["mode"], "whole")
 
     def test_incompatible_upstream_is_rejected(self):

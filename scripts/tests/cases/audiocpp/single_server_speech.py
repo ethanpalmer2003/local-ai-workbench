@@ -1,4 +1,4 @@
-"""Brief one-process Nemotron/Kokoro residency, alternation and concurrent-request screen."""
+"""Brief one-process Nemotron/speech residency, alternation and concurrent-request screen."""
 
 import base64
 import hashlib
@@ -21,7 +21,7 @@ from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp.asr_turns import speech_config
-from scripts.launchers.audiocpp.kokoro import audio_environment
+from scripts.launchers.audiocpp.tts_server import audio_environment
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.shared.resources import summarize_resources, watch_resources
@@ -225,11 +225,11 @@ def exercise(run, server, upload, report, memory):
 
 
 def main():
-    context = dict(require_native_execution("Single AudioCpp ASR/Kokoro screen"))
+    context = dict(require_native_execution("Single AudioCpp ASR/speech screen"))
     run = CasePaths(__file__).new_run()
     clip = prepare_corpus(run, None)[0]
     config = speech_config(PORT)
-    path = run.temp / "asr-kokoro.json"
+    path = run.temp / "asr-speech.json"
     path.write_text(json.dumps(config, indent=2), encoding="utf-8")
     hashes = {}
     for model in config["models"]:

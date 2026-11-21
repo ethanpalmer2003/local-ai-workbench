@@ -30,7 +30,7 @@
 
 ## Benchmarks
 
-- Kokoro internal/external packages differ in format and quantization; compare full configurations, not engine-only speed.
-- External Kokoro uses portable eSpeak at `frameworks/audiocpp/additions/espeak-ng`; `KOKORO_TTS` owns its profile.
+- Kokoro is parked: no speech engine selects it and Supertonic is the practice voice.
+- External AudioCpp speech uses portable eSpeak at `frameworks/audiocpp/additions/espeak-ng`; `AUDIOCPP_SPEECH` owns its profile.
 - Gemma audio worked in both runtimes before refactoring, including 30-second clips; reasoning/KV/cache conditions were not matched for a fair speed ranking.
 - [Coding checkpoint/deferred validation](../../../notes/asr/ASR-IMPLEMENTATION.md). No automatic tests/benchmarks; preserve existing sessions and execution-context evidence.

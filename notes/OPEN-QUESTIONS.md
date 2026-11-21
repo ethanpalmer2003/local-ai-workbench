@@ -38,10 +38,6 @@ A replacement is measured and clearly ahead while the older option still works a
 entry leaves when that option is retired or the evidence stops holding, so a row here means "waiting to
 be dropped", not "undecided".
 
-- **Kokoro as the practice voice.** Supertonic 3 is ahead on request time, load time, VRAM and
-  language count ([timings](../scripts/tests/notes/SUPERTONIC-TTS-SCREEN.md)). Kokoro stays because
-  the Lemonade comparison pins its own `kokoro-v1`, it is the AudioCpp comparison baseline, and
-  native Kobold speech still loads the Kokoro GGUF.
 - **Piper and Sherpa TTS.** Retained alternatives with further work not planned
   ([note](../scripts/launchers/audiocpp/RETAINED-TTS.md)); they survive only for the resident
   benchmark.

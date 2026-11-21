@@ -43,7 +43,7 @@ class DeliveryTests(unittest.TestCase):
             self.assertFalse(live.supported(cfg.AsrStartupEngine.AUDIOCPP))
 
     def test_tts_capability_and_request_format_are_preserved(self):
-        spec = {"id": cfg.LANGUAGE_PRACTICE.tts_model, "family": "kokoro_tts", "path": "unused", "mode": "streaming"}
+        spec = {"id": cfg.LANGUAGE_PRACTICE.tts_model, "family": "supertonic", "path": "unused", "mode": "streaming"}
         with (
             patch.object(speech_delivery, "overrides", return_value={}),
             patch.object(practice_models, "tts_spec", return_value=spec),

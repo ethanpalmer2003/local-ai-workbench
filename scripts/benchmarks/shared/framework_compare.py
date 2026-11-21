@@ -3,13 +3,11 @@
 Each backend is started and stopped in turn so one stack holds the GPU at a time. Practice means
 this repository's language profile: llama.cpp chat, AudioCpp Supertonic speech and Qwen3-ASR recognition
 behind the practice gateway. Lemonade answers the same three legs on its own port with its kokoro and
-whisper.cpp backends. KoboldCpp answers them from one process: its own chat on the same weights, its
-built-in Kokoro speech and its embedded whisper. A leg a stack cannot serve is recorded as
+whisper.cpp backends. A leg a stack cannot serve is recorded as
 unavailable with the reason the server gave, never dropped.
 """
 
 import argparse
-import base64
 import json
 import time
 from dataclasses import asdict
@@ -24,7 +22,6 @@ from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance, reporting
 from scripts.benchmarks.shared import language_corpus as corpus
 from scripts.benchmarks.shared.framework_compare_serving import (
     ALTERNATE_ENGINE,
-    KOBOLD_ARM_MODEL,
     Options,
     Served,
     _recogniser_path,
@@ -44,8 +41,8 @@ PROMPTS = (
     "Describe a quiet scouting mission near an enemy facility with a teammate.",
     "Explain why a small local model can still be useful for practicing a language.",
 )
-# - One sentence per language the practice profile speaks. Lemonade and Kobold ask for the Kokoro
-#   voice; the practice arm uses the preset of whichever TTS model it serves.
+# - One sentence per language the practice profile speaks. Lemonade asks for its own Kokoro voice;
+#   the practice arm uses the preset of whichever TTS model it serves.
 TTS_TEXTS = (
     ("en", "en-us", "af_heart", "Good morning. I would like a ticket to the city center, please."),
     ("es", "es", "ef_dora", "Buenos días. Quisiera un billete para el centro de la ciudad, por favor."),
@@ -54,8 +51,7 @@ TTS_TEXTS = (
 )
 # - "whisper" is the practice stack with its other installed recogniser, kept as a third arm so
 #   the recognition choice stays measured instead of being re-probed by hand
-# - "kobold" serves all three legs from one process, on the same chat weights as the practice arm
-BACKENDS = ("practice", "whisper", "lemonade", "kobold")
+BACKENDS = ("practice", "whisper", "lemonade")
 LEGS = ("chat", "tts", "asr")
 # - Ports are taken from the OS per run: a stack left in TIME_WAIT must not fail the next run
 DEFAULT_WEIGHTS = model_cfg.path(cfg.LANGUAGE_PRACTICE.llm_model)
@@ -223,12 +219,10 @@ def _speech_issues(
 
 
 def _practice_voice(fallback: str) -> str:
-    """Kokoro voice ids only apply when the practice stack serves Kokoro; a preset voice wins otherwise."""
+    """The preset voice the practice stack serves; a family without one keeps the caller's id."""
     from scripts.launchers.asr.shared import practice_models
 
     spec = practice_models.tts_spec()
-    if spec["family"] == "kokoro_tts":
-        return fallback
     return str(cfg.TTS_FAMILY_DEFAULT_VOICE.get(spec["family"], fallback))
 
 
@@ -277,20 +271,14 @@ def _tts_leg(served: Served, run: RunPaths) -> dict[str, Any]:
 
 
 def _transcribe(served: Served, audio: bytes, language: str) -> tuple[str, float]:
-    if served.asr_style == "kobold":
-        request: dict[str, Any] = {
-            "url": f"{served.asr}/api/extra/transcribe",
-            "json": {"audio_data": base64.b64encode(audio).decode(), "langcode": language},
-        }
-    else:
-        body, content_type = audio_upload(
-            audio, {"model": served.asr_model, "language": language, "response_format": "json"}
-        )
-        request = {
-            "url": f"{served.asr}/v1/audio/transcriptions",
-            "data": body,
-            "headers": {"Content-Type": content_type},
-        }
+    body, content_type = audio_upload(
+        audio, {"model": served.asr_model, "language": language, "response_format": "json"}
+    )
+    request: dict[str, Any] = {
+        "url": f"{served.asr}/v1/audio/transcriptions",
+        "data": body,
+        "headers": {"Content-Type": content_type},
+    }
     started = time.perf_counter()
     response = requests.post(timeout=300, **request)
     seconds = time.perf_counter() - started
@@ -539,13 +527,9 @@ def _source_models(weights: Path) -> list[provenance.ModelIdentity]:
     """Weight files behind every stack, recorded so a swap is visible later."""
     return [
         provenance.file_identity("chat", weights),
-        provenance.file_identity("kobold chat", model_cfg.path(KOBOLD_ARM_MODEL)),
         provenance.file_identity("practice tts", model_cfg.path(cfg.LANGUAGE_PRACTICE.tts_model)),
         provenance.file_identity("practice asr", _recogniser_path()),
         provenance.file_identity("practice asr alternate", _recogniser_path(ALTERNATE_ENGINE)),
-        provenance.file_identity("kobold tts", cfg.KOKORO_TTS.koboldcpp_model),
-        provenance.file_identity("kobold asr", Path(str(cfg.KOBOLDCPP_KCPPS_ARGS["whispermodel"]))),
-        provenance.file_identity("kobold server", cfg.KOBOLDCPP_SERVICE.exe),
         provenance.file_identity("lemonade server", cfg.LEMONADE_SERVICE.exe),
     ]
 
@@ -587,7 +571,7 @@ def main(argv: list[str] | None = None) -> int:
         "reasoning": "One stack at a time on the same weights. Chat streams, speech synthesizes one sentence per "
         "language, recognition scores the pinned corpus clips by pooled word and character error rate.",
         "provenance": provenance.block(
-            subject="language practice versus Lemonade and KoboldCpp",
+            subject="language practice versus Lemonade",
             config={
                 "legs": list(options.legs),
                 "tokens": options.tokens,
@@ -599,7 +583,6 @@ def main(argv: list[str] | None = None) -> int:
             frameworks=[
                 provenance.framework_state("llamacpp"),
                 provenance.framework_state("audiocpp"),
-                provenance.framework_state("koboldcpp"),
                 provenance.framework_state("lemonade_server"),
             ],
             models=_source_models(weights),

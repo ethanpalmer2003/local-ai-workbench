@@ -86,8 +86,6 @@ def runtime_references() -> list[ModelReference]:
         ModelReference(Path(str(cfg.KOBOLDCPP_KCPPS_ARGS["whispermodel"])), "KOBOLDCPP_KCPPS_ARGS[whispermodel]")
     )
     references += [
-        ModelReference(cfg.KOKORO_TTS.koboldcpp_model, "KOKORO_TTS.koboldcpp_model"),
-        ModelReference(cfg.KOKORO_TTS.audiocpp_model, "KOKORO_TTS.audiocpp_model"),
         ModelReference(cfg.QWEN3_ASR.model, "QWEN3_ASR.model"),
         ModelReference(cfg.QWEN3_ASR.mmproj, "QWEN3_ASR.mmproj"),
         ModelReference(cfg.GEMMA_AUDIO_ASR.mmproj, "GEMMA_AUDIO_ASR.mmproj"),

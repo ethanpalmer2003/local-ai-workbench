@@ -1,4 +1,4 @@
-"""Bounded Gemma + selected standalone ASR + Lite integration smoke on temporary ports."""
+"""Bounded Gemma + selected standalone ASR + Kobold's embedded Whisper + Lite integration smoke on temporary ports."""
 
 import argparse
 import base64
@@ -110,6 +110,21 @@ def _transcribe(lite: str, clips: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return transcripts
 
 
+def _transcribe_embedded(native: str, clips: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Kobold's own Whisper on the same corpus, graded the same way; its server already runs."""
+    transcripts: list[dict[str, Any]] = []
+    for clip in clips[:2]:
+        body = json.dumps(
+            {"audio_data": base64.b64encode(Path(clip["file"]).read_bytes()).decode(), "langcode": "en"}
+        ).encode()
+        result = request(native + "/api/extra/transcribe", body)
+        accuracy = word_errors(clip["reference"], result["text"])
+        assert result["text"].strip() and accuracy["wer"] < 0.1
+        transcripts.append({"path": "embedded", "text": result["text"], **accuracy})
+        print(f"[OK] embedded: {result['text']}", flush=True)
+    return transcripts
+
+
 def _chat(lite: str, transcripts: list[dict[str, Any]]) -> Any:
     return request(
         lite + "/v1/chat/completions",
@@ -158,15 +173,18 @@ def main() -> None:
     cfg.QWEN3_ASR.port = 18887
     run = CasePaths(__file__).new_run()
     print(f"[OUTPUT] {run.root}", flush=True)
+    # - the whisper path grades Kobold's own engine on clips it already serves, so no arm is spent loading it
+    embedded_whisper = args.transcription_engine == "whisper-vulkan"
     commands = {
         "asr": transcription.backend(cfg.KOBOLDCPP_SERVICE.transcription_engine).command(),
-        "kobold": kobold.server_command("shared"),
+        "kobold": kobold.server_command("shared", embedded_whisper=embedded_whisper),
     }
     settings = {
         "execution_context": context,
         "commands": commands,
         "transcription_engine": args.transcription_engine,
         "asr_model": str(transcription.model(cfg.KOBOLDCPP_SERVICE.transcription_engine)),
+        "embedded_whisper": embedded_whisper,
     }
     cfg.LAUNCH.temp_dir.mkdir(parents=True, exist_ok=True)
     env = {**os.environ, "TEMP": str(cfg.LAUNCH.temp_dir), "TMP": str(cfg.LAUNCH.temp_dir)}
@@ -198,12 +216,13 @@ def main() -> None:
                 )
                 native_caps = request("http://127.0.0.1:18885/api/extra/version")
                 proxy_caps = request(lite + "/api/extra/version")
-                assert native_caps["transcribe"] is False and proxy_caps["transcribe"] is True
+                assert native_caps["transcribe"] is embedded_whisper and proxy_caps["transcribe"] is True
                 page = requests.get(lite, timeout=30)
                 page.raise_for_status()
                 html = page.text
                 assert "kobold_streaming.js" in html
                 transcripts = [row for _pass in range(args.repeats) for row in _transcribe(lite, clips)]
+                embedded = _transcribe_embedded("http://127.0.0.1:18885", clips) if embedded_whisper else []
                 reply = _chat(lite, transcripts)
                 assert reply["choices"][0]["message"]["content"].strip()
                 assert (
@@ -217,6 +236,7 @@ def main() -> None:
                         "native_capabilities": native_caps,
                         "proxy_capabilities": proxy_caps,
                         "transcripts": transcripts,
+                        "embedded_transcripts": embedded,
                         "reply": reply,
                     }
                 )

@@ -49,13 +49,7 @@ def _catalog_model(native_spec: dict[str, Any]):
 def tts_models() -> list[dict[str, Any]]:
     native_specs = _native_tts_specs()
     language_catalog = model_languages.read_catalog()["models"]
-    rows: list[dict[str, Any]] = [
-        {"id": key, "label": label, "family": "kokoro_tts"}
-        for key, label in (
-            (cfg.KOKORO_TTS_PACKAGES["multilingual"], "Kokoro: multilingual bundle"),
-            (cfg.KOKORO_TTS_PACKAGES["small"], "Kokoro: compact bundle"),
-        )
-    ]
+    rows: list[dict[str, Any]] = []
     labels = {
         "breeze_tts": "Breeze TTS 2: voice design",
         "ming3_tts": "Ming 3.0 TTS 0.5B",
@@ -77,10 +71,7 @@ def tts_models() -> list[dict[str, Any]]:
     for row in rows:
         row["available"] = models.path(row["id"]).is_file()
         row["reason"] = "" if row["available"] else "Model file is not installed"
-        if row["family"] == "kokoro_tts":
-            spec = {"id": row["id"], "family": "kokoro_tts", "path": str(models.path(row["id"]))}
-        else:
-            spec = next((item for item in native_specs if item["id"] == row.get("native_id")), None)
+        spec = next((item for item in native_specs if item["id"] == row.get("native_id")), None)
         language_entry = next((entry for entry in language_catalog if row["id"] in entry["model_ids"]), None)
         row["default_language"] = (
             language_entry.get("practice_default_language", DEFAULT_PRACTICE_LANGUAGE)
@@ -100,8 +91,6 @@ def tts_models() -> list[dict[str, Any]]:
 
 def tts_spec(key: str | None = None) -> dict[str, Any]:
     key = key or tts_id()
-    if key in cfg.KOKORO_TTS_PACKAGES.values():
-        return {"id": key, "family": "kokoro_tts", "path": str(models.path(key)), "task": "tts", "mode": "streaming"}
     for spec in _native_tts_specs():
         model = _catalog_model(spec)
         if model is not None and model.label == key:
@@ -119,12 +108,6 @@ def ordered_languages(codes: list[str]) -> list[str]:
 
 def language_profiles():
     spec = tts_spec()
-    if spec["family"] == "kokoro_tts":
-        from scripts.launchers.audiocpp.kokoro import language_profiles as profiles
-
-        rows = profiles(models.path(tts_id()))
-        order = ordered_languages([row["code"] for row in rows])
-        return sorted(rows, key=lambda row: order.index(row["code"]))
     from scripts.config.models import model_languages
 
     entry = next(entry for entry in model_languages.read_catalog()["models"] if tts_id() in entry["model_ids"])
@@ -147,16 +130,6 @@ def speech_body(payload: dict[str, object]) -> dict[str, object]:
         payload.setdefault("stream_format", "audio")
     else:
         payload.pop("stream_format", None)
-    if spec["family"] == "kokoro_tts":
-        from scripts.launchers.shared.media.text_processing import clean_speech_payload
-
-        clean_speech_payload(payload, language=cfg.KOKORO_TTS.language)
-        payload.setdefault("voice", cfg.KOKORO_TTS.voice)
-        options = payload.setdefault("options", {})
-        if not isinstance(options, dict):
-            raise ValueError("Speech options must be an object")
-        options.setdefault("language", cfg.KOKORO_TTS.language)
-        return payload
     from scripts.launchers.audiocpp import audiocpp_catalog
     from scripts.launchers.audiocpp.audiocpp_proxy import _transform
 

@@ -46,7 +46,7 @@ class PracticeRuntime:
         config: dict[str, Any] = (
             asr.speech_config(cfg.AUDIOCPP_VAD.server_port, self.controls.engine.value)
             if shared
-            else {"backend": "vulkan", "threads": cfg.KOKORO_TTS.threads, "models": [practice_models.tts_spec()]}
+            else {"backend": "vulkan", "threads": cfg.AUDIOCPP_SPEECH.threads, "models": [practice_models.tts_spec()]}
         )
         port = cfg.AUDIOCPP_VAD.server_port if shared else cfg.AUDIOCPP_SERVICE.internal_port
         specs = {"asr": config["models"][0], "tts": config["models"][-1]}
