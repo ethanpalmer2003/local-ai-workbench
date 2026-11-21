@@ -30,6 +30,16 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
   which 517 lines still carry and `scripts/shared/import_graph.py` and `scripts/tests/scoped_selection.py`
   have dropped; that marker is house style, not a Python standard, so it may be kept as it is.
 - **How a run should be laid out on disk.** A run currently sits at `<root>/<area>/<case>/<outcome>/<epoch-id>/`, while the trash uses `YYYY-MM-DD` folders. Options: a date folder per run (`.../<outcome>/<YYYY-MM-DD>/<id>/`) so retention reads as calendar time and a whole day prunes at once; a build folder keyed on the engine commit (`.../<commit>/<id>/`) so a comparison across builds sits together and a superseded build is one folder; or keep the flat shape and let `cleanup.py` own the rule, which is what happens today. Cost of either change: every new run path moves, historical paths keep their current place because a tracked document may cite them, and a cited run id keeps working either way because the id does not change.
+- **Making parking follow the host.** A parking record states why something is parked on this
+  machine: a raw hardware shortfall such as Drama 3, an OS or GPU-vendor limit such as the Linux-only
+  ExLlama engines, or a measured loss such as the RDNA builds. The registry assumes Windows on one AMD
+  card and keeps a single static answer, so a reader on another host cannot tell which entries apply.
+  Long-term options: record the condition each entry is parked against (OS, GPU vendor or class,
+  memory) and resolve it in a check at run time; probe the machine when a launcher starts
+  (`nvidia-smi`/`rocm-smi`, free VRAM) so the set follows the hardware it runs on; or keep the static
+  registry and document the host it describes, which is what happens today. The first two make
+  `revisit` machine-checkable, but no work starts until a second host exists to test the rule
+  against.
 - A decision that would change work is added here with its options.
 
 ## Superseded

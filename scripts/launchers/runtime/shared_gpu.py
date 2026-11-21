@@ -8,7 +8,10 @@ from scripts.config.audiocpp import server as audio_cfg
 
 IMAGE_ARGS = ("--backend", "Vulkan0,te=cpu", "--vae-tiling", "--vae-tile-size", "512x512")
 KOBOLDCPP_MODEL_ARGS = {"koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS": {"gpulayers": 16}}
-AUDIO_SESSION_OPTIONS = {"ming3_audio": {"ming3_audio.disk_experts": True, "ming3_audio.pin_experts": False}}
+AUDIO_SESSION_OPTIONS = {
+    "fish_drama3": {"fish_drama3.cpu_expert_layers": 40},
+    "ming3_audio": {"ming3_audio.disk_experts": True, "ming3_audio.pin_experts": False},
+}
 
 
 def audio_config(source: Path, port: int) -> Path:

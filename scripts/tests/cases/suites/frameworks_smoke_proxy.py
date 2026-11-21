@@ -30,14 +30,14 @@ from scripts.tests.shared.paths import CasePaths
 class ProxyHTTP(unittest.TestCase):
     def test_model_default_refresh_passes_selected_model_to_catalog(self):
         snapshot = {
-            "selected_model": cfg.AudiocppModel.MING3_TTS.value,
+            "selected_model": cfg.AudiocppModel.FISH_DRAMA3_Q2.value,
             "packaged_defaults": {"request": {"temperature": 0.8}},
         }
         with patch.object(audiocpp_catalog, "runtime_defaults", return_value=snapshot) as defaults:
-            status, body, _ = request(self.audio_url + f"/proxy/config?model={cfg.AudiocppModel.MING3_TTS.value}")
+            status, body, _ = request(self.audio_url + f"/proxy/config?model={cfg.AudiocppModel.FISH_DRAMA3_Q2.value}")
         self.assertEqual(status, 200)
         self.assertEqual(json.loads(body), snapshot)
-        defaults.assert_called_once_with(cfg.AUDIOCPP_SERVICE, cfg.AudiocppModel.MING3_TTS.value)
+        defaults.assert_called_once_with(cfg.AUDIOCPP_SERVICE, cfg.AudiocppModel.FISH_DRAMA3_Q2.value)
 
     def test_comparison_catalog_is_served_locally(self):
         catalog = {"voices": [{"id": "voice-a", "available": True}], "models": []}
@@ -325,7 +325,7 @@ class ProxyHTTP(unittest.TestCase):
                 result = audiocpp_proxy._transform(
                     {
                         "input": '[Tone: happy] "Hello." (giggle softly)',
-                        "model": cfg.AudiocppModel.MING3_TTS.value,
+                        "model": cfg.AudiocppModel.FISH_DRAMA3_Q2.value,
                         "stream": streaming,
                         "_tone_tag": "sad",
                     }

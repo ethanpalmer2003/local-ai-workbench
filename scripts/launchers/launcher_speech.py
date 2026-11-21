@@ -437,6 +437,7 @@ KOBOLDCPP_MODEL_KCPPS_OVERRIDES = {
 # - "server" = audiocpp_server.exe only (no wrapping)
 # - "proxy"  = audiocpp_server.exe + model/voice-validating proxy (audiocpp_proxy.py)
 class AudiocppModel(str, Enum):
+    FISH_DRAMA3_Q2 = "audiocpp/fish-drama3-q2"
     BREEZE_TTS = "audiocpp/breeze-tts-2-q4_0"
     BREEZE_DESIGN = "audiocpp/breeze-tts-2-q4_0-design"
     MING3_TTS = "audiocpp/ming3-tts-0.5b-q8_0"
@@ -517,6 +518,7 @@ class AudiocppProxyRequestModelPreset:
 # - Breeze chunk modes: "default" uses word-based splitting; "tag_aware" keeps tags intact.
 #   The preset selects the proxy default, and request options can override it with either mode.
 AUDIOCPP_PROXY_MODEL_PRESETS = {
+    AudiocppModel.FISH_DRAMA3_Q2: AudiocppProxyRequestModelPreset(pcm_sample_rate=44100, playback_buffer_ms=4000),
     AudiocppModel.BREEZE_TTS: AudiocppProxyRequestModelPreset(
         request_options={"text_chunk_mode": "tag_aware"}, playback_buffer_ms=2000
     ),

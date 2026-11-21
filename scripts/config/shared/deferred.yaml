@@ -13,8 +13,7 @@
   source: scripts/tools/capability_matrix.py, scripts/benchmarks/audit_timing.py
 - thing: HRX llama.cpp
   kind: build
-  state: restorable
-  reason: HRX work is paused by the user; the sources stay under frameworks/llamacpp/additions/hrx and no runtime build remains
+  state: retained
   revisit: HRX returns
   source: notes/UPSTREAM-INDEX.md
 - thing: HRX build capability row
@@ -66,8 +65,8 @@
   source: scripts/download/frameworks/shared/other_updates.py
 - thing: Lemonade Server
   kind: framework
-  state: unavailable
-  reason: it is not installed, and it ships its own launcher rather than an updatable package
+  state: retained
+  reason: it ships its own launcher and update path, so this repository only benchmarks it
   revisit: a model server is installed and exercised
   source: scripts/download/frameworks/shared/other_updates.py
 - thing: Medium/high-context grids

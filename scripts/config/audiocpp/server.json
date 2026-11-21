@@ -72,6 +72,20 @@
         "language": "en-us",
         "voice": "af_heart"
       }
+    },
+    {
+      "id": "audiocpp/fish-drama3-q2",
+      "family": "fish_drama3",
+      "path": "{AI_ROOT}/data/huggingface/models/audiocpp/drama-3-backbone-8bit-experts-Q2_K.gguf",
+      "task": "tts",
+      "mode": "streaming",
+      "session_options": {
+        "fish_drama3.cpu_expert_layers": 40,
+        "fish_drama3.context_length": 2048
+      },
+      "default_request_options": {
+        "max_tokens": 500
+      }
     }
   ]
 }

@@ -40,9 +40,7 @@ from scripts.tests.cases.audiocpp.audiocpp_backend_compare import (
 from scripts.tests.cases.audiocpp.audiocpp_transport import AudioReader
 
 MODEL = project_cfg.AUDIOCPP_MODELS_DIR / "drama-3-backbone-8bit-experts-Q2_K.gguf"
-# - the model is parked out of server.json because its best offload pair ran slower than real time, so this
-#   benchmark writes its own server config and carries the id the catalog still owns.
-MODEL_ID = "audiocpp/fish-drama3-q2"
+MODEL_ID = cfg.AudiocppModel.FISH_DRAMA3_Q2.value
 PORT = 18884
 
 
