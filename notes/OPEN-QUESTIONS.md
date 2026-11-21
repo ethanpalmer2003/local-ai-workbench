@@ -7,19 +7,18 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
 
 - **Public evidence for measured claims.** Forty tracked documents cite 132 artifact paths under the ignored
   `scripts/benchmarks/output/` and `scripts/tests/output/`, so a public reader cannot open the evidence behind
-  a number. Options: commit a curated subset of the `report.md`/`summary.txt` files behind each decision, move
-  the numbers into the documents themselves, or keep the paths local-only. A curated set is a few MB; the two
-  folders hold 1.4 GB.
+  a number. Options: commit a curated subset of the `report.md`/`summary.txt` files behind a decision, move
+  the numbers into the documents themselves, or keep the paths local-only. A curated set is a few MB.
 - **An operating-system backstop for the deep-scan rule.** The profile guard in
   `scripts/state/plugins/guard-deep-scan` refuses a scan under or above the ignored trees and derives those
-  names from the ignore files, but it only binds harnesses that load that plugin. Options: an ACL that denies
+  names from the ignore files, but it binds only harnesses that load it. Options: an ACL that denies
   the agent process read access to `data/` and `frameworks/`, which no tool call can bypass and needs a fresh
   shell as the agent's user to prove; an ACL that allows only named subpaths, which is narrower but needs the
   same proof; or keep the guard as the only rule and accept that another harness can walk those trees. The
-  first two change file permissions on 320 GB of installs, so the decision comes before any test.
-- **The docstring voice and the `# - ` marker.** The standard already exists:
-  [PEP 257](https://peps.python.org/pep-0257/) asks for an imperative summary line ("Return the path") and
-  ruff's pydocstyle rules measure it, so the question is which subset to adopt, not which style to invent.
+  first two change permissions on 320 GB, so the decision comes first.
+- **The docstring voice and the `# - ` marker.** [PEP 257](https://peps.python.org/pep-0257/) asks for an
+  imperative summary line ("Return the path") and ruff's pydocstyle rules measure it, so the question is which
+  subset to adopt, not which style to invent.
   Measured today: `D401` reports 168 sites; the whole `D` family reports 3,069, almost all of them missing
   docstrings (`D102` 1,338 methods, `D103` 888 functions, `D101` 320 classes). Of the 1,238 docstrings, the
   first word is a determiner in 287, an imperative verb in 211 and neither in 740, though only function
@@ -29,20 +28,23 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
   2,546 public functions, methods and classes over months. The same pass settles the `# - ` comment marker,
   which 517 lines still carry and `scripts/shared/import_graph.py` and `scripts/tests/scoped_selection.py`
   have dropped; that marker is house style, not a Python standard, so it may be kept as it is.
-- **How a run should be laid out on disk.** A run currently sits at `<root>/<area>/<case>/<outcome>/<epoch-id>/`, while the trash uses `YYYY-MM-DD` folders. Options: a date folder per run (`.../<outcome>/<YYYY-MM-DD>/<id>/`) so retention reads as calendar time and a whole day prunes at once; a build folder keyed on the engine commit (`.../<commit>/<id>/`) so a comparison across builds sits together and a superseded build is one folder; or keep the flat shape and let `cleanup.py` own the rule, which is what happens today. Cost of either change: every new run path moves, historical paths keep their current place because a tracked document may cite them, and a cited run id keeps working either way because the id does not change.
+- **How a run should be laid out on disk.** A run currently sits at `<root>/<area>/<case>/<outcome>/<epoch-id>/`, while the trash uses `YYYY-MM-DD` folders. Options: a date folder per run (`.../<outcome>/<YYYY-MM-DD>/<id>/`) so retention reads as calendar time and a whole day prunes at once; a build folder keyed on the engine commit (`.../<commit>/<id>/`) so a comparison across builds sits together and a superseded build is one folder; or keep the flat shape and let `cleanup.py` own the rule, which is what happens today. Either change moves every new run path; historical paths stay because a tracked document may cite them.
 - **Making parking follow the host.** A parking record states why this machine parks something: a raw hardware
   shortfall such as Drama 3, an OS or GPU-vendor limit such as the Linux-only ExLlama engines, or a measured loss
   such as the RDNA builds. The registry assumes Windows on one AMD card, so a reader on another host cannot tell
   which entries apply. Options: record the condition each entry is parked against (OS, GPU vendor or class, memory)
   and resolve it at run time; probe the machine when a launcher starts (`nvidia-smi`/`rocm-smi`, free VRAM); or keep
-  the static registry and document its host, which is today. `cause` already names the condition; nothing evaluates
-  it yet, and no work starts until a second host exists to test against.
+  the static registry and document its host, which is today. No work starts without a second host.
 - **A third quantization vendor: LookAtMyQuant.** [The compiler](https://github.com/ShinMegamiBoson/lookatmyquant) (MIT)
   allocates bits per matrix, embedding bucket and KV table to a device budget; llama.cpp's types give ordinary GGUF,
   while its own MLX packs run on Apple silicon, where all its speed results live. Options: score its published Gemma
   GGUF here as a third vendor row; adopt only its method (KL from the BF16 teacher plus its task suite) to compare
   vendors on Windows; or wait for GGUF releases of its 27B and Inkling files, which are MLX-only. Its numbers are
   vendor claims until we reproduce one.
+- **A decision model, local or remote.** The coding setup has no adjudicator: a model that grades answers could
+  run locally beside Pi or remotely as DeepSeek V4.1 Flash under DeepSeek Harness. Local keeps the loop offline
+  but shares the GPU; remote reaches a stronger model at no VRAM cost and adds a network call per decision.
+  Neither is measured.
 - A decision that would change work is added here with its options.
 
 ## Superseded

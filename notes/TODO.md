@@ -22,7 +22,7 @@ Work that cannot be settled without a live run: weights, a device, a server or a
 
 ### Unattended
 
-- [ ] Make the merged HRX stack build: `hsa-runtime64.dll` fails to link because `hsakmt` calls `Wkmi::FillinHwQueuePrivData`, `FillinContextPrivData`, `GetSdmaSubmitPrivDataSize`, `FillinSdmaSubmitPrivData` and `FillinUnregisterEventPrivData` from `shared/amdgpu-windows-interop/wkmi`, which the current ROCr configure neither builds nor links (`LNK2019` x5, `LNK1120`). Upstream also moved the ROCr cache off `frameworks/llamacpp-additions/hrx` and the SDK to `data/ROCm/therock-dist-windows-gfx110X-all-10.2.0a20260927`, so the caches and `Clang_DIR` had to be repointed by hand. [HRX limits](../scripts/config/llamacpp/HRX.md). ~1-2 h
+- [ ] Finish the merged HRX build: ROCr and HRX compile and stage on the 2026-11-21 heads, and `llama-server` stops on two upstream MSVC defects in `ggml-hrx` (`M_PI` undeclared in `dispatch-rope-utils.h`, and a lambda without a return value in `graph-diagnostics.cpp`, `C4716`), with the UI asset check also failing on missing `build.json`/`version.json`/bundle files. Re-apply our exported fix (`_USE_MATH_DEFINES` in `ggml-hrx`) and fix the lambda, then run `--install`. `wkmi.lib` came from the public DVC bucket and the three trees needed the ROCm/HRX/llama.cpp configure paths in [HRX limits](../scripts/config/llamacpp/HRX.md). ~1-2 h
 
 - [ ] Explain why generation stops after a few tokens at a 96K prompt: reasoning on returns only `<think>`,
   reasoning off a 17-token fragment, both far under a 256-token budget, while 32K, 40K and 64K answer fully.

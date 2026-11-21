@@ -14,6 +14,7 @@ from pathlib import Path
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.paths import dated_run
 from scripts.config import project_config as project_cfg
+from scripts.download.frameworks import native_build
 from scripts.download.frameworks.framework_catalog import hrx_tools
 from scripts.download.frameworks.llamacpp.hrx import prepare as prepare_hrx
 from scripts.launchers import launch_util
@@ -66,15 +67,63 @@ def stale_cache_message(directory: Path) -> str | None:
     return None
 
 
+MIN_CMAKE = (4, 2)
+
+
+def cmake_path() -> str:
+    """The installed CMake; a Windows HRX build needs 4.2 or newer for short object names."""
+    executable = shutil.which("cmake")
+    if executable is None:
+        raise RuntimeError("CMake is not on PATH; install 4.2 or newer before building HRX")
+    version = subprocess.run([executable, "--version"], capture_output=True, text=True, check=True).stdout
+    match = re.search(r"(\d+)\.(\d+)", version)
+    if not match or (int(match.group(1)), int(match.group(2))) < MIN_CMAKE:
+        raise RuntimeError(f"{version.splitlines()[0]} is too old; HRX on Windows needs CMake 4.2 or newer")
+    return executable
+
+
+def configured(cache: Path) -> bool:
+    """True when the HRX cache carries the options the current upstream requires."""
+    if not cache.is_file():
+        return False
+    text = cache.read_text(encoding="utf-8", errors="replace")
+    return all(
+        re.search(rf"^{name}:[A-Z]+=ON$", text, re.MULTILINE)
+        for name in ("LOOM_TARGET_VM", "LOOM_TARGET_ARCH_VM", "AMDF_BUILD")
+    )
+
+
+def configure(cmake: str, paths: RunPaths) -> None:
+    """Configure the HRX tree as the current upstream expects, inside the Visual Studio environment."""
+    run_step(
+        "hrx-configure",
+        [
+            cmake,
+            "-S",
+            str(HRX_ROOT / "hrx-system"),
+            "-B",
+            str(HRX_ROOT / "build/hrx"),
+            "-DLOOM_TARGET_VM=ON",
+            "-DLOOM_TARGET_ARCH_VM=ON",
+            "-DAMDF_BUILD=ON",
+            f"-DIREE_ROCM_PATH={project_cfg.ROCM_SDK_BIN_DIR.parent}",
+            f"-DPython3_EXECUTABLE={sys.executable}",
+        ],
+        paths,
+        native_build.visual_studio_environment(),
+    )
+
+
 def build(paths: RunPaths, jobs: int) -> None:
     for name in ("rocr", "hrx", "llamacpp"):
-        if message := stale_cache_message(HRX_ROOT / "build" / name):
+        directory = HRX_ROOT / "build" / name
+        if message := stale_cache_message(directory):
             raise RuntimeError(message)
-    cache = (HRX_ROOT / "build/hrx/CMakeCache.txt").read_text(encoding="utf-8")
-    match = re.search(r"^CMAKE_COMMAND:INTERNAL=(.+)$", cache, re.MULTILINE)
-    cmake = match.group(1).strip() if match else shutil.which("cmake")
-    if cmake is None or not Path(cmake).is_file():
-        raise FileNotFoundError("Configured CMake is unavailable; select the correct installed toolchain first")
+        if not directory.is_dir():
+            raise RuntimeError(f"{directory} is not configured; see the HRX note in UPDATES.md")
+    cmake = cmake_path()
+    if not configured(HRX_ROOT / "build/hrx/CMakeCache.txt"):
+        configure(cmake, paths)
 
     def compile_targets(directory: str, targets: list[str]) -> list[str]:
         return [
@@ -89,23 +138,13 @@ def build(paths: RunPaths, jobs: int) -> None:
             str(jobs),
         ]
 
-    run_step("rocr-build", compile_targets("rocr", ["hsa-runtime64"]), paths)
-    if not all(f"{key}:BOOL=ON" in cache for key in ("LOOM_TARGET_VM", "LOOM_TARGET_ARCH_VM")):
-        run_step(
-            "hrx-configure",
-            [
-                cmake,
-                "-S",
-                str(HRX_ROOT / "hrx-system"),
-                "-B",
-                str(HRX_ROOT / "build/hrx"),
-                "-DLOOM_TARGET_VM=ON",
-                "-DLOOM_TARGET_ARCH_VM=ON",
-            ],
-            paths,
-        )
+    # - every step runs inside the Visual Studio environment: a configure re-run needs cl and ml64
+    env = native_build.visual_studio_environment()
+    run_step("rocr-build", compile_targets("rocr", ["hsa-runtime64"]), paths, env)
     # - Current upstream's descriptor generators consume this file without a reliable VS build-order edge.
-    run_step("hrx-contracts", compile_targets("hrx", ["loom_target_arch_amdgpu_contracts_contract_tables_gen"]), paths)
+    run_step(
+        "hrx-contracts", compile_targets("hrx", ["loom_target_arch_amdgpu_contracts_contract_tables_gen"]), paths, env
+    )
     run_step(
         "hrx-build",
         compile_targets(
@@ -119,13 +158,15 @@ def build(paths: RunPaths, jobs: int) -> None:
             ],
         ),
         paths,
+        env,
     )
     run_step(
         "hrx-stage",
         [cmake, "--install", str(HRX_ROOT / "build/hrx"), "--config", "Release", "--component", "HrxPublicDist"],
         paths,
+        env,
     )
-    run_step("llama-build", compile_targets("llamacpp", ["llama-server", "llama-cli", "test-backend-ops"]), paths)
+    run_step("llama-build", compile_targets("llamacpp", ["llama-server", "llama-cli", "test-backend-ops"]), paths, env)
 
 
 def merge_sources(paths: RunPaths) -> None:
