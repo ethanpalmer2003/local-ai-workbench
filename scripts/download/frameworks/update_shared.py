@@ -34,6 +34,29 @@ CATEGORY_HEADINGS = (
 )
 # - these name the exact entry; collapsing them would hide which one broke
 EXPANDED_STATUSES = ("CHECK FAILED", "SKIPPED BY OPTION")
+# - the status column tells the reader what to do; the group title is the long internal name
+STATUS_LABELS = {
+    "CHECK FAILED": "check failed",
+    "UPDATE AVAILABLE": "update available",
+    "SOURCE UPDATE AVAILABLE; BUILD REQUIRED": "build required",
+    "UPSTREAM CHANGED; MANUAL MERGE/REBUILD REQUIRED": "manual merge/rebuild",
+    "MANUAL CHECK/UPDATE REQUIRED": "manual check",
+    "PI PACKAGE SYNC REQUIRED": "package sync",
+    "UP TO DATE": "up to date",
+    "SKIPPED BY OPTION": "skipped",
+}
+TABLE_COLUMNS = ("tool", "source", "status", "detail")
+
+
+def render_table(rows: list[tuple[str, ...]], columns: tuple[str, ...] = TABLE_COLUMNS) -> str:
+    """One aligned table: every column as wide as its widest cell, so a plan scans by row."""
+    widths = [max(len(columns[index]), *(len(row[index]) for row in rows)) for index in range(len(columns))]
+
+    def line(values: tuple[str, ...]) -> str:
+        return "| " + " | ".join(value.ljust(widths[index]) for index, value in enumerate(values)) + " |"
+
+    separator = "| " + " | ".join("-" * width for width in widths) + " |"
+    return "\n".join([line(columns), separator, *(line(row) for row in rows)])
 
 
 class Asset(TypedDict):
@@ -105,18 +128,22 @@ class UpdateSummary:
         self.kinds.pop(label, None)
         self.patch_sources[:] = [entry for entry in self.patch_sources if tool_label(entry[0]) != label]
 
-    def summarize(self, names: list[str], grouped: bool = True, blocked: frozenset[str] = frozenset()) -> list[str]:
-        """Collapse per-package and per-part entries onto their component's line."""
+    def rows(
+        self, names: list[str], grouped: bool = True, blocked: frozenset[str] = frozenset()
+    ) -> list[tuple[str, list[str], str]]:
+        """Collapse per-package and per-part entries onto their component's row: (label, details, first member)."""
         details: dict[str, list[str]] = {}
+        members: dict[str, str] = {}
         for entry in names:
             label, _, detail = entry.partition(" :: ")
             key = self.group_keys.get(label, label)
             if not grouped or key in blocked:
                 key = label
             bucket = details.setdefault(key, [])
+            members.setdefault(key, label)
             if detail and detail not in bucket:
                 bucket.append(detail)
-        return [f"- {key}: {'; '.join(items)}" if items else f"- {key}" for key, items in details.items()]
+        return [(key, items, members[key]) for key, items in details.items()]
 
     def failed_groups(self) -> frozenset[str]:
         """Groups with at least one failure stay expanded so the broken entry is visible."""
@@ -164,23 +191,28 @@ class UpdateSummary:
                     )
         return frozenset(key for key, seen in kinds.items() if len(seen) > 1)
 
+    def table_rows(self, category: str) -> list[tuple[str, str, str, str]]:
+        """One table's rows for a category: tool, the kind that updates it, its status, and the detail."""
+        blocked = self.failed_groups() | self.split_groups(category)
+        rows: list[tuple[str, str, str, str]] = []
+        for title, names in self.groups():
+            unique = list(dict.fromkeys(entry for entry in names if self._in_category(entry, category)))
+            for key, details, member in self.rows(unique, grouped=title not in EXPANDED_STATUSES, blocked=blocked):
+                kind = self.kinds.get(member, cfg.UNCLASSIFIED_KIND)
+                rows.append((key, kind, STATUS_LABELS.get(title, title.lower()), "; ".join(details)))
+        return rows
+
     def print(self) -> None:
         for category, heading in CATEGORY_HEADINGS:
-            kinds = self.kinds_present(category)
-            if not kinds:
+            rows = self.table_rows(category)
+            if not rows:
                 continue
             print(f"\n=== {heading} ===")
-            blocked = self.failed_groups() | self.split_groups(category)
-            for kind in kinds:
-                print(f"\n--- {kind} ---")
-                for title, names in self.status_sections(category, kind):
-                    if not names:
-                        continue
-                    print(f"\n[{title}]")
-                    for line in self.summarize(
-                        list(dict.fromkeys(names)), grouped=title not in EXPANDED_STATUSES, blocked=blocked
-                    ):
-                        print(line)
+            print(render_table(rows))
+            counts: dict[str, int] = {}
+            for row in rows:
+                counts[row[2]] = counts.get(row[2], 0) + 1
+            print(f"{len(rows)} tool(s): " + ", ".join(f"{count} {status}" for status, count in counts.items()))
 
 
 ManagedHandler = Callable[[cfg.ToolSpec, Path, Path, bool, UpdateSummary | None], None]
