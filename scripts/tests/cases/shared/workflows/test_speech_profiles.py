@@ -99,7 +99,7 @@ class SpeechProfiles(unittest.TestCase):
         tested = {row["id"] for row in rows if row["coverage"] == "tested"}
         untested = {row["id"] for row in rows if row["coverage"] == "untested"}
         self.assertEqual(tested, set(cfg.LIVE_TESTED_TTS_MODELS))
-        self.assertEqual(untested, {cfg.KOKORO_MODEL, "audiocpp/fish-drama3-q2"})
+        self.assertEqual(untested, {cfg.KOKORO_MODEL})
         self.assertEqual(tested | untested, {row["id"] for row in rows})
 
     def test_live_coverage_names_the_three_arms_that_speak_with_a_model(self):

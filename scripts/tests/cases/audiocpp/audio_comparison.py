@@ -76,7 +76,7 @@ class AudioComparison(unittest.TestCase):
                     {
                         "models": [
                             {"id": cfg.AudiocppModel.BREEZE_TTS.value, "path": "breeze.gguf"},
-                            {"id": cfg.AudiocppModel.FISH_DRAMA3_Q2.value, "path": "missing.gguf"},
+                            {"id": "audiocpp/kokoro-audiocpp-multilingual-q8_0", "path": "missing.gguf"},
                             {"id": cfg.AudiocppModel.BREEZE_DESIGN.value, "path": "breeze.gguf"},
                             {"id": "asr/audiocpp/higgs-audio-v3-stt-q8_0", "path": "breeze.gguf"},
                         ]
@@ -94,7 +94,7 @@ class AudioComparison(unittest.TestCase):
                 catalog["models"],
                 [
                     {"id": cfg.AudiocppModel.BREEZE_TTS.value, "installed": True, "clone": True},
-                    {"id": cfg.AudiocppModel.FISH_DRAMA3_Q2.value, "installed": False, "clone": True},
+                    {"id": "audiocpp/kokoro-audiocpp-multilingual-q8_0", "installed": False, "clone": True},
                     {"id": cfg.AudiocppModel.BREEZE_DESIGN.value, "installed": True, "clone": False},
                 ],
             )

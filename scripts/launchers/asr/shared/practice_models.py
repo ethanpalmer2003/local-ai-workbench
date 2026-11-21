@@ -53,7 +53,6 @@ def tts_models() -> list[dict[str, Any]]:
     labels = {
         "breeze_tts": "Breeze TTS 2: voice design",
         "ming3_tts": "Ming 3.0 TTS 0.5B",
-        "fish_drama3": "Drama 3: heavy/offloaded",
         "supertonic": "Supertonic 3: 31 languages, preset voices",
         "kokoro_tts": "Kokoro: multilingual bundle",
     }

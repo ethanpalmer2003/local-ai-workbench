@@ -1,65 +1,118 @@
-# What is parked, why it cannot start, and what would unpark it. A capability row names the same
-# thing by its subject, so the matrix reads its reason here instead of keeping a second list.
-# Table view: python -m scripts.tools.yaml_table scripts/config/shared/deferred.yaml
+# What is parked, whether it still runs, why it cannot start, and what would unpark it. A capability
+# row names the same thing by its subject, so the matrix reads its reason here instead of keeping a
+# second list. `state` is the one fact a reader needs first: `retained` is installed and functional as
+# it stands, `restorable` is kept but needs its documented restore step, and `unavailable` is not on
+# this machine or cannot run on it. Table view: python -m scripts.tools.yaml_table
+# scripts/config/shared/deferred.yaml
 - thing: Fish Audio Drama 3, and every comparison of it
   kind: model
+  state: unavailable
   subject: shared/drama3_offload
-  reason: the 15.9 GiB local TTS model is heavier than this setup carries
+  reason: the installed 15.9 GiB TTS model ran at best RTF 1.21, slower than real time, so this setup cannot carry it
   revisit: a larger-memory target or a smaller conversion exists
   source: scripts/tools/capability_matrix.py, scripts/benchmarks/audit_timing.py
 - thing: HRX llama.cpp
   kind: build
-  revisit: upstream slows down, or a paired screen comes back
+  state: restorable
+  reason: HRX work is paused by the user; the sources stay under frameworks/llamacpp/additions/hrx and no runtime build remains
+  revisit: HRX returns
   source: notes/UPSTREAM-INDEX.md
 - thing: HRX build capability row
   kind: row
+  state: restorable
   subject: probes/hrx_updates
   reason: HRX work is paused by the user; the build and its update probe stay out of the rerun set
   revisit: HRX returns
   source: scripts/tools/capability_matrix.py
 - thing: llama.cpp backend benchmark
   kind: row
+  state: restorable
   subject: llamacpp/benchmark_backends
   reason: its comparison arm is the paused HRX build, so the row cannot be judged while HRX is parked
   revisit: HRX returns
   source: scripts/tools/capability_matrix.py
 - thing: Avalon
   kind: framework
+  state: retained
   revisit: it earns another look
   source: scripts/download/frameworks/shared/other_updates.py
 - thing: ExLlama family (hipfire, TabbyAPI)
   kind: framework
+  state: unavailable
+  reason: both need a Linux host with ROCm and EXL2/EXL3 weights rather than GGUF
   revisit: a Linux host with ROCm and EXL2/EXL3 exists
   source: notes/OPEN-QUESTIONS.md
+- thing: Piper TTS
+  kind: framework
+  state: retained
+  revisit: the resident benchmark stops comparing TTS runtimes
+  source: scripts/launchers/audiocpp/RETAINED-TTS.md
+- thing: Sherpa-onnx TTS
+  kind: framework
+  state: retained
+  revisit: the resident benchmark stops comparing TTS runtimes
+  source: scripts/launchers/audiocpp/RETAINED-TTS.md
+- thing: LocalAI
+  kind: framework
+  state: unavailable
+  reason: release 4.12.1 publishes no Windows binary, so there is nothing to install here
+  revisit: a Windows release is published
+  source: scripts/download/frameworks/shared/other_updates.py
+- thing: Text generation WebUI
+  kind: framework
+  state: unavailable
+  reason: it is not installed; a portable Windows zip exists but no launcher or run exercises it
+  revisit: a model server is installed and exercised
+  source: scripts/download/frameworks/shared/other_updates.py
+- thing: Lemonade Server
+  kind: framework
+  state: unavailable
+  reason: it is not installed, and it ships its own launcher rather than an updatable package
+  revisit: a model server is installed and exercised
+  source: scripts/download/frameworks/shared/other_updates.py
 - thing: Medium/high-context grids
   kind: work
+  state: restorable
+  reason: Vulkan long generations stop past 64K, so the grids cannot complete until that engine fault clears
   revisit: Vulkan long generations work
   source: notes/TODO.md, notes/reviews/LLAMACPP-VULKAN-2026-11-09.md
 - thing: sdcpp ROCm runtime
   kind: runtime
+  state: retained
   revisit: the ROCm runtime is validated
   source: scripts/config/sdcpp/README.md
 - thing: ComfyUI autotune, quality and scaling
   kind: work
+  state: restorable
+  reason: tuning runs were never started because no measured reason for them has appeared
   revisit: a measured reason appears
   source: scripts/benchmarks/personal/comfyui/README.md
 - thing: Unsloth quants for the two large coding models
   kind: model
+  state: unavailable
+  reason: neither model has a Qwen4 build from Unsloth yet
   revisit: a Qwen4 build of either model exists
   source: notes/TODO.md
 - thing: Kokoro live coverage; the multilingual package stays selectable and untested
   kind: model
+  state: retained
   revisit: a probe or benchmark arm speaks with it again
   source: scripts/launchers/launcher_speech.py
 - thing: RDNA-boosts llama.cpp builds (ROCm and Vulkan)
   kind: build
+  state: restorable
+  reason: both lost to the plain Vulkan default on the 27B pair, and their checkouts and builds are archived to trash
   revisit: a patch set rebased on the current llama.cpp wins a paired screen
   source: scripts/config/llamacpp/BUILDS.md
 - thing: Coding harnesses other than Pi (little-coder, ohmypi, nanocoder, DeepSeek Harness)
   kind: work
+  state: restorable
+  reason: Pi is the only client this host launches; the entry points wait in scripts/config/coding_agents/parked
   revisit: another harness becomes the client again
   source: notes/TODO.md
 - thing: ASR test execution, Handy and Kobold coverage
   kind: work
+  state: restorable
+  reason: Handy has no validated microphone and no multilingual corpus is configured, so these checks wait for an instruction
   revisit: an explicit instruction
   source: scripts/tests/cases/asr/README.md

@@ -72,10 +72,10 @@ class StackProbeTests(unittest.TestCase):
                 "models": [
                     {"id": "breeze", "family": "breeze_tts", "path": "breeze.gguf"},
                     {
-                        "id": "drama",
-                        "family": "fish_drama3",
-                        "path": "drama.gguf",
-                        "session_options": {"fish_drama3.context_length": 2048},
+                        "id": "ming3-audio",
+                        "family": "ming3_audio",
+                        "path": "ming3-audio.gguf",
+                        "session_options": {"ming3_audio.context_length": 2048},
                     },
                 ]
             }
@@ -87,7 +87,11 @@ class StackProbeTests(unittest.TestCase):
             self.assertNotIn("session_options", effective["models"][0])
             self.assertEqual(
                 effective["models"][1]["session_options"],
-                {"fish_drama3.context_length": 2048, "fish_drama3.cpu_expert_layers": 40},
+                {
+                    "ming3_audio.context_length": 2048,
+                    "ming3_audio.disk_experts": True,
+                    "ming3_audio.pin_experts": False,
+                },
             )
             self.assertTrue(Path(effective["models"][0]["path"]).is_absolute())
 

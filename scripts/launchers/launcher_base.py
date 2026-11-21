@@ -146,7 +146,8 @@ def llamacpp_build(use: str = "coding") -> str:
 LLAMACPP_ACTIVE_CODING_AGENT_PROFILE = "swift15"
 # - deferred work: wired so a re-enable is one edit, never selectable by a launcher or a benchmark
 LLAMACPP_DEFERRED_PROFILES = frozenset({"swift15-hrx"})
-# - parked builds stay installed but are not selectable by a launcher or a benchmark
+# - parked builds are not on disk: their checkouts and builds were archived to trash, only HRX sources remain
+#   under additions/hrx, and `update_frameworks --build rdna` recreates the two RDNA builds. Nothing selects them.
 LLAMACPP_DEFERRED_BUILDS = frozenset({"hrx", "rocm-rdna", "rdna-vulkan"})
 
 

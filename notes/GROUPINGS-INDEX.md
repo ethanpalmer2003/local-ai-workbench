@@ -17,7 +17,7 @@ A new family adds a row here and a constant beside its owner, and the
 | --- | --- | --- | --- |
 | Catalog category | catalog entries | Which model family an entry belongs to, and so which lookup and download scope reads it | `CATEGORIES` in [catalog.py](../scripts/config/models/catalog.py); the values are in [catalog.json](../scripts/config/models/catalog.json) |
 | Catalog role | weight files | What a file is for | [catalog.json](../scripts/config/models/catalog.json) |
-| Deferred | anything parked: a model, a framework, a build, a row, a runtime, a piece of work | What kind of thing it is, and what would unpark it | `DeferredKind` in [deferred.py](../scripts/config/shared/deferred.py); the records are in [deferred.yaml](../scripts/config/shared/deferred.yaml) |
+| Deferred | anything parked: a model, a framework, a build, a row, a runtime, a piece of work | What kind of thing it is, whether it still runs (`retained`, `restorable`, `unavailable`), and what would unpark it | `DeferredKind` and `DeferredState` in [deferred.py](../scripts/config/shared/deferred.py); the records are in [deferred.yaml](../scripts/config/shared/deferred.yaml) |
 | Delivery mode | speech clients | How text arrives: incremental, per segment, or once | [speech_delivery.py](../scripts/config/shared/speech_delivery.py) |
 | Language tier | checkpoints | Which languages a model handles well | [model_languages.json](../scripts/config/models/model_languages.json) |
 | Run outcome | saved run folders | Whether the evidence counts as a decision | [paths.py](../scripts/benchmarks/shared/paths.py) |

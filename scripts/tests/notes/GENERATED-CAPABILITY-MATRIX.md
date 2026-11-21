@@ -34,8 +34,8 @@ Is an alternative better than the default?
 | Resident speech comparison | probe | 2026-11-12 | completed | - | [OK] | report (../../benchmarks/output/tts_engines/resident/unreviewed/1794450046473369400/artifacts/report.json) |
 | AudioCpp backend comparison | probe | 2026-11-12 | completed | 21 s | [OK] | report (../output/audiocpp/audiocpp_backend_compare/inconclusive/1794448807011598500/artifacts/report.json) |
 | Ming page smoke | smoke | 2026-11-12 | completed | 8 s | [OK] | report (../output/audiocpp/ming_page_smoke/unreviewed/1794449521522386700/artifacts/report.json) |
-| Resident ASR comparison | probe | 2026-11-12 | - | - | [OK] | report (../../benchmarks/output/asr/asr_resident_compare/unreviewed/1794453879199198100/artifacts/report.json) |
-| Practice Whisper recognition | probe | 2026-11-12 | completed | 15 s | [OK] | report (../output/asr/shared/language_practice_whisper/unreviewed/1794448603234647200/artifacts/report.json) |
+| Resident ASR comparison | probe | 2026-11-12 | - | - | [WARN] stale: llamacpp-qwen-1.7b changed | report (../../benchmarks/output/asr/asr_resident_compare/unreviewed/1794453879199198100/artifacts/report.json) |
+| Practice Whisper recognition | probe | 2026-11-12 | completed | 15 s | [WARN] stale: asr changed | report (../output/asr/shared/language_practice_whisper/unreviewed/1794448603234647200/artifacts/report.json) |
 | Embedded Whisper comparison | probe | 2026-11-12 | completed | 24 s | [OK] | report (../../benchmarks/output/asr/whisper_embedded_compare/unreviewed/1794448554903429400/artifacts/report.json) |
 | Gemma audio comparison | probe | 2026-11-12 | completed | 72 s | [OK] | report (../../benchmarks/output/asr/gemma_audio_compare/unreviewed/1794448621016870500/artifacts/report.json) |
 | Parakeet Vulkan smoke | smoke | 2026-11-12 | completed | 26 s | [OK] | report (../output/asr/parakeetcpp/smoke/unreviewed/1794448527478985500/artifacts/report.json) |
@@ -44,6 +44,6 @@ Is an alternative better than the default?
 | llama.cpp backend benchmark | probe | 2026-11-12 | unreviewed | - | [defer] | report (../../benchmarks/output/llamacpp/benchmark_backends/unreviewed/1794442694238268800/artifacts/report.json) |
 | HRX build | probe | - | passed | - | [defer] | report (../output/probes/hrx_updates/verified/20261015-rebuild/artifacts/report.json) |
 | Drama offload screen | benchmark | 2026-10-28 | completed | 107 s | [defer] | report (../output/shared/drama3_offload/unreviewed/1793151003911821700/artifacts/report.json) |
-| Language practice versus Lemonade | benchmark | 2026-11-12 | passed | practice TTFT 0.07 s; lemonade TTFT 0.08 s; kobold TTFT 0.39 s | [WARN] stale: kobold tts missing | report (../../benchmarks/output/shared/framework_compare/unreviewed/1794449538297774600/artifacts/report.json) |
+| Language practice versus Lemonade | benchmark | 2026-11-12 | passed | practice TTFT 0.07 s; lemonade TTFT 0.08 s; kobold TTFT 0.39 s | [WARN] stale: practice asr changed, kobold tts missing | report (../../benchmarks/output/shared/framework_compare/unreviewed/1794449538297774600/artifacts/report.json) |
 
-Deferred, no rerun planned: llama.cpp backend benchmark (its comparison arm is the paused HRX build, so the row cannot be judged while HRX is parked); HRX build (HRX work is paused by the user; the build and its update probe stay out of the rerun set); Drama offload screen (the 15.9 GiB local TTS model is heavier than this setup carries).
+Deferred, no rerun planned: llama.cpp backend benchmark (its comparison arm is the paused HRX build, so the row cannot be judged while HRX is parked); HRX build (HRX work is paused by the user; the build and its update probe stay out of the rerun set); Drama offload screen (the installed 15.9 GiB TTS model ran at best RTF 1.21, slower than real time, so this setup cannot carry it).
