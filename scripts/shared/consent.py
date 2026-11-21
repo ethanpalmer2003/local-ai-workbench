@@ -35,9 +35,12 @@ def _minutes(expected_seconds: float) -> str:
 def _agree(prompt: str, refusal: str) -> bool:
     """The one prompt: a person types yes, and anything else, including a closed stdin, refuses."""
     if sys.stdin.isatty():
+        print(flush=True)
         print(prompt, flush=True)
+        print("[WAIT] nothing runs until you type yes and press Enter; anything else stops the run", flush=True)
         # - readline, not input: a captured or closed stdin answers nothing, which is a refusal
         if sys.stdin.readline().strip().lower() == "yes":
+            print("[OK] confirmed", flush=True)
             return True
     print(refusal, flush=True)
     return False

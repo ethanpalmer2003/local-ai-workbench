@@ -121,7 +121,8 @@ def main() -> int:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with (
         updater.staging_scope(cache, prefix="framework-updates-") as folder,
-        log_path.open("w", encoding="utf-8") as log,
+        # - line buffered: a window closed mid-update must not leave the plan lost in a buffer
+        log_path.open("w", encoding="utf-8", buffering=1) as log,
     ):
         updater.check_tools(tools, Path(folder), summary, log)
         summary.print()

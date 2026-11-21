@@ -32,6 +32,13 @@ class FrameworkUpdates(unittest.TestCase):
         apply_toolchains = patch.object(entry.toolchains, "apply", return_value=False)
         apply_toolchains.start()
         self.addCleanup(apply_toolchains.stop)
+        # - a mocked check writes nothing, so its log directory must not land in the real logs folder
+        scratch = contextlib.ExitStack()
+        self.addCleanup(scratch.close)
+        folder = scratch.enter_context(CasePaths(__file__).temporary_directory())
+        logs = patch.object(project_cfg, "LOGS_DIR", Path(folder))
+        logs.start()
+        self.addCleanup(logs.stop)
 
     def test_category_selects_only_speech_and_preserves_check_only(self):
         tools = [

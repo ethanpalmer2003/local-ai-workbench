@@ -46,6 +46,13 @@ class FrameworkUpdateSources(unittest.TestCase):
         apply_toolchains = patch.object(entry.toolchains, "apply", return_value=False)
         apply_toolchains.start()
         self.addCleanup(apply_toolchains.stop)
+        # - a mocked check writes nothing, so its log directory must not land in the real logs folder
+        scratch = contextlib.ExitStack()
+        self.addCleanup(scratch.close)
+        folder = scratch.enter_context(CasePaths(__file__).temporary_directory())
+        logs = patch.object(project_cfg, "LOGS_DIR", Path(folder))
+        logs.start()
+        self.addCleanup(logs.stop)
 
     def _comfyui_tool(self):
         return next(tool for tool in cfg.TOOLS if tool.name == "comfyui/rocm")
