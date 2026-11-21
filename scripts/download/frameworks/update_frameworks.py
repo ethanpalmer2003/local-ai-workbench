@@ -28,30 +28,52 @@ def missing_builds(tools: list[cfg.ToolSpec]) -> list[cfg.ToolSpec]:
 
 
 def offer_missing_builds(tools: list[cfg.ToolSpec], *, check_only: bool, assume_yes: bool) -> bool:
-    """An absent install is not an update: offer it once, after the plan is shown. True when a build failed."""
+    """Build the source installs still absent after the run; True when a build failed.
+
+    The question is asked before the first check (see `main`), never after the plan: a run that stops
+    halfway through its progress for an answer reads as a hung run.
+    """
     missing = missing_builds(tools)
-    if check_only or not missing:
+    if check_only or not missing or not assume_yes:
         return False
-    return bool(build_missing(missing, assume_yes=assume_yes))
+    return bool(build_missing(missing))
 
 
-def build_missing(missing: list[cfg.ToolSpec], *, assume_yes: bool) -> int:
-    """Ask once whether to build absent installs, then build them here; returns failures."""
-    names = ", ".join(tool.name for tool in missing)
-    if not assume_yes:
-        answer = input(f"\n[BUILD] {len(missing)} source install(s) missing: {names}. Build now? [y/N] ")
-        if answer.strip().lower() not in ("y", "yes"):
-            print(f"[SKIP] Build later with: C:/AI/bat/update_frameworks.bat --only {missing[0].name}")
-            return 0
+def build_missing(missing: list[cfg.ToolSpec]) -> int:
+    """Build the absent installs here; returns failures."""
     return build_frameworks.run_builds(missing, foreground=True)
 
 
-def run_requested_build(args: argparse.Namespace) -> bool:
-    """Run the parked build this run asked for, if any; True when it failed."""
+def run_requested_build(args: argparse.Namespace, allowed: bool) -> bool:
+    """Run the parked build this run asked for; True when it failed or was not agreed."""
     if args.check_only or args.build != "rdna":
         return False
+    if not allowed:
+        return True
     print("\n=== RDNA BUILD ===")
-    return build_rdna(args.yes)
+    return build_rdna(assume_yes=True)
+
+
+def consent_for_later_phases(tools: list[cfg.ToolSpec], args: argparse.Namespace) -> tuple[bool, bool]:
+    """Every question this run can ask, before the first check: absent source builds, then a parked build.
+
+    A prompt that arrives between progress lines reads as a hung run, so the answer is collected here
+    and the later phases only act on it.
+    """
+    builds = False
+    if not args.check_only:
+        missing = missing_builds(tools)
+        if missing:
+            names = ", ".join(tool.name for tool in missing)
+            builds = consent.ask(
+                f"Framework build ({names})", build_frameworks.BUILD_SECONDS, args.build_missing or args.yes
+            )
+            if not builds:
+                print(f"[SKIP] Build later with: C:/AI/bat/update_frameworks.bat --only {missing[0].name}")
+    rdna = args.build == "rdna" and not args.check_only
+    if rdna and not consent.ask("RDNA llama.cpp build", RDNA_BUILD_SECONDS, args.yes):
+        return builds, False
+    return builds, rdna
 
 
 def build_rdna(assume_yes: bool) -> bool:
@@ -115,6 +137,8 @@ def main() -> int:
     if pi_selected:
         additions, removals = pi_packages.sync_plan()
         summary.package_sync = [f"Install {name}" for name in additions] + [f"Remove {name}" for name in removals]
+    # - asked here, before the first check, so no phase stops the progress for an answer
+    builds_allowed, rdna_allowed = consent_for_later_phases(tools, args)
     cache = project_cfg.component("shared").cache_dir / "framework_updates"
     cache.mkdir(parents=True, exist_ok=True)
     log_path = project_cfg.component("shared").logs_dir / "framework_updates" / f"{time.time_ns()}" / "update.log"
@@ -126,7 +150,7 @@ def main() -> int:
     ):
         updater.check_tools(tools, Path(folder), summary, log)
         summary.print()
-        failed = offer_missing_builds(tools, check_only=args.check_only, assume_yes=args.build_missing) or bool(
+        failed = offer_missing_builds(tools, check_only=args.check_only, assume_yes=builds_allowed) or bool(
             summary.failures
         )
         toolchain_rows: list[toolchains.Row] = []
@@ -149,7 +173,7 @@ def main() -> int:
                     pi_packages.sync(apply=True)
                 failed = updater.apply_updates(tools, Path(folder), summary, log) or failed
                 failed = toolchains.apply(toolchain_rows) or failed
-    failed = run_requested_build(args) or failed
+    failed = run_requested_build(args, rdna_allowed) or failed
     print(f"\nDetails: {log_path}")
     print("\n=== COMPLETE ===")
     return int(failed)

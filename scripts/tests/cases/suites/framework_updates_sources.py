@@ -617,25 +617,55 @@ class FrameworkUpdateSources(unittest.TestCase):
             run.assert_not_called()
             prepare.assert_called_once()
 
-    def test_a_missing_source_install_is_offered_before_any_build(self):
-        tool: Any = SimpleNamespace(name="fixture/build", build_command=["cmake", "--build", "."])
-        with (
-            patch.object(entry.build_frameworks, "build_targets", return_value=[tool]),
-            patch.object(entry.project_cfg, "framework_install_dir", return_value=Path("absent")),
-        ):
-            self.assertEqual(entry.missing_builds([tool]), [tool])
 
-    def test_declining_the_offer_builds_nothing(self):
-        tool: Any = SimpleNamespace(name="fixture/build", build_command=["cmake"])
-        with patch("builtins.input", return_value="n"), patch.object(entry.build_frameworks, "run_builds") as run:
-            self.assertEqual(entry.build_missing([tool], assume_yes=False), 0)
-        run.assert_not_called()
+class UpFrontConsentTests(unittest.TestCase):
+    """Every question an update asks is collected before the first check, so no prompt interrupts progress."""
 
-    def test_assuming_yes_builds_without_a_prompt(self):
-        tool: Any = SimpleNamespace(name="fixture/build", build_command=["cmake"])
+    def args(self, **overrides) -> Any:
+        values = {"check_only": False, "build_missing": False, "build": None, "yes": False}
+        values.update(overrides)
+        return SimpleNamespace(**values)
+
+    def tool(self) -> Any:
+        return SimpleNamespace(name="fixture/build", build_command=["cmake"])
+
+    def test_a_missing_source_install_is_agreed_before_the_first_check(self):
+        tool = self.tool()
         with (
-            patch("builtins.input", side_effect=AssertionError("should not ask")),
-            patch.object(entry.build_frameworks, "run_builds", return_value=0) as run,
+            patch.object(entry, "missing_builds", return_value=[tool]),
+            patch.object(entry.consent, "ask", return_value=True) as ask,
         ):
-            entry.build_missing([tool], assume_yes=True)
-        run.assert_called_once_with([tool], foreground=True)
+            self.assertEqual(entry.consent_for_later_phases([tool], self.args()), (True, False))
+        self.assertIn("fixture/build", ask.call_args.args[0])
+
+    def test_declining_the_build_prints_how_to_run_it_later_and_never_builds(self):
+        tool = self.tool()
+        printed = io.StringIO()
+        with (
+            patch.object(entry, "missing_builds", return_value=[tool]),
+            patch.object(entry.consent, "ask", return_value=False),
+            contextlib.redirect_stdout(printed),
+        ):
+            self.assertEqual(entry.consent_for_later_phases([tool], self.args()), (False, False))
+        self.assertIn("--only fixture/build", printed.getvalue())
+
+    def test_a_requested_parked_build_asks_before_the_update_starts(self):
+        with (
+            patch.object(entry, "missing_builds", return_value=[]),
+            patch.object(entry.consent, "ask", return_value=True) as ask,
+        ):
+            self.assertEqual(entry.consent_for_later_phases([], self.args(build="rdna")), (False, True))
+        self.assertIn("RDNA", ask.call_args.args[0])
+
+    def test_declining_the_parked_build_leaves_it_out_of_the_run(self):
+        with (
+            patch.object(entry, "missing_builds", return_value=[]),
+            patch.object(entry.consent, "ask", return_value=False),
+        ):
+            self.assertEqual(entry.consent_for_later_phases([], self.args(build="rdna")), (False, False))
+        self.assertTrue(entry.run_requested_build(self.args(build="rdna"), False))
+
+    def test_a_check_only_run_asks_nothing(self):
+        with patch.object(entry.consent, "ask") as ask:
+            self.assertEqual(entry.consent_for_later_phases([], self.args(check_only=True)), (False, False))
+        ask.assert_not_called()

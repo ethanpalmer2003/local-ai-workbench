@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
@@ -725,8 +726,18 @@ def process_tool(tool: cfg.ToolSpec, tmp_dir: Path, check_only: bool, summary: U
 
 
 def check_tools(tools: list[cfg.ToolSpec], folder: Path, summary: UpdateSummary, log: TextIO) -> None:
+    total = len(tools)
     for index, tool in enumerate(tools, 1):
-        print(f"\rChecking frameworks: {index}/{len(tools)}", end="", flush=True)
+        if sys.stdout.isatty():
+            # - a terminal rewrites one line in place
+            print(f"\rChecking frameworks: {index}/{total}", end="", flush=True)
+        else:
+            # - piped output turns carriage returns into many lines, so a stage gets the one line it
+            #   already knows how to fold into its own bar
+            filled = 20 * index // total
+            print(
+                f"[PROGRESS] frameworks [{'#' * filled}{'-' * (20 - filled)}] {index}/{total} {tool.name}", flush=True
+            )
         captured = io.StringIO()
         try:
             with contextlib.redirect_stdout(captured), contextlib.redirect_stderr(captured):
@@ -737,7 +748,7 @@ def check_tools(tools: list[cfg.ToolSpec], folder: Path, summary: UpdateSummary,
         if not success:
             summary.discard(tool)
             summary.record(tool, "failures")
-    if tools:
+    if tools and sys.stdout.isatty():
         print()
 
 
