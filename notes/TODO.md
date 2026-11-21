@@ -7,6 +7,8 @@
 ## Needs a model run or device
 Work that cannot be settled without a live run: weights, a device, a server or a human at the machine.
 
+- [ ] Pin every inference engine to the tracked discrete adapter. llama.cpp's Vulkan builds now resolve it by name ([hardware.json](../scripts/config/shared/hardware.json), [gpu_selection.py](../scripts/launchers/runtime/gpu_selection.py)) and refuse when it is missing, but AudioCpp (`--device 0`), sd.cpp (`Vulkan0`), Strata (`gpu: 0`) and the ROCm builds (`HIP_VISIBLE_DEVICES=0`) still assume device order, so an adapter-order change could benchmark the integrated GPU and pass. ~45 min
+
 ### Requires user input
 
 - [ ] Judge the Q2_K and Q4_K_M encoder pair on quality: both clips were saved and only timing was written up, so watch the two and record which one keeps. [Screen](reviews/COMFYUI-VIDEO-2026-11-09.md). ~15 min
