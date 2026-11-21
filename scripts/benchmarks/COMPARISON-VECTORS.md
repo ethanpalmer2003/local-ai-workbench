@@ -14,7 +14,7 @@ MoE offload and the memory envelope are now named here as first-class axes.
 | Model | Swift-1.5 27B, Flash Next, Inkling-2-Mini; Qwen4 27B when released | [catalog](../config/models/catalog.json) |
 | Tokenizer and template | GGUF-embedded chat template, `--jinja`, reasoning tags, vision projector absent or present | model metadata |
 | Model quantization | IQ3_XXS, IQ2_XS, Q4_K_XL, Q8_K_XL, plus the file size it costs | catalog entry |
-| Vendor quantization | Unsloth dynamic v3, ISTA GSQ-RCO, bartowski, ggml-org imatrix | catalog notes |
+| Vendor quantization | Unsloth dynamic v3, ISTA GSQ-RCO, bartowski, ggml-org imatrix, LookAtMyQuant | catalog notes |
 | Weight layout | mainline GGUF, vendor looped layout, `Mainline_Support` copy, matching drafter | catalog notes |
 | MoE offload | expert layers resident on GPU, CPU-resident experts, mmap on or off | profile session options |
 | Memory envelope | 16 GB VRAM on the pinned discrete adapter, 32 GB RAM; measured model, context and compute rather than file size | [tuning](../config/llamacpp/TUNING.md) |
@@ -27,7 +27,8 @@ MoE offload and the memory envelope are now named here as first-class axes.
 ## Future tests
 
 - Quantization ladder per model at a matched memory budget: IQ3_XXS against Q2_K_XL and IQ4_XS.
-- Vendor quantization head to head: Unsloth dynamic v3 against the ISTA GSQ-RCO build of the same model.
+- Vendor quantization head to head: Unsloth dynamic v3 against the ISTA GSQ-RCO build of the same model, and
+  a LookAtMyQuant GGUF against both where one exists for this host.
 - MoE offload ladder under the 16 GB card: resident experts against CPU-resident layers, decode and TTFT.
 - Inkling 2 Mini quality on harder tasks; only wall time is measured so far.
 - Loom inference once its Vulkan model preparation compiles.

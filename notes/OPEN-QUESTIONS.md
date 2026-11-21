@@ -8,8 +8,8 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
 - **Public evidence for measured claims.** Forty tracked documents cite 132 artifact paths under the ignored
   `scripts/benchmarks/output/` and `scripts/tests/output/`, so a public reader cannot open the evidence behind
   a number. Options: commit a curated subset of the `report.md`/`summary.txt` files behind each decision, move
-  the numbers into the documents themselves, or keep the paths local-only. The two folders hold 1.4 GB in total,
-  so a wholesale commit is out; a curated set would be a few MB.
+  the numbers into the documents themselves, or keep the paths local-only. A curated set is a few MB; the two
+  folders hold 1.4 GB.
 - **An operating-system backstop for the deep-scan rule.** The profile guard in
   `scripts/state/plugins/guard-deep-scan` refuses a scan under or above the ignored trees and derives those
   names from the ignore files, but it only binds harnesses that load that plugin. Options: an ACL that denies
@@ -30,17 +30,19 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
   which 517 lines still carry and `scripts/shared/import_graph.py` and `scripts/tests/scoped_selection.py`
   have dropped; that marker is house style, not a Python standard, so it may be kept as it is.
 - **How a run should be laid out on disk.** A run currently sits at `<root>/<area>/<case>/<outcome>/<epoch-id>/`, while the trash uses `YYYY-MM-DD` folders. Options: a date folder per run (`.../<outcome>/<YYYY-MM-DD>/<id>/`) so retention reads as calendar time and a whole day prunes at once; a build folder keyed on the engine commit (`.../<commit>/<id>/`) so a comparison across builds sits together and a superseded build is one folder; or keep the flat shape and let `cleanup.py` own the rule, which is what happens today. Cost of either change: every new run path moves, historical paths keep their current place because a tracked document may cite them, and a cited run id keeps working either way because the id does not change.
-- **Making parking follow the host.** A parking record states why something is parked on this
-  machine: a raw hardware shortfall such as Drama 3, an OS or GPU-vendor limit such as the Linux-only
-  ExLlama engines, or a measured loss such as the RDNA builds. The registry assumes Windows on one AMD
-  card and keeps a single static answer, so a reader on another host cannot tell which entries apply.
-  Long-term options: record the condition each entry is parked against (OS, GPU vendor or class,
-  memory) and resolve it in a check at run time; probe the machine when a launcher starts
-  (`nvidia-smi`/`rocm-smi`, free VRAM) so the set follows the hardware it runs on; or keep the static
-  registry and document the host it describes, which is what happens today. The registry's `cause`
-  already names which of those parks a thing; what is missing is that nothing evaluates it against the
-  host. The first two make `revisit` machine-checkable, but no work starts until a second host exists
-  to test the rule against.
+- **Making parking follow the host.** A parking record states why this machine parks something: a raw hardware
+  shortfall such as Drama 3, an OS or GPU-vendor limit such as the Linux-only ExLlama engines, or a measured loss
+  such as the RDNA builds. The registry assumes Windows on one AMD card, so a reader on another host cannot tell
+  which entries apply. Options: record the condition each entry is parked against (OS, GPU vendor or class, memory)
+  and resolve it at run time; probe the machine when a launcher starts (`nvidia-smi`/`rocm-smi`, free VRAM); or keep
+  the static registry and document its host, which is today. `cause` already names the condition; nothing evaluates
+  it yet, and no work starts until a second host exists to test against.
+- **A third quantization vendor: LookAtMyQuant.** [The compiler](https://github.com/ShinMegamiBoson/lookatmyquant) (MIT)
+  allocates bits per matrix, embedding bucket and KV table to a device budget; llama.cpp's types give ordinary GGUF,
+  while its own MLX packs run on Apple silicon, where all its speed results live. Options: score its published Gemma
+  GGUF here as a third vendor row; adopt only its method (KL from the BF16 teacher plus its task suite) to compare
+  vendors on Windows; or wait for GGUF releases of its 27B and Inkling files, which are MLX-only. Its numbers are
+  vendor claims until we reproduce one.
 - A decision that would change work is added here with its options.
 
 ## Superseded
