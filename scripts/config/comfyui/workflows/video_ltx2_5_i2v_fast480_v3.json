@@ -1252,43 +1252,6 @@
       }
     },
     {
-      "id": 30,
-      "type": "CLIPLoaderGGUFDynamicVRAM",
-      "pos": [
-        -263.6486407542278,
-        784.5082732906408
-      ],
-      "size": [
-        452.9,
-        90
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 2,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "CLIP",
-          "type": "CLIP",
-          "links": []
-        }
-      ],
-      "title": "[DISABLED] Gemma CLIP Q5 via DynamicVRAM loader - errors with .tolist(); use regular CLIPLoaderGGUF",
-      "properties": {
-        "cnr_id": "comfyui-gguf-reboot",
-        "ver": "b6016439f135342819461256ec5f03fbb4003a8b",
-        "Node name for S&R": "CLIPLoaderGGUFDynamicVRAM"
-      },
-      "widgets_values": [
-        "gemma4-12b-with-proj-ltx-2.5-Q5_K_M.gguf",
-        "ltxv"
-      ],
-      "widgets_values_named": {
-        "clip_name": "gemma4-12b-with-proj-ltx-2.5-Q5_K_M.gguf",
-        "type": "ltxv"
-      }
-    },
-    {
       "id": 2,
       "type": "UnetLoaderGGUFDynamicVRAM",
       "pos": [

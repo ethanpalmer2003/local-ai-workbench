@@ -38,6 +38,7 @@ class ModelId(StrEnum):
     COMFYUI_LTX_2_5_AUDIO_VAE_BF16 = "comfyui/ltx-2.5-audio-vae-bf16"
     COMFYUI_LTX_2_5_LATENT_SPATIAL_UPSCALER_X2_BF16_1_0 = "comfyui/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0"
     COMFYUI_LTX_2_5_VIDEO_VAE_BF16 = "comfyui/ltx-2.5-video-vae-bf16"
+    EMBEDDINGS_QWEN3_EMBEDDING_0_6B_Q8_0 = "embeddings/Qwen3-Embedding-0.6B-Q8_0"
     EMBEDDINGS_EMBEDDINGGEMMA_2_Q8_0 = "embeddings/embeddinggemma-2-Q8_0"
     LLAMACPP_SWIFT_1_5_QWEN3_8_27B_GSQ_RCO_IQ3_XXS_MTP = "llamacpp/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp"
     LLAMACPP_GEMMA_4_E4B_IT_Q4_0 = "llamacpp/gemma-4-E4B-it-Q4_0"
