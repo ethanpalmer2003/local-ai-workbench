@@ -24,16 +24,9 @@ def _catalog_issues(catalog: dict[str, Any]) -> list[str]:
         "LANGUAGE_PRACTICE.llm_model": cfg.LANGUAGE_PRACTICE.llm_model,
         "LANGUAGE_PRACTICE.tts_model": cfg.LANGUAGE_PRACTICE.tts_model,
     }
-    if cfg.DEFAULT_KOKORO_PACKAGE not in cfg.KOKORO_TTS_PACKAGES:
-        issues.append(f"Unknown default Kokoro package: {cfg.DEFAULT_KOKORO_PACKAGE}")
     issues.extend(
         f"{owner} references unknown catalog ID: {model_id}"
         for owner, model_id in selected.items()
-        if model_id not in catalog
-    )
-    issues.extend(
-        f"KOKORO_TTS_PACKAGES[{package!r}] references unknown catalog ID: {model_id}"
-        for package, model_id in cfg.KOKORO_TTS_PACKAGES.items()
         if model_id not in catalog
     )
     return issues

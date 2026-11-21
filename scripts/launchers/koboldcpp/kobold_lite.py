@@ -16,7 +16,7 @@ from scripts.launchers.asr import selector as transcription
 from scripts.launchers.asr.shared import http_api, practice_models
 from scripts.launchers.asr.shared.streaming import live
 from scripts.launchers.audiocpp import audiocpp_catalog, tts_text_processing
-from scripts.launchers.koboldcpp import external_bridge, kokoro
+from scripts.launchers.koboldcpp import external_bridge, speech
 from scripts.launchers.proxy_util import (
     ProxyHandlerMixin,
     RequestScope,
@@ -37,9 +37,7 @@ def audio_delivery_plan():
         """AudioCpp """
         """path."""
     )
-    external = not kokoro.internal() and (
-        cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP or kokoro.selected()
-    )
+    external = cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP or speech.selected()
     plan = practice_models.delivery_plan()
     return plan if external else {**plan, "mode": "whole", "supported": ["whole"]}
 
@@ -94,7 +92,7 @@ def _patch_local(html: str) -> tuple[str, str]:
             **audiocpp_catalog.streaming_defaults(cfg.AUDIOCPP_SERVICE),
             "streaming_enabled": plan["mode"] == "streaming",
             "audioProxyPort": cfg.AUDIOCPP_SERVICE.port,
-            "tone_tags_supported": not kokoro.selected()
+            "tone_tags_supported": not speech.selected()
             and cfg.AUDIOCPP_SERVICE.model in cfg.BREEZE_MODELS
             and tts_text_processing.BREEZE_TONES.tags_enabled,
         }
@@ -402,12 +400,12 @@ class _KoboldLiteHandler(ProxyHandlerMixin):
             from scripts.launchers.audiocpp import asr
 
             target = asr.url()
-        elif kokoro.selected():
-            target = self.upstream if kokoro.internal() else f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}"
+        elif speech.selected():
+            target = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}"
         else:
             return target, body
         try:
-            return target, kokoro.speech_body(body)
+            return target, speech.speech_body(body)
         except (ValueError, TypeError) as error:
             send_json_error(self, 400, str(error), "invalid_request_error")
             return None

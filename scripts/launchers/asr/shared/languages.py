@@ -1,4 +1,4 @@
-"""Practice language intersection: exact selected ASR checkpoint and installed Kokoro spec."""
+"""Practice language intersection: exact selected ASR checkpoint and installed speech spec."""
 
 from typing import Any
 

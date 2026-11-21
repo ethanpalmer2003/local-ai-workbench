@@ -8,8 +8,7 @@ cannot be counted without instrumenting it.
 # - one warmup per arm is included: it pays the model load and is excluded from the timings
 BACKEND_CALLS: dict[str, int] = {
     "parakeet": 4,
-    "whisper": 5,
-    "practice-whisper": 2,
+    "practice-whisper": 4,
     "practice-qwen": 2,
     "gemma": 6,
     "images": 1,

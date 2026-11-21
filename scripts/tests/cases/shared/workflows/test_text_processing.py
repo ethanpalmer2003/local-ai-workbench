@@ -5,7 +5,7 @@ import unittest
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import tts_text_processing
-from scripts.launchers.koboldcpp import kokoro
+from scripts.launchers.koboldcpp import speech
 from scripts.launchers.shared.media import text_processing
 
 
@@ -42,14 +42,14 @@ class TextProcessingTests(unittest.TestCase):
         self.assertEqual(text_processing.clean_text(text), text)
         self.assertEqual(text_processing.clean_text("می\u200dروم"), "می\u200dروم")
 
-    def test_character_proxy_and_kokoro_use_identical_generic_rules(self):
+    def test_character_proxy_and_speech_use_identical_generic_rules(self):
         text = "#Hello - `bonjour` 🙂 <END>"
         expected = text_processing.clean_text(text)
         self.assertEqual(expected, "Hello - bonjour")
         self.assertEqual(
             tts_text_processing.clean_text({"input": text, "model": cfg.LANGUAGE_PRACTICE.tts_model})[0], expected
         )
-        value = json.loads(kokoro.speech_body(json.dumps({"input": text}).encode()))
+        value = json.loads(speech.speech_body(json.dumps({"input": text}).encode()))
         self.assertEqual(value["input"], expected)
 
     def test_empty_speech_is_rejected_before_native_inference(self):

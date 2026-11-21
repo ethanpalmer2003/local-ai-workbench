@@ -14,15 +14,12 @@ import psutil
 import requests
 
 from scripts.benchmarks.shared.paths import RunPaths
-from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers import lemonade_server as lemonade
 from scripts.launchers.asr import selector
 from scripts.launchers.asr import server as asr_gateway
 from scripts.launchers.audiocpp import asr as audiocpp_asr
-from scripts.launchers.koboldcpp import kobold
-from scripts.launchers.launch_util import wait_for_backend
 from scripts.launchers.llamacpp import language_practice
 from scripts.launchers.shared.services import native
 from scripts.launchers.shared.services.process import stop_owned
@@ -30,8 +27,6 @@ from scripts.shared.wait import http_ready, wait_ready
 
 # - "whisper" is the practice stack with its other installed recogniser, kept as a third arm
 ALTERNATE_ENGINE = cfg.AsrStartupEngine.WHISPER_VULKAN
-KOBOLD_ARM_MODEL = cfg.LANGUAGE_PRACTICE.llm_model
-KOBOLD_STARTUP_TIMEOUT_S = 240
 # - Lemonade names these by its own catalog: kokoro-v1 for speech, whisper.cpp models for recognition
 LEMONADE_TTS_MODEL = "kokoro-v1"
 LEMONADE_ASR_MODEL = "Whisper-Large-v3-Turbo"
@@ -48,8 +43,6 @@ class Served:
     chat_model: str
     tts_model: str
     asr_model: str
-    # - "kobold" posts base64 audio to /api/extra/transcribe; the other arms use multipart
-    asr_style: str = "openai"
     details: dict[str, Any] = field(default_factory=dict)
 
 
@@ -262,56 +255,10 @@ def _serve_lemonade(weights: Path, run: RunPaths) -> Iterator[Served]:
             _await_exit(process.pid)
 
 
-@contextmanager
-def _serve_koboldcpp(weights: Path, run: RunPaths) -> Iterator[Served]:
-    """KoboldCpp alone: its own chat, its built-in Kokoro and its embedded whisper, one process."""
-    port = _free_port()
-    settings = replace(
-        cfg.KOBOLDCPP_SERVICE,
-        model=KOBOLD_ARM_MODEL,
-        speech_engine=cfg.KoboldcppSpeechStartupEngine.KOKORO_INTERNAL,
-        transcription_engine=cfg.AsrStartupEngine.EMBEDDED,
-    )
-    # - A free port per run: the configured 5002 may hold a session the user started
-    arguments = {**cfg.KOBOLDCPP_KCPPS_ARGS, "port": port, "port_param": port}
-    with patch.object(cfg, "KOBOLDCPP_SERVICE", settings), patch.dict(cfg.KOBOLDCPP_KCPPS_ARGS, arguments):
-        process, _, log = kobold.start_kobold("standalone", owned=True)
-        base = f"http://127.0.0.1:{port}"
-        try:
-            if not wait_for_backend(port, KOBOLD_STARTUP_TIMEOUT_S):
-                raise TimeoutError(f"KoboldCpp did not answer on port {port} within {KOBOLD_STARTUP_TIMEOUT_S}s")
-            yield Served(
-                backend="kobold",
-                chat=base,
-                tts=base,
-                asr=base,
-                chat_model=model_cfg.path(settings.model).stem,
-                tts_model=cfg.KOKORO_TTS.koboldcpp_model.stem,
-                asr_model=Path(str(arguments["whispermodel"])).stem,
-                # - Kobold posts base64 audio to /api/extra/transcribe instead of multipart uploads
-                asr_style="kobold",
-                details={
-                    "log": str(log),
-                    "port": port,
-                    "exe": str(cfg.KOBOLDCPP_SERVICE.exe),
-                    "weights": str(model_cfg.path(settings.model)),
-                    "speech_engine": settings.speech_engine.value,
-                    "transcription_engine": getattr(settings.transcription_engine, "value", "off"),
-                    "tts_model": str(cfg.KOKORO_TTS.koboldcpp_model),
-                    "whisper_model": str(arguments["whispermodel"]),
-                    "comparison_weights": str(weights),
-                },
-            )
-        finally:
-            stop_owned(process)
-            _await_exit(process.pid)
-
-
 def serve(backend: str, weights: Path, run: RunPaths) -> AbstractContextManager[Served]:
     handlers = {
         "practice": _serve_practice,
         "lemonade": _serve_lemonade,
         "whisper": partial(_serve_practice, recogniser_engine=ALTERNATE_ENGINE),
-        "kobold": _serve_koboldcpp,
     }
     return handlers[backend](weights, run)

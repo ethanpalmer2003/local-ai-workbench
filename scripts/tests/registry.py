@@ -79,7 +79,6 @@ from scripts.tests.cases.shared.benchmarks.test_coding_engines import CodingEngi
 from scripts.tests.cases.shared.benchmarks.test_context_stream import ContextStreamTests
 from scripts.tests.cases.shared.benchmarks.test_framework_compare import (
     AlternateArmTests,
-    KoboldArmTests,
     LemonadeModelTests,
     RecognitionLegTests,
     SpeechLegTests,
@@ -185,7 +184,6 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     SummaryTests,
     LemonadeModelTests,
     AlternateArmTests,
-    KoboldArmTests,
     SpeechPlausibilityTests,
     CorpusManifestTests,
     ExtractionTests,

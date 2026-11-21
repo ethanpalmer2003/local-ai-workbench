@@ -8,7 +8,7 @@ assets/runtime failures. Isolated resources do not establish LLM/TTS coexistence
 capacity. Publisher RTFx remains separate from local speed.
 
 - [Streaming/VAD groups](../../../launchers/asr/CAPABILITIES.md); [evaluation](../../notes/asr/ASR-SCREEN.md).
-- ASR coexistence tests use Kokoro or another lightweight multilingual TTS, not Breeze/heavier speech models. [One-server evidence](../../notes/audiocpp/AUDIOCPP-SINGLE-SERVER.md); isolated ASR measurements remain labeled separately.
+- ASR coexistence tests use the practice TTS or another lightweight multilingual voice, not Breeze/heavier speech models. [One-server evidence](../../notes/audiocpp/AUDIOCPP-SINGLE-SERVER.md); isolated ASR measurements remain labeled separately.
 
 The [resident runner](../../../benchmarks/asr/asr_resident_compare.py) uses the domain-neutral
 [benchmark lifecycle](../../../benchmarks/README.md). Startup/loading, first inference,
@@ -28,7 +28,7 @@ keeps llama.cpp serving it. Cohere and Granite have brief saved checks
 on two synthetic English clips, three repeats each; this does not establish multilingual/noisy quality.
 The original Parakeet CPU/Vulkan profiles use English 110M.
 `--engines` selects a subset; `--budget` bounds the whole inference sequence.
-The default corpus is saved synthetic English Kokoro audio. `--corpus` accepts the
+The default corpus is saved synthetic English Kokoro audio from the retained comparison runs the Kokoro TTS arm produced before it was parked. `--corpus` accepts the
 shared JSON manifest. Inputs are prepared before timing; response transfer and JSON
 parsing are included. Reports retain commands, model SHA256, corpus references,
 actual execution context, Unicode WER/CER, failures, lifecycle phases and request

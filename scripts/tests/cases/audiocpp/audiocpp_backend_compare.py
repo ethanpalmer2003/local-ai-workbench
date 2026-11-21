@@ -1,4 +1,4 @@
-"""Brief Breeze 2, Ming 3.0, Kokoro or Supertonic TTS checks across AudioCpp release builds."""
+"""Brief Breeze 2, Ming 3.0 or Supertonic TTS checks across AudioCpp release builds."""
 
 import argparse
 import csv
@@ -21,7 +21,7 @@ from scripts.benchmarks.shared.vram import process_evidence, snapshot_dict
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
-from scripts.launchers.audiocpp.kokoro import audio_environment
+from scripts.launchers.audiocpp.tts_server import audio_environment
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
 from scripts.shared.resources import summarize_resources, watch_resources
@@ -53,15 +53,6 @@ PROFILES = {
         1234,
         {"voice_id": "F1"},
         voice="F1",
-    ),
-    "kokoro": TtsProfile(
-        "kokoro-test",
-        "Kokoro 82M multilingual Q8_0",
-        model_cfg.path("audiocpp/kokoro-audiocpp-multilingual-q8_0"),
-        "kokoro_tts",
-        1234,
-        {"language": "en-us"},
-        voice="af_heart",
     ),
     "ming3-tts": TtsProfile(
         "ming3-tts-test",

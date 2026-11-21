@@ -106,7 +106,9 @@ class PracticeTests(unittest.TestCase):
         start_mock, load_mock, unload_mock = Mock(side_effect=start), Mock(side_effect=load), Mock()
         service = Service(start_mock, load_mock, unload_mock)
         manager = ServiceLifecycle(
-            {"audio": service}, {"asr": "audio", "tts": "audio"}, models={"asr": "asr-q8.gguf", "tts": "kokoro-q8.gguf"}
+            {"audio": service},
+            {"asr": "audio", "tts": "audio"},
+            models={"asr": "asr-q8.gguf", "tts": "supertonic-q8.gguf"},
         )
         start_mock.assert_not_called()
         with (
@@ -214,7 +216,7 @@ class PracticeTests(unittest.TestCase):
     def test_shared_test_page_uses_actual_practice_tts_without_advertising_streaming(self):
         from scripts.launchers.asr.shared import http_api
 
-        spec = {"id": cfg.LANGUAGE_PRACTICE.tts_model, "family": "kokoro_tts", "path": "selected.gguf"}
+        spec = {"id": cfg.LANGUAGE_PRACTICE.tts_model, "family": "supertonic", "path": "selected.gguf"}
         with (
             patch.object(http_api.practice_models, "tts_spec", return_value=spec),
             patch.object(http_api.audiocpp_catalog, "runtime_defaults", return_value={}) as defaults,
@@ -270,21 +272,6 @@ class PracticeTests(unittest.TestCase):
             self.assertEqual(control.select({"asr": "known", "tts": "tts"}), {"asr": "known", "tts": "tts"})
             with self.assertRaises(RuntimeError):
                 control.select({"asr": "known", "tts": "tts"})
-
-    def test_kokoro_missing_japanese_resources_are_visible_not_claimed_ready(self):
-        from scripts.launchers.audiocpp import kokoro
-
-        spec = {"languages": ["en-us", "ja", "zh"], "ui": {"builtin_voices": ["af_heart", "jf_alpha", "zf_xiaobei"]}}
-        metadata = {
-            "audiocpp.model_spec.json": json.dumps(spec),
-            "audiocpp.embedded_files.names": ["g2p/ja.json", "g2p/zh.json"],
-        }
-        with patch.object(kokoro, "inspect_metadata", return_value={"metadata": metadata}):
-            rows = {row["locale"]: row for row in kokoro.language_profiles()}
-        self.assertFalse(rows["ja"]["available"])
-        self.assertIn("unidic/dicrc", rows["ja"]["unavailable_reason"])
-        self.assertTrue(rows["zh"]["available"])
-        self.assertTrue(rows["en-us"]["available"])
 
     def test_language_options_intersect_selected_asr_with_installed_tts(self):
         from scripts.config import models

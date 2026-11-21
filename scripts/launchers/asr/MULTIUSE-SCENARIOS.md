@@ -15,7 +15,7 @@ not another multiplier for this first deployment screen.
 
 Start with the validated one-AudioCpp arrangement on both chat runtimes:
 two layouts/six cells. Other layouts are conditional alternatives, not a mandatory grid.
-Keep Kokoro fixed for ASR tests.
+Keep the practice TTS fixed for ASR tests.
 
 Record startup/loading separately, first partial, final-after-speech, first usable
 LLM text, first audible TTS, cancellation delay, underruns and RAM/VRAM. Compare

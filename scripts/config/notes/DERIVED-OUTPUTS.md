@@ -8,7 +8,7 @@
 | KoboldCpp | Native `.kcpps` + Python overrides -> direct config and CLI flags; browser launch disabled by default |
 | AudioCpp standalone | `audiocpp/server.json` -> direct native config |
 | Shared AudioCpp | Base JSON + shared policy -> `generated/audiocpp/shared-<port>.json` |
-| External Kokoro | `KOKORO_TTS` -> `generated/audiocpp/kokoro-<port>.json`, CPU, one model |
+| External AudioCpp speech | `AUDIOCPP_SPEECH` -> `generated/audiocpp/tts-<port>.json`, CPU, one model |
 | Pi/Lens | `../coding_agents/pi/` -> app-required agent settings/extensions; preserve user state |
 | Strata | `strata/*.json` -> native settings shared with desktop/Pi; host/credential overrides at launch |
 | ComfyUI | Owned YAML/workflows/node -> required installation copies during sync/startup |

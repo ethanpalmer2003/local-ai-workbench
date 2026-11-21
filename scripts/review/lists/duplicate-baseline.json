@@ -23,7 +23,6 @@
     "scripts/download/input/split_from_csv.py|scripts/download/input/tune_silence.py": 1,
     "scripts/launchers/asr/llamacpp/llama_audio.py|scripts/tests/cases/suites/gemma_runtime_screen.py": 1,
     "scripts/launchers/audiocpp/audiocpp.py|scripts/launchers/llamacpp/llamacpp.py": 1,
-    "scripts/launchers/audiocpp/kokoro.py|scripts/tests/cases/shared/workflows/test_speech_profiles.py": 1,
     "scripts/launchers/audiocpp/tts_proxy.py|scripts/launchers/proxy_util.py": 1,
     "scripts/review/checks/frontend_wiring.py|scripts/review/checks/layout.py": 1,
     "scripts/review/checks/spellings.py|scripts/review/checks/typography.py": 1,

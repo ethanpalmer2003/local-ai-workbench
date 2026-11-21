@@ -11,11 +11,11 @@
 
 ```powershell
 C:/AI/bat/checks/test_model_free.bat
-C:/AI/bat/checks/test_live_backends.bat --only whisper parakeet practice-whisper practice-qwen gemma
+C:/AI/bat/checks/test_live_backends.bat --only parakeet practice-whisper practice-qwen gemma
 ```
 
 - Quick validation runs native probes sequentially on temporary ports, preserves logs and returns failure if any probe fails. Processes are task-owned; existing native sessions are retained/refused.
-- Optional selections cover Kokoro, images and AudioCpp; the default batch now runs only a brief Breeze comparison. Expect several minutes; execution-context and long-run rules apply.
+- Optional selections cover images and the AudioCpp TTS cases; the default batch now runs only a brief Breeze comparison. Expect several minutes; execution-context and long-run rules apply.
 - Gemma unit checks cover empty/exactly-30/over-limit input, stereo resampling, malformed audio, response formats and invalid/truncated transcripts.
 - Synthetic English clips establish compatibility and bounded timing. Fair multilingual/noisy/cold-versus-cached evaluation needs controlled inputs/settings.
 - Output mirrors source via `CasePaths`; historical output stays in place. [Current evidence](../../../../notes/NATIVE-VALIDATION.md), [test rules](../../README.md).

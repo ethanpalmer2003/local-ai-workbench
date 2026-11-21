@@ -4,7 +4,7 @@ First timing pair for the practice TTS model and the Kokoro baseline it replaced
 Vulkan build, three measured requests after one warmup, WAV output.
 
 Run: `python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case supertonic --backend vulkan --repeats 3`
-and the same with `--case kokoro`.
+for the practice model; the Kokoro row below is the retained baseline from the run before that case was parked.
 
 ## Setup
 

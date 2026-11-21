@@ -9,20 +9,17 @@ AudioCpp is the default practice TTS runtime. Prioritize natural multilingual
 speech and latency; Piper/Sherpa remain alternatives. Listening checks are separate.
 The practice model is Supertonic 3: one self-contained GGUF with 31 listed languages
 and preset voices `M1`-`M5`/`F1`-`F5`, named by `LANGUAGE_PRACTICE.tts_model` and
-configured in `config/audiocpp/server.json`. Kokoro stays installed for comparisons.
+configured in `config/audiocpp/server.json`. Kokoro is parked: its packages stay installed but
+nothing selects them.
 
 Nemotron and the practice TTS model share one server: [checks](../../tests/notes/audiocpp/AUDIOCPP-SINGLE-SERVER.md).
 
 - Speech test: [launcher](../../../bat/browser/launch_test.bat); ASR, LLM and TTS are optional. The AudioCpp proxy redirects `/test/` there. Native Vulkan is default; `--build` follows launcher config.
 - ROCm: updater `--only audiocpp/rocm`; installs under `frameworks/audiocpp/rocm/`. Compare with Vulkan using `python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare`; [evidence](../../../notes/NATIVE-VALIDATION.md).
 - Both release executables live directly in `frameworks/audiocpp/{vulkan,rocm}/`; updater flattens vendor build folders. Older ROCm variants stay under `additions/rocm/`.
-- Brief tests: `python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case breeze2`; `--case supertonic` and `--case kokoro` give the practice pair. [Audio model setup](../../config/audiocpp/MODELS.md). Default is one warmup and one measured short sentence per official backend.
-- Editable native modes/models/session options: `config/audiocpp/server.json`. Python service/playback selection: `AUDIOCPP_SERVICE`; Supertonic presets: `SUPERTONIC_TTS`; Kokoro profile: `KOKORO_TTS`.
-- Kokoro defaults to the bundled multilingual Q8 package. `KOKORO_TTS.audiocpp_package`
-  selects `multilingual` or retained `small`; both stay in the download catalog.
-  Japanese needs bundled UniDic plus `AUDIOCPP_MECAB_LIBRARY`. Provision the pinned
-  portable DLL/licenses with `python -m scripts.download.frameworks.audiocpp.setup_mecab`;
-  it does not install a Python package. Language choices inspect the selected GGUF.
+- Brief tests: `python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case breeze2`; `--case supertonic` and `--case ming3-tts` cover the remaining families. [Audio model setup](../../config/audiocpp/MODELS.md). Default is one warmup and one measured short sentence per official backend.
+- Editable native modes/models/session options: `config/audiocpp/server.json`. Python service/playback selection: `AUDIOCPP_SERVICE`; Supertonic presets: `SUPERTONIC_TTS`; request defaults: `AUDIOCPP_SPEECH`.
+- The server links eSpeak NG and MeCab for its own frontends; `AUDIOCPP_SPEECH` owns both paths and `AUDIOCPP_ESPEAK_LIBRARY`/`AUDIOCPP_ESPEAK_DATA`/`AUDIOCPP_MECAB_LIBRARY` carry them. Provision the pinned portable DLL/licenses with `python -m scripts.download.frameworks.audiocpp.setup_mecab`; it installs no Python package.
 - Standalone reads native JSON; shared GPU and CPU speech configs derive in `state/generated/audiocpp/`. [Ownership](../../config/notes/DERIVED-OUTPUTS.md).
 
 ## Speech test page
