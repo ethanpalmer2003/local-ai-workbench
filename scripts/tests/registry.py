@@ -125,6 +125,7 @@ from scripts.tests.cases.shared.reports.test_reporting import Reporting
 from scripts.tests.cases.shared.reports.test_reports import ReportOutputs
 from scripts.tests.cases.shared.runtime.test_backend_sessions import BackendSessions
 from scripts.tests.cases.shared.runtime.test_gpu_memory_monitor import MemoryMonitorTests
+from scripts.tests.cases.shared.runtime.test_gpu_selection import GpuSelectionTests
 from scripts.tests.cases.shared.runtime.test_image_on_demand import NativePassthroughTests, ResidencyTests
 from scripts.tests.cases.shared.runtime.test_native_probes import ProbeCommandTests
 from scripts.tests.cases.shared.runtime.test_resources import ResourceTests
@@ -332,6 +333,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     Reporting,
     ResourceTests,
     MemoryMonitorTests,
+    GpuSelectionTests,
     HrxBuildTests,
     NativePassthroughTests,
     ResidencyTests,

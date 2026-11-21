@@ -73,6 +73,13 @@ SWIFT15_HRX = with_extra(
 )
 
 
+# --- Inkling 2 Mini ----------------------------------------------------
+# - looped MoE: no MTP or ngram speculation, and Unsloth's guide asks for temperature 1.0, top-p 1.0,
+#   top-k 0 and min-p 0.0, which the INI carries as the server default
+INKLING_BASE = model_base(model_cfg.path("llamacpp/unsloth_Inkling-2-Mini-UD-IQ3_XXS").name, "inkling-q3.ini")
+INKLING_32K = with_extra(INKLING_BASE, **{"ctx-size": ContextSize.K32})
+
+
 # --- selected ----------------------------------------------------------
 
 
@@ -80,6 +87,7 @@ LLAMACPP_PROFILES: dict[str, LLMProfile] = {
     "swift15": SWIFT15_MTP_NGRAM,
     "swift15-8k": SWIFT15_MTP_NGRAM_8K,
     "swift15-hrx": SWIFT15_HRX,
+    "inkling": INKLING_32K,
 }
 
 LLAMACPP_BENCHMARK_PROFILES: dict[str, LLMProfile] = {

@@ -12,7 +12,7 @@ from scripts.download.input import split_from_csv, voice_model, voice_workflow
 from scripts.download.models import cli_download
 from scripts.launchers import launch_util, proxy_util
 from scripts.launchers.llamacpp import llamacpp, llamacpp_proxy
-from scripts.launchers.runtime import gpu_memory
+from scripts.launchers.runtime import gpu_memory, gpu_selection
 from scripts.review.checks.inventory_code import inspect_source
 from scripts.shared.timing import timed
 from scripts.tests.cases.koboldcpp.kobold_vram_estimate import kv_cache_mib
@@ -176,6 +176,7 @@ class SharedContracts(unittest.TestCase):
             patch.object(llamacpp, "launch_process", return_value=process),
             patch.object(llamacpp, "LlamaMonitor") as monitor,
             patch.object(llamacpp, "kill_process_tree") as kill,
+            patch.object(gpu_selection, "discrete_vulkan_device", return_value="Vulkan0"),
         ):
             monitor.return_value.log_file = Path(folder) / "server.log"
             monitor.return_value.wait_ready.return_value = False

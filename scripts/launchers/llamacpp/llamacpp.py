@@ -24,6 +24,7 @@ from scripts.launchers.launch_util import (
 )
 from scripts.launchers.launcher_config import ConsoleTerminalLaunchMode
 from scripts.launchers.llamacpp import llamacpp_profiles as profiles
+from scripts.launchers.runtime import gpu_selection
 
 # - what --dry-run prints for --log-file; a real launch picks a timestamped path
 #   under the same tree. Never a temporary directory: these launchers also run
@@ -100,8 +101,9 @@ class LlamaConfig:
             return {}
 
         parser = configparser.ConfigParser(interpolation=None, inline_comment_prefixes=("#", ";"))
-        with self.ini_path.open(encoding="utf-8") as ini_file:
-            parser.read_file(ini_file)
+        # - the shared INI holds every flag each model would otherwise repeat; a profile INI carries only its
+        #   own overrides, and llama.cpp's own defaults cover the rest
+        parser.read([str(cfg.LLAMACPP_INI_DIR / "defaults.ini"), str(self.ini_path)])
         return {**dict(parser.defaults()), **self.ini_overrides}
 
     def build_cmd(self, log_file: Path) -> list[str]:
@@ -313,6 +315,11 @@ def launch(
         print(f"[llm] profile args: {profile_extra}")
 
     cmd = [*conf.build_cmd(monitor.log_file), *(extra_args or [])]
+    # - a Vulkan build would otherwise see the integrated adapter too; naming the discrete one is the
+    #   blocker that keeps an accidental iGPU run from passing as a GPU benchmark. Resolved here, not in
+    #   build_cmd, so describing a command stays side-effect free
+    if "vulkan" in conf.build_dir.name:
+        cmd += build_cli_args({"--device": gpu_selection.discrete_vulkan_device(conf.exe)})
     port = conf.port
     startup_marker = monitor.log_file.with_suffix(".ready")
     terminal_cmd = [

@@ -703,6 +703,18 @@
       "sha256": null,
       "roles": [],
       "source_page": null
+    },
+    {
+      "category": "llms",
+      "group": "llamacpp",
+      "label": "llamacpp/unsloth_Inkling-2-Mini-UD-IQ3_XXS",
+      "filename": "coding_models/Inkling-2-Mini-UD-IQ3_XXS.gguf",
+      "url": "https://huggingface.co/unsloth/Inkling-2-Mini-GGUF/resolve/main/Mainline_Support/Inkling-2-Mini-UD-IQ3_XXS.gguf_file",
+      "in_use": false,
+      "notes": "Unsloth dynamic IQ3_XXS of Inkling-2-Mini (Thinking Machines, 26B MoE, 24 blocks with a three-pass looped core); this is the Mainline_Support copy, because the repository root file stores 24 blocks and fails to load as 48 on mainline llama.cpp. The GGUF declares temperature 1.0, top-p 1.0, top-k 0 and min-p 0.0.",
+      "sha256": "fd9ccedae17c1bb89744612fbb46730b5275f2a342133d0419776bd1ae311657",
+      "roles": [],
+      "source_page": null
     }
   ]
 }

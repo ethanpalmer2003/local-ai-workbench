@@ -1,21 +1,22 @@
 # llama.cpp tuning
 
-- Owners: [profiles](../../launchers/llamacpp/llamacpp_profiles.py), [native INI](swift-q3.ini), [service/build selection](../../launchers/launcher_config.py).
+- Owners: [profiles](../../launchers/llamacpp/llamacpp_profiles.py), [defaults](defaults.ini), [model overrides](swift-q3.ini), [build selection](../../launchers/launcher_config.py).
+- `defaults.ini` holds the repeated flags; a model INI keeps its sampling and reasoning, and engine defaults cover the rest.
 - Profile values override INI; the launcher supplies the model. Sampling or reasoning may override startup defaults.
-- Coding default: `swift15` (96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium) on the pinned **vulkan-1.0.0** build, the llama.cpp default for every use ([builds](BUILDS.md)). The allocation picks the build: at 96K Vulkan prefills a 3044-token prompt in 11.5 s against ROCm's 46.7 s (526 against 117 tok/s), while ROCm decodes faster (216 against 199 tok/s fresh, 83 against 71 on a rewrite). At 64K both read about 526 tok/s, so ROCm collapses only above 64K. It wins at 8K and needs the iGPU hidden to load ([upstream](../../../notes/UPSTREAM-INDEX.md), [note](../../../notes/reviews/ROCM-DRIVER-TIMEOUT-2026-11-13.md)); select it with `--build rocm-lemonade` when the context fits; the Lemonade *server* is a different framework.
+- Coding default: `swift15` (96K capacity, Q8 KV, FA on, one slot; benchmark reasoning low, normal launcher medium) on the rolling **vulkan** build, the llama.cpp default for every use ([builds](BUILDS.md)). The allocation picks the build: at 96K Vulkan prefills a 3044-token prompt in 11.5 s against ROCm's 46.7 s (526 against 117 tok/s), while ROCm decodes faster (216 against 199 tok/s fresh, 83 against 71 on a rewrite). At 64K both read about 526 tok/s, so ROCm collapses only above 64K. It wins at 8K and needs the iGPU hidden to load ([upstream](../../../notes/UPSTREAM-INDEX.md), [note](../../../notes/reviews/ROCM-DRIVER-TIMEOUT-2026-11-13.md)); select it with `--build rocm-lemonade` when the context fits; the Lemonade *server* is a different framework.
 
 | Choice | Evidence / limitation |
 | --- | --- |
 | MTP depth 2 | Rotated 2/3/4 trials averaged 37.16/35.87/35.42 tok/s; depth 2 shortest aggregate request time. Short English/code scope, not a universal optimum |
 | Ngram 24/48/64 | Two paired source-copy tasks: decode +18.9%, request time +4.3%; four fresh-generation rounds showed no meaningful penalty, not formal equivalence |
-| Q8 K/V | Faster decode than f16 on ROCm: 59.6 tok/s against 35.1 at 32K, with 510 against 584 prefill. Answer quality and Q4 KV not evaluated |
-| Prefill measured | The profile runner now sends one cold request per prompt: `prompt_per_second` is reported next to decode, with `cache_n` showing reuse. The 32K filled-context run measured 505 tok/s cold prefill and a 63.3 s TTFT |
-| GPU layers 99 | Working full-offload request/cap, not an actual layer count or sweep result |
-| Flash Attention | Compatibility established; speed and quality effect unmeasured |
+| Q8 K/V | Faster decode than f16 on ROCm: 59.6 against 35.1 tok/s at 32K, 510 against 584 prefill; quality and Q4 KV unevaluated |
+| Prefill measured | One cold request per prompt; `prompt_per_second` sits next to decode with `cache_n` showing reuse. At 32K: 505 tok/s cold prefill, 63.3 s TTFT |
+| GPU layers 99 | Full-offload cap; not a layer sweep |
+| Flash Attention | Compatibility only; speed and quality unmeasured |
 | One slot | Interactive choice; no ngram restriction implied |
 
-- Per-build faults: [builds](BUILDS.md).
-- Legacy ngram 32/4/8 remains a named profile. Do not combine unrelated screens into a stronger claim.
+- Faults: [builds](BUILDS.md).
+- Legacy ngram 32/4/8 is a named profile; do not merge unrelated screens into a stronger claim.
 - Optional `swift15-8k`: short greedy screen rose from 38.02 to 57.26 tok/s versus 96K capacity, with identical 64-token outputs. Use only when complete prompt/history/output fits; filled-context/everyday-sampling performance remains unverified.
 - Screens recorded 2026-10-04: MTP evidence (../../tests/output/llamacpp/benchmark_speedbench/verified/1791093433528713400/artifacts/comparison.md), copy evidence (../../tests/output/llamacpp/benchmark_ngram/no-gain/1791087672992167800/artifacts/comparison.md).
 - Profile screen 2026-11-11, b1372, short built-in prompts: cold prefill 43.4 tok/s over a 39-token prompt and decode 63.6 tok/s for `swift15`; 48.8 and 25.5 for `swift15-mtp-notemplate`. One run, code prompt spread is wide. Output: ../../benchmarks/output/llamacpp/benchmark_llamacpp_profiles/unreviewed/1794440590360444400/artifacts/llama-benchmark-summary-20261111-174436.txt

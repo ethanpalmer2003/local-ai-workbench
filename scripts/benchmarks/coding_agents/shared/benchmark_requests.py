@@ -52,6 +52,12 @@ def request_settings(body: dict[str, Any], endpoint: BenchmarkEndpoint, settings
         "max_tokens": cap,
         "seed": settings.get("seed", 42),
     }
+    # - a model's own sampling recommendation is sent only when the caller names it, so an arm that
+    #   never sets these keeps the server default it was measured with
+    for key in ("top_p", "top_k", "min_p"):
+        value = settings.get(key)
+        if value is not None:
+            body[key] = value
     for key in ("reasoning", "thinking", "enable_thinking"):
         body.pop(key, None)
     body.pop("max_completion_tokens", None)

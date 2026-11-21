@@ -25,6 +25,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp, audiocpp_catalog, audiocpp_proxy
 from scripts.launchers.koboldcpp import kobold
 from scripts.launchers.llamacpp import llamacpp, llamacpp_coding
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
 from scripts.launchers.sdcpp import server as sdcpp
 from scripts.shared import consent, wait
@@ -114,6 +115,7 @@ class LaunchCommands(unittest.TestCase):
             patch.object(llamacpp, "LlamaMonitor", autospec=True) as monitor,
             patch.object(llamacpp, "trigger_preload", autospec=True) as preload,
             patch.object(llamacpp, "kill_process_tree"),
+            patch.object(gpu_selection, "discrete_vulkan_device", return_value="Vulkan0"),
         ):
             monitor.return_value.log_file = CasePaths(__file__).new_run().temp / "warmup-regression-unused.log"
             monitor.return_value.wait_ready.return_value = True

@@ -337,6 +337,9 @@ def run_matrix(
     metadata: list[dict[str, Any]] = []
     settings = {
         "temperature": args.temperature,
+        "top_p": getattr(args, "top_p", None),
+        "top_k": getattr(args, "top_k", None),
+        "min_p": getattr(args, "min_p", None),
         "thinking": args.thinking,
         "reasoning_budget": args.reasoning_budget,
         "seed": args.seed,
@@ -372,6 +375,9 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--context-size", type=int, default=32768)
     parser.add_argument("--max-output-tokens", type=int, default=16384)
     parser.add_argument("--temperature", type=float, default=0)
+    parser.add_argument("--top-p", type=float, default=None, help="Sampling cutoff; omitted leaves the server default")
+    parser.add_argument("--top-k", type=int, default=None, help="Sampling cutoff; 0 disables it")
+    parser.add_argument("--min-p", type=float, default=None, help="Sampling floor; omitted leaves the server default")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--suite", choices=("polyglot", "local"), default="polyglot")
     parser.add_argument("--tasks", nargs="+")
@@ -469,6 +475,9 @@ def main() -> int:
             "repeats": args.repeats,
             "context_size": args.context_size,
             "temperature": args.temperature,
+            "top_p": getattr(args, "top_p", None),
+            "top_k": getattr(args, "top_k", None),
+            "min_p": getattr(args, "min_p", None),
             "seed": args.seed,
             "max_output_tokens": args.max_output_tokens,
             "max_turns": args.max_turns,

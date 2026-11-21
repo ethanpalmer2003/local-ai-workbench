@@ -85,6 +85,16 @@ class BenchmarkRequestsTests(unittest.TestCase):
             result = request_settings(body, endpoint, {**SETTINGS, "thinking": "off"})
             self.assertFalse(result["chat_template_kwargs"]["enable_thinking"])
 
+    def test_a_model_recommended_sampling_is_sent_only_when_it_is_named(self):
+        endpoint = BenchmarkEndpoint("llamacpp", "Inkling-2-Mini-UD-IQ3_XXS", "http://127.0.0.1/v1", "secret")
+        sampling = {"temperature": 1.0, "top_p": 1.0, "top_k": 0, "min_p": 0.0}
+        result = request_settings({}, endpoint, {**SETTINGS, **sampling})
+        self.assertEqual(result["temperature"], 1.0)
+        self.assertEqual((result["top_p"], result["top_k"], result["min_p"]), (1.0, 0, 0.0))
+        plain = request_settings({}, endpoint, SETTINGS)
+        for key in ("top_p", "top_k", "min_p"):
+            self.assertNotIn(key, plain)
+
     def test_usage_events_are_not_counted_twice_and_reasoning_is_not_added_again(self):
         record = {"finished": True}
         observe_chunk(record, {"usage": USAGE}, 1)
