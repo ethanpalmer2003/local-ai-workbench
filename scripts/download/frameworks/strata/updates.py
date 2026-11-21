@@ -40,6 +40,7 @@ def update_command(destination: Path) -> list[str]:
 
 
 def describe(part: str, data: dict[str, Any]) -> str:
+    """One part as `engine 0.1.59->0.1.63 available`, short enough for a plan's detail column."""
     installed, offered = data.get("installed"), data.get("offered")
     if isinstance(installed, dict):
         installed = installed.get("version")
@@ -47,8 +48,8 @@ def describe(part: str, data: dict[str, Any]) -> str:
         offered = offered.get("version")
     versions = str(installed or "not installed")
     if offered and offered != installed:
-        versions += f" -> {offered}"
-    return f"{part}: {versions}" if data["status"] == "current" else f"{part}: {versions} ({data['status']})"
+        versions += f"->{offered}"
+    return f"{part} {versions}" if data["status"] == "current" else f"{part} {versions} {data['status']}"
 
 
 def _environment() -> dict[str, str]:

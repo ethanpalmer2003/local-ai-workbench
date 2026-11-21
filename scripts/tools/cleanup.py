@@ -16,6 +16,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.review.lists.sources import tracked_files
+from scripts.shared.tables import render_table
 from scripts.tools import state_cleanup
 
 # - the two evidence roots, and the run-directory name shape they both use
@@ -193,8 +194,9 @@ def main(arguments: list[str] | None = None) -> int:
     selected = options.outputs or options.state or options.empty_trash is not None
     if not selected:
         print("nothing selected; pass --outputs, --state or --empty-trash DAYS")
-        for folder, size in trash_days()[:10]:
-            print(f"{size / 1_000_000_000:6.2f} GB  {folder}")
+        days = [(str(folder), f"{size / 1_000_000_000:.2f} GB") for folder, size in trash_days()[:10]]
+        if days:
+            print(render_table(days, ("trash day", "size")))
         return 0
     stamp = date.today().isoformat()
     status = 0
@@ -214,8 +216,9 @@ def main(arguments: list[str] | None = None) -> int:
 def _empty(older_than: int, dry_run: bool) -> int:
     """Report or delete the dated trash folders older than `older_than` days."""
     if dry_run:
-        for folder, size in trash_days():
-            print(f"[WOULD DELETE] {folder} ({size / 1_000_000_000:.2f} GB)")
+        days = [(str(folder), f"{size / 1_000_000_000:.2f} GB") for folder, size in trash_days()]
+        if days:
+            print(render_table(days, ("trash day", "size")))
         return 0
     print(f"deleted {empty_trash(older_than)} dated trash folder(s)")
     return 0

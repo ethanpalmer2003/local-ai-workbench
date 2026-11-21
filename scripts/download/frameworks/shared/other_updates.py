@@ -307,7 +307,7 @@ def process_strata(tool: ToolSpec, dest_dir: Path, check_only: bool, summary: sh
     parts = ("engine", "control", "app")
     # - a part the feed never publishes is current: nothing is offered, so nothing needs a person
     groups = {STRATA_STATUS_GROUPS.get(report[part]["status"], "manual_check") for part in parts}
-    detail = "; ".join(strata_updates.describe(part, report[part]) for part in parts)
+    detail = ", ".join(strata_updates.describe(part, report[part]) for part in parts)
     newer = "manual_check" in groups
     if newer:
         print("Status: UPDATE AVAILABLE IN THE STRATA APP; this updater never installs Strata parts")

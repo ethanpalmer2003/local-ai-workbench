@@ -22,6 +22,7 @@ from scripts.config import project_config as project_cfg
 from scripts.config.trash import archive_path
 from scripts.download.frameworks import github
 from scripts.download.frameworks import update_types as cfg
+from scripts.shared.tables import render_table
 
 MARKER_NAME = ".release_published_at"
 ASSET_MARKER_NAME = ".release_asset"
@@ -46,17 +47,6 @@ STATUS_LABELS = {
     "SKIPPED BY OPTION": "skipped",
 }
 TABLE_COLUMNS = ("tool", "source", "status", "detail")
-
-
-def render_table(rows: list[tuple[str, ...]], columns: tuple[str, ...] = TABLE_COLUMNS) -> str:
-    """One aligned table: every column as wide as its widest cell, so a plan scans by row."""
-    widths = [max(len(columns[index]), *(len(row[index]) for row in rows)) for index in range(len(columns))]
-
-    def line(values: tuple[str, ...]) -> str:
-        return "| " + " | ".join(value.ljust(widths[index]) for index, value in enumerate(values)) + " |"
-
-    separator = "| " + " | ".join("-" * width for width in widths) + " |"
-    return "\n".join([line(columns), separator, *(line(row) for row in rows)])
 
 
 class Asset(TypedDict):
@@ -208,7 +198,7 @@ class UpdateSummary:
             if not rows:
                 continue
             print(f"\n=== {heading} ===")
-            print(render_table(rows))
+            print(render_table(rows, TABLE_COLUMNS))
             counts: dict[str, int] = {}
             for row in rows:
                 counts[row[2]] = counts.get(row[2], 0) + 1

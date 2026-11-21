@@ -8,6 +8,7 @@ from scripts.config.models import ModelDownload as ModelDownload
 from scripts.download.models import DOWNLOAD_SECONDS, transfer
 from scripts.download.models.hub_sources import parse_url
 from scripts.shared import consent
+from scripts.shared.tables import render_table
 
 
 def download_model(model: ModelDownload, range_download: bool = False, resume_file: Path | None = None) -> None:
@@ -63,15 +64,25 @@ def _matches(model: ModelDownload, args: argparse.Namespace) -> bool:
     )
 
 
+def _installed_text(path: Path) -> str:
+    """An installed file's size in the unit that keeps it readable; a voice tensor is not 0 MiB."""
+    size = path.stat().st_size
+    return f"yes, {size / 2**20:.0f} MiB" if size >= 2**20 else f"yes, {size / 1024:.0f} KiB"
+
+
 def _print_models(models: list[ModelDownload]) -> None:
-    for model in models:
-        print(f"{'IN USE' if model.in_use else 'INACTIVE'}  {model.label}")
-        print(f"  Download: {model.url or 'NOT CONFIGURED'}")
-        if model.source_page:
-            print(f"  Model page: {model.source_page}")
-        print(f"  Target: {model.path}")
-        if model.notes:
-            print(f"  Note: {model.notes}")
+    """One table per listing: the state, the label, whether its file is installed, and its group."""
+    rows = [
+        (
+            "in use" if model.in_use else "inactive",
+            model.label,
+            _installed_text(model.path) if model.path.is_file() else "no",
+            model.group,
+        )
+        for model in models
+    ]
+    print(render_table(rows, ("state", "model", "installed", "group")))
+    print(f"{len(rows)} model(s); a single entry's URL, target and note: `model_admin where LABEL`")
 
 
 def _start_downloads(models: list[ModelDownload], args: argparse.Namespace) -> None:

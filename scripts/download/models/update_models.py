@@ -21,6 +21,7 @@ from scripts.config.models import MODELS, ModelDownload, catalog
 from scripts.download.models import DOWNLOAD_SECONDS, transfer, updates
 from scripts.download.models.hub_sources import parse_url
 from scripts.shared import consent
+from scripts.shared.tables import render_table
 from scripts.tools import model_admin
 
 
@@ -150,6 +151,9 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = _arguments(argv)
+    # - asked before the first network call: a question that arrives after a plan reads as a hung run
+    if not args.dry_run and not consent.ask("Model update", DOWNLOAD_SECONDS, args.yes):
+        return 1
     from huggingface_hub import HfApi
 
     api = HfApi(token=project_cfg.HF_TOKEN)
@@ -160,14 +164,11 @@ def main(argv: list[str] | None = None) -> int:
     if not actions:
         print("[OK] Nothing to update: no newer releases and no size drift.")
         return 0
-    print(f"{len(actions)} action(s):")
-    for action in actions:
-        print(f"  {action.kind:<8} {action.model.label}" + (f" -> {action.label}" if action.entry else ""))
+    rows = [(action.kind, action.model.label, action.label if action.entry else "") for action in actions]
+    print(render_table(rows, ("action", "model", "replaces")))
     if args.dry_run:
         print("\n[Dry run] Re-run without --dry-run to download, replace references and retire the old weights.")
         return 0
-    if not consent.ask(f"Model update ({len(actions)} action(s))", DOWNLOAD_SECONDS, args.yes):
-        return 1
     failed = 0
     with tqdm(total=len(actions), desc="models", ascii=True, unit="action") as bar:
         for action in actions:
