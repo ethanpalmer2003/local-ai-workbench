@@ -52,6 +52,9 @@ TTS_TEXTS = (
 # - "whisper" is the practice stack with its other installed recogniser, kept as a third arm so
 #   the recognition choice stays measured instead of being re-probed by hand
 BACKENDS = ("practice", "whisper", "lemonade")
+# - the Lemonade server is parked (`deferred.yaml`), so a run measures the practice stack and whisper.cpp
+#   unless Lemonade is named; `--backend all` stays the explicit way to include it
+DEFAULT_BACKENDS = ("practice", "whisper")
 LEGS = ("chat", "tts", "asr")
 # - Ports are taken from the OS per run: a stack left in TIME_WAIT must not fail the next run
 DEFAULT_WEIGHTS = model_cfg.path(cfg.LANGUAGE_PRACTICE.llm_model)
@@ -544,7 +547,7 @@ def _status(results: list[dict[str, Any]], options: Options) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--weights", type=Path, help="GGUF the chat leg serves (default: the practice model)")
-    parser.add_argument("--backend", choices=(*BACKENDS, "all"), default="all", help="stack to measure")
+    parser.add_argument("--backend", choices=(*BACKENDS, "all", "default"), default="default", help="stack to measure")
     parser.add_argument("--legs", nargs="+", choices=LEGS, default=list(LEGS), help="legs to measure")
     parser.add_argument("--tokens", type=int, default=64, help="maximum reply tokens per chat request")
     parser.add_argument("--requests", type=int, default=2, help="measured chat requests per backend")
@@ -561,7 +564,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"[INFO] legs: {', '.join(options.legs)}; corpus clips: {len(clips)}", flush=True)
     started = time.perf_counter()
     results = []
-    for backend in BACKENDS if args.backend == "all" else (args.backend,):
+    selected = BACKENDS if args.backend == "all" else DEFAULT_BACKENDS if args.backend == "default" else (args.backend,)
+    for backend in selected:
         print(f"[INFO] measuring {backend}", flush=True)
         results.append(measure(backend, weights, paths, options, clips))
     report = {

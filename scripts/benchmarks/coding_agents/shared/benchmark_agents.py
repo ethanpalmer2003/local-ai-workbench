@@ -31,9 +31,10 @@ from scripts.shared import consent
 from scripts.shared.service_identity import endpoint_identity
 from scripts.shared.timing import timed
 
-# - Pi is the only coding client this repository works with. The other three keep their wiring so a
-#   re-enable is one edit, but they never run by default and cannot be requested.
+# - Pi is the only coding client this repository benchmarks by default. The other three keep their
+#   wiring so a screen can name one with --clients, but a run without that flag measures Pi alone.
 CLIENTS = ("pi", "littlecoder", "ohmypi", "nanocoder")
+DEFAULT_CLIENTS = ("pi",)
 # - launcher profiles plus the benchmark-only ones, so a screen can name `swift15-nospec` directly
 PROFILES = {**cfg.LLAMACPP_PROFILES, **cfg.LLAMACPP_BENCHMARK_PROFILES}
 
@@ -360,7 +361,9 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Compare Strata and llama.cpp models across coding clients on identical tasks."
     )
-    parser.add_argument("--clients", nargs="+", choices=CLIENTS, default=list(CLIENTS), help="coding client to run")
+    parser.add_argument(
+        "--clients", nargs="+", choices=CLIENTS, default=list(DEFAULT_CLIENTS), help="coding client to run"
+    )
     parser.add_argument(
         "--pi-extensions",
         action="store_true",

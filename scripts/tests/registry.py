@@ -23,6 +23,7 @@ from scripts.tests.cases.audiocpp.test_tts_profiles import TtsProfiles
 from scripts.tests.cases.coding_agents.pi.test_pi_packages import PiPackageTests
 from scripts.tests.cases.coding_agents.shared.framework_clients import FrameworkClients
 from scripts.tests.cases.coding_agents.shared.test_benchmark_backends import BenchmarkBackendsTests
+from scripts.tests.cases.coding_agents.shared.test_benchmark_defaults import ParkedDefaultsTests
 from scripts.tests.cases.coding_agents.shared.test_benchmark_matrix import BenchmarkMatrixTests
 from scripts.tests.cases.coding_agents.shared.test_benchmark_requests import BenchmarkRequestsTests
 from scripts.tests.cases.koboldcpp.kobold_lite_streaming import StreamingPatch
@@ -257,6 +258,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     FrameworkClients,
     BenchmarkBackendsTests,
     BenchmarkMatrixTests,
+    ParkedDefaultsTests,
     BenchmarkRequestsTests,
     StrataPiTests,
     StrataProfileTests,

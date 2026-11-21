@@ -24,7 +24,6 @@
     "--kv",
     "int8",
     "--mmap-experts",
-    "--vision",
     "--vram-reserve-mib",
     "1280",
     "--adapt-every",
@@ -50,14 +49,6 @@
   "backend": "hip",
   "gpu": 0,
   "gpus_asked": true,
-  "vision": {
-    "exe": "",
-    "mmproj": "{AI_ROOT}/data/huggingface/models/strata/models/mmproj-Swift-Qwen3.8-Flash-Next-BF16.gguf",
-    "model": "{AI_ROOT}/data/huggingface/models/strata/models/swift-IQ2_XS/Swift-Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf",
-    "gpu": false,
-    "max_tokens": 300,
-    "threads": 6
-  },
   "args_written": [
     "--pack",
     "{AI_ROOT}/data/huggingface/models/strata/packs/swift-iq2_xs",
@@ -82,7 +73,6 @@
     "--kv",
     "int8",
     "--mmap-experts",
-    "--vision",
     "--vram-reserve-mib",
     "1280",
     "--adapt-every",

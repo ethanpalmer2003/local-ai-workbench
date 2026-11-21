@@ -15,6 +15,10 @@
 - Original desktop profile and prior preference: preserved in `C:/AI/trash/`.
 - Shared edits: apply when each backend next starts; an already-loaded model keeps its current settings.
 - Backend-only Pi launch: rejects nonempty inherited MCP servers.
+- Vision stays off in these profiles. The installed 0.1.60 control starts an image-encoder child from the
+  profile's `vision.exe`, which is empty here, and dies with `[WinError 5]` before serving; every profile here
+  is a coding one and sends no images, so the flag and block are gone. Add a `strata-vision` component and the
+  flag back when a vision run exists.
 
 ## App-managed data
 

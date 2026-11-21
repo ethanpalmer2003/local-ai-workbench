@@ -7,7 +7,7 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
-from scripts.benchmarks.coding_agents.shared.benchmark_agents import CLIENTS, client_command
+from scripts.benchmarks.coding_agents.shared.benchmark_agents import CLIENTS, DEFAULT_CLIENTS, client_command
 from scripts.benchmarks.coding_agents.shared.benchmark_backends import BenchmarkEndpoint
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
@@ -66,7 +66,7 @@ def capture_client(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--backend", choices=("llamacpp", "strata"), default="llamacpp")
-    parser.add_argument("--clients", nargs="+", choices=CLIENTS, default=list(CLIENTS))
+    parser.add_argument("--clients", nargs="+", choices=CLIENTS, default=list(DEFAULT_CLIENTS))
     args = parser.parse_args()
     output = BenchmarkPaths(__file__).new_run()
     bodies: list[dict[str, Any]] = []
