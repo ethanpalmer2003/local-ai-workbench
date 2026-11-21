@@ -34,9 +34,11 @@ RULES: tuple[Rule, ...] = (
                 "scripts/shared/consent.py",
                 "scripts/tests/validate.py",
                 "bat/manage/manage_kill_ai_services.bat",
+                "bat/update_frameworks.bat",
             }
         ),
-        "the unattended answer lives in consent.flag/take/forward; validate forwards it to staged runs",
+        "the unattended answer lives in consent.flag/take/forward; validate forwards it to staged runs and a "
+        "double-clicked batch is the request it carries",
     ),
 )
 

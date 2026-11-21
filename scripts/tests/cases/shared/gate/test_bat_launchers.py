@@ -53,6 +53,10 @@ class BatLaunchers(unittest.TestCase):
             for module in modules:
                 self.assertIsNotNone(importlib.util.find_spec(module), f"{relative}: missing module {module}")
 
+    def test_the_framework_update_batch_confirms_the_run_a_person_started(self):
+        text = (project_cfg.BAT_DIR / "update_frameworks.bat").read_text(encoding="utf-8")
+        self.assertIn("--yes", text, "a double-clicked update must not wait on the consent prompt")
+
     def test_argparse_entry_points_accept_help(self):
         for path in sorted(project_cfg.BAT_DIR.rglob("*.bat")):
             relative = path.relative_to(project_cfg.BASE_DIR).as_posix()

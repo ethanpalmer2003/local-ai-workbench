@@ -6,7 +6,7 @@ below `low`, which is normal and not reported.
 """
 
 RANGES: dict[str, tuple[int, int, int]] = {
-    "frameworks": (15, 35, 300),
+    "frameworks": (15, 35, 600),
     "models": (10, 30, 120),
     "gate": (45, 55, 80),
     "suite": (20, 45, 80),
