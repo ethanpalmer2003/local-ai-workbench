@@ -34,6 +34,18 @@ class ConsentTests(unittest.TestCase):
             ):
                 self.assertEqual(consent.ask("Full validation", 600), expected, answer)
 
+    def test_the_prompt_says_it_is_waiting_and_confirms_the_answer(self):
+        printed = io.StringIO()
+        with (
+            patch("scripts.shared.consent.sys.stdin", Mock(isatty=lambda: True, readline=lambda: "yes\n")),
+            contextlib.redirect_stdout(printed),
+        ):
+            self.assertTrue(consent.ask("Framework update", 600))
+        text = printed.getvalue()
+        self.assertIn("Type yes to continue:", text)
+        self.assertIn("[WAIT] nothing runs until you type yes", text)
+        self.assertIn("[OK] confirmed", text)
+
     def test_the_boundary_is_five_minutes(self):
         self.assertFalse(consent.is_long(consent.LONG_RUN_SECONDS - 1))
         self.assertTrue(consent.is_long(consent.LONG_RUN_SECONDS))
