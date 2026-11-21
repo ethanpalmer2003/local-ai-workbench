@@ -207,7 +207,7 @@ class FrameworkUpdates(unittest.TestCase):
             self.assertEqual(entry.main(), 0)
         text = output.getvalue()
         self.assertEqual(run.call_count, 1)
-        self.assertEqual(text.count("UPSTREAM CHANGED; MANUAL MERGE/REBUILD REQUIRED"), 1)
+        self.assertEqual(text.count("| manual merge/rebuild |"), 1)
         # - Inactive entries are ignored outright: not checked, not listed.
         self.assertNotIn("NOT CURRENTLY IN USE", text)
         self.assertNotIn("unused-a", text)
@@ -305,8 +305,9 @@ class FrameworkUpdates(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()) as output:
             summary.print()
         text = output.getvalue()
-        self.assertIn("- strata: engine: 0.1.57; app: 0.2.11", text)
-        self.assertIn("- coding_agents/pi", text)
+        self.assertIn("| strata ", text)
+        self.assertIn("engine: 0.1.57; app: 0.2.11", text)
+        self.assertIn("| coding_agents/pi ", text)
         self.assertNotIn("(current)", text)
 
     def test_every_release_type_maps_to_one_reported_update_kind(self):
@@ -328,13 +329,15 @@ class FrameworkUpdates(unittest.TestCase):
         text = output.getvalue()
         other = text.split("=== OTHER ===", 1)[1]
         speech = text.split("=== TTS / ASR ===", 1)[1].split("=== OTHER ===", 1)[0]
-        self.assertLess(other.index("--- git fast-forward ---"), other.index("--- npm package ---"))
-        self.assertLess(other.index("[UP TO DATE]"), other.index("[UPDATE AVAILABLE]"))
-        self.assertIn("- benchmarks/demo", other.split("--- npm package ---")[0])
-        self.assertIn("- coding_agents/demo", other.split("--- npm package ---")[1])
+        self.assertLess(other.index("benchmarks/demo"), other.index("coding_agents/demo"))
+        self.assertLess(other.index("up to date"), other.index("update available"))
+        self.assertIn("| benchmarks/demo", other)
+        self.assertIn("| coding_agents/demo", other)
+        self.assertIn("git fast-forward", other)
+        self.assertIn("npm package", other)
         self.assertNotIn("npm package", speech)
-        self.assertIn("--- github release ---", speech)
-        self.assertIn("- tts/demo", speech)
+        self.assertIn("github release", speech)
+        self.assertIn("| tts/demo", speech)
 
     def test_a_component_split_across_update_kinds_is_expanded_not_repeated(self):
         summary = updater.UpdateSummary()
@@ -347,9 +350,8 @@ class FrameworkUpdates(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()) as output:
             summary.print()
         text = output.getvalue()
-        self.assertIn("- coding_agents/demo\n", text)
-        self.assertIn("- coding_agents/demo-desktop", text)
-        self.assertNotIn("- coding_agents/demo:", text)
+        self.assertIn("| coding_agents/demo ", text)
+        self.assertIn("| coding_agents/demo-desktop", text)
 
     def test_a_failure_names_its_own_entry_instead_of_the_collapsed_group(self):
         summary = updater.UpdateSummary()
@@ -360,9 +362,9 @@ class FrameworkUpdates(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()) as output:
             summary.print()
         text = output.getvalue()
-        self.assertIn("- benchmarks/club-rdna16", text)
-        self.assertIn("- benchmarks/speed-bench", text)
-        self.assertNotIn("- benchmarks\n", text)
+        self.assertIn("| benchmarks/club-rdna16", text)
+        self.assertIn("| benchmarks/speed-bench", text)
+        self.assertIn("check failed", text)
 
     def test_custom_node_behind_its_origin_is_detected(self):
         with CasePaths(__file__).temporary_directory() as folder:
@@ -448,9 +450,9 @@ class FrameworkUpdates(unittest.TestCase):
                 self.assertEqual(entry.main(), 1)
             text = output.getvalue()
             self.assertNotIn("Status: SOURCE UP TO DATE", text)
-            self.assertEqual(text.count("[UP TO DATE]"), 1)
-            self.assertEqual(text.count("[UPDATE AVAILABLE]"), 1)
-            self.assertLess(text.index("[CHECK FAILED]"), text.index("=== APPLYING UPDATES ==="))
+            self.assertIn("1 up to date", text)
+            self.assertIn("1 update available", text)
+            self.assertLess(text.index("check failed"), text.index("=== APPLYING UPDATES ==="))
             self.assertNotIn("NOT CURRENTLY IN USE", text)
             self.assertNotIn(("unused", True), events)
             self.assertEqual(events[-1], ("new", False))
