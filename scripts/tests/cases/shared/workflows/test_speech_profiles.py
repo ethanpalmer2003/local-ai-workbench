@@ -86,6 +86,14 @@ class SpeechProfiles(unittest.TestCase):
         self.assertNotIn("voice", body)
         self.assertTrue(body["stream"])
 
+    def test_the_chat_default_is_a_model_the_tracked_catalog_can_resolve(self):
+        from scripts.config.models import catalog
+
+        tracked = {model.label for model in catalog.load_catalog(overlay=False)}
+        self.assertEqual(cfg.KOBOLDCPP_CHAT_LABELS[0], cfg.DEFAULT_CHAT_MODEL)
+        self.assertIn(cfg.DEFAULT_CHAT_MODEL, tracked)
+        self.assertIn(cfg.KOBOLD_CHAT.llm_model, cfg.KOBOLDCPP_MODELS)
+
     def test_selection_separates_tested_models_from_selectable_untested_ones(self):
         rows = practice_models.tts_models()
         tested = {row["id"] for row in rows if row["coverage"] == "tested"}

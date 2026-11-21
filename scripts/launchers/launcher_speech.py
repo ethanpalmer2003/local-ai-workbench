@@ -153,8 +153,13 @@ KOKORO_MODEL = "audiocpp/kokoro-audiocpp-multilingual-q8_0"
 PRACTICE_LANGUAGES = ("en", "es", "fr", "ja", "de")
 
 
-# - KOBOLD_CHAT: Rocinante chat, Breeze voice-design TTS through the AudioCpp proxy, no external ASR.
-#   Design needs no reference clip, so the default voice comes from the tone instruction.
+# - The tracked chat model: the profile falls back to it and it heads the KoboldCpp allowlist, so a
+#   clone with no overlay resolves a model it can download.
+DEFAULT_CHAT_MODEL = "llamacpp/gemma-4-E4B-it-Q4_0"
+
+# - KOBOLD_CHAT: Gemma E4B chat on the tracked catalog; the overlay's `chat.llm` names the heavier
+#   personal weights. Breeze voice-design TTS goes through the AudioCpp proxy, and there is no
+#   external ASR. Design needs no reference clip, so the default voice comes from the tone instruction.
 # - A voice id from the overlay's defaults.yaml enables cloning; without one, Breeze uses its own default.
 # - `chat.image` in that file attaches image generation to this stack without editing code.
 IMAGE_MODES = ("off", "with", "on-demand")
@@ -164,7 +169,7 @@ KOBOLD_CHAT = SpeechWorkflowDefaults(
     profile="character",
     framework="koboldcpp",
     asr_engine=None,
-    llm_model=local_overlay.setting("chat.llm", "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS"),
+    llm_model=local_overlay.setting("chat.llm", DEFAULT_CHAT_MODEL),
     tts_model=local_overlay.setting("chat.tts.model", "audiocpp/breeze-tts-2-q4_0"),
     tts_voice=_CHAT_TTS_VOICE,
     image=_CHAT_IMAGE if _CHAT_IMAGE in IMAGE_MODES else "off",
@@ -393,7 +398,7 @@ KOBOLDCPP_PORT: int = cast(int, KOBOLDCPP_KCPPS_ARGS["port"])
 # - KoboldCpp chat allowlist, in the canonical registry-label namespace; paths come from the registry.
 #   Configured weights can come from the overlay, so a clone without it keeps the tracked model.
 KOBOLDCPP_CHAT_LABELS = (
-    "llamacpp/gemma-4-E4B-it-Q4_0",
+    DEFAULT_CHAT_MODEL,
     "koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS",
     "koboldcpp/TheDrummer_Snowpiercer-15B-v4-IQ4_XS",
     "koboldcpp/TheDrummer_Cydonia-24B-v4.3-IQ3_XXS",
