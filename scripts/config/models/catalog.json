@@ -691,6 +691,18 @@
       "sha256": "3bc2462eca3a3a8f56abcd860d0943ffdc0546547dde55a9d08589607d6f3936",
       "roles": [],
       "source_page": null
+    },
+    {
+      "category": "embeddings",
+      "group": "embeddings",
+      "label": "embeddings/Qwen3-Embedding-0.6B-Q8_0",
+      "filename": "Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "url": "https://huggingface.co/Qwen/Qwen3-Embedding-0.6B-GGUF/resolve/main/Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "in_use": false,
+      "notes": "Retained comparison weight cited by notes/reviews/EMBEDDINGS-2026-11-10.md; no launcher serves it, so it stays inactive.",
+      "sha256": null,
+      "roles": [],
+      "source_page": null
     }
   ]
 }
