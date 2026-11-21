@@ -20,10 +20,10 @@ Selection: `LLAMACPP_DEFAULT_BUILD` is the rolling `vulkan` build: b12590 return
 fallback.
 
 The RDNA-boosts builds are parked: both lost to the plain Vulkan default on the 27B pair (2026-11-20).
-The ROCm build took 32.6 s and 100.2 s against 21.2 s and 51.0 s; the same patches built for Vulkan were
-mixed, 30.4 s against 21.7 s on `whitespace` and 50.7 s against 60.1 s on `ledger`. They stay installed as
-`rocm-rdna` and `rdna-vulkan` in `LLAMACPP_DEFERRED_BUILDS`, so nothing selects them;
-`update_frameworks --build rdna` rebuilds, needing the SDK bin on PATH for `mt.exe`.
+ROCm took 32.6 s and 100.2 s against 21.2 s and 51.0 s; the same patches on Vulkan were mixed, 30.4 s
+against 21.7 s and 50.7 s against 60.1 s. Checkout and builds are archived to trash (2.1 GiB);
+`update_frameworks --build rdna` recreates them at the base the installed release names, and both sit in
+`LLAMACPP_DEFERRED_BUILDS`, so nothing selects them.
 
 Both faults here needed a batched request, so a one-prompt screen says nothing about them. The nearest upstream
 report is
