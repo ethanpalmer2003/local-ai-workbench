@@ -227,11 +227,13 @@ def _run_stage(stage: Stage, log_path: Path, bar: tqdm[Any], prefix: float, stre
         bar.write(f"[FAIL] {stage.key}: {note}; tail of {log_path.name}")
         for row in _tail(log_path):
             bar.write(f"  | {row}")
+        bar.write(f"[LOG] full output: {log_path}")
         return Result(stage.key, status, seconds, note, log_path)
     if status == "failed":
         bar.write(f"[FAIL] {stage.key}: exit {code}; tail of {log_path.name}")
         for row in _tail(log_path):
             bar.write(f"  | {row}")
+        bar.write(f"[LOG] full output: {log_path}")
     return Result(stage.key, status, seconds, live.note, log_path)
 
 
