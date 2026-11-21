@@ -44,4 +44,8 @@ def speech_body(body: bytes) -> bytes:
         payload.pop("voice", None)
         if isinstance(options, dict):
             options["voice_id"] = cfg.SUPERTONIC_TTS.voice
+    elif family() == "kokoro_tts":
+        payload.setdefault("voice", cfg.KOKORO_TTS.voice)
+        if isinstance(options, dict):
+            options.setdefault("language", cfg.KOKORO_TTS.language)
     return json.dumps(payload).encode("utf-8")

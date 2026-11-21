@@ -55,6 +55,7 @@ def tts_models() -> list[dict[str, Any]]:
         "ming3_tts": "Ming 3.0 TTS 0.5B",
         "fish_drama3": "Drama 3: heavy/offloaded",
         "supertonic": "Supertonic 3: 31 languages, preset voices",
+        "kokoro_tts": "Kokoro: multilingual bundle",
     }
     for spec in native_specs:
         model = _catalog_model(spec)
@@ -71,6 +72,8 @@ def tts_models() -> list[dict[str, Any]]:
     for row in rows:
         row["available"] = models.path(row["id"]).is_file()
         row["reason"] = "" if row["available"] else "Model file is not installed"
+        # - a selection screen separates the two: one group has a live arm, the other is reachable only by hand
+        row["coverage"] = "tested" if row["id"] in cfg.LIVE_TESTED_TTS_MODELS else "untested"
         spec = next((item for item in native_specs if item["id"] == row.get("native_id")), None)
         language_entry = next((entry for entry in language_catalog if row["id"] in entry["model_ids"]), None)
         row["default_language"] = (
@@ -130,6 +133,16 @@ def speech_body(payload: dict[str, object]) -> dict[str, object]:
         payload.setdefault("stream_format", "audio")
     else:
         payload.pop("stream_format", None)
+    if spec["family"] == "kokoro_tts":
+        from scripts.launchers.shared.media.text_processing import clean_speech_payload
+
+        clean_speech_payload(payload, language=cfg.KOKORO_TTS.language)
+        payload.setdefault("voice", cfg.KOKORO_TTS.voice)
+        options = payload.setdefault("options", {})
+        if not isinstance(options, dict):
+            raise ValueError("Speech options must be an object")
+        options.setdefault("language", cfg.KOKORO_TTS.language)
+        return payload
     from scripts.launchers.audiocpp import audiocpp_catalog
     from scripts.launchers.audiocpp.audiocpp_proxy import _transform
 

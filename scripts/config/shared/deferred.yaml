@@ -47,10 +47,10 @@
   kind: model
   revisit: a Qwen4 build of either model exists
   source: notes/TODO.md
-- thing: Kokoro TTS, its live probe and both Kobold speech-engine options
+- thing: Kokoro live coverage; the multilingual package stays selectable and untested
   kind: model
-  revisit: Kokoro is selected again, which needs its packages repointed and the engine option restored
-  source: scripts/launchers/audiocpp/tts_server.py
+  revisit: a probe or benchmark arm speaks with it again
+  source: scripts/launchers/launcher_speech.py
 - thing: RDNA-boosts llama.cpp builds (ROCm and Vulkan)
   kind: build
   revisit: a patch set rebased on the current llama.cpp wins a paired screen

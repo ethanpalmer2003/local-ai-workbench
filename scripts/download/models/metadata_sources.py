@@ -70,7 +70,7 @@ def hub_metadata(source: HubFile) -> dict[str, Any]:
 
 
 def native_metadata(path: Path, groups: list[str]) -> NativeMetadata:
-    if "silero" in path.name.lower() or path.name == "Kokoro_no_espeak_Q4.gguf":
+    if "silero" in path.name.lower():
         return {
             "status": "not_available",
             "reason": "No verified inspector for this auxiliary or Kobold-specific format",
