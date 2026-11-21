@@ -160,17 +160,24 @@ def remove_readonly(function, path: str, _error) -> None:
     function(path)
 
 
-def empty_trash(older_than: int) -> int:
-    """Delete dated trash folders older than `older_than` days; this is the only deletion in the tool."""
-    removed = 0
+def expired_days(older_than: int) -> list[tuple[Path, int]]:
+    """Dated folders old enough to delete; `empty_trash` and its dry run share the one age rule."""
     today = date.today()
-    for folder, _ in trash_days():
+    expired: list[tuple[Path, int]] = []
+    for folder, size in trash_days():
         try:
             day = datetime.strptime(folder.name[:10], "%Y-%m-%d").date()
         except ValueError:
             continue
-        if (today - day).days < older_than:
-            continue
+        if (today - day).days >= older_than:
+            expired.append((folder, size))
+    return expired
+
+
+def empty_trash(older_than: int) -> int:
+    """Delete dated trash folders older than `older_than` days; this is the only deletion in the tool."""
+    removed = 0
+    for folder, _ in expired_days(older_than):
         shutil.rmtree(folder, onexc=remove_readonly)
         removed += 1
     return removed
@@ -216,9 +223,11 @@ def main(arguments: list[str] | None = None) -> int:
 def _empty(older_than: int, dry_run: bool) -> int:
     """Report or delete the dated trash folders older than `older_than` days."""
     if dry_run:
-        days = [(str(folder), f"{size / 1_000_000_000:.2f} GB") for folder, size in trash_days()]
+        days = [(str(folder), f"{size / 1_000_000_000:.2f} GB") for folder, size in expired_days(older_than)]
         if days:
             print(render_table(days, ("trash day", "size")))
+        else:
+            print(f"no dated trash folder is {older_than} day(s) old or more")
         return 0
     print(f"deleted {empty_trash(older_than)} dated trash folder(s)")
     return 0

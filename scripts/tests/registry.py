@@ -110,6 +110,7 @@ from scripts.tests.cases.shared.gate.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
 from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
 from scripts.tests.cases.shared.models.test_model_languages import ModelLanguages
+from scripts.tests.cases.shared.models.test_model_provenance import ModelProvenanceTests
 from scripts.tests.cases.shared.models.test_model_sync import ModelSyncTests
 from scripts.tests.cases.shared.models.test_model_updates import (
     CatalogOverlayTests,
@@ -223,6 +224,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     DeliveryTests,
     StreamingAdapters,
     ModelLanguages,
+    ModelProvenanceTests,
     ModelAnalysisTests,
     TextProcessingTests,
     BatLaunchers,

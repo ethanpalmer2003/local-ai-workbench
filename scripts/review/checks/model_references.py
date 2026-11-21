@@ -76,10 +76,24 @@ def _proxy_issues(runtime_models: list[Any]) -> list[str]:
     ]
 
 
+def provenance_issues(models_in_catalog: dict[str, Any]) -> list[str]:
+    """An installed weight must be re-fetchable or byte-pinned: a source link, or a hash of the bytes.
+
+    A private overlay entry may have no public link, but leaving both blank means a lost file cannot be
+    recognized or fetched again, so that gap fails the check instead of waiting to be noticed.
+    """
+    return [
+        f"Installed model has neither a source link nor a sha256: {label}"
+        for label, model in models_in_catalog.items()
+        if model.path.is_file() and not model.url and not model.sha256
+    ]
+
+
 def inspect() -> list[str]:
     catalog = {model.label: model for model in models.MODELS}
     paths = {normalized(model.path): model.label for model in models.MODELS}
     issues = _catalog_issues(catalog)
+    issues.extend(provenance_issues(catalog))
     try:
         runtime = audiocpp_server.read()
     except (OSError, json.JSONDecodeError) as error:

@@ -553,8 +553,8 @@
       "filename": "nova3DCGXL_ilV90.safetensors",
       "url": null,
       "in_use": false,
-      "notes": "Exact original source not recorded.",
-      "sha256": null,
+      "notes": "Exact original source not recorded; the sha256 pins these bytes, so a copy can be verified.",
+      "sha256": "7e6a80d04a39fb5ad3f397307ca20fe4c2a78d7fb85daf33f53d13fb3f138f4c",
       "roles": [],
       "source_page": null
     },
@@ -565,8 +565,8 @@
       "filename": "nova3DCGXL_ilV90_q4_K.gguf",
       "url": null,
       "in_use": false,
-      "notes": "Exact original source not recorded.",
-      "sha256": null,
+      "notes": "Exact original source not recorded; the sha256 pins these bytes, so a copy can be verified.",
+      "sha256": "b74e873988f7443faa921e2d95ba6695f3c7bafc591b9c28fc5beedbae7b2937",
       "roles": [],
       "source_page": null
     },
