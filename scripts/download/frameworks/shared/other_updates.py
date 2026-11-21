@@ -77,9 +77,8 @@ TOOLS = [
     *benchmark_tools(),
     *pi_tools(),
     # - These four harnesses were retired after the coding benchmark compared them with Pi, which is
-    #   the only client this host launches; their launchers live in scripts/config/coding_agents/parked.
-    #   Any of them, or a new harness, is re-benchmarked by restoring its arm in that benchmark and
-    #   setting `in_use=True` here again.
+    #   the only client this host launches. Their launchers stay live so any of them starts by hand;
+    #   only the update rows and benchmark arms are parked, and `in_use=True` restores the updates.
     ToolSpec("coding_agents/littlecoder", "", ReleaseType.NPM, package="little-coder", in_use=False),
     ToolSpec("coding_agents/nanocoder", "", ReleaseType.NPM, package="@nanocollective/nanocoder", in_use=False),
     ToolSpec(

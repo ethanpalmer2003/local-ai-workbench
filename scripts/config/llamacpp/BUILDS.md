@@ -21,9 +21,9 @@ fallback.
 
 The RDNA-boosts builds are parked: both lost to the plain Vulkan default on the 27B pair (2026-11-20).
 ROCm took 32.6 s and 100.2 s against 21.2 s and 51.0 s; the same patches on Vulkan were mixed, 30.4 s
-against 21.7 s and 50.7 s against 60.1 s. Checkout and builds are archived to trash (2.1 GiB);
-`update_frameworks --build rdna` recreates them at the base the installed release names, and both sit in
-`LLAMACPP_DEFERRED_BUILDS`, so nothing selects them.
+against 21.7 s and 50.7 s against 60.1 s. Their checkouts and builds sit in trash (2.1 GiB);
+`update_frameworks --build rdna` recreates them, and the ids stay selectable, refusing with a repair hint
+until that directory exists.
 
 Both faults here needed a batched request, so a one-prompt screen says nothing about them. The nearest upstream
 report is

@@ -37,9 +37,10 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
   Long-term options: record the condition each entry is parked against (OS, GPU vendor or class,
   memory) and resolve it in a check at run time; probe the machine when a launcher starts
   (`nvidia-smi`/`rocm-smi`, free VRAM) so the set follows the hardware it runs on; or keep the static
-  registry and document the host it describes, which is what happens today. The first two make
-  `revisit` machine-checkable, but no work starts until a second host exists to test the rule
-  against.
+  registry and document the host it describes, which is what happens today. The registry's `cause`
+  already names which of those parks a thing; what is missing is that nothing evaluates it against the
+  host. The first two make `revisit` machine-checkable, but no work starts until a second host exists
+  to test the rule against.
 - A decision that would change work is added here with its options.
 
 ## Superseded

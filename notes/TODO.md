@@ -4,11 +4,6 @@
 - Entries do not authorize live tests, package changes or long runs. Upstream defects stay in [UPSTREAM](UPSTREAM-INDEX.md), evidence in [STATUS](../scripts/tests/notes/STATUS-INDEX.md).
 - Each entry ends with a rough duration, shortest first.
 
-## Repository work
-Code and configuration a settled decision leaves behind.
-
-- [ ] Finish parking the coding harnesses other than Pi: their launcher entry points are in [parked](../scripts/config/coding_agents/parked/README.md) and their updater rows are `in_use=False`, so the full validation no longer fetches them; the client settings in `launcher_base.py`, `coding_clients.py` and the benchmark's arms still name them, so decide whether the benchmark keeps comparing clients or drops to Pi and then move the rest. ~1 h
-
 ## Needs a model run or device
 Work that cannot be settled without a live run: weights, a device, a server or a human at the machine.
 

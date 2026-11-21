@@ -170,11 +170,14 @@ def add_config_args(parser: argparse.ArgumentParser) -> None:
 
 def config_from_args(args: argparse.Namespace, port: int | None = None) -> LlamaConfig:
     """The server configuration an add_config_args CLI describes"""
-    # - deferred work stays wired but is never launched: HRX needs a rebuild this machine does not have
-    if args.llama_cpp_build in cfg.LLAMACPP_DEFERRED_BUILDS:
-        raise SystemExit(f"{args.llama_cpp_build} is a deferred build; see notes/UPSTREAM-INDEX.md")
-    if args.ini_profile in cfg.LLAMACPP_DEFERRED_PROFILES:
-        raise SystemExit(f"{args.ini_profile} is a deferred profile; see notes/UPSTREAM-INDEX.md")
+    # - a named build that is not on disk is the only selection this refuses; everything else fails where
+    #   llama-server rejects it, so a parked build stays selectable until its directory is gone
+    named = cfg.LLAMACPP_BUILDS.get(args.llama_cpp_build) if args.llama_cpp_build else None
+    if named is not None and not Path(named.bin_dir).is_dir():
+        raise SystemExit(
+            f"{args.llama_cpp_build} is not installed: {named.bin_dir} does not exist; "
+            "see scripts/config/llamacpp/BUILDS.md"
+        )
     return LlamaConfig(
         profile_name=args.ini_profile,
         build_name=args.llama_cpp_build,

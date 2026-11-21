@@ -33,14 +33,9 @@ from scripts.shared.timing import timed
 
 # - Pi is the only coding client this repository works with. The other three keep their wiring so a
 #   re-enable is one edit, but they never run by default and cannot be requested.
-CLIENTS = ("pi",)
-DISABLED_CLIENTS = ("littlecoder", "ohmypi", "nanocoder")
+CLIENTS = ("pi", "littlecoder", "ohmypi", "nanocoder")
 # - launcher profiles plus the benchmark-only ones, so a screen can name `swift15-nospec` directly
-PROFILES = {
-    name: profile
-    for name, profile in {**cfg.LLAMACPP_PROFILES, **cfg.LLAMACPP_BENCHMARK_PROFILES}.items()
-    if name not in cfg.LLAMACPP_DEFERRED_PROFILES
-}
+PROFILES = {**cfg.LLAMACPP_PROFILES, **cfg.LLAMACPP_BENCHMARK_PROFILES}
 
 
 def client_command(
@@ -362,13 +357,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Compare Strata and llama.cpp models across coding clients on identical tasks."
     )
-    parser.add_argument(
-        "--clients",
-        nargs="+",
-        choices=CLIENTS,
-        default=list(CLIENTS),
-        help=f"coding client; {', '.join(DISABLED_CLIENTS)} are disabled and stay unselectable",
-    )
+    parser.add_argument("--clients", nargs="+", choices=CLIENTS, default=list(CLIENTS), help="coding client to run")
     parser.add_argument(
         "--pi-extensions",
         action="store_true",
@@ -379,7 +368,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--strata-config", type=Path, help="Prepared Strata model configuration; default: discover Swift"
     )
     parser.add_argument("--profile", choices=sorted(PROFILES), default="swift15")
-    parser.add_argument("--build", choices=sorted(set(cfg.LLAMACPP_BUILDS) - cfg.LLAMACPP_DEFERRED_BUILDS))
+    parser.add_argument("--build", choices=sorted(cfg.LLAMACPP_BUILDS))
     parser.add_argument("--context-size", type=int, default=32768)
     parser.add_argument("--max-output-tokens", type=int, default=16384)
     parser.add_argument("--temperature", type=float, default=0)

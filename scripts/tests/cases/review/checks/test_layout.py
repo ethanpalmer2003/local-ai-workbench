@@ -99,29 +99,6 @@ class PolicyTests(unittest.TestCase):
         for relative in sorted(layout.BATCH_RUNS_ALONE):
             self.assertEqual(layout._batch_runner_issue(relative, '".venv\\Scripts\\python.exe" -m x\n'), [])
 
-    def test_a_parked_file_missing_from_its_readme_is_reported(self):
-        parked = project_cfg.CONFIG_DIR / "coding_agents" / "parked" / "orphan.py"
-        with patch.object(layout, "tracked_files", return_value=[parked]):
-            self.assertEqual(layout.parked_issues(), ["Parked file is missing from its README: orphan.py"])
-
-    def test_maintained_code_may_not_import_the_parked_tree(self):
-        target = project_cfg.SCRIPTS_DIR / "tests" / "output" / "parked-importer.py"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(f"from {layout.PARKED_MODULE} import llamacpp_dsh\n", encoding="utf-8")
-        try:
-            with patch.object(layout, "tracked_files", return_value=[target]):
-                issues = layout.parked_issues()
-        finally:
-            target.unlink()
-        self.assertEqual(len(issues), 1)
-        self.assertIn("imports a parked module", issues[0])
-
-    def test_the_parked_tree_names_its_files_and_nothing_imports_it(self):
-        parked = sorted((project_cfg.CONFIG_DIR / "coding_agents" / "parked").glob("*.py"))
-        self.assertTrue(parked)
-        with patch.object(layout, "tracked_files", return_value=parked):
-            self.assertEqual(layout.parked_issues(), [])
-
     def test_a_root_folder_holding_no_tracked_file_is_a_leftover(self):
         from scripts.tests.shared.paths import CasePaths
 

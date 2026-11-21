@@ -262,11 +262,7 @@ def main() -> None:
     else:
         selected = tuple(c for c in CANDIDATES if not args.candidates or c.name in args.candidates)
     require_free_session()
-    profiles = {
-        name: profile
-        for name, profile in {**cfg.LLAMACPP_PROFILES, **cfg.LLAMACPP_BENCHMARK_PROFILES}.items()
-        if name not in cfg.LLAMACPP_DEFERRED_PROFILES
-    }
+    profiles = {**cfg.LLAMACPP_PROFILES, **cfg.LLAMACPP_BENCHMARK_PROFILES}
     conf = LlamaConfig(profile_name=args.profile, profiles=profiles)
     output = BenchmarkPaths(__file__).new_run()
     report: dict[str, Any] = {

@@ -177,10 +177,7 @@ def stream_request(
 def parse_settings() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--builds",
-        nargs="+",
-        choices=tuple(sorted(set(cfg.LLAMACPP_BUILDS) - cfg.LLAMACPP_DEFERRED_BUILDS)),
-        default=["vulkan", "rocm-lemonade"],
+        "--builds", nargs="+", choices=tuple(sorted(cfg.LLAMACPP_BUILDS)), default=["vulkan", "rocm-lemonade"]
     )
     parser.add_argument("--profile", default="swift15")
     parser.add_argument("--capacity", type=int, default=8192)

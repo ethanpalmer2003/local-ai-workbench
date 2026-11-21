@@ -560,7 +560,7 @@ def main() -> None:
     parser.add_argument(
         "--builds",
         nargs="+",
-        choices=sorted(set(cfg.LLAMACPP_BUILDS) - cfg.LLAMACPP_DEFERRED_BUILDS),
+        choices=sorted(cfg.LLAMACPP_BUILDS),
         default=None,
         help="llama.cpp build(s) to benchmark (default: the active build). "
         "Runs the cross product with --profiles, so one run can A/B builds.",

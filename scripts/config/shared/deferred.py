@@ -1,4 +1,4 @@
-"""What kind of thing is parked, whether it still runs, and the records that name each parked thing."""
+"""What kind of thing is parked, why it is parked on this machine, and what would unpark it."""
 
 from dataclasses import dataclass
 from enum import Enum
@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 
 RECORDS_PATH = Path(__file__).with_name("deferred.yaml")
-FIELDS = ("thing", "kind", "state", "revisit", "source")
+FIELDS = ("thing", "kind", "cause", "reason", "revisit", "source")
 
 
 class DeferredKind(str, Enum):
@@ -21,24 +21,26 @@ class DeferredKind(str, Enum):
     WORK = "work"
 
 
-class DeferredState(str, Enum):
-    """Whether a parked thing still runs: as kept, after a restore step, or never on this host."""
+class DeferredCause(str, Enum):
+    """Why this host parks it: its numbers, its OS, its GPU vendor, a measured loss, or nothing planned."""
 
-    RETAINED = "retained"
-    RESTORABLE = "restorable"
-    UNAVAILABLE = "unavailable"
+    CAPACITY = "capacity"
+    OS = "os"
+    VENDOR = "vendor"
+    PERFORMANCE = "performance"
+    UNPLANNED = "unplanned"
 
 
 @dataclass(frozen=True)
 class ParkedWork:
-    """One thing that cannot start yet, whether it still runs, and what would change that."""
+    """One thing that cannot start yet, why this host parks it, and what would change that."""
 
     thing: str
     kind: DeferredKind
-    state: DeferredState
+    cause: DeferredCause
+    reason: str
     revisit: str
     source: str
-    reason: str | None = None
     subject: str | None = None
 
 
@@ -51,28 +53,22 @@ def _entry(raw: object, index: int) -> ParkedWork:
     kind = str(raw["kind"])
     if kind not in {item.value for item in DeferredKind}:
         raise ValueError(f"Parked work {index} has an undeclared kind: {kind}")
-    state = str(raw["state"])
-    if state not in {item.value for item in DeferredState}:
-        raise ValueError(f"Parked work {index} has an undeclared state: {state}")
-    reason = str(raw["reason"]) if raw.get("reason") else None
-    subject = str(raw["subject"]) if raw.get("subject") else None
-    if subject is not None and reason is None:
-        raise ValueError(f"Parked work {index} names a capability row and needs its reason")
-    if state != DeferredState.RETAINED.value and reason is None:
-        raise ValueError(f"Parked work {index} is {state} and needs the reason it is parked")
+    cause = str(raw["cause"])
+    if cause not in {item.value for item in DeferredCause}:
+        raise ValueError(f"Parked work {index} has an undeclared cause: {cause}")
     return ParkedWork(
         thing=str(raw["thing"]),
         kind=DeferredKind(kind),
-        state=DeferredState(state),
+        cause=DeferredCause(cause),
+        reason=str(raw["reason"]),
         revisit=str(raw["revisit"]),
         source=str(raw["source"]),
-        reason=reason,
-        subject=subject,
+        subject=str(raw["subject"]) if raw.get("subject") else None,
     )
 
 
 def records() -> list[ParkedWork]:
-    """Every parked record, validated so a typo cannot pass as a kind or state."""
+    """Every parked record, validated so a typo cannot pass as a kind or cause."""
     raw = yaml.safe_load(RECORDS_PATH.read_text(encoding="utf-8")) or []
     if not isinstance(raw, list):
         raise ValueError("Parked work must be a list")

@@ -122,18 +122,14 @@ class LabelVocabularyTests(unittest.TestCase):
         keys = {key for row in catalog["models"] for key in (row.get("coverage_tiers") or {})}
         self.assertLessEqual(keys, TIERS)
 
-    def test_parked_work_declares_a_kind_and_state_and_names_real_rows(self):
+    def test_parked_work_declares_a_kind_and_cause_and_names_real_rows(self):
         entries = parked.records()
         self.assertTrue(entries)
         self.assertLessEqual({entry.kind.value for entry in entries}, {item.value for item in parked.DeferredKind})
-        self.assertLessEqual({entry.state.value for entry in entries}, {item.value for item in parked.DeferredState})
+        self.assertLessEqual({entry.cause.value for entry in entries}, {item.value for item in parked.DeferredCause})
         subjects = {subject for subject, _ in capability_matrix.CAPABILITIES}
         named = {entry.subject for entry in entries if entry.subject}
         self.assertLessEqual(named, subjects)
-        self.assertLessEqual(named, {entry.subject for entry in entries if entry.reason})
-        for entry in entries:
-            if entry.state is not parked.DeferredState.RETAINED:
-                self.assertTrue(entry.reason, entry.thing)
 
 
 def _adapter_only() -> set[str]:
