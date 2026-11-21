@@ -918,10 +918,7 @@
         "tts"
       ],
       "model_ids": [
-        "audiocpp/kokoro-audiocpp-q8_0",
         "audiocpp/kokoro-audiocpp-multilingual-q8_0",
-        "audiocpp/kokoro-kobold-q4",
-        "audiocpp/kokoro-v1_0",
         "tts/sherpa-onnx/kokoro-v1.0-int8/model"
       ],
       "languages": [

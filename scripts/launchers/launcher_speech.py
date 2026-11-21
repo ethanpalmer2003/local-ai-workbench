@@ -144,6 +144,9 @@ class SpeechWorkflowDefaults:
 
 # - Supertonic 3: one self-contained GGUF, 31 languages, preset voices M1-M5/F1-F5, no cloning.
 SUPERTONIC_MODEL = "audiocpp/supertonic-3-q8_0"
+# - Kokoro's multilingual package stays selectable but is not probed or benchmarked any more; the
+#   compact and Q4 conversions and the PyTorch checkpoint are gone.
+KOKORO_MODEL = "audiocpp/kokoro-audiocpp-multilingual-q8_0"
 
 # - The languages this workspace targets. The pinned corpus covers en/es/fr/ja; German was added from
 #   live synthesis only. Speech lists put these first and keep the model's own order after them.
@@ -307,6 +310,17 @@ AUDIOCPP_SPEECH = AudiocppSpeechStartupRequestSettings()
 
 
 @dataclass(frozen=True)
+class SharedKokoroStartupRequestSettings:
+    """Request defaults for Kokoro's own locale frontend: a voice id plus a negotiated language."""
+
+    voice: str = "af_heart"
+    language: str = "en-us"
+
+
+KOKORO_TTS = SharedKokoroStartupRequestSettings()
+
+
+@dataclass(frozen=True)
 class SharedSupertonicStartupRequestSettings:
     """Request defaults for the preset-voice Supertonic family; there is no cloning path."""
 
@@ -317,8 +331,9 @@ class SharedSupertonicStartupRequestSettings:
 
 SUPERTONIC_TTS = SharedSupertonicStartupRequestSettings()
 
-# - Supertonic reads the language from the text and takes only a preset voice id.
-TTS_FAMILY_DEFAULT_VOICE = {"supertonic": SUPERTONIC_TTS.voice}
+# - Each TTS family takes its own request fields: Kokoro negotiates a locale frontend per request,
+#   while Supertonic reads the language from the text and takes only a preset voice id.
+TTS_FAMILY_DEFAULT_VOICE = {"kokoro_tts": KOKORO_TTS.voice, "supertonic": SUPERTONIC_TTS.voice}
 
 
 @dataclass(frozen=True)
@@ -423,6 +438,7 @@ class AudiocppModel(str, Enum):
     MING3_TTS = "audiocpp/ming3-tts-0.5b-q8_0"
     MING3_AUDIO = "audiocpp/ming3-audio-tiny-q4_k"
     SUPERTONIC_3 = SUPERTONIC_MODEL
+    KOKORO_MULTILINGUAL = KOKORO_MODEL
 
 
 # - Both entries load the same weights; only the default task differs.
@@ -466,6 +482,14 @@ AUDIOCPP_SERVICE = AudiocppStartupRequestServiceSettings(
 AUDIOCPP_SERVER_ARGS: dict[str, str] = {"config": str(audio_cfg.CONFIG_PATH)}
 
 AUDIOCPP_PROXY_ACCEPTED_MODELS = tuple(model.value for model in AudiocppModel)
+
+# - Which selectable TTS models a live arm actually exercises: the AudioCpp launcher arm speaks with
+#   Breeze, the practice arms and the Gemma probe speak with Supertonic, and the `ming3-tts` backend
+#   probe speaks with Ming. Every other selectable model is listed as untested, so a selection screen
+#   can separate them; adding a live arm means adding its model here in the same change.
+LIVE_TESTED_TTS_MODELS = frozenset(
+    {AudiocppModel.BREEZE_TTS.value, AudiocppModel.MING3_TTS.value, AudiocppModel.SUPERTONIC_3.value}
+)
 AUDIOCPP_PROXY_CLONE_VOICES: tuple[str, ...] = local_overlay.voice_ids()
 
 AUDIOCPP_INPUT_DIR = local_overlay.voices_dir()  # voice samples; the accessor honours AI_VOICES_DIR
@@ -506,6 +530,7 @@ AUDIOCPP_PROXY_MODEL_PRESETS = {
         instruction_option=None,
     ),
     AudiocppModel.SUPERTONIC_3: AudiocppProxyRequestModelPreset(pcm_sample_rate=44100, playback_buffer_ms=1000),
+    AudiocppModel.KOKORO_MULTILINGUAL: AudiocppProxyRequestModelPreset(pcm_sample_rate=24000, playback_buffer_ms=1000),
 }
 
 

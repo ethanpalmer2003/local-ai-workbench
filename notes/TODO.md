@@ -8,6 +8,7 @@
 Code and configuration a settled decision leaves behind.
 
 - [ ] Finish parking the coding harnesses other than Pi: their launcher entry points are in [parked](../scripts/config/coding_agents/parked/README.md) and their updater rows are `in_use=False`, so the full validation no longer fetches them; the client settings in `launcher_base.py`, `coding_clients.py` and the benchmark's arms still name them, so decide whether the benchmark keeps comparing clients or drops to Pi and then move the rest. ~1 h
+- [ ] Restore or re-source the LTX video clip projector `data/videogen/clip/gemma4-12b-with-proj-ltx-2.5-Q5_K_M.gguf`: it is absent while both Q2_K and Q4_K_M sit in the same folder, and two workflows name it at node 30, so `model_admin` reports a missing model on every change and a Q5_K_M video run cannot load its projector. ~20 min
 
 ## Needs a model run or device
 Work that cannot be settled without a live run: weights, a device, a server or a human at the machine.

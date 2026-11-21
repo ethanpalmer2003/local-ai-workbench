@@ -86,6 +86,25 @@ class SpeechProfiles(unittest.TestCase):
         self.assertNotIn("voice", body)
         self.assertTrue(body["stream"])
 
+    def test_selection_separates_tested_models_from_selectable_untested_ones(self):
+        rows = practice_models.tts_models()
+        tested = {row["id"] for row in rows if row["coverage"] == "tested"}
+        untested = {row["id"] for row in rows if row["coverage"] == "untested"}
+        self.assertEqual(tested, set(cfg.LIVE_TESTED_TTS_MODELS))
+        self.assertEqual(untested, {cfg.KOKORO_MODEL, "audiocpp/fish-drama3-q2"})
+        self.assertEqual(tested | untested, {row["id"] for row in rows})
+
+    def test_live_coverage_names_the_three_arms_that_speak_with_a_model(self):
+        from scripts.config import models
+        from scripts.tests.cases.audiocpp import audiocpp_backend_compare
+
+        spoke_with = {
+            models.path(cfg.AUDIOCPP_SERVICE.model),
+            models.path(cfg.LANGUAGE_PRACTICE.tts_model),
+            audiocpp_backend_compare.PROFILES["ming3-tts"].model,
+        }
+        self.assertEqual(spoke_with, {models.path(label) for label in cfg.LIVE_TESTED_TTS_MODELS})
+
     def test_invalid_speech_json_is_rejected_before_relay(self):
         with self.assertRaises(ValueError):
             speech.speech_body(b"[]")

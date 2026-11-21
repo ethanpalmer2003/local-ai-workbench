@@ -10,7 +10,12 @@ same entries.
 | `supertonic` | Practice default. 31 languages, preset voices `M1`-`M5`/`F1`-`F5`, no cloning, streaming. One self-contained GGUF. |
 | `breeze_tts` | Voice cloning plus instruction-driven design; streaming. |
 | `ming3_tts`, `ming3_audio` | Named voices such as `US_James`; the heavier checkpoint is Complete WAV only. |
-| `fish_drama3` | Heavy, CPU-expert offload; streaming. |
+| `fish_drama3` | Heavy, CPU-expert offload; streaming. Selectable and untested: no arm runs it. |
+| `kokoro_tts` | One multilingual package kept selectable and untested; the compact, Q4 and `.pth` conversions are dropped. |
+
+Every selectable TTS row carries `coverage`: `tested` names a model a live arm speaks with
+(`LIVE_TESTED_TTS_MODELS` in [launcher_speech.py](../../launchers/launcher_speech.py)), and
+`untested` is reachable by hand only.
 
 Supertonic, Ming and Drama play at 44100 Hz. Lemonade cannot load audio.cpp GGUFs: its own catalog
 serves `kokoro-v1` plus MOSS TTS entries, so Supertonic stays on AudioCpp and KoboldCpp.
