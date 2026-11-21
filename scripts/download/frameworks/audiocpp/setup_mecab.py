@@ -1,49 +1,73 @@
-"""Provision the portable MeCab DLL from a checksum-pinned Windows wheel; no pip install."""
+"""Provision the portable MeCab DLL from the newest Windows wheel; no pip install."""
 
 import hashlib
 import io
 import json
 import zipfile
+from pathlib import Path
 
 import requests
 
 from scripts.config import project_config as project_cfg
 
-URL = "https://files.pythonhosted.org/packages/e9/ff/6f63a75ea7983c10dd85d81df696efc1b4edf80731757ab1ccb19777325b/mecab_python3-1.0.12-cp313-cp313-win_amd64.whl"
-SHA256 = "ad8508d0bf9827b6ad4b3537d144a1ecbbd6a6841b74430c6b74fe4b8766aa42"
+PACKAGE = "mecab-python3"
+PYPI = "https://pypi.org/pypi/{package}/json"
+WHEEL_SUFFIX = "-win_amd64.whl"
+# - the wheel is unpacked for one DLL, so the largest archive this reads stays bounded
+ARCHIVE_LIMIT = 16 * 1024 * 1024
 
 
-def main():
-    response = requests.get(URL, timeout=30)
+def latest_wheel(package: str) -> tuple[str, str]:
+    """The current version and the Windows wheel that carries its native library."""
+    response = requests.get(PYPI.format(package=package), timeout=30)
     response.raise_for_status()
-    data = response.content[: 16 * 1024 * 1024]
-    if hashlib.sha256(data).hexdigest() != SHA256:
-        raise ValueError("MeCab wheel checksum mismatch")
-    root = project_cfg.component("audiocpp/additions/mecab").framework_dir
+    data = response.json()
+    version = str(data["info"]["version"])
+    wheels = [item for item in data["urls"] if str(item["filename"]).endswith(WHEEL_SUFFIX)]
+    if not wheels:
+        raise ValueError(f"{package} {version} publishes no Windows wheel")
+    return version, str(wheels[0]["url"])
+
+
+def installed_version(root: Path) -> str | None:
+    """The version recorded beside the extracted DLL; the field has carried both forms."""
+    record = root / "INSTALL.json"
+    if not record.is_file():
+        return None
+    tokens = str(json.loads(record.read_text(encoding="utf-8")).get("version", "")).split()
+    return tokens[-1] if tokens else None
+
+
+def install(wheel_url: str, root: Path, version: str) -> None:
+    response = requests.get(wheel_url, timeout=60)
+    response.raise_for_status()
+    data = response.content[:ARCHIVE_LIMIT]
     root.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         for name in archive.namelist():
             if name.endswith("/libmecab.dll") or "/licenses/" in name:
-                target = root / name.rsplit("/", 1)[-1]
-                content = archive.read(name)
-                if target.exists() and target.read_bytes() != content:
-                    raise RuntimeError("Different installed MeCab file; preserve it before replacement")
-                target.write_bytes(content)
+                (root / name.rsplit("/", 1)[-1]).write_bytes(archive.read(name))
     if not (root / "libmecab.dll").is_file():
         raise RuntimeError("Wheel did not contain the expected MeCab DLL")
     (root / "INSTALL.json").write_text(
         json.dumps(
             {
-                "version": "mecab-python3 1.0.12",
-                "source": URL,
-                "sha256": SHA256,
+                "version": version,
+                "source": wheel_url,
+                "sha256": hashlib.sha256(data).hexdigest(),
                 "scope": "Portable MeCab native DLL/licenses only; Python package not installed",
             },
             indent=2,
         ),
         encoding="utf-8",
     )
-    print(f"[OK] Portable MeCab -> {root}")
+    print(f"[OK] Portable MeCab {version} -> {root}")
+
+
+def main() -> None:
+    root = project_cfg.component("audiocpp/additions/mecab").framework_dir
+    version, wheel = latest_wheel(PACKAGE)
+    install(wheel, root, version)
 
 
 if __name__ == "__main__":

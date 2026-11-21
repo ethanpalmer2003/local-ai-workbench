@@ -19,10 +19,8 @@ class ReleaseType(str, Enum):
     PATCHES = "patches"
     STRATA = "strata"
     DESKTOP = "desktop"
-    # - the vendor's own app owns the install; a check would only restate its updater
-    APP_UPDATER = "app-updater"
-    # - a file placed by hand with no feed to compare; nothing here can check it
-    HAND_INSTALL = "hand-install"
+    # - a PyPI distribution whose wheel carries a native library
+    PYPI = "pypi"
 
 
 # - how an update replaces files on disk; the summary nests status under these, in this order
@@ -31,12 +29,10 @@ UPDATE_KINDS = (
     "github release",
     "npm package",
     "app installer",
-    "app updater",
     "vendor script",
     "git snapshot",
     "pip wheel",
     "local build",
-    "hand install",
 )
 KIND_OF_RELEASE = {
     ReleaseType.SOURCE: "git fast-forward",
@@ -46,15 +42,14 @@ KIND_OF_RELEASE = {
     ReleaseType.NPM: "npm package",
     ReleaseType.DESKTOP: "app installer",
     ReleaseType.STRATA: "app installer",
-    ReleaseType.APP_UPDATER: "app updater",
     ReleaseType.BAT: "vendor script",
     ReleaseType.SNAPSHOT: "git snapshot",
     ReleaseType.WHEEL: "pip wheel",
+    ReleaseType.PYPI: "pip wheel",
     ReleaseType.SDK: "pip wheel",
     ReleaseType.PATCHES: "github release",
     ReleaseType.BUILD: "local build",
     ReleaseType.NATIVE_BUILD: "local build",
-    ReleaseType.HAND_INSTALL: "hand install",
 }
 UNCLASSIFIED_KIND = "unclassified"
 

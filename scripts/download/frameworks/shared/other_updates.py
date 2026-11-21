@@ -99,14 +99,8 @@ TOOLS = [
         channel="nightly",
         in_use=False,
     ),
-    # - Model servers stay parked until one is installed and exercised. Lemonade and Text generation
-    #   WebUI ship their own launchers and updaters, so a second updater would fight the vendor's.
-    #   LocalAI 4.12.1 publishes no Windows binary (linux, darwin, AppImage, dmg and source only).
-    ToolSpec("lemonade_server", "", ReleaseType.APP_UPDATER, in_use=False),
-    ToolSpec("localai", "", ReleaseType.HAND_INSTALL, repo="mudler/LocalAI", in_use=False),
-    ToolSpec(
-        "text-generation-webui", "", ReleaseType.APP_UPDATER, repo="oobabooga/text-generation-webui", in_use=False
-    ),
+    # - Lemonade Server, LocalAI and Text generation WebUI stay unmanaged: none is installed here, each
+    #   ships its own launcher, and [deferred.yaml] records why, so no catalog row restates it.
     ToolSpec(
         name=project_cfg.SDCPP_ROCM_DIR.relative_to(project_cfg.FRAMEWORKS_DIR).as_posix(),
         repo="leejet/stable-diffusion.cpp",

@@ -190,8 +190,8 @@ class FrameworkUpdates(unittest.TestCase):
     def test_final_status_groups_appear_once_in_order_and_unused_tools_are_not_processed(self):
         tools = [
             cfg.ToolSpec("patched-source", "", cfg.ReleaseType.SOURCE),
-            cfg.ToolSpec("unused-a", "", cfg.ReleaseType.HAND_INSTALL, in_use=False),
-            cfg.ToolSpec("unused-b", "", cfg.ReleaseType.HAND_INSTALL, in_use=False),
+            cfg.ToolSpec("unused-a", "", cfg.ReleaseType.BAT, in_use=False),
+            cfg.ToolSpec("unused-b", "", cfg.ReleaseType.BAT, in_use=False),
         ]
 
         def process(tool: cfg.ToolSpec, _folder: Path, _check: bool, summary: updater.UpdateSummary | None = None):
@@ -419,7 +419,7 @@ class FrameworkUpdates(unittest.TestCase):
 
     def test_all_checks_and_grouped_plan_precede_updates_and_failed_checks_are_not_applied(self):
         tools = [cfg.ToolSpec(name, "", cfg.ReleaseType.SOURCE) for name in ("new", "current", "patched", "broken")]
-        tools.append(cfg.ToolSpec("unused", "", cfg.ReleaseType.HAND_INSTALL, in_use=False))
+        tools.append(cfg.ToolSpec("unused", "", cfg.ReleaseType.BAT, in_use=False))
         events = []
 
         def process(tool: cfg.ToolSpec, _folder: Path, check_only: bool, summary: updater.UpdateSummary | None = None):

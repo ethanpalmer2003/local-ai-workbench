@@ -233,16 +233,12 @@ class FrameworkUpdateSources(unittest.TestCase):
         self.assertEqual(
             {tool.name for tool in cfg.TOOLS if not tool.in_use},
             {
-                "lemonade_server",
-                "localai",
-                "text-generation-webui",
                 "avalon",
                 "tts/sherpa-onnx",
                 "tts/piper",
                 "audiocpp/additions/rocm/7.1-old",
                 "audiocpp/additions/rocm/therock-10.2-hip-7.17-gfx1101",
                 "asr/whispercpp/vulkan",
-                "asr/parakeetcpp/cpu-stream",
                 "llamacpp/rdna",
                 "llamacpp/additions/hrx/llama.cpp",
                 "llamacpp/additions/hrx/hrx-system",
@@ -455,8 +451,6 @@ class FrameworkUpdateSources(unittest.TestCase):
                 "llamacpp/additions/hrx/hrx-system",
                 "llamacpp/additions/hrx/rocm-systems",
                 "llamacpp/rdna",
-                "llamacpp/additions/llama-cpp-rdna-boosts",
-                "asr/parakeetcpp/cpu-stream",
                 "avalon",
             ],
         )

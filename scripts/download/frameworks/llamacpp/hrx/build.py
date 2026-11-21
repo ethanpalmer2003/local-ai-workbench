@@ -52,7 +52,24 @@ def run_step(name: str, command: list[str], paths: RunPaths, env: dict[str, str]
     print(f"[OK] {name}: {time.monotonic() - started:.1f}s", flush=True)
 
 
+def stale_cache_message(directory: Path) -> str | None:
+    """A cache recorded under another path makes CMake refuse to configure; name the fix."""
+    cache = directory / "CMakeCache.txt"
+    if not cache.is_file():
+        return None
+    match = re.search(
+        r"^CMAKE_CACHEFILE_DIR:INTERNAL=(.+)$", cache.read_text(encoding="utf-8", errors="replace"), re.MULTILINE
+    )
+    recorded = match.group(1).strip().replace("\\", "/") if match else ""
+    if recorded and Path(recorded).resolve() != directory.resolve():
+        return f"Build cache in {directory} was created at {recorded}; remove that directory to rebuild here."
+    return None
+
+
 def build(paths: RunPaths, jobs: int) -> None:
+    for name in ("rocr", "hrx", "llamacpp"):
+        if message := stale_cache_message(HRX_ROOT / "build" / name):
+            raise RuntimeError(message)
     cache = (HRX_ROOT / "build/hrx/CMakeCache.txt").read_text(encoding="utf-8")
     match = re.search(r"^CMAKE_COMMAND:INTERNAL=(.+)$", cache, re.MULTILINE)
     cmake = match.group(1).strip() if match else shutil.which("cmake")

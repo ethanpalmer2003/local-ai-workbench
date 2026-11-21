@@ -23,20 +23,10 @@ sessions are independent per turn and capped at two. Stop/idle/shutdown clean up
 
 ## Parakeet CPU library
 
-Official v0.6.1 Windows archives include CLI/server executables but no streaming
-DLL. The optional CPU library is built separately under
-`frameworks/asr/parakeetcpp/cpu-stream/`; official `cpu/` and `vulkan/` stay intact.
-It uses the pinned v0.6.1 commit/submodule, CPU-only ggml and eight native default
-compute threads. One active native stream is allowed; overlap returns 429.
-
-Reproduce with installed Visual Studio/CMake/Ninja:
-
-```powershell
-python -m scripts.download.frameworks.asr.parakeetcpp
-```
-
-The build records its source commit, options, logs and execution context in
-`.build_manifest.json`. It needs native execution approval, not package changes.
+The release's `parakeet-v*-lib-win-cpu-x64.zip` asset carries the streaming DLL, so
+the update installs it into `frameworks/asr/parakeetcpp/cpu-stream/` and official
+`cpu/` and `vulkan/` stay intact. One active native stream is allowed; overlap
+returns 429.
 The updater lists it as optional/manual, excluded from routine rebuilds.
 Vulkan Nemotron streaming remains disabled after the recorded access violation;
 no newer stable release fixing it was found. Retry after a relevant fix.

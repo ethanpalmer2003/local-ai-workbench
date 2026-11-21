@@ -41,6 +41,8 @@ update_shared.MANAGED_HANDLERS.update(
 update_shared.POST_INSTALLERS["asr/handy/installer"] = asr_updates.install_handy
 update_shared.POST_INSTALL_PENDING["asr/handy/installer"] = asr_updates.install_handy_pending
 update_shared.MANAGED_HANDLERS[ReleaseType.NATIVE_BUILD] = asr_updates.process_whisper
+update_shared.MANAGED_HANDLERS[ReleaseType.PYPI] = audiocpp_updates.process_pypi
+update_shared.INSTALLERS["audiocpp/additions/espeak-ng"] = audiocpp_updates.extract_espeak
 update_shared.RELEASE_INSTALLERS[ReleaseType.WHEEL] = tts_updates.install_wheel
 update_shared.RELEASE_INSTALLERS[ReleaseType.SDK] = loom_updates.install_sdk
 update_shared.SOURCE_PATCH_WRITER = llamacpp_updates.snapshot_source_patches

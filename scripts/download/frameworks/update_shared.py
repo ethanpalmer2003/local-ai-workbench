@@ -42,7 +42,6 @@ STATUS_LABELS = {
     "SOURCE UPDATE AVAILABLE; BUILD REQUIRED": "build required",
     "UPSTREAM CHANGED; MANUAL MERGE/REBUILD REQUIRED": "manual merge/rebuild",
     "APP UPDATE REQUIRED": "update in its app",
-    "MANUAL INSTALL REQUIRED": "install by hand",
     "PI PACKAGE SYNC REQUIRED": "package sync",
     "UP TO DATE": "up to date",
     "SKIPPED BY OPTION": "skipped",
@@ -80,7 +79,6 @@ class UpdateSummary:
     manual_rebuild: list[str] = field(default_factory=list)
     source_build: list[str] = field(default_factory=list)
     app_update: list[str] = field(default_factory=list)
-    hand_install: list[str] = field(default_factory=list)
     failures: list[str] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
     apply_keys: set[str] = field(default_factory=set)
@@ -97,7 +95,6 @@ class UpdateSummary:
             ("UPSTREAM CHANGED; MANUAL MERGE/REBUILD REQUIRED", self.manual_rebuild),
             ("SOURCE UPDATE AVAILABLE; BUILD REQUIRED", self.source_build),
             ("APP UPDATE REQUIRED", self.app_update),
-            ("MANUAL INSTALL REQUIRED", self.hand_install),
             ("CHECK FAILED", self.failures),
             ("SKIPPED BY OPTION", self.skipped),
         )
@@ -212,6 +209,8 @@ ManagedHandler = Callable[[cfg.ToolSpec, Path, Path, bool, UpdateSummary | None]
 ReleaseInstaller = Callable[[Asset, Path, Path, str], None]
 MANAGED_HANDLERS: dict[cfg.ReleaseType, ManagedHandler] = {}
 RELEASE_INSTALLERS: dict[cfg.ReleaseType, ReleaseInstaller] = {}
+# - a release whose unpacking is specific to one entry, keyed by catalog name
+INSTALLERS: dict[str, ReleaseInstaller] = {}
 # - per-tool post-install steps; they also run on apply when the download is already current.
 POST_INSTALLERS: dict[str, Callable[[cfg.ToolSpec], None]] = {}
 # - a post-install step also runs on apply when its tool has no update, but only while
@@ -664,16 +663,6 @@ def process_managed_tool(
         if summary is not None:
             summary.record(tool, "available" if needed else "current")
         return True
-    if tool.release_type in (cfg.ReleaseType.APP_UPDATER, cfg.ReleaseType.HAND_INSTALL):
-        app = tool.release_type == cfg.ReleaseType.APP_UPDATER
-        if summary is not None:
-            summary.record(tool, "app_update" if app else "hand_install")
-        print(
-            "Status: APP UPDATE REQUIRED (the app updates itself)"
-            if app
-            else "Status: MANUAL INSTALL REQUIRED (no feed to compare; the file is placed by hand)"
-        )
-        return True
     return False
 
 
@@ -703,7 +692,7 @@ def _needs_update(tool: cfg.ToolSpec, release: Release, asset: Asset, dest_dir: 
 
 def _install_release(tool: cfg.ToolSpec, asset: Asset, dest_dir: Path, tmp_dir: Path, release: Release) -> None:
     print("Status: UPDATING")
-    installer = RELEASE_INSTALLERS.get(tool.release_type, update_tool)
+    installer = INSTALLERS.get(tool.name) or RELEASE_INSTALLERS.get(tool.release_type, update_tool)
     installer(asset, dest_dir, tmp_dir, tool.exe)
     if tool.release_type in (cfg.ReleaseType.DATE, cfg.ReleaseType.WHEEL, cfg.ReleaseType.SDK):
         (dest_dir / MARKER_NAME).write_text(release["published_at"])

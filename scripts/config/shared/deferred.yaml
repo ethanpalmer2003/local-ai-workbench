@@ -37,7 +37,7 @@
   cause: performance
   reason: it trails stable llama.cpp and lost the paired screen, so the default build is the only one compared
   revisit: it earns another look
-  source: scripts/download/frameworks/shared/other_updates.py
+  source: scripts/download/frameworks/UPDATES-COMPONENTS.md
 - thing: ExLlama family (hipfire, TabbyAPI)
   kind: framework
   cause: os
@@ -61,19 +61,19 @@
   cause: os
   reason: release 4.12.1 publishes no Windows binary, so there is nothing to install here
   revisit: a Windows release is published
-  source: scripts/download/frameworks/shared/other_updates.py
+  source: scripts/download/frameworks/UPDATES-COMPONENTS.md
 - thing: Text generation WebUI
   kind: framework
   cause: unplanned
   reason: it is not installed; a portable Windows zip exists but nothing schedules installing or running it
   revisit: a model server is installed and exercised
-  source: scripts/download/frameworks/shared/other_updates.py
+  source: scripts/download/frameworks/UPDATES-COMPONENTS.md
 - thing: Lemonade Server
   kind: framework
   cause: unplanned
   reason: it ships its own launcher and update path, so only the framework comparison runs it
   revisit: a model server is installed and exercised
-  source: scripts/download/frameworks/shared/other_updates.py
+  source: scripts/download/frameworks/UPDATES-COMPONENTS.md
 - thing: Medium/high-context grids
   kind: work
   cause: unplanned

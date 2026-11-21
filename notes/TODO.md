@@ -22,6 +22,8 @@ Work that cannot be settled without a live run: weights, a device, a server or a
 
 ### Unattended
 
+- [ ] Make the merged HRX stack build: `hsa-runtime64.dll` fails to link because `hsakmt` calls `Wkmi::FillinHwQueuePrivData`, `FillinContextPrivData`, `GetSdmaSubmitPrivDataSize`, `FillinSdmaSubmitPrivData` and `FillinUnregisterEventPrivData` from `shared/amdgpu-windows-interop/wkmi`, which the current ROCr configure neither builds nor links (`LNK2019` x5, `LNK1120`). Upstream also moved the ROCr cache off `frameworks/llamacpp-additions/hrx` and the SDK to `data/ROCm/therock-dist-windows-gfx110X-all-10.2.0a20260927`, so the caches and `Clang_DIR` had to be repointed by hand. [HRX limits](../scripts/config/llamacpp/HRX.md). ~1-2 h
+
 - [ ] Explain why generation stops after a few tokens at a 96K prompt: reasoning on returns only `<think>`,
   reasoning off a 17-token fragment, both far under a 256-token budget, while 32K, 40K and 64K answer fully.
   Probe once with a plain long-generation prompt at 96K: if that also stops early the deep allocation is the

@@ -6,6 +6,7 @@ import re
 import shutil
 import subprocess
 import time
+from importlib import import_module
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
@@ -42,10 +43,12 @@ TOOLS = [
     ToolSpec(
         "audiocpp/additions/espeak-ng",
         "eSpeak NG/libespeak-ng.dll",
-        ReleaseType.HAND_INSTALL,
+        ReleaseType.DATE,
         repo="espeak-ng/espeak-ng",
+        # - the project publishes one Windows package; msiexec unpacks it without installing anything
+        asset_pattern=r"^espeak-ng\.msi$",
     ),
-    ToolSpec("audiocpp/additions/mecab", "libmecab.dll", ReleaseType.HAND_INSTALL),
+    ToolSpec("audiocpp/additions/mecab", "libmecab.dll", ReleaseType.PYPI, package="mecab-python3"),
     ToolSpec(
         name=project_cfg.AUDIOCPP_ROCM_LEGACY_DIR.relative_to(project_cfg.FRAMEWORKS_DIR).as_posix(),
         repo="IIIIIllllIIIIIlllll/audio.cpp",
@@ -65,6 +68,46 @@ TOOLS = [
         in_use=False,
     ),
 ]
+
+
+def extract_espeak(asset: shared.Asset, destination: Path, temporary: Path, _exe: str) -> None:
+    """Unpack eSpeak NG's MSI and keep the DLL and its data, which is what AudioCpp loads."""
+    package = shared.download_asset(asset, temporary)
+    extracted = temporary / "espeak"
+    extracted.mkdir()
+    result = subprocess.run(
+        ["msiexec.exe", "/a", str(package), "/qn", f"TARGETDIR={extracted}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    source = extracted / "eSpeak NG"
+    if result.returncode != 0 or not (source / "libespeak-ng.dll").is_file():
+        raise shared.UpdateError(f"eSpeak NG did not unpack a usable DLL (msiexec {result.returncode}): {source}")
+    installed = destination / "eSpeak NG"
+    if installed.is_dir():
+        shared.archive_path(installed, project_cfg.FRAMEWORKS_DIR)
+    shutil.copytree(source, installed)
+
+
+def process_pypi(
+    tool: ToolSpec, destination: Path, temporary: Path, check_only: bool, summary: shared.UpdateSummary | None
+) -> None:
+    """Compare a PyPI distribution's newest Windows wheel with the version recorded here."""
+    setup_mecab = import_module("scripts.download.frameworks.audiocpp.setup_mecab")
+    version, wheel = setup_mecab.latest_wheel(tool.package or "")
+    installed = setup_mecab.installed_version(destination)
+    print(f"Local version : {installed or 'NOT INSTALLED'}\nLatest version: {version}")
+    needed = installed != version
+    if summary is not None:
+        summary.record(tool, "available" if needed else "current")
+    if not needed:
+        print("Status: UP TO DATE")
+        return
+    print("Status: UPDATE AVAILABLE")
+    if not check_only:
+        setup_mecab.install(wheel, destination, version)
+        print("Status: UPDATED")
 
 
 def find_audiocpp_rocm_path() -> Path:

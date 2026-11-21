@@ -10,6 +10,7 @@
 - Matched previous/current 64-token screen: aggregate 13.62 versus 13.92 tok/s (+2.2%); variation exceeded the difference, so no demonstrated decode speedup. Comparison (../../tests/output/probes/hrx_performance/unreviewed/1792112820577230300/artifacts/report.json).
 - Larger contexts/other models remain unverified. Merged prefill/router changes do not establish benefits for this dense IQ3_XXS decode workload.
 - 2026-11-21: no retained patch applies to the current upstream heads (llama.cpp `76c3785b9`, HRX `b81ff778b`, rocm-systems `0ca1de96e9`). `tests/test-hrx-ops.cpp` no longer exists, and upstream has since landed IQ3_XXS skinny-matmul decoding (#200) and routed expert pairs (#175), the subject of two of them. The patch set and checkpoints describe the 2026-10-15 stack only; a fresh start would clone and fix forward instead of re-merging them.
+- 2026-11-21 merge: the checkouts moved cleanly to llama.cpp `3e71ba3ff`, HRX `b6ad3f37e` and rocm-systems `6ac2f27c18`, after the build caches were repointed from the pre-reorganization `frameworks/llamacpp-additions` path. The rebuild then stops linking `hsa-runtime64.dll`: `hsakmt` references `Wkmi::FillinHwQueuePrivData` and four siblings from `shared/amdgpu-windows-interop/wkmi`, which this configure neither builds nor links (`LNK2019`, `LNK1120`). The installed runtime is unchanged.
 
 ## Diagnosis retained
 

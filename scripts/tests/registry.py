@@ -174,6 +174,7 @@ from scripts.tests.cases.shared.workflows.test_workflow_defaults import Workflow
 from scripts.tests.cases.strata.test_strata_pi import StrataPiTests
 from scripts.tests.cases.strata.test_strata_profiles import StrataProfileTests
 from scripts.tests.cases.suites import frameworks_smoke
+from scripts.tests.cases.suites.framework_update_additions import FrameworkUpdateAdditions
 from scripts.tests.cases.suites.framework_updates import FrameworkUpdates
 from scripts.tests.cases.suites.framework_updates_sources import FrameworkUpdateSources
 from scripts.tests.cases.suites.shared_contracts import SharedContracts
@@ -326,6 +327,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     CodingEngineSummaryTests,
     ContextStreamTests,
     FrameworkUpdates,
+    FrameworkUpdateAdditions,
     FrameworkUpdateSources,
     ReportOutputs,
     NgramWorkloads,

@@ -53,15 +53,14 @@ TOOLS = [
         repo="mudler/parakeet.cpp",
         asset_pattern=r"^parakeet-v.*-bin-win-cpu-x64\.zip$",
     ),
+    # - the streaming adapter loads this DLL in-process; upstream publishes it as the `lib-win-cpu` asset
     ToolSpec(
         "asr/parakeetcpp/cpu-stream",
         "parakeet.dll",
-        ReleaseType.SOURCE,
+        ReleaseType.DATE,
         repo="mudler/parakeet.cpp",
-        source_checkout="asr/parakeetcpp/additions",
-        rebuild_required=True,
-        in_use=False,
-    ),  # Pinned optional C API build; routine updates must not rebuild it.
+        asset_pattern=r"^parakeet-v.*-lib-win-cpu-x64\.zip$",
+    ),
     ToolSpec(
         "asr/whispercpp/vulkan",
         "whisper-cli.exe",
