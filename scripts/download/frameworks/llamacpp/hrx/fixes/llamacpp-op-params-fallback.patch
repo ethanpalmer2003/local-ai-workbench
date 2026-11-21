@@ -1,0 +1,16 @@
+diff --git a/ggml/src/ggml-hrx/graph/graph-diagnostics.cpp b/ggml/src/ggml-hrx/graph/graph-diagnostics.cpp
+index eb361fcb8..b378039a4 100644
+--- a/ggml/src/ggml-hrx/graph/graph-diagnostics.cpp
++++ b/ggml/src/ggml-hrx/graph/graph-diagnostics.cpp
+@@ -180,6 +180,11 @@ json op_params_json(const OpParams & params) {
+                     { "beta_slow",   value.beta_slow   },
+                     { "sections",    value.sections    },
+                 };
++            } else {
++                // Some OpParams alternatives have no JSON form yet; MSVC rejects the fallthrough.
++                return {
++                    { "kind", "unhandled" }
++                };
+             }
+         },
+         params);

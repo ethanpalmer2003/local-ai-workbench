@@ -177,6 +177,7 @@ from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.cases.suites.framework_update_additions import FrameworkUpdateAdditions
 from scripts.tests.cases.suites.framework_updates import FrameworkUpdates
 from scripts.tests.cases.suites.framework_updates_sources import FrameworkUpdateSources
+from scripts.tests.cases.suites.hrx_fixes import FixStateTests
 from scripts.tests.cases.suites.shared_contracts import SharedContracts
 from scripts.tests.cases.test_lemonade_launcher import LemonadeLauncherTests, LemonadeOwnedStartTests
 
@@ -327,6 +328,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     CodingEngineSummaryTests,
     ContextStreamTests,
     FrameworkUpdates,
+    FixStateTests,
     FrameworkUpdateAdditions,
     FrameworkUpdateSources,
     ReportOutputs,

@@ -1,0 +1,62 @@
+diff --git a/build_tools/cmake/iree_python.cmake b/build_tools/cmake/iree_python.cmake
+index e6ce37654..8454c3edc 100644
+--- a/build_tools/cmake/iree_python.cmake
++++ b/build_tools/cmake/iree_python.cmake
+@@ -368,7 +368,7 @@ function(iree_py_generated_files)
+   )
+   list(APPEND _GENERATOR_PACKAGE_DIRS "$ENV{PYTHONPATH}")
+   if(CMAKE_HOST_WIN32)
+-    list(JOIN _GENERATOR_PACKAGE_DIRS "\\;" _GENERATOR_PYTHONPATH)
++    list(JOIN _GENERATOR_PACKAGE_DIRS "$<SEMICOLON>" _GENERATOR_PYTHONPATH)
+   else()
+     list(JOIN _GENERATOR_PACKAGE_DIRS ":" _GENERATOR_PYTHONPATH)
+   endif()
+diff --git a/loom/build_tools/cmake/loom_generated.cmake b/loom/build_tools/cmake/loom_generated.cmake
+index c1ec9c43f..0fc39c4e9 100644
+--- a/loom/build_tools/cmake/loom_generated.cmake
++++ b/loom/build_tools/cmake/loom_generated.cmake
+@@ -21,7 +21,7 @@ function(_loom_python_command_prefix OUTPUT_PREFIX GENERATOR)
+   iree_py_library_collect_package_dirs(_GENERATOR_PACKAGE_DIRS "${GENERATOR}")
+   list(APPEND _GENERATOR_PACKAGE_DIRS "$ENV{PYTHONPATH}")
+   if(CMAKE_HOST_WIN32)
+-    list(JOIN _GENERATOR_PACKAGE_DIRS "\\;" _GENERATOR_PYTHONPATH)
++    list(JOIN _GENERATOR_PACKAGE_DIRS "$<SEMICOLON>" _GENERATOR_PYTHONPATH)
+   else()
+     list(JOIN _GENERATOR_PACKAGE_DIRS ":" _GENERATOR_PYTHONPATH)
+   endif()
+diff --git a/loom/src/loom/ir/attribute.c b/loom/src/loom/ir/attribute.c
+index 382746d27..838e582bc 100644
+--- a/loom/src/loom/ir/attribute.c
++++ b/loom/src/loom/ir/attribute.c
+@@ -104,6 +104,10 @@ const char* loom_predicate_kind_name(uint8_t kind) {
+ 
+ bool loom_predicate_kind_parse(iree_string_view_t name,
+                                loom_predicate_kind_t* out_kind) {
++  // Legacy llama.cpp kernel sources use mul for the same divisibility constraint.
++  if (iree_string_view_equal(name, IREE_SV("mul"))) {
++    name = IREE_SV("multiple_of");
++  }
+   for (loom_predicate_kind_t kind = 0; kind < LOOM_PREDICATE_COUNT_; ++kind) {
+     const loom_predicate_descriptor_t* descriptor =
+         &loom_predicate_descriptors[kind];
+diff --git a/runtime/src/iree/hal/drivers/amdgpu/util/info.c b/runtime/src/iree/hal/drivers/amdgpu/util/info.c
+index fae2b3eed..62312bb2b 100644
+--- a/runtime/src/iree/hal/drivers/amdgpu/util/info.c
++++ b/runtime/src/iree/hal/drivers/amdgpu/util/info.c
+@@ -68,13 +68,15 @@ iree_status_t iree_hal_amdgpu_system_info_query(
+                                HSA_AMD_SYSTEM_INFO_SVM_SUPPORTED,
+                                &svm_supported),
+       "querying HSA_AMD_SYSTEM_INFO_SVM_SUPPORTED");
++#if !defined(_WIN32)
+   if (!svm_supported) {
+     IREE_RETURN_AND_END_ZONE_IF_ERROR(
+         z0, iree_make_status(IREE_STATUS_INCOMPATIBLE,
+                              "only systems with SVM are supported "
+                              "(HSA_AMD_SYSTEM_INFO_SVM_SUPPORTED == true)"));
+   }
+-  out_info->svm.supported = 1;
++#endif
++  out_info->svm.supported = svm_supported ? 1 : 0;
+ 
+   bool svm_accessible_by_default = false;
+   IREE_RETURN_AND_END_ZONE_IF_ERROR(

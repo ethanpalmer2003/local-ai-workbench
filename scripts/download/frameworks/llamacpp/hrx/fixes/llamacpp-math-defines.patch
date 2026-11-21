@@ -1,0 +1,15 @@
+diff --git a/ggml/src/ggml-hrx/CMakeLists.txt b/ggml/src/ggml-hrx/CMakeLists.txt
+index 3a398b18a..428bbea79 100644
+--- a/ggml/src/ggml-hrx/CMakeLists.txt
++++ b/ggml/src/ggml-hrx/CMakeLists.txt
+@@ -303,6 +303,10 @@ ggml_add_backend_library(ggml-hrx
+ target_link_libraries(ggml-hrx PRIVATE ggml-hrx-kernel-corpus hrx::hrx loomc::loomc)
+ target_include_directories(ggml-hrx PRIVATE . "${CMAKE_CURRENT_BINARY_DIR}" ../../../vendor)
+ target_compile_definitions(ggml-hrx PRIVATE GGML_USE_HRX)
++if(WIN32)
++    # MSVC keeps M_PI out of <cmath> unless this is defined; the rope dispatch headers use it.
++    target_compile_definitions(ggml-hrx PRIVATE _USE_MATH_DEFINES)
++endif()
+ 
+ if (GGML_HRX_BUNDLE_RUNTIME_LIBS)
+     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/BundleRuntime.cmake")

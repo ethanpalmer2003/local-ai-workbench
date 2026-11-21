@@ -16,6 +16,7 @@ from scripts.benchmarks.shared.paths import dated_run
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import native_build
 from scripts.download.frameworks.framework_catalog import hrx_tools
+from scripts.download.frameworks.llamacpp.hrx import fixes
 from scripts.download.frameworks.llamacpp.hrx import prepare as prepare_hrx
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
@@ -299,6 +300,8 @@ def main() -> None:
     paths.create()
     if args.merge:
         merge_sources(paths)
+        if fixes.ensure():
+            raise RuntimeError("A required HRX fix could not be applied; see the messages above")
     if not args.validate_only:
         build(paths, args.jobs)
     candidate = stage_candidate(paths)
