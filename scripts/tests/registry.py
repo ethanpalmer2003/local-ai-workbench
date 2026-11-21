@@ -99,6 +99,7 @@ from scripts.tests.cases.shared.benchmarks.test_provenance import (
 from scripts.tests.cases.shared.gate.test_bat_launchers import BatLaunchers
 from scripts.tests.cases.shared.gate.test_changes import UpstreamTextTests
 from scripts.tests.cases.shared.gate.test_consent import ConsentTests
+from scripts.tests.cases.shared.gate.test_gate_entry import GateEntryTests
 from scripts.tests.cases.shared.gate.test_inference_engines import InferenceEngines
 from scripts.tests.cases.shared.gate.test_label_vocabulary import LabelVocabularyTests
 from scripts.tests.cases.shared.gate.test_live_stamp import LiveStampTests
@@ -341,6 +342,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     TestSelection,
     StalenessTests,
     UpstreamTextTests,
+    GateEntryTests,
     ExitReportTests,
     # - the launcher and proxy block is scoped like everything else: a change to that wiring keeps it,
     #   a change elsewhere leaves it to the push, so no class sits outside the graph
