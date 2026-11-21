@@ -649,8 +649,9 @@ def main(argv: list[str] | None = None) -> int:
         baseline = False
         changed = []
         print("[GATE] this branch has no upstream ref; every section runs, and --fast skips the slow ones", flush=True)
-    # - a clean tree is evidence that nothing needs checking
-    if not changed:
+    # - a clean tree is evidence that nothing needs checking, unless a flag asked for the whole gate
+    forced = _flag(argv, "--all") or _flag(argv, "--prune") or _flag(argv, "--scrub")
+    if not changed and not forced:
         if baseline:
             print("[GATE] nothing is uncommitted or unpushed; nothing to check, and --all runs every section")
             return 0
@@ -658,9 +659,7 @@ def main(argv: list[str] | None = None) -> int:
     prose_only = pushing and not any(path.endswith(".py") for path in changed)
     if prose_only:
         print("[PUSH] no Python change since upstream; prose sections only", flush=True)
-    if prose_only or (
-        not pushing and not (_flag(argv, "--all") or _flag(argv, "--prune") or _flag(argv, "--scrub")) and changed
-    ):
+    if prose_only or (not pushing and not forced and changed):
         return touched_gate(argv, changed)
     return full_gate(argv)
 
