@@ -1,13 +1,19 @@
 """Check that selected and native runtime models resolve to the model catalog."""
 
 import json
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
 from scripts.config import models
+from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audiocpp_server
 from scripts.launchers import launcher_config as cfg
+
+# - code that consumes a model asks the catalog; a literal file link here would be a second owner
+LINK_ROOTS = ("launchers", "benchmarks", "tools")
+MODEL_FILE_URL = re.compile(r"https://huggingface\.co/[\w.\-]+/[\w.\-]+/(?:resolve|blob)/")
 
 
 def normalized(path: str | Path) -> str:
@@ -89,11 +95,32 @@ def provenance_issues(models_in_catalog: dict[str, Any]) -> list[str]:
     ]
 
 
+def link_issues() -> list[str]:
+    """A model file link belongs to the catalog or the private overlay; consumer code asks the catalog.
+
+    Docs and evidence may quote a link, and the download package builds URLs from parsed ones, so only
+    the code that resolves and serves models is scanned here.
+    """
+    issues = []
+    for root in LINK_ROOTS:
+        for path in (project_cfg.SCRIPTS_DIR / root).rglob("*.py"):
+            for number, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+                if not MODEL_FILE_URL.search(line):
+                    continue
+                try:
+                    shown = path.relative_to(project_cfg.BASE_DIR).as_posix()
+                except ValueError:
+                    shown = path.as_posix()
+                issues.append(f"Model file link outside the catalog: {shown}:{number}")
+    return issues
+
+
 def inspect() -> list[str]:
     catalog = {model.label: model for model in models.MODELS}
     paths = {normalized(model.path): model.label for model in models.MODELS}
     issues = _catalog_issues(catalog)
     issues.extend(provenance_issues(catalog))
+    issues.extend(link_issues())
     try:
         runtime = audiocpp_server.read()
     except (OSError, json.JSONDecodeError) as error:
