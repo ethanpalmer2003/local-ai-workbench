@@ -711,7 +711,7 @@
       "filename": "coding_models/Inkling-2-Mini-UD-IQ3_XXS.gguf",
       "url": "https://huggingface.co/unsloth/Inkling-2-Mini-GGUF/resolve/main/Mainline_Support/Inkling-2-Mini-UD-IQ3_XXS.gguf_file",
       "in_use": false,
-      "notes": "Unsloth dynamic IQ3_XXS of Inkling-2-Mini (Thinking Machines, 26B MoE, 24 blocks with a three-pass looped core); this is the Mainline_Support copy, because the repository root file stores 24 blocks and fails to load as 48 on mainline llama.cpp. The GGUF declares temperature 1.0, top-p 1.0, top-k 0 and min-p 0.0.",
+      "notes": "Unsloth dynamic IQ3_XXS of Inkling-2-Mini (Thinking Machines, 26B MoE, 24 blocks with a three-pass looped core); this is the Mainline_Support copy, because the repository root file stores 24 blocks. Mainline build 12602 loads it but never produces usable chat content or a tool call, so use the root-layout file with the Unsloth build. The GGUF declares temperature 1.0, top-p 1.0, top-k 0 and min-p 0.0.",
       "sha256": "fd9ccedae17c1bb89744612fbb46730b5275f2a342133d0419776bd1ae311657",
       "roles": [],
       "source_page": null
@@ -725,6 +725,18 @@
       "in_use": false,
       "notes": "DSpark speculative drafter (Q8_0) for Inkling-2-Mini; the vendor guide pairs it with --spec-type draft-dspark and --spec-draft-n-max 3 on its Unsloth build and repository-root GGUF. Mainline build 12602 rejects it against the Mainline_Support copy: markov_w1.weight expects vocab 200058 but the drafter stores 201024, so the two layouts are not interchangeable.",
       "sha256": "2ec78510da837e8fc3be54a14757a0c5fbd2d8d9e85a0d92853fafdf674f3773",
+      "roles": [],
+      "source_page": null
+    },
+    {
+      "category": "llms",
+      "group": "llamacpp",
+      "label": "llamacpp/unsloth_Inkling-2-Mini-root-IQ3_XXS",
+      "filename": "coding_models/Inkling-2-Mini-UD-IQ3_XXS-unsloth.gguf",
+      "url": "https://huggingface.co/unsloth/Inkling-2-Mini-GGUF/resolve/main/Inkling-2-Mini-UD-IQ3_XXS.gguf",
+      "in_use": false,
+      "notes": "Repository-root layout for Unsloth's own b12588-mix build, which reads it with the DSpark drafter; mainline llama.cpp reads the Mainline_Support copy instead. Passed both local coding tasks in 55.0 s and 80.2 s at 32K on that build.",
+      "sha256": "bd7ef0865adf119b5183e45e741c629bafa649769b33b5ebf689bb4bcc4690d6",
       "roles": [],
       "source_page": null
     }

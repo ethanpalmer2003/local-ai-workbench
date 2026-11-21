@@ -99,6 +99,14 @@ TOOLS = [
         version_regex=r"build (\d+)",
         version_prefix="b",
     ),
+    # - Unsloth's fork; its Windows Vulkan zip unpacks flat like the upstream one and adds DSpark speculation
+    ToolSpec(
+        "llamacpp/unsloth",
+        "llama-server.exe",
+        ReleaseType.DATE,
+        repo="unslothai/llama.cpp",
+        asset_pattern=r"^app-b\d+-mix-[0-9a-f]+-windows-x64-vulkan\.zip$",
+    ),
     *rdna_tools(),
     ToolSpec(
         "llamacpp/additions/sccache",

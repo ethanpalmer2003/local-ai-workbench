@@ -318,7 +318,7 @@ def launch(
     # - a Vulkan build would otherwise see the integrated adapter too; naming the discrete one is the
     #   blocker that keeps an accidental iGPU run from passing as a GPU benchmark. Resolved here, not in
     #   build_cmd, so describing a command stays side-effect free
-    if "vulkan" in conf.build_dir.name:
+    if (conf.build_dir / "ggml-vulkan.dll").is_file():
         cmd += build_cli_args({"--device": gpu_selection.discrete_vulkan_device(conf.exe)})
     port = conf.port
     startup_marker = monitor.log_file.with_suffix(".ready")
