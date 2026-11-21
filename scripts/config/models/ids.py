@@ -44,6 +44,7 @@ class ModelId(StrEnum):
     LLAMACPP_GEMMA_4_E4B_IT_Q4_0 = "llamacpp/gemma-4-E4B-it-Q4_0"
     LLAMACPP_GEMMA_4_E4B_IT_MMPROJ_Q8_0 = "llamacpp/gemma-4-E4B-it-mmproj-q8_0"
     LLAMACPP_UNSLOTH_INKLING_2_MINI_UD_IQ3_XXS = "llamacpp/unsloth_Inkling-2-Mini-UD-IQ3_XXS"
+    LLAMACPP_UNSLOTH_INKLING_2_MINI_DSPARK_Q8_0 = "llamacpp/unsloth_Inkling-2-Mini-dspark-Q8_0"
     SDCPP_NOVA_3DCG_XL_ILV90_Q4_K_M = "sdcpp/Nova-3DCG-XL-ilV90-Q4_K_M"
     SDCPP_CLIP_G = "sdcpp/clip_g"
     SDCPP_CLIP_L = "sdcpp/clip_l"

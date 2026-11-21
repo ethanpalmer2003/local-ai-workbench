@@ -7,6 +7,8 @@
 ## Needs a model run or device
 Work that cannot be settled without a live run: weights, a device, a server or a human at the machine.
 
+- [ ] Try Inkling 2 Mini on the vendor's own llama.cpp build. Mainline build 12602 loads the Mainline_Support GGUF but never answers in chat: with no reasoning budget it fills the token budget with reasoning, and with `--reasoning-budget 256` it answers with gibberish or no tool call at all. The [Unsloth guide](https://unsloth.ai/docs/models/inkling-2-mini) pairs its `b12588-mix-c0c3de8` build with the repository-root GGUF, the DSpark drafter and `--spec-type draft-dspark`; the drafter already fails on mainline with a vocab mismatch (201024 against 200058). So install that build as its own id, re-download the root GGUF, and rerun the Pi coding pair before judging the model. ~1 h
+
 - [ ] Pin every inference engine to the tracked discrete adapter. llama.cpp's Vulkan builds now resolve it by name ([hardware.json](../scripts/config/shared/hardware.json), [gpu_selection.py](../scripts/launchers/runtime/gpu_selection.py)) and refuse when it is missing, but AudioCpp (`--device 0`), sd.cpp (`Vulkan0`), Strata (`gpu: 0`) and the ROCm builds (`HIP_VISIBLE_DEVICES=0`) still assume device order, so an adapter-order change could benchmark the integrated GPU and pass. ~45 min
 
 ### Requires user input

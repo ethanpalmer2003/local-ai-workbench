@@ -715,6 +715,18 @@
       "sha256": "fd9ccedae17c1bb89744612fbb46730b5275f2a342133d0419776bd1ae311657",
       "roles": [],
       "source_page": null
+    },
+    {
+      "category": "llms",
+      "group": "llamacpp",
+      "label": "llamacpp/unsloth_Inkling-2-Mini-dspark-Q8_0",
+      "filename": "coding_models/Inkling-2-Mini-dspark-Q8_0.gguf",
+      "url": "https://huggingface.co/unsloth/Inkling-2-Mini-GGUF/resolve/main/dspark-Inkling-2-Mini-Q8_0.gguf",
+      "in_use": false,
+      "notes": "DSpark speculative drafter (Q8_0) for Inkling-2-Mini; the vendor guide pairs it with --spec-type draft-dspark and --spec-draft-n-max 3 on its Unsloth build and repository-root GGUF. Mainline build 12602 rejects it against the Mainline_Support copy: markov_w1.weight expects vocab 200058 but the drafter stores 201024, so the two layouts are not interchangeable.",
+      "sha256": "2ec78510da837e8fc3be54a14757a0c5fbd2d8d9e85a0d92853fafdf674f3773",
+      "roles": [],
+      "source_page": null
     }
   ]
 }
