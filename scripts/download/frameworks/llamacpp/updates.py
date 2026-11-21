@@ -51,6 +51,7 @@ def release_notes(release: shared.Release) -> None:
 
 
 def hrx_tools() -> tuple[ToolSpec, ...]:
+    # - a source update is incomplete until the tree is compiled, so the kind is the build
     return (
         ToolSpec(
             "llamacpp/additions/hrx/llama.cpp",
@@ -58,15 +59,24 @@ def hrx_tools() -> tuple[ToolSpec, ...]:
             ReleaseType.SOURCE,
             repo="AMD-Ecosystem/llama.cpp",
             branch="hrx-graph-develop-v2",
+            rebuild_required=True,
             in_use=False,
         ),
-        ToolSpec("llamacpp/additions/hrx/hrx-system", "", ReleaseType.SOURCE, repo="ROCm/hrx-system", in_use=False),
+        ToolSpec(
+            "llamacpp/additions/hrx/hrx-system",
+            "",
+            ReleaseType.SOURCE,
+            repo="ROCm/hrx-system",
+            rebuild_required=True,
+            in_use=False,
+        ),
         ToolSpec(
             "llamacpp/additions/hrx/rocm-systems",
             "",
             ReleaseType.SOURCE,
             repo="ROCm/rocm-systems",
             branch="develop",
+            rebuild_required=True,
             in_use=False,
         ),
     )
@@ -81,6 +91,7 @@ def rdna_tools() -> tuple[ToolSpec, ...]:
             repo="ggml-org/llama.cpp",
             branch="master",
             manual_merge=True,
+            rebuild_required=True,
             in_use=False,
         ),
         # - the patch set tracks its own releases; the RDNA build that consumes it is hand-run and parked

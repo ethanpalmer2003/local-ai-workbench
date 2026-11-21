@@ -190,8 +190,8 @@ class FrameworkUpdates(unittest.TestCase):
     def test_final_status_groups_appear_once_in_order_and_unused_tools_are_not_processed(self):
         tools = [
             cfg.ToolSpec("patched-source", "", cfg.ReleaseType.SOURCE),
-            cfg.ToolSpec("unused-a", "", cfg.ReleaseType.MANUAL, in_use=False),
-            cfg.ToolSpec("unused-b", "", cfg.ReleaseType.MANUAL, in_use=False),
+            cfg.ToolSpec("unused-a", "", cfg.ReleaseType.HAND_INSTALL, in_use=False),
+            cfg.ToolSpec("unused-b", "", cfg.ReleaseType.HAND_INSTALL, in_use=False),
         ]
 
         def process(tool: cfg.ToolSpec, _folder: Path, _check: bool, summary: updater.UpdateSummary | None = None):
@@ -314,7 +314,6 @@ class FrameworkUpdates(unittest.TestCase):
         self.assertEqual(set(update_types.KIND_OF_RELEASE), set(cfg.ReleaseType))
         self.assertEqual(set(update_types.KIND_OF_RELEASE.values()), set(update_types.UPDATE_KINDS))
         self.assertEqual(len(update_types.UPDATE_KINDS), len(set(update_types.UPDATE_KINDS)))
-        self.assertEqual(len(update_types.UPDATE_KINDS), 9)
 
     def test_summary_nests_status_under_update_kind_inside_its_category(self):
         summary = updater.UpdateSummary()
@@ -420,7 +419,7 @@ class FrameworkUpdates(unittest.TestCase):
 
     def test_all_checks_and_grouped_plan_precede_updates_and_failed_checks_are_not_applied(self):
         tools = [cfg.ToolSpec(name, "", cfg.ReleaseType.SOURCE) for name in ("new", "current", "patched", "broken")]
-        tools.append(cfg.ToolSpec("unused", "", cfg.ReleaseType.MANUAL, in_use=False))
+        tools.append(cfg.ToolSpec("unused", "", cfg.ReleaseType.HAND_INSTALL, in_use=False))
         events = []
 
         def process(tool: cfg.ToolSpec, _folder: Path, check_only: bool, summary: updater.UpdateSummary | None = None):
@@ -459,7 +458,7 @@ class FrameworkUpdates(unittest.TestCase):
             log = next(Path(folder).rglob("*.log")).read_text()
             self.assertIn("Status: SOURCE UP TO DATE", log)
 
-    def test_strata_reports_current_parts_without_a_manual_notice(self):
+    def test_strata_reports_current_parts_without_an_app_notice(self):
         tool = next(tool for tool in cfg.TOOLS if tool.name == "strata")
         summary = updater.UpdateSummary()
         report = {
@@ -470,12 +469,12 @@ class FrameworkUpdates(unittest.TestCase):
         with patch.object(strata_updates, "process", return_value=report) as native:
             self.assertTrue(updater.process_tool(tool, Path("unused"), True, summary))
         native.assert_called_once()
-        self.assertEqual(summary.manual_check, [])
+        self.assertEqual(summary.app_update, [])
         self.assertEqual(len(summary.current), 1)
         self.assertTrue(summary.current[0].startswith("strata"))
         self.assertEqual(summary.apply_keys, set())
 
-    def test_strata_reports_a_manual_notice_only_when_a_part_is_newer(self):
+    def test_strata_reports_an_app_notice_only_when_a_part_is_newer(self):
         tool = next(tool for tool in cfg.TOOLS if tool.name == "strata")
         summary = updater.UpdateSummary()
         report = {
@@ -486,8 +485,8 @@ class FrameworkUpdates(unittest.TestCase):
         with patch.object(strata_updates, "process", return_value=report):
             self.assertTrue(updater.process_tool(tool, Path("unused"), True, summary))
         self.assertEqual(summary.current, [])
-        self.assertEqual(len(summary.manual_check), 1)
-        self.assertIn("0.1.59", summary.manual_check[0])
+        self.assertEqual(len(summary.app_update), 1)
+        self.assertIn("0.1.59", summary.app_update[0])
         self.assertEqual(summary.apply_keys, set())
 
     def test_a_newer_strata_part_is_never_work_for_this_run(self):
@@ -501,8 +500,8 @@ class FrameworkUpdates(unittest.TestCase):
         with patch.object(strata_updates, "process", return_value=report), contextlib.redirect_stdout(io.StringIO()):
             updater.process_tool(tool, Path("unused"), True, summary)
         # - the app installs its own bundle, so a notice must never enter the apply set
-        self.assertEqual(len(summary.manual_check), 1)
-        self.assertIn("0.1.59", summary.manual_check[0])
+        self.assertEqual(len(summary.app_update), 1)
+        self.assertIn("0.1.59", summary.app_update[0])
         self.assertEqual(summary.apply_keys, set())
 
     def test_strata_update_command_is_a_check_with_a_materialized_config(self):

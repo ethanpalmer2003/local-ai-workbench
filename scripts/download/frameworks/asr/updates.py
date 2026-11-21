@@ -56,9 +56,10 @@ TOOLS = [
     ToolSpec(
         "asr/parakeetcpp/cpu-stream",
         "parakeet.dll",
-        ReleaseType.MANUAL,
+        ReleaseType.SOURCE,
         repo="mudler/parakeet.cpp",
         source_checkout="asr/parakeetcpp/additions",
+        rebuild_required=True,
         in_use=False,
     ),  # Pinned optional C API build; routine updates must not rebuild it.
     ToolSpec(

@@ -40,9 +40,12 @@ TOOLS = [
         asset_pattern=r"^audio-.*-bin-windows-x64-rocm[\d.]+(?:-test)?\.zip$",
     ),
     ToolSpec(
-        "audiocpp/additions/espeak-ng", "eSpeak NG/libespeak-ng.dll", ReleaseType.MANUAL, repo="espeak-ng/espeak-ng"
+        "audiocpp/additions/espeak-ng",
+        "eSpeak NG/libespeak-ng.dll",
+        ReleaseType.HAND_INSTALL,
+        repo="espeak-ng/espeak-ng",
     ),
-    ToolSpec("audiocpp/additions/mecab", "libmecab.dll", ReleaseType.MANUAL),
+    ToolSpec("audiocpp/additions/mecab", "libmecab.dll", ReleaseType.HAND_INSTALL),
     ToolSpec(
         name=project_cfg.AUDIOCPP_ROCM_LEGACY_DIR.relative_to(project_cfg.FRAMEWORKS_DIR).as_posix(),
         repo="IIIIIllllIIIIIlllll/audio.cpp",

@@ -99,13 +99,14 @@ TOOLS = [
         channel="nightly",
         in_use=False,
     ),
-    ToolSpec("lemonade_server", "", ReleaseType.MANUAL, in_use=False),
-    # - Model servers stay parked until one is installed and exercised: each ships its own
-    #   launcher, so a version check would only restate the vendor's updater. LocalAI 4.12.1
-    #   publishes no Windows binary (linux, darwin, AppImage, dmg and source only); Text
-    #   generation WebUI publishes portable zips (cpu, vulkan, rocm, cuda) but is not installed.
-    ToolSpec("localai", "", ReleaseType.MANUAL, repo="mudler/LocalAI", in_use=False),
-    ToolSpec("text-generation-webui", "", ReleaseType.MANUAL, repo="oobabooga/text-generation-webui", in_use=False),
+    # - Model servers stay parked until one is installed and exercised. Lemonade and Text generation
+    #   WebUI ship their own launchers and updaters, so a second updater would fight the vendor's.
+    #   LocalAI 4.12.1 publishes no Windows binary (linux, darwin, AppImage, dmg and source only).
+    ToolSpec("lemonade_server", "", ReleaseType.APP_UPDATER, in_use=False),
+    ToolSpec("localai", "", ReleaseType.HAND_INSTALL, repo="mudler/LocalAI", in_use=False),
+    ToolSpec(
+        "text-generation-webui", "", ReleaseType.APP_UPDATER, repo="oobabooga/text-generation-webui", in_use=False
+    ),
     ToolSpec(
         name=project_cfg.SDCPP_ROCM_DIR.relative_to(project_cfg.FRAMEWORKS_DIR).as_posix(),
         repo="leejet/stable-diffusion.cpp",
@@ -246,9 +247,9 @@ def _vendor_batch_state(
 ) -> bool:
     """None-safe report of a vendor-managed checkout: True when the call is finished."""
     if not tool.repo:
-        print("Status: MANUAL CHECK REQUIRED")
+        print("Status: APP UPDATE REQUIRED (no version feed; the app's own updater owns it)")
         if summary is not None:
-            summary.record(tool, "manual_check", "external updater; version check unavailable", actionable=True)
+            summary.record(tool, "app_update", "external updater; version check unavailable", actionable=True)
         return True
     command = ["git", "-c", f"safe.directory={dest_dir.as_posix()}", "-C", str(dest_dir)]
     local = subprocess.run([*command, "rev-parse", "HEAD"], capture_output=True, text=True, check=False)
@@ -305,13 +306,13 @@ def process_strata(tool: ToolSpec, dest_dir: Path, check_only: bool, summary: sh
         return
     parts = ("engine", "control", "app")
     # - a part the feed never publishes is current: nothing is offered, so nothing needs a person
-    groups = {STRATA_STATUS_GROUPS.get(report[part]["status"], "manual_check") for part in parts}
+    groups = {STRATA_STATUS_GROUPS.get(report[part]["status"], "app_update") for part in parts}
     detail = ", ".join(strata_updates.describe(part, report[part]) for part in parts)
-    newer = "manual_check" in groups
+    newer = "app_update" in groups
     if newer:
         print("Status: UPDATE AVAILABLE IN THE STRATA APP; this updater never installs Strata parts")
     # - Strata is checked here and updated in its own app, so a notice never becomes work for this run
-    summary.record(tool, "manual_check" if newer else "current", detail)
+    summary.record(tool, "app_update" if newer else "current", detail)
 
 
 def installed_desktop_version(tool: ToolSpec, dest_dir: Path) -> str | None:

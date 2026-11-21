@@ -20,7 +20,13 @@ PATCH_ASSET = r"^patches\.tar\.gz$"
 RELEASE_ASSET = r"^release\.json$"
 RELEASE_JSON = "release.json"
 TOOL = ToolSpec(
-    "llamacpp/additions/llama-cpp-rdna-boosts", "", ReleaseType.PATCHES, repo=REPO, asset_pattern=PATCH_ASSET
+    "llamacpp/additions/llama-cpp-rdna-boosts",
+    "",
+    ReleaseType.PATCHES,
+    repo=REPO,
+    asset_pattern=PATCH_ASSET,
+    # - the patch set only counts once the build that applies it exists
+    rebuild_required=True,
 )
 
 

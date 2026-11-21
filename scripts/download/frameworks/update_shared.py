@@ -41,7 +41,8 @@ STATUS_LABELS = {
     "UPDATE AVAILABLE": "update available",
     "SOURCE UPDATE AVAILABLE; BUILD REQUIRED": "build required",
     "UPSTREAM CHANGED; MANUAL MERGE/REBUILD REQUIRED": "manual merge/rebuild",
-    "MANUAL CHECK/UPDATE REQUIRED": "manual check",
+    "APP UPDATE REQUIRED": "update in its app",
+    "MANUAL INSTALL REQUIRED": "install by hand",
     "PI PACKAGE SYNC REQUIRED": "package sync",
     "UP TO DATE": "up to date",
     "SKIPPED BY OPTION": "skipped",
@@ -78,7 +79,8 @@ class UpdateSummary:
     package_sync: list[str] = field(default_factory=list)
     manual_rebuild: list[str] = field(default_factory=list)
     source_build: list[str] = field(default_factory=list)
-    manual_check: list[str] = field(default_factory=list)
+    app_update: list[str] = field(default_factory=list)
+    hand_install: list[str] = field(default_factory=list)
     failures: list[str] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
     apply_keys: set[str] = field(default_factory=set)
@@ -94,7 +96,8 @@ class UpdateSummary:
             ("PI PACKAGE SYNC REQUIRED", self.package_sync),
             ("UPSTREAM CHANGED; MANUAL MERGE/REBUILD REQUIRED", self.manual_rebuild),
             ("SOURCE UPDATE AVAILABLE; BUILD REQUIRED", self.source_build),
-            ("MANUAL CHECK/UPDATE REQUIRED", self.manual_check),
+            ("APP UPDATE REQUIRED", self.app_update),
+            ("MANUAL INSTALL REQUIRED", self.hand_install),
             ("CHECK FAILED", self.failures),
             ("SKIPPED BY OPTION", self.skipped),
         )
@@ -661,10 +664,15 @@ def process_managed_tool(
         if summary is not None:
             summary.record(tool, "available" if needed else "current")
         return True
-    if tool.release_type == cfg.ReleaseType.MANUAL:
+    if tool.release_type in (cfg.ReleaseType.APP_UPDATER, cfg.ReleaseType.HAND_INSTALL):
+        app = tool.release_type == cfg.ReleaseType.APP_UPDATER
         if summary is not None:
-            summary.record(tool, "manual_check")
-        print("Status: MANUAL UPDATE REQUIRED (support tooling)")
+            summary.record(tool, "app_update" if app else "hand_install")
+        print(
+            "Status: APP UPDATE REQUIRED (the app updates itself)"
+            if app
+            else "Status: MANUAL INSTALL REQUIRED (no feed to compare; the file is placed by hand)"
+        )
         return True
     return False
 

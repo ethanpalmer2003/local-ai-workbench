@@ -8,3 +8,5 @@ The installed latest-stack rebuild additionally uses `latest-loom-q4-bounds.patc
 - `iq2-iq3-s-unfused-normal-output.patch`: supersedes that experiment and disables alternate output publication for the newly unfused IQ2_S/IQ3_S matmuls. See `corrected-manifest.json` for validation, hash and deployment status. Apply this patch alone, never both.
 
 Source updates and patch application are separate from runtime installation. Review upstream changes and compatibility, check patch application, then rebuild an isolated candidate with matching source and patch revisions. Validate against CPU and the previous checkpoint before installing. Preserve the previous verified runtime for rollback. Existing source modifications have snapshots but have not yet been organized into separate Git commits.
+
+None of these apply to the 2026-11-19 upstream heads; they describe the 2026-10-15 stack, and upstream has since landed its own IQ3_XXS decoding work. See [HRX limits](../HRX.md).

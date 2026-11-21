@@ -445,10 +445,22 @@ class FrameworkUpdateSources(unittest.TestCase):
             self.assertEqual((cache / "data").read_bytes(), b"keep")
 
     def test_merge_and_build_only_sources_are_reported_separately(self):
-        # - rdna carries local patches, so upstream changes need a merge; Avalon is a
-        #   clean checkout that only has to be recompiled after a fast-forward.
+        # - rdna carries local patches, so upstream changes need a merge; the rest only have to
+        #   be recompiled after an update, which is why they report the local build kind.
         self.assertEqual([tool.name for tool in cfg.TOOLS if tool.manual_merge], ["llamacpp/rdna"])
-        self.assertEqual([tool.name for tool in cfg.TOOLS if tool.rebuild_required], ["avalon"])
+        self.assertEqual(
+            [tool.name for tool in cfg.TOOLS if tool.rebuild_required],
+            [
+                "llamacpp/additions/hrx/llama.cpp",
+                "llamacpp/additions/hrx/hrx-system",
+                "llamacpp/additions/hrx/rocm-systems",
+                "llamacpp/rdna",
+                "llamacpp/additions/llama-cpp-rdna-boosts",
+                "asr/parakeetcpp/cpu-stream",
+                "avalon",
+            ],
+        )
+        self.assertEqual({cfg.update_kind(tool) for tool in cfg.TOOLS if tool.rebuild_required}, {"local build"})
         audio = next(tool for tool in cfg.TOOLS if tool.name == "audiocpp/vulkan")
         self.assertEqual(audio.release_type, cfg.ReleaseType.DATE)
         self.assertEqual(audio.install_subdir, "")

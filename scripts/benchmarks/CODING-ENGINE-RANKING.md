@@ -16,7 +16,9 @@ include harness startup and tools. Each row is one engine and model pair, ranked
 
 ROCm led prefill (501 and 502 tok/s) and decode (62.5 and 56.8), but its `ledger` run generated 37,435 tokens
 against 24,459 for the rolling build, so its wall time is not a like-for-like rate comparison. The Strata row is
-64K because its profile runs there; its older 32K pair read 74.1 and 144.0.
+64K because its profile runs there; its older 32K pair read 74.1 and 144.0. Strata was then updated in its own app
+to 0.2.18 with control and engine 0.1.64 on 2026-11-21 at 15:34, so the row above measures the 0.1.60 bundle until
+the pair runs again.
 
 ## Flash Next (IQ2_XS, Strata weights)
 
