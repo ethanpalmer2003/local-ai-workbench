@@ -3,6 +3,7 @@
 Benchmark runners and their timing support live here, separate from correctness and smoke tests in `scripts/tests`.
 
 - Strata vs Avalon on the same weights: [llm/](inference_engines/README.md) (`bat/benchmarks/benchmark_strata_avalon.bat`); reports native prefill, decode and TTFT medians per arm.
+- [Comparison vectors](COMPARISON-VECTORS.md) own the dimensions a result may vary on: engine, build, backend, harness, model, quantization, vendor quantization, MoE offload and memory envelope.
 - Coding agents: [coding_agents/](coding_agents/README.md) (`bat/benchmarks/benchmark_coding_agents.bat`).
 - Language practice vs Lemonade (`bat/benchmarks/benchmark_framework_compare.bat`): chat, speech and recognition on the pinned corpus, one stack at a time, with an extra arm for the practice recogniser's Whisper build. Every long run records [provenance](shared/provenance.py) so a later run can tell what changed.
 - The llama.cpp build sweep (`benchmark_llm_inference`) is retired; its sources are archived in `C:/AI/trash/retired-llm-inference-sweep`.

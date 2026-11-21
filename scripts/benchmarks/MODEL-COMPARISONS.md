@@ -11,6 +11,7 @@ python -m scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles --builds vulka
 ```
 
 - Native workload: live/opt-in. Refuse conflicting sessions, warm up, alternate order and separate startup/model loading from measurements.
+- [Comparison vectors](COMPARISON-VECTORS.md) name every dimension a result may vary on, including quantization, vendor quantization, weight layout and the memory envelope; one comparison holds all but one fixed.
 - Match hashes, tokenizer/template, context occupancy/capacity, sampling, KV type, FA, speculation, reasoning and token limits. Request count alone is insufficient.
 - Build comparisons run on the configured default model, so only the build changes: Breeze 2 for AudioCpp and `swift15` for llama.cpp coding builds. The llama.cpp coding builds are the ROCm builds taken from Lemonade's release assets; Lemonade's own server is a separate language-practice framework measured with Gemma. A non-default model such as Ming gets one check on the default build, never across every build.
 - Short-context evidence cannot establish filled-context performance. Reused prompts/cache conditions must be explicit.
