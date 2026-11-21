@@ -371,11 +371,8 @@
       "sources": [
         {
           "url": "https://huggingface.co/openai/whisper-large-v3-turbo",
-          "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9"
-        },
-        {
-          "url": "https://huggingface.co/openai/whisper-large-v3-turbo/resolve/main/generation_config.json",
-          "kind": "generation_config.lang_to_id"
+          "revision": "41f01f3fe87f28c78e2fbf8b568835947dd65ed9",
+          "kind": "card; language IDs read from generation_config.lang_to_id at this revision"
         }
       ]
     },
@@ -495,11 +492,8 @@
       "sources": [
         {
           "url": "https://huggingface.co/openai/whisper-small",
-          "revision": "973afd24965f72e36ca33b3055d56a652f456b4d"
-        },
-        {
-          "url": "https://huggingface.co/openai/whisper-small/resolve/main/generation_config.json",
-          "kind": "generation_config.lang_to_id"
+          "revision": "973afd24965f72e36ca33b3055d56a652f456b4d",
+          "kind": "card; language IDs read from generation_config.lang_to_id at this revision"
         }
       ]
     },
@@ -619,11 +613,8 @@
       "sources": [
         {
           "url": "https://huggingface.co/openai/whisper-base",
-          "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb"
-        },
-        {
-          "url": "https://huggingface.co/openai/whisper-base/resolve/main/generation_config.json",
-          "kind": "generation_config.lang_to_id"
+          "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+          "kind": "card; language IDs read from generation_config.lang_to_id at this revision"
         }
       ]
     },
@@ -947,11 +938,8 @@
       "sources": [
         {
           "url": "https://huggingface.co/hexgrad/Kokoro-82M",
-          "revision": "f3ff3571791e39611d31c381e3a41a3af07b4987"
-        },
-        {
-          "url": "https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md",
-          "kind": "voices/languages; Hub card en tag is incomplete"
+          "revision": "f3ff3571791e39611d31c381e3a41a3af07b4987",
+          "kind": "card; VOICES.md lists the voices and languages, and the card's en tag is incomplete"
         }
       ]
     },
