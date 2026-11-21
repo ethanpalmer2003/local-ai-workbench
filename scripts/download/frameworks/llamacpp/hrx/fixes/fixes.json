@@ -16,6 +16,14 @@
     "reason": "The visitor over OpParams misses some alternatives, and MSVC rejects the fallthrough (C4716)."
   },
   {
+    "id": "hrx-system-memory-transition-cast",
+    "repository": "hrx-system",
+    "marker_file": "libhrx/src/libhrx/memory_transition.c",
+    "marker": "(uint32_t) IREE_HAL_MEMORY_EFFECT_UNSUPPORTED",
+    "patch": "hrx-system-memory-transition-cast.patch",
+    "reason": "MSVC reads the 0x80000000 effect bit as a negative int and stops the build on C4308."
+  },
+  {
     "id": "hrx-system-msvc-gfx1101",
     "repository": "hrx-system",
     "marker_file": "build_tools/cmake/iree_python.cmake",

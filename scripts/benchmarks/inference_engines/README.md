@@ -13,6 +13,10 @@ python -m scripts.benchmarks.inference_engines.benchmark_coding_engines --engine
 
 Both arms serve the same Strata Swift IQ2_XS weights with the `strata_profiles` contract (long Python prefix, 128 tokens, temperature 0, seed 42), so their medians share one scope. The first sample per arm is discarded (`--warmup-samples`) because it pays the cold expert pages. Arms run sequentially; whatever holds a chosen port is stopped first, so a run never waits on a session. `--draft-n-max` sets Avalon's MTP depth; `--strata-resident-experts` and `--strata-cache-floor-mib` alter the Strata arm only.
 
+## Engines to try
+
+Queued, neither installed: [trial engines](TRIAL-ENGINES.md).
+
 ## Feature parity, and why Avalon prefills slower
 
 | Feature | Strata arm | Avalon arm | Blocking evidence |
@@ -31,8 +35,8 @@ Both arms serve the same Strata Swift IQ2_XS weights with the `strata_profiles` 
 | 2026-11-13 | llama.cpp `vulkan` b12363, `swift15` | 526 tok/s (3044-token prompt, 11.5 s) | 134.8 tok/s (199 fresh, 71 rewrite) | 0.118 s | 0.859 |
 | 2026-11-13 | llama.cpp `rocm-lemonade` b1375, `swift15` | 129.5 tok/s (3044-token prompt, 46.7 s) | 149.6 tok/s (216 fresh, 83 rewrite) | 0.112 s | 0.937 |
 
-- The 96K allocation costs ROCm four turns of prefill on the same 3044 tokens; at 64K it reads 551 against Vulkan's 526 tok/s, so ROCm collapses only between 64K and 96K. Decode splits by task class: 71-83 tok/s on the rewrite against 199-216 on fresh generation.
-- The Strata arm runs again: 357 tok/s prefill and 46.2 decode over the 3025-token prefix, TTFT 8.5 s, startup 38 s, with no prompt reuse (`0 reused + 18185 read`). The earlier "cannot create the refill stream" exit no longer reproduces; the vision encoder's `WinError 5` is untested.
+- The 96K allocation costs ROCm four turns of prefill on the same 3044 tokens; at 64K it reads 551 against Vulkan's 526 tok/s, so ROCm collapses only between 64K and 96K. Decode splits: 71-83 tok/s on the rewrite against 199-216 on fresh generation.
+- The Strata arm runs again: 357 tok/s prefill and 46.2 decode over the 3025-token prefix, TTFT 8.5 s, startup 38 s, with no prompt reuse (`0 reused + 18185 read`). The earlier "cannot create the refill stream" exit no longer reproduces.
 
 ## Superseded measurements
 
@@ -45,11 +49,11 @@ Kept because it was once a decision basis. Do not mix it into a new table; re-ru
 | 2026-11-13 | llama.cpp `rocm-lemonade` b1375, `swift15`, one sample | 118.0 tok/s (66-token prompt, 1.5 s) | 95.6 tok/s | 47.9 tok/s | 0.37 s | 0.809 |
 
 - A four-task corpus ran on both builds and `swift15-8k` on 2026-11-13 and gave up its place above: its median sat near the fresh-generation class, so only its prefill agrees. Its outputs stay in the run folders.
-- Superseded by the 2026-11-13 harness change: pooled samples without a warm-up, so decode carried the ramp and its own samples span 31 to 126 tok/s. Two one-sample rows predate the warm-up. Warm prefill was dropped: a warm sample prefills only its cache miss.
+- Superseded by the 2026-11-13 harness change: pooled samples without a warm-up, so decode carried the ramp and its own samples span 31 to 126 tok/s. Warm prefill was dropped: a warm sample prefills only its cache miss.
 - Evidence: `scripts/benchmarks/output/inference_engines/benchmark_coding_engines/unreviewed/1794441020487629300/artifacts/summary.txt`.
 
 ## Metric scope
 
 Both arms report native server `timings`: prefill tok/s, decode tok/s and TTFT, plus parsed prompt-cache reuse per arm. HTTP request time is not decode throughput, and this is a paired screen, not a ranking. Every run records startup, warmup, samples, settings, failures and logs under `scripts/benchmarks/output/llm/`.
 
-The retired llama.cpp build sweep (llama.cpp/Vulkan builds plus hipfire/TabbyAPI adapters) is archived in `C:/AI/trash/retired-llm-inference-sweep`.
+The retired llama.cpp build sweep is archived in `C:/AI/trash/retired-llm-inference-sweep`.

@@ -35,6 +35,7 @@ from scripts.review.checks import (
     typography,
     walrus,
 )
+from scripts.review.lists import text_files
 from scripts.shared import changes
 from scripts.shared.changes import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
 from scripts.shared.import_graph import (
@@ -76,7 +77,8 @@ def _spelling_targets() -> list[str]:
 def spelling_check(paths: list[str] | None = None) -> int:
     """Codespell over the change at edit time and the whole tree at push."""
     checker = project_cfg.VENV_DIR / "Scripts" / "codespell.exe"
-    targets = list(paths) if paths else _spelling_targets()
+    # - the same suffix vocabulary as the text checks: an imported patch keeps the upstream spelling
+    targets = [path for path in paths if text_files.is_text(path)] if paths else _spelling_targets()
     status = 0
     for start in range(0, len(targets), 80):
         status |= subprocess.run(

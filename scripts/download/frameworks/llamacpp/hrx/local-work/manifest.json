@@ -1,0 +1,180 @@
+[
+  {
+    "repository": "llama.cpp",
+    "remote": "origin/hrx-graph-develop-v2",
+    "remote_head": "3e71ba3ffc4153aa151a9dadf3766ee107e2c2a2",
+    "bundle": "llama.cpp-local-branches.bundle",
+    "branches": {
+      "codex/hrx-upstream-20261012": {
+        "commits": [
+          {
+            "sha": "4dfa7b2e218b714395f43be36f7bd577c4403f5d",
+            "date": "2026-10-15",
+            "subject": "Merge remote-tracking branch 'origin/hrx-graph-develop-v2' into codex/hrx-upstream-20261012"
+          },
+          {
+            "sha": "43b0ec2c41cc671cc0add797a4b8c0aae87b2f1a",
+            "date": "2026-10-15",
+            "subject": "ggml-hrx: reuse block metadata in dense and paired tiled matmul (#148)"
+          },
+          {
+            "sha": "dbe1d6e1a27ea78e432f3da84778ecb591f196a6",
+            "date": "2026-10-14",
+            "subject": "ggml-hrx: adopt exclusively owned Loom link-index builders (#147)"
+          },
+          {
+            "sha": "1bdb972083ba9b9f4da91858205d13c471ee8a36",
+            "date": "2026-10-14",
+            "subject": "ggml-hrx: size fused router launch for target expert tiles (#146)"
+          },
+          {
+            "sha": "775aa771292ed6318827c005910a3c857f48bcc4",
+            "date": "2026-10-13",
+            "subject": "ggml-hrx: prove packet bounds before view linearization (#141)"
+          },
+          {
+            "sha": "5ce02c605750d317fe523439521ff41839b464db",
+            "date": "2026-10-12",
+            "subject": "Adapt HRX JIT to exclusive Loom link-index builder API"
+          },
+          {
+            "sha": "9a5d7e00b4a47d994e38634e3ce216839bb320d2",
+            "date": "2026-10-12",
+            "subject": "Merge remote-tracking branch 'origin/hrx-graph-develop-v2' into codex/hrx-upstream-20261012"
+          },
+          {
+            "sha": "70a2f6fe6ef1fb9d3aa9d92b3f988e2cc16f4ae6",
+            "date": "2026-10-12",
+            "subject": "Preserve validated Windows HRX patches before upstream merge"
+          },
+          {
+            "sha": "d1b0eb24d62dd5423ebc32bf066889f3641538ee",
+            "date": "2026-10-11",
+            "subject": "hrx: accept empty MoE expert views when matching graphs (#140)"
+          },
+          {
+            "sha": "d9e2dc4920b9365cb6f2ff64cba5d516397b2773",
+            "date": "2026-10-08",
+            "subject": "ggml-hrx: adopt canonical Loom divisibility predicates (#139)"
+          },
+          {
+            "sha": "53d443cd04e059b6a2f20825581e3b2795aaf945",
+            "date": "2026-10-07",
+            "subject": "ggml-hrx: squash development through 8108322b7"
+          }
+        ],
+        "upstream_lacks": [
+          "53d443cd04e059b6a2f20825581e3b2795aaf945",
+          "70a2f6fe6ef1fb9d3aa9d92b3f988e2cc16f4ae6",
+          "5ce02c605750d317fe523439521ff41839b464db"
+        ],
+        "upstream_has_equivalent": [
+          "d9e2dc4920b9365cb6f2ff64cba5d516397b2773",
+          "d1b0eb24d62dd5423ebc32bf066889f3641538ee",
+          "775aa771292ed6318827c005910a3c857f48bcc4",
+          "1bdb972083ba9b9f4da91858205d13c471ee8a36",
+          "dbe1d6e1a27ea78e432f3da84778ecb591f196a6",
+          "43b0ec2c41cc671cc0add797a4b8c0aae87b2f1a"
+        ]
+      },
+      "hrx-graph-develop-v2": {
+        "commits": [
+          {
+            "sha": "d9e2dc4920b9365cb6f2ff64cba5d516397b2773",
+            "date": "2026-10-08",
+            "subject": "ggml-hrx: adopt canonical Loom divisibility predicates (#139)"
+          },
+          {
+            "sha": "53d443cd04e059b6a2f20825581e3b2795aaf945",
+            "date": "2026-10-07",
+            "subject": "ggml-hrx: squash development through 8108322b7"
+          }
+        ],
+        "upstream_lacks": [
+          "53d443cd04e059b6a2f20825581e3b2795aaf945"
+        ],
+        "upstream_has_equivalent": [
+          "d9e2dc4920b9365cb6f2ff64cba5d516397b2773"
+        ]
+      }
+    }
+  },
+  {
+    "repository": "hrx-system",
+    "remote": "origin/main",
+    "remote_head": "b6ad3f37e2054036eff2e0fdb59a7c31d3beb982",
+    "bundle": "hrx-system-local-branches.bundle",
+    "branches": {
+      "codex/hrx-windows": {
+        "commits": [
+          {
+            "sha": "bf1d3963ec238d97b056a40d0ee9c96462b4a53f",
+            "date": "2026-10-15",
+            "subject": "Merge remote-tracking branch 'origin/main' into codex/hrx-windows"
+          },
+          {
+            "sha": "b7132f6262d7f05b006eea3bf59eaadc2202e047",
+            "date": "2026-10-12",
+            "subject": "Merge remote-tracking branch 'origin/main' into codex/hrx-windows"
+          },
+          {
+            "sha": "0c6dc41f69c60bbcb86120316ad1053f03e87fd2",
+            "date": "2026-10-10",
+            "subject": "Merge remote-tracking branch 'origin/main' into codex/hrx-windows"
+          },
+          {
+            "sha": "992073f5cbf504716ca80bd9c6c2240523347f0b",
+            "date": "2026-10-10",
+            "subject": "Preserve MSVC portability and gfx1101 HRX discovery fixes"
+          }
+        ],
+        "upstream_lacks": [
+          "992073f5cbf504716ca80bd9c6c2240523347f0b"
+        ],
+        "upstream_has_equivalent": []
+      }
+    }
+  },
+  {
+    "repository": "rocm-systems",
+    "remote": "origin/develop",
+    "remote_head": "90e1fc7a09ad72b2674f4215f8c303840969c34b",
+    "bundle": "rocm-systems-local-branches.bundle",
+    "branches": {
+      "codex/hrx-windows": {
+        "commits": [
+          {
+            "sha": "65d961f1091b618ec079c69d6f6bdb77f71b5866",
+            "date": "2026-10-15",
+            "subject": "Merge remote-tracking branch 'origin/develop' into codex/hrx-windows"
+          },
+          {
+            "sha": "7cc9d692b63c90bbdb39f7a9fbd5821834852c22",
+            "date": "2026-10-12",
+            "subject": "Merge remote-tracking branch 'origin/develop' into codex/hrx-windows"
+          },
+          {
+            "sha": "e0d87ca55d46f256800ea47b7ac8169688b2290c",
+            "date": "2026-10-10",
+            "subject": "Wait for the submitted fence in non-atomic PM4 completion"
+          },
+          {
+            "sha": "47490f1d6232ba47d27eae6623c6bb65786a2a3e",
+            "date": "2026-10-10",
+            "subject": "Merge remote-tracking branch 'origin/develop' into codex/hrx-windows"
+          },
+          {
+            "sha": "c3ccb897170b9d59a25027910f7c0864fed699fe",
+            "date": "2026-10-10",
+            "subject": "Preserve Windows discrete GPU node selection fixes"
+          }
+        ],
+        "upstream_lacks": [
+          "c3ccb897170b9d59a25027910f7c0864fed699fe",
+          "e0d87ca55d46f256800ea47b7ac8169688b2290c"
+        ],
+        "upstream_has_equivalent": []
+      }
+    }
+  }
+]

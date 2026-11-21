@@ -62,5 +62,6 @@ def text_check_targets(
     args = parser.parse_args(argv)
     root = git_root()
     if args.paths:
-        return root, [path for path in args.paths if path not in skip]
+        # - an imported patch keeps the upstream prose it carries, so only our own text suffixes are read
+        return root, [path for path in args.paths if path not in skip and is_text(path)]
     return root, tracked_text_files(root, skip)
