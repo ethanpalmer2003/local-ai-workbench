@@ -432,6 +432,29 @@ class CodeChangeStageTests(unittest.TestCase):
                     ["notes/TODO.md", "scripts/removed.py"],
                 )
 
+    def test_a_document_or_a_batch_file_does_not_count_for_the_push(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = self._tree(folder, "VALUE = 1\n")
+            with patch.object(scoped_selection, "upstream_texts", return_value={}) as upstream:
+                self.assertFalse(scoped_selection.python_code_changed(["notes/TODO.md", "bat/checks/a.bat"], root))
+            upstream.assert_not_called()
+
+    def test_a_docstring_only_python_edit_does_not_count_for_the_push(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = self._tree(folder, '"""New docstring."""\nVALUE = 1\n')
+            with patch.object(
+                scoped_selection, "upstream_texts", return_value={"scripts/run.py": '"""Old docstring."""\nVALUE = 1\n'}
+            ):
+                self.assertFalse(scoped_selection.python_code_changed(["scripts/run.py", "notes/TODO.md"], root))
+
+    def test_a_python_code_edit_counts_for_the_push(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = self._tree(folder, '"""New docstring."""\nVALUE = 2\n')
+            with patch.object(
+                scoped_selection, "upstream_texts", return_value={"scripts/run.py": '"""Old docstring."""\nVALUE = 1\n'}
+            ):
+                self.assertTrue(scoped_selection.python_code_changed(["notes/TODO.md", "scripts/run.py"], root))
+
     def test_an_unreadable_upstream_copy_counts_as_a_change(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = self._tree(folder, "VALUE = 1\n")

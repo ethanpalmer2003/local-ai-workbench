@@ -3,8 +3,8 @@
 A class is kept when its module changed or directly imports a changed module. The full suite runs for
 `--all`, a code change to a `FULL_TRIGGERS` file, a deleted Python file, or a branch with no upstream.
 No classes run for a clean tree, an edit to comments, docstrings or layout only, or a change that
-touches no Python module. The pre-push stage asks the same question through `code_change_paths`, so a
-push that only edits comments or docstrings runs nothing either.
+touches no Python module. The pre-push stage asks the same question through `python_code_changed`, so
+a push that only edits comments or docstrings runs nothing either.
 
 The walk is currently set to one hop because a second hop was tested and found to select close to a
 full run. A test two imports away waits for the full pre-push run.
@@ -102,6 +102,15 @@ def select_test_classes(
     return _build_selection(test_classes, reachable, reason)
 
 
+def python_code_changed(paths: list[str], root: Path | None = None) -> bool:
+    """Whether any changed Python file carries a code change; a document or config path never counts.
+
+    The pre-push stage asks this, so a push that only edits Markdown, a batch file or configuration runs
+    nothing, as it always did, and a `.py` edit that only touches prose stays cheap as well.
+    """
+    return bool(code_change_paths([path for path in paths if path.endswith(".py")], root))
+
+
 def code_change_paths(paths: list[str], root: Path | None = None) -> list[str]:
     """The changed paths that carry a code change; a Python prose-only edit is left out.
 
@@ -109,6 +118,8 @@ def code_change_paths(paths: list[str], root: Path | None = None) -> list[str]:
     fast instead of running the full suite for a file whose behavior did not change.
     """
     # Only `.py` paths can match upstream, so every other path stays for the caller to judge.
+    if not paths:
+        return []
     base = root or project_cfg.BASE_DIR
     readable = [path for path in paths if path.endswith(".py") and (base / path).is_file()]
     # The upstream copies come from one git call for the whole set. A read that fails is no evidence, so

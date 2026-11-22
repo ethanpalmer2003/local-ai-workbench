@@ -6,7 +6,7 @@ from scripts.shared.changes import GitError, NoUpstreamError, changed_since_head
 from scripts.shared.timing import timed
 from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.registry import TEST_CLASSES
-from scripts.tests.scoped_selection import code_change_paths, select_test_classes
+from scripts.tests.scoped_selection import python_code_changed, select_test_classes
 
 if __name__ == "__main__":
     pushing = "--push" in sys.argv[1:]
@@ -18,7 +18,7 @@ if __name__ == "__main__":
         # - --push is the pre-push stage: every class when a code change is unpushed, none when only
         #   comments, docstrings or prose are, through the same filter the commit stage applies
         try:
-            python_changed = bool(code_change_paths(changed_since_upstream()))
+            python_changed = python_code_changed(changed_since_upstream())
         except (GitError, NoUpstreamError):
             # No baseline is no evidence, so the push stage runs every class rather than none
             python_changed = True
