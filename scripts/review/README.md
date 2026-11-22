@@ -55,7 +55,7 @@ folder rather than list names.
 The optional embedding check and its code mode: [similarity](SIMILARITY.md). Front-end wiring: [frontend
 wiring](FRONTEND-WIRING.md). Both are in the gate.
 
-Each check runs alone, for example `python -m scripts.review.checks.layout`. `docs --words` prints every
+Each check runs alone, for example `python -m scripts.review.checks.layout`. `checks/docs.py --words` prints every
 document by word count with its budget, `--roles` counts documents per role, and `--links` reports pointers,
 repeats and unlinked documents; a link fails when it is absolute, uses a backslash, points into an untracked
 path, or misses its target. Add `--tests` to run the model-free suite afterwards. Document organization:
