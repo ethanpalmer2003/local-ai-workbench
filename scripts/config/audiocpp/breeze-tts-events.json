@@ -1,7 +1,7 @@
 {
   "source": "https://docs.breezeblue.ai/guides/audio-tags",
   "retrieved": "2026-11-21",
-  "note": "English tags use parentheses. The multilingual model uses square brackets in every other language, so its tags are not listed here: this adapter speaks English. The model card also accepts the plain forms of the same events, and both spellings are listed per event.",
+  "note": "Breeze 2 runs here as an English voice: the vendor's square-bracket table for other languages is not used. Each event lists the vendor's exact English tag first and the plain form the model card shows, and the adapter passes whichever spelling the caller typed through unchanged.",
   "events": [
     {"canonical": "laugh", "category": "Laughter", "tags": ["(laughs)", "(laugh)"]},
     {"canonical": "chuckle", "category": "Laughter", "tags": ["(chuckles)", "(chuckle)"]},

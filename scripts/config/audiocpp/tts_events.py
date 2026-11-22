@@ -1,7 +1,8 @@
 """Breeze TTS 2 vocal events: the vendor's own tag spellings, kept in one data file.
 
 The Breeze audio-tags page owns these spellings, so the adapter reads them from the JSON beside this module
-instead of carrying a hard-coded list the vendor can outgrow. Refresh it by re-reading
+instead of carrying a hard-coded list the vendor can outgrow. Only the English tags are recorded: Breeze 2
+runs here as an English voice, not as a language-practice model. Refresh the file by re-reading
 https://docs.breezeblue.ai/guides/audio-tags, updating the JSON, and rerunning the audiocpp test cases.
 """
 

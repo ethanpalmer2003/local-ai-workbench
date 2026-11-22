@@ -46,6 +46,12 @@ class BreezeVocalAdapterTests(unittest.TestCase):
     def test_a_documented_event_passes_through(self):
         self.assertEqual(tts_text_processing.filter_breeze_vocal_events("(laughs) hello"), "(laughs) hello")
 
+    def test_a_bare_event_keeps_the_spelling_the_caller_typed(self):
+        # - both the vendor's tag and the model card's plain form are sent as written, never rewritten
+        for tag in ("(laugh)", "(laughs)", "(giggles)", "(clears throat)", "(breathing heavily)", "(pause)"):
+            with self.subTest(tag=tag):
+                self.assertEqual(tts_text_processing.filter_breeze_vocal_events(f"{tag} hi"), f"{tag} hi")
+
     def test_an_undocumented_parenthetical_is_unwrapped(self):
         self.assertEqual(tts_text_processing.filter_breeze_vocal_events("(waves hello)"), "waves hello")
 
