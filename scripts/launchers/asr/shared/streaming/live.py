@@ -9,7 +9,6 @@ import threading
 import time
 import uuid
 from typing import Any
-from urllib.parse import urlsplit
 
 from scripts.config import project_config as project_cfg
 from scripts.config.shared import speech_delivery
@@ -18,7 +17,7 @@ from scripts.launchers.asr import selector
 from scripts.launchers.asr.shared.streaming.segment_stream import SegmentStream
 from scripts.launchers.asr.shared.streaming.turns import Turns
 from scripts.launchers.asr.shared.streaming.websocket_stream import WebSocketBridge
-from scripts.launchers.proxy_util import read_request_body, send_bytes, send_json_error
+from scripts.launchers.proxy_util import read_request_body, same_workspace_origin, send_bytes, send_json_error
 
 
 class Sessions:
@@ -141,8 +140,7 @@ class Sessions:
             )
             return True
         # Browsers must use this gateway's origin; never let another website start a native helper.
-        origin = handler.headers.get("Origin")
-        if origin and urlsplit(origin).netloc != handler.headers.get("Host"):
+        if not same_workspace_origin(handler.headers.get("Origin"), handler.headers.get("Host")):
             send_json_error(handler, 403, "Use the practice page on this server", "invalid_request_error")
             return True
         try:

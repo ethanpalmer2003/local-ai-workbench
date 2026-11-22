@@ -226,6 +226,17 @@ class SharedContracts(unittest.TestCase):
                 proxy_util.serve_proxy(llamacpp_proxy.Handler, "127.0.0.1", 9988, "unused", "test")
             server.return_value.__exit__.assert_called_once()
 
+    def test_the_gateway_accepts_either_loopback_name_on_its_own_port(self):
+        # - the page can be opened on localhost or 127.0.0.1; both are this listener
+        self.assertTrue(proxy_util.same_workspace_origin("http://localhost:8895", "127.0.0.1:8895"))
+        self.assertTrue(proxy_util.same_workspace_origin("http://127.0.0.1:8895", "localhost:8895"))
+        self.assertTrue(proxy_util.same_workspace_origin(None, "127.0.0.1:8895"))
+
+    def test_the_gateway_refuses_another_host_or_port(self):
+        self.assertFalse(proxy_util.same_workspace_origin("http://other.invalid", "localhost:8895"))
+        self.assertFalse(proxy_util.same_workspace_origin("http://localhost:9000", "localhost:8895"))
+        self.assertFalse(proxy_util.same_workspace_origin("file:///page.html", "localhost:8895"))
+
 
 if __name__ == "__main__":
     with timed("shared/shared_contracts"):

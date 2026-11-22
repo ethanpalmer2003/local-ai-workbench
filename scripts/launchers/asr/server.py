@@ -21,6 +21,7 @@ from scripts.launchers.proxy_util import (
     build_forward_headers,
     read_request_body,
     relay_stream,
+    same_workspace_origin,
     send_bytes,
     send_json_error,
     serve_proxy,
@@ -42,7 +43,7 @@ class _AsrProxyHandler(ProxyHandlerMixin):
     def _forward(self, method: str) -> None:
         path = urlsplit(self.path).path
         origin = self.headers.get("Origin") if self.runtime else None
-        if self.runtime and method == "POST" and origin and urlsplit(origin).netloc != self.headers.get("Host"):
+        if self.runtime and method == "POST" and not same_workspace_origin(origin, self.headers.get("Host")):
             send_json_error(self, 403, "Use this workspace origin", "invalid_request_error")
             return
         try:

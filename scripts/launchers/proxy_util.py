@@ -44,6 +44,26 @@ def build_forward_headers(client_headers: Message, body: bytes) -> dict[str, str
     return headers
 
 
+# - a browser page served from this gateway may use either loopback name for it
+LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
+
+
+def same_workspace_origin(origin: str | None, host_header: str | None) -> bool:
+    """Whether a browser Origin is this gateway's own page: loopback, on the host header's port.
+
+    Comparing the full netloc would refuse `http://localhost:PORT` when the page was opened on
+    `127.0.0.1:PORT`, which is the same server; the port is what identifies the listener here, and a
+    page from any other host cannot claim a loopback origin.
+    """
+    if not origin:
+        return True
+    parsed = urlsplit(origin)
+    if parsed.scheme not in {"http", "https"} or parsed.hostname not in LOOPBACK_HOSTS:
+        return False
+    _host, _, port = (host_header or "").rpartition(":")
+    return not port.isdigit() or parsed.port == int(port)
+
+
 def relay_response_headers(
     handler: BaseHTTPRequestHandler, resp_headers: Iterable[tuple[str, str]], content_length: int
 ):
