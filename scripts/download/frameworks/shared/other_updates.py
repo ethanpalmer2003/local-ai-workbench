@@ -447,17 +447,35 @@ def process_tool(
         process_desktop(tool, destination, check_only, summary)
 
 
+def _prompt_label(entry: ast.expr) -> str:
+    """The scope label a specspeed prompt carries: a bare string, or the first item of a tuple."""
+    try:
+        value = ast.literal_eval(entry)
+    except (ValueError, SyntaxError) as error:
+        raise shared.UpdateError(f"specspeed prompt is not a literal: {ast.unparse(entry)}") from error
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (tuple, list)) and value and isinstance(value[0], str):
+        return value[0]
+    raise shared.UpdateError(f"specspeed prompt names no scope: {ast.unparse(entry)}")
+
+
 def restrict_specspeed(path: Path) -> None:
     source = path.read_text(encoding="utf-8")
     node = next(
-        node
-        for node in ast.walk(ast.parse(source))
-        if isinstance(node, ast.Assign)
-        and any(isinstance(target, ast.Name) and target.id == "PROMPTS" for target in node.targets)
+        (
+            node
+            for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == "PROMPTS" for target in node.targets)
+        ),
+        None,
     )
+    if node is None:
+        raise shared.UpdateError(f"specspeed has no PROMPTS assignment: {path}")
     if not isinstance(node.value, ast.List):
         raise shared.UpdateError(f"specspeed PROMPTS is not a list literal: {path}")
-    prompts = [entry for entry in node.value.elts if ast.literal_eval(entry)[0] in ("code", "code2", "prose_en")]
+    prompts = [entry for entry in node.value.elts if _prompt_label(entry) in ("code", "code2", "prose_en")]
     lines = source.splitlines(keepends=True)
     lines[node.lineno - 1 : node.end_lineno] = [
         "PROMPTS = " + ast.unparse(ast.List(elts=prompts, ctx=ast.Load())) + "\n"

@@ -425,6 +425,20 @@ class FrameworkUpdateSources(unittest.TestCase):
             self.assertIn("prose_en", source)
             self.assertIn("code", source)
 
+    def test_specspeed_accepts_a_bare_string_prompt(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            path = Path(folder) / "specspeed.py"
+            path.write_text('PROMPTS = ["code", "prose_zh", "prose_en"]\n', encoding="utf-8")
+            other_updates.restrict_specspeed(path)
+            self.assertEqual(path.read_text(encoding="utf-8"), "PROMPTS = ['code', 'prose_en']\n")
+
+    def test_specspeed_without_prompts_is_a_stated_failure(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            path = Path(folder) / "specspeed.py"
+            path.write_text("VALUE = 1\n", encoding="utf-8")
+            with self.assertRaisesRegex(updater.UpdateError, "no PROMPTS assignment"):
+                other_updates.restrict_specspeed(path)
+
     def test_snapshot_check_only_does_not_download_or_replace(self):
         tool = next(tool for tool in cfg.TOOLS if tool.name == "benchmarks/specspeed")
         response = Mock()
