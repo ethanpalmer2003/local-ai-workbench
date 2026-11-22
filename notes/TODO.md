@@ -40,7 +40,7 @@ Decisions only you can make.
 ## Needs a live run or device
 Cannot be settled without hardware or a serving model.
 
-- [ ] Pin every inference engine to the tracked discrete adapter. llama.cpp's Vulkan builds now resolve it by name ([hardware.json](../scripts/config/shared/hardware.json), [gpu_selection.py](../scripts/launchers/runtime/gpu_selection.py)) and refuse when it is missing, but AudioCpp (`--device 0`), sd.cpp (`Vulkan0`), Strata (`gpu: 0`) and the ROCm builds (`HIP_VISIBLE_DEVICES=0`) still assume device order, so an adapter-order change could benchmark the integrated GPU and pass. ~45 min
+- [ ] Pin every inference engine to the tracked discrete adapter. llama.cpp's Vulkan builds resolve it by name at launch ([hardware.json](../scripts/config/shared/hardware.json), [gpu_selection.py](../scripts/launchers/runtime/gpu_selection.py)) and refuse when it is missing, but every other engine still names an ordinal: AudioCpp `"device": 0`, Strata `"gpu": 0` in four configs, sd.cpp `--backend Vulkan0`, the ROCm builds' `HIP_VISIBLE_DEVICES=0`, parakeet's `PARAKEET_DEVICE=Vulkan0`, gemma audio and `launcher_speech`'s `Vulkan0`, and the whisper file profile. The order is not guaranteed here - `amdf-info --format=json` already lists the RX 7800 XT as `gfx1102` at ordinal 1 while `rdna://0` is the integrated adapter - so a driver reinstall could benchmark the iGPU and still pass. Resolve each engine's selector from the tracked name at launch, the way llama.cpp does, or fail loudly. ~45 min
 
 ### Requires user input
 
