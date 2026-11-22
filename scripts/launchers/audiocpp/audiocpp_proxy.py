@@ -1,3 +1,5 @@
+"""AudioCpp TTS proxy: model/voice fallbacks, streaming defaults and Breeze text rules in one transform."""
+
 import importlib
 import sys
 from collections.abc import Callable
@@ -81,7 +83,7 @@ def _apply_streaming_options(payload: Payload) -> None:
             options.setdefault(key, value)
 
 
-def _preset_for(model: str):
+def _preset_for(model: str) -> cfg.AudiocppProxyRequestModelPreset | None:
     return cfg.AUDIOCPP_PROXY_MODEL_PRESETS.get(cfg.AudiocppModel(model))
 
 
@@ -125,7 +127,7 @@ def _apply_voice_ref_fallback(payload: Payload) -> None:
         print(f"[audiocpp-proxy] warning: no clone files found for {candidates}")
 
 
-def _apply_request_options(payload: Payload, preset, model: str) -> None:
+def _apply_request_options(payload: Payload, preset: cfg.AudiocppProxyRequestModelPreset, model: str) -> None:
     options = payload.setdefault("options", {})
     if not isinstance(options, dict):
         return
