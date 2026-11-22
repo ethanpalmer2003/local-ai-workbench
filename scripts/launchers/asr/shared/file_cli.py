@@ -75,7 +75,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--input", type=Path)
     parser.add_argument("--mode", choices=("offline", "streaming", "live"))
     parser.add_argument("--language", default="auto")
-    parser.add_argument("--output", type=Path, help="Transcript file for NeMo, AudioCpp or CrispASR")
+    parser.add_argument("--output", type=Path, help="Transcript file for NeMo or AudioCpp")
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--print-command", action="store_true")
     return parser
