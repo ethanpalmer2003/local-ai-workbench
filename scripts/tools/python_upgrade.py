@@ -9,6 +9,7 @@ Run from `C:/AI`; nothing here edits the project environment.
 """
 
 import argparse
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -45,25 +46,25 @@ def resolves(version: str) -> tuple[bool, str]:
 
 
 def installs(version: str) -> tuple[bool, str]:
-    """Whether a scratch environment on this version installs the project, which proves the wheels."""
+    """Whether a scratch copy of the project installs on this version, which proves the wheels exist.
+
+    The copy exists so the check cannot rewrite this repository's own `.venv`: `uv sync` acts on the project
+    directory it is given, and the lock travelling with the copy keeps the pins the real environment uses.
+    """
     with tempfile.TemporaryDirectory() as folder:
-        environment = Path(folder) / "env"
-        created = subprocess.run(
-            ["uv", "venv", "--python", version, str(environment)], capture_output=True, text=True, check=False
-        )
-        if created.returncode:
-            return False, (created.stderr or created.stdout).strip().splitlines()[-1]
+        scratch = Path(folder) / "project"
+        scratch.mkdir()
+        for name in ("pyproject.toml", "uv.lock"):
+            source = project_cfg.BASE_DIR / name
+            if source.is_file():
+                shutil.copy2(source, scratch / name)
         synced = subprocess.run(
-            ["uv", "sync", "--python", str(environment / "Scripts" / "python.exe")],
-            cwd=project_cfg.BASE_DIR,
-            capture_output=True,
-            text=True,
-            check=False,
+            ["uv", "sync", "--project", str(scratch), "--python", version], capture_output=True, text=True, check=False
         )
         if synced.returncode:
             detail = (synced.stderr or synced.stdout).strip().splitlines()
             return False, detail[-1] if detail else "uv sync failed without output"
-    return True, "installed into a scratch environment"
+    return True, "installed into a scratch copy of the project"
 
 
 def below_floor(candidate: str) -> bool:

@@ -11,6 +11,7 @@ import sys
 import time
 
 from scripts.config import project_config as project_cfg
+from scripts.launchers import launch_util
 from scripts.tools.capability_matrix import CATEGORY as _CATEGORIES
 
 # - category -> whole-run budget in seconds; the matrix owns which category a row is
@@ -34,8 +35,8 @@ def run(command: list[str], seconds: float) -> int:
     try:
         return process.wait(timeout=seconds)
     except subprocess.TimeoutExpired:
-        process.kill()
-        process.wait(timeout=30)
+        # - the probe's own child holds the ports and VRAM, so the whole tree has to go, not just the launcher
+        launch_util.stop_process(process, command[2] if len(command) > 2 else command[0], timeout=30)
         print(
             f"[FAIL] ProbeTimeout: {' '.join(command[:3])} exceeded its {seconds:.0f} s deadline after "
             f"{time.perf_counter() - started:.0f} s",

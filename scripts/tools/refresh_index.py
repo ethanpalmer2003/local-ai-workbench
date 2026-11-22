@@ -96,16 +96,23 @@ def plan(paths: Sequence[str], root: Path, resolve: Callable[[str], str] = binar
     return Plan(step, graphify_commands(tool, root))
 
 
+def _run_commands(commands: Sequence[Sequence[str]], cwd: str | None) -> tuple[int, str]:
+    """Run commands in order, stopping at the first failure; the exit code and its last output line."""
+    code, tail = 0, ""
+    for command in commands:
+        result = subprocess.run(list(command), capture_output=True, text=True, check=False, cwd=cwd)
+        code = result.returncode
+        output = (result.stderr or result.stdout).strip()
+        tail = output.splitlines()[-1] if output else ""
+        if code:
+            break
+    return code, tail
+
+
 def run_step(step: Step) -> tuple[Step, float, int, str]:
     """Run one step's commands in order, stopping at the first failure, and time the whole step."""
     started = time.monotonic()
-    code, tail = 0, ""
-    for command in step.commands:
-        result = subprocess.run(list(command), capture_output=True, text=True, check=False, cwd=step.cwd or None)
-        code = result.returncode
-        tail = (result.stderr or result.stdout).strip().splitlines()[-1] if (result.stderr or result.stdout) else ""
-        if code:
-            break
+    code, tail = _run_commands(step.commands, step.cwd or None)
     return step, time.monotonic() - started, code, tail
 
 
@@ -134,7 +141,12 @@ def acquire(lock: Path) -> bool:
             lock.touch(exist_ok=False)
             return True
         except FileExistsError:
-            if time.time() - lock.stat().st_mtime < LOCK_STALE_SECONDS:
+            try:
+                age = time.time() - lock.stat().st_mtime
+            except OSError:
+                # - the run that held it removed it between the failed touch and the read
+                continue
+            if age < LOCK_STALE_SECONDS:
                 return False
             lock.unlink(missing_ok=True)
     return False
@@ -174,14 +186,8 @@ def start_graphify(root: Path, lock: Path) -> str:
 def run_graphify(commands: Sequence[Sequence[str]], root: Path, lock: Path | None = None) -> int:
     """Run the architecture rebuild in this process and release the lock whoever ends it."""
     started = time.monotonic()
-    code, tail = 0, ""
     try:
-        for command in commands:
-            result = subprocess.run(list(command), capture_output=True, text=True, check=False, cwd=root.as_posix())
-            code = result.returncode
-            tail = (result.stderr or result.stdout).strip().splitlines()[-1] if (result.stderr or result.stdout) else ""
-            if code:
-                break
+        code, tail = _run_commands(commands, root.as_posix())
     finally:
         if lock is not None:
             lock.unlink(missing_ok=True)
@@ -190,8 +196,17 @@ def run_graphify(commands: Sequence[Sequence[str]], root: Path, lock: Path | Non
 
 
 def default_paths(root: Path) -> list[str]:
-    """What to judge with no change set given: the last commit plus anything uncommitted."""
-    return sorted(set(changes.committed_paths(root)) | set(changes.changed_since_upstream(root)))
+    """What to judge with no change set given: the last commit plus anything uncommitted.
+
+    A branch with no upstream has nothing to compare against, so its last commit is the whole answer there;
+    an indexer must not fail a commit just because the branch is new.
+    """
+    uncommitted: list[str] = []
+    try:
+        uncommitted = changes.changed_since_upstream(root)
+    except changes.NoUpstreamError:
+        uncommitted = []
+    return sorted(set(changes.committed_paths(root)) | set(uncommitted))
 
 
 def refresh(paths: list[str] | None = None, root: Path | None = None) -> int:

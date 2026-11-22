@@ -21,6 +21,7 @@ from scripts.config import project_config as project_cfg
 from scripts.config.models import catalog
 from scripts.config.trash import trash_dir
 from scripts.download.models import model_sync
+from scripts.shared.paths import display_path
 
 
 @dataclass(frozen=True)
@@ -67,13 +68,6 @@ def _excluded(path: Path) -> bool:
     return bool({"output", "old", "retired", "__pycache__"} & set(path.parts))
 
 
-def display_path(path: Path) -> str:
-    try:
-        return str(path.relative_to(project_cfg.BASE_DIR))
-    except ValueError:
-        return str(path)
-
-
 def mention_files() -> list[Path]:
     files = set(model_sync.source_files())
     files.update(project_cfg.TEST_CASES_DIR.rglob("*.py"))
@@ -105,7 +99,7 @@ def blocker_lines(
         f"{ref.source}: {ref.path}" for ref in refs if ref.required and not ref.source.startswith("download catalog:")
     ]
     blockers += [
-        f"{item.path.relative_to(project_cfg.BASE_DIR)}:{item.line}: {item.text}"
+        f"{display_path(item.path)}:{item.line}: {item.text}"
         for item in found_mentions
         if catalog_dir not in item.path.parents
     ]
@@ -362,8 +356,6 @@ def command_replace(
             print(f"\n--apply would download {new.label} before rewriting references.")
         _print_dry_run(include_docs, include_tests)
         return 0
-    if strata:
-        return 1
     if download and not new.path.is_file():
         from scripts.download.models import download_catalog
 
@@ -441,7 +433,6 @@ def main(argv: list[str] | None = None) -> int:
     add.add_argument("--notes", default="")
     add.add_argument("--sha256")
     add.add_argument("--roles", nargs="+")
-    add.add_argument("--runtimes", nargs="+")
     add.add_argument("--source-page")
     add.add_argument("--apply", action="store_true")
     add.add_argument("--overlay", action="store_true", help="Append to the input overlay instead of the catalog")

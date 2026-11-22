@@ -159,6 +159,23 @@ def _overdue(process: subprocess.Popen[Any], stage: Stage, started: float, bar: 
     return True
 
 
+def _wait_for_exit(process: subprocess.Popen[Any], stage: Stage, started: float, bar: tqdm[Any]) -> tuple[int, bool]:
+    """The child's exit code and whether its cap stopped it.
+
+    A child can close its output and keep running, which ends the reader without ending the process, so the
+    wait still needs the same cap the polling loop applies.
+    """
+    killed = False
+    while True:
+        try:
+            return process.wait(timeout=0.2), killed
+        except subprocess.TimeoutExpired:
+            if not _overdue(process, stage, started, bar):
+                continue
+            killed = True
+            return process.wait(), killed
+
+
 @dataclass
 class _Pump:
     """One line at a time: echo it, track progress, and stop a child that outlived its cap."""
@@ -219,9 +236,9 @@ def _run_stage(stage: Stage, log_path: Path, bar: tqdm[Any], prefix: float, stre
             if pump.feed(line):
                 break
             _refresh(bar, stage, prefix, live, started)
+        code, killed_waiting = _wait_for_exit(process, stage, started, bar)
         seconds = time.perf_counter() - started
-        code = process.wait()
-    killed = pump.killed
+    killed = pump.killed or killed_waiting
     status = "skipped" if live.skipped and not code else ("failed" if code or killed else "ok")
     if killed:
         note = f"timed out after {limit_for(stage):.0f} s"

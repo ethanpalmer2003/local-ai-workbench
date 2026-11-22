@@ -47,15 +47,24 @@ def check() -> int:
 
 def fix() -> int:
     base = project_cfg.BASE_DIR
-    subprocess.run(["icacls", str(base), "/setintegritylevel", "(OI)(CI)Medium"], check=False, capture_output=True)
-    for name in SUBTREES:
-        path = base / name
-        if not path.is_dir():
-            continue
-        print(f"[FIX] {path}")
-        subprocess.run(
-            ["icacls", str(path), "/setintegritylevel", "(OI)(CI)Medium", "/T", "/C"], check=False, capture_output=True
-        )
+    failures = []
+    for path, arguments in (
+        (base, ["/setintegritylevel", "(OI)(CI)Medium"]),
+        *(
+            (base / name, ["/setintegritylevel", "(OI)(CI)Medium", "/T", "/C"])
+            for name in SUBTREES
+            if (base / name).is_dir()
+        ),
+    ):
+        result = subprocess.run(["icacls", str(path), *arguments], check=False, capture_output=True, text=True)
+        print(f"[{'FIX' if not result.returncode else 'FAIL'}] {path}")
+        if result.returncode:
+            detail = (result.stderr or result.stdout).strip().splitlines()
+            failures.append(f"{path}: {detail[-1] if detail else f'exit {result.returncode}'}")
+    if failures:
+        for failure in failures:
+            print(f"[FAIL] {failure}")
+        return 1
     print("[OK] Medium restored on the workspace root and its executable-bearing subtrees")
     return 0
 

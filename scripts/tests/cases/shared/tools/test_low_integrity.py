@@ -30,11 +30,21 @@ class LowIntegrityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             (root / "bat").mkdir()
-            with patch.object(project_cfg, "BASE_DIR", root), patch.object(low_integrity.subprocess, "run") as run:
+            with (
+                patch.object(project_cfg, "BASE_DIR", root),
+                patch.object(low_integrity.subprocess, "run", return_value=icacls_output("")) as run,
+            ):
                 self.assertEqual(low_integrity.fix(), 0)
         commands = [call.args[0] for call in run.call_args_list]
         self.assertTrue(any("(OI)(CI)Medium" in " ".join(command) for command in commands))
         self.assertTrue(any("/T" in command for command in commands))
+
+    def test_a_refused_fix_reports_the_failure(self):
+        from subprocess import CompletedProcess
+
+        refused = CompletedProcess(["icacls"], 5, stdout="", stderr="Access is denied.\n")
+        with patch.object(low_integrity.subprocess, "run", return_value=refused):
+            self.assertEqual(low_integrity.fix(), 1)
 
 
 if __name__ == "__main__":

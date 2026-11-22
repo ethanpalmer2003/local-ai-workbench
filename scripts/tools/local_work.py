@@ -11,14 +11,16 @@ from pathlib import Path
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks.llamacpp.hrx import fixes
 
-ARCHIVE = Path("scripts/download/frameworks/llamacpp/hrx/local-work")
+ARCHIVE = project_cfg.BASE_DIR / "scripts/download/frameworks/llamacpp/hrx/local-work"
 CHECKOUTS = ("llama.cpp", "hrx-system", "rocm-systems")
 
 
 def git(root: Path, *args: str) -> str:
-    return subprocess.run(
-        ["git", "-C", str(root), *args], capture_output=True, text=True, encoding="utf-8", errors="replace"
-    ).stdout
+    """A git read from one checkout; a checkout that is missing or refuses answers nothing."""
+    result = subprocess.run(
+        ["git", "-C", str(root), *args], capture_output=True, text=True, encoding="utf-8", errors="replace", check=False
+    )
+    return result.stdout
 
 
 def checkout_rows() -> list[tuple[str, str, str, str]]:
@@ -27,7 +29,10 @@ def checkout_rows() -> list[tuple[str, str, str, str]]:
     rows = []
     for name in CHECKOUTS:
         directory = root / name
-        head = git(directory, "log", "-1", "--format=%h %ad", "--date=short").strip()
+        if not directory.is_dir():
+            rows.append((name, "missing checkout", "-", "-"))
+            continue
+        head = git(directory, "log", "-1", "--format=%h %ad", "--date=short").strip() or "unreadable"
         dirty = len([line for line in git(directory, "status", "--porcelain").splitlines() if line])
         branches = []
         for branch in git(directory, "for-each-ref", "--format=%(refname:short)", "refs/heads").split():
@@ -50,7 +55,7 @@ def archive_rows() -> tuple[list[tuple[str, int, str]], list[dict[str, object]]]
         rows.append((patch.name, len(subjects), f"{len(subjects)} commit(s)"))
     manifest = ARCHIVE / "manifest.json"
     recorded = json.loads(manifest.read_text(encoding="utf-8")) if manifest.is_file() else []
-    return rows, recorded
+    return rows, recorded if isinstance(recorded, list) else []
 
 
 def main() -> int:

@@ -120,9 +120,14 @@ def rename_import_names(text: str, forms: list[tuple[str, str, str]]) -> str:
 
 
 def rename_dotted(text: str, pairs: list[tuple[str, str]]) -> str:
-    """Replace dotted names only at a word boundary, so a longer module sharing the prefix survives."""
+    """Replace dotted names only between word boundaries, so a longer module sharing the prefix survives.
+
+    The leading guard matters as much as the trailing one: `scripts.foo` also sits inside `old_scripts.foo`,
+    and rewriting that suffix would corrupt an unrelated module name.
+    """
     for old, new in pairs:
-        text = re.sub(rf"{re.escape(old)}(?![\w])", lambda _match, replacement=new: replacement, text)
+        pattern = rf"(?<![\w.]){re.escape(old)}(?![\w])"
+        text = re.sub(pattern, lambda _match, replacement=new: replacement, text)
     return text
 
 
@@ -208,7 +213,7 @@ def rewrite_text(
         changes += len(re.findall(pattern, updated))
         updated = re.sub(pattern, lambda _match, replacement=new: replacement, updated)
     for old, _new in dotted:
-        changes += len(re.findall(rf"{re.escape(old)}(?![\w])", updated))
+        changes += len(re.findall(rf"(?<![\w.]){re.escape(old)}(?![\w])", updated))
     for old_package, old_name, _package, _name in collapsed or []:
         pattern = rf"^\s*from\s+{re.escape(old_package)}\s+import\s+[^\n]*\b{re.escape(old_name)}\b"
         changes += len(re.findall(pattern, updated, re.MULTILINE))
@@ -361,16 +366,25 @@ def collapse(package: str, target: str, *, dry_run: bool, root: Path = ROOT) -> 
 
 def leftovers(moves: dict[str, str], *, root: Path = ROOT) -> list[str]:
     """References that survived the rewrite, which a manual review then has to explain."""
-    scanned = list(text_files(root))
-    forms = [
-        pair for move, target in moves.items() for pair in (*reference_forms(move, target), *dotted_forms(move, target))
+    # - a path is reported wherever it appears; a dotted name only as a whole name, so a longer module
+    #   that merely contains it is not reported as a leftover
+    patterns = [
+        (pair[0], False) for move, target in moves.items() for pair in reference_forms(move, target, bare=False)
     ]
-    names = [old for old, _ in forms]
+    patterns += [(old, True) for old, _new in dotted_forms_all(moves)]
     found = []
-    for path in scanned:
+    for path in text_files(root):
         text = path.read_text(encoding="utf-8", errors="replace")
-        found.extend(f"{path.relative_to(root).as_posix()}: {name}" for name in names if name in text)
+        for name, bounded in patterns:
+            pattern = rf"(?<![\w.]){re.escape(name)}(?![\w])" if bounded else re.escape(name)
+            if re.search(pattern, text):
+                found.append(f"{path.relative_to(root).as_posix()}: {name}")
     return found
+
+
+def dotted_forms_all(moves: dict[str, str]) -> list[tuple[str, str]]:
+    """Every moved module's dotted form, for the leftover scan."""
+    return [pair for old, new in moves.items() for pair in dotted_forms(old, new)]
 
 
 def parse_collapses(values: list[str]) -> list[tuple[str, str]]:

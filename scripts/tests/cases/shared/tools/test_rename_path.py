@@ -48,6 +48,12 @@ class MoveParsingTests(unittest.TestCase):
         self.assertEqual(rename_path.dotted_forms("scripts/tests/__init__.py", "scripts/tests/sub/__init__.py"), [])
         self.assertEqual(rename_path.dotted_forms("scripts/config/shared", "scripts/config/common"), [])
 
+    def test_a_dotted_name_rewrites_only_as_a_whole_name(self):
+        pairs = [("scripts.tools.x", "scripts.tools.y")]
+        self.assertEqual(rename_path.rename_dotted("import scripts.tools.x\n", pairs), "import scripts.tools.y\n")
+        # - a longer module that merely ends with the old name keeps its own prefix
+        self.assertEqual(rename_path.rename_dotted("old_scripts.tools.x", pairs), "old_scripts.tools.x")
+
 
 class ImportRewriteTests(unittest.TestCase):
     def test_a_module_imported_by_name_is_renamed_and_its_alias_kept(self):
