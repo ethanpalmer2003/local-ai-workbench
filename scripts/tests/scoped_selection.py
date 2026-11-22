@@ -3,7 +3,8 @@
 A class is kept when its module changed or directly imports a changed module. The full suite runs for
 `--all`, a code change to a `FULL_TRIGGERS` file, a deleted Python file, or a branch with no upstream.
 No classes run for a clean tree, an edit to comments, docstrings or layout only, or a change that
-touches no Python module.
+touches no Python module. The pre-push stage asks the same question through `code_change_paths`, so a
+push that only edits comments or docstrings runs nothing either.
 
 The walk is currently set to one hop because a second hop was tested and found to select close to a
 full run. A test two imports away waits for the full pre-push run.
