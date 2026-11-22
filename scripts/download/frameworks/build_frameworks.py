@@ -10,6 +10,8 @@ from scripts.shared import consent
 
 # - a source build is minutes of compiler work, so it asks before it starts
 BUILD_SECONDS = 900
+# - a foreground build that outlives this bound is a hang, not a slow compiler; the console shows its output
+BUILD_LIMIT_SECONDS = 3600
 
 
 def build_targets(only: list[str] | None = None) -> list[ToolSpec]:
@@ -32,7 +34,10 @@ def run_builds(targets: list[ToolSpec], *, foreground: bool = False, dry_run: bo
         if foreground:
             print(f"\n=== {tool.name} ===\n{command}", flush=True)
             try:
-                subprocess.run(list(tool.build_command or []), cwd=folder, check=True)
+                subprocess.run(list(tool.build_command or []), cwd=folder, check=True, timeout=BUILD_LIMIT_SECONDS)
+            except subprocess.TimeoutExpired:
+                print(f"[FAIL] {tool.name}: build still running after {BUILD_LIMIT_SECONDS} s; stopped it", flush=True)
+                failed += 1
             except subprocess.CalledProcessError:
                 failed += 1
             continue
@@ -56,7 +61,8 @@ def main() -> int:
     args = parser.parse_args()
     targets = build_targets(args.only)
     if not targets:
-        parser.error("No catalog entry declares a build command")
+        missing = ", ".join(args.only) if args.only else "no name given"
+        parser.error(f"No catalog entry declares a build command: {missing}")
     if not args.dry_run and not consent.ask("Framework build", BUILD_SECONDS, args.yes):
         return 1
     return 1 if run_builds(targets, foreground=args.foreground, dry_run=args.dry_run) else 0
