@@ -4,6 +4,7 @@ import os
 import tempfile
 import time
 import unittest
+import unittest.mock
 from pathlib import Path
 
 from scripts.tools import state_cleanup
@@ -62,6 +63,34 @@ class StateCleanupTests(unittest.TestCase):
         self.assertEqual(count, 1)
         self.assertFalse(blob.exists())
         self.assertTrue(cache.is_dir())
+
+    def test_gate_reports_keep_the_latest_two(self):
+        root = self.root()
+        generated = root / "generated"
+        reports = generated / "code_review"
+        reports.mkdir(parents=True)
+        for name in ("1", "2", "3"):
+            (reports / name).mkdir()
+        with unittest.mock.patch.object(state_cleanup.project_cfg, "component") as component:
+            component.return_value.generated_dir = generated
+            count, _ = state_cleanup.prune_review_reports(False)
+        self.assertEqual(count, 1)
+        self.assertEqual(sorted(item.name for item in reports.iterdir()), ["2", "3"])
+
+    def test_launch_scratch_keeps_in_extractions_and_new_entries(self):
+        root = self.root()
+        old, new, extraction = root / "old", root / "new", root / "_MEI9"
+        for folder in (old, new, extraction):
+            folder.mkdir()
+            (folder / "payload.bin").write_bytes(b"x")
+        self.age(old, 9)
+        self.age(extraction, 9)
+        with unittest.mock.patch.object(state_cleanup.cfg.LAUNCH, "temp_dir", root):
+            count, _ = state_cleanup.prune_launch_cache(time.time() - 7 * 86400, False)
+        self.assertEqual(count, 1)
+        self.assertFalse(old.exists())
+        self.assertTrue(new.exists())
+        self.assertTrue(extraction.exists())
 
 
 if __name__ == "__main__":

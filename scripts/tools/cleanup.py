@@ -183,6 +183,22 @@ def empty_trash(older_than: int) -> int:
     return removed
 
 
+def prune_outputs(dry_run: bool) -> tuple[int, float]:
+    """Move superseded run evidence to trash; returns the count and the bytes it covers."""
+    runs = [run for root in OUTPUT_ROOTS if root.is_dir() for run in run_directories(root)]
+    if not runs:
+        return 0, 0.0
+    cited = cited_runs()
+    stale = superseded(runs, cited)
+    if not stale:
+        return 0, 0.0
+    freed = 0
+    for run in stale:
+        freed += sum(item.stat().st_size for item in run.rglob("*") if item.is_file())
+    move_to_trash(stale, date.today().isoformat(), dry_run)
+    return len(stale), freed
+
+
 def main(arguments: list[str] | None = None) -> int:
     """Report or perform the cleanup; without a selector it reports every tree and changes nothing."""
     parser = argparse.ArgumentParser(description="Prune superseded run evidence, state logs and the trash.")
@@ -205,14 +221,11 @@ def main(arguments: list[str] | None = None) -> int:
         if days:
             print(render_table(days, ("trash day", "size")))
         return 0
-    stamp = date.today().isoformat()
+    date.today().isoformat()
     status = 0
     if options.outputs:
-        runs = [run for root in OUTPUT_ROOTS if root.is_dir() for run in run_directories(root)]
-        cited = cited_runs()
-        stale = superseded(runs, cited, keep=options.keep, older_days=options.older_than)
-        print(f"{len(runs)} runs, {len(stale)} superseded, {len(cited)} run ids cited")
-        status |= _report(move_to_trash(stale, stamp, options.dry_run), len(stale), options.dry_run)
+        count, freed = prune_outputs(options.dry_run)
+        print(f"{count} superseded run(s), {freed / 1e6:.1f} MB")
     if options.state:
         state_cleanup.prune_generated(7, 30, 30, options.dry_run)
     if options.empty_trash is not None:

@@ -84,6 +84,45 @@ def prune_update_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
     return count, freed
 
 
+def prune_review_reports(dry_run: bool) -> tuple[int, int]:
+    """Keep the latest gate report and the one before it, in the tree the gate writes them to."""
+    root = project_cfg.component("shared").generated_dir / "code_review"
+    if not root.is_dir():
+        return 0, 0
+    folders = sorted(path for path in root.iterdir() if path.is_dir())
+    count = freed = 0
+    for path in folders[:-KEEP_REVIEW_LOGS]:
+        size = path_size(path)
+        if not dry_run:
+            _remove(path)
+        count += 1
+        freed += size
+    return count, freed
+
+
+def prune_launch_cache(cutoff: float, dry_run: bool) -> tuple[int, int]:
+    """Drop launch scratch entries past the age floor; the directory refills on demand."""
+    root = cfg.LAUNCH.temp_dir
+    if not root.is_dir():
+        return 0, 0
+    count = freed = 0
+    for path in root.iterdir():
+        if path.name.startswith("_MEI"):
+            continue
+        try:
+            age = path.stat().st_mtime
+        except OSError:
+            continue
+        if age >= cutoff:
+            continue
+        size = path_size(path)
+        if not dry_run:
+            _remove(path)
+        count += 1
+        freed += size
+    return count, freed
+
+
 def prune_review_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
     """Keep the latest gate runs and the one before them; older timings are history nobody reads."""
     root = project_cfg.LOGS_DIR / "shared" / "review"
@@ -152,50 +191,41 @@ def stale_entries(entries: list[Path], keep: int) -> list[Path]:
     return ordered[:-keep] if keep else ordered
 
 
+def _prune_suite_runs(cutoff: float, dry_run: bool) -> tuple[int, int]:
+    """Suite runs land under state/temp/runs rather than the evidence root, so the ordinary window applies."""
+    run_root = project_cfg.STATE_DIR / "temp" / "runs"
+    count = freed = 0
+    for folder in run_root.glob("*/*") if run_root.is_dir() else ():
+        folder_count, folder_freed = prune("*", folder, cutoff, dry_run, recursive=False)
+        count += folder_count
+        freed += folder_freed
+    return count, freed
+
+
 def prune_generated(days: int, log_days: int, cache_days: int, dry_run: bool) -> list[str]:
+    """Prune every regenerable tree this workspace writes, one line per owner that had work."""
     now = time.time()
     cutoff = now - days * 86400
     log_cutoff = now - log_days * 86400
     cache_cutoff = now - cache_days * 86400
     downloads = project_cfg.STATE_DIR / "downloads"
-    report: list[str] = []
-    for label, pattern, root, when in (
-        ("orphaned _MEI extractions", "_MEI*", cfg.LAUNCH.temp_dir, cutoff),
-        ("aborted download blobs", "*.incomplete", downloads, cutoff),
-        ("stale download locks", "*.lock", downloads, cutoff),
-        ("old run logs", "*.log", project_cfg.LOGS_DIR, log_cutoff),
-    ):
-        count, freed = prune(pattern, root, when, dry_run)
-        if count:
-            report.append(f"{label}: {count} item(s), {freed / 1e6:.1f} MB")
-    # - the framework fills this model cache on demand, so its hashed folders are the unit and a
-    #   re-download is the cost; the longer window keeps a repeated comparison warm
-    # - suite runs land here rather than in the evidence root, so the ordinary window is all they get
-    run_root = project_cfg.STATE_DIR / "temp" / "runs"
-    run_count = run_freed = 0
-    for folder in run_root.glob("*/*") if run_root.is_dir() else ():
-        count, freed = prune("*", folder, cutoff, dry_run, recursive=False)
-        run_count += count
-        run_freed += freed
-    if run_count:
-        report.append(f"old suite run folders: {run_count} item(s), {run_freed / 1e6:.1f} MB")
-    area_count, area_freed = prune_log_areas(dry_run)
-    if area_count:
-        report.append(f"old area logs: {area_count} item(s), {area_freed / 1e6:.1f} MB")
-    review_count, review_freed = prune_review_logs(cutoff, dry_run)
-    if review_count:
-        report.append(f"old gate runs: {review_count} item(s), {review_freed / 1e6:.1f} MB")
-    trash_count, trash_freed = prune_trash(dry_run)
-    if trash_count:
-        report.append(f"old trash folders: {trash_count} item(s), {trash_freed / 1e6:.1f} MB")
-    update_count, update_freed = prune_update_logs(cutoff, dry_run)
-    if update_count:
-        report.append(f"old framework updates: {update_count} item(s), {update_freed / 1e6:.1f} MB")
-    cache_root = cfg.LAUNCH.temp_dir / "audiocpp-gguf"
-    count, freed = prune("*", cache_root, cache_cutoff, dry_run, recursive=False)
-    if count:
-        report.append(f"old AudioCpp support-model caches: {count} item(s), {freed / 1e6:.1f} MB")
-    return report
+    steps: tuple[tuple[str, tuple[int, float]], ...] = (
+        ("orphaned _MEI extractions", prune("_MEI*", cfg.LAUNCH.temp_dir, cutoff, dry_run)),
+        ("aborted download blobs", prune("*.incomplete", downloads, cutoff, dry_run)),
+        ("stale download locks", prune("*.lock", downloads, cutoff, dry_run)),
+        ("old run logs", prune("*.log", project_cfg.LOGS_DIR, log_cutoff, dry_run)),
+        # - the framework fills this model cache on demand, so its hashed folders are the unit and a
+        #   re-download is the cost; the longer window keeps a repeated comparison warm
+        ("old suite run folders", _prune_suite_runs(cutoff, dry_run)),
+        ("old area logs", prune_log_areas(dry_run)),
+        ("old gate runs", prune_review_logs(cutoff, dry_run)),
+        ("old gate reports", prune_review_reports(dry_run)),
+        ("old launch scratch entries", prune_launch_cache(cache_cutoff, dry_run)),
+        ("old trash folders", prune_trash(dry_run)),
+        ("old framework updates", prune_update_logs(cutoff, dry_run)),
+        ("old AudioCpp support-model caches", prune("*", cfg.LAUNCH.temp_dir / "audiocpp-gguf", cache_cutoff, dry_run)),
+    )
+    return [f"{label}: {count} item(s), {freed / 1e6:.1f} MB" for label, (count, freed) in steps if count]
 
 
 def main() -> int:
