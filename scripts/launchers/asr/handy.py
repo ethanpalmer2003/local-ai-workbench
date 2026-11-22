@@ -15,6 +15,7 @@ def main() -> int:
     executable = project_cfg.HANDY_APP_DIR / "handy.exe"
     if not executable.is_file():
         raise FileNotFoundError("Run bat/update_frameworks.bat --only asr/handy first")
+    # - the desktop app outlives this launcher, so it is deliberately not bound to the kill-on-close job
     subprocess.Popen([str(executable), *native_args], cwd=project_cfg.HANDY_APP_DIR)
     return 0
 
