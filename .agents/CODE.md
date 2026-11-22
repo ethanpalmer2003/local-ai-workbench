@@ -1,7 +1,7 @@
 # Code
 
 - Direct flow; a helper carries reused behavior, a class carries state or policy.
-- A file opens with its entry function after the docstring, imports and constants; helpers follow in order of use, the `__main__` guard last.
+- A file opens with its constants and helpers in order of use, and ends with its entry function and the `__main__` guard.
 - One wait, one probe, one timer: [wait.py](../scripts/shared/wait.py) owns `wait_ready` and `http_ready`, [timing.py](../scripts/shared/timing.py) owns `timed`; a different question gets its own name.
 - A name is explained once, in its owner's docstring; an import says why this module needs it, never what it does.
 - Functions stay at McCabe complexity 10 or below; extract by responsibility, and keep unexpected tracebacks.

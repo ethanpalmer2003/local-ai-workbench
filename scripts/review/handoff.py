@@ -13,6 +13,7 @@ may be one switch. They exist so a reader spends its time on the few places that
 import argparse
 import ast
 import json
+import shutil
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -614,30 +615,38 @@ def evidence_report(root: Path | None = None) -> list[str]:
 BUNDLE_FILES = frozenset({"HANDOFF.md", "REVIEW-REQUEST.md", "ast_map.json"})
 
 
-def holds_only_the_bundle(folder: Path) -> bool:
-    """Whether a bundle folder holds nothing but the files this builder wrote.
+def carry_reviews(stale: list[Path], destination: Path) -> list[Path]:
+    """Copy a bundle's saved reviews into the current bundle before the old folder moves to trash.
 
-    A reviewer may save its findings beside them, and that file is not this tool's to prune: a folder with
-    anything extra is kept until a person moves the review out.
+    A reviewer's findings are the one file in a bundle this builder did not write, so they outlive the
+    folder they were saved in; the name keeps the bundle they came from, since two reviews can share a name.
     """
-    return {path.name for path in folder.iterdir() if path.is_file()} <= BUNDLE_FILES
+    carried: list[Path] = []
+    for folder in stale:
+        for path in folder.iterdir():
+            if not path.is_file() or path.name in BUNDLE_FILES:
+                continue
+            target = destination / f"{path.stem}-{folder.name}{path.suffix}"
+            if target.exists():
+                continue
+            shutil.copy2(path, target)
+            carried.append(target)
+    return carried
 
 
 def prune_superseded(destination: Path) -> list[Path]:
     """Move every bundle but the newest two to trash: a handoff is superseded by the next one.
 
     The folder grows once a day at most, so two cover the current review and the one it replaced; anything
-    older describes a tree nobody is reading. A bundle holding a file this builder did not write is kept, so
-    a saved review is never pruned unseen.
+    older describes a tree nobody is reading. A saved review inside a stale bundle is copied into the
+    current one first, so the reviewer's findings survive the rotation.
     """
     bundles = sorted(
         (path for path in destination.parent.iterdir() if path.is_dir()), key=lambda path: path.name, reverse=True
     )
-    stale = [
-        path
-        for path in cleanup.superseded(bundles, cited=set(), keep=HANDOFF_KEEP, older_days=-1)
-        if holds_only_the_bundle(path)
-    ]
+    stale = cleanup.superseded(bundles, cited=set(), keep=HANDOFF_KEEP, older_days=-1)
+    for path in carry_reviews(stale, destination):
+        print(f"[KEEP] review copied into this bundle: {path.name}")
     if stale:
         cleanup.move_to_trash(stale, datetime.now().strftime("%Y-%m-%d"), dry_run=False)
     return stale

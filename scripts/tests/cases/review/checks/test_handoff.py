@@ -410,16 +410,21 @@ class RetentionTests(unittest.TestCase):
             with unittest.mock.patch.object(handoff.cleanup, "move_to_trash", return_value=0):
                 self.assertEqual(handoff.prune_superseded(root / "2"), [])
 
-    def test_a_bundle_holding_a_saved_review_is_never_pruned(self):
-        # - the reviewer's findings are not this builder's file to move
+    def test_a_saved_review_is_copied_forward_before_its_bundle_moves(self):
+        # - the reviewer's findings are not this builder's file, so rotation carries them instead of losing them
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder)
             for name in ("1", "2", "3", "4"):
                 (root / name).mkdir()
             (root / "1" / "REVIEW.md").write_text("# Findings\n", encoding="utf-8")
+            (root / "1" / "HANDOFF.md").write_text("# Brief\n", encoding="utf-8")
             moved: list[Path] = []
             with unittest.mock.patch.object(
                 handoff.cleanup, "move_to_trash", side_effect=lambda paths, stamp, dry_run: moved.extend(paths)
             ):
                 handoff.prune_superseded(root / "4")
-        self.assertEqual([item.name for item in moved], ["2"])
+            carried = (root / "4" / "REVIEW-1.md").read_text(encoding="utf-8")
+            carried_brief = (root / "4" / "HANDOFF-1.md").exists()
+        self.assertEqual([item.name for item in moved], ["2", "1"])
+        self.assertEqual(carried, "# Findings\n")
+        self.assertFalse(carried_brief)

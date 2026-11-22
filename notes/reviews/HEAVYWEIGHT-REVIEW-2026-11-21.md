@@ -26,12 +26,13 @@ linked because it is untracked evidence.
 12. `handoff` counts `except (Exception, ...)` and `contextlib.suppress` in its silent and broad handler tallies.
 13. Extraction retention has one rule: newest twenty, never one younger than a day, so a running child keeps
     its extraction.
+14. Entry ordering: [code rules](../../.agents/CODE.md) now state the practice - constants, helpers in order of
+    use, the entry function and the `__main__` guard last - because 135 modules already worked that way against
+    11 that open with `main`.
 
 ## Deferred
 
-1. Entry-first ordering: [open question](../OPEN-QUESTIONS.md), because 135 modules put `main` last and 11 put it
-   first, so the rule and the tree disagree.
-2. Why dead code missed an unused helper: [TODO](../TODO.md), with the scoped-scan hypothesis.
+1. Why dead code missed an unused helper: [TODO](../TODO.md), with the scoped-scan hypothesis.
 
 ## Not accepted
 

@@ -15,6 +15,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, NamedTuple, TypedDict
 
+import psutil
+
 
 class UsageWindow(TypedDict):
     """Consecutive samples at or above the near-peak threshold."""
@@ -286,13 +288,11 @@ def _get_windows_processes(pid: int) -> tuple[set[int], dict[int, tuple[str, str
     A PowerShell WMI query per poll costs hundreds of milliseconds and adds a process to the machine being
     measured; psutil reads the same table in-process. An unreadable process is left out rather than guessed.
     """
-    import psutil
-
     details: dict[int, tuple[str, str]] = {}
     try:
         root = psutil.Process(pid)
         processes = [root, *root.children(recursive=True)]
-    except psutil.Error:
+    except (psutil.Error, OSError):
         return {pid}, {}
     for process in processes:
         try:

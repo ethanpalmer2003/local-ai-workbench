@@ -17,6 +17,7 @@ from ctypes import wintypes
 from enum import Enum
 from typing import Any, TextIO, cast
 
+import psutil
 import requests
 
 from scripts.config import project_config as project_cfg
@@ -233,10 +234,8 @@ def _pid_alive(pid: int) -> bool:
 def process_start_time(pid: int) -> float | None:
     """Wall-clock creation time of pid, or None when it is gone or unreadable."""
     try:
-        import psutil
-
         return psutil.Process(pid).create_time()
-    except Exception:
+    except (psutil.Error, OSError):
         return None
 
 
@@ -310,10 +309,8 @@ def stop_process(
 def descendant_pids(pid: int) -> set[int]:
     """Every current descendant of pid, sampled before the kill severs the parent links."""
     try:
-        import psutil
-
         return {child.pid for child in psutil.Process(pid).children(recursive=True)}
-    except Exception:
+    except (psutil.Error, OSError):
         return set()
 
 
@@ -600,10 +597,8 @@ def kill_processes_on_ports(ports: int | list[int]) -> None:
 def describe_process(pid: int) -> str:
     """Human-readable owner for a pid, used when refusing to touch a listener."""
     try:
-        import psutil
-
         info = psutil.Process(int(pid)).as_dict(attrs=["name", "exe", "cmdline"], ad_value=None)
-    except Exception:
+    except (psutil.Error, OSError, ValueError):
         return "unknown owner"
     name = info.get("name") or info.get("exe") or "unknown"
     cmdline = " ".join(info.get("cmdline") or [])[:200]
