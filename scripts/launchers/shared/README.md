@@ -40,6 +40,11 @@ takes. A launch fails when the adapter is missing; an index of 0 is never the fa
 may be the integrated adapter. Check an engine before wiring it:
 `python -m scripts.launchers.runtime.gpu_selection frameworks/sdcpp/vulkan/sd-server.exe`.
 
+Two vendor-owned surfaces stay outside the rule and are accepted: Strata's desktop app reads the tracked
+configs directly, so its `gpu: 0` means the discrete adapter only when this repository starts it and applies
+the HIP mask; AudioCpp's native `server.json` keeps `device: 0` as its default for direct readers, while the
+launcher materializes the resolved index.
+
 Imports never start services or load model libraries. Optional audio dependencies
 load only when conversion is requested. Timing remains owned by the
 [shared benchmark lifecycle](../../benchmarks/README.md), independently of

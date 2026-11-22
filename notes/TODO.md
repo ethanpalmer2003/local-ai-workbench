@@ -4,7 +4,6 @@
 - Entries do not authorize live tests, package changes or long runs. Upstream defects stay in [UPSTREAM](UPSTREAM-INDEX.md), evidence in [STATUS](../scripts/tests/notes/STATUS-INDEX.md).
 - Each entry ends with a rough duration.
 
-
 ## Broken now
 Work that failed when last tried; the recorded state, not re-tested today. A diagnosis or fix comes before new comparisons.
 
@@ -12,15 +11,11 @@ Work that failed when last tried; the recorded state, not re-tested today. A dia
 
 - [ ] Take the Loom device failure upstream once it is confirmed, then retry the comparison: it now reproduces on the installed release - `loom-serve --device=amdgpu`, `rdna`, `rdna://1` and `amdgpu://1` all exit 1 with `NOT_FOUND; no AMD endpoint matches the selected family and path` (`runtime/src/iree/hal/driver/amd/driver.c:843`) whatever `HIP_VISIBLE_DEVICES` or `ROCR_VISIBLE_DEVICES` say, while `amdf-info --device=rdna --activate` reports `Activation: OK` on `rdna://0`, the integrated adapter, and `--format=json` lists the RX 7800 XT as `gfx1102`, ordinal 1. `--device=task` starts and registers `Qwen/Qwen2.5-0.5B-Instruct`, but a chat request was still 503 after four minutes. Next: let the CPU path finish to prove the package and the server, then try an explicit device document, and only then write the upstream question; the console scripts need `PYTHONPATH` pointing at `frameworks/loom/sdk`, since their shims load the `loom` package from beside them, and `loom-fetch` writes its hub cache into `data/huggingface/models` unless `--cache` names `data/huggingface/hub`, which the layout check reads as an unregistered model root. The symptom is recorded in [upstream](../notes/UPSTREAM-INDEX.md). Baseline for the same GGUF on llama.cpp Vulkan 1.0.0-dev (12422, a681a53b6): 472 tok/s median over five 128-token runs. ~2 h
 
-### Waiting on a release
-
 - [ ] Validate Handy microphone selection, dictation and paste. `selected_microphone` is null and the last attempt captured 0 samples in 17 ms, so the device is the suspect; model, VAD and hotkey are configured. ~30-45 min
 
 - [ ] Finish live voice-practice checks on both chat consumers: pipelining, capture, playback and echo. Saved-PCM path passes; the browser mic returns audio requests but no transcript. [Scenario matrix](../scripts/launchers/asr/MULTIUSE-SCENARIOS.md). ~45-60 min
 
 - [ ] Measure multilingual/noisy accuracy and microphone latency: capture produced no transcript, and only the English clips have been scored although the pinned corpus carries twenty each of English, Spanish, French and Japanese. [Evaluation](asr/ASR-EVALUATION.md), [coverage inventory](../scripts/benchmarks/asr/coverage.py). ~45-60 min
-
-### Unattended
 
 - [ ] Explain why generation stops after a few tokens at a 96K prompt: reasoning on returns only `<think>`,
   reasoning off a 17-token fragment, both far under a 256-token budget, while 32K, 40K and 64K answer fully.
@@ -36,13 +31,6 @@ Decisions only you can make.
 - [ ] Decide what to do with the HRX archive. None of the four retained patches applies to the current upstream heads (llama.cpp `76c3785b9`, HRX `b81ff778b`, rocm-systems `0ca1de96e9`), `tests/test-hrx-ops.cpp` no longer exists, and upstream has since landed its own IQ3_XXS decoding (#200, #175). Options: keep the tracked patches, snapshots and checkouts as a dated record, or trash the checkouts and snapshots and keep [the patch directory](../scripts/config/llamacpp/hrx-patches/README.md). ~15 min
 
 - [ ] Judge the Q2_K and Q4_K_M encoder pair on quality: both clips were saved and only timing was written up, so watch the two and record which one keeps. [Screen](reviews/COMFYUI-VIDEO-2026-11-09.md). ~15 min
-
-## Needs a live run or device
-Cannot be settled without hardware or a serving model.
-
-- [ ] Finish pinning every engine to the tracked discrete adapter. Done: [runtime/gpu_selection.py](../scripts/launchers/runtime/gpu_selection.py) owns every listing format and the probe CLI; llama.cpp's Vulkan and ROCm builds, Qwen ASR, Gemma audio, AudioCpp TTS, sd.cpp image flags and memory matrix, whisper's `-dev`, parakeet's environment, the ROCm `HIP_VISIBLE_DEVICES` mask and launcher-started Strata (iGPU hidden, so its `gpu: 0` is the discrete card) all resolve at launch. Two vendor-owned surfaces remain: Strata's desktop app reads the tracked configs directly, so its `gpu: 0` only means the discrete adapter when this repository starts it, and AudioCpp's [server.json](../scripts/config/audiocpp/server.json) keeps `device: 0` as the native default for direct readers; the shared launcher overrides it, but a reader that hands that file straight to the server would still take the default. Both need a materialized-config decision, not more wiring. ~15 min
-
-### Requires user input
 
 ## Unattended
 Code work that runs here without a live model.
