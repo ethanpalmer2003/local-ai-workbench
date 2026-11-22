@@ -74,6 +74,11 @@ from scripts.tests.cases.review.checks.test_typography import CheckTests, ScanTe
 from scripts.tests.cases.review.checks.test_walrus import WalrusTests
 from scripts.tests.cases.review.test_examples import ExamplesPageTests
 from scripts.tests.cases.review.test_public_audit import PublicAuditTests
+from scripts.tests.cases.review.test_restrictions import (
+    RestrictionCommandTests,
+    RestrictionResolveTests,
+    RestrictionTableTests,
+)
 from scripts.tests.cases.review.test_review_gate import GateScopeTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
@@ -282,6 +287,9 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     BareAnyTests,
     LineLengthTests,
     LimitsReportTests,
+    RestrictionTableTests,
+    RestrictionResolveTests,
+    RestrictionCommandTests,
     LiveStampTests,
     LanguageMatrixTests,
     RocmInventoryTests,

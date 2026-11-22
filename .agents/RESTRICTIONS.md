@@ -2,7 +2,7 @@
 
 What limits an agent in this workspace, what enforces each limit, and where the rule is written. The
 enforcement and the prose are deliberately separate: a rule a hook enforces is listed here so a reader does not
-have to find it in three trees.
+have to find it in three trees. The whole list prints: `python -m scripts.review.restrictions`.
 
 | Restriction | Enforced by | Written in |
 | --- | --- | --- |
