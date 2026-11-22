@@ -3,6 +3,7 @@
 import argparse
 import importlib.util
 import re
+import subprocess
 from collections import Counter
 from functools import cache
 from pathlib import Path
@@ -40,6 +41,30 @@ MODEL_NAME_ALLOWED = (
     "scripts/tests/notes/",
 )
 MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+
+
+@cache
+def tracked_paths() -> frozenset[str]:
+    """Every path git tracks, so a link that would vanish in a clone is told from one that survives."""
+    result = subprocess.run(
+        ["git", "-C", str(project_cfg.BASE_DIR), "ls-files", "-z"], capture_output=True, text=True, check=False
+    )
+    return frozenset(item for item in result.stdout.split("\0") if item)
+
+
+def tracked_target(destination: Path) -> bool:
+    """Whether a link target survives a clone: a tracked file, or a folder holding tracked files."""
+    try:
+        relative = destination.resolve().relative_to(project_cfg.BASE_DIR).as_posix()
+    except ValueError:
+        return False
+    tracked = tracked_paths()
+    if destination.is_dir():
+        prefix = relative.rstrip("/") + "/"
+        return any(item.startswith(prefix) for item in tracked)
+    return relative in tracked
+
+
 # - evidence and retired trees are not maintained documents, so a pointer into them will not survive a clone
 UNTRACKED_PARTS = frozenset({"output", "old", "retired", "trash"})
 # - one home per role: the table is the whole taxonomy, so an unlisted kind fails instead of drifting in
@@ -229,7 +254,7 @@ def pointer_stats(files: list[Path]) -> dict[str, Any]:
                 if destination.is_relative_to(project_cfg.BASE_DIR)
                 else str(destination)
             )
-            if UNTRACKED_PARTS & set(Path(target).parts):
+            if UNTRACKED_PARTS & set(Path(target).parts) or (destination.exists() and not tracked_target(destination)):
                 untracked.add(key)
             sources[relative] += 1
             targets[key] += 1
@@ -342,6 +367,10 @@ def _link_issues(path: Path, relative: str, text: str) -> list[str]:
         destination = path.parent / target if target else path
         if not destination.exists():
             issues.append(f"{relative}: missing link {target}")
+        elif UNTRACKED_PARTS & set(target.split("/")):
+            issues.append(f"{relative}: link into an untracked path {target}; cite the run without a link")
+        elif not tracked_target(destination):
+            issues.append(f"{relative}: link into an untracked path {target}; cite it as plain text")
         elif anchor and destination.suffix == ".md" and anchor not in markdown_anchors(destination):
             issues.append(f"{relative}: missing heading {target}#{anchor}")
     return issues

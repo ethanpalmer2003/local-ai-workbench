@@ -51,8 +51,9 @@ class RestrictionCommandTests(unittest.TestCase):
         printed = out.getvalue()
         self.assertEqual(status, 0)
         self.assertIn(f"[OK] {len(rows)} restrictions printed", printed)
-        # - a link in the table is resolved, so the terminal names the file to read
-        self.assertIn("(scripts/state/plugins/guard-deep-scan/package.json)", printed)
+        # - the profile plugin is installed on this machine and untracked, so it is cited as a plain path
+        self.assertIn("scripts/state/plugins/guard-deep-scan", printed)
+        self.assertIn("installed in the profile, not tracked", printed)
 
     def test_all_adds_the_failure_rows_and_the_harness_rules(self):
         with contextlib.redirect_stdout(io.StringIO()) as out:

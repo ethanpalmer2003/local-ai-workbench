@@ -2,6 +2,7 @@
 
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
@@ -129,7 +130,8 @@ class PointerTests(unittest.TestCase):
         )
         target.write_text("# Target\n\nNo outgoing links.\n", encoding="utf-8")
         try:
-            stats = docs.pointer_stats([source, target])
+            with patch.object(docs, "tracked_target", return_value=True):
+                stats = docs.pointer_stats([source, target])
         finally:
             source.unlink()
             target.unlink()
@@ -161,10 +163,22 @@ class LinkTests(unittest.TestCase):
             path.parent.rmdir()
         self.assertTrue(any("untracked" in issue for issue in issues), issues)
 
+    def test_a_link_to_a_present_but_untracked_file_is_reported(self):
+        # - the file exists for this checkout but a clone has no copy, so the pointer would be dead
+        path = self._fixture("# Linked\n\n[Itself](LINKED.md)\n")
+        try:
+            with patch.object(docs, "tracked_paths", return_value=frozenset()):
+                issues = docs.markdown_issues(path, path.read_text(encoding="utf-8"))
+        finally:
+            path.unlink()
+            path.parent.rmdir()
+        self.assertTrue(any("untracked" in issue for issue in issues), issues)
+
     def test_a_tracked_neighbour_link_resolves(self):
         path = self._fixture("# Linked\n\n[Itself](LINKED.md)\n")
         try:
-            issues = docs.markdown_issues(path, path.read_text(encoding="utf-8"))
+            with patch.object(docs, "tracked_target", return_value=True):
+                issues = docs.markdown_issues(path, path.read_text(encoding="utf-8"))
         finally:
             path.unlink()
             path.parent.rmdir()
