@@ -30,6 +30,16 @@ argument metadata. The [resident catalog](../asr/shared/resident_profiles.py)
 builds server commands from those profiles and launcher builders; consumers must
 not import command definitions from test modules.
 
+## Device selection
+
+No tracked file stores a GPU ordinal. The one owner is
+[runtime/gpu_selection.py](../runtime/gpu_selection.py): it asks the engine's own binary for its device list
+(`--list-devices`), matches the adapter named in
+[config/shared/hardware.json](../../config/shared/hardware.json), and returns the id or index that engine
+takes. A launch fails when the adapter is missing; an index of 0 is never the fallback, because that position
+may be the integrated adapter. Check an engine before wiring it:
+`python -m scripts.launchers.runtime.gpu_selection frameworks/sdcpp/vulkan/sd-server.exe`.
+
 Imports never start services or load model libraries. Optional audio dependencies
 load only when conversion is requested. Timing remains owned by the
 [shared benchmark lifecycle](../../benchmarks/README.md), independently of

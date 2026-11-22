@@ -7,6 +7,7 @@ from typing import Any
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.runtime import gpu_selection
 
 
 def audio_command(
@@ -24,6 +25,9 @@ def audio_command(
         "lazy_load": True,
         "models": [spec],
     }
+    if backend != "cpu":
+        # - the native server takes an ordinal, resolved from the tracked adapter name at launch
+        config["device"] = gpu_selection.device_for_binary(project_cfg.AUDIOCPP_SERVER_EXE).index
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
     return [str(project_cfg.AUDIOCPP_SERVER_EXE), "--config", str(path), "--model", str(spec["id"])]

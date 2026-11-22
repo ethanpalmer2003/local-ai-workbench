@@ -7,9 +7,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.config import project_config as project_cfg
+from scripts.config.shared import hardware
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import practice_models
 from scripts.launchers.koboldcpp import kobold, kobold_lite, speech
+from scripts.launchers.runtime import gpu_selection
 from scripts.tests.shared.paths import CasePaths
 
 
@@ -59,6 +61,21 @@ class SpeechProfiles(unittest.TestCase):
         self.assertEqual([model["id"] for model in config["models"]], [spec["id"]])
         self.assertEqual(config["models"][0]["path"], spec["path"])
         self.assertEqual(command[-2:], ["--model", spec["id"]])
+
+    def test_a_vulkan_backend_records_the_resolved_device(self):
+        spec = practice_models.tts_spec()
+        with (
+            CasePaths(__file__).temporary_directory() as folder,
+            patch.object(project_cfg, "GENERATED_DIR", Path(folder)),
+            patch(
+                "scripts.launchers.audiocpp.tts_server.gpu_selection.device_for_binary",
+                return_value=gpu_selection.Device("Vulkan0", hardware.discrete_gpu(), 0),
+            ),
+        ):
+            command = speech.audio_command(18881, backend="vulkan")
+            config = json.loads(Path(command[command.index("--config") + 1]).read_text())
+        self.assertEqual(config["device"], 0)
+        self.assertEqual(config["models"][0]["id"], spec["id"])
 
     def test_speech_provider_routes_to_the_audiocpp_proxy(self):
         def serve(handler, *_args):

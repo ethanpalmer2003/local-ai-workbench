@@ -1,17 +1,65 @@
-"""Pin a llama.cpp build to the discrete adapter so it cannot silently run on the integrated one."""
+"""Which GPU an engine may use: resolve the tracked discrete adapter from the engine's own device list.
 
+The standard is the same for every launcher: no tracked file stores a device ordinal, which is only a
+position in one runtime's enumeration order. A launcher asks its own binary for the list, matches the name
+from `config/shared/hardware.json`, and passes the returned id or index. A missing adapter fails the launch;
+falling back to index 0 would silently select the integrated GPU.
+"""
+
+import argparse
 import re
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.config.shared import hardware
 
-DEVICE_LINE = re.compile(r"^\s+(\S+): (.+?) \(\d+ MiB", re.MULTILINE)
 LIST_TIMEOUT_S = 120
+# - llama.cpp: `  Vulkan0: AMD Radeon RX 7800 XT (16368 MiB, 15408 MiB free)`
+LLAMA_DEVICE = re.compile(r"^\s+(Vulkan\d+): (.+?) \(\d+ MiB", re.MULTILINE)
+# - sd.cpp: `Vulkan0\tAMD Radeon RX 7800 XT`, printed after its `ggml_vulkan: Found n devices` block
+SD_DEVICE = re.compile(r"^(Vulkan\d+)\t(.+?)\s*$", re.MULTILINE)
+# - audio.cpp: `Vulkan:0 "AMD Radeon RX 7800 XT" [GPU]`
+AUDIO_DEVICE = re.compile(r'^Vulkan:(\d+) "(.+?)" \[', re.MULTILINE)
 
 
-def vulkan_devices(binary: Path) -> list[tuple[str, str]]:
-    """Device id and name per the build's own `--list-devices` output."""
+@dataclass(frozen=True)
+class Device:
+    """One listed device: the id an engine takes, its position there, and the adapter name."""
+
+    id: str
+    name: str
+    index: int
+
+
+def devices(text: str) -> list[Device]:
+    """Every Vulkan adapter a listing names, in the engine's own order."""
+    listed = [
+        Device(match.group(1), match.group(2).strip(), int(match.group(1)[len("Vulkan") :]))
+        for match in LLAMA_DEVICE.finditer(text)
+    ]
+    if not listed:
+        listed = [
+            Device(match.group(1), match.group(2).strip(), int(match.group(1)[len("Vulkan") :]))
+            for match in SD_DEVICE.finditer(text)
+        ]
+    if not listed:
+        listed = [Device(f"Vulkan{index}", name.strip(), int(index)) for index, name in AUDIO_DEVICE.findall(text)]
+    return listed
+
+
+def discrete_from_listing(text: str) -> Device:
+    """The listed device whose name is the tracked discrete adapter; a missing one is an error."""
+    wanted = hardware.discrete_gpu().lower()
+    listed = devices(text)
+    for device in listed:
+        if wanted in device.name.lower():
+            return device
+    available = ", ".join(f"{device.id}: {device.name}" for device in listed) or "none"
+    raise RuntimeError(f"the engine did not list {hardware.discrete_gpu()}; available: {available}")
+
+
+def _listing(binary: Path) -> str:
     result = subprocess.run(
         [str(binary), "--list-devices"],
         capture_output=True,
@@ -23,14 +71,35 @@ def vulkan_devices(binary: Path) -> list[tuple[str, str]]:
     )
     if result.returncode != 0:
         raise RuntimeError(f"{binary} --list-devices exited {result.returncode}: {result.stderr.strip()}")
-    return DEVICE_LINE.findall(result.stdout)
+    return result.stdout
+
+
+def device_for_binary(binary: Path) -> Device:
+    """The device this binary must be told to use, resolved from its own `--list-devices`."""
+    return discrete_from_listing(_listing(binary))
 
 
 def discrete_vulkan_device(binary: Path) -> str:
-    """The listed device whose name is the tracked discrete adapter; a missing one is an error."""
-    wanted = hardware.discrete_gpu().lower()
-    for device_id, name in vulkan_devices(binary):
-        if wanted in name.lower():
-            return device_id
-    listed = ", ".join(f"{device_id}: {name}" for device_id, name in vulkan_devices(binary)) or "none"
-    raise RuntimeError(f"Vulkan did not list {hardware.discrete_gpu()}; available: {listed}")
+    """The llama.cpp device id for the tracked discrete adapter."""
+    return device_for_binary(binary).id
+
+
+def main(arguments: list[str] | None = None) -> int:
+    """Print the resolved device per engine binary; exit 1 when one cannot find the discrete adapter."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("binaries", nargs="+", help="engine executables that support --list-devices")
+    options = parser.parse_args(arguments)
+    failed = False
+    for name in options.binaries:
+        try:
+            device = device_for_binary(Path(name))
+        except (OSError, RuntimeError) as error:
+            print(f"[FAIL] {name}: {error}")
+            failed = True
+        else:
+            print(f"[OK] {name}: {device.id} (index {device.index}) {device.name}")
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
