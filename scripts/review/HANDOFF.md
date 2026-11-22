@@ -13,8 +13,8 @@ and two when they skip, with the per-stage ranges in [stage times](../tools/stag
 writes `summary.json` beside the run's logs, and the handoff refuses to build when no run left one, when a
 stage failed, or when the tree moved after the run.
 
-The reviewer role and output shape come from the [code-review skill](../../.agents/skills/code-review/SKILL.md), which
-vendors obra/superpowers' prompt; the request restates the essentials for a bundle with no repository to open.
+The reviewer role and answer shape start from the [code-review skill](../../.agents/skills/code-review/SKILL.md), which
+vendors obra/superpowers' prompt unedited; the request borrows the essentials for a bundle with no repository to open.
 Two files:
 
 - `HANDOFF.md` carries the rules that decide quality, the shape of the repository, where the weight sits per

@@ -324,11 +324,14 @@ class BundleTests(unittest.TestCase):
         ]
         text = "\n".join(handoff.review_request(records))
         self.assertIn("- scripts/launchers/a.py", text)
-        self.assertIn("What not to do", text)
-        self.assertIn("a cheap check already fails on", text)
+        self.assertIn("What not to spend the review on", text)
+        self.assertIn("a deterministic check already fails on", text)
         # - the request asks for a general review, so it states no checklist of questions to answer
         self.assertIn("from your own knowledge", text)
         self.assertNotIn("Is any abstraction", text)
+        # - the exclusions focus the effort without bounding what a reviewer may propose
+        self.assertIn("a library this repository does not have", text)
+        self.assertIn("rather than treat it as the whole rubric", text)
 
     def test_a_run_writes_the_brief_the_request_and_the_index(self):
         record: handoff.FileRecord = {
