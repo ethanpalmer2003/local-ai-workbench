@@ -122,7 +122,7 @@ class FullRunTests(unittest.TestCase):
         }
         text = "\n".join(handoff.brief([record]))
         self.assertIn("## The full test behind this bundle", text)
-        self.assertIn(".agents/skills/code-review/SKILL.md", text)
+        self.assertIn("REVIEW-REQUEST.md", text)
 
 
 class BundleTests(unittest.TestCase):
@@ -173,7 +173,8 @@ class BundleTests(unittest.TestCase):
         text = "\n".join(handoff.brief(records, ranked=1))
         self.assertIn("| scripts/heavy.py | 400 | 1 | 2 | 1 | 1 |", text)
         self.assertNotIn("scripts/calm.py", text)
-        self.assertIn("Do not spend judgment on them", text)
+        # - the not-to-report rules live in the request, so the brief points there instead of restating them
+        self.assertNotIn("Do not spend judgment on them", text)
 
     def test_a_path_option_narrows_the_index_to_one_subtree(self):
         with CasePaths(__file__).temporary_directory() as folder:
@@ -323,8 +324,11 @@ class BundleTests(unittest.TestCase):
         ]
         text = "\n".join(handoff.review_request(records))
         self.assertIn("- scripts/launchers/a.py", text)
-        self.assertIn("What not to spend judgment on", text)
-        self.assertIn("already runs", text)
+        self.assertIn("What not to do", text)
+        self.assertIn("a cheap check already fails on", text)
+        # - the request asks for a general review, so it states no checklist of questions to answer
+        self.assertIn("from your own knowledge", text)
+        self.assertNotIn("Is any abstraction", text)
 
     def test_a_run_writes_the_brief_the_request_and_the_index(self):
         record: handoff.FileRecord = {

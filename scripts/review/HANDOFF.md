@@ -13,17 +13,16 @@ and two when they skip, with the per-stage ranges in [stage times](../tools/stag
 writes `summary.json` beside the run's logs, and the handoff refuses to build when no run left one, when a
 stage failed, or when the tree moved after the run.
 
-The reviewer role, output shape and read-only rules come from the [code-review skill](../../.agents/skills/code-review/SKILL.md),
-which vendors obra/superpowers' prompt; the brief repeats the essentials because a pasted bundle has no
-repository to open.
+The reviewer role and output shape come from the [code-review skill](../../.agents/skills/code-review/SKILL.md), which
+vendors obra/superpowers' prompt; the request restates the essentials for a bundle with no repository to open.
 Two files:
 
 - `HANDOFF.md` carries the rules that decide quality, the shape of the repository, where the weight sits per
   folder, the files ranked by how much judgment they ask for, and the full test behind the bundle. It also
   holds the evidence the opt-in checks already produced - the duplicate pairs the baseline accepts, and the
   last `--code` similarity run with the date it ran.
-- `REVIEW-REQUEST.md` is the instruction to give the heavier model: read the brief, then these files in full,
-  answer these four questions, and leave the gate's own findings alone.
+- `REVIEW-REQUEST.md` is the instruction: read the brief and the listed files, review them for quality from its own
+  knowledge, and avoid the listed things - a blacklist, not a checklist of answers.
 - `ast_map.json` holds every maintained Python file's public functions with their signature, span and whether
   they carry a docstring, so a reader can judge the shape without opening a file first.
 
@@ -36,8 +35,7 @@ counts what moved before that run instead. Either number is a reason to rerun th
 a pair count from another day.
 
 The measurements are prompts, never findings: a silent `except` may be deliberate and a long function may be
-one switch. A reader answers per file with line numbers, says which findings are real and which are
-deliberate, and leaves the gate's own findings alone.
+one switch. How to answer them is in `REVIEW-REQUEST.md`.
 
 Ranking is `3 x silent handlers + broad handlers + 2 x long functions`, plus one for a module past twelve
 public functions; `--ranked` sets how many files the brief names, and `--out` writes elsewhere. The
