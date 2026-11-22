@@ -1,6 +1,8 @@
 # ASR selection rationale
 
 The configured engines and models are owned by `launcher_config`; this page records why each option exists.
+The measured comparison sits in [ASR comparison](ASR-COMPARISON.md), installs in
+[ASR downloads](ASR-DOWNLOADS.md) and the engine wiring in [ASR implementation](ASR-IMPLEMENTATION.md).
 
 Goal: English/French/Spanish conversation with Gemma E4B and Kokoro. Language
 quality and runtime behavior are separate; synthetic English checks do not rank

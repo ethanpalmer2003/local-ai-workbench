@@ -1,7 +1,7 @@
 # Strata backend configuration
 
 - Pi/backend source: [decode.json](decode.json) (default) and [prefill.json](prefill.json); editable native JSON, never regenerated.
-- Which profile to run, what each was measured at and what stays unmeasured: [TUNING.md](TUNING.md).
+- Which profile to run, what each was measured at and what stays unmeasured: [TUNING.md](TUNING.md). One experimental profile, not the default: [issue-3695 reference](REFERENCE.md).
 - Switching: `--config C:/AI/scripts/config/strata/prefill.json` on the launch bat, or edit `STRATA.config_path`. A loaded model keeps its settings until restart.
 - Default location: `STRATA.config_path` in [launcher_config.py](../../launchers/launcher_config.py).
 - Alternate file: `C:/AI/bat/launch_strata_pi_agent.bat --config C:/path/to/config.json`.

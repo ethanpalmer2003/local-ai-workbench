@@ -6,6 +6,7 @@ Benchmark runners and their timing support live here, separate from correctness 
 - [Comparison vectors](COMPARISON-VECTORS.md) own the dimensions a result may vary on: engine, build, backend, harness, model, quantization, vendor quantization, MoE offload and memory envelope.
 - [Coding engine ranking](CODING-ENGINE-RANKING.md) ranks the engines per coding model from measured task times, with each build's date and commit.
 - Coding agents: [coding_agents/](coding_agents/README.md) (`bat/benchmarks/benchmark_coding_agents.bat`).
+- Measured tables: [model comparisons](MODEL-COMPARISONS.md). Area guides: [ASR](asr/README.md), [TTS engines](tts_engines/README.md), [KoboldCpp](koboldcpp/README.md) and [shared timing support](shared/README.md).
 - Language practice vs Lemonade (`bat/benchmarks/benchmark_framework_compare.bat`): chat, speech and recognition on the pinned corpus, one stack at a time, with an extra arm for the practice recogniser's Whisper build. Every long run records [provenance](shared/provenance.py) so a later run can tell what changed.
 - The llama.cpp build sweep (`benchmark_llm_inference`) is retired; its sources are archived in `C:/AI/trash/retired-llm-inference-sweep`.
 

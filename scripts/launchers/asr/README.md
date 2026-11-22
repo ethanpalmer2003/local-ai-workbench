@@ -3,8 +3,8 @@
 - [Speech workspace](PRACTICE-WORKSPACE.md) covers routes, conversation and measurements; [interactive speech-model selection](PRACTICE-MODELS.md) covers ASR framework/model and TTS model choice.
 
 - [Picks and reasons](../../../notes/asr/ASR-EVALUATION.md); [language lists/counts](../../config/notes/MODEL-LANGUAGES.md).
-- [All profiles grouped by streaming/VAD](CAPABILITIES.md); [evaluation and saved speeds](../../tests/notes/asr/ASR-SCREEN.md).
-- [Multi-use layouts](MULTIUSE.md): shared Gemma, multiple AudioCpp/llama.cpp servers, concurrency limits and staged test matrix.
+- [All profiles grouped by streaming/VAD](CAPABILITIES.md), with [counts and terminology](CAPABILITIES-NOTES.md); [evaluation and saved speeds](../../tests/notes/asr/ASR-SCREEN.md).
+- [Multi-use layouts](MULTIUSE.md): shared Gemma, multiple AudioCpp/llama.cpp servers, concurrency limits and staged test matrix. Its [workload scenarios](MULTIUSE-SCENARIOS.md) own the measurement contract.
 
 | Backend | Code / settings | Scope |
 | --- | --- | --- |

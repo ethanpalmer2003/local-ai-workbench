@@ -13,6 +13,8 @@ Work that cannot be settled without a live run: weights, a device, a server or a
 
 ### Requires user input
 
+- [ ] Decide whether to keep the rejected patch export of local HRX work. `scripts/state/llamacpp/hrx/local-work` holds two llama.cpp patches (133,873,695 and 134,054,355 bytes) carrying the squashed history that cannot be committed, beside a manifest and README; the same commits are 180 KB of git bundles in [the tracked local-work folder](../scripts/download/frameworks/llamacpp/hrx/local-work/README.md), which also keeps hrx-system and rocm-systems patch copies next to their 10 KB and 5 KB bundles. Options: delete the state copy (about 268 MB) and the two redundant tracked patches, or keep the patches as readable text. Deletion needs approval. ~5 min
+
 - [ ] Decide what to do with the HRX archive. None of the four retained patches applies to the current upstream heads (llama.cpp `76c3785b9`, HRX `b81ff778b`, rocm-systems `0ca1de96e9`), `tests/test-hrx-ops.cpp` no longer exists, and upstream has since landed its own IQ3_XXS decoding (#200, #175). Options: keep the tracked patches, snapshots and checkouts as a dated record, or trash the checkouts and snapshots and keep [the patch directory](../scripts/config/llamacpp/hrx-patches/README.md). ~15 min
 
 - [ ] Judge the Q2_K and Q4_K_M encoder pair on quality: both clips were saved and only timing was written up, so watch the two and record which one keeps. [Screen](reviews/COMFYUI-VIDEO-2026-11-09.md). ~15 min

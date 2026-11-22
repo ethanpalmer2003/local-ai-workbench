@@ -47,4 +47,5 @@ as the relevant latency evidence for practice. File numbers above remain evidenc
 for their original scope, not a universal framework ranking.
 
 French/Spanish learner recordings, noise/silence and physical microphone checks
-remain pending. [TODO](../../../../notes/TODO.md) owns follow-up work.
+remain pending. The end-to-end speech workspace smoke, browser UI included, is
+[speech workspace validation](WORKSPACE-UI-2026-10-29.md). [TODO](../../../../notes/TODO.md) owns follow-up work.

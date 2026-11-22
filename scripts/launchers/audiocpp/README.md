@@ -2,7 +2,7 @@
 
 [Model languages and offline query](../../config/notes/MODEL-LANGUAGES.md).
 
-- [Silero automatic ASR turns](ASR-VAD.md): Nemotron/TTS server plus a tiny CPU VAD helper; saved-file launcher and streaming integration API.
+- [Silero automatic ASR turns](ASR-VAD.md): Nemotron/TTS server plus a tiny CPU VAD helper; saved-file launcher and streaming integration API. The browser loop and gateway session: [streaming integration](ASR-VAD-STREAMING-INTEGRATION.md).
 - [Retained TTS runtimes](RETAINED-TTS.md): Sherpa ONNX and Piper installs, updates and the resident comparison, kept as alternatives.
 
 AudioCpp is the default practice TTS runtime. Prioritize natural multilingual

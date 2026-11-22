@@ -24,7 +24,7 @@
 ## Maintenance
 
 - [Merge/build/validate/install/restore commands](../../download/frameworks/UPDATES.md#hrx).
-- Saved local work: [hrx-patches](hrx-patches/README.md), the [fix registry](../../download/frameworks/llamacpp/hrx/fixes/fixes.json), snapshots and the verified pointer in `state/llamacpp/hrx`, every local-only commit exported to `state/llamacpp/hrx/local-work` with a manifest, and the `codex/*` branches.
+- Saved local work: [hrx-patches](hrx-patches/README.md), the [fix registry](../../download/frameworks/llamacpp/hrx/fixes/fixes.json), snapshots and the verified pointer in `state/llamacpp/hrx`, the local-only commits as git bundles in [the framework's local-work folder](../../download/frameworks/llamacpp/hrx/local-work/README.md), and the `codex/*` branches.
 - Modified checkouts/local commits require reviewed merges. New builds need explicit scope and long-run approval; preserve the working runtime on failure.
 - Upstream/vendor availability differs from this custom Windows installation. Check actual support before treating a release as interchangeable.
 - [Pending work](../../../notes/TODO.md), [historical outcomes](../../tests/notes/OUTCOMES.md).

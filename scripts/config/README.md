@@ -28,7 +28,7 @@ python -m scripts.config.sync_configs --only comfyui --apply
 - Historical configs/results are evidence, never editable defaults. Credentials stay out of Git/reports.
 - Layout/docs guards, the full review and their commands: [checks](../../.agents/CHECKS.md).
 
-- Model registry: edit [models/catalog.json](models/catalog.json); import the package API. `models/ids.py` is generated; category modules are compatibility wrappers. Storage group, task roles and runtime candidates are separate. Runtime candidates do not prove tested compatibility.
+- Model registry: edit [models/catalog.json](models/catalog.json); the [models package](models/README.md) owns identity and layout. Import the package API. `models/ids.py` is generated; category modules are compatibility wrappers. Storage group, task roles and runtime candidates are separate. Runtime candidates do not prove tested compatibility.
 - Inspect, add or retire a model: `python -m scripts.tools.model_admin where|add|remove|replace ...`; `--apply` edits `catalog.json`, regenerates `ids.py`, rewrites active references and moves weights to trash. Strata native configs remain a manual boundary.
 
 ## Notes
@@ -37,6 +37,7 @@ python -m scripts.config.sync_configs --only comfyui --apply
 - [Language practice](notes/LANGUAGE-PRACTICE.md)
 - [Speech model languages](notes/MODEL-LANGUAGES.md)
 - [Shared GPU policy](notes/SHARED-GPU.md)
+- [Benchmark corpus](benchmarks/README.md): clips a language run speaks and hears, pinned by revision.
 
 ## Workflow defaults
 
