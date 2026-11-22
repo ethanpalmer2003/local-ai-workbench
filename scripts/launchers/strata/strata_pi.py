@@ -16,6 +16,7 @@ from scripts.config import paths
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp_coding import prepare_pi_env
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.runtime.backend_readiness import ready_url
 
 LOG_DIR = project_cfg.component("strata").logs_dir
@@ -108,6 +109,9 @@ def start_backend(connection: StrataConnection, log_file: Path | None = None) ->
         raise FileNotFoundError(f"Strata's bundled Python was not found: {python}")
     # - the config's own engine switches (WMMA, PREFILL_MMQ, ...) reach the engine
     engine_env = {str(key): str(value) for key, value in (connection.config.get("env") or {}).items()}
+    if str(connection.config.get("backend", "")).lower() == "hip":
+        # - the config's `gpu` is an ordinal; hiding the iGPU makes the discrete card the only HIP device
+        engine_env.setdefault("HIP_VISIBLE_DEVICES", str(gpu_selection.rocm_peer_index()))
     return launch_util.launch_process(
         [
             str(python),

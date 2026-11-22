@@ -12,17 +12,25 @@ from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.runtime import gpu_selection, shared_gpu
 from scripts.shared import benchmark_config as benchmark_cfg
 from scripts.shared import consent
 
+# - the variant names only the text-encoder switch and its flags; the device is resolved per run
 VARIANTS = {
-    "baseline": ("--backend", "Vulkan0"),
-    "text-encoder-cpu": ("--backend", "Vulkan0,te=cpu"),
-    "vae-tile-512": ("--backend", "Vulkan0", "--vae-tiling", "--vae-tile-size", "512x512"),
-    "vae-tile-256": ("--backend", "Vulkan0", "--vae-tiling", "--vae-tile-size", "256x256"),
-    "cpu-weights-budget-8": ("--backend", "Vulkan0", "--offload-to-cpu", "--max-vram", "8"),
-    "text-cpu-and-vae-512": ("--backend", "Vulkan0,te=cpu", "--vae-tiling", "--vae-tile-size", "512x512"),
+    "baseline": ("", ()),
+    "text-encoder-cpu": (",te=cpu", ()),
+    "vae-tile-512": ("", ("--vae-tiling", "--vae-tile-size", "512x512")),
+    "vae-tile-256": ("", ("--vae-tiling", "--vae-tile-size", "256x256")),
+    "cpu-weights-budget-8": ("", ("--offload-to-cpu", "--max-vram", "8")),
+    "text-cpu-and-vae-512": (",te=cpu", ("--vae-tiling", "--vae-tile-size", "512x512")),
 }
+
+
+def variant_args(name: str, device_id: str) -> list[str]:
+    """The variant's flags with `--backend` naming the tracked adapter's own id."""
+    text_encoder, extra = VARIANTS[name]
+    return ["--backend", f"{device_id}{text_encoder}", *extra]
 
 
 def summarize(result: dict[str, Any], folder: RunPaths) -> dict[str, Any]:
@@ -88,8 +96,9 @@ def main():
             "apps and can miss short peaks; no broad quality ranking",
         },
     ) as report:
+        device_id = gpu_selection.device_for_binary(shared_gpu.server_exe()).id
         for variant in args.variants:
-            arguments = VARIANTS[variant]
+            arguments = variant_args(variant, device_id)
             folder = RunPaths(output.root / variant)
             folder.create()
             print(f"[VARIANT] {variant}", flush=True)

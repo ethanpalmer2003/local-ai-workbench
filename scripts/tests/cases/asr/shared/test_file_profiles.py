@@ -93,7 +93,7 @@ class FileProfiles(unittest.TestCase):
 
         profile = ASR_FILE_PROFILES["parakeetcpp-nemotron-streaming"]
         self.assertEqual(environment(profile, "streaming")["PARAKEET_DEVICE"], "cpu")
-        self.assertEqual(environment(profile, "offline")["PARAKEET_DEVICE"], "Vulkan0")
+        self.assertEqual(environment(profile, "offline")["PARAKEET_DEVICE"], "gpu")
         self.assertIn("--vad", build_command("parakeetcpp-v3", audio))
         for key in ("parakeetcpp-v3", "audiocpp-ming-audio-tiny"):
             with self.assertRaises(ValueError):

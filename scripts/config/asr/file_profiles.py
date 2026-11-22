@@ -230,7 +230,7 @@ for key, label, streaming in (
         streaming_kind="cache-aware Nemotron" if streaming else "offline multilingual Parakeet v3",
         server_arguments=("--model", "{model}", "--port", "{port}", "--threads", "4"),
         server_executable=binary("asr/parakeetcpp", "vulkan/parakeet-server.exe"),
-        environment_overrides=(("PARAKEET_DEVICE", "Vulkan0"),),
+        environment_overrides=(("PARAKEET_DEVICE", "gpu"),),
         mode_executables={"streaming": binary("asr/parakeetcpp", "cpu/parakeet-cli.exe")} if streaming else None,
         mode_environments={"streaming": (("PARAKEET_DEVICE", "cpu"),)} if streaming else None,
     )
