@@ -52,6 +52,7 @@ from scripts.tests.cases.review.checks.test_docs import (
     PointerTests,
     RoleTests,
     RootDocumentTests,
+    RunningListTests,
 )
 from scripts.tests.cases.review.checks.test_duplicates import DuplicateReportTests
 from scripts.tests.cases.review.checks.test_dynamic_imports import DynamicImportTests
@@ -231,6 +232,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     RoleTests,
     RootDocumentTests,
     HubSiblingTests,
+    RunningListTests,
     SharedRuntimeTests,
     ReadinessRouteTests,
     OwnedLaunchTests,

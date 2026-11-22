@@ -333,5 +333,29 @@ class HubSiblingTests(unittest.TestCase):
             self._clean(first, second)
 
 
+class RunningListTests(unittest.TestCase):
+    def test_a_regrouped_todo_loses_its_depth_and_its_empty_section_is_named(self):
+        text = (
+            "# TODO\n\n- intro\n\n## Broken now\nDescription.\n\n- [ ] one ~1 h\n\n"
+            "### Stray section\n\n- [ ] two ~1 h\n\n## Empty\nDescription only.\n\n## Next\n\n- [ ] three ~1 h\n"
+        )
+        issues = docs.running_list_issues("notes/TODO.md", text)
+        self.assertTrue(any("Stray section: heading deeper than 2" in issue for issue in issues), issues)
+        self.assertTrue(any("Empty: heading has no entries" in issue for issue in issues), issues)
+
+    def test_a_repeated_heading_is_reported(self):
+        text = "# TODO\n\n## Same\nDescription.\n\n- [ ] one ~1 h\n\n## Same\nDescription.\n\n- [ ] two ~1 h\n"
+        issues = docs.running_list_issues("notes/TODO.md", text)
+        self.assertTrue(any("Same: repeated heading" in issue for issue in issues), issues)
+
+    def test_a_prose_section_in_another_running_list_stays_legal(self):
+        text = "# Outcomes\n\n## Delivery\nTwo prose lines.\nMore prose, no list entries.\n"
+        self.assertEqual(docs.running_list_issues("scripts/tests/notes/OUTCOMES.md", text), [])
+
+    def test_a_well_formed_todo_passes(self):
+        text = "# TODO\n\n## Broken now\nDescription.\n\n- [ ] one ~1 h\n\n## Next\nDescription.\n\n- [ ] two\n"
+        self.assertEqual(docs.running_list_issues("notes/TODO.md", text), [])
+
+
 if __name__ == "__main__":
     unittest.main()

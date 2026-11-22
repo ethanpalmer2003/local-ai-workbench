@@ -17,7 +17,7 @@ The runner executes:
 - `checks/annotations.py`: annotation complexity by atoms, nesting and unions; above the cap it asks for a record.
 - `checks/line_length.py`: no line over 120 except template or token content.
 - `checks/bare_any.py`: no parameter or return may be exactly `Any` outside tests; `dict[str, Any]` stays allowed.
-- `checks/docs.py`: Markdown placement, roles, budgets, basename casing, links and model-name policy.
+- `checks/docs.py`: Markdown placement, roles, budgets, basename casing, links, running-list structure and model-name policy.
 - `ruff check` and `ruff format`: the configured lint set, including the [McCabe limit](../../.agents/CODE.md), and the formatting every commit applies.
 - `checks/model_references.py`: catalog IDs, workflow defaults, AudioCpp runtime paths.
 - `checks/frontend_wiring.py`: HTML/JS asset paths, DOM element ids and injected settings keys.

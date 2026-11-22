@@ -411,6 +411,47 @@ def markdown_issues(path: Path, text: str) -> list[str]:
     issues.extend(_module_reference_issues(relative, text))
     issues.extend(policy_number_issues(relative, text))
     issues.extend(generated_page_issues(relative, text))
+    if document_role(relative) == "running list":
+        issues.extend(running_list_issues(relative, text))
+    return issues
+
+
+HEADING_LINE = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
+ENTRY_LINE = re.compile(r"^\s*(?:- \[[ xX]\]|[-*+] |\d+\. |\|)")
+# - notes/TODO.md groups work under `##` sections only; a deeper heading there is a merge artifact
+MAX_RUNNING_LIST_DEPTH = {"notes/TODO.md": 2}
+
+
+def running_list_issues(relative: str, text: str) -> list[str]:
+    """A running list's headings describe a section that carries entries, once.
+
+    An empty section and a heading that belongs to another list are how a regroup script pasting
+    entry blocks corrupts the shape: the text still parses, so only a structural rule sees it.
+    """
+    lines = text.splitlines()
+    headings: list[tuple[int, int, str]] = []
+    for index, line in enumerate(lines):
+        match = HEADING_LINE.match(line)
+        if match:
+            headings.append((index, len(match.group(1)), match.group(2)))
+    issues: list[str] = []
+    seen: set[str] = set()
+    limit = MAX_RUNNING_LIST_DEPTH.get(relative, 6)
+    requires_entries = relative == "notes/TODO.md"
+    for position, (index, depth, title) in enumerate(headings):
+        if depth > limit:
+            issues.append(f"{relative}: {title}: heading deeper than {limit}")
+        if title in seen:
+            issues.append(f"{relative}: {title}: repeated heading")
+        seen.add(title)
+        if not requires_entries:
+            continue
+        end = next(
+            (following for following, following_depth, _title in headings[position + 1 :] if following_depth <= depth),
+            len(lines),
+        )
+        if not any(ENTRY_LINE.match(line) for line in lines[index + 1 : end]):
+            issues.append(f"{relative}: {title}: heading has no entries under it")
     return issues
 
 
