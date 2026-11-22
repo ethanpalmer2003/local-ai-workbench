@@ -90,7 +90,8 @@ def prune_extractions(root: Path, dry_run: bool, keep: int = KEEP_EXTRACTIONS) -
     """Keep the newest few `_MEI*` extractions: one belongs to a launch, and the rest are debris."""
     if not root.is_dir():
         return 0, 0
-    entries = sorted(root.glob("_MEI*"), key=lambda path: path.stat().st_mtime, reverse=True)
+    # - ties break by name: extraction folders created in one second keep a stable order
+    entries = sorted(root.glob("_MEI*"), key=lambda path: (path.stat().st_mtime, path.name), reverse=True)
     count = freed = 0
     for path in entries[keep:]:
         size = path_size(path)
