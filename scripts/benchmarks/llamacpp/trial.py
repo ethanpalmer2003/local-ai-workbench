@@ -9,6 +9,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
+from typing import NamedTuple
 
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import await_http
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT
@@ -16,6 +17,14 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 from scripts.launchers.runtime import gpu_selection
+
+
+class RunningServer(NamedTuple):
+    """One live trial server: its base URL, the command that started it, and the process."""
+
+    base_url: str
+    command: list[str]
+    process: subprocess.Popen[bytes]
 
 
 def require_free_session(message: str = "Stop the existing llama-server before running the comparison") -> None:
@@ -39,7 +48,7 @@ def running_server(
     guard: bool = True,
     alias: str | None = None,
     ready_timeout: float | None = None,
-) -> Iterator[tuple[str, list[str], subprocess.Popen[bytes]]]:
+) -> Iterator[RunningServer]:
     """Launch one llama.cpp server, wait for readiness, and always tear it down.
 
     Yields (base_url, command, process). `guard` refuses an occupied test session; `alias`
@@ -62,7 +71,7 @@ def running_server(
     try:
         base = f"http://127.0.0.1:{trial.port}"
         await_http(base, process, ready_timeout or cfg.LLAMACPP_SERVICE.ready_timeout_s)
-        yield base, command, process
+        yield RunningServer(base, command, process)
     finally:
         if process.poll() is None:
             launch_util.kill_process_tree(process.pid)

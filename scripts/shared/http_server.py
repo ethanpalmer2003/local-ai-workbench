@@ -8,6 +8,8 @@ from typing import Any, cast
 
 import requests
 
+JsonBody = dict[str, object]
+
 
 class QuietLog:
     """Suppress the default per-request line, for a handler whose caller prints its own summary."""
@@ -17,7 +19,7 @@ class QuietLog:
 
 
 def request(
-    url: str, payload: dict[str, object] | bytes | None = None, method: str | None = None, timeout: float = 5
+    url: str, payload: JsonBody | bytes | None = None, method: str | None = None, timeout: float = 5
 ) -> tuple[int, bytes, str]:
     structured = payload if isinstance(payload, dict) else None
     raw = payload if not isinstance(payload, dict) else None

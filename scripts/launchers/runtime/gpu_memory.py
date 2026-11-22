@@ -18,6 +18,21 @@ from typing import Any, NamedTuple, TypedDict
 import psutil
 
 
+class WindowsProcess(NamedTuple):
+    """The name and command line one Windows process reports for itself."""
+
+    name: str
+    command_line: str
+
+
+class ProcessSplit(NamedTuple):
+    """Adapter memory split by target pids, other AI processes and everything else."""
+
+    target_mb: float | None
+    other_ai_mb: float | None
+    other_non_ai_mb: float | None
+
+
 class UsageWindow(TypedDict):
     """Consecutive samples at or above the near-peak threshold."""
 
@@ -282,13 +297,13 @@ def _memory_value(data: Mapping[str, object], *names: str) -> float | None:
     return None
 
 
-def _get_windows_processes(pid: int) -> tuple[set[int], dict[int, tuple[str, str]]]:
+def _get_windows_processes(pid: int) -> tuple[set[int], dict[int, WindowsProcess]]:
     """The target's process tree with each process's name and command line, from psutil.
 
     A PowerShell WMI query per poll costs hundreds of milliseconds and adds a process to the machine being
     measured; psutil reads the same table in-process. An unreadable process is left out rather than guessed.
     """
-    details: dict[int, tuple[str, str]] = {}
+    details: dict[int, WindowsProcess] = {}
     try:
         root = psutil.Process(pid)
         processes = [root, *root.children(recursive=True)]
@@ -296,7 +311,7 @@ def _get_windows_processes(pid: int) -> tuple[set[int], dict[int, tuple[str, str
         return {pid}, {}
     for process in processes:
         try:
-            details[process.pid] = (process.name(), " ".join(process.cmdline()))
+            details[process.pid] = WindowsProcess(process.name(), " ".join(process.cmdline()))
         except (psutil.Error, OSError):
             continue
     return set(details) | {pid}, details
@@ -311,7 +326,7 @@ _AI_PROCESS_NAMES = {
 }
 
 
-def _is_ai_process(details: tuple[str, str]) -> bool:
+def _is_ai_process(details: WindowsProcess) -> bool:
     name, command_line = details
     name = name.lower()
     command_line = command_line.lower()
@@ -404,8 +419,8 @@ def _split_process_memory(
     process_samples: list[tuple[str, int, float]],
     selected_adapter: str,
     target_pids: set[int],
-    process_names: dict[int, tuple[str, str]],
-) -> tuple[float | None, float | None, float | None]:
+    process_names: Mapping[int, WindowsProcess],
+) -> ProcessSplit:
     process_mb: float | None = None
     other_ai_mb: float | None = None
     other_non_ai_mb: float | None = None
@@ -414,15 +429,15 @@ def _split_process_memory(
             continue
         if process_id in target_pids:
             process_mb = (process_mb or 0.0) + value_mb
-        elif _is_ai_process(process_names.get(process_id, ("", ""))):
+        elif _is_ai_process(process_names.get(process_id, WindowsProcess("", ""))):
             other_ai_mb = (other_ai_mb or 0.0) + value_mb
         else:
             other_non_ai_mb = (other_non_ai_mb or 0.0) + value_mb
-    return process_mb, other_ai_mb, other_non_ai_mb
+    return ProcessSplit(process_mb, other_ai_mb, other_non_ai_mb)
 
 
 def parse_windows_memory(
-    samples: object, target_pids: set[int], process_names: dict[int, tuple[str, str]]
+    samples: object, target_pids: set[int], process_names: Mapping[int, WindowsProcess]
 ) -> GpuMemorySnapshot | None:
     adapter_mb, process_samples = _collect_samples(samples)
     if not adapter_mb:

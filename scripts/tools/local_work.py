@@ -7,12 +7,28 @@ that only exists on this machine. Run `python -m scripts.tools.local_work` to se
 import json
 import subprocess
 from pathlib import Path
+from typing import NamedTuple
 
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks.llamacpp.hrx import fixes
 
 ARCHIVE = project_cfg.BASE_DIR / "scripts/download/frameworks/llamacpp/hrx/local-work"
 CHECKOUTS = ("llama.cpp", "hrx-system", "rocm-systems")
+
+
+class ArchivePatch(NamedTuple):
+    """One saved patch: its name, the commits it carries and a printable count."""
+
+    name: str
+    commits: int
+    detail: str
+
+
+class ArchiveRows(NamedTuple):
+    """The saved patches plus the manifest that records what upstream already carries."""
+
+    patches: list[ArchivePatch]
+    manifest: list[dict[str, object]]
 
 
 def git(root: Path, *args: str) -> str:
@@ -43,7 +59,7 @@ def checkout_rows() -> list[tuple[str, str, str, str]]:
     return rows
 
 
-def archive_rows() -> tuple[list[tuple[str, int, str]], list[dict[str, object]]]:
+def archive_rows() -> ArchiveRows:
     """The saved patches, with how many commits each one carries, and the manifest."""
     rows = []
     for patch in sorted(ARCHIVE.glob("*.patch")):
@@ -52,10 +68,10 @@ def archive_rows() -> tuple[list[tuple[str, int, str]], list[dict[str, object]]]
             for line in patch.read_text(encoding="utf-8", errors="replace").splitlines()
             if line.startswith("Subject:")
         ]
-        rows.append((patch.name, len(subjects), f"{len(subjects)} commit(s)"))
+        rows.append(ArchivePatch(patch.name, len(subjects), f"{len(subjects)} commit(s)"))
     manifest = ARCHIVE / "manifest.json"
     recorded = json.loads(manifest.read_text(encoding="utf-8")) if manifest.is_file() else []
-    return rows, recorded if isinstance(recorded, list) else []
+    return ArchiveRows(rows, recorded if isinstance(recorded, list) else [])
 
 
 def main() -> int:

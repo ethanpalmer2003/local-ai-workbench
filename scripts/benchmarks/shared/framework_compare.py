@@ -36,6 +36,9 @@ from scripts.launchers.shared.media.audio import decode_audio
 from scripts.launchers.shared.transport.multipart import audio_upload
 from scripts.shared import consent
 
+# - speech-rate plausibility bands, in characters per second
+Bands = dict[str, tuple[float, float]]
+
 WARMUP_PROMPT = "Say hello in one short sentence."
 PROMPTS = (
     "Describe a quiet scouting mission near an enemy facility with a teammate.",
@@ -199,11 +202,7 @@ def _speech(served: Served, text: str, voice: str, locale: str) -> tuple[bytes, 
 
 
 def _speech_issues(
-    language: str,
-    characters: int,
-    audio_seconds: float,
-    rms: float,
-    bands: dict[str, tuple[float, float]] | None = None,
+    language: str, characters: int, audio_seconds: float, rms: float, bands: Bands | None = None
 ) -> list[str]:
     """Reasons the waveform cannot be the sentence: silence, or a rate no speaker reaches."""
     rate_bands = bands or corpus.speech_rate()

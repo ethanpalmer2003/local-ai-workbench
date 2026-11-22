@@ -492,8 +492,9 @@ class _JsonProxyHandler(ProxyHandlerMixin):
         print(f"[{self.tag}] {format % args}")
 
 
-Transform = Callable[[dict[str, object]], dict[str, object] | None]
-OnResponse = Callable[[dict[str, object], dict[str, object]], None]
+JsonObject = dict[str, object]
+Transform = Callable[[JsonObject], JsonObject | None]
+OnResponse = Callable[[JsonObject, JsonObject], None]
 
 
 def run_json_proxy(

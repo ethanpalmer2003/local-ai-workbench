@@ -13,6 +13,8 @@ from scripts.launchers.asr.shared.streaming.vad import Silero
 from scripts.launchers.asr.shared.streaming.websocket_stream import WebSocketBridge, WebSocketStream
 from scripts.launchers.shared.transport.streaming_http import StreamingPost
 
+StreamSource = StreamingPost | SegmentStream | WebSocketStream
+
 
 class Turns:
     def __init__(
@@ -23,7 +25,7 @@ class Turns:
         model: str = "benchmark-asr",
         language: str = "en-US",
         settings: cfg.AudiocppVadSettings | None = None,
-        stream_factory: Callable[[], StreamingPost | SegmentStream | WebSocketStream] | None = None,
+        stream_factory: Callable[[], StreamSource] | None = None,
         transport: WebSocketBridge | None = None,
     ):
         settings = cfg.AUDIOCPP_VAD if settings is None else settings

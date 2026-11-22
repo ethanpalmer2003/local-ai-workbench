@@ -12,6 +12,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import tts_text_processing
 
 Payload = dict[str, object]
+ModelSpec = dict[str, Any]
 
 
 class ComparisonSelectionError(ValueError):
@@ -90,9 +91,7 @@ def _voice_refs() -> dict[str, Path]:
 
 
 def runtime_defaults(
-    service: cfg.AudiocppStartupRequestServiceSettings,
-    model: str | None = None,
-    specs: list[dict[str, Any]] | None = None,
+    service: cfg.AudiocppStartupRequestServiceSettings, model: str | None = None, specs: list[ModelSpec] | None = None
 ) -> dict[str, object]:
     selected = model or service.model
     source = Path(cfg.AUDIOCPP_SERVER_ARGS["config"])

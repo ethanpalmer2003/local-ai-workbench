@@ -33,7 +33,8 @@ AGENT_MARKERS = (
 
 PortKey = tuple[str, int]
 Ports = set[PortKey]
-ListenerMap = dict[int | None, dict[int, Ports]]
+PortListeners = dict[int, Ports]
+ListenerMap = dict[int | None, PortListeners]
 
 
 class Listener(NamedTuple):

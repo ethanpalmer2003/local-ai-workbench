@@ -129,11 +129,42 @@ def annotations_in(path: Path) -> Iterable[Annotation]:
             yield Annotation(relative, node.name, node.lineno, scored.score, scored.pieces, scored.depth, scored.union)
 
 
+def alias_annotations(path: Path) -> Iterable[Annotation]:
+    """Module-level type aliases, scored like a signature so a hard type cannot hide behind a name."""
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return
+    try:
+        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+    except ValueError:
+        # - a caller can hand in a scratch file, and the report still has to name it
+        relative = path.as_posix()
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            name, value = node.targets[0].id, node.value
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            name, value = node.target.id, node.value
+        else:
+            continue
+        if not isinstance(value, ast.Subscript):
+            continue
+        scored = annotation_score(value)
+        if scored is None:
+            continue
+        yield Annotation(
+            relative, f"{name} (type alias)", node.lineno, scored.score, scored.pieces, scored.depth, scored.union
+        )
+
+
 def findings(paths: list[Path] | None = None) -> list[Annotation]:
-    """Annotations at or above the warning score, worst first, one row per function and score."""
+    """Annotations and type aliases at or above the warning score, worst first."""
     sources = [path for path in (maintained_files() if paths is None else paths) if path.suffix == ".py"]
     scored = [
-        item for path in sources for item in annotations_in(path) if item.score >= WARN_SCORE or item.depth > MAX_DEPTH
+        item
+        for path in sources
+        for item in (*annotations_in(path), *alias_annotations(path))
+        if item.score >= WARN_SCORE or item.depth > MAX_DEPTH
     ]
     # - one function with four heavy parameters is one thing to fix, not four findings
     unique: dict[tuple[str, str, int], Annotation] = {}

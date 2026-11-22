@@ -30,6 +30,9 @@ class RequestRecord(TypedDict):
     error: str | None
 
 
+RequestRow = RequestRecord | dict[str, Any]
+
+
 class RequestSummary(TypedDict):
     """Pooled statistics over completed resident requests; percentiles need a sample floor."""
 
@@ -294,7 +297,7 @@ class BenchmarkLifecycle:
                 raise
 
 
-def summarize_requests(rows: Sequence[RequestRecord | dict[str, Any]]) -> RequestSummary:
+def summarize_requests(rows: Sequence[RequestRow]) -> RequestSummary:
     """Pool completed resident requests; rows may come from a report, so each is checked, not trusted."""
     eligible: list[float] = []
     for row in rows:

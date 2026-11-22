@@ -49,7 +49,7 @@ class MoveParsingTests(unittest.TestCase):
         self.assertEqual(rename_path.dotted_forms("scripts/config/shared", "scripts/config/common"), [])
 
     def test_a_dotted_name_rewrites_only_as_a_whole_name(self):
-        pairs = [("scripts.tools.x", "scripts.tools.y")]
+        pairs = [rename_path.DottedPair("scripts.tools.x", "scripts.tools.y")]
         self.assertEqual(rename_path.rename_dotted("import scripts.tools.x\n", pairs), "import scripts.tools.y\n")
         # - a longer module that merely ends with the old name keeps its own prefix
         self.assertEqual(rename_path.rename_dotted("old_scripts.tools.x", pairs), "old_scripts.tools.x")
@@ -58,18 +58,25 @@ class MoveParsingTests(unittest.TestCase):
 class ImportRewriteTests(unittest.TestCase):
     def test_a_module_imported_by_name_is_renamed_and_its_alias_kept(self):
         text = "from scripts.tests import scoping, other\nfrom scripts.tests import scoping as scope\n"
-        rewritten = rename_path.rename_import_names(text, [("scripts.tests", "scoping", "selection")])
+        rewritten = rename_path.rename_import_names(
+            text, [rename_path.ImportRename("scripts.tests", "scoping", "selection")]
+        )
         self.assertEqual(
             rewritten, "from scripts.tests import selection, other\nfrom scripts.tests import selection as scope\n"
         )
 
     def test_another_package_and_a_longer_name_are_untouched(self):
         text = "from scripts.other import scoping\nfrom scripts.tests import scoping_extras\n"
-        self.assertEqual(rename_path.rename_import_names(text, [("scripts.tests", "scoping", "selection")]), text)
+        self.assertEqual(
+            rename_path.rename_import_names(text, [rename_path.ImportRename("scripts.tests", "scoping", "selection")]),
+            text,
+        )
 
     def test_a_dotted_name_sharing_the_prefix_is_not_truncated(self):
         text = "from scripts.tests.scoping_extras import helper\n"
-        rewritten = rename_path.rename_dotted(text, [("scripts.tests.scoping", "scripts.tests.selection")])
+        rewritten = rename_path.rename_dotted(
+            text, [rename_path.DottedPair("scripts.tests.scoping", "scripts.tests.selection")]
+        )
         self.assertEqual(rewritten, text)
 
 

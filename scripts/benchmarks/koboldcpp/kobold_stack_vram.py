@@ -138,6 +138,13 @@ def _describe_image(result: dict[str, Any], paths: RunPaths, label: str, body: b
         raise RuntimeError(f"Expected image {expected}, received {result['dimensions']}")
 
 
+class DescribedResult(NamedTuple):
+    """One request's recorded result and the prompt text it returns to the caller."""
+
+    result: dict[str, Any]
+    prompt_text: str | None
+
+
 def _describe_result(
     kind: str,
     paths: RunPaths,
@@ -146,17 +153,17 @@ def _describe_result(
     content_type: str,
     speech: dict[str, Any] | None,
     started: float,
-) -> tuple[dict[str, Any], str | None]:
+) -> DescribedResult:
     result: dict[str, Any] = {"kind": kind, "seconds": time.monotonic() - started, "content_type": content_type}
     if speech is not None:
         result["streaming"] = speech
     if kind == "text":
-        return result, _describe_text(result, body)
+        return DescribedResult(result, _describe_text(result, body))
     if kind == "audio":
         _describe_audio(result, paths, label, body)
-        return result, None
+        return DescribedResult(result, None)
     _describe_image(result, paths, label, body)
-    return result, None
+    return DescribedResult(result, None)
 
 
 def generate(

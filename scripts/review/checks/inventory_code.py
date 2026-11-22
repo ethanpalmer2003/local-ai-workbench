@@ -39,7 +39,10 @@ def load_file_baseline() -> dict[str, int]:
     return dict(json.loads(FILE_BASELINE.read_text(encoding="utf-8"))["files"])
 
 
-def save_file_baseline(rows: list[dict[str, int | str]]) -> None:
+BaselineRow = dict[str, int | str]
+
+
+def save_file_baseline(rows: list[BaselineRow]) -> None:
     accepted = {str(row["path"]): int(row["lines"]) for row in rows if int(row["lines"]) > MAX_FILE_LINES}
     FILE_BASELINE.write_text(json.dumps({"files": dict(sorted(accepted.items()))}, indent=2) + "\n", encoding="utf-8")
 

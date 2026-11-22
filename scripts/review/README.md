@@ -14,7 +14,7 @@ The runner executes:
 - `checks/layout.py`: component/config ownership, install roots, folder naming, high-level file placement, batch references, and the committed index: every `scripts.*` import resolves in it and no indexed file matches an ignore rule.
 - `checks/owned_tokens.py`: a literal one module owns may not be spelled in another, so a copy fails instead of drifting.
 - `checks/duplicates.py`: pylint duplicate blocks against a reviewed baseline; opt-in, a minute.
-- `checks/annotations.py`: annotation complexity by atoms, nesting and unions; above the cap it asks for a record.
+- `checks/annotations.py`: annotation complexity by atoms, nesting and unions, aliases included; above the cap it asks for a record.
 - `checks/line_length.py`: no line over 120 except template or token content.
 - `checks/bare_any.py`: no parameter or return may be exactly `Any` outside tests; `dict[str, Any]` stays allowed.
 - `checks/docs.py`: Markdown placement, roles, budgets, basename casing, links, running-list structure and model-name policy.

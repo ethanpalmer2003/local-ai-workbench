@@ -25,10 +25,26 @@ import json
 import re
 import subprocess
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, NamedTuple
 
 from scripts.config import local_overlay
 from scripts.download.input.audio_workflow import MAX_MERGED_DUR, SILENCE_MIN_DUR, SILENCE_NOISE_DB, source_paths
+
+
+class MergedClip(NamedTuple):
+    """One sentence-sized clip: where it starts, how long it runs, and its text."""
+
+    start: float
+    duration: float
+    text: str
+
+
+class MergeRows(NamedTuple):
+    """The merged clips and which boundary kind cut them."""
+
+    clips: list[MergedClip]
+    silence_cuts: int
+    cap_cuts: int
 
 
 def detect_silences(mp3_path, noise_db, min_dur, cache_path):
@@ -74,7 +90,7 @@ def has_silence_between(t1, t2, silences):
 
 def merge_rows(
     rows: Sequence[dict[str, Any]], silences: Sequence[tuple[float, float]], max_dur: float = MAX_MERGED_DUR
-) -> tuple[list[tuple[float, float, str]], int, int]:
+) -> MergeRows:
     """Collapse consecutive CSV rows into sentence-ish groups.
 
     - Boundary placed between two rows if:
@@ -87,7 +103,7 @@ def merge_rows(
       so the caller can report which mechanism is doing the splitting
     """
     if not rows:
-        return [], 0, 0
+        return MergeRows([], 0, 0)
 
     boundaries = [0]
     group_start_idx = 0
@@ -121,9 +137,9 @@ def merge_rows(
             last = rows[-1]
             end = float(last["Start"]) + float(last["Duration"])
         text = " ".join(rows[j]["Text"].strip() for j in range(s_idx, e_idx))
-        merged.append((start, end - start, text))
+        merged.append(MergedClip(start, end - start, text))
 
-    return merged, silence_cuts, cap_cuts
+    return MergeRows(merged, silence_cuts, cap_cuts)
 
 
 def main():

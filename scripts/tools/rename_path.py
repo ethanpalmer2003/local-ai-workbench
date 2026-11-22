@@ -32,8 +32,42 @@ PRUNE = EXCLUDED | {"data", "frameworks", "trash", "graphify-out"}
 TEXT_SUFFIXES = {".md", ".py", ".bat", ".yaml", ".yml", ".json", ".js", ".cjs", ".mjs"}
 
 # - one planned rewrite, and the bare basenames a move may repoint beside it
+PathPair = tuple[str, str]
 Planned = list[tuple[Path, int]]
-LocalForms = dict[Path, list[tuple[str, str]]]
+LocalForms = dict[Path, list[PathPair]]
+
+
+class DottedPair(NamedTuple):
+    """One dotted module name before and after a move."""
+
+    old: str
+    new: str
+
+
+class ImportRename(NamedTuple):
+    """One `from package import module` component that changes."""
+
+    package: str
+    old: str
+    new: str
+
+
+class CollapsedRename(NamedTuple):
+    """One collapsed package's import, with the parent and module name it moves under."""
+
+    old_package: str
+    old_name: str
+    new_package: str
+    new_name: str
+
+
+class MovedForms(NamedTuple):
+    """The dotted and import-name forms a move produces, before any file is read."""
+
+    dotted: list[DottedPair]
+    imports: list[ImportRename]
+
+
 # - `from package import module` names the module by its last component, so it needs its own rewrite
 FROM_IMPORT = re.compile(r"^(?P<head>\s*from\s+(?P<package>[\w.]+)\s+import\s+)(?P<names>[^\n]+)$", re.MULTILINE)
 ROOT = Path(__file__).resolve().parents[2]
@@ -73,7 +107,7 @@ def reference_forms(old: str, new: str, *, bare: bool = True) -> list[tuple[str,
     return sorted(pairs, key=lambda pair: len(pair[0]), reverse=True)
 
 
-def dotted_forms(old: str, new: str) -> list[tuple[str, str]]:
+def dotted_forms(old: str, new: str) -> list[DottedPair]:
     """A moved Python module is also imported by its dotted name, which a path rewrite never sees.
 
     A package `__init__.py` keeps the package name, so it has no dotted form of its own.
@@ -83,20 +117,20 @@ def dotted_forms(old: str, new: str) -> list[tuple[str, str]]:
         return []
     if old_path.name == "__init__.py" or len(old_path.parts) < 2:
         return []
-    return [(".".join(old_path.with_suffix("").parts), ".".join(new_path.with_suffix("").parts))]
+    return [DottedPair(".".join(old_path.with_suffix("").parts), ".".join(new_path.with_suffix("").parts))]
 
 
-def import_name_forms(old: str, new: str) -> list[tuple[str, str, str]]:
+def import_name_forms(old: str, new: str) -> list[ImportRename]:
     """`from package import module` names the module by its last component, so that needs the package."""
     old_path, new_path = PurePosixPath(old), PurePosixPath(new)
     if old_path.suffix != ".py" or new_path.suffix != ".py" or old_path.name == "__init__.py":
         return []
     if old_path.stem == new_path.stem or len(old_path.parts) < 2:
         return []
-    return [(".".join(old_path.parent.parts), old_path.stem, new_path.stem)]
+    return [ImportRename(".".join(old_path.parent.parts), old_path.stem, new_path.stem)]
 
 
-def rename_import_names(text: str, forms: list[tuple[str, str, str]]) -> str:
+def rename_import_names(text: str, forms: list[ImportRename]) -> str:
     """Rewrite the module component of a `from package import module` line and keep any alias."""
     if not forms:
         return text
@@ -119,7 +153,7 @@ def rename_import_names(text: str, forms: list[tuple[str, str, str]]) -> str:
     return FROM_IMPORT.sub(replace, text)
 
 
-def rename_dotted(text: str, pairs: list[tuple[str, str]]) -> str:
+def rename_dotted(text: str, pairs: list[DottedPair]) -> str:
     """Replace dotted names only between word boundaries, so a longer module sharing the prefix survives.
 
     The leading guard matters as much as the trailing one: `scripts.foo` also sits inside `old_scripts.foo`,
@@ -160,7 +194,7 @@ def text_files(root: Path) -> Iterable[Path]:
                 yield path
 
 
-def rename_collapsed_imports(text: str, forms: list[tuple[str, str, str, str]]) -> str:
+def rename_collapsed_imports(text: str, forms: list[CollapsedRename]) -> str:
     """`from old.package import module` becomes `from new.parent import renamed`, because the package is gone."""
     if not forms:
         return text
@@ -193,10 +227,10 @@ def rename_collapsed_imports(text: str, forms: list[tuple[str, str, str, str]]) 
 def rewrite_text(
     text: str,
     pairs: list[tuple[str, str]],
-    dotted: list[tuple[str, str]],
-    imports: list[tuple[str, str, str]],
-    collapsed: list[tuple[str, str, str, str]] | None = None,
-    local: list[tuple[str, str]] | None = None,
+    dotted: list[DottedPair],
+    imports: list[ImportRename],
+    collapsed: list[CollapsedRename] | None = None,
+    local: list[PathPair] | None = None,
 ) -> tuple[str, int]:
     """Apply every reference form to one file's text, and count the references that changed.
 
@@ -223,11 +257,11 @@ def rewrite_text(
     return updated, changes
 
 
-def _moved_forms(moves: dict[str, str]) -> tuple[list[tuple[str, str]], list[tuple[str, str, str]]]:
+def _moved_forms(moves: dict[str, str]) -> MovedForms:
     """The dotted and import-name forms, which do not depend on where the move happens."""
     dotted = [pair for old, new in moves.items() for pair in dotted_forms(old, new)]
     imports = [form for old, new in moves.items() for form in import_name_forms(old, new)]
-    return dotted, imports
+    return MovedForms(dotted, imports)
 
 
 def _pairs(moves: dict[str, str], root: Path = ROOT) -> tuple[list[tuple[str, str]], LocalForms]:
@@ -244,11 +278,11 @@ def _pairs(moves: dict[str, str], root: Path = ROOT) -> tuple[list[tuple[str, st
 
 def plan_forms(
     pairs: list[tuple[str, str]],
-    dotted: list[tuple[str, str]],
-    imports: list[tuple[str, str, str]],
+    dotted: list[DottedPair],
+    imports: list[ImportRename],
     *,
     root: Path = ROOT,
-    collapsed: list[tuple[str, str, str, str]] | None = None,
+    collapsed: list[CollapsedRename] | None = None,
     local: LocalForms | None = None,
 ) -> Planned:
     """Every file a rewrite would touch and how many references each holds, without writing."""
@@ -271,12 +305,12 @@ def preview(moves: dict[str, str], *, root: Path = ROOT) -> Planned:
 
 def rewrite_forms(
     pairs: list[tuple[str, str]],
-    dotted: list[tuple[str, str]],
-    imports: list[tuple[str, str, str]],
+    dotted: list[DottedPair],
+    imports: list[ImportRename],
     *,
     dry_run: bool,
     root: Path = ROOT,
-    collapsed: list[tuple[str, str, str, str]] | None = None,
+    collapsed: list[CollapsedRename] | None = None,
     local: LocalForms | None = None,
 ) -> list[Path]:
     """Apply one set of reference forms to every source file, writing only when asked."""
@@ -307,8 +341,8 @@ class Collapse(NamedTuple):
     module: Path
     init: Path
     pairs: list[tuple[str, str]]
-    dotted: list[tuple[str, str]]
-    imports: list[tuple[str, str, str, str]]
+    dotted: list[DottedPair]
+    imports: list[CollapsedRename]
 
 
 def collapse_plan(package: str, target: str, *, root: Path = ROOT) -> Collapse:
@@ -336,7 +370,7 @@ def collapse_plan(package: str, target: str, *, root: Path = ROOT) -> Collapse:
         dotted=dotted_forms(old, target),
         # - the package disappears, so its one module is imported from the parent under the new name
         imports=[
-            (
+            CollapsedRename(
                 ".".join(PurePosixPath(package).parts),
                 module.stem,
                 ".".join(PurePosixPath(target).parent.parts),
@@ -383,7 +417,7 @@ def leftovers(moves: dict[str, str], *, root: Path = ROOT) -> list[str]:
     return found
 
 
-def dotted_forms_all(moves: dict[str, str]) -> list[tuple[str, str]]:
+def dotted_forms_all(moves: dict[str, str]) -> list[DottedPair]:
     """Every moved module's dotted form, for the leftover scan."""
     return [pair for old, new in moves.items() for pair in dotted_forms(old, new)]
 

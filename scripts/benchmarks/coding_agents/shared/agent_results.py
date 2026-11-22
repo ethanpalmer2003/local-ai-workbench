@@ -18,6 +18,8 @@ from typing import Any, TypedDict
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import llamacpp
 
+ResultMetadata = dict[str, Any]
+
 
 @dataclass
 class Result:
@@ -162,7 +164,7 @@ def result_row(result: Result) -> ResultRow:
 
 
 def save_results(
-    root: Path, results: list[Result], conf: llamacpp.LlamaConfig, metadata: list[dict[str, Any]] | None = None
+    root: Path, results: list[Result], conf: llamacpp.LlamaConfig, metadata: list[ResultMetadata] | None = None
 ) -> None:
     for memory_report in root.parent.glob("*/round-*/logs/llamacpp/*.memory.json"):
         backend, round_name = memory_report.relative_to(root.parent).parts[:2]

@@ -177,5 +177,31 @@ class FindingsTests(unittest.TestCase):
         self.assertGreater(rows[0].depth, annotations.MAX_DEPTH)
 
 
+class AliasTests(unittest.TestCase):
+    def _alias(self, source: str) -> list[annotations.Annotation]:
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "sample.py"
+            path.write_text(source, encoding="utf-8")
+            return list(annotations.alias_annotations(path))
+
+    def test_a_module_level_type_alias_is_scored(self):
+        rows = self._alias("Heavy = dict[int, list[tuple[str, int, str, bool]]]\n")
+        self.assertEqual([(row.function, row.score) for row in rows], [("Heavy (type alias)", 14)])
+
+    def test_an_annotated_alias_is_scored(self):
+        rows = self._alias("Heavy: object = dict[int, list[tuple[str, int, str, bool]]]\n")
+        self.assertEqual([row.function for row in rows], ["Heavy (type alias)"])
+
+    def test_a_data_assignment_is_not_a_type_alias(self):
+        self.assertEqual(self._alias('TABLE = {"a": 1}\n'), [])
+
+    def test_a_heavy_alias_reaches_the_findings(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "sample.py"
+            path.write_text("Heavy = dict[int, list[tuple[str, int, str, bool]]]\n", encoding="utf-8")
+            rows = annotations.findings([path])
+        self.assertEqual([(row.function, row.score) for row in rows], [("Heavy (type alias)", 14)])
+
+
 if __name__ == "__main__":
     unittest.main()

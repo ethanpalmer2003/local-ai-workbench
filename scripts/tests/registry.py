@@ -39,7 +39,7 @@ from scripts.tests.cases.llamacpp.test_speech_ui import SpeechUiTests
 from scripts.tests.cases.personal.comfyui.test_comfyui_video import ExecutionTests, WorkflowTests
 from scripts.tests.cases.personal.comfyui.test_ltx_prompt_cache import PromptCacheTests
 from scripts.tests.cases.personal.comfyui.test_verify_node import ProviderTests, VerifyNodeTests
-from scripts.tests.cases.review.checks.test_annotations import DefaultTests, FindingsTests, ScoreTests
+from scripts.tests.cases.review.checks.test_annotations import AliasTests, DefaultTests, FindingsTests, ScoreTests
 from scripts.tests.cases.review.checks.test_bare_any import BareAnyTests
 from scripts.tests.cases.review.checks.test_comments import CommentPolicyTests
 from scripts.tests.cases.review.checks.test_dead_code import FindingTests, ScopedSkipTests
@@ -259,6 +259,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     FindingsTests,
     ScoreTests,
     DefaultTests,
+    AliasTests,
     NetworkTimeoutTests,
     SimilarityUnitTests,
     SimilarityNeighborTests,

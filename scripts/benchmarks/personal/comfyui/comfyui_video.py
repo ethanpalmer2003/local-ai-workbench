@@ -11,9 +11,10 @@ import socket
 import subprocess
 import time
 import uuid
+from collections.abc import Iterable
 from dataclasses import asdict, replace
 from pathlib import Path
-from typing import Any, BinaryIO, TextIO
+from typing import Any, BinaryIO, NamedTuple, TextIO
 
 import aiohttp
 from tqdm import tqdm
@@ -28,6 +29,14 @@ from scripts.config import project_config as project_cfg
 from scripts.config.comfyui.workflow_overrides import CONTROL_NAMES, LTXWorkflowOverrides, VAEDecode, VideoVAE, workflow
 from scripts.launchers.runtime import gpu_memory
 from scripts.shared import consent
+
+
+class ModelGroup(NamedTuple):
+    """One ComfyUI model folder and the file names expected in it."""
+
+    folder: str
+    files: tuple[str, ...]
+
 
 MODELS = (model_cfg.path("comfyui/LTX25-distilled-DiT-Q3_K_M").name,)
 ENCODERS = (
@@ -336,7 +345,7 @@ def _workflow_vaes(saved: dict[str, Any], selected_vae: str | None) -> tuple[str
     return vaes
 
 
-def _require_model_files(model_root: Path, groups: tuple[tuple[str, tuple[str, ...]], ...]) -> None:
+def _require_model_files(model_root: Path, groups: Iterable[ModelGroup]) -> None:
     for folder, names in groups:
         for filename in names:
             if not (model_root / folder / filename).is_file():
@@ -368,7 +377,9 @@ def _select_sources(args: argparse.Namespace, comfy: Path, model_root: Path, pat
     selected_vae = LTXWorkflowOverrides(video_vae=VideoVAE(args.video_vae)).video_vae_filename
     for name, saved in saved_workflows.items():
         vaes = _workflow_vaes(saved, selected_vae)
-        _require_model_files(model_root, (("unet", models), ("clip", encoders), ("vae", vaes)))
+        _require_model_files(
+            model_root, (ModelGroup("unet", models), ModelGroup("clip", encoders), ModelGroup("vae", vaes))
+        )
         _stage_source(name, saved, comfy, paths)
     return SelectedSources(models, encoders, presets, sources, saved_workflows)
 

@@ -10,7 +10,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, NamedTuple, Protocol
 
 if TYPE_CHECKING:
     from huggingface_hub import ModelInfo
@@ -47,12 +47,19 @@ def _size(value: int | None) -> str:
     return f"{value / 1024**3:.1f} GiB" if value else "-"
 
 
-def _release(repo_id: str) -> tuple[str, tuple[int, ...]] | None:
+class Release(NamedTuple):
+    """A family stem and its parsed version numbers."""
+
+    stem: str
+    version: tuple[int, ...]
+
+
+def _release(repo_id: str) -> Release | None:
     """A versioned release repository: `.../Family-v1.2-GGUF` -> ('Family', (1, 2))."""
     match = RELEASE.match(repo_id.rsplit("/", 1)[-1])
     if not match:
         return None
-    return match.group("stem"), tuple(int(part) for part in match.group("version").split("."))
+    return Release(match.group("stem"), tuple(int(part) for part in match.group("version").split(".")))
 
 
 def latest_release(api: Hub, repo_id: str) -> tuple[str, str] | None:
