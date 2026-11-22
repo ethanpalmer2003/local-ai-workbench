@@ -49,7 +49,7 @@ def installs(version: str) -> tuple[bool, str]:
     """Whether a scratch copy of the project installs on this version, which proves the wheels exist.
 
     The copy exists so the check cannot rewrite this repository's own `.venv`: `uv sync` acts on the project
-    directory it is given, and the lock travelling with the copy keeps the pins the real environment uses.
+    directory it is given, and the lock traveling with the copy keeps the pins the real environment uses.
     """
     with tempfile.TemporaryDirectory() as folder:
         scratch = Path(folder) / "project"

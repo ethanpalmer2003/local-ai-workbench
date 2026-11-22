@@ -350,10 +350,17 @@ def replace_installation(staged: Path, dest_dir: Path) -> None:
     dest_dir = dest_dir.resolve()
     dest_dir.relative_to(project_cfg.FRAMEWORKS_DIR.resolve())
     stop_installation_processes(dest_dir)
-    if dest_dir.exists():
-        archive_path(dest_dir, project_cfg.FRAMEWORKS_DIR)
-    # - new files inherit installation permissions instead of cache integrity labels
-    shutil.copytree(staged, dest_dir)
+    archived = archive_path(dest_dir, project_cfg.FRAMEWORKS_DIR) if dest_dir.exists() else None
+    try:
+        # - new files inherit installation permissions instead of cache integrity labels
+        shutil.copytree(staged, dest_dir)
+    except OSError:
+        # - the previous install is in trash; put it back rather than leave a half-copied one
+        shutil.rmtree(dest_dir, ignore_errors=True)
+        if archived is not None:
+            shutil.move(str(archived), str(dest_dir))
+            print(f"[RESTORE] {dest_dir} restored after a failed copy")
+        raise
 
 
 def _runs_from(value: str, target: str) -> bool:

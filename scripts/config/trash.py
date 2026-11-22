@@ -25,19 +25,24 @@ def trash_path(name: str) -> Path:
     return destination
 
 
-def archive_path(path: Path, root: Path) -> None:
-    """Archive one path under `root` into today's trash folder, refusing anything outside that root."""
+def archive_path(path: Path, root: Path) -> Path | None:
+    """Archive one path under `root` into today's trash folder, refusing anything outside that root.
+
+    Returns where it put the path, for a caller that may have to move it back; None when there was
+    nothing to keep, because the path was absent or empty and is gone.
+    """
     path = path.resolve()
     path.relative_to(root.resolve())
     if path == root.resolve():
         raise ValueError("Cannot archive the containing root")
     if not path.exists():
-        return
+        return None
     if path.is_dir() and not any(path.iterdir()):
         # - an empty directory holds nothing worth keeping, so it is removed rather than archived
         path.rmdir()
-        return
+        return None
     trash = trash_dir()
     destination = trash_path(f"{path.name}-{time.time_ns()}")
     destination.relative_to(trash)
     shutil.move(str(path), str(destination))
+    return destination

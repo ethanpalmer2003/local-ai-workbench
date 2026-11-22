@@ -281,6 +281,31 @@ class FrameworkUpdateSources(unittest.TestCase):
                 updater.replace_installation(root / "staged", root / "tool")
                 stop.assert_called_once_with(root / "tool")
 
+    def test_a_failed_replacement_restores_the_previous_installation(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            tool = root / "tool"
+            tool.mkdir()
+            (tool / "old.exe").write_text("old", encoding="utf-8")
+            staged = root / "staged"
+            staged.mkdir()
+            (staged / "new.exe").write_text("new", encoding="utf-8")
+
+            def archive(path: Path, _root: Path) -> Path:
+                target = root / "archived"
+                shutil.move(str(path), str(target))
+                return target
+
+            with (
+                patch.object(project_cfg, "FRAMEWORKS_DIR", root),
+                patch.object(updater, "stop_installation_processes"),
+                patch.object(updater, "archive_path", side_effect=archive),
+                patch.object(updater.shutil, "copytree", side_effect=OSError("disk full")),
+                self.assertRaises(OSError),
+            ):
+                updater.replace_installation(staged, tool)
+            self.assertEqual((tool / "old.exe").read_text(encoding="utf-8"), "old")
+
     def test_rdna_build_and_patches_share_the_skipped_group(self):
         self.assertEqual(
             {tool.name for tool in cfg.rdna_tools()}, {"llamacpp/rdna", "llamacpp/additions/llama-cpp-rdna-boosts"}
