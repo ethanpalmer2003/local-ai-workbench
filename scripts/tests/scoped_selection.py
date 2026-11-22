@@ -37,6 +37,11 @@ from scripts.shared.import_graph import (
 # `registry.py` lists the classes, `run.py` runs them, and this file holds the rule that picks from them.
 FULL_TRIGGERS = {"scripts/tests/registry.py", "scripts/tests/run.py", "scripts/tests/scoped_selection.py"}
 
+# A batch file names its module in text, so the graph cannot see the dependency. Any batch edit also
+# selects the test that imports every module a batch names and asks each one for `--help`.
+BATCH_LAUNCHER_TEST = "scripts.tests.cases.shared.gate.test_bat_launchers"
+
+
 # Alias for a test class rather than one of its instances, which is what the scope passes around.
 TestClass = type[unittest.TestCase]
 
@@ -90,6 +95,11 @@ def select_test_classes(
 
     # A document, config or batch path contributes no module, and neither does a `.py` outside `scripts/`.
     changed_modules = module_names(code_changes)
+    # A batch file names its module in text, which the graph cannot see, so a batch edit selects the test
+    # that imports every module a batch names. It starts nothing, and it costs under a second.
+    batches = [path for path in code_changes if path.endswith(".bat")]
+    if batches:
+        changed_modules.add(BATCH_LAUNCHER_TEST)
     if not changed_modules:
         return Selection((), test_classes, "no Python change")
 
@@ -98,7 +108,7 @@ def select_test_classes(
     # The walk is a breadth-first search over the reversed graph, one hop back, per `REACH_DEPTH`.
     reachable = find_affected_modules(edges, changed_modules, depth=REACH_DEPTH)
 
-    reason = _reach_reason(edges, reachable, code_changes)
+    reason = _reach_reason(edges, reachable, code_changes, batches)
     return _build_selection(test_classes, reachable, reason)
 
 
@@ -175,12 +185,13 @@ def _module_deleted(paths: list[str], root: Path | None) -> bool:
     return any(path.endswith(".py") and not (base / path).is_file() for path in paths)
 
 
-def _reach_reason(edges: ImportGraph, reachable: set[str], paths: list[str]) -> str:
+def _reach_reason(edges: ImportGraph, reachable: set[str], paths: list[str], batches: list[str] | None = None) -> str:
     """The evidence a reader sees, including how many changed paths named no module."""
     # The change set holds unique paths, so the difference is exactly the ones that named no module.
     ignored = len(paths) - len(module_names(paths))
     detail = f" ({ignored} path(s) outside the module graph ignored)" if ignored else ""
-    return f"{len(reachable)} of {len(edges)} modules reachable{detail}"
+    note = "; batch edit runs the launcher test" if batches else ""
+    return f"{len(reachable)} of {len(edges)} modules reachable{detail}{note}"
 
 
 def _dump_without_docstrings(tree: ast.Module) -> str:

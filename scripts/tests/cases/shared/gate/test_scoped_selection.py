@@ -155,12 +155,7 @@ class TestSelection(unittest.TestCase):
 
     def test_a_non_python_change_runs_no_class(self):
         groups = (TestSelection,)
-        for paths in (
-            ["notes/TODO.md"],
-            ["scripts/config/models/catalog.json"],
-            ["scripts/benchmarks/README.md"],
-            ["bat/checks/test_all.bat"],
-        ):
+        for paths in (["notes/TODO.md"], ["scripts/config/models/catalog.json"], ["scripts/benchmarks/README.md"]):
             with self.subTest(paths=paths):
                 chosen = scoped_selection.select_test_classes(groups, change_set=paths)
                 self.assertEqual(chosen.kept, ())
@@ -454,6 +449,21 @@ class CodeChangeStageTests(unittest.TestCase):
                 scoped_selection, "upstream_texts", return_value={"scripts/run.py": '"""Old docstring."""\nVALUE = 1\n'}
             ):
                 self.assertTrue(scoped_selection.python_code_changed(["notes/TODO.md", "scripts/run.py"], root))
+
+    def test_a_batch_edit_selects_the_launcher_wiring_test(self):
+        # - a class standing in for that module, because importing it here would add an edge to the graph
+        target = type("BatLauncherWiring", (unittest.TestCase,), {"__module__": scoped_selection.BATCH_LAUNCHER_TEST})
+        with patch.object(
+            scoped_selection, "import_graph", return_value=_graph({scoped_selection.BATCH_LAUNCHER_TEST: ()})
+        ):
+            chosen = scoped_selection.select_test_classes((target,), change_set=["bat/checks/test_all.bat"])
+        self.assertEqual(chosen.kept, (target,))
+        self.assertIn("batch edit runs the launcher test", chosen.reason)
+
+    def test_a_document_edit_still_selects_nothing(self):
+        chosen = scoped_selection.select_test_classes((TestSelection,), change_set=["notes/TODO.md"])
+        self.assertEqual(chosen.kept, ())
+        self.assertEqual(chosen.reason, "no Python change")
 
     def test_an_unreadable_upstream_copy_counts_as_a_change(self):
         with CasePaths(__file__).temporary_directory() as folder:
