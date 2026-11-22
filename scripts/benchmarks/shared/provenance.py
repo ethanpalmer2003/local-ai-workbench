@@ -113,7 +113,11 @@ def engine_binaries(directory: Path) -> dict[str, BinaryState]:
         for path in sorted(directory.glob(pattern)):
             if not path.is_file() or path.name not in ENGINE_BINARIES:
                 continue
-            stat = path.stat()
+            try:
+                stat = path.stat()
+            except OSError:
+                # - a binary replaced between the glob and the read is the change this records
+                continue
             found[path.relative_to(directory).as_posix()] = {
                 "bytes": stat.st_size,
                 "modified": datetime.fromtimestamp(stat.st_mtime, UTC).isoformat(timespec="seconds"),
@@ -134,9 +138,13 @@ def changed_binaries(recorded: dict[str, BinaryState], current: dict[str, Binary
 
 def file_identity(label: str, path: Path) -> ModelIdentity:
     """Weight identity that survives a rename: exact size and modification time."""
+    try:
+        stat = path.stat()
+    except OSError:
+        # - absent, or removed between the caller naming it and this read; either way there is no weight
+        return {"label": label, "path": str(path), "present": False}
     if not path.is_file():
         return {"label": label, "path": str(path), "present": False}
-    stat = path.stat()
     return {
         "label": label,
         "path": str(path),
@@ -177,7 +185,14 @@ def corpus_state(identity: dict[str, Any], root: Path | None) -> dict[str, Any]:
     """Corpus identity plus the downloaded-evidence file the fetcher writes beside the audio."""
     state = dict(identity)
     record = root / "download.json" if root is not None else None
-    state["downloaded"] = json.loads(record.read_text(encoding="utf-8")) if record and record.is_file() else None
+    downloaded: dict[str, Any] | None = None
+    if record is not None and record.is_file():
+        try:
+            payload = json.loads(record.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            payload = None
+        downloaded = payload if isinstance(payload, dict) else None
+    state["downloaded"] = downloaded
     return state
 
 

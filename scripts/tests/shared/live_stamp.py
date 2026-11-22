@@ -31,7 +31,10 @@ def _installation_identity() -> bytes:
         root = component.framework_dir
         if not root.is_dir():
             continue
-        lines.append(f"{root}:{root.stat().st_mtime_ns}")
+        try:
+            lines.append(f"{root}:{root.stat().st_mtime_ns}")
+        except OSError:
+            continue
         for marker in (".last_update_hash", ".git/HEAD"):
             path = root / marker
             if path.is_file():
@@ -49,9 +52,12 @@ def fingerprint() -> str:
 def _stamps() -> dict[str, dict[str, str]]:
     path = project_cfg.STATE_DIR / "shared" / "live-stamps.json"
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {}
+    if not isinstance(payload, dict):
+        return {}
+    return {str(key): value for key, value in payload.items() if isinstance(value, dict)}
 
 
 def _save(stamps: dict[str, dict[str, str]]) -> None:

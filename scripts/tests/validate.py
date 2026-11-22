@@ -108,7 +108,13 @@ def main(argv: list[str] | None = None) -> int:
         os.environ["AI_LIVE_FORCE"] = "1"
     selected = list(args.only) if args.only else None
     if args.no_update:
-        selected = [key for key in (selected or ALL_KEYS) if key != "frameworks"]
+        # - an explicit `--only frameworks` with `--no-update` names nothing to run; say that instead of
+        #   falling back to the default plan, which would quietly run every other stage
+        wanted = selected if selected is not None else list(ALL_KEYS)
+        selected = [key for key in wanted if key != "frameworks"]
+        if not selected:
+            print("[FAIL] --no-update leaves no stage to run")
+            return 1
     stages = plan(selected, args.models, args.build)
     if args.dry_run:
         print("Full validation plan; frameworks update first and live stages skip when unchanged:")
