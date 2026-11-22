@@ -42,14 +42,26 @@ class StalenessTests(unittest.TestCase):
         (root / "src" / "notes.md").write_text("different prose\n", encoding="utf-8")
         self.assertEqual(staleness.tree_fingerprint(["src"], root, python_only, empty), base)
 
-    def test_a_manifest_reports_changed_and_new_files(self):
+    def test_a_manifest_reports_changed_new_and_removed_files(self):
         root = self.root()
-        first, second = root / "a.py", root / "b.py"
+        first, second, third = root / "a.py", root / "b.py", root / "c.py"
         first.write_text("1", encoding="utf-8")
-        recorded = staleness.manifest([first], root)
+        third.write_text("3", encoding="utf-8")
+        recorded = staleness.manifest([first, third], root)
         first.write_text("2", encoding="utf-8")
-        second.write_text("3", encoding="utf-8")
-        self.assertEqual(staleness.changed_since(recorded, staleness.manifest([first, second], root)), ["a.py", "b.py"])
+        second.write_text("4", encoding="utf-8")
+        third.unlink()
+        current = staleness.manifest([first, second], root)
+        self.assertEqual(staleness.changed_since(recorded, current), ["a.py", "b.py", "c.py"])
+
+    def test_a_tree_fingerprint_survives_a_file_that_vanished_mid_walk(self):
+        root = self.root()
+        (root / "src").mkdir()
+        (root / "src" / "a.py").write_text("x = 1\n", encoding="utf-8")
+        python_only, empty = frozenset({".py"}), frozenset()
+        first = staleness.tree_fingerprint(["src"], root, python_only, empty)
+        (root / "src" / "a.py").unlink()
+        self.assertNotEqual(staleness.tree_fingerprint(["src"], root, python_only, empty), first)
 
     def test_a_stamp_matches_only_itself_and_an_empty_stamp_never_matches(self):
         self.assertTrue(staleness.matched("abc", "abc"))

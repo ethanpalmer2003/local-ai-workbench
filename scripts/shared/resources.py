@@ -44,7 +44,12 @@ def monitor_process(
                 worker.join(timeout=5)
     finally:
         result.update(
-            pid=process.pid, launcher_pid=launcher_pid, cpu_ram=summarize_resources(samples), gpu=gpu.summary()
+            pid=process.pid,
+            launcher_pid=launcher_pid,
+            cpu_ram=summarize_resources(samples),
+            gpu=gpu.summary(),
+            # - a guard kill is the run's outcome, so the summary names it rather than leaving it in one sample
+            guard_abort=next((sample["abort"] for sample in samples if "abort" in sample), None),
         )
 
 

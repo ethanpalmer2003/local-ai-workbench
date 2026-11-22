@@ -138,6 +138,7 @@ from scripts.tests.cases.shared.runtime.test_gpu_selection import GpuSelectionTe
 from scripts.tests.cases.shared.runtime.test_image_on_demand import NativePassthroughTests, ResidencyTests
 from scripts.tests.cases.shared.runtime.test_native_probes import ProbeCommandTests
 from scripts.tests.cases.shared.runtime.test_resources import ResourceTests
+from scripts.tests.cases.shared.runtime.test_service_identity import EndpointIdentityTests
 from scripts.tests.cases.shared.runtime.test_shared_runtime import (
     ExitReportTests,
     OwnedLaunchTests,
@@ -355,6 +356,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     LemonadeOwnedStartTests,
     Reporting,
     ResourceTests,
+    EndpointIdentityTests,
     MemoryMonitorTests,
     GpuSelectionTests,
     HrxBuildTests,

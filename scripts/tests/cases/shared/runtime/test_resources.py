@@ -28,6 +28,23 @@ class ResourceTests(unittest.TestCase):
         self.assertEqual(result["pid"], 123)
         self.assertEqual(result["cpu_ram"]["whole_run"]["process_rss_bytes"]["maximum"], None)
 
+    def test_owned_monitor_reports_a_guard_abort_in_its_summary(self):
+        from pathlib import Path
+
+        gpu = MagicMock()
+        gpu.summary.return_value = {}
+
+        def sample_once(process, stop, samples, deadline, phase):
+            samples.append({"phase": "resident", "abort": "Available RAM below 1 GiB"})
+
+        with (
+            patch("scripts.launchers.runtime.gpu_memory.GpuMemoryMonitor", return_value=gpu),
+            patch.object(resources, "watch_resources", side_effect=sample_once),
+            resources.monitor_process(running_process(pid=123), Path("unused.jsonl")) as result,
+        ):
+            pass
+        self.assertEqual(result["guard_abort"], "Available RAM below 1 GiB")
+
     def test_short_process_exit_before_sampling_is_unavailable(self):
         import psutil
 

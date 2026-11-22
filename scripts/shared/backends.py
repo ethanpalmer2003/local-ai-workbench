@@ -166,7 +166,11 @@ def owned_backend_sessions(run: RunPaths, backends: tuple[str, ...], start_missi
         for process in reversed(owned):
             if process.poll() is None:
                 launch_util.kill_process_tree(process.pid)
+            try:
                 process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                # - one stubborn process must not leave the rest of the owned set running
+                continue
 
 
 def main() -> None:

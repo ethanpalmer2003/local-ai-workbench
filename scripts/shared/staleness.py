@@ -57,7 +57,11 @@ def tree_fingerprint(
                 continue
             digest.update(path.relative_to(root).as_posix().encode())
             digest.update(b"\0")
-            digest.update(path.read_bytes())
+            try:
+                digest.update(path.read_bytes())
+            except OSError:
+                # - a file removed between the walk and the read moved as surely as an edited one
+                digest.update(b"missing")
     digest.update(b"\0")
     digest.update(extra)
     return digest.hexdigest()
@@ -69,8 +73,14 @@ def manifest(files: Iterable[Path], root: Path) -> dict[str, str]:
 
 
 def changed_since(recorded: dict[str, str], current: dict[str, str]) -> list[str]:
-    """Paths whose content differs from a recorded manifest, or that are new."""
-    return sorted(path for path, digest in current.items() if recorded.get(path) != digest)
+    """Paths whose content differs from a recorded manifest, that are new, or that are gone.
+
+    A removed path changes the inputs as much as an edited one: a reader comparing the two manifests
+    must see the deletion, or a report keeps describing a file the tree no longer has.
+    """
+    changed = {path for path, digest in current.items() if recorded.get(path) != digest}
+    changed |= set(recorded) - set(current)
+    return sorted(changed)
 
 
 def matched(recorded: str | None, current: str) -> bool:
