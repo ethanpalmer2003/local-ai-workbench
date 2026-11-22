@@ -1,8 +1,10 @@
-"""A condition nests at most three boolean and comparison operators: name the parts instead.
+"""A condition nests operators to three levels: its root, at most two inside it.
 
-`a or (b and c) or (d and not e)` reads as one sentence with a hinge a reader has to hold in working
+`a or (b and (c or (d and e)))` reads as one sentence with a hinge a reader has to hold in working
 memory, and the fix is the same every time: extract `blocked = b and c` and the condition becomes a
-short list of named facts. Formatting carries no weight here; a long table row is not a condition.
+short list of named facts. A chain inside one operator node (`a or b or c`) stays allowed, because it
+is read in one pass; what the check counts is how deep operator nodes nest. A call or comprehension is
+one fact whatever it contains, so its inside is not counted.
 """
 
 import ast
@@ -11,7 +13,8 @@ from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
 from scripts.review.lists.sources import check_targets
 
-MAX_DEPTH = 4
+# - the first nesting depth the rule refuses: root plus two inside it is the allowance
+MAX_DEPTH = 3
 CONDITIONS = ast.If | ast.While | ast.IfExp
 # - a call or comprehension is one fact whatever it does inside; the rule is about the condition's own hooks
 OPAQUE = ast.Call | ast.Lambda | ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp
@@ -49,15 +52,15 @@ def overlong_conditions(path) -> list[tuple[str, int, int, str]]:
 
 
 def main(paths: list[str] | None = None) -> int:
-    """Report every condition above the depth limit; exit 1 when one is found."""
+    """Report every condition above the nesting limit; exit 1 when one is found."""
     targets = check_targets(paths, (".py",)) if paths else check_targets(None, (".py",))
     findings = [item for path in targets for item in overlong_conditions(path)]
     for relative, line, depth, source in findings[:MAX_REPORTED]:
-        print(f"{relative}:{line}: condition nests {depth} operators: {source}")
+        print(f"{relative}:{line}: condition nests {depth} operator layer(s): {source}")
     if len(findings) > MAX_REPORTED:
         print(f"[TRUNCATED] {len(findings) - MAX_REPORTED} more finding(s)")
     if findings:
-        print(f"[FAIL] {len(findings)} condition(s) nest {MAX_DEPTH} or more operators; name the parts")
+        print(f"[FAIL] {len(findings)} condition(s) nest {MAX_DEPTH} or more operator layers; name the parts")
         return 1
     print(f"[OK] Expression depth: {len(targets)} files, every condition nests fewer than {MAX_DEPTH}")
     return 0

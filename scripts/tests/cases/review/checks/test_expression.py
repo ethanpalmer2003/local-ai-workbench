@@ -11,6 +11,8 @@ from scripts.review.checks.expression import MAX_DEPTH, nesting, overlong_condit
 class ExpressionDepthTests(unittest.TestCase):
     def test_a_flat_condition_nests_nothing(self):
         self.assertEqual(nesting(ast.parse("a and b", mode="eval").body), 0)
+        # - a chain inside one operator node is read in one pass, so it is not nesting
+        self.assertEqual(nesting(ast.parse("a or b or c or d", mode="eval").body), 0)
 
     def test_a_call_is_one_fact_whatever_it_contains(self):
         self.assertEqual(nesting(ast.parse("any(x or y for x in items)", mode="eval").body), 0)
@@ -30,3 +32,10 @@ class ExpressionDepthTests(unittest.TestCase):
             path = Path(temporary) / "sample.py"
             path.write_text(source, encoding="utf-8")
             self.assertEqual(overlong_conditions(path), [])
+
+    def test_the_limit_is_the_root_plus_two_layers(self):
+        self.assertEqual(MAX_DEPTH, 3)
+        two_layers = ast.parse("a and (b or (c and d))", mode="eval").body
+        three_layers = ast.parse("a and (b or (c and (d or e)))", mode="eval").body
+        self.assertEqual(nesting(two_layers), 2)
+        self.assertEqual(nesting(three_layers), 3)

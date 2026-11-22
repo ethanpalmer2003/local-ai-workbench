@@ -321,7 +321,8 @@ def collapse_plan(package: str, target: str, *, root: Path = ROOT) -> Collapse:
     if any(child.is_dir() and child.name not in PRUNE for child in directory.iterdir()):
         raise ValueError(f"Package holds a subdirectory, so it is not one module: {package}")
     body = ast.parse(init.read_text(encoding="utf-8")).body
-    if body and not (len(body) == 1 and isinstance(body[0], ast.Expr)):
+    docstring_only = len(body) == 1 and isinstance(body[0], ast.Expr)
+    if body and not docstring_only:
         raise ValueError(f"__init__.py holds code; merge it into the module by hand: {package}")
     module = modules[0]
     old = module.relative_to(root).as_posix()
