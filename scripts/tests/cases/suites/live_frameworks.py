@@ -21,6 +21,7 @@ import requests
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.reporting import RunReport
 from scripts.config import project_config as project_cfg
+from scripts.config.shared import stage_times
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp, audiocpp_proxy
@@ -36,7 +37,6 @@ from scripts.tests.shared import live_stamp
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.progress import ProgressBar
 from scripts.tests.shared.timing import TimedTextTestResult
-from scripts.tools import stage_times
 
 live_timeout = 300.0
 # - One target per user-facing launch entry. Backend probes cover engines/models

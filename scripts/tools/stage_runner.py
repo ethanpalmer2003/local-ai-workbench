@@ -23,9 +23,9 @@ from typing import Any
 from tqdm import tqdm
 
 from scripts.config import project_config as project_cfg
+from scripts.config.shared import stage_times
 from scripts.launchers import launch_util
 from scripts.shared import staleness
-from scripts.tools import stage_times
 
 STEP_RE = re.compile(r"^=== (.+) ===$")
 PROGRESS_RE = re.compile(r"^\[PROGRESS\] \S+ \[[#-]*\] (\d+)/(\d+)(?: (.*))?$")

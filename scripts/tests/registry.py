@@ -154,6 +154,7 @@ from scripts.tests.cases.shared.tools.test_cleanup import CleanupTests
 from scripts.tests.cases.shared.tools.test_config_paths import ConfigPathTests
 from scripts.tests.cases.shared.tools.test_language_matrix import LanguageMatrixTests
 from scripts.tests.cases.shared.tools.test_local_overlay import LocalOverlayTests
+from scripts.tests.cases.shared.tools.test_locate_files import LocateTests
 from scripts.tests.cases.shared.tools.test_low_integrity import LowIntegrityTests
 from scripts.tests.cases.shared.tools.test_model_admin import ModelAdminTests
 from scripts.tests.cases.shared.tools.test_preflight import PreflightTests
@@ -289,6 +290,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     TransferTests,
     DownloadModelsTests,
     LocalOverlayTests,
+    LocateTests,
     SampleCodeTests,
     LabelVocabularyTests,
     YamlTableTests,

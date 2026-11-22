@@ -9,13 +9,13 @@ import time
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.reporting import RunReport
 from scripts.config import project_config as project_cfg
+from scripts.config.shared import stage_times
 from scripts.launchers import launch_util
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.shared import consent
 from scripts.tests.shared import live_stamp
 from scripts.tests.shared.paths import CasePaths
 from scripts.tests.shared.progress import ProgressBar
-from scripts.tools import stage_times
 
 PROBES = {
     "parakeet": ("scripts.tests.cases.asr.parakeetcpp", [], 240),

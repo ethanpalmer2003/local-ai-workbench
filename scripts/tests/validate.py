@@ -3,7 +3,7 @@
 Frameworks update first so the checks and live stages describe the state the machine is actually in;
 `--models` adds a read-only source check for the catalog. The model-free gate and suite follow, then
 both live suites, which skip themselves when their sources and installations are unchanged. Expected
-ranges live in `scripts/tests/shared/stage_times.py`.
+ranges live in `scripts/config/shared/stage_times.py`.
 """
 
 import argparse
@@ -11,10 +11,11 @@ import os
 from dataclasses import replace
 
 from scripts.config import project_config as project_cfg
+from scripts.config.shared import stage_times
 from scripts.review.lists.sources import maintained_files
 from scripts.shared import consent, staleness
 from scripts.tests.shared import live_stamp
-from scripts.tools import stage_runner, stage_times
+from scripts.tools import stage_runner
 
 MODULES: dict[str, tuple[str, tuple[str, ...]]] = {
     # - ComfyUI is vendor-managed and updated by hand, so it stays out of the automatic preflight

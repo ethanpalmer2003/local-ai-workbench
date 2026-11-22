@@ -5,8 +5,8 @@ import io
 import unittest
 from unittest.mock import patch
 
+from scripts.config.shared import stage_times
 from scripts.tests import validate
-from scripts.tools import stage_times
 
 DEFAULT = ["frameworks", "gate", "suite", "launchers", "backends"]
 

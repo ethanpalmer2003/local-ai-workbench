@@ -9,7 +9,7 @@ attention, and the remaining questions need judgment rather than a diff.
 The bundle is only written after the full validation has recorded a clean run, and the brief opens with that
 run. `python -m scripts.tests.validate` (or [test_full.bat](../../bat/checks/test_full.bat)) updates the
 frameworks, runs the gate and the model-free suite, then both live suites; about eleven minutes with live work
-and two when they skip, with the per-stage ranges in [stage times](../tools/stage_times.py). The stage runner
+and two when they skip, with the per-stage ranges in [stage times](../config/shared/stage_times.py). The stage runner
 writes `summary.json` beside the run's logs, and the handoff refuses to build when no run left one, when a
 stage failed, or when the tree moved after the run.
 
