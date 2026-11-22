@@ -361,3 +361,31 @@ class BundleTests(unittest.TestCase):
             with unittest.mock.patch.object(handoff, "last_full_run", return_value=None):
                 self.assertEqual(handoff.main(["--out", str(destination)]), 1)
             self.assertFalse(destination.exists())
+
+
+class RetentionTests(unittest.TestCase):
+    def test_a_new_bundle_moves_every_bundle_but_the_newest_two_to_trash(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            for name in ("1", "2", "3"):
+                (root / name).mkdir()
+            newest = root / "4"
+            newest.mkdir()
+            moved: list[Path] = []
+            with (
+                unittest.mock.patch.object(handoff.cleanup, "superseded", wraps=handoff.cleanup.superseded) as rule,
+                unittest.mock.patch.object(
+                    handoff.cleanup, "move_to_trash", side_effect=lambda paths, stamp, dry_run: moved.extend(paths)
+                ),
+            ):
+                handoff.prune_superseded(newest)
+        self.assertEqual([item.name for item in moved], ["2", "1"])
+        self.assertEqual(rule.call_args.kwargs["keep"], handoff.HANDOFF_KEEP)
+
+    def test_a_folder_with_two_bundles_moves_nothing(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            root = Path(folder)
+            for name in ("1", "2"):
+                (root / name).mkdir()
+            with unittest.mock.patch.object(handoff.cleanup, "move_to_trash", return_value=0):
+                self.assertEqual(handoff.prune_superseded(root / "2"), [])

@@ -25,7 +25,7 @@ from scripts.review.checks.inventory_code import maintained_python
 from scripts.review.lists.sources import maintained_files
 from scripts.shared import staleness
 from scripts.tests import validate
-from scripts.tools import stage_runner
+from scripts.tools import cleanup, stage_runner
 
 # - a function past this many lines carries more than one idea, which a reader has to judge rather than fix
 LONG_FUNCTION = 60
@@ -36,6 +36,8 @@ BUNDLE_NAME = "HANDOFF.md"
 REQUEST_NAME = "REVIEW-REQUEST.md"
 # - a screen older than this, or one that predates this many changed files, no longer describes the tree
 STALE_DAYS = 7
+# - the current bundle and the one it replaced; anything older describes a tree nobody reads
+HANDOFF_KEEP = 2
 STALE_CHANGES = 25
 DUPLICATE_BASELINE = project_cfg.SCRIPTS_DIR / "review" / "lists" / "duplicate-baseline.json"
 SIMILARITY_ROOT = project_cfg.GENERATED_DIR / "shared" / "similarity" / "code"
@@ -563,6 +565,21 @@ def evidence_report(root: Path | None = None) -> list[str]:
     return lines
 
 
+def prune_superseded(destination: Path) -> list[Path]:
+    """Move every bundle but the newest two to trash: a handoff is superseded by the next one.
+
+    The folder grows once a day at most, so two cover the current review and the one it replaced; anything
+    older describes a tree nobody is reading.
+    """
+    bundles = sorted(
+        (path for path in destination.parent.iterdir() if path.is_dir()), key=lambda path: path.name, reverse=True
+    )
+    stale = cleanup.superseded(bundles, cited=set(), keep=HANDOFF_KEEP, older_days=-1)
+    if stale:
+        cleanup.move_to_trash(stale, datetime.now().strftime("%Y-%m-%d"), dry_run=False)
+    return stale
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ranked", type=int, default=12, help="how many files the brief names first")
@@ -587,6 +604,8 @@ def main(argv: list[str] | None = None) -> int:
     (destination / REQUEST_NAME).write_text("\n".join(review_request(records, args.ranked)) + "\n", encoding="utf-8")
     (destination / "ast_map.json").write_text(json.dumps({"files": records}, indent=2) + "\n", encoding="utf-8")
     silent = sum(len(record["silent_excepts"]) for record in records)
+    for stale in prune_superseded(destination):
+        print(f"[PRUNE] superseded bundle moved to trash: {stale.name}")
     print(f"[OK] Handoff: {len(records)} files, {silent} silent handler(s)")
     print(f"[OK] Bundle: {destination / BUNDLE_NAME}")
     return 0

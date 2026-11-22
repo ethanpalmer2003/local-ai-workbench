@@ -1,23 +1,21 @@
 # Handoff to a heavier model
 
 `python -m scripts.review.handoff` writes a bundle under `scripts/state/generated/shared/handoff/<run>/` for a
-model that should not read the tree. It exists because the prompt sent to a large model is expensive: the
-mechanical findings already fail the gate, so they are not worth its attention, and the remaining questions
-need judgment rather than a diff.
+model that should not read the tree: mechanical findings already fail the gate, so they are not worth its
+attention, and the remaining questions need judgment rather than a diff.
 
 ## A passing full test comes first
 
 The bundle is only written after the full validation has recorded a clean run, and the brief opens with that
 run. `python -m scripts.tests.validate` (or [test_full.bat](../../bat/checks/test_full.bat)) updates the
-frameworks, runs the gate and the model-free suite, then both live suites; it takes about eleven minutes with
-live work to do and about two when they skip, with the per-stage ranges in [stage times](../tools/stage_times.py).
-The stage runner writes `summary.json` beside the run's logs, and the handoff refuses to build when no run left
-one, when a stage failed, or when the tree moved after the run.
+frameworks, runs the gate and the model-free suite, then both live suites; about eleven minutes with live work
+and two when they skip, with the per-stage ranges in [stage times](../tools/stage_times.py). The stage runner
+writes `summary.json` beside the run's logs, and the handoff refuses to build when no run left one, when a
+stage failed, or when the tree moved after the run.
 
 The reviewer role, output shape and read-only rules come from the [code-review skill](../../.agents/skills/code-review/SKILL.md),
 which vendors obra/superpowers' prompt; the brief repeats the essentials because a pasted bundle has no
 repository to open.
-
 Two files:
 
 - `HANDOFF.md` carries the rules that decide quality, the shape of the repository, where the weight sits per
@@ -28,6 +26,8 @@ Two files:
   answer these four questions, and leave the gate's own findings alone.
 - `ast_map.json` holds every maintained Python file's public functions with their signature, span and whether
   they carry a docstring, so a reader can judge the shape without opening a file first.
+
+- Only the newest two bundles stay: a bundle describes one tree, so the current review and the one it replaced are the whole history. `HANDOFF_KEEP` owns the number, and writing a third moves the oldest to trash.
 
 The similarity block warns when the screen no longer describes the tree: past 25 changed files, older than
 seven days (`STALE_CHANGES`, `STALE_DAYS`), or one pair naming a file or symbol the tree has since dropped.
@@ -43,6 +43,5 @@ Ranking is `3 x silent handlers + broad handlers + 2 x long functions`, plus one
 public functions; `--ranked` sets how many files the brief names, and `--out` writes elsewhere. The
 thresholds are `LONG_FUNCTION = 60` lines and `WIDE_SURFACE = 12` functions.
 
-What this bundle deliberately does not do: run the similarity or duplicate checks (both are opt-in and slower
-than a brief), or restate a rule that [code rules](../../.agents/CODE.md) own. It measures where a reader
-should look and stops there.
+It does not run the similarity or duplicate checks, both opt-in and slower than a brief, nor restate a rule
+that [code rules](../../.agents/CODE.md) own.
