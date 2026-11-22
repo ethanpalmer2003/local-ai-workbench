@@ -40,6 +40,8 @@ KEEP_REVIEW_LOGS = 2
 KEEP_TRASH_DAYS = 2
 # - every other log area keeps the latest entry and the one before it
 KEEP_LOG_ENTRIES = 2
+# - a PyInstaller extraction lasts one launch, so the count bound matters more than its age
+KEEP_EXTRACTIONS = 20
 # - handled by their own rules above
 SPECIAL_LOG_AREAS = frozenset({"shared/review", "shared/framework_updates"})
 
@@ -79,6 +81,24 @@ def prune_update_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
         size = path_size(path)
         if not dry_run:
             _remove(path)
+        count += 1
+        freed += size
+    return count, freed
+
+
+def prune_extractions(root: Path, dry_run: bool, keep: int = KEEP_EXTRACTIONS) -> tuple[int, int]:
+    """Keep the newest few `_MEI*` extractions: one belongs to a launch, and the rest are debris."""
+    if not root.is_dir():
+        return 0, 0
+    entries = sorted(root.glob("_MEI*"), key=lambda path: path.stat().st_mtime, reverse=True)
+    count = freed = 0
+    for path in entries[keep:]:
+        size = path_size(path)
+        if not dry_run:
+            try:
+                _remove(path)
+            except OSError:
+                continue
         count += 1
         freed += size
     return count, freed
@@ -221,6 +241,7 @@ def prune_generated(days: int, log_days: int, cache_days: int, dry_run: bool) ->
         ("old gate runs", prune_review_logs(cutoff, dry_run)),
         ("old gate reports", prune_review_reports(dry_run)),
         ("old launch scratch entries", prune_launch_cache(cache_cutoff, dry_run)),
+        ("surplus launch extractions", prune_extractions(cfg.LAUNCH.temp_dir, dry_run)),
         ("old trash folders", prune_trash(dry_run)),
         ("old framework updates", prune_update_logs(cutoff, dry_run)),
         ("old AudioCpp support-model caches", prune("*", cfg.LAUNCH.temp_dir / "audiocpp-gguf", cache_cutoff, dry_run)),

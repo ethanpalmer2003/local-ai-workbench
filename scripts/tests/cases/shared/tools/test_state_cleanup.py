@@ -92,6 +92,19 @@ class StateCleanupTests(unittest.TestCase):
         self.assertTrue(new.exists())
         self.assertTrue(extraction.exists())
 
+    def test_extractions_keep_the_newest_few_whatever_their_age(self):
+        root = self.root()
+        created = []
+        for index in range(5):
+            folder = root / f"_MEI{index}"
+            folder.mkdir()
+            (folder / "payload.bin").write_bytes(b"x")
+            created.append(folder)
+        count, _ = state_cleanup.prune_extractions(root, False, keep=2)
+        self.assertEqual(count, 3)
+        remaining = sorted(item.name for item in root.iterdir())
+        self.assertEqual(remaining, ["_MEI3", "_MEI4"])
+
 
 if __name__ == "__main__":
     unittest.main()
