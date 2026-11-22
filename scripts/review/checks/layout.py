@@ -86,15 +86,9 @@ def physical_root_issues() -> list[str]:
         if not root.is_dir():
             continue
         allowed = {p.relative_to(root).parts[0] for p in paths if p.is_relative_to(root)}
-        if root == project_cfg.HF_MODELS_DIR:
-            allowed.update(project_cfg.MODEL_ALIASES)
         for path in root.iterdir():
             if path.is_dir() and not path.name.startswith(".") and path.name not in allowed:
                 issues.append(f"Unregistered install/model root: {path}")
-    for alias, owner in project_cfg.MODEL_ALIASES.items():
-        path = project_cfg.HF_MODELS_DIR / alias
-        if path.exists() and path.resolve() != project_cfg.component(owner).models_dir.resolve():
-            issues.append(f"Model alias {alias} does not resolve to {owner}")
     native = project_cfg.component("comfyui").config_dir / "extra_model_paths.yaml"
     match = re.search(r'^\s*base_path:\s*"([^"]+)"', config_paths.load_text(native), re.M)
     if not match or Path(match.group(1)) != project_cfg.component("comfyui").models_dir:

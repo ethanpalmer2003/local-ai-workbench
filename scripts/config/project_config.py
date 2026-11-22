@@ -8,6 +8,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # This file lives in the project's shared config package.
 # - three levels up from scripts/config reaches the repository root
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -38,12 +40,7 @@ TEST_OUTPUT_DIR = TESTS_DIR / "output"
 # --- ENVIRONMENT LOADING ---
 
 # - Load env vars at import time so all scripts can use config.HF_TOKEN
-try:
-    from dotenv import load_dotenv
-
-    load_dotenv(str(ENV_FILE))
-except ImportError:
-    pass  # - dotenv not installed, rely on system env vars
+load_dotenv(str(ENV_FILE))
 
 HF_TOKEN = os.environ.get("HF_TOKEN")
 # - local service credentials stay in scripts/.env, never in tracked config
@@ -173,7 +170,6 @@ COMPONENTS.update(
         "strata": ComponentPaths("strata", framework_override="Strata"),
     }
 )
-MODEL_ALIASES: dict[str, str] = {}
 # App-managed weights not represented by individual download entries.
 MODEL_DISCOVERY_SUBDIRS = {"strata": "models", "asr/handy": ""}
 

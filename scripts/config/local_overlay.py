@@ -38,8 +38,15 @@ def model_overlay_path() -> Path:
 
 
 def _manifest(path: Path) -> dict[str, Any]:
-    """One hand-authored overlay manifest; YAML so the file can carry comments."""
-    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    """One hand-authored overlay manifest; YAML so the file can carry comments.
+
+    A malformed or unreadable overlay reads as empty, the same rule `overrides` keeps: the overlay may
+    change what a launcher does, never whether it starts.
+    """
+    try:
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return {}
     return payload if isinstance(payload, dict) else {}
 
 

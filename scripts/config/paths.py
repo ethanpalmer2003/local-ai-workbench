@@ -18,8 +18,15 @@ def load_text(path: Path) -> str:
 
 
 def load_json(path: Path) -> dict[str, Any]:
-    """Read a JSON object; every configuration file here is an object."""
-    return cast(dict[str, Any], json.loads(load_text(path)))
+    """Read a JSON object; every configuration file here is an object.
+
+    A wrong top-level type is a broken config, so it is raised here where the file is named rather than
+    surfacing later as an attribute error in whichever caller read a list.
+    """
+    payload = json.loads(load_text(path))
+    if not isinstance(payload, dict):
+        raise ValueError(f"{path} must hold a JSON object, not {type(payload).__name__}")
+    return cast(dict[str, Any], payload)
 
 
 def materialize(source: Path, folder: str = "configs") -> Path:

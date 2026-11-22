@@ -149,6 +149,7 @@ from scripts.tests.cases.shared.runtime.test_shared_runtime import (
 from scripts.tests.cases.shared.runtime.test_suite_calls import SuiteCallTests
 from scripts.tests.cases.shared.tools.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
 from scripts.tests.cases.shared.tools.test_cleanup import CleanupTests
+from scripts.tests.cases.shared.tools.test_config_paths import ConfigPathTests
 from scripts.tests.cases.shared.tools.test_language_matrix import LanguageMatrixTests
 from scripts.tests.cases.shared.tools.test_local_overlay import LocalOverlayTests
 from scripts.tests.cases.shared.tools.test_low_integrity import LowIntegrityTests
@@ -212,6 +213,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     FreshnessTests,
     HeadlineTests,
     RenderTests,
+    ConfigPathTests,
     CheckTests,
     ScanTests,
     SuffixTests,
