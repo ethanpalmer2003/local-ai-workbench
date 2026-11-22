@@ -611,16 +611,33 @@ def evidence_report(root: Path | None = None) -> list[str]:
     return lines
 
 
+BUNDLE_FILES = frozenset({"HANDOFF.md", "REVIEW-REQUEST.md", "ast_map.json"})
+
+
+def holds_only_the_bundle(folder: Path) -> bool:
+    """Whether a bundle folder holds nothing but the files this builder wrote.
+
+    A reviewer may save its findings beside them, and that file is not this tool's to prune: a folder with
+    anything extra is kept until a person moves the review out.
+    """
+    return {path.name for path in folder.iterdir() if path.is_file()} <= BUNDLE_FILES
+
+
 def prune_superseded(destination: Path) -> list[Path]:
     """Move every bundle but the newest two to trash: a handoff is superseded by the next one.
 
     The folder grows once a day at most, so two cover the current review and the one it replaced; anything
-    older describes a tree nobody is reading.
+    older describes a tree nobody is reading. A bundle holding a file this builder did not write is kept, so
+    a saved review is never pruned unseen.
     """
     bundles = sorted(
         (path for path in destination.parent.iterdir() if path.is_dir()), key=lambda path: path.name, reverse=True
     )
-    stale = cleanup.superseded(bundles, cited=set(), keep=HANDOFF_KEEP, older_days=-1)
+    stale = [
+        path
+        for path in cleanup.superseded(bundles, cited=set(), keep=HANDOFF_KEEP, older_days=-1)
+        if holds_only_the_bundle(path)
+    ]
     if stale:
         cleanup.move_to_trash(stale, datetime.now().strftime("%Y-%m-%d"), dry_run=False)
     return stale

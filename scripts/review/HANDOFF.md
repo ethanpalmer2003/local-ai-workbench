@@ -26,7 +26,7 @@ Two files:
 - `ast_map.json` holds every maintained Python file's public functions with their signature, span and whether
   they carry a docstring, so a reader can judge the shape without opening a file first.
 
-- Only the newest two bundles stay: a bundle describes one tree, so the current review and the one it replaced are the whole history. `HANDOFF_KEEP` owns the number, and writing a third moves the oldest to trash.
+- Only the newest two bundles stay: a bundle describes one tree, so the current review and the one it replaced are the whole history. `HANDOFF_KEEP` owns the number, and writing a third moves the oldest to trash. A bundle holding a file the builder did not write is kept.
 
 The similarity block warns when the screen no longer describes the tree: past 25 changed files, older than
 seven days (`STALE_CHANGES`, `STALE_DAYS`), or one pair naming a file or symbol the tree has since dropped.

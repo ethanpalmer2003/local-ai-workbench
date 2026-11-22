@@ -12,7 +12,8 @@ This is a scoped checkpoint, not an exhaustive codebase audit.
 | [Runtime](RUNTIME-CONSOLIDATION.md) | Shared lifecycle, audio, uploads and native binding owners established |
 | [Regressions](REGRESSION-FIXTURE-CONSOLIDATION.md) | Shared fixtures/contracts and explicit non-live/live boundary active |
 
-Dated records, newest first: [ROCm driver timeout](ROCM-DRIVER-TIMEOUT-2026-11-13.md),
+Dated records, newest first: [heavyweight review triage](HEAVYWEIGHT-REVIEW-2026-11-21.md),
+[ROCm driver timeout](ROCM-DRIVER-TIMEOUT-2026-11-13.md),
 [embeddings](EMBEDDINGS-2026-11-10.md), [llama.cpp Vulkan](LLAMACPP-VULKAN-2026-11-09.md),
 [Strata profiles](STRATA-PROFILES-2026-11-09.md), [ComfyUI video](COMFYUI-VIDEO-2026-11-09.md) and
 [upstream Kokoro](UPSTREAM-KOKORO-2026-11-08.md).
