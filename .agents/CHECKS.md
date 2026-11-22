@@ -7,7 +7,7 @@
 
 ## Commands
 
-- `python -m scripts.review.checks.layout` checks structure; `.docs` documents; `.comments` rejects markers, banners and commented-out code; `.expression` rejects a condition nesting four operators.
+- `python -m scripts.review.checks.layout` checks structure; `.docs` documents; `.comments` rejects markers, banners and commented-out code; `.expression` rejects a condition nesting operators three levels deep.
 - `basedpyright --level error` catches type/name contracts; syntax compilation alone is not enough. Run from `C:/AI` with the project environment and a normal-token invocation, or dependency discovery reports false missing imports.
 - `python -m scripts.review` or `scripts/review/check_repo.bat` runs every static check; `--tests` adds the suite.
 - An import smoke check starts no suite, model, GPU or service.
