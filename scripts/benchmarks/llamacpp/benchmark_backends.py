@@ -16,6 +16,7 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
+from scripts.launchers.runtime import gpu_selection
 from scripts.shared import consent
 
 
@@ -56,7 +57,7 @@ def run_trial(
         cwd=str(conf.build_dir),
         mode=cfg.ConsoleTerminalLaunchMode.MERGE,
         log_file=str(log),
-        env=conf.build_env,
+        env=gpu_selection.resolve_env(conf.build_env),
     )
     try:
         base = f"http://127.0.0.1:{port}"

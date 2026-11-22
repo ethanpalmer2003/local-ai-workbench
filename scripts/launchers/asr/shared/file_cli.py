@@ -10,6 +10,7 @@ from pathlib import Path
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES, FileAsrProfile
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.runtime.execution_context import require_native_execution
 
 
@@ -133,7 +134,7 @@ def main() -> int:
     _prepare_output(parser, args)
     print(f"ASR: {args.engine}; mode: {args.mode or profile.default_mode}", file=sys.stderr)
     return subprocess.run(
-        command, env=environment(profile, args.mode), cwd=project_cfg.BASE_DIR, check=False
+        command, env=gpu_selection.resolve_env(environment(profile, args.mode)), cwd=project_cfg.BASE_DIR, check=False
     ).returncode
 
 

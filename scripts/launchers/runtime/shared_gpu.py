@@ -5,8 +5,9 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audio_cfg
+from scripts.launchers.runtime import gpu_selection
 
-IMAGE_ARGS = ("--backend", "Vulkan0,te=cpu", "--vae-tiling", "--vae-tile-size", "512x512")
+VAE_ARGS = ("--vae-tiling", "--vae-tile-size", "512x512")
 KOBOLDCPP_MODEL_ARGS = {"koboldcpp/TheDrummer_Rocinante-X-12B-v1-IQ4_XS": {"gpulayers": 16}}
 AUDIO_SESSION_OPTIONS = {
     "fish_drama3": {"fish_drama3.cpu_expert_layers": 40},
@@ -14,9 +15,24 @@ AUDIO_SESSION_OPTIONS = {
 }
 
 
+def server_exe(build: str | None = None) -> Path:
+    """The sd.cpp server for the selected build; the launcher and the evidence recorders share it."""
+    from scripts.launchers import launcher_config as cfg
+
+    return cfg.SDCPP_BUILDS[cfg.SDCPP_SERVICE.build if build is None else build] / "sd-server.exe"
+
+
+def image_args(binary: Path | None = None) -> tuple[str, ...]:
+    """The shared image-session flags, with `--backend` naming the tracked adapter's own id."""
+    device = gpu_selection.device_for_binary(binary or server_exe())
+    return ("--backend", f"{device.id},te=cpu", *VAE_ARGS)
+
+
 def audio_config(source: Path, port: int) -> Path:
     """Derive a native server config because its CLI has no session-option override."""
     config = audio_cfg.read(source)
+    # - the native JSON names a default index; the tracked adapter decides the one this launch uses
+    config["device"] = gpu_selection.discrete_index(project_cfg.AUDIOCPP_SERVER_EXE)
     for model in config["models"]:
         options = AUDIO_SESSION_OPTIONS.get(model.get("family"))
         if options:

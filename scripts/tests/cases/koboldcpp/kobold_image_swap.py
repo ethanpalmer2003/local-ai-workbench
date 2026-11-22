@@ -51,7 +51,7 @@ class SwapProbe:
                 "kobold_usage_profile": "standalone",
                 "audio_model": cfg.AUDIOCPP_SERVICE.model,
                 "image_model": cfg.SDCPP_SERVICE.model,
-                "image_args": shared_gpu.IMAGE_ARGS,
+                "image_args": shared_gpu.image_args(),
                 "speech_text": SPEECH,
                 "swap_method": "stop/restart owned native server and proxy worker; no model downloads",
                 "limits": "Explicit prototype transitions, not yet automatic production request routing; OS caches not "

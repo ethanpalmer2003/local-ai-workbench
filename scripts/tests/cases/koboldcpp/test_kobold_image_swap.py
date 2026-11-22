@@ -10,6 +10,17 @@ from scripts.tests.shared.process_fixtures import running_process
 
 
 class SwapTests(unittest.TestCase):
+    def setUp(self) -> None:
+        """Model-free report and command building must not probe a native device list."""
+        for patcher in (
+            patch(
+                "scripts.launchers.runtime.shared_gpu.image_args",
+                return_value=("--backend", "Vulkan0,te=cpu", "--vae-tiling", "--vae-tile-size", "512x512"),
+            ),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
     def test_stop_targets_only_the_recorded_owned_worker(self):
         with CasePaths(__file__).temporary_directory() as folder:
             paths = RunPaths(Path(folder))

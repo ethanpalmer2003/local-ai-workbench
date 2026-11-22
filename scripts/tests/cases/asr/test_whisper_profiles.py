@@ -13,10 +13,17 @@ import requests
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import whispercpp as whisper
 from scripts.launchers.koboldcpp import kobold, kobold_lite
+from scripts.launchers.runtime import gpu_selection
 from scripts.tests.shared.http_fixtures import json_response
 
 
 class WhisperProfiles(unittest.TestCase):
+    def setUp(self) -> None:
+        """Model-free report and command building must not probe a native device list."""
+        for patcher in (patch.object(gpu_selection, "vulkan_peer_index", return_value=0),):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
     def test_external_cli_refuses_an_existing_kobold_session_before_starting_whisper(self):
         with (
             patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", cfg.AsrStartupEngine.EMBEDDED),

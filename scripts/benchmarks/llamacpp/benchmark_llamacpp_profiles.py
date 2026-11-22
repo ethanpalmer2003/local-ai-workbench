@@ -38,6 +38,7 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 from scripts.launchers.llamacpp.llamacpp_profiles import ALL_LLAMACPP_PROFILES
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
 from scripts.shared import consent
@@ -195,7 +196,7 @@ def run_profile(
         kill_ports=config.port,
         mode=cfg.ConsoleTerminalLaunchMode.MERGE,
         log_file=str(log_file),
-        env=config.build_env,
+        env=gpu_selection.resolve_env(config.build_env),
     )
 
     results: dict[str, list[Sample]] = {}
@@ -315,7 +316,7 @@ def overthink_profile(
         kill_ports=config.port,
         mode=cfg.ConsoleTerminalLaunchMode.MERGE,
         log_file=str(log_file),
-        env=config.build_env,
+        env=gpu_selection.resolve_env(config.build_env),
     )
 
     results: dict[str, dict[str, Any]] = {}

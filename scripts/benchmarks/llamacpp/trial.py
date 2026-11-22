@@ -15,6 +15,7 @@ from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
+from scripts.launchers.runtime import gpu_selection
 
 
 def require_free_session(message: str = "Stop the existing llama-server before running the comparison") -> None:
@@ -56,7 +57,7 @@ def running_server(
         kill_ports=trial.port,
         mode=cfg.ConsoleTerminalLaunchMode.MERGE,
         log_file=str(log),
-        env=trial.build_env,
+        env=gpu_selection.resolve_env(trial.build_env),
     )
     try:
         base = f"http://127.0.0.1:{trial.port}"

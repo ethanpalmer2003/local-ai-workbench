@@ -220,7 +220,7 @@ class WhispercppAsrStartupRequestSettings:
     model: Path = model_cfg.path("asr/whispercpp/large-v3-turbo-q5_0")
     port: int = 8890
     threads: int = 4
-    device: int = 0
+    device: int | None = None
     flash_attention: bool = True
     language: str = "en"
 
@@ -235,7 +235,6 @@ class ParakeetcppAsrStartupRequestSettings:
     vad_model: Path = model_cfg.path("asr/parakeetcpp/silero-vad-f16")
     vad: bool = True
     threads: int = 4
-    device: str = "Vulkan0"
 
     def executable(self, build: str) -> Path:
         return project_cfg.component("asr/parakeetcpp").framework_dir / build / "parakeet-cli.exe"

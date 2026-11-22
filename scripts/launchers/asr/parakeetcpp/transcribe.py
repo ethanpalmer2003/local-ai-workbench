@@ -7,6 +7,7 @@ from pathlib import Path
 
 from scripts.config import models as model_cfg
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.runtime.execution_context import require_native_execution
 
 
@@ -76,7 +77,8 @@ def main() -> int:
             parser.error(f"Missing file: {path}")
     command = _command(args, settings, exe, vad)
     env = os.environ.copy()
-    env["PARAKEET_DEVICE"] = "cpu" if args.build == "cpu" else settings.device
+    # - parakeet reads its device from the environment and cannot list devices itself
+    env["PARAKEET_DEVICE"] = "cpu" if args.build == "cpu" else gpu_selection.vulkan_peer_id()
     require_native_execution("Parakeet ASR")
     return subprocess.run(command, env=env, check=False).returncode
 

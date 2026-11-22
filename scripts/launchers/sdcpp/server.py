@@ -34,11 +34,11 @@ def launch(
     parser.add_argument("--model-profile", choices=tuple(cfg.SDCPP_MODELS), default=cfg.SDCPP_SERVICE.model)
     parser.add_argument("--usage-profile", choices=cfg.USAGE_PROFILES, default="standalone")
     selection, native_args = parser.parse_known_args(extra_args or [])
-    if selection.usage_profile == "shared":
-        native_args = [*shared_gpu.IMAGE_ARGS, *native_args]
     cfg.SDCPP_SERVICE.model = selection.model_profile
     directory = build_dir(selection.build)
     server_exe = str(directory / "sd-server.exe")
+    if selection.usage_profile == "shared":
+        native_args = [*shared_gpu.image_args(Path(server_exe)), *native_args]
     port = port if port is not None else cfg.SDCPP_SERVICE.port
 
     server_opts = {**cfg.SDCPP_SERVER_ARGS, "listen-ip": cfg.SDCPP_SERVICE.listen_ip, "listen-port": port}

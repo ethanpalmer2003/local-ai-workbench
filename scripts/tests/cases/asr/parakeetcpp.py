@@ -17,6 +17,7 @@ from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.shared.resources import summarize_resources, watch_resources
 from scripts.tests.shared.paths import CasePaths, RunPaths
@@ -83,7 +84,8 @@ def main() -> None:
             report, frameworks=("asr/parakeetcpp",), models={"asr": settings.model, "vad": settings.vad_model}
         )
         for build in ("cpu", "vulkan"):
-            env = {**os.environ, "PARAKEET_DEVICE": "cpu" if build == "cpu" else settings.device}
+            device = "cpu" if build == "cpu" else gpu_selection.vulkan_peer_id()
+            env = {**os.environ, "PARAKEET_DEVICE": device}
             for index, vad in enumerate((False, True)):
                 clip = clips[index]
                 paths = RunPaths(run.root / f"{build}-vad-{vad}")

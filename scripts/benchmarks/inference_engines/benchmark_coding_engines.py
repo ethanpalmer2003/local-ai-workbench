@@ -35,6 +35,7 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.shared import consent
 from scripts.shared.timing import timed
@@ -95,7 +96,7 @@ def llamacpp_session(args: argparse.Namespace, output: RunPaths) -> EngineSessio
         kill_ports=config.port,
         mode=cfg.ConsoleTerminalLaunchMode.MERGE,
         log_file=str(log_file),
-        env=config.build_env,
+        env=gpu_selection.resolve_env(config.build_env),
     )
     return EngineSession(
         name="llamacpp",

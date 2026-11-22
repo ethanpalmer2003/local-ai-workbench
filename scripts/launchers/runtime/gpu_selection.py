@@ -9,6 +9,7 @@ falling back to index 0 would silently select the integrated GPU.
 import argparse
 import re
 import subprocess
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -85,6 +86,47 @@ def device_for_binary(binary: Path) -> Device:
 def discrete_device_id(binary: Path) -> str:
     """The device id (VulkanN or ROCmN) for the tracked discrete adapter."""
     return device_for_binary(binary).id
+
+
+def discrete_index(binary: Path) -> int:
+    """The tracked adapter's position in this binary's own list, for a command that takes a number."""
+    return device_for_binary(binary).index
+
+
+def _llamacpp_peer(build: str) -> Path:
+    """A llama.cpp binary that can list devices, for engines that cannot list their own.
+
+    Every ggml binary on this machine reads the same Vulkan loader and ICD, so they enumerate the
+    adapters in one order; a startup log from whisper or parakeet confirms the same first device.
+    """
+    from scripts.launchers import launcher_config as cfg
+
+    return cfg.LLAMACPP_BUILDS[build].bin_dir / "llama-server.exe"
+
+
+def vulkan_peer_id() -> str:
+    """The discrete adapter's Vulkan id as the shared ggml stack lists it."""
+    return discrete_device_id(_llamacpp_peer("vulkan"))
+
+
+def vulkan_peer_index() -> int:
+    """The discrete adapter's Vulkan index, for a command that takes a number."""
+    return _device_index(vulkan_peer_id())
+
+
+def rocm_peer_index() -> int:
+    """The discrete adapter's HIP index, for a build that hides the iGPU with HIP_VISIBLE_DEVICES."""
+    return _device_index(discrete_device_id(_llamacpp_peer("rocm-lemonade")))
+
+
+def resolve_env(env: Mapping[str, str | None]) -> dict[str, str]:
+    """Resolve the device variables that an engine reads from the environment instead of its argv."""
+    resolved = {key: value for key, value in env.items() if value is not None}
+    if resolved.get("PARAKEET_DEVICE", "cpu") != "cpu":
+        resolved["PARAKEET_DEVICE"] = vulkan_peer_id()
+    if "HIP_VISIBLE_DEVICES" in resolved:
+        resolved["HIP_VISIBLE_DEVICES"] = str(rocm_peer_index())
+    return resolved
 
 
 def main(arguments: list[str] | None = None) -> int:

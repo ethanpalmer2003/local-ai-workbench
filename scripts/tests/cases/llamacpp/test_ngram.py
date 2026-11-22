@@ -14,6 +14,12 @@ from scripts.tests.shared.process_fixtures import running_process
 
 
 class NgramWorkloads(unittest.TestCase):
+    def setUp(self) -> None:
+        """Model-free report and command building must not probe a native device list."""
+        for patcher in (patch("scripts.launchers.runtime.gpu_selection.resolve_env", side_effect=lambda env: env),):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
     def test_speedbench_retains_completed_round_when_next_round_is_interrupted(self):
         @dataclass
         class Sample:

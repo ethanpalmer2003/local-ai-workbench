@@ -344,7 +344,7 @@ def launch(
         cwd=str(project_cfg.BASE_DIR),
         kill_ports=port if clear_port else None,
         mode=mode,
-        env=conf.build_env,
+        env=gpu_selection.resolve_env(conf.build_env),
     )
 
     try:

@@ -55,7 +55,7 @@ class NativeSessionProbe:
                 "kobold_command": kobold.server_command("standalone"),
                 "audio_model": self.pipeline.native.audio_model,
                 "image_profile": cfg.SDCPP_SERVICE.model,
-                "image_args": shared_gpu.IMAGE_ARGS,
+                "image_args": shared_gpu.image_args(),
                 "native_management": asdict(demand_cfg.SETTINGS),
                 "speech": SPEECH,
             },

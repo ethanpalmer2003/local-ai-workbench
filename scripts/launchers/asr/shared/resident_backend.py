@@ -10,6 +10,7 @@ from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import requests
 from scripts.launchers.asr.shared.resident_profiles import build_server_command
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.shared.services import native
 
 
@@ -50,7 +51,7 @@ class ResidentBackend:
             self.settings.profile,
             self.ready,
             lambda: native.matches(command),
-            env={**os.environ, **dict(profile.environment_overrides)},
+            env=gpu_selection.resolve_env({**os.environ, **dict(profile.environment_overrides)}),
             component_key=profile.component,
         )
 

@@ -23,6 +23,7 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
 from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
 from scripts.shared import consent
@@ -276,7 +277,7 @@ def benchmark_build(
         cwd=str(config.build_dir),
         mode=cfg.ConsoleTerminalLaunchMode.MERGE,
         log_file=str(log),
-        env=config.build_env,
+        env=gpu_selection.resolve_env(config.build_env),
     )
     monitor = GpuMemoryMonitor(process.pid, run.logs / f"vram-{build}.jsonl")
     monitor.stage = "startup"

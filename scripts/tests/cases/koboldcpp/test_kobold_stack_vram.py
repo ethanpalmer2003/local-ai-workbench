@@ -9,13 +9,25 @@ from unittest.mock import patch
 
 from scripts.benchmarks.koboldcpp import kobold_stack_vram as probe
 from scripts.launchers.koboldcpp import kobold
-from scripts.launchers.runtime import shared_gpu
+from scripts.launchers.runtime import gpu_selection, shared_gpu
 from scripts.launchers.sdcpp import server as sdcpp
 from scripts.tests.shared.media_fixtures import PNG
 from scripts.tests.shared.paths import CasePaths
 
 
 class StackProbeTests(unittest.TestCase):
+    def setUp(self) -> None:
+        """Model-free report and command building must not probe a native device list."""
+        for patcher in (
+            patch(
+                "scripts.launchers.runtime.shared_gpu.image_args",
+                return_value=("--backend", "Vulkan0,te=cpu", "--vae-tiling", "--vae-tile-size", "512x512"),
+            ),
+            patch.object(gpu_selection, "discrete_index", return_value=0),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
     def test_shared_kobold_offloads_layers_without_changing_standalone(self):
         shared = kobold.server_command("shared")
         self.assertEqual(shared[shared.index("--gpulayers") + 1], "16")

@@ -6,6 +6,7 @@ from typing import Any
 
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import requests
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.shared.services import native
 
 
@@ -50,12 +51,13 @@ def server_command(
 
 def command() -> list[str]:
     settings = cfg.WHISPERCPP_ASR
+    device = settings.device if settings.device is not None else gpu_selection.vulkan_peer_index()
     return server_command(
         settings.exe,
         settings.model,
         settings.port,
         settings.threads,
-        settings.device,
+        device,
         settings.flash_attention,
         settings.language,
     )
