@@ -12,3 +12,7 @@
 
 # Graphify's local knowledge graph (generated, 9 MB)
 graphify-out/
+scripts/config/strata/.strata-mcp/
+scripts/config/strata/ram-budget-*.done
+scripts/config/strata/*.log
+scripts/config/strata/run-*.bat

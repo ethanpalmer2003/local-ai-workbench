@@ -1,0 +1,280 @@
+diff --git a/ggml/src/ggml-hrx/CMakeLists.txt b/ggml/src/ggml-hrx/CMakeLists.txt
+index 3a398b18a..428bbea79 100644
+--- a/ggml/src/ggml-hrx/CMakeLists.txt
++++ b/ggml/src/ggml-hrx/CMakeLists.txt
+@@ -303,6 +303,10 @@ ggml_add_backend_library(ggml-hrx
+ target_link_libraries(ggml-hrx PRIVATE ggml-hrx-kernel-corpus hrx::hrx loomc::loomc)
+ target_include_directories(ggml-hrx PRIVATE . "${CMAKE_CURRENT_BINARY_DIR}" ../../../vendor)
+ target_compile_definitions(ggml-hrx PRIVATE GGML_USE_HRX)
++if(WIN32)
++    # MSVC keeps M_PI out of <cmath> unless this is defined; the rope dispatch headers use it.
++    target_compile_definitions(ggml-hrx PRIVATE _USE_MATH_DEFINES)
++endif()
+ 
+ if (GGML_HRX_BUNDLE_RUNTIME_LIBS)
+     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/BundleRuntime.cmake")
+diff --git a/ggml/src/ggml-hrx/ggml-hrx.cpp b/ggml/src/ggml-hrx/ggml-hrx.cpp
+index d4bf98db9..753ba8b8f 100644
+--- a/ggml/src/ggml-hrx/ggml-hrx.cpp
++++ b/ggml/src/ggml-hrx/ggml-hrx.cpp
+@@ -150,7 +150,7 @@ static bool buffer_submit_and_wait(ggml_backend_hrx_device_context * device,
+     if (!HRX_CHECK(submit(device->buffer_stream, user_data))) {
+         return false;
+     }
+-    return HRX_CHECK(hrx_stream_synchronize(device->buffer_stream));
++    return HRX_CHECK(hrx_stream_synchronize(device->buffer_stream, HRX_WAIT_FLAG_NONE));
+ }
+ 
+ struct FillBufferArgs {
+@@ -162,7 +162,7 @@ struct FillBufferArgs {
+ 
+ static hrx_status_t submit_fill_buffer(hrx_stream_t stream, void * user_data) {
+     auto * args = static_cast<FillBufferArgs *>(user_data);
+-    return hrx_stream_fill_buffer(stream, args->buffer, args->offset, args->size, &args->value, sizeof(args->value));
++    return hrx_stream_fill_buffer_linear(stream, args->buffer, args->offset, args->size, &args->value, sizeof(args->value));
+ }
+ 
+ struct CopyBufferArgs {
+@@ -175,7 +175,7 @@ struct CopyBufferArgs {
+ 
+ static hrx_status_t submit_copy_buffer(hrx_stream_t stream, void * user_data) {
+     auto * args = static_cast<CopyBufferArgs *>(user_data);
+-    return hrx_stream_copy_buffer(stream, args->source, args->source_offset, args->destination,
++    return hrx_stream_copy_buffer_linear(stream, args->source, args->source_offset, args->destination,
+                                   args->destination_offset, args->size);
+ }
+ 
+@@ -230,7 +230,7 @@ static void buffer_set(ggml_backend_buffer_t buffer,
+         return;
+     }
+     if (!HRX_CHECK(
+-            hrx_synchronous_h2d(context->device->transfer_queue, data, context->buffer, destination_offset, size))) {
++            hrx_synchronous_h2d_linear(context->device->transfer_queue, data, context->buffer, destination_offset, size))) {
+         GGML_LOG_ERROR("%s: HRX buffer upload failed\n", __func__);
+     }
+ }
+@@ -251,7 +251,7 @@ static void buffer_get(ggml_backend_buffer_t buffer,
+         return;
+     }
+     if (!HRX_CHECK(
+-            hrx_synchronous_d2h(context->device->transfer_queue, context->buffer, source_offset, data, size))) {
++            hrx_synchronous_d2h_linear(context->device->transfer_queue, context->buffer, source_offset, data, size))) {
+         GGML_LOG_ERROR("%s: HRX buffer download failed\n", __func__);
+     }
+ }
+@@ -279,13 +279,13 @@ static bool buffer_copy(ggml_backend_buffer_t buffer, const ggml_tensor * source
+     if (both_imported) {
+         std::memmove(destination_context->base + destination_offset, source_context->base + source_offset, size);
+     } else if (source_imported) {
+-        if (!HRX_CHECK(hrx_synchronous_h2d(destination_context->device->transfer_queue,
++        if (!HRX_CHECK(hrx_synchronous_h2d_linear(destination_context->device->transfer_queue,
+                                            source_context->base + source_offset, destination_context->buffer,
+                                            destination_offset, size))) {
+             return false;
+         }
+     } else if (destination_imported) {
+-        if (!HRX_CHECK(hrx_synchronous_d2h(source_context->device->transfer_queue, source_context->buffer,
++        if (!HRX_CHECK(hrx_synchronous_d2h_linear(source_context->device->transfer_queue, source_context->buffer,
+                                            source_offset, destination_context->base + destination_offset, size))) {
+             return false;
+         }
+@@ -486,7 +486,7 @@ static void backend_set_tensor_async(ggml_backend_t backend,
+     ggml::hrx::HostBufferRef source = backend_context->device->host_buffers.find(data, size);
+     if (source.valid()) {
+         // Registered host buffers can participate directly in the stream command buffer.
+-        HRX_CHECK(hrx_stream_copy_buffer(backend_context->stream, source.buffer(), source.offset(), context->buffer,
++        HRX_CHECK(hrx_stream_copy_buffer_linear(backend_context->stream, source.buffer(), source.offset(), context->buffer,
+                                          tensor_base + offset, size));
+     } else {
+         synchronous_upload_fallback(backend_context, data, context->buffer, tensor_base + offset, size);
+@@ -516,7 +516,7 @@ static void backend_get_tensor_async(ggml_backend_t      backend,
+     ggml::hrx::HostBufferRef destination = backend_context->device->host_buffers.find(data, size);
+     if (destination.valid()) {
+         // Registered host buffers can participate directly in the stream command buffer.
+-        HRX_CHECK(hrx_stream_copy_buffer(backend_context->stream, context->buffer, tensor_base + offset,
++        HRX_CHECK(hrx_stream_copy_buffer_linear(backend_context->stream, context->buffer, tensor_base + offset,
+                                          destination.buffer(), destination.offset(), size));
+     } else {
+         synchronous_download_fallback(backend_context, context->buffer, tensor_base + offset, data, size);
+@@ -552,7 +552,7 @@ static bool backend_copy_tensor_async(ggml_backend_t      backend_src,
+                 destination->view_src != nullptr ? destination->view_src->buffer : destination->buffer;
+             return buffer_copy(destination_buffer, source, destination);
+         }
+-        return HRX_CHECK(hrx_stream_copy_buffer(destination_backend->stream, source_context->buffer, source_offset,
++        return HRX_CHECK(hrx_stream_copy_buffer_linear(destination_backend->stream, source_context->buffer, source_offset,
+                                                 destination_context->buffer, destination_offset, size));
+     }
+     ggml_backend_buffer_t source_buffer = source->view_src != nullptr ? source->view_src->buffer : source->buffer;
+@@ -576,7 +576,7 @@ static bool backend_copy_tensor_async(ggml_backend_t      backend_src,
+ 
+ static void backend_synchronize(ggml_backend_t backend) {
+     auto * context = static_cast<ggml_backend_hrx_context *>(backend->context);
+-    if (HRX_CHECK(hrx_stream_synchronize(context->stream))) {
++    if (HRX_CHECK(hrx_stream_synchronize(context->stream, HRX_WAIT_FLAG_NONE))) {
+         context->graph_replay_state.mark_stream_synchronized();
+     }
+ }
+diff --git a/ggml/src/ggml-hrx/graph/graph-diagnostics.cpp b/ggml/src/ggml-hrx/graph/graph-diagnostics.cpp
+index eb361fcb8..b378039a4 100644
+--- a/ggml/src/ggml-hrx/graph/graph-diagnostics.cpp
++++ b/ggml/src/ggml-hrx/graph/graph-diagnostics.cpp
+@@ -180,6 +180,11 @@ json op_params_json(const OpParams & params) {
+                     { "beta_slow",   value.beta_slow   },
+                     { "sections",    value.sections    },
+                 };
++            } else {
++                // Some OpParams alternatives have no JSON form yet; MSVC rejects the fallthrough.
++                return {
++                    { "kind", "unhandled" }
++                };
+             }
+         },
+         params);
+diff --git a/ggml/src/ggml-hrx/runtime/command-program-executor.cpp b/ggml/src/ggml-hrx/runtime/command-program-executor.cpp
+index 05937ad47..1f6146876 100644
+--- a/ggml/src/ggml-hrx/runtime/command-program-executor.cpp
++++ b/ggml/src/ggml-hrx/runtime/command-program-executor.cpp
+@@ -228,7 +228,7 @@ class DebugSerialExecutionTrace {
+             return true;
+         }
+         log("sync-begin", phase, detail);
+-        if (ErrorResult error = take_status(hrx_stream_synchronize(context_.stream))) {
++        if (ErrorResult error = take_status(hrx_stream_synchronize(context_.stream, HRX_WAIT_FLAG_NONE))) {
+             GGML_LOG_ERROR("HRX debug serial sync failed phase=%s %s: %s\n", phase, detail.c_str(), error->c_str());
+             return false;
+         }
+@@ -659,7 +659,7 @@ static Status initialize_command_program_completion_counters(const CommandProgra
+     }
+     const uint32_t zero_pattern = 0;
+     if (ErrorResult error = take_status(
+-            hrx_stream_fill_buffer(context.stream, allocation.buffer, commands.completion_counters.arena_offset,
++            hrx_stream_fill_buffer_linear(context.stream, allocation.buffer, commands.completion_counters.arena_offset,
+                                    commands.completion_counters.byte_count, &zero_pattern, sizeof(zero_pattern)))) {
+         status.log("failed to initialize completion counters: %s", error->c_str());
+     }
+@@ -1152,7 +1152,7 @@ static Status upload_prepared_host_staging(const CommandProgramExecutionContext
+         }
+         Status upload_status;
+         if (staging.source_host_buffer.valid()) {
+-            if (ErrorResult error = take_status(hrx_stream_copy_buffer(context.stream, staging.source_host_buffer.buffer(),
++            if (ErrorResult error = take_status(hrx_stream_copy_buffer_linear(context.stream, staging.source_host_buffer.buffer(),
+                                                                        staging.source_host_buffer.offset(),
+                                                                        staging.buffer, 0, staging.length))) {
+                 upload_status.log("HRX host staging buffer copy failed: %s", error->c_str());
+@@ -1194,7 +1194,7 @@ static Status flush_stream_commands(const CommandProgramExecutionContext & conte
+ 
+ static Status wait_stream_commands(const CommandProgramExecutionContext & context, const char * label) {
+     Status status;
+-    if (ErrorResult error = take_status(hrx_stream_wait(context.stream))) {
++    if (ErrorResult error = take_status(hrx_stream_wait(context.stream, HRX_WAIT_FLAG_NONE))) {
+         status.log("%s failed: %s", label, error->c_str());
+     }
+     return status;
+@@ -1235,7 +1235,7 @@ static Status download_prepared_host_staging(const CommandProgramExecutionContex
+             status.append(allocation_status);
+             return status;
+         }
+-        if (ErrorResult error = take_status(hrx_stream_copy_buffer(context.stream, staging.buffer, 0,
++        if (ErrorResult error = take_status(hrx_stream_copy_buffer_linear(context.stream, staging.buffer, 0,
+                                                                    download_buffer, 0, staging.length))) {
+             status.log("HRX host download staging copy failed for value %d: %s", staging.value, error->c_str());
+             hrx_buffer_release(download_buffer);
+@@ -1789,7 +1789,7 @@ static bool execute_prepared_kernel_command_via_graph(const CommandProgramExecut
+         }
+     }
+     if (status.success()) {
+-        if (ErrorResult error = take_status(hrx_stream_synchronize(context.stream))) {
++        if (ErrorResult error = take_status(hrx_stream_synchronize(context.stream, HRX_WAIT_FLAG_NONE))) {
+             status.log("synchronize diagnostic graph: %s", error->c_str());
+         }
+     }
+@@ -1830,7 +1830,7 @@ static bool execute_prepared_command_prefix_via_graph(const CommandProgramExecut
+         }
+     }
+     if (status.success()) {
+-        if (ErrorResult error = take_status(hrx_stream_synchronize(context.stream))) {
++        if (ErrorResult error = take_status(hrx_stream_synchronize(context.stream, HRX_WAIT_FLAG_NONE))) {
+             status.log("synchronize diagnostic prefix graph: %s", error->c_str());
+         }
+     }
+@@ -2196,7 +2196,7 @@ RecordedCommandGraphExecutionResult bind_and_launch_recorded_command_graph(
+                                  (diagnostic_sync_size != nullptr && diagnostic_sync_size[0] != '\0' &&
+                                   recorded.dispatch_count == std::strtoull(diagnostic_sync_size, nullptr, 0));
+     if (diagnostic_sync) {
+-        if (ErrorResult error = take_status(hrx_stream_synchronize(context.stream))) {
++        if (ErrorResult error = take_status(hrx_stream_synchronize(context.stream, HRX_WAIT_FLAG_NONE))) {
+             result.launch_ns = hrx_graph_replay_now_ns() - launch_start_ns;
+             result.status.log("synchronize diagnostic graph replay: %s", error->c_str());
+             result.event = HrxGraphReplayEvent::LaunchFailed;
+diff --git a/ggml/src/ggml-hrx/runtime/host-memory.cpp b/ggml/src/ggml-hrx/runtime/host-memory.cpp
+index 3adb1a9ae..98622d6e3 100644
+--- a/ggml/src/ggml-hrx/runtime/host-memory.cpp
++++ b/ggml/src/ggml-hrx/runtime/host-memory.cpp
+@@ -484,7 +484,8 @@ static Status materialize_symmetric_k32_eightgroups_shared4(const HostWeightSour
+     std::atomic<bool> conversion_failed = false;
+ 
+     auto convert_cohorts = [&](size_t cohort_begin, size_t cohort_end) {
+-        std::array<std::array<float, QK_K>, shared_rows> decoded = {};
++        // the bound is written out: MSVC rejects a captured constexpr here (C2975)
++        std::array<std::array<float, QK_K>, 4> decoded = {};
+         for (size_t cohort = cohort_begin; cohort < cohort_end; ++cohort) {
+             if (conversion_failed.load(std::memory_order_relaxed)) {
+                 return;
+@@ -1268,7 +1269,7 @@ Status HostTransferManager::upload_synchronous(hrx_stream_t stream,
+         status.log("query HRX upload device failed: %s", error->c_str());
+         return status;
+     }
+-    if (ErrorResult error = take_status(hrx_stream_synchronize(stream))) {
++    if (ErrorResult error = take_status(hrx_stream_synchronize(stream, HRX_WAIT_FLAG_NONE))) {
+         status.log("synchronize before HRX host upload failed: %s", error->c_str());
+         return status;
+     }
+@@ -1277,7 +1278,7 @@ Status HostTransferManager::upload_synchronous(hrx_stream_t stream,
+         status.log("query HRX upload queue failed: %s", error->c_str());
+         return status;
+     }
+-    if (ErrorResult error = take_status(hrx_synchronous_h2d(queue, host_source, destination, offset, size))) {
++    if (ErrorResult error = take_status(hrx_synchronous_h2d_linear(queue, host_source, destination, offset, size))) {
+         status.log("synchronous HRX host upload failed: %s", error->c_str());
+         return status;
+     }
+@@ -1313,7 +1314,7 @@ Status HostTransferManager::upload_async(hrx_stream_t stream,
+         const size_t remaining  = size - uploaded;
+         const size_t chunk_size = remaining < kMaxInlineUploadBytes ? remaining : kMaxInlineUploadBytes;
+         if (ErrorResult error = take_status(
+-                hrx_stream_update_buffer(stream, host_bytes + uploaded, chunk_size, destination, offset + uploaded))) {
++                hrx_stream_update_buffer_linear(stream, host_bytes + uploaded, chunk_size, destination, offset + uploaded))) {
+             status.log("HRX async host upload failed: %s", error->c_str());
+             return status;
+         }
+@@ -1344,7 +1345,7 @@ Status HostTransferManager::download_synchronous(hrx_stream_t stream,
+         status.log("query HRX download device failed: %s", error->c_str());
+         return status;
+     }
+-    if (ErrorResult error = take_status(hrx_stream_synchronize(stream))) {
++    if (ErrorResult error = take_status(hrx_stream_synchronize(stream, HRX_WAIT_FLAG_NONE))) {
+         status.log("synchronize before HRX host download failed: %s", error->c_str());
+         return status;
+     }
+@@ -1353,7 +1354,7 @@ Status HostTransferManager::download_synchronous(hrx_stream_t stream,
+         status.log("query HRX download queue failed: %s", error->c_str());
+         return status;
+     }
+-    if (ErrorResult error = take_status(hrx_synchronous_d2h(queue, source, offset, host_destination, size))) {
++    if (ErrorResult error = take_status(hrx_synchronous_d2h_linear(queue, source, offset, host_destination, size))) {
+         status.log("synchronous HRX host download failed: %s", error->c_str());
+         return status;
+     }
+diff --git a/ggml/src/ggml-hrx/runtime/transient-arena.cpp b/ggml/src/ggml-hrx/runtime/transient-arena.cpp
+index ecfcc687c..faed55f66 100644
+--- a/ggml/src/ggml-hrx/runtime/transient-arena.cpp
++++ b/ggml/src/ggml-hrx/runtime/transient-arena.cpp
+@@ -83,7 +83,7 @@ Status TransientArena::ensure_capacity_locked(hrx_device_t device, hrx_stream_t
+         if (diagnostic_fresh) {
+             diagnostic_retired_buffers_.push_back(buffer_);
+         } else {
+-        if (ErrorResult error = take_status(hrx_stream_synchronize(stream))) {
++        if (ErrorResult error = take_status(hrx_stream_synchronize(stream, HRX_WAIT_FLAG_NONE))) {
+             status.log("synchronize before growing transient arena: %s", error->c_str());
+             return status;
+         }

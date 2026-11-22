@@ -1,5 +1,13 @@
 [
   {
+    "id": "llamacpp-hrx-api-port",
+    "repository": "llama.cpp",
+    "marker_file": "ggml/src/ggml-hrx/ggml-hrx.cpp",
+    "marker": "hrx_synchronous_h2d_linear",
+    "patch": "llamacpp-hrx-api-port.patch",
+    "reason": "current HRX transfers take a region: the linear calls keep the behavior, and every stream wait takes a flag"
+  },
+  {
     "id": "llamacpp-math-defines",
     "repository": "llama.cpp",
     "marker_file": "ggml/src/ggml-hrx/CMakeLists.txt",
@@ -14,37 +22,5 @@
     "marker": "\"unhandled\"",
     "patch": "llamacpp-op-params-fallback.patch",
     "reason": "The visitor over OpParams misses some alternatives, and MSVC rejects the fallthrough (C4716)."
-  },
-  {
-    "id": "hrx-system-memory-transition-cast",
-    "repository": "hrx-system",
-    "marker_file": "libhrx/src/libhrx/memory_transition.c",
-    "marker": "(uint32_t) IREE_HAL_MEMORY_EFFECT_UNSUPPORTED",
-    "patch": "hrx-system-memory-transition-cast.patch",
-    "reason": "MSVC reads the 0x80000000 effect bit as a negative int and stops the build on C4308."
-  },
-  {
-    "id": "hrx-system-msvc-gfx1101",
-    "repository": "hrx-system",
-    "marker_file": "build_tools/cmake/iree_python.cmake",
-    "marker": "$<SEMICOLON>",
-    "patch": "hrx-system-msvc-gfx1101.patch",
-    "reason": "Windows generator PYTHONPATH join, the legacy mul predicate alias, and the SVM requirement."
-  },
-  {
-    "id": "rocm-systems-windows-gpu-node",
-    "repository": "rocm-systems",
-    "marker_file": "projects/rocr-runtime/libhsakmt/src/dxg/topology.cpp",
-    "marker": "Visible-device ordinals exclude CPU nodes",
-    "patch": "rocm-systems-windows-gpu-node.patch",
-    "reason": "ROCR_VISIBLE_DEVICES must select a GPU node after the CPU nodes, not before topology runs."
-  },
-  {
-    "id": "rocm-systems-pm4-fence",
-    "repository": "rocm-systems",
-    "marker_file": "projects/rocr-runtime/libhsakmt/src/dxg/wddm/queue.cpp",
-    "marker": "completion_fence",
-    "patch": "rocm-systems-pm4-fence.patch",
-    "reason": "Submit retires a fence several AQL packets share, so the wait must compare against it."
   }
 ]

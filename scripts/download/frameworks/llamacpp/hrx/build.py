@@ -94,6 +94,31 @@ def configured(cache: Path) -> bool:
     )
 
 
+def configure_llamacpp(cmake: str, paths: RunPaths) -> None:
+    """Configure the HRX-backed llama.cpp tree against the staged runtime, without the web UI."""
+    staged = HRX_ROOT / "install" / "hrx"
+    run_step(
+        "llamacpp-configure",
+        [
+            cmake,
+            "-S",
+            str(HRX_ROOT / "llama.cpp"),
+            "-B",
+            str(HRX_ROOT / "build" / "llamacpp"),
+            f"-DPython3_EXECUTABLE={sys.executable}",
+            f"-DCMAKE_PREFIX_PATH={staged}",
+            f"-DCMAKE_PROJECT_INCLUDE={Path(__file__).with_name('packages.cmake')}",
+            f"-Dhrx_DIR={staged / 'lib' / 'cmake' / 'hrx'}",
+            f"-Dloomc_DIR={staged / 'lib' / 'cmake' / 'loomc'}",
+            # - the API benchmark serves no web UI, and the asset check needs files this checkout lacks
+            "-DLLAMA_BUILD_UI=OFF",
+            "-DLLAMA_USE_PREBUILT_UI=OFF",
+        ],
+        paths,
+        native_build.visual_studio_environment(),
+    )
+
+
 def configure(cmake: str, paths: RunPaths) -> None:
     """Configure the HRX tree as the current upstream expects, inside the Visual Studio environment."""
     run_step(
@@ -125,6 +150,7 @@ def build(paths: RunPaths, jobs: int) -> None:
     cmake = cmake_path()
     if not configured(HRX_ROOT / "build/hrx/CMakeCache.txt"):
         configure(cmake, paths)
+    configure_llamacpp(cmake, paths)
 
     def compile_targets(directory: str, targets: list[str]) -> list[str]:
         return [
@@ -185,7 +211,17 @@ def stage_candidate(paths: RunPaths) -> Path:
     from scripts.benchmarks.llamacpp.hrx import hrx_tensor_probe
 
     candidate = paths.temp / "bin"
-    hrx_tensor_probe.build(candidate)
+    probe_source = Path(hrx_tensor_probe.__file__).with_suffix(".cpp")
+    if not probe_source.is_file():
+        # - the probe source is not tracked; reuse the built one rather than break the candidate
+        built = HRX_ROOT / "runtime/hrx-tensor-probe.exe"
+        if not built.is_file():
+            raise RuntimeError(f"Tensor probe source and installed probe are both missing: {probe_source}")
+        print(f"[WARN] tensor probe source is missing; reusing {built}", flush=True)
+        candidate.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(built, candidate / built.name)
+    else:
+        hrx_tensor_probe.build(candidate)
     checkpoint = json.loads((HRX_ROOT / "runtime/checkpoint.json").read_text(encoding="utf-8"))
     special = {
         "hrx.dll": HRX_ROOT / "build/hrx/libhrx/src/libhrx/Release/hrx.dll",
