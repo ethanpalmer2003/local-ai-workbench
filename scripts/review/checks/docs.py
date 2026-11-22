@@ -431,6 +431,38 @@ def model_name_issues(files: list[Path]) -> list[str]:
     return issues
 
 
+def hub_sibling_issues(files: list[Path]) -> list[str]:
+    """A folder's hub names every sibling document, so a reader landing in the folder finds the rest."""
+    folders: dict[Path, list[Path]] = {}
+    for path in files:
+        if path.suffix == ".md":
+            folders.setdefault(path.parent, []).append(path)
+    issues = []
+    for members in folders.values():
+        hubs = [path for path in members if path.name in {"README.md", "AGENTS.md"}]
+        if not hubs:
+            continue
+        named: set[Path] = set()
+        for hub in hubs:
+            named |= _linked_files(hub, hub.read_text(encoding="utf-8-sig"))
+        for member in members:
+            if member.name in {"README.md", "AGENTS.md"} or member.resolve() in named:
+                continue
+            relative = member.relative_to(project_cfg.BASE_DIR).as_posix()
+            issues.append(f"{relative}: {hubs[0].name} beside it does not name it")
+    return issues
+
+
+def _linked_files(path: Path, text: str) -> set[Path]:
+    """The files a document links, resolved, so a sibling link and a `../` link compare the same."""
+    targets = set()
+    for match in MARKDOWN_LINK.finditer(text):
+        target = unquote(match.group(1).strip().strip("<>")).partition("#")[0]
+        if target and not re.match(r"^[a-z]+:", target, re.I):
+            targets.add((path.parent / target).resolve())
+    return targets
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--words", action="store_true", help="list every maintained document by word count")
@@ -444,7 +476,13 @@ def main(argv: list[str] | None = None) -> int:
         return print_role_counts(files)
     if args.links:
         return print_pointer_counts(files)
-    issues = root_document_issues() + role_issues(files) + model_name_issues(files) + cap_table_issues()
+    issues = (
+        root_document_issues()
+        + role_issues(files)
+        + model_name_issues(files)
+        + cap_table_issues()
+        + hub_sibling_issues(files)
+    )
     for path in files:
         if path.suffix != ".md":
             continue

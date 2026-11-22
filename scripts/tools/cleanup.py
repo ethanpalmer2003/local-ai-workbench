@@ -122,7 +122,7 @@ def _age_days(path: Path) -> int:
 
 
 def move_to_trash(paths: list[Path], stamp: str, dry_run: bool) -> int:
-    """Move each path under `trash/<stamp>/cleanup/`, keeping its relative place; return bytes moved."""
+    """Move each path under `trash/<stamp>/cleanup/`, keeping its relative place; return how many moved."""
     moved = 0
     for path in paths:
         target = TRASH_DIR / stamp / "cleanup" / path.relative_to(project_cfg.BASE_DIR)

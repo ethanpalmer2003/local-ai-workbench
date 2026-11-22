@@ -44,6 +44,7 @@ from scripts.tests.cases.review.checks.test_comments import CommentPolicyTests
 from scripts.tests.cases.review.checks.test_dead_code import FindingTests, ScopedSkipTests
 from scripts.tests.cases.review.checks.test_docs import (
     GeneratedPageTests,
+    HubSiblingTests,
     LinkTests,
     MarkdownNameTests,
     ModelNameTests,
@@ -222,6 +223,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     PointerTests,
     RoleTests,
     RootDocumentTests,
+    HubSiblingTests,
     SharedRuntimeTests,
     ReadinessRouteTests,
     OwnedLaunchTests,

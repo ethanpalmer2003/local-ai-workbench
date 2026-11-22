@@ -256,5 +256,57 @@ class GeneratedPageTests(unittest.TestCase):
         self.assertEqual(docs.generated_page_issues("scripts/review/GENERATED-DEBT.md", text), [])
 
 
+class HubSiblingTests(unittest.TestCase):
+    def _folder(self) -> Path:
+        folder = BASE / "scripts/tests/output/hub-sibling-fixture"
+        folder.mkdir(parents=True, exist_ok=True)
+        return folder
+
+    def _pair(self, hub_text: str) -> tuple[Path, Path]:
+        folder = self._folder()
+        hub, sibling = folder / "README.md", folder / "SIBLING.md"
+        hub.write_text(hub_text, encoding="utf-8")
+        sibling.write_text("# Sibling\n", encoding="utf-8")
+        return hub, sibling
+
+    def _clean(self, *paths: Path) -> None:
+        for path in paths:
+            path.unlink()
+        paths[0].parent.rmdir()
+
+    def test_a_hub_that_names_its_sibling_passes(self):
+        hub, sibling = self._pair("# Hub\n\n[A sibling](SIBLING.md)\n")
+        try:
+            self.assertEqual(docs.hub_sibling_issues([hub, sibling]), [])
+        finally:
+            self._clean(hub, sibling)
+
+    def test_a_sibling_link_with_an_anchor_still_names_it(self):
+        hub, sibling = self._pair("# Hub\n\n[A sibling](SIBLING.md#usage)\n")
+        try:
+            self.assertEqual(docs.hub_sibling_issues([hub, sibling]), [])
+        finally:
+            self._clean(hub, sibling)
+
+    def test_a_sibling_the_hub_omits_is_reported(self):
+        hub, sibling = self._pair("# Hub\n\nNothing points at the sibling.\n")
+        try:
+            issues = docs.hub_sibling_issues([hub, sibling])
+        finally:
+            self._clean(hub, sibling)
+        self.assertEqual(len(issues), 1)
+        self.assertIn("SIBLING.md", issues[0])
+
+    def test_a_folder_without_a_hub_is_left_to_its_parent(self):
+        folder = self._folder()
+        first, second = folder / "FIRST.md", folder / "SECOND.md"
+        first.write_text("# First\n", encoding="utf-8")
+        second.write_text("# Second\n", encoding="utf-8")
+        try:
+            self.assertEqual(docs.hub_sibling_issues([first, second]), [])
+        finally:
+            self._clean(first, second)
+
+
 if __name__ == "__main__":
     unittest.main()
