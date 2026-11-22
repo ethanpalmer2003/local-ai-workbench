@@ -352,8 +352,13 @@ class RunningListTests(unittest.TestCase):
         text = "# Outcomes\n\n## Delivery\nTwo prose lines.\nMore prose, no list entries.\n"
         self.assertEqual(docs.running_list_issues("scripts/tests/notes/OUTCOMES.md", text), [])
 
+    def test_an_unknown_todo_section_is_reported(self):
+        text = "# TODO\n\n## Broken now\nDescription.\n\n- [ ] one ~1 h\n\n## Waiting on a release\n- [ ] two\n"
+        issues = docs.running_list_issues("notes/TODO.md", text)
+        self.assertTrue(any("Waiting on a release: unknown TODO section" in issue for issue in issues), issues)
+
     def test_a_well_formed_todo_passes(self):
-        text = "# TODO\n\n## Broken now\nDescription.\n\n- [ ] one ~1 h\n\n## Next\nDescription.\n\n- [ ] two\n"
+        text = "# TODO\n\n## Broken now\nDescription.\n\n- [ ] one ~1 h\n\n## Unattended\nDescription.\n\n- [ ] two\n"
         self.assertEqual(docs.running_list_issues("notes/TODO.md", text), [])
 
 

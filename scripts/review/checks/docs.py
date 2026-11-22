@@ -420,6 +420,8 @@ HEADING_LINE = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
 ENTRY_LINE = re.compile(r"^\s*(?:- \[[ xX]\]|[-*+] |\d+\. |\|)")
 # - notes/TODO.md groups work under `##` sections only; a deeper heading there is a merge artifact
 MAX_RUNNING_LIST_DEPTH = {"notes/TODO.md": 2}
+# - the categories are deliberate: a new one edits this list, and a stray heading never lands silently
+TODO_SECTIONS = frozenset({"Broken now", "Needs your input", "Unattended", "Nice to have, deferred"})
 
 
 def running_list_issues(relative: str, text: str) -> list[str]:
@@ -441,6 +443,8 @@ def running_list_issues(relative: str, text: str) -> list[str]:
     for position, (index, depth, title) in enumerate(headings):
         if depth > limit:
             issues.append(f"{relative}: {title}: heading deeper than {limit}")
+        if requires_entries and depth == 2 and title not in TODO_SECTIONS:
+            issues.append(f"{relative}: {title}: unknown TODO section")
         if title in seen:
             issues.append(f"{relative}: {title}: repeated heading")
         seen.add(title)
