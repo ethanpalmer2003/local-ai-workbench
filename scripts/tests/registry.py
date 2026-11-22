@@ -75,6 +75,7 @@ from scripts.tests.cases.review.checks.test_spellings import AmericanSpellingTes
 from scripts.tests.cases.review.checks.test_typography import CheckTests, ScanTests, SuffixTests, TargetTests
 from scripts.tests.cases.review.checks.test_walrus import WalrusTests
 from scripts.tests.cases.review.test_examples import ExamplesPageTests
+from scripts.tests.cases.review.test_frontend_wiring import EmittedKeyTests
 from scripts.tests.cases.review.test_public_audit import PublicAuditTests
 from scripts.tests.cases.review.test_restrictions import (
     RestrictionCommandTests,
@@ -330,6 +331,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     WalrusTests,
     ExamplesPageTests,
     FolderRuleTests,
+    EmittedKeyTests,
     WorkspaceTotalTests,
     BundleTests,
     FullRunTests,

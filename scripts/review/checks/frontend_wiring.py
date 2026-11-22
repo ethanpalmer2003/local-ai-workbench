@@ -5,6 +5,7 @@ plus string literals, and loop variables bound to a literal array, are resolved 
 Computed or templated paths are skipped rather than guessed.
 """
 
+import ast
 import os
 import re
 from pathlib import Path
@@ -183,12 +184,36 @@ def dom_id_issues() -> list[str]:
     return issues
 
 
+def literal_keys(text: str) -> tuple[set[str], bool]:
+    """Top-level keys of the first `json.dumps({...})` in this source, and whether it expands a mapping.
+
+    Parsed as a tree, so a nested dict does not cut the block short the way a `.*?}` match would.
+    """
+    keys: set[str] = set()
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return keys, False
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call) and ast.unparse(node.func) == "json.dumps" and node.args):
+            continue
+        argument = node.args[0]
+        if not isinstance(argument, ast.Dict):
+            continue
+        expands = False
+        for key in argument.keys:
+            if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                keys.add(key.value)
+            elif key is None:
+                expands = True
+        return keys, expands
+    return keys, False
+
+
 def _emitted_keys(launcher: str) -> set[str]:
-    text = _read(project_cfg.BASE_DIR / launcher)
-    block = re.search(r"json\.dumps\(\s*\{(.*?)\}\s*\)", text, re.S)
-    body = block.group(1) if block else ""
-    keys = set(re.findall(r"[\"'](\w+)[\"']\s*:", body))
-    if "streaming_defaults" in body:
+    """Keys of the settings object the launcher emits, plus the keys of a `**` expansion."""
+    keys, expands = literal_keys(_read(project_cfg.BASE_DIR / launcher))
+    if expands:
         from scripts.launchers import launcher_config as cfg
         from scripts.launchers.audiocpp import audiocpp_catalog
 
