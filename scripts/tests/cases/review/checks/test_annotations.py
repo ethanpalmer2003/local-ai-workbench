@@ -123,6 +123,12 @@ class DefaultTests(unittest.TestCase):
             path.unlink()
         self.assertEqual([(function, parameter) for _, _, function, parameter in rows], [("f", "count")])
 
+    def test_a_positional_only_default_is_counted(self):
+        source = "def f(a=1, /, b=2): ...\n"
+        function = ast.parse(source).body[0]
+        assert isinstance(function, ast.FunctionDef)
+        self.assertEqual([argument.arg for argument, _default in annotations._parameters(function)], ["a", "b"])
+
 
 class FindingsTests(unittest.TestCase):
     def test_the_future_import_is_refused(self):

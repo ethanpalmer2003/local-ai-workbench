@@ -80,6 +80,9 @@ class BenchmarkVram:
                 monitor.stage = value
 
     def watch_backend(self, name: str, pids: list[int]) -> None:
+        # - watching the same backend again replaces its monitors, which must not keep sampling
+        for _pid, monitor, _snapshot in self.processes.pop(name, []):
+            monitor.__exit__()
         self.processes[name] = []
         for pid in pids:
             snapshot = get_gpu_memory_snapshot(pid)

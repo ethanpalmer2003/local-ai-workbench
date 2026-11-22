@@ -202,9 +202,10 @@ def _default_problem(node: ast.expr) -> str | None:
 
 
 def _parameters(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[tuple[ast.arg, ast.expr]]:
-    """Every parameter that carries a default, with that default."""
+    """Every parameter that carries a default, with that default; positional-only ones count too."""
     args = node.args
-    positional = args.args[len(args.args) - len(args.defaults) :] if args.defaults else []
+    positional_args = [*args.posonlyargs, *args.args]
+    positional = positional_args[len(positional_args) - len(args.defaults) :] if args.defaults else []
     return [
         (argument, default)
         for argument, default in zip([*positional, *args.kwonlyargs], [*args.defaults, *args.kw_defaults], strict=False)
@@ -328,7 +329,10 @@ def default_findings(paths: list[Path] | None = None) -> list[tuple[str, int, st
             tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
         except (OSError, SyntaxError):
             continue
-        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+        try:
+            relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+        except ValueError:
+            relative = path.as_posix()
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue

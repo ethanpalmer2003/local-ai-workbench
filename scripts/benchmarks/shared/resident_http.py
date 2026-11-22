@@ -49,9 +49,12 @@ class ResidentHttp:
             self.command,
             cwd=str(self.cwd or Path(self.command[0]).parent),
             env={**os.environ, **(self.env or {})},
+            stdin=subprocess.DEVNULL,
             stdout=self.stream,
             stderr=subprocess.STDOUT,
         )
+        # - a failure from here on is cleaned by the lifecycle that called this start, which stops the
+        #   process and closes the log in its own cleanup phase
         launch_util.assign_process_to_job(self.process.pid)
         wait_ready(self.ready, self.timeout, label=f"Server; log: {self.log}", process=self.process, interval=0.1)
 
