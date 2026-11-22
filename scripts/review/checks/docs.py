@@ -16,8 +16,9 @@ from scripts.review.lists.sources import maintained_files
 
 # - three caps only; each document role picks one, so a new kind needs no new number
 WORD_TIERS = {"long": 1000, "large": 700, "medium": 500}
-# - the running list of work in progress grows between decisions, so its length is not a finding
-UNCAPPED = frozenset({"notes/TODO.md"})
+# - the running list of work in progress and the list of undecided questions both grow between decisions,
+#   so their length is not a finding
+UNCAPPED = frozenset({"notes/TODO.md", "notes/OPEN-QUESTIONS.md"})
 ROLE_TIERS = {
     "hub": "large",
     "agent rule": "medium",

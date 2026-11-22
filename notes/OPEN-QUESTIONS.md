@@ -45,6 +45,14 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
   run locally beside Pi or remotely as DeepSeek V4.1 Flash under DeepSeek Harness. Local keeps the loop offline
   but shares the GPU; remote reaches a stronger model at no VRAM cost and adds a network call per decision.
   Neither is measured.
+- **One kind of staleness or two.** A validation stage is invalidated by any content change to what it reads, so a
+  typo in a document and a changed launcher force the same rerun: one framework update cost 403 s across five
+  stages, though most inputs were untouched. The sets are already narrow (the gate reads every maintained file,
+  the suite the Python ones, the live stages their sources plus installation identity), so a reader can see that
+  a stage is stale but not which file made it so. Options: keep one verdict and name the changed files per stage,
+  which `staleness.manifest` already lists; hash Python by its AST and documents by structure, so comment and
+  prose edits stop invalidating; or record coverage per file and accept a stage when only declared-irrelevant
+  files moved. Only the first is cheap, and nothing measures whether grading pays for itself.
 - A decision that would change work is added here with its options.
 
 ## Superseded
