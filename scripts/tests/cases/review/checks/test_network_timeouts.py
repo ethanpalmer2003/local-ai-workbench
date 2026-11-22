@@ -37,6 +37,18 @@ class NetworkTimeoutTests(unittest.TestCase):
     def test_requests_without_a_timeout_is_rejected(self):
         self.assertTrue(self._issues("import requests\nrequests.get('https://example.invalid')\n"))
 
+    def test_timeout_none_is_rejected_because_it_waits_forever(self):
+        found = self._issues("import requests\nrequests.get('https://example.invalid', timeout=None)\n")
+        self.assertTrue(any("timeout=None" in issue for issue in found), found)
+
+    def test_a_keyword_that_only_appears_in_a_url_is_not_a_bound(self):
+        found = self._issues("import requests\nrequests.get('https://example.invalid/?timeout=30')\n")
+        self.assertTrue(any("without a timeout" in issue for issue in found), found)
+
+    def test_a_chained_dict_read_is_not_a_second_http_call(self):
+        body = "import requests\nrequests.get('https://example.invalid', timeout=5).json().get('data')\n"
+        self.assertEqual(self._issues(body), [])
+
     def test_the_project_local_wrapper_owns_its_timeout(self):
         body = "from scripts.launchers.asr.shared import requests\nrequests.post(url, body, kind)\n"
         self.assertEqual(self._issues(body), [])

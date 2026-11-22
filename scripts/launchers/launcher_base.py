@@ -131,9 +131,9 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
 # - v1.0.0 stays installed as the fallback, and ROCm still collapses past a 64K read
 #   ([builds](../config/llamacpp/BUILDS.md)).
 LLAMACPP_DEFAULT_BUILD = "vulkan"
-# - Per-use overrides; None means "follow the llama.cpp default".
-LLAMACPP_CODING_BUILD: str | None = None
-LLAMACPP_EMBEDDINGS_BUILD: str | None = None
+# - Per-use overrides read from the environment; unset means "follow the llama.cpp default"
+LLAMACPP_CODING_BUILD: str | None = os.environ.get("LLAMACPP_CODING_BUILD") or None
+LLAMACPP_EMBEDDINGS_BUILD: str | None = os.environ.get("LLAMACPP_EMBEDDINGS_BUILD") or None
 
 _BUILD_OVERRIDES: dict[str, str | None] = {"coding": LLAMACPP_CODING_BUILD, "embeddings": LLAMACPP_EMBEDDINGS_BUILD}
 
@@ -142,7 +142,10 @@ def llamacpp_build(use: str = "coding") -> str:
     """The build id a use case runs: its override when set, otherwise the one llama.cpp default."""
     if use not in _BUILD_OVERRIDES:
         raise ValueError(f"Unknown llama.cpp use case: {use}")
-    return _BUILD_OVERRIDES[use] or LLAMACPP_DEFAULT_BUILD
+    chosen = _BUILD_OVERRIDES[use] or LLAMACPP_DEFAULT_BUILD
+    if chosen not in LLAMACPP_BUILDS:
+        raise ValueError(f"LLAMACPP_{use.upper()}_BUILD names an unknown build: {chosen}")
+    return chosen
 
 
 LLAMACPP_ACTIVE_CODING_AGENT_PROFILE = "swift15"

@@ -17,14 +17,19 @@ def owned_module_worker(process, module: str):
     root = psutil.Process(process.pid)
     matches = []
     for candidate in (root, *root.children(recursive=True)):
-        args = candidate.cmdline()
+        try:
+            args = candidate.cmdline()
+            parent = candidate.ppid()
+        except psutil.Error:
+            # - a worker that exited between the tree walk and the read is not a candidate
+            continue
         if "-m" in args and args[args.index("-m") + 1 : args.index("-m") + 2] == [module]:
-            matches.append(candidate)
-    parents = {candidate.ppid() for candidate in matches}
-    leaves = [candidate for candidate in matches if candidate.pid not in parents]
+            matches.append((candidate.pid, parent))
+    parents = {parent for _pid, parent in matches}
+    leaves = [pid for pid, _parent in matches if pid not in parents]
     if len(leaves) != 1:
         raise RuntimeError(f"Cannot identify one owned module worker for {module}")
-    return SimpleNamespace(pid=leaves[0].pid, poll=process.poll)
+    return SimpleNamespace(pid=leaves[0], poll=process.poll)
 
 
 def stop_owned(

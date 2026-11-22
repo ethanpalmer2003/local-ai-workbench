@@ -177,6 +177,12 @@ class LauncherBehaviors(unittest.TestCase):
             self.assertEqual(cfg.llamacpp_build("coding"), cfg.LLAMACPP_DEFAULT_BUILD)
         with self.assertRaises(ValueError):
             cfg.llamacpp_build("unknown-use")
+        # - an override naming a build the registry does not hold fails here, not as a KeyError later
+        with (
+            patch.dict(cfg._BUILD_OVERRIDES, {"coding": "not-a-build"}),
+            self.assertRaisesRegex(ValueError, "unknown build"),
+        ):
+            cfg.llamacpp_build("coding")
 
     def test_a_named_build_without_its_directory_is_refused_at_the_cli(self):
         import argparse
