@@ -86,7 +86,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Report a stale page and exit non-zero")
     args = parser.parse_args(argv)
-    text = render(model_languages.read_catalog())
+    catalog = model_languages.read_catalog()
+    text = render(catalog)
     if args.check:
         current = OUTPUT.read_text(encoding="utf-8") if OUTPUT.is_file() else ""
         if current != text:
@@ -96,7 +97,6 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(text, encoding="utf-8")
-    catalog = model_languages.read_catalog()
     print(f"[OK] {OUTPUT.relative_to(project_cfg.BASE_DIR)}")
     print(f"{len(rows(catalog))} speech checkpoints, {len(model_cfg.models_for('asr'))} ASR weights")
     return 0

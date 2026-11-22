@@ -70,9 +70,10 @@ def version_of(root: Path) -> str:
     build = root / "BUILD.json"
     if build.is_file():
         try:
-            value = json.loads(build.read_text(encoding="utf-8")).get("rocm_version")
+            payload = json.loads(build.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
-            value = None
+            payload = None
+        value = payload.get("rocm_version") if isinstance(payload, dict) else None
         if value:
             return str(value)
     return root.name

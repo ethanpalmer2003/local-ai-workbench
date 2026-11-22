@@ -53,7 +53,6 @@ CAPABILITIES = (
     ("shared/framework_compare", "Language practice versus Lemonade"),
 )
 
-# - Work parked on purpose: the row stays so the page says why it is not judged, and a rerun is not expected
 # - how much work one row is, which decides the runner budget: smoke 90 s, probe 300 s, benchmark 900 s
 CATEGORY = {
     "shared/live_frameworks": "probe",
@@ -170,7 +169,9 @@ def _chat_headline(row: dict[str, Any]) -> str | None:
     chat = (row.get("legs") or {}).get("chat")
     if not chat or chat.get("status") != "measured":
         return None
-    first = [item["first_token_seconds"] for item in chat["requests"] if item.get("first_token_seconds")]
+    # - evidence written by an older runner may carry fewer keys, so a missing sample is skipped
+    samples = [item.get("first_token_seconds") for item in chat.get("requests") or [] if isinstance(item, dict)]
+    first = [sample for sample in samples if sample]
     return f"{row.get('backend')} TTFT {reporting.mean_text(first)} s"
 
 
@@ -224,7 +225,10 @@ def section(subject: str) -> str:
 
 
 def deferred(subject: str) -> str | None:
-    """Why a parked capability is not judged; None for work that is expected to run."""
+    """Why a parked capability is not judged; None for work that is expected to run.
+
+    Work parked on purpose keeps its row so the page says why it is not judged, and a rerun is not expected.
+    """
     entry = parked.for_subject(subject)
     return entry.reason if entry else None
 
