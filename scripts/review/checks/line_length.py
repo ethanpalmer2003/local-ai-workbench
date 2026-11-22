@@ -107,12 +107,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("paths", nargs="*", help="files to check (default: every maintained Python file)")
     args = parser.parse_args(argv)
-    over = findings(check_targets(args.paths, (".py",)))
+    # - one target list for both the findings and the accepted counts, so a scoped run reads only the change
+    targets = check_targets(args.paths, (".py",))
+    over = findings(targets)
     for relative, number, length, kind in over[:MAX_REPORTED]:
         print(f"[FAIL] {relative}:{number}: {length} characters ({kind}); wrap it")
     if len(over) > MAX_REPORTED:
         print(f"[WARN] {len(over) - MAX_REPORTED} further lines; output bounded at {MAX_REPORTED}")
-    accepted_counts = accepted()
+    accepted_counts = accepted(targets)
     print(
         f"[{'FAIL' if over else 'OK'}] Line length: {len(over)} over {LIMIT} to wrap, "
         f"{accepted_counts['template']} template and {accepted_counts['token']} token lines accepted"
