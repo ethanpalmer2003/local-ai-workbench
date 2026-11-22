@@ -174,7 +174,8 @@ def audit_models(
         if reference.required:
             expected[path].append(reference.source)
     installed = installed_model_files(roots)
-    text = "\n".join(file.read_text(encoding="utf-8-sig").lower() for file in sources)
+    # - a captured config may carry anything; an undecodable byte must not abort the audit
+    text = "\n".join(file.read_text(encoding="utf-8-sig", errors="replace").lower() for file in sources)
     tokens = re.findall(r"[^\s\"'<>:=,;{}\[\]()]+\.(?:gguf|safetensors|ckpt|pt|pth|onnx|bin)(?![\w.-])", text)
     names = {Path(token.replace("\\", "/")).name for token in tokens}
     unreferenced = sorted(str(path) for path in installed - cataloged if path.name.lower() not in names)
