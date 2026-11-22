@@ -299,10 +299,11 @@ class ProxyHTTP(unittest.TestCase):
                     self.assertEqual(result["input"], expected)
 
     def test_vocal_parenthetical_modes_preserve_known_events(self):
+        # - the vendor's exact English tag is the plural form, so a known event keeps the spelling it was sent in
         for mode, expected in (
-            (tts_text_processing.BreezeParenMode.KEEP, "(laugh) (giggle) (waves hello)"),
-            (tts_text_processing.BreezeParenMode.UNWRAP, "(laugh) (giggle) waves hello"),
-            (tts_text_processing.BreezeParenMode.STRIP, "(laugh) (giggle) "),
+            (tts_text_processing.BreezeParenMode.KEEP, "(laugh) (giggles) (waves hello)"),
+            (tts_text_processing.BreezeParenMode.UNWRAP, "(laugh) (giggles) waves hello"),
+            (tts_text_processing.BreezeParenMode.STRIP, "(laugh) (giggles) "),
         ):
             settings = replace(tts_text_processing.BREEZE_VOCAL_EVENTS, parentheticals=mode)
             with patch.object(tts_text_processing, "BREEZE_VOCAL_EVENTS", settings):

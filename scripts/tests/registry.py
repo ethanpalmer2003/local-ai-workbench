@@ -19,6 +19,7 @@ from scripts.tests.cases.asr.shared.test_whisper_compare import WhisperCompareTe
 from scripts.tests.cases.asr.test_whisper_profiles import WhisperProfiles
 from scripts.tests.cases.audiocpp.audio_comparison import AudioComparison
 from scripts.tests.cases.audiocpp.test_audiocpp_transport import TransportBenchmark
+from scripts.tests.cases.audiocpp.test_tts_events import BreezeEventTableTests, BreezeVocalAdapterTests
 from scripts.tests.cases.audiocpp.test_tts_profiles import TtsProfiles
 from scripts.tests.cases.coding_agents.pi.test_pi_packages import PiPackageTests
 from scripts.tests.cases.coding_agents.shared.framework_clients import FrameworkClients
@@ -265,6 +266,8 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     ProviderTests,
     PromptCacheTests,
     TtsProfiles,
+    BreezeEventTableTests,
+    BreezeVocalAdapterTests,
     FrameworkClients,
     BenchmarkBackendsTests,
     BenchmarkMatrixTests,

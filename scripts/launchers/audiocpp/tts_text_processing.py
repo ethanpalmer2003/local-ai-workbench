@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from scripts.config import local_overlay
+from scripts.config.audiocpp import tts_events
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.shared.media import text_processing
 
@@ -92,47 +93,8 @@ class BreezeVocalEventSettings:
     # - applies in all parentheticals modes
     trim_vocal_events: bool = True
 
-    # - parentheticals kept in the spoken text (Breeze vocal events)
-    allowed_vocal_events: set[str] = field(
-        default_factory=lambda: {
-            "(laugh)",
-            "(chuckle)",
-            "(giggle)",
-            "(cry)",
-            "(sob)",
-            "(whimper)",
-            "(groan)",
-            "(moan)",
-            "(sigh)",
-            "(gasp)",
-            "(inhale)",
-            "(exhale)",
-            "(breathe heavily)",
-            "(whisper)",
-            "(shout)",
-            "(scream)",
-            "(sing)",
-            "(hum)",
-            "(stutter)",
-            "(pause)",
-            "(clear throat)",
-            "(clears throat)",
-            "(cough)",
-            "(coughs)",
-            "(sniffle)",
-            "(lip smack)",
-            "(click tongue)",
-            "(yawn)",
-            "(sneeze)",
-            "(hiccup)",
-            "(burp)",
-            "(gulp)",
-            "(gag)",
-            "(grunt)",
-            "(scoff)",
-            "(snort)",
-        }
-    )
+    # - parentheticals kept in the spoken text (Breeze vocal events), from the vendor's tag table
+    allowed_vocal_events: frozenset[str] = field(default_factory=tts_events.tags)
 
 
 BREEZE_VOCAL_EVENTS = BreezeVocalEventSettings()
