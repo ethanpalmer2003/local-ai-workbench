@@ -6,7 +6,7 @@
 - The model-free suite passes at full access; under `workspace-write` some tests fail, because the sandbox denies the piped child process that `platform.win32_ver` and scipy's numpy import use.
 - Withdraw a launcher by moving it into `C:/AI/trash`; `bat/` blocks that only while its integrity label is wrong.
 - Files written by an earlier low-integrity run can stay unreadable (`.pytest_cache`, `tmp*` run directories, which then break the structure review). Repair the label, then remove them.
-- No multi-line Python through `pwsh -Command`: heredocs break and a bad edit corrupts files. Use a scratch script or the file-edit tool.
+- No multi-line Python through `pwsh -Command`, and no `python -c` one-liner carrying quotes, braces or newlines: heredocs break, PowerShell rewrites the quoting, and a bad edit corrupts files. Use a scratch script or the file-edit tool.
 - Staging is the other silent one: stage explicit paths, never `git add -A`. Guards: [failure modes](FAILURES.md).
 - PowerShell flattens `@(@('a','b'))` to two strings, so the loop indexes characters. Use Python for pair lists.
 - A denial is a policy decision, not a retry prompt: escalate that exact operation once, then report the outcome.

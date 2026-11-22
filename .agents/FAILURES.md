@@ -5,20 +5,15 @@
 
 | Symptom | Root cause | Replacement |
 | --- | --- | --- |
-| `Missing file specification after redirection operator` | A bash heredoc (`<<'PY'`) passed to PowerShell | Write the scratch script under `scripts/state/temp/` and run it, or use the file-edit tool |
-| A file gains a literal `\r\n`, loses its line endings or fails to compile after a rewrite | Text replacement through PowerShell quoting, plus `Set-Content` rewriting CRLF | Rewrite with the edit tool or a Python script, then read `git diff` for that file |
 | A commit carries app-written state (logs, run scripts, connection configs) | `git add -A` stages whatever the tree contains | Stage explicit paths; the layout section's committed-index rule refuses an indexed file that matches an ignore rule |
 | A committed file imports a module the repository does not have | `git add -u` stages modified paths only, so a new file stayed untracked while the edit that names it was staged | The layout section's committed-index rule refuses an import the index does not carry; still add the new path explicitly |
 | A push is rejected for a file past the host limit | An exported bundle or patch was committed unchecked | The gate's `large files` section refuses a tracked file over [the limit](../scripts/review/checks/layout.py) before the push |
-| A list keeps an entry that was meant to be removed | A line filter that silently matches nothing | Grep the text after the removal; the gate cannot know the intent |
+| A list keeps an entry that was meant to be removed | A line filter that silently matches nothing | Grep the text after the removal, and make the filter assert the count it expects before it writes; the gate cannot know the intent |
 | A validation stage is stale the moment its run ends | The recorded fingerprint was captured before a stage updated what a later stage reads | `stage_runner.run(fingerprint_after=...)` re-reads each stage's inputs after it runs |
 | A search walks `frameworks/` or `data/` for minutes, or is refused outright | A recursive scan named an ignored tree | Name one folder, use the depth-bounded locator, or `git grep` inside a checkout |
-| A `pwsh` call ends `[exit code: 1]` near 60 s, or reports `still running` | The desktop profile caps a foreground command at 60 s and promotes it to a job | Start it with `run_in_background` and collect it once with `job_output(wait=true)`; never sleep or poll |
-| `python -c "..."` fails with `ParserError`, `SyntaxError: unterminated string`, or silently does nothing | A one-liner carrying quotes, braces or newlines; PowerShell rewrites it before Python sees it | Write the scratch script with the write tool and run it, or make the change with the edit tool |
 | A commit that a hook refused still reads as a success, and the new commit is missing | `git commit ...; git log` reports the exit code of the last command in the chain | Run the commit alone, or chain with `&&`, then confirm `git log --oneline -1` names the new commit |
-| A command runs for minutes with no output | It is the work the profile expects to be backgrounded: a validation run, a native build, a model download | Background it, do unrelated work, collect it when it finishes |
 | Every `pwsh` call costs 20-40 s | An unbounded glob or listing over the whole tree | `Select-Object -First N`, `-Name`, or scope the path to one folder |
 | The same command re-run three times with the same failure | No root cause was named before the retry | Stop, read the message once, name the cause, then change the command |
 
 - A failing call is not a repository defect: look for its class above before retrying, and add a row when none fits. A retry of the same command is not a fix.
-- Harness-specific symptoms (sandbox denials, low-integrity labels, the 60 s foreground cap) stay in [the harness page](DEEPSEEK-HARNESS.md), which owns how this host behaves rather than how a step went wrong.
+- Harness-specific symptoms - sandbox denials, low-integrity labels, the 60 s foreground cap, heredocs, `python -c` quoting and a long silent run - stay in [the harness page](DEEPSEEK-HARNESS.md), which owns how this host behaves rather than how a step went wrong.
