@@ -67,6 +67,8 @@ class LlamaConfig:
         self.build_dir, self.build_extra = Path(build.bin_dir), dict(build.extra_args)
         self.build_env = dict(build.env)
         self.unsupported_server_args = build.unsupported_server_args
+        # - a profile names its weights by filename, and every llama.cpp coding model is owned by the catalog's
+        #   coding_models folder; a profile for another storage group would name a path here that does not exist
         self.model: Path = project_cfg.LLMS_CODING_MODELS_DIR / self.profile.model
         self.exe: Path = self.build_dir / "llama-server.exe"
         self.ini_path: Path = cfg.LLAMACPP_INI_DIR / self.profile.ini
@@ -307,7 +309,7 @@ def launch(
     build_args = f" (args: {conf.build_extra})" if conf.build_extra else ""
     print(f"[llm] build:   {conf.build_dir}{build_args}")
 
-    ini_display = "skipped (--no-ini)" if conf.skip_ini else f"{conf.ini_path.name} [DEFAULT]"
+    ini_display = "skipped (--ini-skip)" if conf.skip_ini else f"{conf.ini_path.name} [DEFAULT]"
     print(f"[llm] ini:     {ini_display}")
 
     profile_extra = conf.profile.extra_args
