@@ -175,6 +175,43 @@ class ModelCatalogTests(unittest.TestCase):
             self.assertEqual(model.label in text, not model.in_use)
         fetch.assert_not_called()
 
+    def test_ids_render_from_the_tracked_catalog_only(self):
+        from scripts.config import local_overlay
+        from scripts.config.models import catalog
+
+        with CasePaths(__file__).temporary_directory() as folder:
+            overlay = Path(folder) / "models.overlay.yaml"
+            overlay.write_text(
+                "models:\n"
+                "  - category: llms\n"
+                "    group: llamacpp\n"
+                "    label: llamacpp/overlay-fixture\n"
+                "    filename: overlay-fixture.gguf\n",
+                encoding="utf-8",
+            )
+            catalog.clear_cache()
+            try:
+                with patch.object(local_overlay, "model_overlay_path", return_value=overlay):
+                    catalog.clear_cache()
+                    self.assertIn("llamacpp/overlay-fixture", {model.label for model in catalog.load_catalog()})
+                    self.assertNotIn("overlay-fixture", catalog.render_ids())
+                    self.assertNotIn("overlay-fixture", catalog.render_ids(catalog.load_catalog(overlay=False)))
+            finally:
+                catalog.clear_cache()
+
+    def test_a_filename_that_disagrees_with_its_destination_is_refused(self):
+        from scripts.config.models import catalog
+
+        entry = {
+            "category": "llms",
+            "group": "llamacpp",
+            "label": "llamacpp/mismatched-fixture",
+            "filename": "one.gguf",
+            "destination": "huggingface/models/llms/two.gguf",
+        }
+        with self.assertRaisesRegex(ValueError, "does not match its destination"):
+            catalog.validate_entries([entry])
+
 
 if __name__ == "__main__":
     unittest.main()

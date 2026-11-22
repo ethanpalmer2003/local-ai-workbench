@@ -57,6 +57,10 @@ def _destination(group: str, label: str, raw: dict[str, Any], destinations: set[
     target = (project_cfg.DATA_DIR / destination).resolve()
     if not target.is_relative_to(project_cfg.component(group).models_dir.resolve()):
         raise ValueError(f"Model destination is outside its owner: {label}")
+    if filename is not None:
+        expected = filename_from_destination(group, destination)
+        if str(filename) != expected:
+            raise ValueError(f"Model filename does not match its destination: {label}")
     return str(filename), destination
 
 
@@ -294,7 +298,8 @@ def _constant_name(label: str) -> str:
 
 
 def render_ids(models: tuple[ModelDownload, ...] | None = None) -> str:
-    models = MODELS if models is None else models
+    # - ids.py is tracked, so it is rendered from the tracked catalog; the input overlay never reaches it
+    models = load_catalog(overlay=False) if models is None else models
     used: set[str] = set()
     lines = []
     for model in sorted(models, key=lambda item: item.label):
