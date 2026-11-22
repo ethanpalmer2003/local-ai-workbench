@@ -22,6 +22,8 @@ Work that cannot be settled without a live run: weights, a device, a server or a
 
 ### Unattended
 
+- [ ] Hash-check the installed catalog weights once: the download path now verifies each new transfer's `sha256`, but weights installed before that check have never been compared, and `download_model` still skips an existing file by size alone. Read every `catalog.json` entry with a recorded digest, report mismatches, and decide whether a mismatch is re-downloaded or moved to trash. ~30 min for the small ones, ~1 h if the large multimodal weights are included
+
 - [ ] Find why dead code survived the gate: `cleanup._report` was unused for a while without a finding, and the scoped scan is the suspect, since a definition left in an unchanged file goes unseen when its caller is deleted elsewhere and `verdict_cannot_change` then skips that file. Reproduce with a throwaway module and a caller in a second file, then decide whether the section scans the modules a change references. ~30 min
 
 - [ ] Add a comparison row for RustingStrata and LexiEngine. Neither is installed: RustingStrata needs a Vulkan 1.3 driver with subgroup 32 (or fixed 64), device-coherent memory for CPU-resident experts, and tunable `STRATA_VK_*` switches; LexiEngine ships as a USB image or a Linux/WSL install, so Windows means WSL2 with GPU passthrough. Both speak an OpenAI-compatible API, so the `--engine endpoint` arm of `benchmark_coding_engines` is the one to point at them; their caveats are in [the engine notes](../scripts/benchmarks/inference_engines/README.md). ~2 h

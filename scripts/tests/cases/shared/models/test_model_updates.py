@@ -42,10 +42,14 @@ class FakeHub:
         return list(self.repo_files)
 
 
-def _model(url: str, path: Path | None = None, label: str = "koboldcpp/family-v1.1") -> ModelDownload:
+def _model(
+    url: str, path: Path | None = None, label: str = "koboldcpp/family-v1.1", sha256: str | None = None
+) -> ModelDownload:
     return cast(
         ModelDownload,
-        cast(object, SimpleNamespace(label=label, url=url, path=path or Path("missing.gguf"), in_use=True)),
+        cast(
+            object, SimpleNamespace(label=label, url=url, path=path or Path("missing.gguf"), in_use=True, sha256=sha256)
+        ),
     )
 
 
@@ -271,6 +275,37 @@ class TransferTests(unittest.TestCase):
 
             with patch("huggingface_hub.hf_hub_download", side_effect=fake_hub), self.assertRaises(RuntimeError):
                 transfer.fetch(model, expected=99)
+
+    def test_fetch_rejects_a_digest_mismatch_before_it_can_be_moved(self) -> None:
+        import hashlib
+
+        with tempfile.TemporaryDirectory() as folder:
+            wrong = hashlib.sha256(b"something else").hexdigest()
+            model = _model("https://huggingface.co/a/b/blob/main/f.gguf", Path(folder) / "f.gguf", sha256=wrong)
+
+            def fake_hub(**kwargs: Any) -> str:
+                return str(self._staged_file(kwargs["local_dir"], kwargs["filename"]))
+
+            with (
+                patch("huggingface_hub.hf_hub_download", side_effect=fake_hub),
+                self.assertRaisesRegex(RuntimeError, "SHA-256 mismatch"),
+            ):
+                transfer.fetch(model)
+            self.assertFalse(model.path.exists())
+
+    def test_fetch_accepts_the_recorded_digest(self) -> None:
+        import hashlib
+
+        with tempfile.TemporaryDirectory() as folder:
+            recorded = hashlib.sha256(b"fresh").hexdigest()
+            model = _model("https://huggingface.co/a/b/blob/main/f.gguf", Path(folder) / "f.gguf", sha256=recorded)
+
+            def fake_hub(**kwargs: Any) -> str:
+                return str(self._staged_file(kwargs["local_dir"], kwargs["filename"]))
+
+            with patch("huggingface_hub.hf_hub_download", side_effect=fake_hub):
+                staged = transfer.fetch(model)
+            self.assertEqual(staged.read_bytes(), b"fresh")
 
     def test_commit_moves_the_file_and_removes_the_staging_folder(self) -> None:
         with tempfile.TemporaryDirectory() as folder:

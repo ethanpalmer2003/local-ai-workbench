@@ -5,6 +5,7 @@ crashed run cannot block the next transfer. The staged file is checked against t
 only then moved into place.
 """
 
+import hashlib
 import shutil
 from pathlib import Path
 
@@ -17,8 +18,34 @@ def staging_dir(model: ModelDownload) -> Path:
     return model.path.parent / f".hub-{model.path.stem}"
 
 
+def file_digest(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verify(path: Path, model: ModelDownload, expected: int | None = None) -> None:
+    """A staged file must match its size and its recorded digest before it can replace anything.
+
+    The catalog's `sha256` is the only proof that a transfer completed as published; the Hub client does
+    not check it for us, so a truncated or corrupted download would otherwise be moved into place as if
+    complete. An entry without a recorded digest keeps the size check alone.
+    """
+    size = path.stat().st_size
+    if expected and size != expected:
+        raise RuntimeError(f"downloaded {size} bytes, expected {expected}")
+    recorded = (model.sha256 or "").lower()
+    if not recorded:
+        return
+    actual = file_digest(path)
+    if actual != recorded:
+        raise RuntimeError(f"SHA-256 mismatch for {path}: expected {recorded}, got {actual}; file not moved")
+
+
 def fetch(model: ModelDownload, expected: int | None = None) -> Path:
-    """Download into a clean staging folder and return the staged file."""
+    """Download into a clean staging folder and return the staged, verified file."""
     from huggingface_hub import hf_hub_download
 
     source = parse_url(str(model.url))
@@ -34,8 +61,7 @@ def fetch(model: ModelDownload, expected: int | None = None) -> Path:
             local_dir=str(staging),
         )
     )
-    if expected and downloaded.stat().st_size != expected:
-        raise RuntimeError(f"downloaded {downloaded.stat().st_size} bytes, expected {expected}")
+    verify(downloaded, model, expected)
     return downloaded
 
 
