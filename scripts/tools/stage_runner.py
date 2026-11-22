@@ -14,6 +14,7 @@ import subprocess
 import sys
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -328,10 +329,18 @@ def write_summary(log_dir: Path, title: str, results: list[Result], stages: tupl
     (log_dir / "summary.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
-def run(stages: tuple[Stage, ...], *, title: str = "stages", stream: bool = False) -> list[Result]:
+def run(
+    stages: tuple[Stage, ...],
+    *,
+    title: str = "stages",
+    stream: bool = False,
+    fingerprint_after: Callable[[str], str] | None = None,
+) -> list[Result]:
     """Run every stage in order behind one bar and print a per-stage summary.
 
     `stream` keeps every child line (progress lines excepted) instead of only the tagged ones.
+    `fingerprint_after` re-reads a stage's inputs once it has run, so a stage that changes what a later stage
+    reads (a framework update changes installed builds) records the state it left instead of the one it found.
     """
     if not stages:
         return []
@@ -351,7 +360,7 @@ def run(stages: tuple[Stage, ...], *, title: str = "stages", stream: bool = Fals
                 bar.refresh()
                 continue
             result = _run_stage(stage, log_dir / f"{stage.key}.log", bar, prefix, stream or stage.stream)
-            result.fingerprint = stage.fingerprint
+            result.fingerprint = fingerprint_after(stage.key) if fingerprint_after else stage.fingerprint
             bar.write(_describe(result, stage))
             results.append(result)
             prefix += stage.typical

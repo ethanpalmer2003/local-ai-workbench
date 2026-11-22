@@ -122,7 +122,13 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     # - the preflight updated the frameworks, so the model and install checks are the point of this run
     os.environ["AI_MODEL_CHECKS"] = "1"
-    results = stage_runner.run(stages, title="validate", stream=args.verbose)
+    results = stage_runner.run(
+        stages,
+        title="validate",
+        stream=args.verbose,
+        # - a stage that installs or updates what a later stage reads records the state it left behind
+        fingerprint_after=lambda key: stage_fingerprints()[key],
+    )
     return 0 if all(result.status != "failed" for result in results) else 1
 
 

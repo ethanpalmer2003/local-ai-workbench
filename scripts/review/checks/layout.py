@@ -12,6 +12,10 @@ from scripts.launchers import launcher_config as cfg
 from scripts.review import MAX_REPORTED
 from scripts.review.lists.sources import maintained_files, tracked_files
 
+# - the host refuses a file past 100 MiB, so this sits below it and leaves room to act
+LARGE_FILE_MIB = 50
+BYTES_PER_MIB = 1024 * 1024
+
 
 def _component_key_issues() -> list[str]:
     return [
@@ -468,6 +472,24 @@ def placement_issues() -> list[str]:
     return issues
 
 
+def large_file_issues(limit_mib: int | None = None) -> list[str]:
+    """A tracked file past the host's per-file cap is refused at push, after the work is committed.
+
+    The limit sits below that cap, so the file has room to become a release asset or go to trash instead of
+    being discovered by a remote refusal.
+    """
+    limit = LARGE_FILE_MIB if limit_mib is None else limit_mib
+    issues: list[str] = []
+    for path in tracked_files():
+        try:
+            size_mib = path.stat().st_size / BYTES_PER_MIB
+        except OSError:
+            continue
+        if size_mib > limit:
+            issues.append(f"Tracked file over {limit} MiB: {_folder_label(path)} at {size_mib:.1f} MiB")
+    return issues
+
+
 def main() -> int:
     files = maintained_files()
     issues = (
@@ -480,6 +502,7 @@ def main() -> int:
         + batch_runner_issues()
         + state_issues()
         + root_folder_issues()
+        + large_file_issues()
     )
     for path in files:
         issues += owner_issues(path)

@@ -16,6 +16,9 @@ have to find it in three trees.
 | Low-integrity processes crash Electron apps, so the launcher label matters | the launcher, which checks the label before starting | [low integrity](ELECTRON-LOW-INTEGRITY-CRASH.md) |
 | Personal terms must not reach the tree or the history | `public_audit`, run before publishing | [publish skill](skills/publish-repo/SKILL.md) |
 | A directory's role decides what may live in it | the layout section of the gate | [folders](FOLDERS.md) |
+| A tracked file past the host's per-file cap is refused before the push | the layout section's large-file guard | [layout](../scripts/review/checks/layout.py), [failures](FAILURES.md) |
+| A failed step names its root cause and, where one exists, the guard that stops it repeating | the agent contract, and the table of process failures | [failures](FAILURES.md) |
+| No multi-line Python through `pwsh`, no content rewrite through PowerShell, no `git add -A` | the agent contract and the harness page; the push then proves the content | [failures](FAILURES.md), [DeepSeek Harness](DEEPSEEK-HARNESS.md) |
 | One owner per fact | the gate's single-owner tokens and the review questions | [code](CODE.md), [review](REVIEW.md) |
 
 Two of these are harness-level rather than repository-level: the profile plugin and the file sandbox. They travel

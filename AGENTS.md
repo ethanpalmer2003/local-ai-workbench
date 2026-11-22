@@ -12,7 +12,7 @@
 ## Clarify before acting
 - Ask at once when a request is ambiguous or assumes an invented detail; never guess intent.
 - Prefer the plain form: write the simplest code that solves the problem. Immutability, generics, protocols or helpers nothing exercises are complexity, not quality.
-- Do not ask permission to use a standard tool. Prefer a maintained dependency over a local substitute, and check an installed dependency and the standard library before hand-writing a traversal; say why if you keep it.
+- Prefer a maintained dependency over a local substitute; check the installed dependency and the standard library before hand-writing a traversal, and say why if you keep one.
 - When a problem needs the user's judgment, put it in [TODO](notes/TODO.md) with the options and start the next item.
 
 ## Work and permissions
@@ -21,6 +21,7 @@
 - Never create or edit issues, pull requests or discussions outside this account.
 - Respect explicit test deferrals; a TODO or saved result never authorizes a live test.
 - Fix a defect in code already being touched, then and there. Record a larger unrelated fix as a TODO entry.
+- A failed step names its root cause and the guard that stops it repeating; process failures: [failure modes](.agents/FAILURES.md).
 - Each invocation uses its current tool policy; earlier approval does not change later defaults.
 - Before native/GPU work or servers, state execution context via `scripts.launchers.runtime.execution_context` and record it beside the evidence.
 - Before manual llama-server startup, check `launch_util.llama_server_running()`. Manage only processes a run started and never stop an unrelated session. Port policy: [shared launcher helpers](scripts/launchers/shared/README.md).
@@ -30,7 +31,7 @@
 - Change, move or remove a model through `python -m scripts.tools.model_admin` (`where`, `replace`, `remove`): it edits the owning catalog, regenerates `ids.py`, rewrites references and trashes the weights. [Tools](scripts/tools/README.md).
 - [Folder rules](.agents/FOLDERS.md) own typed bindings, naming and the move checklist. Preserve model identity and shared assets through a move.
 - Preserve nonempty data by moving it to `C:/AI/trash`; delete only empty files and directories, and verify each resolved path first.
-- Preserve the evidence a tracked decision cites and the newest run per case the capability matrix reads; an older run nobody references is redundant, and cleanup may move it to trash.
+- Preserve the evidence a tracked decision cites and the newest run per capability case; an older run nobody references may move to trash.
 - Use uv; the interpreter and the checks that run it are in [checks](.agents/CHECKS.md). Secrets are in `scripts/.env`, Hugging Face data in `data/huggingface/`.
 - Codex under [.agents/CODEX-HARNESS.md](.agents/CODEX-HARNESS.md): a command refusal is a hard stop; report what must be allowed.
 - Running under DeepSeek Harness: [.agents/DEEPSEEK-HARNESS.md](.agents/DEEPSEEK-HARNESS.md) covers its permissions, sandbox denials and the settled workarounds.

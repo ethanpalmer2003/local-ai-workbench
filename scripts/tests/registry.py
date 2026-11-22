@@ -56,6 +56,7 @@ from scripts.tests.cases.review.checks.test_dynamic_imports import DynamicImport
 from scripts.tests.cases.review.checks.test_expression import ExpressionDepthTests
 from scripts.tests.cases.review.checks.test_folder_rule import FolderRuleTests, WorkspaceTotalTests
 from scripts.tests.cases.review.checks.test_handoff import BundleTests, FullRunTests, HandlerTests
+from scripts.tests.cases.review.checks.test_large_files import LargeFileTests
 from scripts.tests.cases.review.checks.test_layout import PolicyTests
 from scripts.tests.cases.review.checks.test_line_length import LimitsReportTests, LineLengthTests
 from scripts.tests.cases.review.checks.test_network_timeouts import NetworkTimeoutTests
@@ -276,6 +277,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     SampleCodeTests,
     LabelVocabularyTests,
     YamlTableTests,
+    LargeFileTests,
     PolicyTests,
     BareAnyTests,
     LineLengthTests,
