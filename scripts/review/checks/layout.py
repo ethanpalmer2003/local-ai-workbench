@@ -2,6 +2,7 @@
 
 import ast
 import re
+import subprocess
 import tomllib
 from pathlib import Path
 
@@ -515,6 +516,76 @@ def trash_path_issues() -> list[str]:
     return issues
 
 
+def indexed_files(root: Path | None = None) -> frozenset[str]:
+    """Every path the commit would carry, staged additions included."""
+    directory = root or project_cfg.BASE_DIR
+    result = subprocess.run(
+        ["git", "-C", str(directory), "ls-files", "-z"], capture_output=True, text=True, check=False
+    )
+    if result.returncode:
+        raise RuntimeError(f"git could not list the index: {result.stderr.strip()[:200]}")
+    return frozenset(item for item in result.stdout.split("\0") if item)
+
+
+def imported_modules(tree: ast.AST) -> set[str]:
+    """Absolute `scripts.*` modules this file names in an import statement."""
+    modules: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            modules.update(alias.name for alias in node.names if alias.name.startswith("scripts"))
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module and node.module.startswith("scripts"):
+            modules.add(node.module)
+    return modules
+
+
+def resolves_module(module: str, indexed: frozenset[str]) -> bool:
+    """Whether the index carries this module as a file, a package, or a namespace package."""
+    base = module.replace(".", "/")
+    return (
+        f"{base}.py" in indexed
+        or f"{base}/__init__.py" in indexed
+        or any(path.startswith(f"{base}/") for path in indexed)
+    )
+
+
+def ignored_indexed(root: Path | None = None) -> list[str]:
+    """Indexed paths that also match an ignore rule: forced in, so a clone inherits generated state."""
+    directory = root or project_cfg.BASE_DIR
+    result = subprocess.run(
+        ["git", "-C", str(directory), "ls-files", "-ci", "--exclude-standard", "-z"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode:
+        raise RuntimeError(f"git could not list ignored index entries: {result.stderr.strip()[:200]}")
+    return sorted(item for item in result.stdout.split("\0") if item)
+
+
+def index_issues(root: Path | None = None) -> list[str]:
+    """The index carries every `scripts.*` import it names, and no file an ignore rule covers.
+
+    A file that exists here but not in the commit can satisfy an import while proving nothing about a
+    clone; a file forced in under an ignored path is app-written state every later run has to fight.
+    """
+    directory = root or project_cfg.BASE_DIR
+    indexed = indexed_files(directory)
+    issues = [f"{path}: indexed but matches an ignore rule; never force it in" for path in ignored_indexed(directory)]
+    for path in sorted(indexed):
+        if not path.endswith(".py"):
+            continue
+        try:
+            tree = ast.parse((directory / path).read_text(encoding="utf-8", errors="replace"))
+        except (OSError, SyntaxError):
+            continue
+        issues.extend(
+            f"{path}: imports {module}, which the index does not carry"
+            for module in sorted(imported_modules(tree))
+            if not resolves_module(module, indexed)
+        )
+    return issues
+
+
 def main() -> int:
     files = maintained_files()
     issues = (
@@ -529,6 +600,7 @@ def main() -> int:
         + root_folder_issues()
         + large_file_issues()
         + trash_path_issues()
+        + index_issues()
     )
     for path in files:
         issues += owner_issues(path)

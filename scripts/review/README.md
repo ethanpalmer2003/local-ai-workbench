@@ -11,23 +11,22 @@ The default run is scoped to what changed since upstream. `--all` checks every s
 
 The runner executes:
 
-- `checks/layout.py`: component/config ownership, install roots, folder naming, high-level file placement, and batch references.
+- `checks/layout.py`: component/config ownership, install roots, folder naming, high-level file placement, batch references, and the committed index: every `scripts.*` import resolves in it and no indexed file matches an ignore rule.
 - `checks/owned_tokens.py`: a literal one module owns may not be spelled in another, so a copy fails instead of drifting.
 - `checks/duplicates.py`: pylint duplicate blocks against a reviewed baseline; opt-in, a minute.
 - `checks/annotations.py`: annotation complexity by atoms, nesting and unions; above the cap it asks for a record.
-- `checks/line_length.py`: no line over 120 except template or token content; the accepted count prints.
+- `checks/line_length.py`: no line over 120 except template or token content.
 - `checks/bare_any.py`: no parameter or return may be exactly `Any` outside tests; `dict[str, Any]` stays allowed.
 - `checks/docs.py`: Markdown placement, roles, budgets, basename casing, links and model-name policy.
 - `ruff check` and `ruff format`: the configured lint set, including the [McCabe limit](../../.agents/CODE.md), and the formatting every commit applies.
-- `checks/model_references.py`: catalog IDs, workflow defaults, and AudioCpp runtime IDs/paths.
+- `checks/model_references.py`: catalog IDs, workflow defaults, AudioCpp runtime paths.
 - `checks/frontend_wiring.py`: HTML/JS asset paths, DOM element ids and injected settings keys.
 - `basedpyright`: Python type errors.
-- `checks/inventory_code.py`: folder counts, a 20-direct-file cap, a 600/800-line file rule, sparse folders and line counts.
-- `checks/typography.py`: ASCII punctuation only; dashes, curly quotes, the ellipsis and no-break spaces are rejected in tracked text, quoted corpus references excepted. The hook runs it on staged files.
+- `checks/inventory_code.py`: folder counts, the 20-file and 600/800-line caps, sparse folders.
+- `checks/typography.py`: ASCII punctuation only; dashes, curly quotes, the ellipsis and no-break spaces are rejected in tracked text, quoted corpus references excepted.
 - `checks/comments.py`: markers, banner rules and commented-out code are rejected; comments that explain why stay.
 - `checks/spellings.py` plus codespell: British spellings report the American form and the dictionary catches typos.
-- `checks/dead_code.py`: an unused function or class, or unreachable code, through vulture, with protocol
-  attributes, overrides and catalog constants exempt ([libraries](LIBRARIES.md)).
+- `checks/dead_code.py`: an unused function or class, or unreachable code, through vulture, with overrides and catalog constants exempt ([libraries](LIBRARIES.md)).
 - `checks/walrus.py`, `checks/expression.py`, `checks/dynamic_imports.py`: an assignment hidden in a
   comprehension, a condition nesting three operator levels, and a module loaded by a name the source hides.
 - `audit/package_audit.py` with deptry: the lock against `pyproject.toml`, installed-package advisories, and

@@ -22,6 +22,12 @@ Work that cannot be settled without a live run: weights, a device, a server or a
 
 ### Unattended
 
+- [ ] Replace the five literal catalog labels in `launcher_speech.py` with `ModelId` names against [models](../scripts/config/models/README.md); the rename tool rewrites the strings today, so they are consistent but untyped. ~15 min
+
+- [ ] Merge the two import rewriters (`rename_path` and `rewrite_imports`): they overlap, and the duplicate baseline records the shared block, so a merge needs a behavior-parity pass first. ~30-45 min
+
+- [ ] Consolidate the llama.cpp profile runner onto `trial.running_server`; the hand-rolled lifecycle is live-only, so the change needs a run that proves identical results. ~1 h
+
 - [ ] Hash-check the installed catalog weights once: the download path now verifies each new transfer's `sha256`, but weights installed before that check have never been compared, and `download_model` still skips an existing file by size alone. Read every `catalog.json` entry with a recorded digest, report mismatches, and decide whether a mismatch is re-downloaded or moved to trash. ~30 min for the small ones, ~1 h if the large multimodal weights are included
 
 - [ ] Find why dead code survived the gate: `cleanup._report` was unused for a while without a finding, and the scoped scan is the suspect, since a definition left in an unchanged file goes unseen when its caller is deleted elsewhere and `verdict_cannot_change` then skips that file. Reproduce with a throwaway module and a caller in a second file, then decide whether the section scans the modules a change references. ~30 min

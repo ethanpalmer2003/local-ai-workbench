@@ -74,6 +74,7 @@ from scripts.tests.cases.review.checks.test_similarity import (
 from scripts.tests.cases.review.checks.test_spellings import AmericanSpellingTests
 from scripts.tests.cases.review.checks.test_typography import CheckTests, ScanTests, SuffixTests, TargetTests
 from scripts.tests.cases.review.checks.test_walrus import WalrusTests
+from scripts.tests.cases.review.test_committed_index import IndexConsistencyTests, ResolveTests
 from scripts.tests.cases.review.test_examples import ExamplesPageTests
 from scripts.tests.cases.review.test_frontend_wiring import EmittedKeyTests
 from scripts.tests.cases.review.test_public_audit import PublicAuditTests
@@ -332,6 +333,8 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     ExamplesPageTests,
     FolderRuleTests,
     EmittedKeyTests,
+    IndexConsistencyTests,
+    ResolveTests,
     WorkspaceTotalTests,
     BundleTests,
     FullRunTests,
