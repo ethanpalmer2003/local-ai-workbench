@@ -103,6 +103,20 @@ def signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
     return f"({', '.join(arguments)}) -> {returns}"
 
 
+BROAD_NAMES = frozenset({"Exception", "BaseException"})
+
+
+def broad_kind(kind: ast.expr | None) -> bool:
+    """Whether a caught type set includes everything: bare, `Exception`, or a tuple holding one."""
+    if kind is None:
+        return True
+    if isinstance(kind, ast.Name):
+        return kind.id in BROAD_NAMES
+    if isinstance(kind, ast.Tuple):
+        return any(broad_kind(element) for element in kind.elts)
+    return False
+
+
 def silent_except(node: ast.ExceptHandler) -> bool:
     """Whether a handler does nothing at all, which is where a real failure disappears."""
     if len(node.body) != 1:
@@ -120,10 +134,42 @@ def silent_except(node: ast.ExceptHandler) -> bool:
 
 def broad_except(node: ast.ExceptHandler) -> bool:
     """Whether a handler catches everything, bare or as `Exception`, rather than what it expects."""
-    kind = node.type
-    if kind is None:
-        return True
-    return isinstance(kind, ast.Name) and kind.id in {"Exception", "BaseException"}
+    return broad_kind(node.type)
+
+
+def suppress_call(item: ast.withitem) -> ast.Call | None:
+    """The `suppress(...)` call a `with` item makes, bare or through `contextlib`."""
+    expression = item.context_expr
+    if not isinstance(expression, ast.Call):
+        return None
+    function = expression.func
+    if isinstance(function, ast.Name) and function.id == "suppress":
+        return expression
+    if (
+        isinstance(function, ast.Attribute)
+        and function.attr == "suppress"
+        and isinstance(function.value, ast.Name)
+        and function.value.id == "contextlib"
+    ):
+        return expression
+    return None
+
+
+def suppression_sites(tree: ast.AST) -> list[tuple[int, bool]]:
+    """Every `with suppress(...)` block: its line and whether it swallows everything.
+
+    `contextlib.suppress` is a silent handler spelled another way, so a file that uses it must weigh the
+    same as the `try` form.
+    """
+    sites = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.With):
+            continue
+        for item in node.items:
+            call = suppress_call(item)
+            if call is not None:
+                sites.append((node.lineno, broad_kind(call.args[0] if call.args else None)))
+    return sites
 
 
 def file_record(path: Path, workspace: Path) -> FileRecord:
@@ -144,13 +190,18 @@ def file_record(path: Path, workspace: Path) -> FileRecord:
             }
         )
     handlers = [node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)]
+    suppressed = suppression_sites(tree)
     return {
         "path": path.relative_to(workspace).as_posix(),
         "lines": len(source.splitlines()),
         "functions": functions,
         "classes": [node.name for node in tree.body if isinstance(node, ast.ClassDef)],
-        "silent_excepts": [node.lineno for node in handlers if silent_except(node)],
-        "broad_excepts": [node.lineno for node in handlers if broad_except(node)],
+        "silent_excepts": sorted(
+            [node.lineno for node in handlers if silent_except(node)] + [line for line, _ in suppressed]
+        ),
+        "broad_excepts": sorted(
+            [node.lineno for node in handlers if broad_except(node)] + [line for line, broad in suppressed if broad]
+        ),
         "undocumented": [item["line"] for item in functions if not item["documented"]],
     }
 

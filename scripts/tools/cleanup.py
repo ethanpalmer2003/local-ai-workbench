@@ -2,8 +2,8 @@
 
 `python -m scripts.tools.cleanup --dry-run` says what would move; `--apply` moves it. Run evidence keeps the
 newest run per case and outcome and anything a tracked file cites, so a superseded run leaves while the
-evidence behind a written decision stays. Nothing here deletes: output and state move to `trash/<date>/`,
-and emptying the trash is a separate, explicit flag.
+evidence behind a written decision stays. Output and state move to `trash/<date>/`; `empty_trash` here is the
+one owner of deleting what the trash holds, and the gate calls it with `TRASH_DAYS`.
 """
 
 import argparse
@@ -15,13 +15,13 @@ from datetime import date, datetime
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
+from scripts.config import trash
 from scripts.review.lists.sources import tracked_files
 from scripts.shared.tables import render_table
 from scripts.tools import state_cleanup
 
 # - the two evidence roots, and the run-directory name shape they both use
 OUTPUT_ROOTS = (project_cfg.TESTS_DIR / "output", project_cfg.SCRIPTS_DIR / "benchmarks" / "output")
-TRASH_DIR = project_cfg.BASE_DIR / "trash"
 MAX_DEPTH = 6
 # - a run that took minutes to produce keeps more history than one that took seconds: a benchmark or a
 #   live probe is expensive to repeat, while a fast suite run is cheap
@@ -30,13 +30,19 @@ EXPENSIVE_KEEP, EXPENSIVE_DAYS = 5, 90
 CHEAP_KEEP, CHEAP_DAYS = 1, 7
 # - a suite writes a run per invocation, so an area needs a ceiling of its own
 MAX_RUNS_PER_AREA = 20
+# - a moved item stays recoverable for two days before the next cleanup deletes it
+TRASH_DAYS = 2
 
 
 def run_directories(root: Path) -> list[Path]:
     """Every run directory under `root`: a leaf named with an epoch stamp, at most six levels down."""
     found: list[Path] = []
     for path in _walk(root, MAX_DEPTH):
-        if path.name.isdigit() and len(path.name) >= 15 and any(path.iterdir()):
+        try:
+            populated = any(path.iterdir())
+        except OSError:
+            continue
+        if path.name.isdigit() and len(path.name) >= 15 and populated:
             found.append(path)
     return found
 
@@ -63,7 +69,11 @@ def cited_runs() -> set[str]:
 def superseded(
     runs: list[Path], cited: set[str], *, keep: int | None = None, older_days: int | None = None
 ) -> list[Path]:
-    """Runs to move: superseded within their cost class, old enough, and not cited by a tracked file."""
+    """Runs to move: superseded within their cost class, old enough, and not cited by a tracked file.
+
+    The per-area ceiling can name a run the age rule already named, so the result is deduplicated:
+    moving one path twice would double-count its bytes and fail the second move.
+    """
     by_group: dict[Path, list[Path]] = {}
     for run in runs:
         by_group.setdefault(group_of(run), []).append(run)
@@ -77,7 +87,7 @@ def superseded(
             if run.name in cited or _age_days(run) <= age:
                 continue
             stale.append(run)
-    return [*stale, *_over_area_cap(runs, cited)]
+    return list(dict.fromkeys([*stale, *_over_area_cap(runs, cited)]))
 
 
 def _over_area_cap(runs: list[Path], cited: set[str]) -> list[Path]:
@@ -125,7 +135,7 @@ def move_to_trash(paths: list[Path], stamp: str, dry_run: bool) -> int:
     """Move each path under `trash/<stamp>/cleanup/`, keeping its relative place; return how many moved."""
     moved = 0
     for path in paths:
-        target = TRASH_DIR / stamp / "cleanup" / path.relative_to(project_cfg.BASE_DIR)
+        target = trash.trash_dir(stamp) / "cleanup" / path.relative_to(project_cfg.BASE_DIR)
         if dry_run:
             print(f"[WOULD MOVE] {path} -> {target}")
             continue
@@ -142,9 +152,10 @@ def move_to_trash(paths: list[Path], stamp: str, dry_run: bool) -> int:
 def trash_days() -> list[tuple[Path, int]]:
     """Each dated trash folder and the bytes it holds, newest first."""
     days: list[tuple[Path, int]] = []
-    if not TRASH_DIR.is_dir():
+    root = trash.trash_root()
+    if not root.is_dir():
         return days
-    for folder in sorted(TRASH_DIR.iterdir(), reverse=True):
+    for folder in sorted(root.iterdir(), reverse=True):
         if folder.is_dir() and folder.name[:10].count("-") == 2:
             days.append((folder, state_cleanup.path_size(folder)))
     return days
@@ -183,18 +194,21 @@ def empty_trash(older_than: int) -> int:
     return removed
 
 
-def prune_outputs(dry_run: bool) -> tuple[int, float]:
+def prune_trash() -> int:
+    """Delete the dated trash folders past `TRASH_DAYS`; the gate calls this, so trash cannot pile up."""
+    return empty_trash(TRASH_DAYS)
+
+
+def prune_outputs(dry_run: bool, *, keep: int | None = None, older_days: int | None = None) -> tuple[int, float]:
     """Move superseded run evidence to trash; returns the count and the bytes it covers."""
     runs = [run for root in OUTPUT_ROOTS if root.is_dir() for run in run_directories(root)]
     if not runs:
         return 0, 0.0
     cited = cited_runs()
-    stale = superseded(runs, cited)
+    stale = superseded(runs, cited, keep=keep, older_days=older_days)
     if not stale:
         return 0, 0.0
-    freed = 0
-    for run in stale:
-        freed += sum(item.stat().st_size for item in run.rglob("*") if item.is_file())
+    freed = sum(state_cleanup.path_size(run) for run in stale)
     move_to_trash(stale, date.today().isoformat(), dry_run)
     return len(stale), freed
 
@@ -221,10 +235,9 @@ def main(arguments: list[str] | None = None) -> int:
         if days:
             print(render_table(days, ("trash day", "size")))
         return 0
-    date.today().isoformat()
     status = 0
     if options.outputs:
-        count, freed = prune_outputs(options.dry_run)
+        count, freed = prune_outputs(options.dry_run, keep=options.keep, older_days=options.older_than)
         print(f"{count} superseded run(s), {freed / 1e6:.1f} MB")
     if options.state:
         state_cleanup.prune_generated(7, 30, 30, options.dry_run)
@@ -243,14 +256,6 @@ def _empty(older_than: int, dry_run: bool) -> int:
             print(f"no dated trash folder is {older_than} day(s) old or more")
         return 0
     print(f"deleted {empty_trash(older_than)} dated trash folder(s)")
-    return 0
-
-
-def _report(moved: int, planned: int, dry_run: bool) -> int:
-    if dry_run:
-        print(f"{planned} run(s) would move")
-    else:
-        print(f"{moved} run(s) moved")
     return 0
 
 

@@ -82,7 +82,7 @@ class NgramWorkloads(unittest.TestCase):
         with patch.object(
             benchmark, "post_json", side_effect=[{"tokens": list(range(200))}, {"content": "code"}]
         ) as post:
-            rows = benchmark.workloads("http://unused", benchmark.Settings(context_tokens=100), 0)
+            rows = benchmark.workloads("http://unused", benchmark.Settings(context_tokens=100), 0, {})
         self.assertEqual(post.call_args_list[1].args[1], {"tokens": list(range(100))})
         self.assertEqual(rows[1].requested_depth, 100)
         self.assertIn("invalid amount", rows[1].expected or "")

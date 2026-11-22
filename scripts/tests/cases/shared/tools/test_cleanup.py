@@ -8,6 +8,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from scripts.config import project_config as project_cfg
+from scripts.config import trash as trash_config
 from scripts.tools import cleanup
 
 
@@ -71,6 +72,24 @@ class CleanupTests(unittest.TestCase):
             blocked = stale / "read-only-object"
             blocked.write_text("object", encoding="utf-8")
             os.chmod(blocked, 0o444)
-            with unittest.mock.patch.object(cleanup, "TRASH_DIR", trash):
+            with unittest.mock.patch.object(trash_config, "trash_root", return_value=trash):
                 self.assertEqual(cleanup.empty_trash(1), 1)
             self.assertFalse((trash / "2020-01-01").exists())
+
+    def test_a_run_the_age_rule_and_the_area_cap_both_name_is_listed_once(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            runs = [
+                _run(root, "tests/output/suites", f"17947692132288599{index:02d}", 30)
+                for index in range(cleanup.MAX_RUNS_PER_AREA + 2)
+            ]
+            stale = cleanup.superseded(runs, set())
+        self.assertEqual(len(stale), len(set(stale)))
+        self.assertEqual(len(stale), cleanup.MAX_RUNS_PER_AREA + 1)
+
+    def test_the_keep_override_reaches_the_run_rule(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            runs = [_run(root, "tests/output/suites", f"17947692132288599{index:02d}", 30) for index in range(4)]
+            kept = cleanup.superseded(runs, set(), keep=3, older_days=7)
+        self.assertEqual(len(kept), 1)

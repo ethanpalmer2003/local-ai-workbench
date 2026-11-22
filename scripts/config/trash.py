@@ -8,9 +8,14 @@ from pathlib import Path
 from scripts.config import project_config as project_cfg
 
 
+def trash_root() -> Path:
+    """The folder holding every dated trash folder; computing it creates nothing."""
+    return project_cfg.BASE_DIR / "trash"
+
+
 def trash_dir(stamp: str | None = None) -> Path:
     """Today's trash folder path (`trash/YYYY-MM-DD`); computing it creates nothing."""
-    return (project_cfg.BASE_DIR / "trash" / (stamp or datetime.now().strftime("%Y-%m-%d"))).resolve()
+    return (trash_root() / (stamp or datetime.now().strftime("%Y-%m-%d"))).resolve()
 
 
 def trash_path(name: str) -> Path:

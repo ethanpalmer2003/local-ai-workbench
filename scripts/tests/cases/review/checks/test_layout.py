@@ -116,3 +116,29 @@ class PolicyTests(unittest.TestCase):
                 self.assertEqual(
                     layout.root_folder_issues(), ["Unexpected root folder: bin (no tracked file, not a runtime root)"]
                 )
+
+
+class TrashPathTests(unittest.TestCase):
+    def _issues(self, source: str) -> list[str]:
+        # - a fixture under state/temp, because the rule excuses the tests tree's own trash folders
+        folder = project_cfg.STATE_DIR / "temp" / "trash-path-fixture"
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / "MODULE.py"
+        path.write_text(source, encoding="utf-8")
+        try:
+            with patch.object(layout, "maintained_files", return_value=[path]):
+                return layout.trash_path_issues()
+        finally:
+            path.unlink()
+            folder.rmdir()
+
+    def test_a_second_module_building_the_trash_path_is_reported(self):
+        issues = self._issues("from pathlib import Path\nTRASH = Path('C:/AI') / 'trash'\n")
+        self.assertEqual(len(issues), 1)
+        self.assertIn("joins a 'trash' path", issues[0])
+
+    def test_a_path_that_only_reads_a_file_under_trash_is_left_alone(self):
+        self.assertEqual(self._issues("from pathlib import Path\nNAME = 'trash/2020-01-01'\n"), [])
+
+    def test_the_committed_tree_builds_the_trash_path_once(self):
+        self.assertEqual(layout.trash_path_issues(), [])

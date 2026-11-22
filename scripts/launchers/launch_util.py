@@ -410,8 +410,10 @@ def build_cli_args(options: Mapping[str, object]) -> list[str]:
 def prune_stale_temp(max_age_hours: float = 24) -> int:
     """Remove PyInstaller extractions a killed child left behind in the shared temp dir.
 
-    One-file executables extract to `_MEI*` under TEMP and only remove it on a clean
-    exit, so a taskkill leaves the whole tree behind. Age-gating keeps a running child safe.
+    One-file executables extract to `_MEI*` under TEMP and only remove it on a clean exit, so a taskkill
+    leaves the whole tree behind. This is the launch-time safety gate, and its age floor is what keeps a
+    running child safe; keeping the newest few by count is
+    [state_cleanup.prune_extractions](../tools/state_cleanup.py), which the gate runs.
     """
     root = cfg.LAUNCH.temp_dir
     if not root.is_dir():
@@ -473,10 +475,13 @@ def _merge_streams(mode: ConsoleTerminalLaunchMode, capture: TextIO | None) -> t
     return capture, capture
 
 
-def _bind_job(proc: subprocess.Popen[Any], mode: ConsoleTerminalLaunchMode) -> None:
-    # - SPLIT_INDEPENDENT: no job object, so the process outlives this launcher and
-    #   every other terminal by design
-    if mode == ConsoleTerminalLaunchMode.SPLIT_INDEPENDENT:
+def _bind_job(proc: subprocess.Popen[Any], mode: ConsoleTerminalLaunchMode, bind_job: bool) -> None:
+    """Join the launcher's kill-on-close job, unless this launch is meant to outlive it.
+
+    - SPLIT_INDEPENDENT: no job object, so the process outlives this launcher and every other terminal by
+      design; an owned launch passes `bind_job=True` and joins it anyway
+    """
+    if mode == ConsoleTerminalLaunchMode.SPLIT_INDEPENDENT and not bind_job:
         return
     try:
         assign_process_to_job(proc.pid)
@@ -537,14 +542,7 @@ def launch_process(
             creationflags=subprocess.CREATE_NEW_CONSOLE if new_console else 0,
         )
 
-    _bind_job(proc, resolved)
-    if bind_job and resolved == ConsoleTerminalLaunchMode.SPLIT_INDEPENDENT:
-        try:
-            assign_process_to_job(proc.pid)
-        except OSError:
-            kill_process_tree(proc.pid)
-            proc.wait(timeout=10)
-            raise
+    _bind_job(proc, resolved, bind_job)
     if report_vram:
         report_vram_usage_async(title, proc.pid, vram_before, log_file=log_file)
     return proc

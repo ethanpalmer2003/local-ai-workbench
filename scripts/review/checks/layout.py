@@ -1,5 +1,6 @@
 """Check component ownership, install roots, root folders, folder naming and batch references."""
 
+import ast
 import re
 import tomllib
 from pathlib import Path
@@ -490,6 +491,36 @@ def large_file_issues(limit_mib: int | None = None) -> list[str]:
     return issues
 
 
+TRASH_OWNER = "scripts/config/trash.py"
+
+
+def trash_path_issues() -> list[str]:
+    """The trash folder's path is built in one place, so its retention rule has one owner too.
+
+    A second module that joins a `trash` segment can delete or prune what the owner decides to keep; both
+    owners then need the same edit, and the one nobody remembers is the one that loses data.
+    """
+    issues: list[str] = []
+    for path in maintained_files():
+        if path.suffix != ".py":
+            continue
+        relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
+        # - a fixture builds its own `trash` folder inside a temporary root, which is not this workspace's
+        if relative == TRASH_OWNER or relative.startswith("scripts/tests/"):
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.BinOp) or not isinstance(node.op, ast.Div):
+                continue
+            side = node.right
+            if isinstance(side, ast.Constant) and side.value == "trash":
+                issues.append(f"{relative}:{node.lineno}: joins a 'trash' path; import {TRASH_OWNER}")
+    return issues
+
+
 def main() -> int:
     files = maintained_files()
     issues = (
@@ -503,6 +534,7 @@ def main() -> int:
         + state_issues()
         + root_folder_issues()
         + large_file_issues()
+        + trash_path_issues()
     )
     for path in files:
         issues += owner_issues(path)

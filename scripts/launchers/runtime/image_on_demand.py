@@ -182,9 +182,14 @@ class NativeModelSessions:
     def start(self) -> None:
         root = ensure_native_catalog()
         self.model_root = root
-        self._start_servers(root)
-        self._wait_for_servers()
-        self._select_image()
+        # - a failure after the first launch must not leave that process holding its port and VRAM
+        try:
+            self._start_servers(root)
+            self._wait_for_servers()
+            self._select_image()
+        except BaseException:
+            self.close()
+            raise
 
     def _start_servers(self, root: Path) -> None:
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -221,9 +226,7 @@ class NativeModelSessions:
         process = self.processes[1]
         old_pid = process.pid
         print(f"[image-session] Native sd.cpp control failed; restarting owned server: {reason}", flush=True)
-        if process.poll() is None:
-            launch_util.kill_process_tree(process.pid)
-            process.wait(timeout=20)
+        launch_util.stop_process(process, "sd.cpp image server", timeout=20)
         deadline = time.monotonic() + 10
         while launch_util.port_listening(cfg.SDCPP_SERVICE.internal_port):
             if time.monotonic() >= deadline:
@@ -300,9 +303,7 @@ class NativeModelSessions:
         errors = []
         for process in reversed(self.processes):
             try:
-                if process.poll() is None:
-                    launch_util.kill_process_tree(process.pid)
-                    process.wait(timeout=20)
+                launch_util.stop_process(process, "native image server", timeout=20)
             except Exception as error:
                 errors.append(error)
         if errors:
@@ -361,8 +362,13 @@ class ImageSessionPipeline:
 
     def start(self) -> None:
         self._check_ports()
-        self.kobold_process = self.start_kobold()
-        self.native.start()
+        # - a failure after Kobold or one native server starts must not leave it running
+        try:
+            self.kobold_process = self.start_kobold()
+            self.native.start()
+        except BaseException:
+            self.close()
+            raise
         self._start_proxies()
         deadline = time.monotonic() + 30
         while len(self.servers) != 3:
@@ -426,9 +432,8 @@ class ImageSessionPipeline:
         except Exception as error:
             errors.append(error)
         try:
-            if self.kobold_process is not None and self.kobold_process.poll() is None:
-                launch_util.kill_process_tree(self.kobold_process.pid)
-                self.kobold_process.wait(timeout=20)
+            if self.kobold_process is not None:
+                launch_util.stop_process(self.kobold_process, "KoboldCpp server", timeout=20)
         except Exception as error:
             errors.append(error)
         for server in self.servers:

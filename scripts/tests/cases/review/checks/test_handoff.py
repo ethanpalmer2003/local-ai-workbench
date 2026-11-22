@@ -38,7 +38,20 @@ class HandlerTests(unittest.TestCase):
     def test_a_broad_handler_catches_everything(self):
         self.assertTrue(handoff.broad_except(handler("try:\n    f()\nexcept:\n    pass\n")))
         self.assertTrue(handoff.broad_except(handler("try:\n    f()\nexcept Exception:\n    pass\n")))
+        self.assertTrue(handoff.broad_except(handler("try:\n    f()\nexcept (OSError, Exception):\n    pass\n")))
         self.assertFalse(handoff.broad_except(handler("try:\n    f()\nexcept OSError:\n    pass\n")))
+
+    def test_a_suppress_block_weighs_the_same_as_the_try_form(self):
+        source = (
+            '"""Module."""\n\n'
+            "import contextlib\n\n\n"
+            "def quietly() -> None:\n"
+            "    with contextlib.suppress(OSError):\n"
+            "        open('x')\n"
+            "    with contextlib.suppress(Exception):\n"
+            "        open('y')\n"
+        )
+        self.assertEqual(handoff.suppression_sites(ast.parse(source)), [(7, False), (9, True)])
 
 
 class FullRunTests(unittest.TestCase):

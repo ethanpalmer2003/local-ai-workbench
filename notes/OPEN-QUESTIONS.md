@@ -53,6 +53,12 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
   which `staleness.manifest` already lists; hash Python by its AST and documents by structure, so comment and
   prose edits stop invalidating; or record coverage per file and accept a stage when only declared-irrelevant
   files moved. Only the first is cheap, and nothing measures whether grading pays for itself.
+- **Entry function first or last in a module.** [code rules](../.agents/CODE.md) say a file opens with its entry
+  function and lets helpers follow, but the tree does the opposite: 135 modules put `main` after their helpers and 11
+  put it first. Options: restate the rule as the practice (constants, helpers in call order, the entry function, then
+  the `__main__` guard) and leave the 11 as earlier work; or keep the rule and restructure the 135 as they are
+  touched, a large mechanical change with no behavior behind it. The heavyweight review of bundle
+  `1795317801190382800` raised it as a Minor finding against six ranked files.
 - A decision that would change work is added here with its options.
 
 ## Superseded

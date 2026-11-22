@@ -15,8 +15,8 @@ from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import context_category, report_run
 from scripts.config import project_config as project_cfg
-from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
+from scripts.launchers.llamacpp.llamacpp_profiles import ALL_LLAMACPP_PROFILES
 from scripts.shared import consent
 from scripts.shared.timing import timed
 
@@ -111,13 +111,27 @@ def rewrite_correct(content: str, expected: str) -> bool:
         return False
 
 
-def workloads(base: str, settings: Settings, round_index: int) -> list[Workload]:
+def workload_context(base: str, settings: Settings, cache: dict[int, str]) -> str:
+    """The launcher tree as one context string, read and tokenized once per token budget.
+
+    The text does not change between candidates or rounds, so reading it per candidate would only spend
+    server time before the timed workload runs.
+    """
+    cached = cache.get(settings.context_tokens)
+    if cached is not None:
+        return cached
     files = sorted((project_cfg.SCRIPTS_DIR / "launchers").rglob("*.py"))
     context = "\n".join(f"# File: {path.name}\n{path.read_text(encoding='utf-8')}" for path in files)
     tokens = post_json(f"{base}/tokenize", {"content": context}, settings.timeout)["tokens"]
-    context = post_json(f"{base}/detokenize", {"tokens": tokens[: settings.context_tokens]}, settings.timeout)[
+    rendered = post_json(f"{base}/detokenize", {"tokens": tokens[: settings.context_tokens]}, settings.timeout)[
         "content"
     ]
+    cache[settings.context_tokens] = rendered
+    return rendered
+
+
+def workloads(base: str, settings: Settings, round_index: int, cache: dict[int, str]) -> list[Workload]:
+    context = workload_context(base, settings, cache)
     target = source_block(9000 + round_index)
     return [
         Workload(
@@ -219,6 +233,7 @@ def run_candidate(
     settings: Settings,
     candidate: Candidate,
     round_index: int,
+    cache: dict[int, str],
 ) -> None:
     print(f"[RUN] round {round_index + 1}/{settings.rounds}: {candidate.name}", flush=True)
     options = candidate.options()
@@ -231,7 +246,7 @@ def run_candidate(
             lifecycle = BenchmarkLifecycle(lambda: f"{process.pid}:{candidate.name}" if process.poll() is None else "")
             lifecycle.adopt_prepared(time.perf_counter() - setup_started)
             warmup(lifecycle, base, settings)
-            for workload in workloads(base, settings, round_index):
+            for workload in workloads(base, settings, round_index, cache):
                 measure_workload(
                     lifecycle, base, candidate, workload, settings, output, report, log, options, round_index
                 )
@@ -262,8 +277,7 @@ def main() -> None:
     else:
         selected = tuple(c for c in CANDIDATES if not args.candidates or c.name in args.candidates)
     require_free_session()
-    profiles = {**cfg.LLAMACPP_PROFILES, **cfg.LLAMACPP_BENCHMARK_PROFILES}
-    conf = LlamaConfig(profile_name=args.profile, profiles=profiles)
+    conf = LlamaConfig(profile_name=args.profile, profiles=ALL_LLAMACPP_PROFILES)
     output = BenchmarkPaths(__file__).new_run()
     report: dict[str, Any] = {
         "model": str(conf.model),
@@ -284,11 +298,12 @@ def main() -> None:
     ) as run_report:
         print(f"[OUTPUT] {output.root}", flush=True)
         started = time.perf_counter()
+        contexts: dict[int, str] = {}
         try:
             for round_index in range(settings.rounds):
                 candidates = selected if round_index % 2 == 0 else tuple(reversed(selected))
                 for candidate in candidates:
-                    run_candidate(conf, output, report, settings, candidate, round_index)
+                    run_candidate(conf, output, report, settings, candidate, round_index, contexts)
             if any(result["correct"] is False for result in report["results"]):
                 raise RuntimeError("One or more source rewrites failed grading; see results.json")
         finally:

@@ -56,6 +56,7 @@ def running_server(
         kill_ports=trial.port,
         mode=cfg.ConsoleTerminalLaunchMode.MERGE,
         log_file=str(log),
+        env=trial.build_env,
     )
     try:
         base = f"http://127.0.0.1:{trial.port}"

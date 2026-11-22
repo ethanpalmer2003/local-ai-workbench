@@ -281,49 +281,25 @@ def _memory_value(data: Mapping[str, object], *names: str) -> float | None:
 
 
 def _get_windows_processes(pid: int) -> tuple[set[int], dict[int, tuple[str, str]]]:
-    script = (
-        "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,CommandLine | ConvertTo-Json "
-        "-Compress"
-    )
-    try:
-        result = subprocess.run(
-            ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
-            capture_output=True,
-            text=True,
-            timeout=GPU_SETTINGS.query_timeout_s,
-            check=False,
-        )
-        processes = json.loads(result.stdout)
-    except (OSError, ValueError, TypeError, subprocess.SubprocessError):
-        return {pid}, {}
+    """The target's process tree with each process's name and command line, from psutil.
 
-    if isinstance(processes, dict):
-        processes = [processes]
-    if not isinstance(processes, list):
-        return {pid}, {}
+    A PowerShell WMI query per poll costs hundreds of milliseconds and adds a process to the machine being
+    measured; psutil reads the same table in-process. An unreadable process is left out rather than guessed.
+    """
+    import psutil
 
-    children: dict[int, list[int]] = {}
     details: dict[int, tuple[str, str]] = {}
+    try:
+        root = psutil.Process(pid)
+        processes = [root, *root.children(recursive=True)]
+    except psutil.Error:
+        return {pid}, {}
     for process in processes:
-        if not isinstance(process, dict):
+        try:
+            details[process.pid] = (process.name(), " ".join(process.cmdline()))
+        except (psutil.Error, OSError):
             continue
-        process_id = process.get("ProcessId")
-        parent_id = process.get("ParentProcessId")
-        name = process.get("Name")
-        command_line = process.get("CommandLine")
-        if isinstance(process_id, int) and isinstance(parent_id, int):
-            children.setdefault(parent_id, []).append(process_id)
-            details[process_id] = (str(name or ""), str(command_line or ""))
-
-    result_ids = {pid}
-    pending = [pid]
-    while pending:
-        parent_id = pending.pop()
-        for child_id in children.get(parent_id, []):
-            if child_id not in result_ids:
-                result_ids.add(child_id)
-                pending.append(child_id)
-    return result_ids, details
+    return set(details) | {pid}, details
 
 
 _AI_PROCESS_NAMES = {

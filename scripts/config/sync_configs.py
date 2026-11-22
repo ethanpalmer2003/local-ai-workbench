@@ -9,7 +9,7 @@ from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server
 from scripts.config.coding_agents.pi import packages
 from scripts.config.comfyui import workflow_overrides
-from scripts.config.trash import archive_path
+from scripts.config.trash import archive_path, trash_root
 
 NODE_NAME = "ltx-prompt-cache"
 NODE_SOURCE = "ltx_prompt_cache.py"
@@ -128,9 +128,7 @@ def sync_comfyui(apply: bool = False) -> list[Path]:
     changed = [*_sync_workflow_files(files, apply), *_retire_workflows(retired, apply)]
     if apply:
         _write_manifest(record, files)
-    print(
-        f"[OK] ComfyUI: {len(changed)} changed file(s). Existing replacements go to {(project_cfg.BASE_DIR / 'trash')}."
-    )
+    print(f"[OK] ComfyUI: {len(changed)} changed file(s). Existing replacements go to {trash_root()}.")
     return changed
 
 

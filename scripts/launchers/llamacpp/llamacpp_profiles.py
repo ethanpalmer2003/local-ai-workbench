@@ -113,3 +113,5 @@ LLAMACPP_BENCHMARK_PROFILES: dict[str, LLMProfile] = {
     "swift15-noreason": SWIFT15_NOREASON,
     "swift15-nofa": SWIFT15_NOFA,
 }
+# - one merge of the launcher's profiles and the benchmark-only ones: a benchmark addresses both by name
+ALL_LLAMACPP_PROFILES: dict[str, LLMProfile] = {**LLAMACPP_PROFILES, **LLAMACPP_BENCHMARK_PROFILES}

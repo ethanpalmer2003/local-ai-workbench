@@ -85,7 +85,7 @@ class ReportOutputs(unittest.TestCase):
             ):
                 paths.return_value.new_run.return_value = output
                 benchmark.main()
-            profiles = {**benchmark.LLAMACPP_PROFILES, **benchmark.LLAMACPP_BENCHMARK_PROFILES}
+            profiles = benchmark.ALL_LLAMACPP_PROFILES
             self.assertTrue(all(call.args[0] in profiles for call in run.call_args_list))
             self.assertEqual([call.args[0] for call in run.call_args_list], ["swift15", "swift15-mtp-notemplate"])
             self.assertEqual(len(list(output.artifacts.glob("*.csv"))), 1)

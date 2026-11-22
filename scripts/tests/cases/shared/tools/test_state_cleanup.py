@@ -100,10 +100,19 @@ class StateCleanupTests(unittest.TestCase):
             folder.mkdir()
             (folder / "payload.bin").write_bytes(b"x")
             created.append(folder)
-        count, _ = state_cleanup.prune_extractions(root, False, keep=2)
+        count, _ = state_cleanup.prune_extractions(root, False, keep=2, min_age_hours=0)
         self.assertEqual(count, 3)
         remaining = sorted(item.name for item in root.iterdir())
         self.assertEqual(remaining, ["_MEI3", "_MEI4"])
+
+    def test_a_young_extraction_is_never_pruned(self):
+        # - a running child owns its extraction, so the count bound cannot reach it
+        root = self.root()
+        for index in range(4):
+            (root / f"_MEI{index}").mkdir()
+        count, _ = state_cleanup.prune_extractions(root, False, keep=1)
+        self.assertEqual(count, 0)
+        self.assertEqual(len(list(root.iterdir())), 4)
 
 
 if __name__ == "__main__":

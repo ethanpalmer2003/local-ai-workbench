@@ -22,6 +22,8 @@ Work that cannot be settled without a live run: weights, a device, a server or a
 
 ### Unattended
 
+- [ ] Find why dead code survived the gate: `cleanup._report` was unused for a while without a finding, and the scoped scan is the suspect, since a definition left in an unchanged file goes unseen when its caller is deleted elsewhere and `verdict_cannot_change` then skips that file. Reproduce with a throwaway module and a caller in a second file, then decide whether the section scans the modules a change references. ~30 min
+
 - [ ] Add a comparison row for RustingStrata and LexiEngine. Neither is installed: RustingStrata needs a Vulkan 1.3 driver with subgroup 32 (or fixed 64), device-coherent memory for CPU-resident experts, and tunable `STRATA_VK_*` switches; LexiEngine ships as a USB image or a Linux/WSL install, so Windows means WSL2 with GPU passthrough. Both speak an OpenAI-compatible API, so the `--engine endpoint` arm of `benchmark_coding_engines` is the one to point at them; their caveats are in [the engine notes](../scripts/benchmarks/inference_engines/README.md). ~2 h
 - [ ] Make the latest HRX stack see the GPU: `llama-server` builds against `hrx-system` `b6ad3f37e` with the registered API-port patch, but the staged `hrx-info` reports `amdgpu: 0 devices` with the new and the installed `hsa-runtime64.dll`, so ROCr/HAL device enumeration is the next fault. Also restore `scripts/benchmarks/llamacpp/hrx/hrx_tensor_probe.cpp`, which is missing from the repository and currently replaced by the installed probe binary. [HRX limits](../scripts/config/llamacpp/HRX.md). ~2 h
 

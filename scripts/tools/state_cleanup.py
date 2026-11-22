@@ -1,6 +1,12 @@
-"""Prune regenerable state: orphaned temp extractions, aborted downloads, old logs."""
+"""Prune regenerable state: orphaned temp extractions, aborted downloads, old logs.
+
+Everything here is an artifact a run rewrites from a source of truth, so it is deleted rather than moved to
+trash. Evidence a tracked file cites, and anything moved out of a tree, belongs to
+[cleanup](cleanup.py), which moves it and owns deleting the trash.
+"""
 
 import argparse
+import os
 import shutil
 import time
 from pathlib import Path
@@ -10,19 +16,27 @@ from scripts.launchers import launcher_config as cfg
 
 
 def path_size(path: Path) -> int:
-    """Bytes a file or a folder tree holds; an unreadable entry counts as zero."""
-    if path.is_file():
-        try:
+    """Bytes a file or a folder tree holds, from one scandir pass; an unreadable entry counts as zero."""
+    try:
+        if path.is_file():
             return path.stat().st_size
-        except OSError:
-            return 0
+    except OSError:
+        return 0
     total = 0
-    for child in path.rglob("*"):
+    pending = [path]
+    while pending:
         try:
-            if child.is_file():
-                total += child.stat().st_size
+            entries = list(os.scandir(pending.pop()))
         except OSError:
             continue
+        for entry in entries:
+            try:
+                if entry.is_dir(follow_symlinks=False):
+                    pending.append(Path(entry.path))
+                elif entry.is_file(follow_symlinks=False):
+                    total += entry.stat().st_size
+            except OSError:
+                continue
     return total
 
 
@@ -35,13 +49,14 @@ def _remove(path: Path) -> None:
 
 # - the current update and the last working one are all a repair needs
 KEEP_UPDATES = 2
-# - the same shape for the gate history and the trash: the latest run and the one before it
+# - the same shape for the gate history: the latest run and the one before it
 KEEP_REVIEW_LOGS = 2
-KEEP_TRASH_DAYS = 2
 # - every other log area keeps the latest entry and the one before it
 KEEP_LOG_ENTRIES = 2
-# - a PyInstaller extraction lasts one launch, so the count bound matters more than its age
+# - a PyInstaller extraction lasts one launch, so the count bound matters more than its age; a young one is
+#   never touched because a running child may still own it
 KEEP_EXTRACTIONS = 20
+MIN_EXTRACTION_AGE_HOURS = 24
 # - handled by their own rules above
 SPECIAL_LOG_AREAS = frozenset({"shared/review", "shared/framework_updates"})
 
@@ -68,7 +83,7 @@ def prune(pattern: str, root: Path, cutoff: float, dry_run: bool, recursive: boo
     return count, freed
 
 
-def prune_update_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
+def prune_update_logs(dry_run: bool) -> tuple[int, int]:
     """Keep the two newest framework updates: the current one and the last working one."""
     root = project_cfg.component("shared").logs_dir / "framework_updates"
     if not root.is_dir():
@@ -86,14 +101,22 @@ def prune_update_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
     return count, freed
 
 
-def prune_extractions(root: Path, dry_run: bool, keep: int = KEEP_EXTRACTIONS) -> tuple[int, int]:
+def prune_extractions(
+    root: Path, dry_run: bool, keep: int = KEEP_EXTRACTIONS, min_age_hours: float = MIN_EXTRACTION_AGE_HOURS
+) -> tuple[int, int]:
     """Keep the newest few `_MEI*` extractions: one belongs to a launch, and the rest are debris."""
     if not root.is_dir():
         return 0, 0
     # - ties break by name: extraction folders created in one second keep a stable order
     entries = sorted(root.glob("_MEI*"), key=lambda path: (path.stat().st_mtime, path.name), reverse=True)
+    youngest = time.time() - min_age_hours * 3600
     count = freed = 0
     for path in entries[keep:]:
+        try:
+            if path.stat().st_mtime >= youngest:
+                continue
+        except OSError:
+            continue
         size = path_size(path)
         if not dry_run:
             try:
@@ -144,7 +167,7 @@ def prune_launch_cache(cutoff: float, dry_run: bool) -> tuple[int, int]:
     return count, freed
 
 
-def prune_review_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
+def prune_review_logs(dry_run: bool) -> tuple[int, int]:
     """Keep the latest gate runs and the one before them; older timings are history nobody reads."""
     root = project_cfg.LOGS_DIR / "shared" / "review"
     if not root.is_dir():
@@ -155,22 +178,6 @@ def prune_review_logs(cutoff: float, dry_run: bool) -> tuple[int, int]:
         size = path_size(path)
         if not dry_run:
             _remove(path)
-        count += 1
-        freed += size
-    return count, freed
-
-
-def prune_trash(dry_run: bool) -> tuple[int, int]:
-    """Keep the newest dated trash folders, so a cleanup run cannot leave the trash piling up."""
-    root = project_cfg.BASE_DIR / "trash"
-    if not root.is_dir():
-        return 0, 0
-    days = sorted(path for path in root.iterdir() if path.is_dir())
-    count = freed = 0
-    for path in days[:-KEEP_TRASH_DAYS]:
-        size = path_size(path)
-        if not dry_run:
-            shutil.rmtree(path, ignore_errors=True)
         count += 1
         freed += size
     return count, freed
@@ -231,20 +238,18 @@ def prune_generated(days: int, log_days: int, cache_days: int, dry_run: bool) ->
     cache_cutoff = now - cache_days * 86400
     downloads = project_cfg.STATE_DIR / "downloads"
     steps: tuple[tuple[str, tuple[int, float]], ...] = (
-        ("orphaned _MEI extractions", prune("_MEI*", cfg.LAUNCH.temp_dir, cutoff, dry_run)),
+        ("old run logs", prune("*.log", project_cfg.LOGS_DIR, log_cutoff, dry_run)),
         ("aborted download blobs", prune("*.incomplete", downloads, cutoff, dry_run)),
         ("stale download locks", prune("*.lock", downloads, cutoff, dry_run)),
-        ("old run logs", prune("*.log", project_cfg.LOGS_DIR, log_cutoff, dry_run)),
         # - the framework fills this model cache on demand, so its hashed folders are the unit and a
         #   re-download is the cost; the longer window keeps a repeated comparison warm
         ("old suite run folders", _prune_suite_runs(cutoff, dry_run)),
         ("old area logs", prune_log_areas(dry_run)),
-        ("old gate runs", prune_review_logs(cutoff, dry_run)),
+        ("old gate runs", prune_review_logs(dry_run)),
         ("old gate reports", prune_review_reports(dry_run)),
         ("old launch scratch entries", prune_launch_cache(cache_cutoff, dry_run)),
         ("surplus launch extractions", prune_extractions(cfg.LAUNCH.temp_dir, dry_run)),
-        ("old trash folders", prune_trash(dry_run)),
-        ("old framework updates", prune_update_logs(cutoff, dry_run)),
+        ("old framework updates", prune_update_logs(dry_run)),
         ("old AudioCpp support-model caches", prune("*", cfg.LAUNCH.temp_dir / "audiocpp-gguf", cache_cutoff, dry_run)),
     )
     return [f"{label}: {count} item(s), {freed / 1e6:.1f} MB" for label, (count, freed) in steps if count]

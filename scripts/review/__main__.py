@@ -503,6 +503,9 @@ def _prune_after_run() -> None:
     count, freed = cleanup.prune_outputs(dry_run=False)
     if count:
         print(f"[PRUNE] superseded run evidence: {count} item(s), {freed / 1e6:.1f} MB")
+    expired = cleanup.prune_trash()
+    if expired:
+        print(f"[PRUNE] trash older than {cleanup.TRASH_DAYS} days: {expired} folder(s)")
 
 
 def _package_summary(fast: bool) -> dict[str, int] | None:

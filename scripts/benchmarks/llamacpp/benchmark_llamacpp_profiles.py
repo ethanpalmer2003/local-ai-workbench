@@ -37,7 +37,7 @@ from scripts.benchmarks.shared.vram import snapshot_dict
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp import LlamaConfig
-from scripts.launchers.llamacpp.llamacpp_profiles import LLAMACPP_BENCHMARK_PROFILES, LLAMACPP_PROFILES
+from scripts.launchers.llamacpp.llamacpp_profiles import ALL_LLAMACPP_PROFILES
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
 from scripts.shared import consent
@@ -177,13 +177,10 @@ def run_profile(
 
     if launch_util.llama_server_running() or launch_util.port_listening(cfg.LLAMACPP_SERVICE.port):
         raise RuntimeError("Existing llama.cpp session/port retained; use a free test session")
-    # - benchmark profiles live in their own dict (not in the launcher's
-    #   LLAMACPP_PROFILES); merge so both are addressable by name
-    all_profiles = {**LLAMACPP_PROFILES, **LLAMACPP_BENCHMARK_PROFILES}
     config = LlamaConfig(
         profile_name,
         build_name=build_name,
-        profiles=all_profiles,
+        profiles=ALL_LLAMACPP_PROFILES,
         ini_overrides={"reasoning-effort": BENCHMARK_REASONING_EFFORT},
     )
     log_file = output.logs / f"llama-benchmark-{build_name or 'active'}-{profile_name}.log"
@@ -262,8 +259,7 @@ def run_profile(
 
 def profile_meta(profile_name: str, build_name: str | None) -> dict[str, str]:
     """Resolve a profile's model/ini/params for the CSV record."""
-    all_profiles = {**LLAMACPP_PROFILES, **LLAMACPP_BENCHMARK_PROFILES}
-    profile = all_profiles[profile_name]
+    profile = ALL_LLAMACPP_PROFILES[profile_name]
     params = "; ".join(f"{k}={v}" for k, v in sorted(profile.extra_args.items()))
     return {
         "build": build_name or cfg.llamacpp_build("coding"),
@@ -301,11 +297,12 @@ def overthink_profile(
     - Single request, no repeats, no ignore_eos: this is a behavior probe,
       not a speed benchmark
     """
-    all_profiles = {**LLAMACPP_PROFILES, **LLAMACPP_BENCHMARK_PROFILES}
+    if launch_util.llama_server_running() or launch_util.port_listening(cfg.LLAMACPP_SERVICE.port):
+        raise RuntimeError("Existing llama.cpp session/port retained; use a free test session")
     config = LlamaConfig(
         profile_name,
         build_name=build_name,
-        profiles=all_profiles,
+        profiles=ALL_LLAMACPP_PROFILES,
         ini_overrides={"reasoning-effort": BENCHMARK_REASONING_EFFORT},
     )
     log_file = output.logs / f"llama-overthink-{build_name or 'active'}-{profile_name}.log"
@@ -318,6 +315,7 @@ def overthink_profile(
         kill_ports=config.port,
         mode=cfg.ConsoleTerminalLaunchMode.MERGE,
         log_file=str(log_file),
+        env=config.build_env,
     )
 
     results: dict[str, dict[str, Any]] = {}
@@ -553,7 +551,7 @@ def main() -> None:
     parser.add_argument(
         "--profiles",
         nargs="+",
-        choices=sorted({**LLAMACPP_PROFILES, **LLAMACPP_BENCHMARK_PROFILES}),
+        choices=sorted(ALL_LLAMACPP_PROFILES),
         default=["swift15", "swift15-mtp-notemplate"],
         help="Profiles to benchmark (default: Swift 1.5 template A/B pair).",
     )

@@ -58,7 +58,7 @@ from scripts.tests.cases.review.checks.test_expression import ExpressionDepthTes
 from scripts.tests.cases.review.checks.test_folder_rule import FolderRuleTests, WorkspaceTotalTests
 from scripts.tests.cases.review.checks.test_handoff import BundleTests, FullRunTests, HandlerTests, RetentionTests
 from scripts.tests.cases.review.checks.test_large_files import LargeFileTests
-from scripts.tests.cases.review.checks.test_layout import PolicyTests
+from scripts.tests.cases.review.checks.test_layout import PolicyTests, TrashPathTests
 from scripts.tests.cases.review.checks.test_line_length import LimitsReportTests, LineLengthTests
 from scripts.tests.cases.review.checks.test_network_timeouts import NetworkTimeoutTests
 from scripts.tests.cases.review.checks.test_overlay_access import OverlayAccessTests
@@ -286,6 +286,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     YamlTableTests,
     LargeFileTests,
     PolicyTests,
+    TrashPathTests,
     BareAnyTests,
     LineLengthTests,
     LimitsReportTests,
