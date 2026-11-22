@@ -308,7 +308,8 @@ def review_request(records: list[FileRecord], ranked: int = 12) -> list[str]:
         "## What to do",
         "",
         "1. Read `HANDOFF.md`.",
-        "2. Read these files in full:",
+        "2. Read these files in full. The paths are relative to the repository root, so a reviewer holding the",
+        "   checkout opens them there; one without it needs their contents pasted in before the review starts:",
         "",
     ]
     lines.extend(f"- {record['path']}" for record in records[:ranked])
@@ -318,9 +319,10 @@ def review_request(records: list[FileRecord], ranked: int = 12) -> list[str]:
             "3. Review them the way you would review any codebase, from your own knowledge of design, naming,",
             "   error handling, data flow and testability. The ranking and metrics in the brief say where the weight",
             "   sits, not what to look for.",
-            "4. Where a judgment needs this project's own conventions, they are in `.agents/CODE.md`, document",
-            "   budgets in `.agents/NOTES-CONVENTIONS.md` and folder contracts in `.agents/FOLDERS.md`. Apply them;",
-            "   they are not the review's scope.",
+            "4. Where a judgment needs this project's own conventions and you have the repository, they are in",
+            "   `.agents/CODE.md`, document budgets in `.agents/NOTES-CONVENTIONS.md` and folder contracts in",
+            "   `.agents/FOLDERS.md`. Apply them; they are not the review's scope. Without the repository, judge by",
+            "   what the code itself shows and say when a convention is what you lack.",
             "5. `.agents/skills/code-review/SKILL.md` offers a reviewer role and an answer shape. Take it into",
             "   account rather than treat it as the whole rubric; your own judgment decides what matters.",
             "",
