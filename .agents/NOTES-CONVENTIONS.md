@@ -1,12 +1,12 @@
 # Markdown
 
-- A document's role decides its home and word cap, and the gate rejects a home the role forbids. `--roles` prints the counts. `notes/TODO.md` and `notes/OPEN-QUESTIONS.md` are the uncapped pages, because both grow between decisions rather than stating one.
+- A document's role decides its home and word cap, and the gate rejects a home the role forbids. `--roles` prints the counts. A list grows between decisions rather than stating one, so it has no cap: every running list, and `.agents/FAILURES.md` and `.agents/RESTRICTIONS.md`, whose rows are entries rather than prose.
 
 | Role | Home | Cap |
 | --- | --- | --- |
 | hub | every folder's `README.md` and `AGENTS.md`, repo root included | large, 700 |
 | agent rule | `.agents/`, including skills | medium, 500 |
-| running list | index and status pages under `notes/` and `scripts/tests/notes/`; the rules name them | long, 1000 |
+| running list | index and status pages under `notes/` and `scripts/tests/notes/`; the rules name them | none |
 | generated page | a page a tool writes; name starts `GENERATED-`, header names the command | long, 1000 |
 | note | `notes/`, except the running lists | medium, 500 |
 | review record | `notes/reviews/` | medium, 500 |

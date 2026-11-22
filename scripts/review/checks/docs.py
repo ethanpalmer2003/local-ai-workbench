@@ -16,9 +16,9 @@ from scripts.review.lists.sources import maintained_files
 
 # - three caps only; each document role picks one, so a new kind needs no new number
 WORD_TIERS = {"long": 1000, "large": 700, "medium": 500}
-# - the running list of work in progress and the list of undecided questions both grow between decisions,
-#   so their length is not a finding
-UNCAPPED = frozenset({"notes/TODO.md", "notes/OPEN-QUESTIONS.md"})
+# - a list grows between decisions rather than stating one, so its length is not a finding: every
+#   running list is uncapped by role, and these two agent documents are tables of entries rather than prose
+UNCAPPED = frozenset({".agents/FAILURES.md", ".agents/RESTRICTIONS.md"})
 ROLE_TIERS = {
     "hub": "large",
     "agent rule": "medium",
@@ -46,9 +46,9 @@ UNTRACKED_PARTS = frozenset({"output", "old", "retired", "trash"})
 RUNNING_LISTS = frozenset(
     {"TODO.md", "OPEN-QUESTIONS.md", "OPEN-QUESTIONS-RESOLVED.md", "UPSTREAM-INDEX.md", "GROUPINGS-INDEX.md"}
 )
-# - indexes that grow with every decision get the long cap; they are read for one row, not one rule
+# - indexes that grow with every decision are lists and take no cap; they are read for one row, not one rule
 RUNNING_LIST_PATHS = (
-    r"notes/(?:TODO|OPEN-QUESTIONS|OPEN-QUESTIONS-RESOLVED|UPSTREAM-INDEX|GROUPINGS-INDEX|NATIVE-VALIDATION|ONBOARDING)\.md",
+    r"notes/(?:TODO|OPEN-QUESTIONS|OPEN-QUESTIONS-RESOLVED|UPSTREAM-INDEX|GROUPINGS-INDEX|NATIVE-VALIDATION)\.md",
     r"scripts/tests/notes/(?:STATUS-INDEX|STATUS-EVIDENCE-INDEX|OUTCOMES|ESTIMATES)\.md",
 )
 # - a generated page says so in its name and in its first lines: the name warns a browser, the header the reader
@@ -105,8 +105,8 @@ def document_role(relative: str) -> str | None:
 
 
 def markdown_budget(relative: str) -> int | None:
-    """One of three caps by role, or None for a running list that is deliberately uncapped."""
-    if relative in UNCAPPED:
+    """One of three caps by role, or None for a list, which is deliberately uncapped."""
+    if relative in UNCAPPED or document_role(relative) == "running list":
         return None
     return WORD_TIERS[ROLE_TIERS.get(document_role(relative) or "", "medium")]
 

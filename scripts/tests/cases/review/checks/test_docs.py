@@ -43,10 +43,22 @@ class RootDocumentTests(unittest.TestCase):
 
 
 class RoleTests(unittest.TestCase):
-    def test_the_lists_that_grow_between_decisions_are_uncapped(self):
-        self.assertIsNone(docs.markdown_budget("notes/TODO.md"))
-        self.assertIsNone(docs.markdown_budget("notes/OPEN-QUESTIONS.md"))
+    def test_lists_are_uncapped_and_prose_keeps_its_cap(self):
+        for relative in (
+            "notes/TODO.md",
+            "notes/OPEN-QUESTIONS.md",
+            "notes/OPEN-QUESTIONS-RESOLVED.md",
+            "notes/UPSTREAM-INDEX.md",
+            "scripts/tests/notes/STATUS-INDEX.md",
+            "scripts/tests/notes/OUTCOMES.md",
+            ".agents/FAILURES.md",
+            ".agents/RESTRICTIONS.md",
+        ):
+            with self.subTest(relative=relative):
+                self.assertIsNone(docs.markdown_budget(relative))
         self.assertEqual(docs.markdown_budget("README.md"), 700)
+        # - an agent rule that is prose still keeps the medium cap
+        self.assertEqual(docs.markdown_budget(".agents/CODE.md"), 500)
 
     def test_known_homes_claim_their_role(self):
         cases = {
@@ -56,7 +68,7 @@ class RoleTests(unittest.TestCase):
             ".agents/CODE.md": "agent rule",
             "notes/TODO.md": "running list",
             "notes/reviews/STRUCTURE-REVIEW.md": "review record",
-            "notes/ONBOARDING.md": "running list",
+            "notes/ONBOARDING.md": "note",
             "scripts/tests/notes/STATUS-INDEX.md": "running list",
             "scripts/tests/notes/GENERATED-CAPABILITY-MATRIX.md": "generated page",
             "scripts/config/notes/GENERATED-LANGUAGE-MATRIX.md": "generated page",
@@ -83,11 +95,10 @@ class RoleTests(unittest.TestCase):
         self.assertEqual(len(issues), 1, issues)
         self.assertIn("no document role", issues[0])
 
-    def test_four_caps_are_assigned_by_role(self):
+    def test_the_prose_roles_carry_a_cap(self):
         cases = {
             "AGENTS.md": 700,
             "scripts/config/comfyui/README.md": 700,
-            "notes/OPEN-QUESTIONS-RESOLVED.md": 1000,
             "scripts/tests/notes/GENERATED-CAPABILITY-MATRIX.md": 1000,
             "notes/reviews/STRUCTURE-REVIEW.md": 500,
             "scripts/config/comfyui/TUNING.md": 500,
