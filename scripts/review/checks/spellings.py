@@ -152,10 +152,8 @@ VARIANTS: dict[str, str] = {
     "worshipped": "worshiped",
 }
 PATTERN = re.compile(r"\b(" + "|".join(sorted(VARIANTS, key=len, reverse=True)) + r")\b", re.IGNORECASE)
-CORPUS_FILE = "scripts/config/benchmarks/language_corpus.json"
 # - the checker and its fixtures quote British forms on purpose
 SELF_REFERENTIAL = {"scripts/review/checks/spellings.py", "scripts/tests/cases/review/checks/test_spellings.py"}
-REFERENCE_VALUE = re.compile(r'("reference"\s*:\s*")([^"\\]*(?:\\.[^"\\]*)*)(")')
 
 
 def american(match: re.Match[str]) -> str:
@@ -169,17 +167,10 @@ def american(match: re.Match[str]) -> str:
     return replacement
 
 
-def masked(text: str, path: str) -> str:
-    """Quoted corpus references are third-party text and stay as written."""
-    if path != CORPUS_FILE:
-        return text
-    return REFERENCE_VALUE.sub(lambda match: match.group(1) + "x" * len(match.group(2)) + match.group(3), text)
-
-
 def scan_text(path: str, text: str) -> list[tuple[int, str, str]]:
     """Line, British form and American form for every variant this file would publish."""
     findings = []
-    for number, line in enumerate(masked(text, path).splitlines(), 1):
+    for number, line in enumerate(text_files.mask_corpus_references(path, text).splitlines(), 1):
         findings.extend((number, match.group(0), american(match)) for match in PATTERN.finditer(line))
     return findings
 

@@ -44,16 +44,6 @@ CONTROL = {
 }
 SUSPECT = BANNED | CONTROL
 SUSPECT_PATTERN = re.compile("|".join(re.escape(character) for character in SUSPECT))
-# - escaped characters stay inside the value, so the mask keeps the exact width of what it hides
-REFERENCE_VALUE = re.compile(r'("reference"\s*:\s*")([^"\\]*(?:\\.[^"\\]*)*)(")')
-REFERENCE_FILE = "scripts/config/benchmarks/language_corpus.json"
-
-
-def masked(text: str, path: str) -> str:
-    """The text with quoted corpus references blanked, keeping line and column numbering exact."""
-    if path != REFERENCE_FILE:
-        return text
-    return REFERENCE_VALUE.sub(lambda match: match.group(1) + "x" * len(match.group(2)) + match.group(3), text)
 
 
 def scan_text(path: str, text: str) -> list[tuple[int, str]]:
@@ -63,7 +53,7 @@ def scan_text(path: str, text: str) -> list[tuple[int, str]]:
     feed, which is how a corrupted word would vanish from the scan instead of being reported.
     """
     findings = []
-    for number, line in enumerate(masked(text, path).split("\n"), 1):
+    for number, line in enumerate(text_files.mask_corpus_references(path, text).split("\n"), 1):
         findings.extend((number, SUSPECT[match.group(0)]) for match in SUSPECT_PATTERN.finditer(line))
     return findings
 

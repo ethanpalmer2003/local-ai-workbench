@@ -1,6 +1,7 @@
 """One vocabulary for the text files the review checks read; a new suffix is added here."""
 
 import argparse
+import re
 import subprocess
 from pathlib import Path
 
@@ -25,6 +26,16 @@ TEXT_SUFFIXES = {
     ".yaml",
     ".yml",
 }
+# - the pinned corpus quotes third-party transcript text verbatim, so its references are data, not our prose
+CORPUS_FILE = "scripts/config/benchmarks/language_corpus.json"
+REFERENCE_VALUE = re.compile(r'("reference"\s*:\s*")([^"\\]*(?:\\.[^"\\]*)*)(")')
+
+
+def mask_corpus_references(path: str, text: str) -> str:
+    """Blank quoted corpus references, keeping every line and column exactly where it was."""
+    if path != CORPUS_FILE:
+        return text
+    return REFERENCE_VALUE.sub(lambda match: match.group(1) + "x" * len(match.group(2)) + match.group(3), text)
 
 
 def is_text(path: str) -> bool:

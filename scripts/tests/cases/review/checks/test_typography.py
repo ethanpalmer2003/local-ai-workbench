@@ -44,15 +44,15 @@ class ScanTests(unittest.TestCase):
 
     def test_quoted_corpus_references_are_masked_and_the_rest_of_the_file_is_not(self):
         text = '{"clips": [{"reference": "a \u2014 b"}],\n "note": "kept \u2013 scan"\n}'
-        self.assertEqual(typography.scan_text(typography.REFERENCE_FILE, text), [(2, "en-dash")])
+        self.assertEqual(typography.scan_text(text_files.CORPUS_FILE, text), [(2, "en-dash")])
 
     def test_an_escaped_reference_still_masks_cleanly(self):
         text = '{"reference": "quote \\" \u2014 inside"}\n"other": "\u2014"\n'
-        self.assertEqual(typography.scan_text(typography.REFERENCE_FILE, text), [(2, "em-dash")])
+        self.assertEqual(typography.scan_text(text_files.CORPUS_FILE, text), [(2, "em-dash")])
 
     def test_masking_keeps_the_width_of_the_value_it_hides(self):
         line = '{"reference": "\u2014\u2014\u2026"}'
-        self.assertEqual(len(typography.masked(line, typography.REFERENCE_FILE)), len(line))
+        self.assertEqual(len(text_files.mask_corpus_references(text_files.CORPUS_FILE, line)), len(line))
 
     def test_a_spaced_dash_between_words_is_reported_from_a_docstring(self):
         text = 'def f():\n    """Keep this - never that."""\n'
