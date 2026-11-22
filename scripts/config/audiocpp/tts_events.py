@@ -35,5 +35,15 @@ def events() -> tuple[VocalEvent, ...]:
 
 @cache
 def tags() -> frozenset[str]:
-    """Every accepted spelling, parenthesized exactly as the model receives it."""
+    """Every accepted spelling, parenthesized exactly as a caller may send it."""
     return frozenset(tag for event in events() for tag in event.tags)
+
+
+@cache
+def tag_map() -> dict[str, str]:
+    """Each accepted spelling to the vendor's tag for that event.
+
+    The first tag in an event is the vendor's own spelling, so every alternate form the model card shows
+    resolves to it and the model always receives the documented tag.
+    """
+    return {tag.lower(): event.tags[0] for event in events() for tag in event.tags}

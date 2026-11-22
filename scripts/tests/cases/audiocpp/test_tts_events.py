@@ -43,20 +43,37 @@ class BreezeVocalAdapterTests(unittest.TestCase):
     def test_the_adapter_reads_the_file_rather_than_its_own_list(self):
         self.assertEqual(tts_text_processing.BREEZE_VOCAL_EVENTS.allowed_vocal_events, tts_events.tags())
 
-    def test_a_documented_event_passes_through(self):
+    def test_a_documented_event_is_sent_as_the_vendors_tag(self):
         self.assertEqual(tts_text_processing.filter_breeze_vocal_events("(laughs) hello"), "(laughs) hello")
 
-    def test_a_bare_event_keeps_the_spelling_the_caller_typed(self):
-        # - both the vendor's tag and the model card's plain form are sent as written, never rewritten
-        for tag in ("(laugh)", "(laughs)", "(giggles)", "(clears throat)", "(breathing heavily)", "(pause)"):
-            with self.subTest(tag=tag):
-                self.assertEqual(tts_text_processing.filter_breeze_vocal_events(f"{tag} hi"), f"{tag} hi")
+    def test_an_alternate_spelling_resolves_to_the_vendors_tag(self):
+        # - singular to plural, plural to singular, and the model card's plain forms all normalize
+        cases = {
+            "(laugh)": "(laughs)",
+            "(giggles)": "(giggles)",
+            "(clear throat)": "(clears throat)",
+            "(clears throat)": "(clears throat)",
+            "(sing)": "(singing)",
+            "(breathing heavily)": "(breathing heavily)",
+            "(pause)": "(pause)",
+        }
+        for sent, expected in cases.items():
+            with self.subTest(sent=sent):
+                self.assertEqual(tts_text_processing.filter_breeze_vocal_events(f"{sent} hi"), f"{expected} hi")
 
     def test_an_undocumented_parenthetical_is_unwrapped(self):
         self.assertEqual(tts_text_processing.filter_breeze_vocal_events("(waves hello)"), "waves hello")
 
-    def test_an_event_with_extra_words_is_trimmed_to_the_event(self):
+    def test_an_event_with_extra_words_is_trimmed_to_the_vendors_tag(self):
         self.assertEqual(tts_text_processing.filter_breeze_vocal_events("(giggles softly)"), "(giggles)")
+        self.assertEqual(tts_text_processing.filter_breeze_vocal_events("(giggle softly)"), "(giggles)")
+
+    def test_the_vendors_tag_comes_first_in_each_event(self):
+        # - the loader resolves alternates to tags[0], so it must be the documented spelling
+        cases = {"laugh": "(laughs)", "clear throat": "(clears throat)", "sing": "(singing)"}
+        for event in tts_events.events():
+            if event.canonical in cases:
+                self.assertEqual(event.tags[0], cases[event.canonical], event.canonical)
 
     def test_the_path_points_at_the_tracked_file(self):
         self.assertTrue(Path(tts_events.EVENTS_PATH).is_file())

@@ -295,15 +295,15 @@ class ProxyHTTP(unittest.TestCase):
                         {"input": "(giggle softly) Hello. (waves hello)", "stream": streaming}
                     )
                     assert result is not None
-                    expected = "(giggle) Hello. waves hello" if enabled else "(giggle softly) Hello. (waves hello)"
+                    expected = "(giggles) Hello. waves hello" if enabled else "(giggle softly) Hello. (waves hello)"
                     self.assertEqual(result["input"], expected)
 
     def test_vocal_parenthetical_modes_preserve_known_events(self):
-        # - the vendor's exact English tag is the plural form, so a known event keeps the spelling it was sent in
+        # - a known event is normalized to the vendor's tag, and other parentheticals follow the mode
         for mode, expected in (
-            (tts_text_processing.BreezeParenMode.KEEP, "(laugh) (giggles) (waves hello)"),
-            (tts_text_processing.BreezeParenMode.UNWRAP, "(laugh) (giggles) waves hello"),
-            (tts_text_processing.BreezeParenMode.STRIP, "(laugh) (giggles) "),
+            (tts_text_processing.BreezeParenMode.KEEP, "(laughs) (giggles) (waves hello)"),
+            (tts_text_processing.BreezeParenMode.UNWRAP, "(laughs) (giggles) waves hello"),
+            (tts_text_processing.BreezeParenMode.STRIP, "(laughs) (giggles) "),
         ):
             settings = replace(tts_text_processing.BREEZE_VOCAL_EVENTS, parentheticals=mode)
             with patch.object(tts_text_processing, "BREEZE_VOCAL_EVENTS", settings):

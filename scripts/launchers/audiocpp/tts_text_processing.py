@@ -100,30 +100,30 @@ class BreezeVocalEventSettings:
 BREEZE_VOCAL_EVENTS = BreezeVocalEventSettings()
 
 
-def _trim_to_vocal_event(content: str) -> str | None:
-    """Reduce a parenthetical to its bare vocal event when the text contains
-    one plus extra words/plural:
-    - "giggle softly" -> "(giggle)"
-    - "giggles" -> "(giggle)"
-    - None if no single event fills the parenthetical"""
+def _vendor_vocal_event(content: str) -> str | None:
+    """The vendor's tag for a parenthetical that names a vocal event, however it was spelled.
+
+    - a known event, singular or plural: "giggle" and "giggles" both become "(giggles)"
+    - one plus extra words: "giggle softly" and "giggles softly" also become "(giggles)"
+    - None when no event fills the parenthetical, so the caller's parenthetical rule decides
+    """
     normalized = content.strip().lower()
-    # longest event first, so "clears throat softly" prefers
-    # "clears throat" over a partial "clears"
-    for event in sorted(BREEZE_VOCAL_EVENTS.allowed_vocal_events, key=len, reverse=True):
-        base = event.lower().strip().strip("()")  # events carry their own parens
-        if normalized == base:
-            return None  # already the bare event, so keep original
-        if normalized == base + "s" or normalized.startswith(base + " ") or normalized.startswith(base + "s "):
-            return f"({base})"
+    events = tts_events.tag_map()
+    if f"({normalized})" in events:
+        return events[f"({normalized})"]
+    # longest event first, so "clears throat softly" prefers "clears throat" over a partial "clears"
+    for spelling in sorted(events, key=len, reverse=True):
+        base = spelling.strip("()")
+        if normalized.startswith(base + " ") or normalized.startswith(base + "s "):
+            return events[spelling]
     return None
 
 
 def filter_breeze_vocal_events(text: str) -> str:
     """
-    - Vocal-event tags like (laugh) always pass through
-    - trim_vocal_events: parenthetical containing a vocal event plus extra
-      words/plural is reduced to the bare event ("(giggle softly)" ->
-      "(giggle)"); applies in all parentheticals modes
+    - A known event is sent as the vendor's tag: "(giggle)" and "(giggles)" both become "(giggles)"
+    - trim_vocal_events: an event plus extra words or a plural is reduced to that tag
+      ("(giggle softly)" -> "(giggles)"); applies in all parentheticals modes
     - Other parentheticals follow BREEZE_VOCAL_EVENTS.parentheticals:
       stripped entirely, unwrapped (parens removed, text kept), or left untouched
     """
@@ -132,11 +132,11 @@ def filter_breeze_vocal_events(text: str) -> str:
         return text
 
     def handle(match: re.Match[str]) -> str:
-        if settings.trim_vocal_events:
-            trimmed = _trim_to_vocal_event(match.group(1))
-            if trimmed:
-                return trimmed
-        if match.group(0).lower().strip() in settings.allowed_vocal_events:
+        spelling = match.group(0).lower().strip()
+        event = _vendor_vocal_event(match.group(1))
+        if event is not None and (settings.trim_vocal_events or spelling in settings.allowed_vocal_events):
+            return event
+        if spelling in settings.allowed_vocal_events:
             return match.group(0)
         if settings.parentheticals == BreezeParenMode.KEEP:
             return match.group(0)
