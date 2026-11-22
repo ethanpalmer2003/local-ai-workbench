@@ -14,24 +14,6 @@ make them comparable:
 - Provenance stored beside each measurement.
 - Results whose inputs changed are marked stale rather than compared.
 
-## Examples
-
-Paths are relative to the checkout root.
-
-```powershell
-# Coding: llama.cpp plus the Pi agent client
-bat/launch_llamacpp_pi_agent.bat
-
-# Language practice: chat, speech and recognition behind one gateway
-bat/browser/launch_language_kobold.bat
-
-# Compare the practice stack with Lemonade on chat, speech and recognition
-bat/benchmarks/benchmark_framework_compare.bat
-
-# ComfyUI with its tuned attention and VRAM settings
-bat/browser/comfyui/launch_comfyui.bat
-```
-
 ## Comparing and tuning
 
 Frameworks are measured alone and in combined workflows that replicate real use: a multilingual LLM
@@ -47,9 +29,10 @@ SD.cpp. Both jobs follow the same evidence rule.
 ## Evidence
 
 A long run records the workspace and framework commits, the digest of the script that produced it,
-weight identity, effective settings, corpus revision and manifest hash. Recognition is scored on a pinned multilingual corpus with word and
-character error rates, and synthesized speech is checked against the requested text. Methods are in
-[scripts/benchmarks/README.md](scripts/benchmarks/README.md).
+weight identity, effective settings, corpus revision and manifest hash. Recognition is scored with word and
+character error rates against a pinned corpus holding twenty clips each in English, Spanish, French and
+Japanese; only the English clips have been scored so far. Synthesized speech is checked against the requested
+text. Methods are in [scripts/benchmarks/README.md](scripts/benchmarks/README.md).
 
 ## In progress
 
