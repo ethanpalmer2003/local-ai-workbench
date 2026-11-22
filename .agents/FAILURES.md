@@ -8,6 +8,7 @@
 | `Missing file specification after redirection operator` | A bash heredoc (`<<'PY'`) passed to PowerShell | Write the scratch script under `scripts/state/temp/` and run it, or use the file-edit tool |
 | A file gains a literal `\r\n`, loses its line endings or fails to compile after a rewrite | Text replacement through PowerShell quoting, plus `Set-Content` rewriting CRLF | Rewrite with the edit tool or a Python script, then read `git diff` for that file |
 | A commit carries app-written state (logs, run scripts, connection configs) | `git add -A` stages whatever the tree contains | Stage explicit paths, and check `git status --short` before the commit |
+| A committed file imports a module the repository does not have | `git add -u` stages modified paths only, so a new file stayed untracked while the edit that names it was staged | Add the new path explicitly and confirm `git status --short` lists nothing untracked |
 | A push is rejected for a file past the host limit | An exported bundle or patch was committed unchecked | The gate's `large files` section refuses a tracked file over [the limit](../scripts/review/checks/layout.py) before the push |
 | A list keeps an entry that was meant to be removed | A line filter that silently matches nothing | Grep the text after the removal; the gate cannot know the intent |
 | A validation stage is stale the moment its run ends | The recorded fingerprint was captured before a stage updated what a later stage reads | `stage_runner.run(fingerprint_after=...)` re-reads each stage's inputs after it runs |
