@@ -19,11 +19,18 @@ from scripts.launchers.asr.shared.streaming import live
 from scripts.launchers.asr.shared.streaming.segment_stream import SegmentStream
 from scripts.launchers.audiocpp import asr, asr_qwen3
 from scripts.launchers.koboldcpp import kobold, kobold_lite
+from scripts.launchers.runtime import gpu_selection
 from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.process_fixtures import running_process
 
 
 class PracticeTests(unittest.TestCase):
+    def setUp(self) -> None:
+        """Model-free command building uses a fixed device id instead of a native probe."""
+        patcher = patch.object(gpu_selection, "discrete_device_id", return_value="Vulkan0")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_chat_model_commands_use_allowlisted_model_and_refuse_browser_paths(self):
         from scripts.config import models
         from scripts.launchers.llamacpp import chat_models, language_practice

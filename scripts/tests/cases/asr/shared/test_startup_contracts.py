@@ -10,6 +10,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import whispercpp as whisper
 from scripts.launchers.asr.llamacpp import gemma_audio, qwen3_asr
 from scripts.launchers.asr.shared.resident_profiles import profiles
+from scripts.launchers.runtime import gpu_selection
 from scripts.tests.shared.backend_fixtures import startup_fixture
 from scripts.tests.shared.paths import CasePaths
 
@@ -18,6 +19,12 @@ ADAPTERS = ((whisper, "WHISPERCPP_ASR"), (qwen3_asr, "QWEN3_ASR"), (gemma_audio,
 
 
 class StartupContracts(unittest.TestCase):
+    def setUp(self) -> None:
+        """Model-free command building uses a fixed device id instead of a native probe."""
+        patcher = patch.object(gpu_selection, "discrete_device_id", return_value="Vulkan0")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_matching_healthy_sessions_are_reused(self):
         with CasePaths(__file__).temporary_directory() as folder:
             for adapter, key in ADAPTERS:

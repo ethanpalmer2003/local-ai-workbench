@@ -15,8 +15,10 @@ from pathlib import Path
 from scripts.config.shared import hardware
 
 LIST_TIMEOUT_S = 120
-# - llama.cpp: `  Vulkan0: AMD Radeon RX 7800 XT (16368 MiB, 15408 MiB free)`
+# - llama.cpp on Vulkan: `  Vulkan0: AMD Radeon RX 7800 XT (16368 MiB, 15408 MiB free)`
 LLAMA_DEVICE = re.compile(r"^\s+(Vulkan\d+): (.+?) \(\d+ MiB", re.MULTILINE)
+# - llama.cpp on ROCm/HIP: `  ROCm0: AMD Radeon RX 7800 XT (16368 MiB, 16222 MiB free)`
+HIP_DEVICE = re.compile(r"^\s+(ROCm\d+): (.+?) \(\d+ MiB", re.MULTILINE)
 # - sd.cpp: `Vulkan0\tAMD Radeon RX 7800 XT`, printed after its `ggml_vulkan: Found n devices` block
 SD_DEVICE = re.compile(r"^(Vulkan\d+)\t(.+?)\s*$", re.MULTILINE)
 # - audio.cpp: `Vulkan:0 "AMD Radeon RX 7800 XT" [GPU]`
@@ -32,20 +34,21 @@ class Device:
     index: int
 
 
+def _device_index(device_id: str) -> int:
+    """The number in a device id: `Vulkan0` and `ROCm0` both mean position 0."""
+    return int("".join(character for character in device_id if character.isdigit()))
+
+
 def devices(text: str) -> list[Device]:
-    """Every Vulkan adapter a listing names, in the engine's own order."""
-    listed = [
-        Device(match.group(1), match.group(2).strip(), int(match.group(1)[len("Vulkan") :]))
-        for match in LLAMA_DEVICE.finditer(text)
-    ]
-    if not listed:
+    """Every GPU adapter a listing names, in the engine's own order."""
+    for pattern in (LLAMA_DEVICE, HIP_DEVICE, SD_DEVICE):
         listed = [
-            Device(match.group(1), match.group(2).strip(), int(match.group(1)[len("Vulkan") :]))
-            for match in SD_DEVICE.finditer(text)
+            Device(match.group(1), match.group(2).strip(), _device_index(match.group(1)))
+            for match in pattern.finditer(text)
         ]
-    if not listed:
-        listed = [Device(f"Vulkan{index}", name.strip(), int(index)) for index, name in AUDIO_DEVICE.findall(text)]
-    return listed
+        if listed:
+            return listed
+    return [Device(f"Vulkan{index}", name.strip(), int(index)) for index, name in AUDIO_DEVICE.findall(text)]
 
 
 def discrete_from_listing(text: str) -> Device:
@@ -79,8 +82,8 @@ def device_for_binary(binary: Path) -> Device:
     return discrete_from_listing(_listing(binary))
 
 
-def discrete_vulkan_device(binary: Path) -> str:
-    """The llama.cpp device id for the tracked discrete adapter."""
+def discrete_device_id(binary: Path) -> str:
+    """The device id (VulkanN or ROCmN) for the tracked discrete adapter."""
     return device_for_binary(binary).id
 
 

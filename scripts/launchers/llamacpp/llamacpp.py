@@ -321,7 +321,7 @@ def launch(
     #   blocker that keeps an accidental iGPU run from passing as a GPU benchmark. Resolved here, not in
     #   build_cmd, so describing a command stays side-effect free
     if (conf.build_dir / "ggml-vulkan.dll").is_file():
-        cmd += build_cli_args({"--device": gpu_selection.discrete_vulkan_device(conf.exe)})
+        cmd += build_cli_args({"--device": gpu_selection.discrete_device_id(conf.exe)})
     port = conf.port
     startup_marker = monitor.log_file.with_suffix(".ready")
     terminal_cmd = [

@@ -13,6 +13,7 @@ from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.config import models as model_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers.asr.shared.resident_profiles import build_server_command, profiles
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.shared.native_abi.cabi import structures
 from scripts.launchers.shared.native_abi.native_library import NativeLibrary
 from scripts.launchers.shared.services import native, process
@@ -144,6 +145,12 @@ class ReadinessRouteTests(unittest.TestCase):
 
 
 class SharedRuntimeTests(unittest.TestCase):
+    def setUp(self) -> None:
+        """Model-free command building uses a fixed device id instead of a native probe."""
+        patcher = patch.object(gpu_selection, "discrete_device_id", return_value="Vulkan0")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_python_redirector_resolves_only_its_owned_module_worker(self):
         child = inspected_process(pid=11, parent=10, command=["python", "-m", "owned.module"])
         root = inspected_process(pid=10, parent=1, command=["python", "-m", "owned.module"], children=[child])

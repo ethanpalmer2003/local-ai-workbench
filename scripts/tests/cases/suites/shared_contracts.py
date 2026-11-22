@@ -176,7 +176,7 @@ class SharedContracts(unittest.TestCase):
             patch.object(llamacpp, "launch_process", return_value=process),
             patch.object(llamacpp, "LlamaMonitor") as monitor,
             patch.object(llamacpp, "kill_process_tree") as kill,
-            patch.object(gpu_selection, "discrete_vulkan_device", return_value="Vulkan0"),
+            patch.object(gpu_selection, "discrete_device_id", return_value="Vulkan0"),
         ):
             monitor.return_value.log_file = Path(folder) / "server.log"
             monitor.return_value.wait_ready.return_value = False

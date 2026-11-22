@@ -13,10 +13,17 @@ from scripts.launchers.asr import selector as transcription
 from scripts.launchers.asr.llamacpp import gemma_audio, llama_audio
 from scripts.launchers.asr.llamacpp import qwen3_asr as qwen_asr
 from scripts.launchers.koboldcpp import kobold, kobold_lite
+from scripts.launchers.runtime import gpu_selection
 from scripts.tests.shared.http_fixtures import json_response
 
 
 class QwenAsrProfiles(unittest.TestCase):
+    def setUp(self) -> None:
+        """Model-free command building uses a fixed device id instead of a native probe."""
+        patcher = patch.object(gpu_selection, "discrete_device_id", return_value="Vulkan0")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_alternative_selects_separate_model_projector_and_disables_embedded_whisper(self):
         with patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", cfg.AsrStartupEngine.QWEN3_ASR):
             self.assertTrue(transcription.external(cfg.KOBOLDCPP_SERVICE.transcription_engine))

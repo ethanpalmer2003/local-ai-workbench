@@ -6,6 +6,7 @@ from typing import Any
 
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.shared.services import native
 
 COMPONENT_KEY = "asr/llamacpp"
@@ -20,12 +21,17 @@ class LlamaAudioBackend:
         *,
         alias: str,
         label: str,
-        device: str,
     ) -> None:
         self.settings = settings
         self.alias = alias
         self.label = label
-        self.device = device
+        self._device: str | None = None
+
+    def resolved_device(self) -> str:
+        """The device id for the tracked adapter, resolved once from this binary's own listing."""
+        if self._device is None:
+            self._device = gpu_selection.discrete_device_id(self.settings.exe)
+        return self._device
 
     def url(self) -> str:
         return native.service_url(self.settings.port)
@@ -48,7 +54,7 @@ class LlamaAudioBackend:
             "--alias",
             self.alias,
             "--device",
-            self.device,
+            self.resolved_device(),
             "-ngl",
             "999",
             "-fa",

@@ -247,7 +247,6 @@ PARAKEETCPP_ASR = ParakeetcppAsrStartupRequestSettings()
 @dataclass
 class Qwen3AsrStartupRequestSettings:
     build: str = "vulkan"
-    device: str = "Vulkan0"
     model: Path = model_cfg.path("asr/llamacpp/qwen3-asr-1.7b-q8_0")
     mmproj: Path = model_cfg.path("asr/llamacpp/qwen3-asr-1.7b-mmproj-q8_0")
     port: int = 8891

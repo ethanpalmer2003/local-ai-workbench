@@ -115,7 +115,7 @@ class LaunchCommands(unittest.TestCase):
             patch.object(llamacpp, "LlamaMonitor", autospec=True) as monitor,
             patch.object(llamacpp, "trigger_preload", autospec=True) as preload,
             patch.object(llamacpp, "kill_process_tree"),
-            patch.object(gpu_selection, "discrete_vulkan_device", return_value="Vulkan0"),
+            patch.object(gpu_selection, "discrete_device_id", return_value="Vulkan0"),
         ):
             monitor.return_value.log_file = CasePaths(__file__).new_run().temp / "warmup-regression-unused.log"
             monitor.return_value.wait_ready.return_value = True

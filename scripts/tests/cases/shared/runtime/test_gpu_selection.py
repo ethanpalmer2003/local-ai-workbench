@@ -25,6 +25,11 @@ AUDIO_LISTING = (
     'Vulkan:1 "AMD Radeon(TM) Graphics" [IGPU]\n'
     'CPU:0 "AMD Ryzen 5 7600 6-Core Processor" [CPU]\n'
 )
+ROCM_LISTING = (
+    "Available devices:\n"
+    "  ROCm0: AMD Radeon RX 7800 XT (16368 MiB, 16222 MiB free)\n"
+    "  ROCm1: AMD Radeon(TM) Graphics (12448 MiB, 12235 MiB free)\n"
+)
 
 
 def _listing(text: str = LISTING, code: int = 0) -> subprocess.CompletedProcess[str]:
@@ -36,7 +41,7 @@ def _listing(text: str = LISTING, code: int = 0) -> subprocess.CompletedProcess[
 class GpuSelectionTests(unittest.TestCase):
     def test_the_discrete_adapter_is_the_listed_device(self):
         with patch.object(gpu_selection.subprocess, "run", return_value=_listing()):
-            self.assertEqual(gpu_selection.discrete_vulkan_device(Path("llama-server.exe")), "Vulkan0")
+            self.assertEqual(gpu_selection.discrete_device_id(Path("llama-server.exe")), "Vulkan0")
 
     def test_a_missing_discrete_adapter_is_an_error(self):
         listing = "Available devices:\n  Vulkan0: AMD Radeon(TM) Graphics (16171 MiB, 15362 MiB free)\n"
@@ -44,14 +49,14 @@ class GpuSelectionTests(unittest.TestCase):
             patch.object(gpu_selection.subprocess, "run", return_value=_listing(listing)),
             self.assertRaises(RuntimeError),
         ):
-            gpu_selection.discrete_vulkan_device(Path("llama-server.exe"))
+            gpu_selection.discrete_device_id(Path("llama-server.exe"))
 
     def test_a_failed_listing_is_an_error(self):
         with (
             patch.object(gpu_selection.subprocess, "run", return_value=_listing("", code=1)),
             self.assertRaises(RuntimeError),
         ):
-            gpu_selection.discrete_vulkan_device(Path("llama-server.exe"))
+            gpu_selection.discrete_device_id(Path("llama-server.exe"))
 
     def test_the_tracked_names_come_from_one_file(self):
         self.assertEqual(hardware.discrete_gpu(), hardware.read()["discrete_gpu"])
@@ -76,6 +81,11 @@ class GpuSelectionTests(unittest.TestCase):
     def test_a_missing_adapter_names_what_was_listed(self):
         with self.assertRaisesRegex(RuntimeError, "available: Vulkan1"):
             gpu_selection.discrete_from_listing('Vulkan:1 "AMD Radeon(TM) Graphics" [IGPU]\n')
+
+    def test_a_rocm_listing_resolves_the_same_adapter(self):
+        with patch.object(gpu_selection.subprocess, "run", return_value=_listing(ROCM_LISTING)):
+            self.assertEqual(gpu_selection.discrete_device_id(Path("llama-server.exe")), "ROCm0")
+        self.assertEqual([device.index for device in gpu_selection.devices(ROCM_LISTING)], [0, 1])
 
     def test_the_cli_reports_the_resolved_device(self):
         with patch.object(

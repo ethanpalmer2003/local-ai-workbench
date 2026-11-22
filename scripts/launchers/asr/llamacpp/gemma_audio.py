@@ -8,7 +8,7 @@ from scripts.launchers.asr.llamacpp import module_api
 from scripts.launchers.asr.llamacpp.llama_audio import LlamaAudioBackend
 from scripts.launchers.asr.shared import requests
 
-BACKEND = LlamaAudioBackend(cfg.GEMMA_AUDIO_ASR, alias="gemma-audio", label="Gemma audio", device="Vulkan0")
+BACKEND = LlamaAudioBackend(cfg.GEMMA_AUDIO_ASR, alias="gemma-audio", label="Gemma audio")
 
 url, ready, command, matching_server, start = module_api.bind(BACKEND, globals())
 

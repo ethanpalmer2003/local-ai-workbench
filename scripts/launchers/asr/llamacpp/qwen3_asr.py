@@ -8,7 +8,7 @@ from scripts.launchers.asr.llamacpp import module_api
 from scripts.launchers.asr.llamacpp.llama_audio import LlamaAudioBackend
 from scripts.launchers.asr.shared import requests
 
-BACKEND = LlamaAudioBackend(cfg.QWEN3_ASR, alias="qwen3-asr", label="Qwen ASR", device=cfg.QWEN3_ASR.device)
+BACKEND = LlamaAudioBackend(cfg.QWEN3_ASR, alias="qwen3-asr", label="Qwen ASR")
 
 url, ready, command, matching_server, start = module_api.bind(BACKEND, globals())
 

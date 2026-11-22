@@ -8,11 +8,18 @@ from scripts.benchmarks.asr.metrics import pooled_scores, unicode_errors
 from scripts.config import models as model_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers.asr.shared.file_cli import build_command, required_files
+from scripts.launchers.runtime import gpu_selection
 from scripts.tests.shared.paths import CasePaths, RunPaths
 from scripts.tests.shared.process_fixtures import running_process
 
 
 class FileProfiles(unittest.TestCase):
+    def setUp(self) -> None:
+        """Model-free command building uses a fixed device id instead of a native probe."""
+        patcher = patch.object(gpu_selection, "discrete_device_id", return_value="Vulkan0")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_latency_separates_clip_end_from_estimated_speech_end(self):
         from scripts.tests.cases.asr.shared.latency import latency_metrics
 
