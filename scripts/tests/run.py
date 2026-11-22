@@ -1,3 +1,5 @@
+"""Run the test classes the change reaches, or every class with `--all` and at the push stage."""
+
 import sys
 
 from scripts.shared.changes import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
@@ -23,10 +25,13 @@ if __name__ == "__main__":
             print("[PUSH] no Python change since upstream; the suite is unchanged", flush=True)
             raise SystemExit(0)
         # - the scope follows the change; --all and --push run every class, and run.py keeps it exhaustive
+        try:
+            change_set = changed_since_head() if committing else None
+        except GitError as error:
+            print(f"[FAIL] git could not report the change: {error}", flush=True)
+            raise SystemExit(1)
         selection = select_test_classes(
-            TEST_CLASSES,
-            full="--all" in arguments or "--push" in arguments,
-            change_set=changed_since_head() if committing else None,
+            TEST_CLASSES, full="--all" in arguments or "--push" in arguments, change_set=change_set
         )
         print(f"[SCOPE] {len(selection.kept)} of {len(TEST_CLASSES)} test classes ({selection.reason})", flush=True)
         if not selection.kept:

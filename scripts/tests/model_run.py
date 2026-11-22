@@ -123,7 +123,12 @@ def run(spec: RunSpec) -> int:
     failure: dict[str, str] = {}
     with log_path.open("wb") as log:
         process = subprocess.Popen(command(spec), cwd=project_cfg.BASE_DIR, stdout=log, stderr=subprocess.STDOUT)
-        launch_util.assign_process_to_job(process.pid)
+        try:
+            launch_util.assign_process_to_job(process.pid)
+        except OSError:
+            # - a run that cannot be bound to the kill-on-close job must not be left running unowned
+            launch_util.kill_process_tree(process.pid)
+            raise
         watcher = threading.Thread(target=_watch, args=(process, log_path, spec, failure), daemon=True)
         watcher.start()
         try:
@@ -141,7 +146,8 @@ def run(spec: RunSpec) -> int:
         print(f"[FAIL] {spec.label}: exit {code}; tail of {log_path}")
         for row in _tail(log_path):
             print(f"  | {row}")
-        return code
+        # - a signal or an out-of-range status still has to leave a normal nonzero exit here
+        return code if 0 < code < 256 else 1
     print(f"[OK] {spec.label}")
     return 0
 
