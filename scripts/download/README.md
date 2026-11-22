@@ -14,7 +14,7 @@ C:/AI/bat/models/check_installed_models.bat --group asr
 - `in_use` selects restore downloads, not launcher defaults. Resolve missing provenance before downloading unknown entries.
 - Group prefixes include all children: `asr`, or `asr/whispercpp`, `asr/llamacpp`, `asr/parakeetcpp` individually.
 - Existing complete targets are skipped. HF transfers use the project token/cache; preserve credentials in `scripts/.env`.
-- Curated non-Hub HTTPS assets require a pinned SHA256; verified downloads publish only after hashing. Failed partials are retained.
+- Curated non-Hub HTTPS assets require a pinned SHA256, and a Hub transfer is hashed against the catalog's recorded digest before it replaces anything; a mismatch keeps the staged file and nothing moves. Failed partials are retained.
 - `--range-download` uses verified authenticated ranges; `--resume-file PATH` requires one model and that mode. Preserve partials until validated/retired.
 - Audit compares configured/runtime/catalog paths with installed files; unreferenced does not mean safe to delete. Shared/app-managed weights and missing optional models require interpretation.
 - LLM weights share `models/llms/{coding_models,multilingual_models,character_models}`; runtime/model IDs stay stable. Gemma audio projectors stay beside their main weights.
