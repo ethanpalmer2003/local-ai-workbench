@@ -44,6 +44,11 @@ class TtsProfiles(unittest.TestCase):
             tts_proxy._log_stream_stats("test", "1", stats, cfg.AudiocppModel.MING3_TTS.value)
         self.assertIn("dur=1s", output.call_args.args[0])
 
+    def test_an_unreadable_wav_reports_no_duration_instead_of_failing_the_reply(self):
+        # - the duration is telemetry; a mislabelled body still reaches the client
+        self.assertEqual(tts_proxy._wav_duration(b"RIFF\x00\x00\x00\x00WAVEgarbage"), 0.0)
+        self.assertEqual(tts_proxy._wav_duration(b"not a wave file"), 0.0)
+
     def test_page_assets_are_explicit_and_preserve_file_opening_support(self):
         for path in (
             "/test/",

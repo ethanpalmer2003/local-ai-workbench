@@ -192,10 +192,15 @@ class _Prepared:
 
 
 def _wav_duration(data: bytes) -> float:
+    """Seconds of audio in a WAV body, or zero when the body is not one; this is telemetry, not the reply."""
     if data[:4] != b"RIFF" or data[8:12] != b"WAVE":
         return 0.0
-    with wave.open(BytesIO(data), "rb") as audio:
-        return audio.getnframes() / audio.getframerate()
+    try:
+        with wave.open(BytesIO(data), "rb") as audio:
+            return audio.getnframes() / audio.getframerate()
+    except (wave.Error, EOFError, OSError):
+        # - a truncated or mislabelled body still goes to the client; only the duration is unknown
+        return 0.0
 
 
 class _TtsProxyHandler(QuietLog, ProxyHandlerMixin):
@@ -242,10 +247,7 @@ class _TtsProxyHandler(QuietLog, ProxyHandlerMixin):
             return
 
         if urlsplit(self.path).path != "/v1/audio/speech":
-            body = read_request_body(self)
-            relay_stream(
-                self, method, self.upstream_url + self.path, build_forward_headers(self.headers, body), body, self.tag
-            )
+            self._forward_stream(method)
             return
 
         rid = uuid.uuid4().hex[:6]
@@ -281,6 +283,20 @@ class _TtsProxyHandler(QuietLog, ProxyHandlerMixin):
             traceback.print_exc()
             with contextlib.suppress(Exception):
                 send_json_error(self, 500, "proxy error", "proxy_error")
+
+    def _forward_stream(self, method: str) -> None:
+        """Relay a request that is not speech; an upstream failure is JSON only before headers go out."""
+        body = read_request_body(self)
+        try:
+            relay_stream(
+                self, method, self.upstream_url + self.path, build_forward_headers(self.headers, body), body, self.tag
+            )
+        except requests.RequestException as error:
+            if getattr(self, "_headers_buffer", None):
+                forward_upstream_error(self, self.tag, error)
+            else:
+                _log_tts_error(self.tag, "-", None, error)
+                self.close_connection = True
 
     def _forward_get(self, method: str):
         if self.test_page_redirect and urlsplit(self.path).path in ("/test", "/test/"):
