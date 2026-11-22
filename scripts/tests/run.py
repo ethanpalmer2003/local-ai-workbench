@@ -6,7 +6,7 @@ from scripts.shared.changes import GitError, NoUpstreamError, changed_since_head
 from scripts.shared.timing import timed
 from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.registry import TEST_CLASSES
-from scripts.tests.scoped_selection import select_test_classes
+from scripts.tests.scoped_selection import code_change_paths, select_test_classes
 
 if __name__ == "__main__":
     pushing = "--push" in sys.argv[1:]
@@ -15,14 +15,15 @@ if __name__ == "__main__":
     sys.argv = [sys.argv[0], *[argument for argument in sys.argv[1:] if argument not in ("--push", "--commit")]]
     arguments = sys.argv[1:]
     with timed("default regressions"):
-        # - --push is the pre-push stage: every class when Python changed, none when only prose did
+        # - --push is the pre-push stage: every class when a code change is unpushed, none when only
+        #   comments, docstrings or prose are, through the same filter the commit stage applies
         try:
-            python_changed = any(path.endswith(".py") for path in changed_since_upstream())
+            python_changed = bool(code_change_paths(changed_since_upstream()))
         except (GitError, NoUpstreamError):
             # No baseline is no evidence, so the push stage runs every class rather than none
             python_changed = True
         if pushing and not python_changed:
-            print("[PUSH] no Python change since upstream; the suite is unchanged", flush=True)
+            print("[PUSH] no Python code change since upstream; the suite is unchanged", flush=True)
             raise SystemExit(0)
         # - the scope follows the change; --all and --push run every class, and run.py keeps it exhaustive
         try:

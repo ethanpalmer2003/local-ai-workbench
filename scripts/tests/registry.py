@@ -115,7 +115,7 @@ from scripts.tests.cases.shared.gate.test_inference_engines import InferenceEngi
 from scripts.tests.cases.shared.gate.test_label_vocabulary import LabelVocabularyTests
 from scripts.tests.cases.shared.gate.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.gate.test_model_run import ModelRunTests
-from scripts.tests.cases.shared.gate.test_scoped_selection import TestSelection
+from scripts.tests.cases.shared.gate.test_scoped_selection import CodeChangeStageTests, TestSelection
 from scripts.tests.cases.shared.gate.test_staleness import StalenessTests
 from scripts.tests.cases.shared.gate.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
@@ -380,6 +380,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     ProbeCommandTests,
     SuiteCallTests,
     TestSelection,
+    CodeChangeStageTests,
     StalenessTests,
     UpstreamTextTests,
     GateEntryTests,

@@ -73,17 +73,7 @@ def select_test_classes(
     if not changed:
         return Selection((), test_classes, "nothing changed")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
-    # Only `.py` paths can match upstream, so every other path stays for the module check below to judge.
-    # The upstream copies come from one git call for the whole set; a read that fails is no evidence, so
-    # every path counts as a change then, which is the same answer a missing copy gives. A path that is
-    # gone from the tree is left out: it is a change by definition and git has nothing to show for it.
-    base = root or project_cfg.BASE_DIR
-    readable = [path for path in changed if path.endswith(".py") and (base / path).is_file()]
-    try:
-        previous = upstream_texts(readable, root)
-    except GitError:
-        previous = {}
-    code_changes = [path for path in changed if _code_changed_since_upstream(path, previous.get(path), root)]
+    code_changes = code_change_paths(changed, root)
     if not code_changes:
         return Selection((), test_classes, "no code change")
 
@@ -109,6 +99,26 @@ def select_test_classes(
 
     reason = _reach_reason(edges, reachable, code_changes)
     return _build_selection(test_classes, reachable, reason)
+
+
+def code_change_paths(paths: list[str], root: Path | None = None) -> list[str]:
+    """The changed paths that carry a code change; a Python prose-only edit is left out.
+
+    The pre-push stage asks this same question, so a push that only edits comments or docstrings stays
+    fast instead of running the full suite for a file whose behavior did not change.
+    """
+    # Only `.py` paths can match upstream, so every other path stays for the caller to judge.
+    base = root or project_cfg.BASE_DIR
+    readable = [path for path in paths if path.endswith(".py") and (base / path).is_file()]
+    # The upstream copies come from one git call for the whole set. A read that fails is no evidence, so
+    # every path counts as a change then, which is the same answer a missing copy gives. A path that is
+    # gone from the tree is left out of the read: it is a change by definition, and git has nothing to
+    # show for it, which `_code_changed_since_upstream` already answers.
+    try:
+        previous = upstream_texts(readable, root)
+    except GitError:
+        previous = {}
+    return [path for path in paths if _code_changed_since_upstream(path, previous.get(path), root)]
 
 
 def _code_changed_since_upstream(path: str, previous_source: str | None, root: Path | None = None) -> bool:
