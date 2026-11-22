@@ -3,7 +3,7 @@
 import unittest
 
 from scripts.benchmarks.asr.metrics import word_errors
-from scripts.benchmarks.asr.whisper_embedded_compare import command
+from scripts.benchmarks.asr.whisper_embedded_compare import _summary_cell, command
 
 
 class WhisperCompareTests(unittest.TestCase):
@@ -12,6 +12,12 @@ class WhisperCompareTests(unittest.TestCase):
         self.assertIn("-nfa", command("latest-vulkan"))
         self.assertIn("-fa", command("vulkan-fa"))
         self.assertNotIn("-nfa", command("vulkan-fa"))
+
+    def test_an_engine_with_no_sample_for_a_clip_reads_unavailable(self):
+        # - one failed engine must not abort the table or be formatted as zero
+        self.assertEqual(_summary_cell({"median_seconds": None, "wer": None}), "unavailable")
+        self.assertEqual(_summary_cell({"median_seconds": 1.25, "wer": None}), "unavailable")
+        self.assertEqual(_summary_cell({"median_seconds": 1.25, "wer": 0.5}), "1.250 / 50.0%")
 
     def test_formatting_and_equivalent_spelling_are_not_recognition_errors(self):
         result = word_errors("Let's practice at a caf\u00e9.", "LET'S practice at a cafe!")

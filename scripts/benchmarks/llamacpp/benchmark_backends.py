@@ -111,13 +111,20 @@ def run_trial(
 
 
 def summarize_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
+    """Medians per build; a build whose trials all failed is reported as unmeasured rather than dropped."""
     summary = {}
     for build in ("rocm-lemonade", "hrx"):
         rows = [r for t in evidence["trials"] if t["build"] == build for r in t["requests"]]
-        summary[build] = {
-            "median_decode_tokens_per_second": statistics.median(r["timings"]["predicted_per_second"] for r in rows),
-            "median_request_seconds": statistics.median(r["seconds"] for r in rows),
-        }
+        summary[build] = (
+            {
+                "median_decode_tokens_per_second": statistics.median(
+                    r["timings"]["predicted_per_second"] for r in rows
+                ),
+                "median_request_seconds": statistics.median(r["seconds"] for r in rows),
+            }
+            if rows
+            else {"median_decode_tokens_per_second": None, "median_request_seconds": None}
+        )
     return summary
 
 
@@ -150,9 +157,12 @@ def main() -> None:
                 model = run_trial(evidence, paths, round_index, build, prompts, args, port)
         summary = summarize_evidence(evidence)
         evidence["summary"] = summary
+        # - a failed trial leaves its entry without requests, so a pair is compared only when both measured
+        pairs = [evidence["trials"][index : index + 2] for index in range(0, len(evidence["trials"]), 2)]
         evidence["code_matches"] = [
-            evidence["trials"][i]["requests"][0]["tokens"] == evidence["trials"][i + 1]["requests"][0]["tokens"]
-            for i in range(0, len(evidence["trials"]), 2)
+            pair[0]["requests"][0]["tokens"] == pair[1]["requests"][0]["tokens"]
+            for pair in pairs
+            if len(pair) == 2 and pair[0]["requests"] and pair[1]["requests"]
         ]
         paths.write_report(
             {
@@ -171,6 +181,25 @@ def main() -> None:
             }
         )
         print(json.dumps(summary, indent=2))
+    except BaseException as error:
+        # - a crashed round still writes its status, so the capability matrix does not read a previous run
+        paths.write_report(
+            {
+                "name": "llamacpp/benchmark_backends",
+                "category": "llamacpp",
+                "status": "failed",
+                "reasoning": "Matched settings; alternating fresh servers; no blanket answer-quality grading",
+                "total_seconds": time.monotonic() - start,
+                "error": str(error),
+                "provenance": provenance.block(
+                    subject="llamacpp/benchmark_backends",
+                    config=evidence["settings"],
+                    frameworks=[provenance.framework_state("llamacpp")],
+                    models=[] if model is None else [provenance.file_identity("chat", model)],
+                ),
+            }
+        )
+        raise
     finally:
         (paths.artifacts / "results.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
         print(f"[OUTPUT] {paths.root}", flush=True)

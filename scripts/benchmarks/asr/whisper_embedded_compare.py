@@ -166,6 +166,14 @@ def run_block(
     return result
 
 
+def _summary_cell(cell: dict[str, Any]) -> str:
+    """One table cell; an engine that produced no sample for a clip is named, not formatted."""
+    seconds, wer = cell["median_seconds"], cell["wer"]
+    if seconds is None or wer is None:
+        return "unavailable"
+    return f"{seconds:.3f} / {wer:.1%}"
+
+
 def summarize(run: RunPaths, clips: list[dict[str, Any]], results: list[dict[str, Any]]) -> None:
     engines = list(dict.fromkeys(result["engine"] for result in results))
     lines = [
@@ -189,8 +197,9 @@ def summarize(run: RunPaths, clips: list[dict[str, Any]], results: list[dict[str
                 sum(sample["word_errors"] for sample in samples),
                 sum(sample["reference_words"] for sample in samples),
             )
+            seconds = [sample["seconds"] for sample in samples]
             row[engine] = {
-                "median_seconds": statistics.median(sample["seconds"] for sample in samples),
+                "median_seconds": statistics.median(seconds) if seconds else None,
                 "wer": errors / count if count else None,
                 "samples": len(samples),
                 "transcripts": sorted({sample["text"] for sample in samples}),
@@ -198,7 +207,7 @@ def summarize(run: RunPaths, clips: list[dict[str, Any]], results: list[dict[str
         aggregates.append(row)
         lines.append(
             f"| {row['clip']} | {row['duration_seconds']:.3f} | "
-            + " | ".join(f"{row[engine]['median_seconds']:.3f} / {row[engine]['wer']:.1%}" for engine in engines)
+            + " | ".join(_summary_cell(row[engine]) for engine in engines)
             + " |"
         )
     lines += [
