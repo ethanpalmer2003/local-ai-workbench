@@ -25,6 +25,8 @@ Work that failed when last tried; the recorded state, not re-tested today. A dia
 
 - [ ] Find why dead code survived the gate: `cleanup._report` was unused for a while without a finding, and the scoped scan is the suspect, since a definition left in an unchanged file goes unseen when its caller is deleted elsewhere and `verdict_cannot_change` then skips that file. Reproduce with a throwaway module and a caller in a second file, then decide whether the section scans the modules a change references. ~30 min
 
+- [ ] Make a ComfyUI update finish inside the run that started it: when the vendor updater script changed, `comfyui-rocm-updater.bat` starts `_updater_relaunch.bat` in its own console, which inherits the job's output pipe, does the work outside our log and stops at `pause`, so `update_frameworks --yes` printed UPDATED and never returned. Today it did update (`9f041c1`), and the window had to be stopped and the relaunch batch trashed by hand. Decide whether the wrapper follows `.last_update_hash` and stops the window it caused, or skips the app update and documents the manual step. ~45 min
+
 ## Needs your input
 Decisions only you can make.
 
