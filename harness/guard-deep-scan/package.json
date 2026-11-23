@@ -1,0 +1,14 @@
+{
+  "name": "@local/guard-deep-scan",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Refuses recursive scans of the weight and install roots.",
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": ["index.js", "cordis.patch.yml", "locale", "icon.svg"],
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+}

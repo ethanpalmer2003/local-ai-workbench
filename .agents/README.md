@@ -15,6 +15,7 @@ links here rather than restating a rule.
 | Reading an agent's hard limits | [RESTRICTIONS.md](RESTRICTIONS.md) |
 | A step failed and would repeat | [FAILURES.md](FAILURES.md) |
 | A DeepSeek Harness call was denied | [DEEPSEEK-HARNESS.md](DEEPSEEK-HARNESS.md) |
+| A scan was refused before it ran | [DEEP-SCAN-GUARD.md](DEEP-SCAN-GUARD.md) |
 | Running under Codex | [CODEX-HARNESS.md](CODEX-HARNESS.md) |
 | Electron renders blank under Low integrity | [ELECTRON-LOW-INTEGRITY-CRASH.md](ELECTRON-LOW-INTEGRITY-CRASH.md) |
 

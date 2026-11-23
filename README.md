@@ -43,7 +43,7 @@ not yet made.
 ## Layout
 
 Launchers are in [bat/](bat); code, configuration and setup in [scripts/](scripts/README.md); notes in
-[notes/](notes/); working rules in [AGENTS.md](AGENTS.md), indexed by the [working rules index](.agents/README.md).
-The `data/`,
+[notes/](notes/); working rules in [AGENTS.md](AGENTS.md), indexed by the [working rules index](.agents/README.md);
+host configuration added to DeepSeek Harness in [harness/](harness/README.md). The `data/`,
 `frameworks/` and `trash/` folders are not tracked by Git; see [onboarding](notes/ONBOARDING.md) to
 recreate the installations.

@@ -1,0 +1,4 @@
+- insert:
+    - id: guard-deep-scan
+      name: '@local/guard-deep-scan'
+      config: {}

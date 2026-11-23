@@ -1,0 +1,1 @@
+{ "meta": { "title": "Deep scan guard", "description": "Refuses a recursive shell scan, glob or grep under or above the local ignored trees (weights, installs, trash, .git, the interpreter, package and cache folders, run output) and names the depth-bounded locator instead.", "detail": "../../../.agents/DEEP-SCAN-GUARD.md" } }
