@@ -21,6 +21,7 @@ from scripts.tests.cases.audiocpp.audio_comparison import AudioComparison
 from scripts.tests.cases.audiocpp.test_audiocpp_transport import TransportBenchmark
 from scripts.tests.cases.audiocpp.test_tts_events import BreezeEventTableTests, BreezeVocalAdapterTests
 from scripts.tests.cases.audiocpp.test_tts_profiles import TtsProfiles
+from scripts.tests.cases.audiocpp.test_voice_references import VoiceReferences
 from scripts.tests.cases.coding_agents.pi.test_pi_packages import PiPackageTests
 from scripts.tests.cases.coding_agents.shared.framework_clients import FrameworkClients
 from scripts.tests.cases.coding_agents.shared.test_benchmark_backends import BenchmarkBackendsTests
@@ -270,6 +271,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     AmericanSpellingTests,
     StrataProfileLinkTests,
     AudioComparison,
+    VoiceReferences,
     WorkflowTests,
     ExecutionTests,
     VerifyNodeTests,

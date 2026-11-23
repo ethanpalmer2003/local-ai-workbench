@@ -29,6 +29,7 @@ Nemotron and the practice TTS model share one server: [checks](../../tests/notes
 - One [speech workspace](../asr/PRACTICE-WORKSPACE.md) owns the page and the optional ASR, LLM and TTS stages; it relays every speech request through the AudioCpp proxy, which no longer serves a page of its own.
 - The page starts its practice view on the language-practice voice (Supertonic) and its test view on this proxy's model (Breeze). A last-used tone shows as a note, never as a filled-in default: Breeze's default instruction is empty.
 - Ming is selectable as a TTS model; its playback rate is 44100 Hz and Instruction maps to native `instruct`.
+- Clone reference quality: `python -m scripts.review.voice_references` lists the chosen clip per voice and flags sound annotations, scene text, broken characters and missing clips; the audio itself lives in the private overlay.
 - HTTP PCM/WAV and SSE feed one decoder/player. SSE expects PCM delta events plus completion; compressed audio falls back to complete decoding.
 - Select launcher default to clear saved transport overrides. Native model mode must support the requested response; client streaming flags do not change loaded model mode.
 

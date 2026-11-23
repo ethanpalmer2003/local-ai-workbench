@@ -6,6 +6,7 @@ const vm = require('node:vm');
 function element() {
   return {value: '', textContent: '', children: [], dataset: {}, selected: false, disabled: false,
     append(...children) { this.children.push(...children); },
+    prepend(...children) { this.children.unshift(...children); },
     replaceChildren(...children) { this.children = children; },
     get options() { return this.children; },
     get selectedOptions() { return this.children.filter(child => child.selected); },
