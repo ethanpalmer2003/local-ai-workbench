@@ -119,6 +119,11 @@
   audio { display:block; width:100%; margin-top:10px; } pre { font-size:12px; white-space:pre-wrap; overflow-wrap:anywhere; }
   html[data-embedded=true] .workspace header { display:none; }
   html[data-embedded=true] .workspace { padding:16px; }
+  .chat { width:min(760px,100%); margin:0 auto; }
+  #settings-backdrop { position:fixed; inset:0; background:rgba(8,11,15,.55); z-index:30; }
+  #settings-panel { position:fixed; top:0; bottom:0; left:0; width:min(440px,100%); padding:20px; overflow-y:auto; background:var(--panel); border-right:1px solid var(--line); z-index:40; transform:translateX(-102%); visibility:hidden; transition:transform .2s ease, visibility .2s; }
+  #settings-panel.open { transform:none; visibility:visible; }
+  .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
   html[data-view=practice] .test-only,html[data-view=practice] #practice-audio { display:none!important; }
   html[data-view=test]:not([data-gateway=practice]) .practice-only { display:none!important; }
   .direct-tts-only { display:none!important; }
@@ -130,10 +135,16 @@
 </head>
 <body>
 <section class="workspace">
-  <div id="workspace-options">
-  <header><div><h1 id="workspace-title">Speech workspace</h1></div>
-    <div class="toolbar test-only"><button type="button" id="restart-workspace">Restart workspace</button><span id="restart-workspace-status" class="hint" role="status" aria-live="polite"></span></div>
+  <header class="page-head"><div><h1 id="workspace-title">Speech workspace</h1></div>
+    <div class="toolbar">
+      <button type="button" id="settings-toggle" aria-expanded="false" aria-controls="settings-panel">Settings</button>
+      <button type="button" class="test-only" id="restart-workspace">Restart workspace</button><span id="restart-workspace-status" class="hint" role="status" aria-live="polite"></span>
+    </div>
   </header>
+  <div id="settings-backdrop" hidden></div>
+  <aside id="settings-panel" aria-label="Settings" aria-hidden="true">
+    <div class="panel-head"><h2>Settings</h2><button type="button" id="settings-close">Close</button></div>
+  <div id="workspace-options">
   <div id="model-settings" class="pipeline">
     <fieldset id="asr-choice"><legend>ASR <button type="button" class="toggle test-only" id="enable-asr" aria-pressed="true">Recognize speech</button><button type="button" class="lifecycle-toggle" id="load-asr" hidden>Load</button><span id="residency-asr" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading ASR...</span></legend>
       <label class="model-option">Model<select id="asr-model" disabled></select></label>
@@ -169,6 +180,8 @@
   </details>
   <p id="interim-transcript" class="hint" aria-live="polite"></p>
   </div>
+  </aside>
+  <main class="chat">
   <p id="status" role="status" aria-live="polite"></p>
   <section id="conversation-history" aria-label="Conversation"><h2 id="conversation-title">Conversation</h2><div id="history" role="log" aria-live="polite"></div></section>
   <audio id="practice-audio" controls hidden></audio>
@@ -189,6 +202,7 @@
       </div>
     </div>
   </form>
+  </main>
   <div class="test-only">
   <details id="measurements"><summary>Measurements</summary><p class="hint">Server times split startup, model loading and requests. Browser times include network; ASR includes capture/VAD.</p>
     <p id="lifecycle-log" class="hint technical"></p>
@@ -720,6 +734,19 @@
       signal?.throwIfAborted();
     }
   };
+  const settingsPanel = document.getElementById('settings-panel');
+  const settingsBackdrop = document.getElementById('settings-backdrop');
+  function toggleSettings(open) {
+    if (!settingsPanel) return;
+    settingsPanel.classList.toggle('open', open);
+    settingsPanel.setAttribute('aria-hidden', String(!open));
+    settingsBackdrop?.toggleAttribute('hidden', !open);
+    document.getElementById('settings-toggle')?.setAttribute('aria-expanded', String(open));
+  }
+  document.getElementById('settings-toggle')?.addEventListener('click',
+    () => toggleSettings(!settingsPanel.classList.contains('open')));
+  document.getElementById('settings-close')?.addEventListener('click', () => toggleSettings(false));
+  settingsBackdrop?.addEventListener('click', () => toggleSettings(false));
   window.addEventListener("beforeunload", () => recordings.forEach(url => URL.revokeObjectURL(url)));
 </script>
 <script src="/tests/ui/audiocpp_comparison.js"></script>
