@@ -24,7 +24,11 @@ def _transform(payload: Payload) -> Payload | None:
     if is_streaming_request(payload):
         _apply_streaming_options(payload)
     model = _apply_model_fallback(payload)
-    if audiocpp_catalog.supports_clone(model):
+    # - a both-mode model clones only when the client names a clone voice; a preset speaker stays a preset
+    clone_requested = str(payload.get("voice", "")).strip() in cfg.AUDIOCPP_PROXY_CLONE_VOICES
+    if audiocpp_catalog.supports_clone(model) and (
+        clone_requested or not audiocpp_catalog.declares_voice_presets(model)
+    ):
         _apply_voice_ref_fallback(payload)
     else:
         payload.pop("voice", None)

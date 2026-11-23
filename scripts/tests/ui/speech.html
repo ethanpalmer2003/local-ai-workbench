@@ -548,12 +548,12 @@
     const mode = config.voice_mode || (model?.clone === false ? 'none'
       : /kokoro/i.test(selectedModel) ? 'builtin' : config.voices?.length ? 'clone' : 'none');
     const defaultVoice = config.default_voice || config.voice || '';
-    const available = (mode === 'clone' || (mode === 'builtin' && config.voice_mode))
+    const available = (mode === 'clone' || mode === 'both' || (mode === 'builtin' && config.voice_mode))
       ? (config.voices || []).filter(item => item.available) : [];
     const defaultLabel = mode === 'clone' ? `Default${defaultVoice ? ` (${defaultVoice})` : ''}`
-      : mode === 'builtin' ? `Model default${defaultVoice ? ` (${defaultVoice})` : ''}` : 'Model default';
+      : mode === 'builtin' || mode === 'both' ? `Model default${defaultVoice ? ` (${defaultVoice})` : ''}` : 'Model default';
     select.replaceChildren(new Option(defaultLabel, ''),
-      ...available.map(item => new Option(item.id, item.id)));
+      ...available.map(item => new Option((config.clone_voices || []).includes(item.id) ? `${item.id} (clone)` : item.id, item.id)));
     select.value = '';
     select.disabled = mode === 'none' || !available.length;
     select.title = mode === 'none' ? 'This model has no selectable voices' : defaultLabel;

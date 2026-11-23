@@ -34,18 +34,19 @@ class AudioComparison(unittest.TestCase):
             self.assertIs(value["stream"], True)
             self.assertEqual(value["response_format"], "pcm")
 
-    def test_a_model_with_named_voices_reports_its_own_default(self):
-        for model, voice in (
-            ("audiocpp/supertonic-3-q8_0", "F1"),
-            ("audiocpp/kokoro-audiocpp-multilingual-q8_0", "af_heart"),
-            ("audiocpp/ming3-tts-0.5b-q8_0", "US_James"),
+    def test_a_named_voice_model_reports_its_own_default(self):
+        for model, mode, voice, clone in (
+            ("audiocpp/supertonic-3-q8_0", "builtin", "F1", False),
+            ("audiocpp/kokoro-audiocpp-multilingual-q8_0", "builtin", "af_heart", False),
+            ("audiocpp/ming3-tts-0.5b-q8_0", "both", "US_James", True),
+            ("audiocpp/ming3-audio-tiny-q4_k", "clone", "persona", True),
         ):
             if not model_cfg.path(model).is_file():
                 continue
             data = audiocpp_catalog.runtime_defaults(cfg.AUDIOCPP_SERVICE, model)
-            self.assertEqual(data["voice_mode"], "builtin", model)
+            self.assertEqual(data["voice_mode"], mode, model)
             self.assertEqual(data["voice"], voice, model)
-            self.assertFalse(audiocpp_catalog.supports_clone(model), model)
+            self.assertEqual(audiocpp_catalog.supports_clone(model), clone, model)
 
     def test_only_a_reference_model_reports_the_clone_voice(self):
         model = "audiocpp/breeze-tts-2-q4_0"

@@ -153,7 +153,7 @@ def speech_body(payload: dict[str, object]) -> dict[str, object]:
         if not isinstance(options, dict):
             raise ValueError("Speech options must be an object")
         options.setdefault("voice_id", cfg.SUPERTONIC_TTS.voice)
-    elif audiocpp_catalog.supports_clone(spec["id"]):
+    elif audiocpp_catalog.supports_clone(spec["id"]) and not audiocpp_catalog.declares_voice_presets(spec["id"]):
         payload.setdefault("voice", cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value)
     else:
         payload.pop("voice", None)

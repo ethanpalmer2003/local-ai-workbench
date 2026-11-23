@@ -336,14 +336,10 @@ SUPERTONIC_TTS = SharedSupertonicStartupRequestSettings()
 
 # - Each TTS family takes its own request fields: Kokoro negotiates a locale frontend per request,
 #   while Supertonic reads the language from the text and takes only a preset voice id.
-# - a model that ships named voices speaks one of them; only the reference-driven families clone
+# - a model that ships named voices speaks one of them; only the reference families clone, and the light
+#   Ming checkpoint offers both a preset speaker and a cloned reference
 # - Ming's packaged spec declares four speakers and no default, so the recorded benchmark arm's pick stands
-TTS_FAMILY_DEFAULT_VOICE = {
-    "kokoro_tts": KOKORO_TTS.voice,
-    "supertonic": SUPERTONIC_TTS.voice,
-    "ming3_tts": "US_James",
-    "ming3_audio": "US_James",
-}
+TTS_FAMILY_DEFAULT_VOICE = {"kokoro_tts": KOKORO_TTS.voice, "supertonic": SUPERTONIC_TTS.voice, "ming3_tts": "US_James"}
 
 
 @dataclass(frozen=True)

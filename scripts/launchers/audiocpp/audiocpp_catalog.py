@@ -215,11 +215,9 @@ def configured_models() -> list[dict[str, object]]:
             {
                 "id": spec["id"],
                 "installed": path.is_file(),
-                # - a model that speaks named voices never needs a clone reference, so only Breeze and
-                #   the reference-only checkpoints keep the clone path
-                "clone": spec["id"] != cfg.AudiocppModel.BREEZE_DESIGN.value
-                and not _declares_voice_presets({**spec, "path": str(path)})
-                and _accepts_reference(path),
+                # - a reference-driven checkpoint clones; the light Ming checkpoint also speaks named voices,
+                #   which `voice_data` reports as both, so the two capabilities are recorded separately
+                "clone": spec["id"] != cfg.AudiocppModel.BREEZE_DESIGN.value and _accepts_reference(path),
             }
         )
     return models
@@ -271,14 +269,21 @@ def builtin_voices(path: Path) -> list[dict[str, object]]:
 
 
 def voice_data(model: str, spec: dict[str, Any] | None) -> dict[str, object]:
+    clone = next((row["clone"] for row in configured_models() if row["id"] == model), False)
     if spec and _declares_voice_presets(spec):
         path = Path(spec["path"])
-        return {
-            "voice_mode": "builtin",
-            "voices": builtin_voices(path) if path.is_file() else [],
-            "default_voice": model_default_voice(model, spec),
-        }
-    clone = next((row["clone"] for row in configured_models() if row["id"] == model), False)
+        presets = builtin_voices(path) if path.is_file() else []
+        if clone:
+            # - the light Ming checkpoint takes a preset speaker or a cloned reference, so both lists apply
+            #   and the page marks which names are references rather than packaged speakers
+            references = configured_voices()
+            return {
+                "voice_mode": "both",
+                "voices": presets + references,
+                "clone_voices": [voice["id"] for voice in references],
+                "default_voice": model_default_voice(model, spec),
+            }
+        return {"voice_mode": "builtin", "voices": presets, "default_voice": model_default_voice(model, spec)}
     if clone:
         return {
             "voice_mode": "clone",
@@ -303,11 +308,8 @@ def _voice_option(path: Path) -> dict[str, Any]:
 
 
 def _declares_voice_presets(spec: dict[str, Any]) -> bool:
-    """Whether the model speaks its own named voices, which is what keeps it off the clone list."""
-    if spec.get("family") in cfg.TTS_FAMILY_DEFAULT_VOICE:
-        return True
-    path = Path(spec["path"])
-    return path.is_file() and bool(_voice_option(path).get("values"))
+    """Whether the model speaks its own named voices; a clone-only checkpoint declares none here."""
+    return spec.get("family") in cfg.TTS_FAMILY_DEFAULT_VOICE
 
 
 def model_default_voice(model: str, spec: dict[str, Any] | None) -> str:
