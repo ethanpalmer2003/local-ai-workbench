@@ -36,6 +36,7 @@ $('correct-language').checked = preferences.corrections ?? true;
 $('learning-level').value = ['A1','A2','B1','B2','C1','C2'].includes(preferences.level) ? preferences.level : 'A2';
 $('speech-start').value = preferences.speechStart === 'sentence' ? 'sentence' : 'full_reply';
 $('assistant-practice-toggle').checked = preferences.assistantMode !== 'default';
+$('asr-silence').oninput = () => { $('asr-silence-value').textContent = `${$('asr-silence').value} ms`; };
 function updateAssistantMode() {
     const practice = $('assistant-practice-toggle').checked;
     $('learning-level').disabled = !practice;
@@ -336,7 +337,7 @@ async function replayThroughTurns(file) {
     replaying = true; refreshCaptureButton();
     status('Replaying the WAV through automatic turns...');
     try {
-        const result = await liveRequest('start', {language: selectedLanguage().asr_language}, true);
+        const result = await liveRequest('start', {language: selectedLanguage().asr_language, silence_ms: Number($('asr-silence').value)}, true);
         session = result.session; pendingFrames = []; recording = true;
         const frame = 512, silence = new Float32Array(frame);
         const total = samples.length + 16000 * 2;
@@ -378,7 +379,7 @@ async function startListening() {
         status(document.documentElement.dataset.gateway === 'practice'
             ? 'Preparing ASR and microphone...' : 'Starting ASR model if needed...');
         globalThis.SpeechLifecycle?.loading('asr');
-        const result = await liveRequest('start', {language: selectedLanguage().asr_language}, true);
+        const result = await liveRequest('start', {language: selectedLanguage().asr_language, silence_ms: Number($('asr-silence').value)}, true);
         if (epoch !== captureEpoch) { await liveRequest(`${result.session}/stop`, new ArrayBuffer(0)); return; }
         session = result.session; pendingFrames = []; recording = true; captureStarting = false;
         recorder.port.onmessage = event => {

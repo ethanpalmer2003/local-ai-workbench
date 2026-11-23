@@ -8,6 +8,7 @@ import json
 import threading
 import time
 import uuid
+from dataclasses import replace
 from typing import Any
 
 from scripts.config import project_config as project_cfg
@@ -20,12 +21,22 @@ from scripts.launchers.asr.shared.streaming.websocket_stream import WebSocketBri
 from scripts.launchers.proxy_util import read_request_body, same_workspace_origin, send_bytes, send_json_error
 
 
+def vad_settings(silence_ms: int | None = None):
+    """The VAD settings for one session; a client may shorten or lengthen the silence that ends a turn."""
+    if silence_ms is None:
+        return cfg.AUDIOCPP_VAD
+    if not isinstance(silence_ms, int) or not 200 <= silence_ms <= 1500:
+        raise ValueError("Silence before send must be 200-1500 ms")
+    return replace(cfg.AUDIOCPP_VAD, silence_ms=silence_ms)
+
+
 class Sessions:
     def __init__(self, engine: cfg.AsrStartupEngine | None = cfg.AsrStartupEngine.AUDIOCPP):
         self.engine = engine
         self.lock = threading.Lock()
         self.turns = None
         self.token = ""
+        self.vad_settings = cfg.AUDIOCPP_VAD
         self.touched = 0.0
         self.closed = threading.Event()
         self.reaper = threading.Thread(target=self._expire, daemon=True)
@@ -68,7 +79,9 @@ class Sessions:
             raise ValueError("Already listening; stop the other microphone session first")
         if self.engine is None:
             raise ValueError("Transcription is off for this stack")
-        language = json.loads(body).get("language", "auto")
+        request = json.loads(body)
+        language = request.get("language", "auto")
+        self.vad_settings = vad_settings(request.get("silence_ms"))
         from scripts.launchers.asr.shared.languages import capabilities
 
         allowed = capabilities(self.engine)["asr"]["ready_languages"]
@@ -91,6 +104,7 @@ class Sessions:
             language=language,
             stream_factory=factory,
             transport=transport,
+            settings=self.vad_settings,
         )
         try:
             turns.start()

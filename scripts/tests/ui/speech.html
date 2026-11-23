@@ -137,7 +137,10 @@
   <div id="model-settings" class="pipeline">
     <fieldset id="asr-choice"><legend>ASR <button type="button" class="toggle test-only" id="enable-asr" aria-pressed="true">Recognize speech</button><button type="button" class="lifecycle-toggle" id="load-asr" hidden>Load</button><span id="residency-asr" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading ASR...</span></legend>
       <label class="model-option">Model<select id="asr-model" disabled></select></label>
-      <label class="model-option">Runtime<select id="asr-framework" disabled></select></label><label class="model-option test-only">Delivery<select id="delivery-asr" disabled><option value="auto">Auto</option></select></label></fieldset>
+      <label class="model-option">Runtime<select id="asr-framework" disabled></select></label><label class="model-option test-only">Delivery<select id="delivery-asr" disabled><option value="auto">Auto</option></select></label>
+      <button type="button" class="toggle" id="auto-send" aria-pressed="true">Send recognized turns automatically</button>
+      <label class="asr-silence">Silence before send <input id="asr-silence" type="range" min="200" max="1500" step="50" value="700" aria-describedby="asr-silence-note"> <output id="asr-silence-value">700 ms</output></label>
+      <p id="asr-silence-note" class="hint">A turn ends after this much silence.</p></fieldset>
     <fieldset id="llm-choice"><legend>LLM <button type="button" class="toggle test-only" id="enable-llm" aria-pressed="true">Generate a reply</button><button type="button" class="lifecycle-toggle" id="load-llm" hidden>Load</button><span id="residency-llm" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading LLM...</span></legend>
       <label class="model-option">Model<select id="llm-model" disabled></select></label>
       <label class="model-option test-only">Runtime<div id="llm-runtime" class="framework-display">llama.cpp</div></label>
@@ -162,7 +165,6 @@
       <label>Speech language<select id="language" disabled></select></label>
       <label>Language level<select id="learning-level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></label>
       <button type="button" class="toggle" id="correct-language" aria-pressed="true">Brief corrections</button>
-      <button type="button" class="toggle" id="auto-send" aria-pressed="true">Send recognized turns automatically</button>
     </div>
     <details><summary>Supported languages</summary><p id="asr-languages"></p><p id="tts-languages"></p><p id="language-notes"></p></details>
   </details>
@@ -604,7 +606,8 @@
       document.getElementById('mode').value = '';
       document.getElementById('mode').disabled = document.documentElement.dataset.view === 'practice';
       updateResponseMode();
-      fillVoices(config);
+      // - the workspace fills voices from the selected model's catalog row; this page copy is stale there
+      if (!config.practice_gateway) fillVoices(config);
       showDefaultSources(config);
       defaultsLoaded = true;
       document.getElementById('speak').disabled = false;
@@ -640,7 +643,8 @@
       document.getElementById('extra').value = '{}';
       document.getElementById('mode').disabled = document.documentElement.dataset.view === 'practice';
       updateResponseMode();
-      fillVoices(config);
+      // - the workspace fills voices from the selected model's catalog row; this page copy is stale there
+      if (!config.practice_gateway) fillVoices(config);
       showDefaultSources(config);
       defaultsLoaded = true;
       document.getElementById('speak').disabled = false;

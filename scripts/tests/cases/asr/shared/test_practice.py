@@ -220,6 +220,14 @@ class PracticeTests(unittest.TestCase):
         for name in ("enable-asr", "enable-llm", "enable-tts", "measurements"):
             self.assertIn(name, ids)
 
+    def test_silence_before_send_is_a_bounded_session_option(self):
+        from scripts.launchers.asr.shared.streaming import live
+
+        self.assertEqual(live.vad_settings(900).silence_ms, 900)
+        self.assertEqual(live.vad_settings().silence_ms, cfg.AUDIOCPP_VAD.silence_ms)
+        with self.assertRaises(ValueError):
+            live.vad_settings(100)
+
     def test_shared_test_page_uses_actual_practice_tts_without_advertising_streaming(self):
         from scripts.launchers.asr.shared import http_api
 

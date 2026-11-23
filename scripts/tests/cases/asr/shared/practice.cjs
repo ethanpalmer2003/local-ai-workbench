@@ -35,6 +35,8 @@ for (const id of ['enable-asr', 'enable-llm', 'measurements', 'measurement-rows'
 Object.assign(elements, {'enable-tts': elements.speak, 'speak': elements.send, 'capture-stop': elements.stop, 'practice-audio': elements.audio, 'box': elements.transcript});
 for (const id of ['load-active-models', 'unload-all']) elements[id] = {};
 for (const id of ['learning-level', 'correct-language', 'auto-send', 'assistant-practice-toggle', 'assistant-mode-help', 'interim-transcript', 'save-conversation', 'lifecycle-note', 'lifecycle-log', 'residency-asr', 'residency-llm', 'residency-tts']) elements[id] = {value: '', textContent: '', hidden: false, dataset: {}};
+elements['asr-silence'] = {value: '700', textContent: '', hidden: false, dataset: {}};
+elements['asr-silence-value'] = {value: '', textContent: '700 ms', hidden: false, dataset: {}};
 for (const id of ['load-asr', 'load-llm', 'load-tts']) elements[id] = {textContent: '', hidden: true, disabled: false};
 const body = {dataset: {}};
 const documentElement = {dataset: {}};
