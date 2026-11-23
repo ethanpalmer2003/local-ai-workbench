@@ -751,8 +751,9 @@ restoreModelChoices();
 refreshPracticeStatus().then(loadModelChoices).catch(error => {
     serviceReady = false; chatAvailable = false;
     for (const id of ['enable-asr', 'enable-llm']) { $(id).checked = false; $(id).disabled = true; }
-    for (const [id, label] of [['asr-model', 'ASR'], ['llm-model', 'LLM']])
-        $(id).replaceChildren(new Option(`${label} choices unavailable`, ''));
+    // - a TTS-only page has no speech or reply choices to offer, so the stages are hidden rather than
+    //   filled with placeholder labels
+    for (const id of ['asr-choice', 'llm-choice']) $(id).hidden = true;
     $('record').disabled = true; $('upload').disabled = true; $('upload-turns').disabled = true;
     $('llm-runtime').textContent = 'Open practice launcher for ASR/chat';
     languageProfiles = {auto: {locale: 'auto', label: 'Detect automatically'}};

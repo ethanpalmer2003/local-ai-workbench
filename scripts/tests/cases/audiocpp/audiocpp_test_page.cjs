@@ -196,6 +196,15 @@ async function playback(bufferSeconds) {
   await document.getElementById('defaults').onclick();
   assert.equal(
     document.getElementById('tts-model').value, 'audiocpp/breeze-tts-2-q4_0', 'test view starts on the service model');
+  servedConfig.guidance_scale_option = null;
+  document.documentElement.dataset.view = 'practice';
+  await document.getElementById('defaults').onclick();
+  document.getElementById('gs').value = '4';
+  assert.equal(document.getElementById('gs').disabled, true, 'a model without guidance disables the control');
+  assert.equal(vm.runInContext('settings()', context).payload.options.guidance_scale, undefined);
+  servedConfig.guidance_scale_option = 'guidance_scale';
+  await document.getElementById('defaults').onclick();
+  assert.equal(document.getElementById('gs').disabled, false);
   console.log('PASS: buffered request, split SSE parsing, underrun detection, startup buffering, contiguous scheduling, WAV capture');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 

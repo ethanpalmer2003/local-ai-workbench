@@ -150,6 +150,11 @@ def runtime_defaults(
     if selected in cfg.BREEZE_MODELS:
         proxy, inherited_tone = breeze_defaults()
     voices = voice_data(selected, spec)
+    accepted = accepted_request_options(selected)
+    # - an option the model does not declare is dropped by the proxy, so the page must not offer it
+    instruction_option = preset.instruction_option if preset else "instruction"
+    if instruction_option and instruction_option not in accepted:
+        instruction_option = None
     return {
         "streaming_enabled": (
             (selected == service.model and service.streaming_enabled) or bool(spec and spec.get("mode") == "streaming")
@@ -165,7 +170,8 @@ def runtime_defaults(
         "voice": voices.get("default_voice") or (service.voice if voices.get("voice_mode") == "clone" else ""),
         "selected_model": selected,
         "model_identity": Path(spec["path"]).name if spec else selected,
-        "instruction_option": preset.instruction_option if preset else "instruction",
+        "instruction_option": instruction_option,
+        "guidance_scale_option": "guidance_scale" if "guidance_scale" in accepted else None,
         "models": configured_models(),
         **voices,
         "proxy_defaults": proxy,

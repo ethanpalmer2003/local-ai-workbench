@@ -313,7 +313,7 @@
     if (value("text_chunk_mode")) options.text_chunk_mode = value("text_chunk_mode");
     if (value("instr") && activeDefaults?.instruction_option !== null)
       options[activeDefaults?.instruction_option || "instruction"] = value("instr");
-    if (value("gs")) options.guidance_scale = Number(value("gs"));
+    if (value("gs") && activeDefaults?.guidance_scale_option !== null) options.guidance_scale = Number(value("gs"));
     const payload = {stream: streaming, response_format: streaming ? "pcm" : "wav", options};
     if (streaming) payload.stream_format = value("transport") || activeDefaults?.streaming.transport || "audio";
     if (selectedModel) payload.model = selectedModel;
@@ -539,6 +539,13 @@
       for (const option of mode.options) option.disabled = option.value === 'stream' && config.streaming_supported === false;
     for (const id of ['smooth', 'fast']) document.getElementById(id).disabled = config.streaming_supported === false;
     document.getElementById('instr').disabled = config.instruction_option === null;
+    const guidance = document.getElementById('gs');
+    guidance.disabled = config.guidance_scale_option === null;
+    for (const control of [document.getElementById('instr'), guidance]) {
+      if (!control.disabled) continue;
+      control.placeholder = 'Not accepted';
+      control.title = 'This model takes no such option';
+    }
     if (mode.tagName === 'SELECT') mode.options[0].textContent = config.streaming_enabled ? 'Stream while generating (default)' : 'Complete WAV (default)';
     document.getElementById('default-values').textContent = JSON.stringify(config, null, 2);
     document.getElementById('rate').value = config.streaming?.pcm_sample_rate ?? '';
@@ -587,6 +594,11 @@
         choices.value = practiced ? config.practice_model : config.model; choices.disabled = false;
         choices.onchange = loadModelDefaults;
         document.getElementById('model-status').textContent = 'ASR/chat unavailable on TTS endpoint.';
+        // - this response describes the proxy's own model; the practice view starts on another one, so its
+        //   voices and defaults come from that model's own response instead
+        if (choices.value && choices.value !== (config.selected_model || config.model)) {
+          await loadModelDefaults(); return;
+        }
       }
       document.getElementById('mode').value = '';
       document.getElementById('mode').disabled = !!config.practice_gateway;
