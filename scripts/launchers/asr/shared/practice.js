@@ -195,6 +195,9 @@ function renderModelChoices(catalog, verified = true) {
 async function loadModelChoices() {
     const response = await fetch('/practice/models', {cache: 'no-store'});
     if (!response.ok) {
+        // - a page served by a plain TTS proxy has no workspace catalog; its own model list stays, and
+        //   nothing here is a fault, so no status line is claimed
+        if (response.status === 404 && document.documentElement.dataset.gateway !== 'practice') return;
         for (const [id, label] of [['asr-model', 'ASR'], ['llm-model', 'LLM']])
             $(id).replaceChildren(new Option(`${label} choices unavailable`, ''));
         if (document.documentElement.dataset.gateway === 'practice')

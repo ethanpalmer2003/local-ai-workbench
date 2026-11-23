@@ -30,6 +30,18 @@
         const response = await fetch('/workspace/lifecycle', {cache: 'no-store'});
         if (revision !== statusRevision) { refreshAgain = true; return; }
         if (!response.ok) {
+            if (response.status === 404) {
+                // - a page served by a plain TTS proxy has no workspace behind it: the stages are not
+                //   broken, so the badges go away instead of reporting each one as unavailable
+                for (const stage of ['asr', 'tts', 'llm']) {
+                    const node = $(`residency-${stage}`);
+                    node.hidden = true;
+                    node.textContent = '';
+                }
+                $('lifecycle-note').textContent = '';
+                managed = false;
+                return;
+            }
             $('lifecycle-note').textContent = 'Lifecycle controls unavailable.';
             $('load-active-models').disabled = true;
             $('unload-all').disabled = true;
