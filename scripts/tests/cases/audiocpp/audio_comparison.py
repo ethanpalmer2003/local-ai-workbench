@@ -8,6 +8,7 @@ from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
+from scripts.config import models as model_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp_catalog, audiocpp_proxy, tts_proxy
 from scripts.tests.shared.paths import CasePaths
@@ -33,6 +34,38 @@ class AudioComparison(unittest.TestCase):
             self.assertIs(value["stream"], True)
             self.assertEqual(value["response_format"], "pcm")
 
+    def test_a_model_with_named_voices_reports_its_own_default(self):
+        for model, voice in (
+            ("audiocpp/supertonic-3-q8_0", "F1"),
+            ("audiocpp/kokoro-audiocpp-multilingual-q8_0", "af_heart"),
+            ("audiocpp/ming3-tts-0.5b-q8_0", "US_James"),
+        ):
+            if not model_cfg.path(model).is_file():
+                continue
+            data = audiocpp_catalog.runtime_defaults(cfg.AUDIOCPP_SERVICE, model)
+            self.assertEqual(data["voice_mode"], "builtin", model)
+            self.assertEqual(data["voice"], voice, model)
+            self.assertFalse(audiocpp_catalog.supports_clone(model), model)
+
+    def test_only_a_reference_model_reports_the_clone_voice(self):
+        model = "audiocpp/breeze-tts-2-q4_0"
+        if not model_cfg.path(model).is_file():
+            self.skipTest("Breeze weights are not installed")
+        data = audiocpp_catalog.runtime_defaults(cfg.AUDIOCPP_SERVICE, model)
+        self.assertEqual(data["voice_mode"], "clone")
+        self.assertEqual(data["voice"], cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value)
+
+    def test_a_named_voice_model_gets_its_default_voice_id(self):
+        options: dict[str, object] = {}
+        payload: dict[str, object] = {"input": "hi", "options": options}
+        with (
+            patch.object(audiocpp_catalog, "declares_voice_presets", return_value=True),
+            patch.object(audiocpp_catalog, "default_voice_for", return_value="F1"),
+            patch.object(audiocpp_catalog, "server_request_defaults", return_value={}),
+        ):
+            audiocpp_proxy._apply_request_options(payload, None, "audiocpp/supertonic-3-q8_0")
+        self.assertEqual(options["voice_id"], "F1")
+
     def test_a_request_option_the_model_does_not_declare_is_dropped(self):
         preset = cfg.AUDIOCPP_PROXY_MODEL_PRESETS[cfg.AudiocppModel.BREEZE_TTS]
         options: dict[str, object] = {"language": "en", "instruction": "calm", "guidance_scale": 4.0}
@@ -54,6 +87,7 @@ class AudioComparison(unittest.TestCase):
         with (
             patch.object(audiocpp_catalog, "accepted_request_options", return_value=frozenset()),
             patch.object(audiocpp_catalog, "server_request_defaults", return_value={}),
+            patch.object(audiocpp_catalog, "declares_voice_presets", return_value=False),
         ):
             audiocpp_proxy._apply_request_options(payload, None, cfg.AudiocppModel.MING3_TTS.value)
         self.assertEqual(payload["options"], {"language": "en"})
@@ -125,6 +159,9 @@ class AudioComparison(unittest.TestCase):
                 patch.object(cfg, "AUDIOCPP_PROXY_CLONE_VOICES", ("test-voice", "other-voice")),
                 patch.dict(cfg.AUDIOCPP_SERVER_ARGS, {"config": str(config)}),
                 patch.object(audiocpp_catalog, "_voice_refs", return_value={"test-voice": Path("voice.wav")}),
+                # - the fixture's placeholder files carry no model spec, so the packaging answer is supplied
+                patch.object(audiocpp_catalog, "_accepts_reference", return_value=True),
+                patch.object(audiocpp_catalog, "_declares_voice_presets", return_value=False),
             ):
                 catalog = audiocpp_catalog.comparison_catalog()
             self.assertEqual(

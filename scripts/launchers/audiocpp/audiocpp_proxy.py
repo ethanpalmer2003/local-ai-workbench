@@ -146,6 +146,11 @@ def _apply_request_options(payload: Payload, preset: cfg.AudiocppProxyRequestMod
         options.setdefault(key, value)
     for k, v in (preset.request_options if preset else {}).items():
         options.setdefault(k, v)
+    # - a model with named voices speaks its own default; only a reference-driven model takes `voice`
+    if audiocpp_catalog.declares_voice_presets(model):
+        default_voice = audiocpp_catalog.default_voice_for(model)
+        if default_voice:
+            options.setdefault("voice_id", default_voice)
 
 
 def _trigger_audiocpp_preload(on_success: Callable[[], None] | None = None) -> None:

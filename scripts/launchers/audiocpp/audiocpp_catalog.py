@@ -69,10 +69,26 @@ def streaming_default_sources(
 
 
 def server_request_defaults(model: str) -> dict[str, object]:
+    spec = _configured_spec(model)
+    return dict(spec.get("default_request_options", {})) if spec else {}
+
+
+def _configured_spec(model: str) -> dict[str, Any] | None:
+    """The server config's entry for one model, or None when it is not configured."""
     source = Path(cfg.AUDIOCPP_SERVER_ARGS["config"])
     specs = audio_cfg.read(source)["models"]
-    spec = next((entry for entry in specs if entry["id"] == model), None)
-    return dict(spec.get("default_request_options", {})) if spec else {}
+    return next((entry for entry in specs if entry["id"] == model), None)
+
+
+def declares_voice_presets(model: str) -> bool:
+    """Whether the model speaks its own named voices instead of a cloned reference."""
+    spec = _configured_spec(model)
+    return bool(spec) and _declares_voice_presets(spec)
+
+
+def default_voice_for(model: str) -> str:
+    """The voice a request for this model gets when it names none."""
+    return model_default_voice(model, _configured_spec(model))
 
 
 def configured_voices() -> list[dict[str, object]]:
@@ -133,6 +149,7 @@ def runtime_defaults(
         playback_buffer_source = "Model preset"
     if selected in cfg.BREEZE_MODELS:
         proxy, inherited_tone = breeze_defaults()
+    voices = voice_data(selected, spec)
     return {
         "streaming_enabled": (
             (selected == service.model and service.streaming_enabled) or bool(spec and spec.get("mode") == "streaming")
@@ -145,12 +162,12 @@ def runtime_defaults(
         "playback_note": preset.playback_note if preset else "",
         "practice_url": f"http://127.0.0.1:{cfg.LLAMACPP_PRACTICE.port}/practice",
         "model": service.model,
-        "voice": service.voice,
+        "voice": voices.get("default_voice") or (service.voice if voices.get("voice_mode") == "clone" else ""),
         "selected_model": selected,
         "model_identity": Path(spec["path"]).name if spec else selected,
         "instruction_option": preset.instruction_option if preset else "instruction",
         "models": configured_models(),
-        **voice_data(selected, spec),
+        **voices,
         "proxy_defaults": proxy,
         "inherited_tone": inherited_tone,
         # - the page's practice view starts on the language-practice voice; the test view starts on this
@@ -198,12 +215,20 @@ def configured_models() -> list[dict[str, object]]:
             {
                 "id": spec["id"],
                 "installed": path.is_file(),
-                # - Builtin-voice families take preset ids, so they never need a clone reference.
+                # - a model that speaks named voices never needs a clone reference, so only Breeze and
+                #   the reference-only checkpoints keep the clone path
                 "clone": spec["id"] != cfg.AudiocppModel.BREEZE_DESIGN.value
-                and spec.get("family") not in cfg.TTS_FAMILY_DEFAULT_VOICE,
+                and not _declares_voice_presets({**spec, "path": str(path)})
+                and _accepts_reference(path),
             }
         )
     return models
+
+
+def _accepts_reference(path: Path) -> bool:
+    """Whether the packaged model spec takes a reference clip, which is the cloning path."""
+    entries = _safe_spec(path).get("options", {}).get("request", []) if path.is_file() else []
+    return any(entry.get("name") == "reference_text" for entry in entries)
 
 
 def packaged_spec(path: Path) -> dict[str, Any]:
@@ -246,13 +271,12 @@ def builtin_voices(path: Path) -> list[dict[str, object]]:
 
 
 def voice_data(model: str, spec: dict[str, Any] | None) -> dict[str, object]:
-    if spec and spec.get("family") in cfg.TTS_FAMILY_DEFAULT_VOICE:
+    if spec and _declares_voice_presets(spec):
         path = Path(spec["path"])
-        voices = builtin_voices(path) if path.is_file() else []
         return {
             "voice_mode": "builtin",
-            "voices": voices,
-            "default_voice": cfg.TTS_FAMILY_DEFAULT_VOICE[spec["family"]],
+            "voices": builtin_voices(path) if path.is_file() else [],
+            "default_voice": model_default_voice(model, spec),
         }
     clone = next((row["clone"] for row in configured_models() if row["id"] == model), False)
     if clone:
@@ -262,6 +286,42 @@ def voice_data(model: str, spec: dict[str, Any] | None) -> dict[str, object]:
             "default_voice": cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value,
         }
     return {"voice_mode": "none", "voices": [], "default_voice": ""}
+
+
+def _safe_spec(path: Path) -> dict[str, Any]:
+    """The packaged spec, or empty when the file is absent or not a readable GGUF."""
+    try:
+        return packaged_spec(path)
+    except (OSError, ValueError):
+        return {}
+
+
+def _voice_option(path: Path) -> dict[str, Any]:
+    """The packaged voice_id option, empty when the model takes no preset voice."""
+    entries = _safe_spec(path).get("options", {}).get("request", [])
+    return next((entry for entry in entries if entry.get("name") == "voice_id"), {})
+
+
+def _declares_voice_presets(spec: dict[str, Any]) -> bool:
+    """Whether the model speaks its own named voices, which is what keeps it off the clone list."""
+    if spec.get("family") in cfg.TTS_FAMILY_DEFAULT_VOICE:
+        return True
+    path = Path(spec["path"])
+    return path.is_file() and bool(_voice_option(path).get("values"))
+
+
+def model_default_voice(model: str, spec: dict[str, Any] | None) -> str:
+    """The voice this model speaks when a request names none: its family pick, else its packaged default."""
+    if not spec:
+        return ""
+    family = spec.get("family")
+    if family in cfg.TTS_FAMILY_DEFAULT_VOICE:
+        return cfg.TTS_FAMILY_DEFAULT_VOICE[family]
+    path = Path(spec["path"])
+    if not path.is_file():
+        return ""
+    option = _voice_option(path)
+    return str(option.get("default") or next(iter(option.get("values") or []), ""))
 
 
 def supports_clone(model: str) -> bool:
