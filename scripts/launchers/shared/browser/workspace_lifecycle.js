@@ -3,8 +3,29 @@
     let available = false, managed = false, seen = new Set(), refreshing = false, refreshAgain = false;
     let statusRevision = 0;
     const loadingContexts = new Map();
+    const states = new Map();
     let timer;
     const $ = id => document.getElementById(id);
+    const loaded = state => ['loaded', 'external', 'shared resident'].includes(state);
+    function bind(stage) {
+        const control = $(`load-${stage}`);
+        if (!control) return;
+        control.onclick = async () => {
+            control.disabled = true;
+            try { await action(stage, loaded(states.get(stage)) ? 'unload' : 'load', 'preload'); }
+            catch (error) { $('status').textContent = error.message; }
+            finally { control.disabled = false; }
+        };
+    }
+    for (const stage of ['asr', 'llm', 'tts']) bind(stage);
+    function showControl(stage, state, busy) {
+        const control = $(`load-${stage}`);
+        if (!control) return;
+        states.set(stage, state);
+        control.hidden = false;
+        control.disabled = busy || state === 'loading';
+        control.textContent = state === 'loading' ? 'Loading' : loaded(state) ? 'Unload' : 'Load';
+    }
     function loading(stage, context = 'request', queued = false) {
         if (!managed) return;
         statusRevision++;
@@ -37,6 +58,8 @@
                     const node = $(`residency-${stage}`);
                     node.hidden = true;
                     node.textContent = '';
+                    const control = $(`load-${stage}`);
+                    if (control) control.hidden = true;
                 }
                 $('lifecycle-note').textContent = '';
                 managed = false;
@@ -50,6 +73,8 @@
                 node.hidden = false;
                 node.dataset.state = 'failed';
                 node.textContent = `${stage.toUpperCase()} status unavailable`;
+                const control = $(`load-${stage}`);
+                if (control) control.disabled = true;
             }
             return;
         }
@@ -60,6 +85,7 @@
         $('unload-all').disabled = busy;
         for (const [stage, service] of Object.entries(value.stages)) {
             const node = $(`residency-${stage}`);
+            showControl(stage, service.state, busy);
             const labels = {unloaded: 'Unloaded · starts on request', loading: 'Loading model...', loaded: 'Loaded', external: 'Reused service', failed: 'Load failed', 'shared resident': 'Resident (shared)'};
             node.hidden = false;
             node.dataset.state = service.state;

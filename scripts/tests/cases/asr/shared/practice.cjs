@@ -35,6 +35,7 @@ for (const id of ['enable-asr', 'enable-llm', 'measurements', 'measurement-rows'
 Object.assign(elements, {'enable-tts': elements.speak, 'speak': elements.send, 'capture-stop': elements.stop, 'practice-audio': elements.audio, 'box': elements.transcript});
 for (const id of ['load-active-models', 'unload-all']) elements[id] = {};
 for (const id of ['learning-level', 'correct-language', 'auto-send', 'assistant-practice-toggle', 'assistant-mode-help', 'interim-transcript', 'save-conversation', 'lifecycle-note', 'lifecycle-log', 'residency-asr', 'residency-llm', 'residency-tts']) elements[id] = {value: '', textContent: '', hidden: false, dataset: {}};
+for (const id of ['load-asr', 'load-llm', 'load-tts']) elements[id] = {textContent: '', hidden: true, disabled: false};
 const body = {dataset: {}};
 const documentElement = {dataset: {}};
 const context = vm.createContext({
@@ -101,6 +102,13 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
         assert.equal(elements['workspace-title'].textContent, 'Language practice');
     }
     vm.runInContext(fs.readFileSync(path.join(shared, 'workspace_lifecycle.js'), 'utf8'), context);
+    await tick(); await tick();
+    assert.equal(elements['load-tts'].hidden, false, 'each stage offers its own load control');
+    assert.equal(elements['load-tts'].textContent, 'Load');
+    await elements['load-tts'].onclick();
+    assert.ok(requests.some(([url, options]) => url === '/workspace/lifecycle' && options.method === 'POST' &&
+        JSON.parse(options.body).stage === 'tts' && JSON.parse(options.body).action === 'load'),
+        'the stage control loads that stage');
     if (cached) {
         await tick(); await tick();
         assert.equal(elements.language.value, 'ja');

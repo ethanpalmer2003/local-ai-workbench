@@ -54,6 +54,7 @@
   #workspace-options :is(select,button,.framework-display) { height:38px; min-height:38px; padding:7px 10px; font-size:13px; line-height:22px; }
   #workspace-options .toggle { min-width:10rem; }
   #workspace-options legend .toggle { min-width:0; height:auto; min-height:0; padding:2px 10px; font-size:12px; line-height:18px; }
+  #workspace-options legend .lifecycle-toggle { min-width:0; height:auto; min-height:0; padding:2px 10px; font-size:12px; line-height:18px; }
   .framework-display { color:var(--dim); width:11rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .pipeline select { min-width:0; text-overflow:ellipsis; }
   input::placeholder,textarea::placeholder { color:var(--dim); opacity:.65; }
@@ -134,14 +135,14 @@
     <div class="toolbar test-only"><button type="button" id="restart-workspace">Restart workspace</button><span id="restart-workspace-status" class="hint" role="status" aria-live="polite"></span></div>
   </header>
   <div id="model-settings" class="pipeline">
-    <fieldset id="asr-choice"><legend>ASR <button type="button" class="toggle test-only" id="enable-asr" aria-pressed="true">Recognize speech</button><span id="residency-asr" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading ASR...</span></legend>
+    <fieldset id="asr-choice"><legend>ASR <button type="button" class="toggle test-only" id="enable-asr" aria-pressed="true">Recognize speech</button><button type="button" class="lifecycle-toggle" id="load-asr" hidden>Load</button><span id="residency-asr" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading ASR...</span></legend>
       <label class="model-option">Model<select id="asr-model" disabled></select></label>
       <label class="model-option">Runtime<select id="asr-framework" disabled></select></label><label class="model-option test-only">Delivery<select id="delivery-asr" disabled><option value="auto">Auto</option></select></label></fieldset>
-    <fieldset id="llm-choice"><legend>LLM <button type="button" class="toggle test-only" id="enable-llm" aria-pressed="true">Generate a reply</button><span id="residency-llm" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading LLM...</span></legend>
+    <fieldset id="llm-choice"><legend>LLM <button type="button" class="toggle test-only" id="enable-llm" aria-pressed="true">Generate a reply</button><button type="button" class="lifecycle-toggle" id="load-llm" hidden>Load</button><span id="residency-llm" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading LLM...</span></legend>
       <label class="model-option">Model<select id="llm-model" disabled></select></label>
       <label class="model-option test-only">Runtime<div id="llm-runtime" class="framework-display">llama.cpp</div></label>
 <label class="model-option test-only">Delivery<select id="delivery-llm" disabled><option value="auto">Auto</option></select></label></fieldset>
-    <fieldset id="tts-choice"><legend>TTS <button type="button" class="toggle test-only" id="enable-tts" aria-pressed="true">Speak output</button><span id="residency-tts" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading TTS...</span></legend>
+    <fieldset id="tts-choice"><legend>TTS <button type="button" class="toggle test-only" id="enable-tts" aria-pressed="true">Speak output</button><button type="button" class="lifecycle-toggle" id="load-tts" hidden>Load</button><span id="residency-tts" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading TTS...</span></legend>
       <label class="model-option">Model<select id="tts-model" disabled></select></label>
       <label class="model-option test-only">Runtime<div class="framework-display">AudioCpp</div></label><label class="model-option practice-only">Conversation delivery<select id="delivery-tts" disabled><option value="auto">Auto</option></select></label>
       <label>Voice<select id="voice"></select></label>
@@ -152,7 +153,7 @@
       </fieldset>
   </div>
   <p id="lifecycle-note" class="hint test-only"></p>
-  <div class="toolbar model-option"><button type="button" class="test-only" id="load-active-models" disabled>Load all active</button><button type="button" class="test-only" id="unload-all" disabled>Unload all</button><span id="model-status" class="hint">Loading model choices...</span></div>
+  <div class="toolbar model-option"><button type="button" id="load-active-models" disabled>Load all active</button><button type="button" id="unload-all" disabled>Unload all</button><span id="model-status" class="hint">Loading model choices...</span></div>
   <details id="language-settings">
     <summary>Language and prompt</summary>
     <div class="language-controls">
