@@ -33,7 +33,8 @@ than a tree.
 
 The reason names the replacement and the guides: `python -m scripts.tools.locate_files SUFFIX` walks only the
 configured roots to a fixed depth and answers in under a second, [code search](CODE-SEARCH.md)
-lists the tool per question, and [the rules index](README.md) lists every agent document.
+lists the tool per question, and [the rules index](README.md) lists every agent document. Which trees the guard
+treats as heavy, and whether anything else is as expensive, is `python -m scripts.review.tree_sizes --measure`.
 
 ## Limits
 

@@ -9,6 +9,8 @@
 /.zed/
 /.coverage
 *.lnk
+# the private overlay repo for this host's harness profile; see harness/README.md
+/harness/overlay/
 
 # Graphify's local knowledge graph (generated, 9 MB)
 graphify-out/

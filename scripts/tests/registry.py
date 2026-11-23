@@ -85,6 +85,7 @@ from scripts.tests.cases.review.test_restrictions import (
     RestrictionTableTests,
 )
 from scripts.tests.cases.review.test_review_gate import GateScopeTests
+from scripts.tests.cases.review.test_tree_sizes import TreeSizesTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
 from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
 from scripts.tests.cases.shared.benchmarks.test_coding_engines import CodingEngineSummaryTests
@@ -310,6 +311,7 @@ TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
     LanguageMatrixTests,
     RocmInventoryTests,
     StageRunnerTests,
+    TreeSizesTests,
     CleanupTests,
     StateCleanupTests,
     MoveParsingTests,

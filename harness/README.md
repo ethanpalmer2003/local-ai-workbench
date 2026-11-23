@@ -10,3 +10,5 @@ code it guards rather than in `scripts/state/`, which the harness discards and t
    recreates the link. A harness start imports it; an edit reaches the next start, not the running one.
 3. Anything machine-specific stays out: API routes, ports and account settings live in the profile's own
    `cordis.patch.yml`, which is not tracked here.
+4. That profile is versioned separately in `overlay/`, a private repository this one ignores; its README carries
+   the two copy commands that apply a change and capture a live one.
