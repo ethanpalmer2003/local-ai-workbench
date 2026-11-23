@@ -217,7 +217,7 @@
         <label>Chunk size [1+]<input id="text_chunk_size" type="number" min="1" placeholder="Model default"></label>
         <label>Text chunk mode<select id="text_chunk_mode"><option value="">Server default</option><option>default</option><option>tag_aware</option><option>japanese</option><option>endline</option></select></label>
       </div>
-      <label>Additional options (JSON)<textarea id="extra" rows="3" placeholder='{"instruction":"Speak clearly."}'>{}</textarea></label>
+      <label>Additional options (JSON)<textarea id="extra" rows="3" placeholder='Example: {"instruction":"Speak clearly."}'>{}</textarea></label>
     </details>
     <details><summary>Streaming and playback</summary>
     <fieldset id="streaming-settings" aria-label="Streaming only">
@@ -518,9 +518,10 @@
       const source = proxy[key] !== undefined ? 'Proxy' : config.streaming_sources?.[key] ??
         (configured != null ? 'Launcher' : server[key] !== undefined ? 'Server config' : modelPreset[key] !== undefined ? 'Model preset' : audioCpp[key] !== undefined ? 'AudioCpp default' : 'GGUF fallback');
       const hint = value === undefined ? 'Inherited; default not advertised' : `${source}: ${value === '' ? '(empty)' : value}`;
+      const inherited = id === 'instr' && config.inherited_tone ? ` · last tone: ${config.inherited_tone}` : '';
       const control = document.getElementById(id);
       control.placeholder = value === undefined ? 'Server default' : value === '' ? '(empty)' : String(value);
-      control.title = hint;
+      control.title = hint + inherited;
       if (control.tagName === 'SELECT') control.options[0].textContent = control.placeholder + ' (default)';
     }
     for (const [id, value] of [['rate', config.streaming?.pcm_sample_rate], ['voice', config.voice]]) {
@@ -585,7 +586,9 @@
           const option = document.createElement('option'); option.value = model.id;
           option.textContent = model.id; option.disabled = !model.installed; return option;
         }));
-        choices.value = config.model; choices.disabled = false;
+        const practiced = document.documentElement.dataset.view === 'practice' &&
+          (config.models || []).some(model => model.id === config.practice_model && model.installed);
+        choices.value = practiced ? config.practice_model : config.model; choices.disabled = false;
         choices.onchange = loadModelDefaults;
         document.getElementById('model-status').textContent = 'ASR/chat unavailable on TTS endpoint.';
       }

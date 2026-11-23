@@ -94,6 +94,17 @@ def _voice_refs() -> dict[str, Path]:
     return {voice: sorted(paths)[0] for voice, paths in matches.items()}
 
 
+def breeze_defaults() -> tuple[dict[str, object], str]:
+    """Breeze's configured guidance and instruction defaults, and the last tone this process applied.
+
+    The last tone is not a default: it is what the previous request inherited, so the page shows it as a
+    note rather than filling it in, and a configured empty instruction stays empty.
+    """
+    tones = tts_text_processing.BREEZE_TONES
+    inherited = tts_text_processing.tone_state.last if tones.tags_enabled else None
+    return {"guidance_scale": tones.guidance_scale, "instruction": tones.default_instruction}, inherited or ""
+
+
 def runtime_defaults(
     service: cfg.AudiocppStartupRequestServiceSettings, model: str | None = None, specs: list[ModelSpec] | None = None
 ) -> dict[str, object]:
@@ -110,6 +121,7 @@ def runtime_defaults(
             stat = path.stat()
             packaged = _packaged_defaults(path, stat.st_mtime_ns, stat.st_size)
     proxy: dict[str, object] = {}
+    inherited_tone = ""
     streaming = streaming_defaults(service, selected)
     playback_buffer_source = "Launcher"
     preset = (
@@ -120,9 +132,7 @@ def runtime_defaults(
     if preset and preset.playback_buffer_ms is not None:
         playback_buffer_source = "Model preset"
     if selected in cfg.BREEZE_MODELS:
-        tones = tts_text_processing.BREEZE_TONES
-        inherited = tts_text_processing.tone_state.last if tones.tags_enabled else None
-        proxy = {"guidance_scale": tones.guidance_scale, "instruction": inherited or tones.default_instruction}
+        proxy, inherited_tone = breeze_defaults()
     return {
         "streaming_enabled": (
             (selected == service.model and service.streaming_enabled) or bool(spec and spec.get("mode") == "streaming")
@@ -142,6 +152,10 @@ def runtime_defaults(
         "models": configured_models(),
         **voice_data(selected, spec),
         "proxy_defaults": proxy,
+        "inherited_tone": inherited_tone,
+        # - the page's practice view starts on the language-practice voice; the test view starts on this
+        #   proxy's own service model, so Breeze stays one route away
+        "practice_model": cfg.LANGUAGE_PRACTICE.tts_model,
         "model_preset_defaults": preset.request_options if preset else {},
         "packaged_defaults": packaged,
         "server_session_options": spec.get("session_options", {}) if spec else {},

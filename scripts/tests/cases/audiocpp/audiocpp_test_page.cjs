@@ -91,6 +91,9 @@ async function playback(bufferSeconds) {
     model: 'audiocpp/breeze-tts-2-q4_0', voice: 'voice-a', streaming_enabled: true, streaming: { playback_buffer_ms: 2000,
       pcm_sample_rate: 24000, transport: 'audio', stream_frames_per_event: 16, stream_lookahead_margin: null, stream_chunk_policy: null},
     proxy_defaults: {guidance_scale: 1, instruction: ''},
+    inherited_tone: 'Speak cheerfully.',
+    practice_model: 'audiocpp/supertonic-3-q8_0',
+    models: [{id: 'audiocpp/breeze-tts-2-q4_0', installed: true}, {id: 'audiocpp/supertonic-3-q8_0', installed: true}],
     packaged_defaults: {request: {temperature: .9, stream_lookahead_margin: 12}},
   };
   context.fetch = async (url, options) => {
@@ -111,6 +114,9 @@ async function playback(bufferSeconds) {
   assert.match(document.getElementById('temperature').title, /GGUF fallback/);
   assert.equal(document.getElementById('lookahead').placeholder, '12');
   assert.equal(document.getElementById('gs').placeholder, '1');
+  assert.equal(document.getElementById('instr').placeholder, '(empty)', 'the real default is blank, and a last tone is not one');
+  assert.match(document.getElementById('instr').title, /last tone: Speak cheerfully\./);
+  assert.match(html, /placeholder='Example: \{"instruction"/, 'an example must read as an example');
   assert.equal(vm.runInContext('settings()', context).bufferSeconds, 2);
   assert.equal(vm.runInContext('settings()', context).rate, 24000);
   assert.equal(vm.runInContext('settings()', context).payload.stream_format, 'audio');
@@ -180,6 +186,16 @@ async function playback(bufferSeconds) {
   const wav = await vm.runInContext('PcmAudio.wav([new Uint8Array(4800)], 24000)', context);
   assert.equal(new DataView(wav).getUint32(24, true), 24000);
   assert.equal(new DataView(wav).getUint32(40, true), 4800);
+  delete servedConfig.practice_gateway;
+  context.fetch = async () => ({ok: true, async json() { return servedConfig; }});
+  document.documentElement.dataset.view = 'practice';
+  await document.getElementById('defaults').onclick();
+  assert.equal(
+    document.getElementById('tts-model').value, 'audiocpp/supertonic-3-q8_0', 'practice view starts on the practice voice');
+  document.documentElement.dataset.view = 'test';
+  await document.getElementById('defaults').onclick();
+  assert.equal(
+    document.getElementById('tts-model').value, 'audiocpp/breeze-tts-2-q4_0', 'test view starts on the service model');
   console.log('PASS: buffered request, split SSE parsing, underrun detection, startup buffering, contiguous scheduling, WAV capture');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
