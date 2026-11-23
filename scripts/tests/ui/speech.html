@@ -139,8 +139,7 @@
       <label class="model-option">Model<select id="asr-model" disabled></select></label>
       <label class="model-option">Runtime<select id="asr-framework" disabled></select></label><label class="model-option test-only">Delivery<select id="delivery-asr" disabled><option value="auto">Auto</option></select></label>
       <button type="button" class="toggle" id="auto-send" aria-pressed="true">Send recognized turns automatically</button>
-      <label class="asr-silence">Silence before send <input id="asr-silence" type="range" min="200" max="1500" step="50" value="700" aria-describedby="asr-silence-note"> <output id="asr-silence-value">700 ms</output></label>
-      <p id="asr-silence-note" class="hint">A turn ends after this much silence.</p></fieldset>
+      <label class="asr-silence">Silence before send <input id="asr-silence" type="range" min="200" max="1500" step="50" value="700"> <output id="asr-silence-value">700 ms</output></label></fieldset>
     <fieldset id="llm-choice"><legend>LLM <button type="button" class="toggle test-only" id="enable-llm" aria-pressed="true">Generate a reply</button><button type="button" class="lifecycle-toggle" id="load-llm" hidden>Load</button><span id="residency-llm" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading LLM...</span></legend>
       <label class="model-option">Model<select id="llm-model" disabled></select></label>
       <label class="model-option test-only">Runtime<div id="llm-runtime" class="framework-display">llama.cpp</div></label>

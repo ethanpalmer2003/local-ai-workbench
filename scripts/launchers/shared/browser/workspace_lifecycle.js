@@ -106,7 +106,7 @@
                 node.textContent = `${labels[service.state] || service.state}${service.pid ? ` · PID ${service.pid}` : ''}`;
             }
         }
-        $('lifecycle-note').textContent = 'Uncheck a stage to unload it. Shared servers stop when unused.';
+        $('lifecycle-note').textContent = '';
         $('lifecycle-log').textContent = `Log: ${value.log}`;
         for (const event of value.events) {
             const key = `${event.timestamp}:${event.id}`;
