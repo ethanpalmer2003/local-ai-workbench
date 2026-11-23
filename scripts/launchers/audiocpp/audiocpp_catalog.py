@@ -6,6 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from scripts.config import models as model_cfg
 from scripts.config.audiocpp import server as audio_cfg
 from scripts.config.models.gguf_metadata import read_metadata
 from scripts.launchers import launcher_config as cfg
@@ -13,6 +14,9 @@ from scripts.launchers.audiocpp import tts_text_processing
 
 Payload = dict[str, object]
 ModelSpec = dict[str, Any]
+# - audio.cpp accepts these spellings even though the packaged spec names only the canonical one,
+#   so a client key here is not a request the server would refuse
+REQUEST_OPTION_ALIASES = {"instruction": "instruct"}
 
 
 class ComparisonSelectionError(ValueError):
@@ -191,6 +195,24 @@ def configured_models() -> list[dict[str, object]]:
 def packaged_spec(path: Path) -> dict[str, Any]:
     """The AudioCpp model spec embedded in an installed GGUF."""
     return json.loads(read_metadata(path).get("audiocpp.model_spec.json", "{}"))
+
+
+def request_option_names(model: str) -> frozenset[str]:
+    """The request options the installed model declares; empty when its spec names none."""
+    try:
+        path = model_cfg.path(model)
+    except KeyError:
+        return frozenset()
+    if not path.is_file():
+        return frozenset()
+    entries = packaged_spec(path).get("options", {}).get("request", [])
+    return frozenset(entry["name"] for entry in entries if "name" in entry)
+
+
+def accepted_request_options(model: str) -> frozenset[str]:
+    """Declared options plus the spellings audio.cpp accepts for them; empty when the spec names none."""
+    declared = request_option_names(model)
+    return declared | {alias for alias, canonical in REQUEST_OPTION_ALIASES.items() if canonical in declared}
 
 
 def builtin_voices(path: Path) -> list[dict[str, object]]:

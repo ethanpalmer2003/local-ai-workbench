@@ -56,7 +56,10 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(payload["response_format"], "pcm")
         options = payload["options"]
         assert isinstance(options, dict)
-        self.assertEqual(options["language"], "fr-fr")
+        # - Supertonic's packaged spec declares no locale field, so a client `language` is dropped and
+        #   the model's own voice option stands; the language comes from the text
+        self.assertNotIn("language", options)
+        self.assertEqual(options["voice_id"], cfg.SUPERTONIC_TTS.voice)
         with (
             patch.object(speech_delivery, "overrides", return_value={}),
             patch.object(practice_models, "tts_spec", return_value={**spec, "mode": "buffered"}),

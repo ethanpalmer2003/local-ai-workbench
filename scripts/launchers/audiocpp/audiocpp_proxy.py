@@ -38,10 +38,10 @@ def _transform(payload: Payload) -> Payload | None:
     if cleaned is None:
         return None
     payload["input"] = cleaned
-    if preset := _preset_for(model):
-        if preset.prepend:
-            payload["input"] = preset.prepend + cleaned
-        _apply_request_options(payload, preset, model)
+    preset = _preset_for(model)
+    if preset and preset.prepend:
+        payload["input"] = preset.prepend + cleaned
+    _apply_request_options(payload, preset, model)
     return payload
 
 
@@ -127,16 +127,24 @@ def _apply_voice_ref_fallback(payload: Payload) -> None:
         print(f"[audiocpp-proxy] warning: no clone files found for {candidates}")
 
 
-def _apply_request_options(payload: Payload, preset: cfg.AudiocppProxyRequestModelPreset, model: str) -> None:
+def _apply_request_options(payload: Payload, preset: cfg.AudiocppProxyRequestModelPreset | None, model: str) -> None:
     options = payload.setdefault("options", {})
     if not isinstance(options, dict):
         return
+    # - the packaged spec is the authority: a client option the model does not declare fails the whole
+    #   request upstream, so it is dropped here with one line naming what went (Breeze has no `language`)
+    accepted = audiocpp_catalog.accepted_request_options(model)
+    dropped = sorted(key for key in options if accepted and key not in accepted)
+    if dropped:
+        for key in dropped:
+            options.pop(key, None)
+        print(f"[WARN] {model}: dropped unsupported request option(s): {', '.join(dropped)}", flush=True)
     streaming_keys = {"stream_frames_per_event", "stream_lookahead_margin", "stream_chunk_policy"}
     for key, value in audiocpp_catalog.server_request_defaults(model).items():
         if key in streaming_keys and not is_streaming_request(payload):
             continue
         options.setdefault(key, value)
-    for k, v in preset.request_options.items():
+    for k, v in (preset.request_options if preset else {}).items():
         options.setdefault(k, v)
 
 

@@ -2,6 +2,7 @@
 
 import contextlib
 import json
+import socket
 import time
 import traceback
 import uuid
@@ -38,6 +39,16 @@ Payload = dict[str, object]
 
 # - Synthesis of a long reply can outlast a normal request; the bound is an idle wait, not total time
 UPSTREAM_TIMEOUT = 300
+
+
+def _redirect_target_live(url: str) -> bool:
+    """The practice workspace serves the full test page; when it is down, this proxy serves it here."""
+    parts = urlsplit(url)
+    try:
+        with socket.create_connection((parts.hostname or "127.0.0.1", parts.port or 80), timeout=0.25):
+            return True
+    except OSError:
+        return False
 
 
 def _test_asset(path: str) -> tuple[bytes, str] | None:
@@ -299,7 +310,11 @@ class _TtsProxyHandler(QuietLog, ProxyHandlerMixin):
                 self.close_connection = True
 
     def _forward_get(self, method: str):
-        if self.test_page_redirect and urlsplit(self.path).path in ("/test", "/test/"):
+        if (
+            self.test_page_redirect
+            and urlsplit(self.path).path in ("/test", "/test/")
+            and _redirect_target_live(self.test_page_redirect)
+        ):
             self.send_response(307)
             self.send_header("Location", self.test_page_redirect)
             self.send_header("Content-Length", "0")

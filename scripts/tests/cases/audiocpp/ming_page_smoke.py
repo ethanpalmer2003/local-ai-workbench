@@ -21,15 +21,16 @@ def main() -> None:
     run = CasePaths(__file__).new_run()
     print(f"[OUTPUT] {run.root}", flush=True)
     with report_run(run, "Ming test page / clone / SSE", "audiocpp", settings={"execution_context": context}) as report:
-        # - /test/ redirects to the practice workspace by design; the assets must answer directly
+        # - /test/ redirects to the practice workspace when it runs, and falls back to this proxy's own page
+        practice = requests.get(f"http://127.0.0.1:{cfg.LLAMACPP_PRACTICE.port}/test/", timeout=3)
         for path, expected in (
-            ("/test/", 307),
+            ("/test/", 200 if practice.status_code == 200 else 307),
             ("/test/comparison.js", 200),
             ("/launchers/audiocpp/pcm_audio.js", 200),
         ):
             response = requests.get(root + path, timeout=5, allow_redirects=False)
             assert response.status_code == expected, f"{path}: {response.status_code}"
-            if expected == 200:
+            if response.status_code == 200:
                 assert response.content, path
         defaults = requests.get(root + "/proxy/config?model=" + model, timeout=10).json()
         assert any(row["id"] == model and row["installed"] for row in defaults["models"])

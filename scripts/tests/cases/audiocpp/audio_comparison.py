@@ -1,6 +1,7 @@
 """Comparison selection safety without model inference."""
 
 import json
+import socket
 import struct
 import unittest
 from dataclasses import replace
@@ -8,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.audiocpp import audiocpp_catalog, audiocpp_proxy
+from scripts.launchers.audiocpp import audiocpp_catalog, audiocpp_proxy, tts_proxy
 from scripts.tests.shared.paths import CasePaths
 
 
@@ -31,6 +32,42 @@ class AudioComparison(unittest.TestCase):
             audiocpp_proxy._apply_stream_defaults(value)
             self.assertIs(value["stream"], True)
             self.assertEqual(value["response_format"], "pcm")
+
+    def test_a_request_option_the_model_does_not_declare_is_dropped(self):
+        preset = cfg.AUDIOCPP_PROXY_MODEL_PRESETS[cfg.AudiocppModel.BREEZE_TTS]
+        options: dict[str, object] = {"language": "en", "instruction": "calm", "guidance_scale": 4.0}
+        payload: dict[str, object] = {"input": "hi", "options": options}
+        accepted = frozenset({"guidance_scale", "instruct", "instruction"})
+        with patch.object(audiocpp_catalog, "accepted_request_options", return_value=accepted):
+            audiocpp_proxy._apply_request_options(payload, preset, cfg.AudiocppModel.BREEZE_TTS.value)
+        self.assertNotIn("language", options)
+        self.assertEqual(options["instruction"], "calm")
+        self.assertEqual(options["guidance_scale"], 4.0)
+
+    def test_the_installed_spec_accepts_the_spelling_the_tone_path_sends(self):
+        accepted = audiocpp_catalog.accepted_request_options(cfg.AudiocppModel.BREEZE_TTS.value)
+        self.assertIn("instruction", accepted)
+        self.assertNotIn("language", accepted)
+
+    def test_a_model_that_declares_no_request_options_keeps_the_client_keys(self):
+        payload: dict[str, object] = {"input": "hi", "options": {"language": "en"}}
+        with (
+            patch.object(audiocpp_catalog, "accepted_request_options", return_value=frozenset()),
+            patch.object(audiocpp_catalog, "server_request_defaults", return_value={}),
+        ):
+            audiocpp_proxy._apply_request_options(payload, None, cfg.AudiocppModel.MING3_TTS.value)
+        self.assertEqual(payload["options"], {"language": "en"})
+
+    def test_the_test_page_falls_back_to_the_local_copy_when_the_workspace_is_down(self):
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            port = probe.getsockname()[1]
+        self.assertFalse(tts_proxy._redirect_target_live(f"http://127.0.0.1:{port}/test/"))
+        with socket.socket() as live:
+            live.bind(("127.0.0.1", 0))
+            live.listen(1)
+            chosen = live.getsockname()[1]
+            self.assertTrue(tts_proxy._redirect_target_live(f"http://127.0.0.1:{chosen}/test/"))
 
     def test_live_defaults_read_model_metadata_and_refresh_after_file_changes(self):
         def write_model(path: Path, temperature: float):
