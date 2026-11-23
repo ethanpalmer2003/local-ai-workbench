@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, cast
 
-from huggingface_hub import HfFileMetadata
+import huggingface_hub
 
 from scripts.config import project_config as project_cfg
 from scripts.download.models.hub_sources import HubFile
@@ -16,17 +16,15 @@ class _RangeFetcher:
 
     chunk_size = 32 * 1024**2
 
-    def __init__(self, url: str, headers: dict[str, str], metadata: HfFileMetadata) -> None:
+    def __init__(self, url: str, headers: dict[str, str], metadata: huggingface_hub.HfFileMetadata) -> None:
         self.url = url
         self.headers = headers
         self.metadata = metadata
 
     def fetch(self, start: int) -> bytes:
-        from huggingface_hub.utils import get_session
-
         end = min(cast(int, self.metadata.size), start + self.chunk_size) - 1
         # Requests strips Authorization on cross-host redirects to signed storage URLs.
-        response = get_session().get(
+        response = huggingface_hub.utils.get_session().get(
             self.url, headers={**self.headers, "Range": f"bytes={start}-{end}"}, timeout=cast(Any, (15, 60))
         )
         try:
@@ -66,16 +64,14 @@ def _verify_and_move(partial: Path, destination: Path, etag: str) -> None:
 
 
 def download_ranges(source: HubFile, destination: Path, partial: Path | None = None) -> None:
-    from huggingface_hub import get_hf_file_metadata, hf_hub_url
-    from huggingface_hub.utils import build_hf_headers
 
     token = project_cfg.HF_TOKEN or False
-    url = hf_hub_url(source.repo_id, source.filename, revision=source.revision)
-    metadata = get_hf_file_metadata(url, token=token)
+    url = huggingface_hub.hf_hub_url(source.repo_id, source.filename, revision=source.revision)
+    metadata = huggingface_hub.get_hf_file_metadata(url, token=token)
     if metadata.size is None or metadata.etag is None or len(metadata.etag) != 64:
         raise ValueError("Range fallback requires a file size and SHA-256 Hub ETag")
     partial, offset = _partial_target(destination, partial, metadata.size)
-    fetcher = _RangeFetcher(url, build_hf_headers(token=token), metadata)
+    fetcher = _RangeFetcher(url, huggingface_hub.utils.build_hf_headers(token=token), metadata)
     with partial.open("ab") as out, ThreadPoolExecutor(max_workers=4) as pool:
         while offset < metadata.size:
             starts = range(offset, min(metadata.size, offset + 4 * fetcher.chunk_size), fetcher.chunk_size)
