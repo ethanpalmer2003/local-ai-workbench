@@ -121,14 +121,8 @@
   html[data-view=test]:not([data-gateway=practice]) .practice-only { display:none!important; }
   .direct-tts-only { display:none!important; }
   html[data-view=test][data-gateway=audiocpp] .direct-tts-only { display:flex!important; }
-  html[data-view=practice] .workspace { min-height:100dvh; display:flex; flex-direction:column; }
-  html[data-view=practice] #workspace-options { order:-1; }
   html[data-view=practice] .technical { display:none!important; }
   html[data-view=practice] .residency:not([data-state=loading]) { display:none!important; }
-  html[data-view=practice] #conversation-history { order:0; flex:1; }
-  html[data-view=practice] #history { border:0; background:transparent; padding:0; }
-  html[data-view=practice] #status { order:1; margin:0; }
-  html[data-view=practice] #form { order:2; margin-bottom:0; }
   @media(max-width:620px) { .workspace { padding:16px; } }
 </style>
 </head>
