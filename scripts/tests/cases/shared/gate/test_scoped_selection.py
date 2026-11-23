@@ -95,7 +95,7 @@ class TestSelection(unittest.TestCase):
         )
         self.assertEqual(graph_api.find_affected_modules(edges, {"scripts.c"}), {"scripts.c", "scripts.b", "scripts.a"})
 
-    def test_a_transitive_dependent_is_out_of_scope(self):
+    def test_a_two_hop_dependent_is_in_scope_while_the_cap_allows_it(self):
         from scripts.tests.cases.review.checks.test_docs import PointerTests
 
         edges = _graph(
@@ -110,7 +110,26 @@ class TestSelection(unittest.TestCase):
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             chosen = scoped_selection.select_test_classes((PointerTests,), change_set=["scripts/review/checks/docs.py"])
-        self.assertEqual(chosen.kept, (), "a two-hop dependent waits for the full run")
+        self.assertEqual(chosen.kept, (PointerTests,))
+        self.assertIn("2 hops", chosen.reason)
+
+    def test_a_two_hop_dependent_is_dropped_once_the_cap_is_reached(self):
+        from scripts.tests.cases.review.checks.test_docs import PointerTests
+
+        edges = _graph(
+            {
+                "scripts.review.checks.docs": (),
+                "scripts.review.checks.links": ("scripts.review.checks.docs",),
+                "scripts.tests.cases.review.checks.test_docs": ("scripts.review.checks.links",),
+            }
+        )
+        with (
+            patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
+            patch.object(scoped_selection, "import_graph", return_value=edges),
+            patch.object(scoped_selection, "SECOND_HOP_CLASS_CAP", 0),
+        ):
+            chosen = scoped_selection.select_test_classes((PointerTests,), change_set=["scripts/review/checks/docs.py"])
+        self.assertEqual(chosen.kept, (), "the cap leaves the two-hop dependent to the full run")
 
     def test_a_change_keeps_the_classes_that_import_it(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
@@ -229,7 +248,7 @@ class TestSelection(unittest.TestCase):
                 (PointerTests,), change_set=["scripts/tests/run.py", "scripts/review/checks/docs.py"]
             )
         self.assertEqual(chosen.kept, (PointerTests,))
-        self.assertEqual(chosen.reason, "2 of 2 modules reachable")
+        self.assertEqual(chosen.reason, "2 of 2 modules reachable; 2 hops")
 
     def test_a_deleted_module_keeps_every_class(self):
         chosen = scoped_selection.select_test_classes((TestSelection,), change_set=["scripts/tools/removed.py"])

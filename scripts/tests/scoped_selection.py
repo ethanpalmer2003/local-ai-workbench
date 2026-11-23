@@ -6,8 +6,9 @@ No classes run for a clean tree, an edit to comments, docstrings or layout only,
 touches no Python module. The pre-push stage asks the same question through `python_code_changed`, so
 a push that only edits comments or docstrings runs nothing either.
 
-The walk is currently set to one hop because a second hop was tested and found to select close to a
-full run. A test two imports away waits for the full pre-push run.
+The walk takes a second hop only while the classes it would add stay under `SECOND_HOP_CLASS_CAP`,
+because a wider reach costs more than the risk it covers; a test further away waits for the full
+pre-push run.
 
 Each call into `changes` or `import_graph` carries one line saying what it contributes here, since those
 two modules own the detail; the rest of this file is the rule alone.
@@ -40,6 +41,10 @@ FULL_TRIGGERS = {"scripts/tests/registry.py", "scripts/tests/run.py", "scripts/t
 # A batch file names its module in text, so the graph cannot see the dependency. Any batch edit also
 # selects the test that imports every module a batch names and asks each one for `--help`.
 BATCH_LAUNCHER_TEST = "scripts.tests.cases.shared.gate.test_bat_launchers"
+
+# A second hop is taken only while it stays under this many classes: the measured second-hop reach has a
+# median of 2 classes and a mean of 9, and a hub that would exceed this is already near a full run.
+SECOND_HOP_CLASS_CAP = 30
 
 
 # Alias for a test class rather than one of its instances, which is what the scope passes around.
@@ -105,11 +110,21 @@ def select_test_classes(
 
     # One pass over the tree: every module name mapped to the modules it imports, parsed from source.
     edges = import_graph(root)
-    # The walk is a breadth-first search over the reversed graph, one hop back, per `REACH_DEPTH`.
-    reachable = find_affected_modules(edges, changed_modules, depth=REACH_DEPTH)
+    depth, reachable = _depth_and_reach(edges, changed_modules, test_classes)
 
-    reason = _reach_reason(edges, reachable, code_changes, batches)
+    reason = _reach_reason(edges, reachable, code_changes, batches, depth)
     return _build_selection(test_classes, reachable, reason)
+
+
+def _depth_and_reach(
+    edges: ImportGraph, changed_modules: set[str], test_classes: tuple[TestClass, ...]
+) -> tuple[int, set[str]]:
+    """One hop, or a second one while the classes it adds stay under `SECOND_HOP_CLASS_CAP`."""
+    reachable = find_affected_modules(edges, changed_modules, depth=REACH_DEPTH)
+    deeper = find_affected_modules(edges, changed_modules, depth=REACH_DEPTH + 1)
+    if sum(1 for test_class in test_classes if test_class.__module__ in deeper) <= SECOND_HOP_CLASS_CAP:
+        return REACH_DEPTH + 1, deeper
+    return REACH_DEPTH, reachable
 
 
 def python_code_changed(paths: list[str], root: Path | None = None) -> bool:
@@ -185,13 +200,20 @@ def _module_deleted(paths: list[str], root: Path | None) -> bool:
     return any(path.endswith(".py") and not (base / path).is_file() for path in paths)
 
 
-def _reach_reason(edges: ImportGraph, reachable: set[str], paths: list[str], batches: list[str] | None = None) -> str:
+def _reach_reason(
+    edges: ImportGraph,
+    reachable: set[str],
+    paths: list[str],
+    batches: list[str] | None = None,
+    depth: int = REACH_DEPTH,
+) -> str:
     """The evidence a reader sees, including how many changed paths named no module."""
     # The change set holds unique paths, so the difference is exactly the ones that named no module.
     ignored = len(paths) - len(module_names(paths))
     detail = f" ({ignored} path(s) outside the module graph ignored)" if ignored else ""
     note = "; batch edit runs the launcher test" if batches else ""
-    return f"{len(reachable)} of {len(edges)} modules reachable{detail}{note}"
+    hops = f"; {depth} hops" if depth != REACH_DEPTH else ""
+    return f"{len(reachable)} of {len(edges)} modules reachable{detail}{note}{hops}"
 
 
 def _dump_without_docstrings(tree: ast.Module) -> str:
