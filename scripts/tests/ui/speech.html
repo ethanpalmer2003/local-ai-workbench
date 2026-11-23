@@ -120,6 +120,8 @@
   html[data-embedded=true] .workspace header { display:none; }
   html[data-embedded=true] .workspace { padding:16px; }
   .chat { width:min(760px,100%); margin:0 auto; }
+  .workspace .page-head { align-items:flex-start; justify-content:flex-start; }
+  .rail { display:flex; flex-direction:column; gap:8px; }
   #settings-backdrop { position:fixed; inset:0; background:rgba(8,11,15,.55); z-index:30; }
   #settings-panel { position:fixed; top:0; bottom:0; left:0; width:min(440px,100%); padding:20px; overflow-y:auto; background:var(--panel); border-right:1px solid var(--line); z-index:40; transform:translateX(-102%); visibility:hidden; transition:transform .2s ease, visibility .2s; }
   #settings-panel.open { transform:none; visibility:visible; }
@@ -135,11 +137,12 @@
 </head>
 <body>
 <section class="workspace">
-  <header class="page-head"><div><h1 id="workspace-title">Speech workspace</h1></div>
-    <div class="toolbar">
+  <header class="page-head">
+    <div class="rail">
       <button type="button" id="settings-toggle" aria-expanded="false" aria-controls="settings-panel">Settings</button>
-      <button type="button" class="test-only" id="restart-workspace">Restart workspace</button><span id="restart-workspace-status" class="hint" role="status" aria-live="polite"></span>
+      <button type="button" class="test-only" id="restart-workspace">Restart workspace</button>
     </div>
+    <div><h1 id="workspace-title">Speech workspace</h1><span id="restart-workspace-status" class="hint" role="status" aria-live="polite"></span></div>
   </header>
   <div id="settings-backdrop" hidden></div>
   <aside id="settings-panel" aria-label="Settings" aria-hidden="true">
