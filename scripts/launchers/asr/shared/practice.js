@@ -596,9 +596,11 @@ function refreshLanguages() {
     languageProfiles = Object.fromEntries(usable.map(profile => [profile.locale, profile]));
     $('language').replaceChildren(...profiles.map(profile => modelOption(profile.label, profile.locale, profile.available !== false, profile.unavailable_reason)));
     const modelDefault = usable.find(profile => profile.code === defaultCode || profile.locale === defaultCode);
+    // - a fresh panel starts in French; a saved choice or a model's own default still wins after that
+    const french = usable.find(profile => String(profile.code || profile.locale || '').startsWith('fr'));
     const selected = pendingTtsDefault
         ? modelDefault?.locale || (languageProfiles[previous] ? previous : usable[0]?.locale || '')
-        : languageProfiles[previous] ? previous : modelDefault?.locale || usable[0]?.locale || '';
+        : languageProfiles[previous] ? previous : french?.locale || modelDefault?.locale || usable[0]?.locale || '';
     $('language').value = selected;
     if (pendingTtsDefault && modelDefault) pendingTtsDefault = null;
     $('language').disabled = !usable.length || recording;
