@@ -6,9 +6,8 @@ No classes run for a clean tree, an edit to comments, docstrings or layout only,
 touches no Python module. The pre-push stage asks the same question through `python_code_changed`, so
 a push that only edits comments or docstrings runs nothing either.
 
-The walk takes a second hop only while the classes it would add stay under `SECOND_HOP_CLASS_CAP`,
-because a wider reach costs more than the risk it covers; a test further away waits for the full
-pre-push run.
+The walk keeps adding hops while the classes in reach stay under `HOP_CLASS_CAP`, so a dependent a few
+imports away is included while it is cheap; a hub stops at one hop and waits for the full pre-push run.
 
 Each call into `changes` or `import_graph` carries one line saying what it contributes here, since those
 two modules own the detail; the rest of this file is the rule alone.
@@ -42,9 +41,9 @@ FULL_TRIGGERS = {"scripts/tests/registry.py", "scripts/tests/run.py", "scripts/t
 # selects the test that imports every module a batch names and asks each one for `--help`.
 BATCH_LAUNCHER_TEST = "scripts.tests.cases.shared.gate.test_bat_launchers"
 
-# A second hop is taken only while it stays under this many classes: the measured second-hop reach has a
-# median of 2 classes and a mean of 9, and a hub that would exceed this is already near a full run.
-SECOND_HOP_CLASS_CAP = 30
+# The walk keeps adding hops while the classes in reach stay under this cap: measured over the tree, a hop
+# adds a median of 0 and a mean of about 1 class, so the cap is what keeps a hub from costing a full run.
+HOP_CLASS_CAP = 30
 
 
 # Alias for a test class rather than one of its instances, which is what the scope passes around.
@@ -119,12 +118,17 @@ def select_test_classes(
 def _depth_and_reach(
     edges: ImportGraph, changed_modules: set[str], test_classes: tuple[TestClass, ...]
 ) -> tuple[int, set[str]]:
-    """One hop, or a second one while the classes it adds stay under `SECOND_HOP_CLASS_CAP`."""
-    reachable = find_affected_modules(edges, changed_modules, depth=REACH_DEPTH)
-    deeper = find_affected_modules(edges, changed_modules, depth=REACH_DEPTH + 1)
-    if sum(1 for test_class in test_classes if test_class.__module__ in deeper) <= SECOND_HOP_CLASS_CAP:
-        return REACH_DEPTH + 1, deeper
-    return REACH_DEPTH, reachable
+    """The deepest reach whose classes stay under `HOP_CLASS_CAP`, stopping when no hop adds a module."""
+    depth = REACH_DEPTH
+    reachable = find_affected_modules(edges, changed_modules, depth=depth)
+    while True:
+        deeper = find_affected_modules(edges, changed_modules, depth=depth + 1)
+        # - a saturated walk would only repeat itself, so the depth is the graph's own limit, not a ceiling
+        if deeper == reachable:
+            return depth, reachable
+        if sum(1 for test_class in test_classes if test_class.__module__ in deeper) > HOP_CLASS_CAP:
+            return depth, reachable
+        depth, reachable = depth + 1, deeper
 
 
 def python_code_changed(paths: list[str], root: Path | None = None) -> bool:
