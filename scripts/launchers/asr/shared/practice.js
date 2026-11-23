@@ -28,8 +28,8 @@ function savePreferences() {
 }
 let capabilities, serviceReady = false, llmModel;
 let pendingTtsDefault = null;
-$('enable-asr').checked = !llmOnly;
-$('enable-llm').checked = !asrOnly;
+$('enable-asr').checked = !llmOnly && (practiceView || asrOnly);
+$('enable-llm').checked = !asrOnly && (practiceView || llmOnly);
 $('speak').checked = !asrOnly && !llmOnly;
 $('auto-send').checked = preferences.autoSend ?? true;
 $('correct-language').checked = preferences.corrections ?? true;

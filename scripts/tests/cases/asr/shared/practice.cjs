@@ -134,6 +134,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
     assert.equal(vm.runInContext('resolvedAsr().id', context), 'nemo-nemotron');
     await vm.runInContext('loadModelChoices()', context);
     assert.equal(elements['asr-framework'].value, 'nemo-nemotron', 'Manual override survives refresh');
+    elements['enable-asr'].checked = true; elements['enable-llm'].checked = true;
     await vm.runInContext('applyModels()', context);
     assert.equal(selectedModels.asr, 'nemo-nemotron', 'Apply sends the resolved runtime profile');
     vm.runInContext("modelCatalog.asr.find(row => row.id === 'nemo-nemotron').available = false; fillAsrRuntimes()", context);
