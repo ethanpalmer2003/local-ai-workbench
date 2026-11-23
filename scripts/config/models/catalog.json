@@ -711,7 +711,7 @@
       "filename": "coding_models/Inkling-2-Mini-UD-IQ3_XXS.gguf",
       "url": "https://huggingface.co/unsloth/Inkling-2-Mini-GGUF/resolve/main/Mainline_Support/Inkling-2-Mini-UD-IQ3_XXS.gguf_file",
       "in_use": false,
-      "notes": "Unsloth dynamic IQ3_XXS of Inkling-2-Mini (Thinking Machines, 26B MoE, 24 blocks with a three-pass looped core); this is the Mainline_Support copy, because the repository root file stores 24 blocks. Mainline build 12602 loads it but never produces usable chat content or a tool call, so use the root-layout file with the Unsloth build. The GGUF declares temperature 1.0, top-p 1.0, top-k 0 and min-p 0.0.",
+      "notes": "Unsloth dynamic IQ3_XXS of Inkling-2-Mini (Thinking Machines, 26B MoE, 24 blocks with a three-pass looped core); this is the Mainline_Support copy, because the repository root file stores 24 blocks. Mainline build 12602 loaded it without usable chat content; b12651 runs it, at a 30.3 s median over the three local coding tasks against Unsloth b12649's 40.8. The GGUF declares temperature 1.0, top-p 1.0, top-k 0 and min-p 0.0.",
       "sha256": "fd9ccedae17c1bb89744612fbb46730b5275f2a342133d0419776bd1ae311657",
       "roles": [],
       "source_page": null
@@ -723,7 +723,7 @@
       "filename": "coding_models/Inkling-2-Mini-dspark-Q8_0.gguf",
       "url": "https://huggingface.co/unsloth/Inkling-2-Mini-GGUF/resolve/main/dspark-Inkling-2-Mini-Q8_0.gguf",
       "in_use": false,
-      "notes": "DSpark speculative drafter (Q8_0) for Inkling-2-Mini; the vendor guide pairs it with --spec-type draft-dspark and --spec-draft-n-max 3 on its Unsloth build and repository-root GGUF. Mainline build 12602 rejects it against the Mainline_Support copy: markov_w1.weight expects vocab 200058 but the drafter stores 201024, so the two layouts are not interchangeable.",
+      "notes": "DSpark speculative drafter (Q8_0) for Inkling-2-Mini; the vendor guide pairs it with --spec-type draft-dspark and --spec-draft-n-max 3 on its Unsloth build and repository-root GGUF. Mainline rejects it against the Mainline_Support copy, in 12602 and 12651 alike: markov_w1.weight expects vocab 200058 but the drafter stores 201024, so the two layouts are not interchangeable.",
       "sha256": "2ec78510da837e8fc3be54a14757a0c5fbd2d8d9e85a0d92853fafdf674f3773",
       "roles": [],
       "source_page": null

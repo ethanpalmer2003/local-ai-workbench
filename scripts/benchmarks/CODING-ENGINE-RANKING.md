@@ -1,8 +1,8 @@
 # Coding engine ranking
 
-Method: the coding-agent benchmark with Pi, the local `whitespace` and `ledger` tasks, one repeat, 32K context
-unless a row says otherwise. 27B arms sample at temperature 0; Inkling uses its own declared sampling. Times
-include harness startup and tools. Each row is one engine and model pair, ranked by the median of the two tasks.
+Method: the coding-agent benchmark with Pi, the local `whitespace`, `duration` and `ledger` tasks, one repeat, 32K
+context unless a row says otherwise. 27B arms sample at temperature 0; Inkling uses its own declared sampling.
+Times include harness startup and tools. Each row is one engine and model pair, ranked by the median of its tasks.
 
 ## Swift-1.5 27B (IQ3_XXS, ISTA GSQ-RCO)
 
@@ -28,15 +28,20 @@ the pair runs again.
 
 ## Inkling-2-Mini (IQ3_XXS, Unsloth)
 
-1. llama.cpp `unsloth` b12588: 55.0 and 80.2, median 67.6 at 32K. Mainline b12602 loads the
-   `Mainline_Support` copy but produced no usable answer or tool call, so it has no row.
+1. llama.cpp `vulkan` b12651: 32.1, 26.5 and 30.3, median 30.3 at 32K, every task passing; decode 43.0 and
+   prefill 607 tok/s.
+2. llama.cpp `unsloth` b12649-mix c7059d6: 28.3, 55.7 and 40.8, median 40.8; DSpark decoded 54.1 tok/s at 80%
+   acceptance, prefill 195.
+
+Mainline b12602 loaded the `Mainline_Support` copy and answered nothing; b12651 runs it, so its row is new.
 
 ## What to run
 
 1. Default coding engine: llama.cpp `vulkan`, the rolling build. It wins the 27B median and supports the widest set
    of models.
 2. Long context at 64K and beyond: the same build, since ROCm collapses above 64K.
-3. Inkling 2 Mini: `unsloth`; nothing else runs it usefully.
+3. Inkling 2 Mini: `vulkan` b12651, which now runs the `Mainline_Support` copy on every task; `unsloth` keeps the
+   higher decode rate when decode alone is the target.
 4. Flash Next: Strata; Avalon is the fallback if Strata fails.
 5. The pinned `vulkan-1.0.0` and `rocm-lemonade` builds stay installed as fallbacks; both are within a few seconds
    of the rolling build at 32K.
@@ -44,7 +49,8 @@ the pair runs again.
 ## How to read "latest"
 
 "Latest" means the build installed and measured at the stated date and time, not an open claim about upstream.
-The builds above were read on 2026-11-21 at 15:26 (America/Regina): mainline b12602 (418fe97b5), with b12613
-offered but not installed; Unsloth b12588-mix-c0c3de8 (883286076); ROCm Lemonade b1383 (29b52d398);
-`vulkan-1.0.0` b12359 (b1b770d90); Strata control 0.1.60. Treat a number as reliable for that build and test the
-next one rather than assuming it carries over. One repeat per task means a few seconds of noise, not a ranking gap.
+The 27B and Flash rows were read on 2026-11-21 at 15:26 (America/Regina): mainline b12602 (418fe97b5), Unsloth
+b12588-mix-c0c3de8 (883286076), ROCm Lemonade b1383 (29b52d398), `vulkan-1.0.0` b12359 (b1b770d90), Strata
+control 0.1.60. The Inkling pair is from 2026-11-23 at 10:52: mainline b12651 (f5e6915c2) and Unsloth b12649-mix
+c7059d6 (189f431bf). Treat a number as reliable for that build and test the next one rather than assuming it
+carries over. One repeat per task means a few seconds of noise, not a ranking gap.
