@@ -172,7 +172,7 @@
   <audio id="practice-audio" controls hidden></audio>
   <form id="form">
     <div class="composer-shell">
-      <textarea id="box" rows="2" aria-label="Message or text to speak" placeholder="Message or text to speak" autofocus></textarea>
+      <textarea id="box" rows="2" aria-label="Message or text to speak" placeholder="Message or text to speak"></textarea>
       <div class="composer-footer">
     <div class="toolbar conversation-actions"><button id="clear" type="button">Clear</button><button id="save-conversation" type="button">Save</button></div>
       <div class="composer-actions" role="group" aria-label="Message actions">
@@ -285,6 +285,8 @@
   const log = document.getElementById("log");
   const box = document.getElementById("box");
   const empty = document.getElementById("empty");
+  // - focus the composer without scrolling, so a reload lands at the same place in both views
+  box.focus?.({preventScroll: true});
 
   let defaultsLoaded = false;
   let activeDefaults;
