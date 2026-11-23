@@ -9,6 +9,8 @@ import hashlib
 import shutil
 from pathlib import Path
 
+import huggingface_hub
+
 from scripts.config import project_config as project_cfg
 from scripts.config.models import ModelDownload
 from scripts.download.models.hub_sources import parse_url
@@ -46,14 +48,12 @@ def verify(path: Path, model: ModelDownload, expected: int | None = None) -> Non
 
 def fetch(model: ModelDownload, expected: int | None = None) -> Path:
     """Download into a clean staging folder and return the staged, verified file."""
-    from huggingface_hub import hf_hub_download
-
     source = parse_url(str(model.url))
     staging = staging_dir(model)
     shutil.rmtree(staging, ignore_errors=True)
     staging.mkdir(parents=True, exist_ok=True)
     downloaded = Path(
-        hf_hub_download(
+        huggingface_hub.hf_hub_download(
             repo_id=source.repo_id,
             filename=source.filename,
             revision=source.revision,

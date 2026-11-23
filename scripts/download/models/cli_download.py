@@ -5,6 +5,8 @@ import argparse
 import sys
 from pathlib import Path
 
+import huggingface_hub
+
 from scripts.config import project_config as project_cfg
 from scripts.download.models import DOWNLOAD_SECONDS
 from scripts.download.models.hub_sources import HubFile as HubFile
@@ -19,7 +21,6 @@ def download_snapshot(
 
     - Uses snapshot_download into HF_MODELS_DIR
     """
-    from huggingface_hub import snapshot_download
 
     target = local_dir if local_dir is not None else project_cfg.HF_MODELS_DIR
     target.mkdir(parents=True, exist_ok=True)
@@ -29,7 +30,7 @@ def download_snapshot(
     print(f"Target   : {target}")
     print()
 
-    snapshot_download(repo_id=repo_id, local_dir=str(target), revision=revision, token=token)
+    huggingface_hub.snapshot_download(repo_id=repo_id, local_dir=str(target), revision=revision, token=token)
 
     print("\nDownload complete!")
 
@@ -41,7 +42,6 @@ def download_file(
 
     - Uses hf_hub_download into HF_MODELS_DIR
     """
-    from huggingface_hub import hf_hub_download
 
     target = local_dir if local_dir is not None else project_cfg.HF_MODELS_DIR
     target.mkdir(parents=True, exist_ok=True)
@@ -51,7 +51,7 @@ def download_file(
     print(f"Target   : {target}")
     print()
 
-    path = hf_hub_download(
+    path = huggingface_hub.hf_hub_download(
         repo_id=repo_id, filename=filename, repo_type="model", local_dir=str(target), token=token, revision=revision
     )
 
