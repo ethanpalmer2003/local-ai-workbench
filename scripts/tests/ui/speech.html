@@ -174,7 +174,8 @@
       <p id="assistant-mode-help" class="hint">Adds language and correction guidance.</p>
       <label>Speech language<select id="language" disabled></select></label>
       <label>Language level<select id="learning-level"><option>A1</option><option selected>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></label>
-      <button type="button" class="toggle" id="correct-language" aria-pressed="true">Brief corrections</button>
+      <label>Corrections<select id="correction-mode"><option value="brief" selected>Brief correction</option><option value="full">Full correction</option><option value="none">No correction</option></select></label>
+      <label class="prompt-preview">Practice prompt<textarea id="practice-prompt" rows="6" readonly></textarea></label>
     </div>
     <details><summary>Supported languages</summary><p id="asr-languages"></p><p id="tts-languages"></p><p id="language-notes"></p></details>
   </details>
@@ -242,9 +243,7 @@
         <label>Frames per event<input id="frames" type="number" min="1" placeholder="Server default"></label>
         <label>Lookahead frames<input id="lookahead" type="number" min="0" placeholder="Server default"></label>
       </div>
-      <p class="hint">Audio format: model-controlled.</p>
         <label>PCM sample rate (Hz, read-only)<input id="rate" type="number" readonly aria-readonly="true"></label>
-      <p class="actions"><button type="button" id="smooth">Conservative streaming</button> <button type="button" id="fast">Low latency streaming</button></p>
     </fieldset>
     </details>
     <details id="restart-section"><summary>Session settings and restart</summary>
@@ -488,16 +487,6 @@
   }
   document.getElementById("mode").addEventListener("change", updateResponseMode);
   updateResponseMode();
-  function preset(policy, lookahead, buffer) {
-    document.getElementById("mode").value = "stream";
-    document.getElementById("policy").value = policy;
-    document.getElementById("frames").value = "";
-    document.getElementById("lookahead").value = lookahead;
-    document.getElementById("buffer").value = buffer;
-    updateResponseMode();
-  }
-  document.getElementById("smooth").onclick = () => preset("", "", "500");
-  document.getElementById("fast").onclick = () => preset("", "", "50");
   const generationFields = {instr: 'instruction', gs: 'guidance_scale', seed: 'seed',
     temperature: 'temperature', depth_temperature: 'depth_temperature', top_k: 'top_k',
     top_p: 'top_p', max_tokens: 'max_tokens', text_chunk_size: 'text_chunk_size', text_chunk_mode: 'text_chunk_mode',
@@ -553,7 +542,6 @@
     const mode = document.getElementById('mode');
     if (mode.tagName === 'SELECT')
       for (const option of mode.options) option.disabled = option.value === 'stream' && config.streaming_supported === false;
-    for (const id of ['smooth', 'fast']) document.getElementById(id).disabled = config.streaming_supported === false;
     document.getElementById('instr').disabled = config.instruction_option === null;
     const guidance = document.getElementById('gs');
     guidance.disabled = config.guidance_scale_option === null;

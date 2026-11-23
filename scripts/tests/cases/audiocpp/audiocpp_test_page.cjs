@@ -166,7 +166,6 @@ async function playback(bufferSeconds) {
   assert.equal(heavyMing.payload.response_format, 'wav');
   assert.equal(heavyMing.payload.options.instruction, undefined);
   assert.equal(document.getElementById('instr').disabled, true);
-  assert.equal(document.getElementById('fast').disabled, true);
   servedConfig.practice_gateway = true; servedConfig.practice_url = '/practice';
   document.documentElement.dataset.view = 'test';
   await document.getElementById('defaults').onclick();

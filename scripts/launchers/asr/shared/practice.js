@@ -8,7 +8,7 @@ const asrOnly = !practiceView && testMode === 'asr';
 const llmOnly = !practiceView && testMode === 'llm';
 const {checked, wav} = SpeechTools;
 const speechClient = new SpeechClient();
-for (const id of ['enable-asr', 'enable-llm', 'speak', 'auto-send', 'correct-language', 'assistant-practice-toggle']) SpeechTools.toggle($(id));
+for (const id of ['enable-asr', 'enable-llm', 'speak', 'auto-send', 'assistant-practice-toggle']) SpeechTools.toggle($(id));
 const preferencesKey = 'speech-workspace.preferences.v1';
 function readPreferences() {
     try {
@@ -21,7 +21,7 @@ function savePreferences() {
     preferences = {...preferences, language: $('language').value || preferences.language,
         assistantMode: $('assistant-practice-toggle').checked ? 'practice' : 'default',
         speechStart: $('speech-start').value,
-        level: $('learning-level').value, corrections: $('correct-language').checked,
+        level: $('learning-level').value, corrections: $('correction-mode').value,
         autoSend: $('auto-send').checked,
         models: {asr: resolvedAsr()?.id, llm: $('llm-model').value, tts: $('tts-model').value, testTts: $('tts-model').value}};
     try { globalThis.localStorage?.setItem(preferencesKey, JSON.stringify(preferences)); } catch (_) {}
@@ -32,7 +32,8 @@ $('enable-asr').checked = !llmOnly && (practiceView || asrOnly);
 $('enable-llm').checked = !asrOnly && (practiceView || llmOnly);
 $('speak').checked = !asrOnly && !llmOnly;
 $('auto-send').checked = preferences.autoSend ?? true;
-$('correct-language').checked = preferences.corrections ?? true;
+const savedCorrection = preferences.corrections === true ? 'brief' : preferences.corrections === false ? 'none' : preferences.corrections;
+$('correction-mode').value = ['brief', 'full', 'none'].includes(savedCorrection) ? savedCorrection : 'brief';
 $('learning-level').value = ['A1','A2','B1','B2','C1','C2'].includes(preferences.level) ? preferences.level : 'A2';
 $('speech-start').value = preferences.speechStart === 'sentence' ? 'sentence' : 'full_reply';
 $('assistant-practice-toggle').checked = preferences.assistantMode !== 'default';
@@ -40,7 +41,8 @@ $('asr-silence').oninput = () => { $('asr-silence-value').textContent = `${$('as
 function updateAssistantMode() {
     const practice = $('assistant-practice-toggle').checked;
     $('learning-level').disabled = !practice;
-    $('correct-language').disabled = !practice;
+    $('correction-mode').disabled = !practice;
+    renderPracticePrompt();
     $('assistant-mode-help').textContent = practice
         ? 'Adds language and correction guidance.'
         : 'Uses the model default prompt.';
@@ -418,7 +420,7 @@ function setBusy(value) {
     $('load-active-models').disabled = value || !globalThis.SpeechLifecycle?.available();
     $('unload-all').disabled = value || !globalThis.SpeechLifecycle?.available();
     $('learning-level').disabled = value || !$('assistant-practice-toggle').checked;
-    $('correct-language').disabled = value || !$('assistant-practice-toggle').checked;
+    $('correction-mode').disabled = value || !$('assistant-practice-toggle').checked;
     if (!value) {
         $('enable-asr').disabled = !serviceReady; $('enable-llm').disabled = !chatAvailable;
         refreshLanguages();
@@ -489,12 +491,27 @@ $('upload-turns').onchange = () => {
     if (file) void replayThroughTurns(file);
     $('upload-turns').value = '';
 };
+function practicePrompt() {
+    const language = selectedLanguage().label;
+    const correction = {brief: 'Offer at most one brief correction when useful.',
+        full: 'Correct my language fully: list each mistake and show the corrected sentence.',
+        none: 'Do not correct my language unless I ask.'}[$('correction-mode').value] || '';
+    return `Help me practice conversation in ${language === 'Detect automatically' ? 'the language I use' : language}. Use CEFR ${$('learning-level').value || 'A2'} vocabulary and grammar. Keep replies to one or two short sentences and ask one follow-up question. ${correction}`;
+}
+function renderPracticePrompt() {
+    if (!$('practice-prompt')) return;
+    let shown = 'Uses the model default prompt.';
+    if ($('assistant-practice-toggle').checked) {
+        try { shown = practicePrompt(); } catch (_) { shown = 'Choose an available speech language first.'; }
+    }
+    $('practice-prompt').value = shown;
+}
 async function replyTo(text, onText) {
     const language = selectedLanguage().label;
     const next = [...messages, {role: 'user', content: text}];
     let partial = '', pendingSpeechWhitespace = '';
     const prompt = $('assistant-practice-toggle').checked
-        ? [{role: 'system', content: `Help me practice conversation in ${language === 'Detect automatically' ? 'the language I use' : language}. Use CEFR ${$('learning-level').value || 'A2'} vocabulary and grammar. Keep replies to one or two short sentences and ask one follow-up question. ${$('correct-language').checked ? 'Offer at most one brief correction when useful.' : 'Do not correct my language unless I ask.'}`}]
+        ? [{role: 'system', content: practicePrompt()}]
         : [];
     const reply = await measured('LLM reply', () => speechClient.chat({
             messages: [...prompt, ...next],
@@ -602,6 +619,7 @@ function refreshLanguages() {
         ? modelDefault?.locale || (languageProfiles[previous] ? previous : usable[0]?.locale || '')
         : languageProfiles[previous] ? previous : french?.locale || modelDefault?.locale || usable[0]?.locale || '';
     $('language').value = selected;
+    renderPracticePrompt();
     if (pendingTtsDefault && modelDefault) pendingTtsDefault = null;
     $('language').disabled = !usable.length || recording;
     refreshCaptureButton();
@@ -727,7 +745,7 @@ $('tts-model').onchange = () => {
     if (document.documentElement.dataset.gateway === 'practice') { refreshTtsVoices(); refreshLanguages(); }
     else globalThis.loadModelDefaults?.();
 };
-for (const id of ['language', 'learning-level', 'correct-language', 'auto-send', 'speech-start']) $(id).onchange = savePreferences;
+for (const id of ['language', 'learning-level', 'correction-mode', 'auto-send', 'speech-start']) $(id).onchange = () => { savePreferences(); renderPracticePrompt(); };
 $('assistant-practice-toggle').onchange = () => { updateAssistantMode(); savePreferences(); };
 function renderDelivery(plan) {
     for (const stage of ['asr', 'llm', 'tts']) {
