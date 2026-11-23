@@ -18,10 +18,17 @@ from scripts.shared.wait import http_ready
 # - The practice server hosts one ASR model plus TTS; the profile picks which recognizer
 DEFAULT_ENGINE = "audiocpp-vulkan"
 LABELS = {"audiocpp-vulkan": "Nemotron + AudioCpp TTS", "audiocpp-qwen3": "Qwen3 + AudioCpp TTS"}
+# - the practice page names the engine it runs; the file profile names the recognizer behind it
+ENGINE_PROFILES = {"audiocpp-nemotron": "audiocpp-vulkan"}
+
+
+def profile_for(engine: str) -> str:
+    """The AudioCpp recognizer profile a practice engine id runs."""
+    return ENGINE_PROFILES.get(engine, engine)
 
 
 def speech_config(port: int, engine: str = DEFAULT_ENGINE):
-    config = audio_config(engine, mode="streaming")
+    config = audio_config(profile_for(engine), mode="streaming")
     config.update(lazy_load=False, max_loaded_models=2, idle_unload_ms=0, threads=5, port=port)
     from scripts.launchers.asr.shared.practice_models import tts_spec
 
@@ -54,7 +61,7 @@ def start(port: int | None = None, engine: str = DEFAULT_ENGINE):
         argv,
         [project_cfg.AUDIOCPP_SERVER_EXE, *(Path(m["path"]) for m in speech_config(port, engine)["models"])],
         port,
-        LABELS.get(engine, LABELS[DEFAULT_ENGINE]),
+        LABELS.get(profile_for(engine), LABELS[DEFAULT_ENGINE]),
         lambda: http_ready(f"http://127.0.0.1:{port}/health"),
         lambda: native.matches(argv),
         env=audio_environment(),

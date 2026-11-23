@@ -70,6 +70,11 @@ class FileProfiles(unittest.TestCase):
         self.assertEqual(ming["models"][0]["task"], "asr")
         self.assertTrue(ming["models"][0]["session_options"]["ming3_audio.disk_experts"])
         self.assertEqual(audio_config("audiocpp-vulkan")["models"][0]["family"], "nemotron_asr")
+        from scripts.launchers.audiocpp import asr as audiocpp_asr
+
+        practice = audiocpp_asr.speech_config(9999, "audiocpp-nemotron")
+        self.assertEqual(practice["models"][0]["family"], "nemotron_asr", "practice engine ids map to their profile")
+        self.assertEqual(audiocpp_asr.profile_for("audiocpp-qwen3"), "audiocpp-qwen3")
         self.assertEqual(clean_transcript("audiocpp-ming-audio-tiny", "en\tHello there"), "Hello there")
         self.assertEqual(clean_transcript("audiocpp-vulkan", "en\tHello there"), "en\tHello there")
         audio = Path("sample.wav")
