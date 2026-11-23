@@ -105,7 +105,7 @@
     const heading = document.createElement('h2'); heading.textContent = 'Voice / model comparison';
     const input = document.createElement('p'); input.className = 'text'; input.textContent = text;
     const grid = document.createElement('div'); grid.className = 'comparison-results';
-    batch.append(heading, input, grid); log.append(batch); batches.add(batch);
+    batch.append(heading, input, grid); log.prepend(batch); batches.add(batch);
     return jobs.map(job => {
       const card = document.createElement('article'); card.className = 'comparison-card';
       const title = document.createElement('h3'); title.textContent = `${job.voice} · ${job.model}`;

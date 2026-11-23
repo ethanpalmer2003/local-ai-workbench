@@ -43,8 +43,12 @@ def path_size(path: Path) -> int:
 def _remove(path: Path) -> None:
     if path.is_dir():
         shutil.rmtree(path, ignore_errors=True)
-    else:
+        return
+    try:
         path.unlink(missing_ok=True)
+    except PermissionError:
+        # - a running service keeps its log open; leave it for the next prune instead of failing the gate
+        return
 
 
 # - the current update and the last working one are all a repair needs
