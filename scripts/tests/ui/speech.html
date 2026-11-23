@@ -77,11 +77,10 @@
   .conversation-actions button { height:38px; min-height:38px; padding:7px 10px; }
   .composer-actions { margin-left:auto; }
   .composer-shell { display:flex; flex-direction:column; gap:8px; padding:10px; background:var(--bg); border:1px solid var(--line); border-radius:10px; }
-  .composer-shell:has(#box:focus-visible) { border-color:var(--focus); }
-  .comparison-composer:has(#comparison-text:focus-visible) { border-color:var(--focus); }
-  #box:focus { outline:none; }
+  .composer-shell:has(textarea:focus) { border-color:var(--focus); }
+  #box:focus, #comparison-text:focus { outline:none; }
   #box { flex:none; width:100%; min-height:76px; margin:0; padding:4px; border:0; border-radius:0; }
-  #comparison-text { flex:none; width:100%; min-height:76px; margin:0; padding:4px; border:0; border-radius:0; background:transparent; }
+  #comparison-text { flex:none; width:100%; min-height:76px; margin:0; padding:4px; border:0; border-radius:0; }
   .composer-actions { justify-content:flex-end; }
   .composer-actions button { height:38px; min-height:38px; padding:7px 12px; }
   .composer-actions .icon-button { display:inline-flex; align-items:center; justify-content:center; width:38px; padding:8px; }
