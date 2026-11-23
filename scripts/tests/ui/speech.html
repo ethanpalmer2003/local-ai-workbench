@@ -16,7 +16,7 @@
   body { margin:0; min-height:100vh; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
   .workspace { width:min(1120px,100%); margin:auto; padding:24px; }
   .workspace header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-bottom:18px; border-bottom:1px solid var(--line); margin-bottom:22px; }
-  h1 { margin:0 0 6px; font-size:26px; } h2,.section-title { margin:22px 0 12px; font-size:18px; }
+  h1 { margin:0 0 6px; font-size:26px; } h2 { margin:22px 0 12px; font-size:18px; }
   a { color:var(--focus); }
   .toolbar,.actions,.composer-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   /* Shared controls: views only decide which controls are visible. */
@@ -53,6 +53,7 @@
   #load-active-models,#unload-all { min-height:36px; padding:6px 12px; }
   #workspace-options :is(select,button,.framework-display) { height:38px; min-height:38px; padding:7px 10px; font-size:13px; line-height:22px; }
   #workspace-options .toggle { min-width:10rem; }
+  #workspace-options legend .toggle { min-width:0; height:auto; min-height:0; padding:2px 10px; font-size:12px; line-height:18px; }
   .framework-display { color:var(--dim); width:11rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .pipeline select { min-width:0; text-overflow:ellipsis; }
   input::placeholder,textarea::placeholder { color:var(--dim); opacity:.65; }
@@ -132,16 +133,15 @@
   <header><div><h1 id="workspace-title">Speech workspace</h1></div>
     <div class="toolbar test-only"><button type="button" id="restart-workspace">Restart workspace</button><span id="restart-workspace-status" class="hint" role="status" aria-live="polite"></span></div>
   </header>
-  <h2 class="section-title test-only">Models</h2>
   <div id="model-settings" class="pipeline">
-    <fieldset id="asr-choice"><legend>ASR <span id="residency-asr" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading ASR...</span></legend><button type="button" class="toggle test-only" id="enable-asr" aria-pressed="true">Recognize speech</button>
+    <fieldset id="asr-choice"><legend>ASR <button type="button" class="toggle test-only" id="enable-asr" aria-pressed="true">Recognize speech</button><span id="residency-asr" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading ASR...</span></legend>
       <label class="model-option">Model<select id="asr-model" disabled></select></label>
       <label class="model-option">Runtime<select id="asr-framework" disabled></select></label><label class="model-option test-only">Delivery<select id="delivery-asr" disabled><option value="auto">Auto</option></select></label></fieldset>
-    <fieldset id="llm-choice"><legend>LLM <span id="residency-llm" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading LLM...</span></legend><button type="button" class="toggle test-only" id="enable-llm" aria-pressed="true">Generate a reply</button>
+    <fieldset id="llm-choice"><legend>LLM <button type="button" class="toggle test-only" id="enable-llm" aria-pressed="true">Generate a reply</button><span id="residency-llm" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading LLM...</span></legend>
       <label class="model-option">Model<select id="llm-model" disabled></select></label>
       <label class="model-option test-only">Runtime<div id="llm-runtime" class="framework-display">llama.cpp</div></label>
 <label class="model-option test-only">Delivery<select id="delivery-llm" disabled><option value="auto">Auto</option></select></label></fieldset>
-    <fieldset id="tts-choice"><legend>TTS <span id="residency-tts" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading TTS...</span></legend><button type="button" class="toggle test-only" id="enable-tts" aria-pressed="true">Speak output</button>
+    <fieldset id="tts-choice"><legend>TTS <button type="button" class="toggle test-only" id="enable-tts" aria-pressed="true">Speak output</button><span id="residency-tts" class="hint residency" data-state="loading" role="status" aria-live="polite">Loading TTS...</span></legend>
       <label class="model-option">Model<select id="tts-model" disabled></select></label>
       <label class="model-option test-only">Runtime<div class="framework-display">AudioCpp</div></label><label class="model-option practice-only">Conversation delivery<select id="delivery-tts" disabled><option value="auto">Auto</option></select></label>
       <label>Voice<select id="voice"></select></label>
@@ -168,7 +168,7 @@
   <p id="interim-transcript" class="hint" aria-live="polite"></p>
   </div>
   <p id="status" role="status" aria-live="polite"></p>
-  <section id="conversation-history" aria-label="Conversation"><h2 id="conversation-title" class="test-only">Conversation</h2><div id="history" role="log" aria-live="polite"></div></section>
+  <section id="conversation-history" aria-label="Conversation"><h2 id="conversation-title">Conversation</h2><div id="history" role="log" aria-live="polite"></div></section>
   <audio id="practice-audio" controls hidden></audio>
   <form id="form">
     <div class="composer-shell">
