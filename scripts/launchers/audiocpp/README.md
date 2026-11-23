@@ -14,7 +14,7 @@ nothing selects them.
 
 Nemotron and the practice TTS model share one server: [checks](../../tests/notes/audiocpp/AUDIOCPP-SINGLE-SERVER.md).
 
-- Speech test: [launcher](../../../bat/browser/launch_test.bat); ASR, LLM and TTS are optional. The AudioCpp proxy redirects `/test/` there. Native Vulkan is default; `--build` follows launcher config.
+- Speech test: [launcher](../../../bat/browser/launch_test.bat); ASR, LLM and TTS are optional. The workspace serves the page. Native Vulkan is default; `--build` follows launcher config.
 - ROCm: updater `--only audiocpp/rocm`; installs under `frameworks/audiocpp/rocm/`. Compare with Vulkan using `python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare`; [evidence](../../../notes/NATIVE-VALIDATION.md).
 - Both release executables live directly in `frameworks/audiocpp/{vulkan,rocm}/`; updater flattens vendor build folders. Older ROCm variants stay under `additions/rocm/`.
 - Brief tests: `python -m scripts.tests.cases.audiocpp.audiocpp_backend_compare --case breeze2`; `--case supertonic` and `--case ming3-tts` cover the remaining families. [Audio model setup](../../config/audiocpp/MODELS.md). Default is one warmup and one measured short sentence per official backend.
@@ -26,7 +26,7 @@ Nemotron and the practice TTS model share one server: [checks](../../tests/notes
 
 - [Diagnostic page](../../tests/ui/speech.html) and Kobold Lite share [pcm_audio.js](../shared/browser/pcm_audio.js), with independent overrides.
 - Page initialization reads `/proxy/config`; generation remains disabled if this fails. After Python edits, restart the proxy and refresh defaults.
-- One [speech workspace](../asr/PRACTICE-WORKSPACE.md) owns the maximalist test view and optional ASR, LLM and TTS stages. The AudioCpp proxy redirects `/test/` to that workspace while it runs, and serves its own copy when it does not.
+- One [speech workspace](../asr/PRACTICE-WORKSPACE.md) owns the page and the optional ASR, LLM and TTS stages; it relays every speech request through the AudioCpp proxy, which no longer serves a page of its own.
 - The page starts its practice view on the language-practice voice (Supertonic) and its test view on this proxy's model (Breeze). A last-used tone shows as a note, never as a filled-in default: Breeze's default instruction is empty.
 - Ming is selectable as a TTS model; its playback rate is 44100 Hz and Instruction maps to native `instruct`.
 - HTTP PCM/WAV and SSE feed one decoder/player. SSE expects PCM delta events plus completion; compressed audio falls back to complete decoding.

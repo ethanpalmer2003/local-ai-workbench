@@ -1,11 +1,15 @@
 """Speech workspace policy on the generic owned-service lifecycle."""
 
 import json
+import subprocess
+import sys
 import time
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 from scripts.config import project_config as project_cfg
+from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector
 from scripts.launchers.asr.shared import practice_models
@@ -13,7 +17,27 @@ from scripts.launchers.asr.shared.practice_selection import Selection
 from scripts.launchers.audiocpp import asr, model_management
 from scripts.launchers.llamacpp import chat_models
 from scripts.launchers.runtime.execution_context import ExecutionContext
+from scripts.launchers.shared.services import native
 from scripts.launchers.shared.services.service_lifecycle import Service, ServiceLifecycle
+
+# - The workspace relays every speech request to the AudioCpp proxy, which owns the engine, the tone
+#   and voice transforms, and the per-model defaults; nothing else serves TTS.
+PROXY_COMMAND = [sys.executable, "-m", "scripts.launchers.audiocpp.audiocpp_proxy"]
+
+
+def start_tts_proxy() -> subprocess.Popen[Any] | None:
+    """The one TTS service: reuse a healthy proxy, otherwise start it."""
+    port = cfg.AUDIOCPP_SERVICE.port
+    return native.start_server(
+        PROXY_COMMAND,
+        [Path(cfg.__file__), project_cfg.AUDIOCPP_SERVER_EXE],
+        port,
+        "AudioCpp TTS",
+        lambda: launch_util.port_listening(port),
+        lambda: native.matches(PROXY_COMMAND),
+        component_key="audiocpp",
+        cwd=str(project_cfg.BASE_DIR),
+    )
 
 
 class PracticeRuntime:
@@ -65,8 +89,9 @@ class PracticeRuntime:
             "audio": self.audio_service(shared),
             "asr": Service(lambda: selector.backend(engine).start()),
             "llm": Service(lambda: self.start_chat(self.controls.llm)),
+            "tts": Service(start_tts_proxy),
         }
-        groups = {"asr": "audio" if shared else "asr", "tts": "audio", "llm": "asr" if gemma else "llm"}
+        groups = {"asr": "audio" if shared else "asr", "tts": "tts", "llm": "asr" if gemma else "llm"}
         return ServiceLifecycle(
             services,
             groups,
@@ -93,11 +118,8 @@ class PracticeRuntime:
         self.lifecycle.ensure(stage)
 
     def speech_url(self):
-        return (
-            asr.url()
-            if self.controls.engine in cfg.AUDIOCPP_ASR_ENGINES
-            else f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}"
-        )
+        # - one TTS route for the practice turns and the test view: the AudioCpp proxy
+        return f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.port}"
 
     def llm_path(self):
         return chat_models.path(self.controls.llm)

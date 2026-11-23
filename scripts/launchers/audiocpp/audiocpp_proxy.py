@@ -232,14 +232,7 @@ def launch_proxy(extra_args: list[str] | None = None) -> None:
         {"backend": lifecycle.restart, "proxy": reload_settings},
         {"backend": [source, Path(cfg.__file__)], "proxy": [Path(cfg.__file__), Path(tts_text_processing.__file__)]},
     )
-    run_tts_json_proxy(
-        service,
-        upstream,
-        transform=_transform,
-        tag="audiocpp-proxy",
-        restart_controller=controller,
-        test_page_redirect=f"http://127.0.0.1:{cfg.LLAMACPP_PRACTICE.port}/test/",
-    )
+    run_tts_json_proxy(service, upstream, transform=_transform, tag="audiocpp-proxy", restart_controller=controller)
 
 
 def main() -> None:

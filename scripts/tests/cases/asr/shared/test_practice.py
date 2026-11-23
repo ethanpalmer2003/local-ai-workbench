@@ -228,7 +228,7 @@ class PracticeTests(unittest.TestCase):
             patch.object(http_api.practice_models, "tts_spec", return_value=spec),
             patch.object(http_api.audiocpp_catalog, "runtime_defaults", return_value={}) as defaults,
         ):
-            result = http_api.test_defaults()
+            result = http_api.workspace_defaults()
         self.assertEqual(defaults.call_args.kwargs["specs"], [spec])
         self.assertEqual(defaults.call_args.args[0].model, cfg.LANGUAGE_PRACTICE.tts_model)
         self.assertFalse(result["streaming_supported"])

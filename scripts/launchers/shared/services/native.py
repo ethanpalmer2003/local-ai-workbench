@@ -45,6 +45,7 @@ def start_server(
     timeout: int = 120,
     env: Mapping[str, str | None] | None = None,
     component_key: str = "shared",
+    cwd: str | None = None,
 ) -> subprocess.Popen[Any] | None:
     # - Never stop an existing service: reuse it when it matches, otherwise
     #   refuse. Port clearing belongs to explicit launcher opt-in, not a
@@ -64,7 +65,7 @@ def start_server(
     process = launch_util.launch_process(
         command,
         title,
-        cwd=str(Path(command[0]).parent),
+        cwd=cwd or str(Path(command[0]).parent),
         mode=cfg.ConsoleTerminalLaunchMode.MERGE,
         log_file=str(logs / f"{title.lower().replace(' ', '-')}_{time.time_ns()}.log"),
         env=env,

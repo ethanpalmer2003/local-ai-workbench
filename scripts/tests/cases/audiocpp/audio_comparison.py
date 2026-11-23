@@ -1,7 +1,6 @@
 """Comparison selection safety without model inference."""
 
 import json
-import socket
 import struct
 import unittest
 from dataclasses import replace
@@ -10,7 +9,7 @@ from unittest.mock import patch
 
 from scripts.config import models as model_cfg
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.audiocpp import audiocpp_catalog, audiocpp_proxy, tts_proxy
+from scripts.launchers.audiocpp import audiocpp_catalog, audiocpp_proxy
 from scripts.tests.shared.paths import CasePaths
 
 
@@ -96,17 +95,6 @@ class AudioComparison(unittest.TestCase):
         ):
             audiocpp_proxy._apply_request_options(payload, None, cfg.AudiocppModel.MING3_TTS.value)
         self.assertEqual(payload["options"], {"language": "en"})
-
-    def test_the_test_page_falls_back_to_the_local_copy_when_the_workspace_is_down(self):
-        with socket.socket() as probe:
-            probe.bind(("127.0.0.1", 0))
-            port = probe.getsockname()[1]
-        self.assertFalse(tts_proxy._redirect_target_live(f"http://127.0.0.1:{port}/test/"))
-        with socket.socket() as live:
-            live.bind(("127.0.0.1", 0))
-            live.listen(1)
-            chosen = live.getsockname()[1]
-            self.assertTrue(tts_proxy._redirect_target_live(f"http://127.0.0.1:{chosen}/test/"))
 
     def test_live_defaults_read_model_metadata_and_refresh_after_file_changes(self):
         def write_model(path: Path, temperature: float):

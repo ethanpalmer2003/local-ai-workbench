@@ -5,7 +5,7 @@
 
 | Proxy | Public | Backend | Why it exists |
 | --- | ---: | ---: | --- |
-| [AudioCpp](audiocpp/audiocpp_proxy.py) | 8888 | 8889 | `/test/` and `/practice` pages, tone/text cleanup, TTS page cloning and streaming, backend switching, restart control |
+| [AudioCpp](audiocpp/audiocpp_proxy.py) | 8888 | 8889 | Tone/text cleanup, voice cloning and streaming, backend switching, restart control |
 | [sd.cpp](sdcpp/proxy.py) | 1234 | 1235 | Single UI/API door for the sd.cpp server plus backend lifecycle and restart control |
 | [KoboldCpp Lite](koboldcpp/kobold_lite.py) | 5001 | 5002 | Serves the installed Lite page patched at request time: streaming audio, tone tags, external transcription and the no-model endpoint seed |
 | [llama.cpp](llamacpp/llamacpp_proxy.py) | 9931 | 9932 | Lazy model: answers `/health` and `/v1/models` from configuration, loads on the first real request, unloads after idle so the VRAM comes back |

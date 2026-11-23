@@ -5,6 +5,7 @@ import os
 from dataclasses import replace
 from http.server import BaseHTTPRequestHandler
 from typing import Any
+from urllib.parse import parse_qs, urlsplit
 
 import requests
 
@@ -46,7 +47,11 @@ def static_get(
         send_bytes(handler, 200, asset[0], asset[1])
         return True
     if path == "/proxy/config":
-        send_bytes(handler, 200, json.dumps(test_defaults()).encode(), "application/json")
+        model = parse_qs(urlsplit(handler.path).query).get("model", [None])[0]
+        send_bytes(handler, 200, json.dumps(workspace_defaults(model)).encode(), "application/json")
+        return True
+    if path == "/proxy/comparison-catalog":
+        send_bytes(handler, 200, json.dumps(audiocpp_catalog.comparison_catalog()).encode(), "application/json")
         return True
     if path == "/asr/status":
         chat_port = (
@@ -78,19 +83,26 @@ def static_get(
     return False
 
 
-def test_defaults() -> dict[str, object]:
-    """Expose selected weights and the common delivery policy."""
+def workspace_defaults(model: str | None = None) -> dict[str, object]:
+    """Expose selected weights and the common delivery policy; a named model answers with its own."""
     from scripts.launchers.asr.shared.delivery import tts_plan
 
     plan = tts_plan()
     spec = practice_models.tts_spec()
     voice = cfg.TTS_FAMILY_DEFAULT_VOICE.get(str(spec["family"]), cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value)
-    service = replace(cfg.AUDIOCPP_SERVICE, model=spec["id"], voice=voice)
-    result = audiocpp_catalog.runtime_defaults(service, specs=[spec])
+    selected = model or spec["id"]
+    service = replace(cfg.AUDIOCPP_SERVICE, model=selected, voice=voice)
+    # - the practice model answers with its own configured spec; another model answers with its config entry
+    result = (
+        audiocpp_catalog.runtime_defaults(service, specs=[spec])
+        if selected == spec["id"]
+        else audiocpp_catalog.runtime_defaults(service, model=selected)
+    )
     result.update(
         practice_gateway=True,
         practice_url="/practice",
-        models=[{"id": spec["id"], "installed": True}],
+        practice_model=cfg.LANGUAGE_PRACTICE.tts_model,
+        models=audiocpp_catalog.configured_models(),
         streaming_enabled=plan["mode"] == "streaming",
         streaming_supported="streaming" in plan["supported"],
         delivery=plan,

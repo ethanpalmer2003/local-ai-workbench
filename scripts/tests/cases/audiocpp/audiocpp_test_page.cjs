@@ -168,9 +168,14 @@ async function playback(bufferSeconds) {
   assert.equal(document.getElementById('instr').disabled, true);
   assert.equal(document.getElementById('fast').disabled, true);
   servedConfig.practice_gateway = true; servedConfig.practice_url = '/practice';
+  document.documentElement.dataset.view = 'test';
   await document.getElementById('defaults').onclick();
-  assert.equal(document.getElementById('comparison').hidden, true);
+  assert.equal(document.getElementById('comparison').hidden, false, 'the test view keeps the comparison tool');
   assert.equal(document.getElementById('restart-section').hidden, true);
+  assert.equal(document.getElementById('mode').disabled, false, 'the test view keeps direct TTS delivery');
+  document.documentElement.dataset.view = 'practice';
+  await document.getElementById('defaults').onclick();
+  assert.equal(document.getElementById('comparison').hidden, true, 'practice keeps only the conversation');
   assert.equal(document.getElementById('mode').disabled, true);
   assert.ok(!html.includes('<iframe'));
   assert.ok(html.includes('id="enable-llm"'));

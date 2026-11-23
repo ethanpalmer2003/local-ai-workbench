@@ -122,7 +122,7 @@
   html[data-view=practice] .test-only,html[data-view=practice] #practice-audio { display:none!important; }
   html[data-view=test]:not([data-gateway=practice]) .practice-only { display:none!important; }
   .direct-tts-only { display:none!important; }
-  html[data-view=test][data-gateway=audiocpp] .direct-tts-only { display:flex!important; }
+  html[data-view=test] .direct-tts-only { display:flex!important; }
   html[data-view=practice] .technical { display:none!important; }
   html[data-view=practice] .residency:not([data-state=loading]) { display:none!important; }
   @media(max-width:620px) { .workspace { padding:16px; } }
@@ -579,7 +579,7 @@
       await loadAudioCppDefaults(config, document.getElementById('tts-model').value || config.model);
       activeDefaults = config;
       document.getElementById('restart-section').hidden = !!config.practice_gateway;
-      document.getElementById('comparison').hidden = !!config.practice_gateway;
+      document.getElementById('comparison').hidden = document.documentElement.dataset.view === 'practice';
       const choices = document.getElementById('tts-model');
       for (const id of ['buffer', 'rate', 'voice', 'transport', ...Object.keys(generationFields)]) {
         document.getElementById(id).value = '';
@@ -602,7 +602,7 @@
         }
       }
       document.getElementById('mode').value = '';
-      document.getElementById('mode').disabled = !!config.practice_gateway;
+      document.getElementById('mode').disabled = document.documentElement.dataset.view === 'practice';
       updateResponseMode();
       fillVoices(config);
       showDefaultSources(config);
@@ -633,12 +633,12 @@
       if (currentSelection() !== selected) return;
       activeDefaults = config;
       document.getElementById('restart-section').hidden = !!config.practice_gateway;
-      document.getElementById('comparison').hidden = !!config.practice_gateway;
+      document.getElementById('comparison').hidden = document.documentElement.dataset.view === 'practice';
       for (const id of ['buffer', 'rate', 'voice', 'transport', 'mode', ...Object.keys(generationFields)]) {
         document.getElementById(id).value = '';
       }
       document.getElementById('extra').value = '{}';
-      document.getElementById('mode').disabled = !!config.practice_gateway;
+      document.getElementById('mode').disabled = document.documentElement.dataset.view === 'practice';
       updateResponseMode();
       fillVoices(config);
       showDefaultSources(config);

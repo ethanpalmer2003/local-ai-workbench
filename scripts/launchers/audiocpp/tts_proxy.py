@@ -2,7 +2,6 @@
 
 import contextlib
 import json
-import socket
 import time
 import traceback
 import uuid
@@ -39,16 +38,6 @@ Payload = dict[str, object]
 
 # - Synthesis of a long reply can outlast a normal request; the bound is an idle wait, not total time
 UPSTREAM_TIMEOUT = 300
-
-
-def _redirect_target_live(url: str) -> bool:
-    """The practice workspace serves the full test page; when it is down, this proxy serves it here."""
-    parts = urlsplit(url)
-    try:
-        with socket.create_connection((parts.hostname or "127.0.0.1", parts.port or 80), timeout=0.25):
-            return True
-    except OSError:
-        return False
 
 
 def _test_asset(path: str) -> tuple[bytes, str] | None:
@@ -218,7 +207,6 @@ class _TtsProxyHandler(QuietLog, ProxyHandlerMixin):
     upstream_url = ""
     tag = "audiocpp-proxy"
     audio_service = None
-    test_page_redirect = None
     transform = None
     transform_lock = Lock()
     protocol_version = "HTTP/1.1"
@@ -310,19 +298,6 @@ class _TtsProxyHandler(QuietLog, ProxyHandlerMixin):
                 self.close_connection = True
 
     def _forward_get(self, method: str):
-        if (
-            self.test_page_redirect
-            and urlsplit(self.path).path in ("/test", "/test/")
-            and _redirect_target_live(self.test_page_redirect)
-        ):
-            self.send_response(307)
-            self.send_header("Location", self.test_page_redirect)
-            self.send_header("Content-Length", "0")
-            self.end_headers()
-            return
-        if self.audio_service is not None and (asset := _test_asset(urlsplit(self.path).path)) is not None:
-            send_bytes(self, 200, asset[0], asset[1])
-            return
         if self.path == "/proxy/comparison-catalog" and self.audio_service is not None:
             body = json.dumps(audiocpp_catalog.comparison_catalog()).encode("utf-8")
             send_bytes(self, 200, body, "application/json")
@@ -414,7 +389,6 @@ def run_tts_json_proxy(
     restart_controller: ProxyRestartController | None = None,
     request_scope: RequestScope | None = None,
     on_server: Callable[[ThreadingHTTPServer], None] | None = None,
-    test_page_redirect: str | None = None,
 ):
     """Relay TTS requests; serialize stateful text preparation, leaving playback to clients."""
     audio_service = service if isinstance(service, cfg.AudiocppStartupRequestServiceSettings) else None
@@ -422,7 +396,6 @@ def run_tts_json_proxy(
         "upstream_url": upstream_url,
         "tag": tag,
         "audio_service": audio_service,
-        "test_page_redirect": test_page_redirect,
         "transform_lock": Lock(),
         "restart_controller": restart_controller,
         "request_scope": request_scope,
