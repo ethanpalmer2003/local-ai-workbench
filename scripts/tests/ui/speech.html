@@ -125,13 +125,8 @@
   #settings-backdrop { position:fixed; inset:0; background:rgba(8,11,15,.55); z-index:30; }
   #settings-panel { position:fixed; top:0; bottom:0; left:0; width:min(880px,100%); padding:20px; overflow-y:auto; background:var(--panel); border-right:1px solid var(--line); z-index:40; transform:translateX(-102%); visibility:hidden; transition:transform .2s ease, visibility .2s; }
   #settings-panel.open { transform:none; visibility:visible; }
-  .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
-  html[data-view=practice] .test-only,html[data-view=practice] #practice-audio { display:none!important; }
-  html[data-view=test]:not([data-gateway=practice]) .practice-only { display:none!important; }
-  .direct-tts-only { display:none!important; }
-  html[data-view=test] .direct-tts-only { display:flex!important; }
-  html[data-view=practice] .technical { display:none!important; }
-  html[data-view=practice] .residency:not([data-state=loading]) { display:none!important; }
+  /* Both views share one layout; the comparison tool stays test-only and JS hides it in practice. */
+  .direct-tts-only { display:flex!important; }
   @media(max-width:620px) { .workspace { padding:16px; } }
 </style>
 </head>
