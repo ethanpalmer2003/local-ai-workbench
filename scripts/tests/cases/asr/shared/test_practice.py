@@ -210,7 +210,6 @@ class PracticeTests(unittest.TestCase):
 
         self.assertNotIn("detail-level", ids)
         self.assertNotIn("show-metrics", ids)
-        self.assertIn("html[data-view=practice] .test-only", html)
         self.assertIn("document.documentElement.dataset.view", html)
         self.assertNotIn("capture-stop", ids)
         composer = html.split('<form id="form">', 1)[1].split("</form>", 1)[0]

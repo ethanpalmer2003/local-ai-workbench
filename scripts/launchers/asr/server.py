@@ -168,11 +168,16 @@ class _AsrProxyHandler(ProxyHandlerMixin):
             payload = json.loads(body)
             if not isinstance(payload, dict) or not isinstance(payload.get("options", {}), dict):
                 raise ValueError("Speech request and options must be JSON objects")
-            payload = practice_models.speech_body(payload)
+            # - a named model or a comparison is the test view's direct request; the practice defaults
+            #   would rewrite its model and delivery, so it is relayed untouched
+            named = payload.get("model")
+            direct = payload.get("_comparison") is True or bool(named and named != practice_models.tts_spec()["id"])
+            if not direct:
+                payload = practice_models.speech_body(payload)
+            encoded = json.dumps(payload).encode()
         except (ValueError, TypeError) as error:
             send_json_error(self, 400, str(error), "invalid_request_error")
             return
-        encoded = json.dumps(payload).encode()
         relay_stream(
             self,
             method,
