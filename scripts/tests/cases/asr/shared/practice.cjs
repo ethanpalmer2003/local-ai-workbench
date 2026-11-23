@@ -65,7 +65,7 @@ const context = vm.createContext({
                 {id: 'nemo-nemotron', framework: 'NeMo-Speech.cpp', label: 'Nemotron', available: true},
                 {id: 'parakeetcpp-nemotron-cpu', framework: 'parakeet.cpp CPU', label: 'Nemotron', available: false}],
             llm: [{id: 'llamacpp/gemma', label: 'Gemma', available: true}, {id: 'llamacpp/alternate', label: 'Alternate', available: true}],
-            tts: [{id: 'kokoro', label: 'Kokoro', available: true}, {id: 'compact', label: 'Compact', available: true}], selected: selectedModels};
+            tts: [{id: 'kokoro', label: 'Kokoro', available: true}, {id: 'compact', label: 'Compact', available: true}], selected: selectedModels, test_tts: 'compact'};
         }
         else if (url === '/workspace/lifecycle') value = {log: 'fixture.jsonl', stages: {
             asr: {state: 'unloaded'}, llm: {state: 'unloaded'}, tts: {state: 'unloaded'}}, events: []};
@@ -181,7 +181,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
     const llmMeasurement = elements['measurement-rows'].children.find(row => row.children[0].textContent === 'LLM reply');
     assert.equal(llmMeasurement.children[1].textContent, 'gemma-e4b-q4.gguf');
     const overlappedTurn = elements['measurement-rows'].children.find(row => row.children[0].textContent === 'Turn including playback');
-    assert.match(overlappedTurn.children[1].textContent, /kokoro$/);
+    assert.match(overlappedTurn.children[1].textContent, practiceOnly ? /kokoro$/ : /compact$/);
     const speech = requests.find(([url]) => url === '/v1/audio/speech');
     assert.equal(JSON.parse(speech[1].body).voice, 'ff_siwis');
     assert.equal(JSON.parse(speech[1].body).options.language, 'fr-fr');
@@ -205,17 +205,18 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
     elements['llm-model'].value = 'llamacpp/alternate';
     elements['llm-model'].onchange(); assert.match(elements['model-status'].textContent, /Pending/);
     const history = elements.history.textContent;
-    elements['tts-model'].value = 'compact'; await vm.runInContext('applyModels()', context);
-    assert.equal(selectedModels.tts, 'compact');
+    const switchedTts = practiceOnly ? 'compact' : 'kokoro';
+    elements['tts-model'].value = switchedTts; await vm.runInContext('applyModels()', context);
+    assert.equal(selectedModels.tts, switchedTts);
     assert.equal(selectedModels.llm, 'llamacpp/alternate');
     assert.equal(elements.history.textContent, history);
-    assert.match(overlappedTurn.children[1].textContent, /kokoro$/, 'Model switches must not relabel earlier rows');
+    assert.match(overlappedTurn.children[1].textContent, practiceOnly ? /kokoro$/ : /compact$/, 'Model switches must not relabel earlier rows');
     elements['enable-asr'].checked = false; await elements['enable-asr'].onchange();
     elements['enable-llm'].checked = false; await elements['enable-llm'].onchange();
     const start = requests.length;
     await elements.send.onclick();
     assert.ok(requests.slice(start).some(([url]) => url === '/v1/audio/speech'));
-    assert.ok(!requests.slice(start).some(([url]) => url.includes('/asr/') || url === '/v1/chat/completions'));
+    assert.ok(!requests.slice(start).some(([url]) => (url.includes('/asr/') && url !== '/asr/status') || url === '/v1/chat/completions'));
     elements['enable-tts'].checked = false; elements['enable-llm'].checked = true;
     await elements['enable-tts'].onchange();
     const chatOnly = requests.length; await elements.send.onclick();

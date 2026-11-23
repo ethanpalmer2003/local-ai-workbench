@@ -26,6 +26,8 @@ class Selection:
             "tts": practice_models.tts_models(),
             "llm": chat_models.catalog(),
             "selected": {"asr": self.engine.value, "tts": self.tts, "llm": self.llm},
+            # - the test view starts on the AudioCpp proxy model; practice starts on the chosen model
+            "test_tts": cfg.AUDIOCPP_SERVICE.model,
             "error": self.error,
         }
 

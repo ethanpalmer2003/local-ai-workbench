@@ -23,7 +23,7 @@ function savePreferences() {
         speechStart: $('speech-start').value,
         level: $('learning-level').value, corrections: $('correct-language').checked,
         autoSend: $('auto-send').checked,
-        models: {asr: resolvedAsr()?.id, llm: $('llm-model').value, tts: $('tts-model').value}};
+        models: {asr: resolvedAsr()?.id, llm: $('llm-model').value, tts: $('tts-model').value, testTts: $('tts-model').value}};
     try { globalThis.localStorage?.setItem(preferencesKey, JSON.stringify(preferences)); } catch (_) {}
 }
 let capabilities, serviceReady = false, llmModel;
@@ -182,7 +182,10 @@ function renderModelChoices(catalog, verified = true) {
         || modelCatalog.asr.find(row => row.id === modelCatalog.selected.asr);
     fillAsrModels(selected.id);
     $('tts-model').replaceChildren(...modelCatalog.tts.map(row => modelOption(row.label, row.id, row.available, row.reason)));
-    $('tts-model').value = modelCatalog.tts.some(row => row.id === saved.tts && row.available) ? saved.tts : modelCatalog.selected.tts;
+    // - the test view starts on the AudioCpp proxy's model, practice on the chosen practice model
+    const wantedTts = practiceView ? saved.tts || modelCatalog.selected.tts : saved.testTts || modelCatalog.test_tts || modelCatalog.selected.tts;
+    const fallbackTts = practiceView ? modelCatalog.selected.tts : modelCatalog.test_tts || modelCatalog.selected.tts;
+    $('tts-model').value = modelCatalog.tts.some(row => row.id === wantedTts && row.available) ? wantedTts : fallbackTts;
     refreshTtsVoices();
     const llms = modelCatalog.llm || [];
     $('llm-model').replaceChildren(...llms.map(row => modelOption(row.label, row.id, row.available, row.reason)));
