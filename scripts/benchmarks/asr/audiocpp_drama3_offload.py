@@ -26,6 +26,9 @@ from scripts.config.models.gguf_metadata import _read_str, _skip_value
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp_catalog
+from scripts.launchers.audiocpp.audiocpp_proxy import _transform
+from scripts.launchers.audiocpp.tts_proxy import run_tts_json_proxy
+from scripts.launchers.proxy_restart import OwnedBackendLifecycle, ProxyRestartController, reload_proxy_configuration
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
 from scripts.shared import consent
@@ -301,7 +304,6 @@ if TYPE_CHECKING:
 def _lifecycle(
     process: subprocess.Popen[bytes], exe: Path, config: Path, source: Path, log: BinaryIO, monitor: GpuMemoryMonitor
 ) -> "OwnedBackendLifecycle":
-    from scripts.launchers.proxy_restart import OwnedBackendLifecycle
 
     def prepare_backend() -> None:
         updated = audio_cfg.read(source)
@@ -320,7 +322,6 @@ def _lifecycle(
 
 
 def _reload_settings(config: Path) -> None:
-    from scripts.launchers.proxy_restart import reload_proxy_configuration
 
     reload_proxy_configuration(cfg.AUDIOCPP_SERVICE, "AUDIOCPP_SERVICE")
     cfg.AUDIOCPP_SERVER_ARGS["config"] = str(config)
@@ -333,9 +334,6 @@ def _page_server() -> http.server.ThreadingHTTPServer:
 
 def serve(layers: int, run: RunPaths) -> None:
     # - Lazy loading keeps unselected catalog models unloaded.
-    from scripts.launchers.audiocpp.audiocpp_proxy import _transform
-    from scripts.launchers.audiocpp.tts_proxy import run_tts_json_proxy
-    from scripts.launchers.proxy_restart import ProxyRestartController
 
     if any(listening(port) for port in (8888, 18886, PORT)):
         raise RuntimeError("Audio proxy/test port occupied; reuse or stop the existing session explicitly")

@@ -5,12 +5,15 @@ import math
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
+import soundfile as sf
+from scipy.signal import resample_poly
+
 if TYPE_CHECKING:
     import numpy as np
 
 
 def decode_audio(source: bytes | Path) -> tuple[Any, int]:
-    import soundfile as sf
 
     try:
         return sf.read(io.BytesIO(source) if isinstance(source, bytes) else source, always_2d=True, dtype="float32")
@@ -19,8 +22,6 @@ def decode_audio(source: bytes | Path) -> tuple[Any, int]:
 
 
 def mono_resample(samples: "np.ndarray", rate: int, target_rate: int = 16000, *, clip: bool = False) -> "np.ndarray":
-    import numpy as np
-    from scipy.signal import resample_poly
 
     if rate <= 0 or target_rate <= 0:
         raise ValueError("Audio sample rates must be positive")
@@ -33,7 +34,6 @@ def mono_resample(samples: "np.ndarray", rate: int, target_rate: int = 16000, *,
 
 
 def pcm_wav(samples: "np.ndarray", rate: int = 16000) -> bytes:
-    import soundfile as sf
 
     destination = io.BytesIO()
     sf.write(destination, samples, rate, format="WAV", subtype="PCM_16")

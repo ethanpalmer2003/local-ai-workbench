@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import huggingface_hub
 from tqdm import tqdm
 
 from scripts.config import project_config as project_cfg
@@ -154,9 +155,8 @@ def main(argv: list[str] | None = None) -> int:
     # - asked before the first network call: a question that arrives after a plan reads as a hung run
     if not args.dry_run and not consent.ask("Model update", DOWNLOAD_SECONDS, args.yes):
         return 1
-    from huggingface_hub import HfApi
 
-    api = HfApi(token=project_cfg.HF_TOKEN)
+    api = huggingface_hub.HfApi(token=project_cfg.HF_TOKEN)
     models = [model for model in MODELS if model.in_use and model.url]
     if args.only:
         models = [model for model in models if model.label in set(args.only)]

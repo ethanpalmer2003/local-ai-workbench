@@ -9,6 +9,7 @@ import re
 import subprocess
 from pathlib import Path
 
+import psutil
 import requests
 import yaml
 
@@ -17,6 +18,7 @@ from scripts.config.coding_agents.pi import packages as pi_packages
 from scripts.download.frameworks import update_shared as shared
 from scripts.download.frameworks import update_types as cfg
 from scripts.download.frameworks.npm import command as npm_command
+from scripts.download.frameworks.strata import updates as strata_updates
 from scripts.download.frameworks.update_types import ReleaseType, ToolSpec
 
 
@@ -293,7 +295,6 @@ STRATA_STATUS_GROUPS = {"current": "current", "not-in-feed": "current", "none-in
 
 
 def process_strata(tool: ToolSpec, dest_dir: Path, check_only: bool, summary: shared.UpdateSummary | None) -> None:
-    from scripts.download.frameworks.strata import updates as strata_updates
 
     report = strata_updates.process(dest_dir)
     if summary is None or report is None:
@@ -345,7 +346,6 @@ def feed_details(tool: ToolSpec) -> tuple[str, str, str, int | None]:
 
 def app_running(dest_dir: Path) -> bool:
     """True while a process runs from inside the installation folder."""
-    import psutil
 
     prefix = os.path.normcase(os.path.abspath(dest_dir)).rstrip("\\") + "\\"
     for process in psutil.process_iter(["exe"]):
@@ -357,7 +357,6 @@ def app_running(dest_dir: Path) -> bool:
 
 def stop_app(dest_dir: Path) -> None:
     """An installer owns its files: a running app is ended, not waited for."""
-    import psutil
 
     prefix = os.path.normcase(os.path.abspath(dest_dir)).rstrip("\\") + "\\"
     for process in psutil.process_iter(["exe"]):

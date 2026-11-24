@@ -9,8 +9,10 @@ from urllib.parse import urlencode
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import requests
+from scripts.launchers.asr.shared.practice_models import tts_spec
 from scripts.launchers.asr.shared.resident_profiles import audio_config
 from scripts.launchers.audiocpp.tts_server import audio_environment
+from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 from scripts.launchers.shared.services import native
 from scripts.launchers.shared.transport.streaming_http import StreamingPost
 from scripts.shared.wait import http_ready
@@ -30,7 +32,6 @@ def profile_for(engine: str) -> str:
 def speech_config(port: int, engine: str = DEFAULT_ENGINE):
     config = audio_config(profile_for(engine), mode="streaming")
     config.update(lazy_load=False, max_loaded_models=2, idle_unload_ms=0, threads=5, port=port)
-    from scripts.launchers.asr.shared.practice_models import tts_spec
 
     config["models"].append(tts_spec())
     return config
@@ -77,7 +78,6 @@ def _validated(request: requests.AudioRequest) -> None:
 
 
 def _pcm(request: requests.AudioRequest) -> bytes:
-    from scripts.launchers.shared.media.audio import decode_audio, mono_resample
 
     samples, rate = decode_audio(request.audio)
     pcm = (mono_resample(samples, rate).clip(-1, 1) * 32767).astype("<i2").tobytes()

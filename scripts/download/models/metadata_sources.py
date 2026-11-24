@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, NotRequired, TypedDict
 from urllib.parse import quote
 
+import huggingface_hub
 import requests
 
 from scripts.config import project_config as project_cfg
@@ -37,9 +38,8 @@ def hub_source(url: str | None) -> HubFile | None:
 
 
 def hub_metadata(source: HubFile) -> dict[str, Any]:
-    from huggingface_hub import HfApi
 
-    info = HfApi(token=False).model_info(source.repo_id, revision=source.revision)
+    info = huggingface_hub.HfApi(token=False).model_info(source.repo_id, revision=source.revision)
     result: dict[str, Any] = {
         "repo": source.repo_id,
         "requested_revision": source.revision,

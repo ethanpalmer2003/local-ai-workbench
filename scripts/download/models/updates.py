@@ -15,6 +15,8 @@ from typing import TYPE_CHECKING, Any, NamedTuple, Protocol
 if TYPE_CHECKING:
     from huggingface_hub import ModelInfo
 
+import huggingface_hub
+
 from scripts.config import project_config as project_cfg
 from scripts.config.models import MODELS as MODELS
 from scripts.config.models import ModelDownload as ModelDownload
@@ -163,9 +165,8 @@ def _arguments(argv: list[str] | None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = _arguments(argv)
-    from huggingface_hub import HfApi
 
-    api = HfApi(token=project_cfg.HF_TOKEN)
+    api = huggingface_hub.HfApi(token=project_cfg.HF_TOKEN)
     models = [model for model in MODELS if model.url and (args.all or model.in_use)]
     if args.only:
         models = [model for model in models if model.label in set(args.only)]

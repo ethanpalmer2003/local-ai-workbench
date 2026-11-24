@@ -12,13 +12,13 @@ from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import server
 from scripts.launchers.asr.shared import practice_models
+from scripts.launchers.asr.shared.practice_runtime import PracticeRuntime
 from scripts.launchers.asr.shared.practice_selection import Selection
 from scripts.launchers.runtime.browser import open_browser
+from scripts.launchers.runtime.execution_context import execution_context
 
 
 def run_session(args, controls, start_chat) -> bool:
-    from scripts.launchers.asr.shared.practice_runtime import PracticeRuntime
-    from scripts.launchers.runtime.execution_context import execution_context
 
     runtime = PracticeRuntime(controls, start_chat, execution_context(), args.no_tts)
     try:

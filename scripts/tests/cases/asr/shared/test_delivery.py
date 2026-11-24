@@ -74,10 +74,10 @@ class DeliveryTests(unittest.TestCase):
         controls.catalog.return_value = {"tts": [{"id": "registered"}]}
         with (
             patch(
-                "scripts.launchers.proxy_util.read_request_body",
+                "scripts.launchers.asr.shared.delivery.read_request_body",
                 return_value=b'{"stage":"tts","model":"arbitrary","mode":"whole"}',
             ),
-            patch("scripts.launchers.proxy_util.send_json_error") as error,
+            patch("scripts.launchers.asr.shared.delivery.send_json_error") as error,
             patch.object(speech_delivery, "save") as save,
         ):
             self.assertTrue(delivery.route(handler, "POST", "/workspace/delivery", controls))

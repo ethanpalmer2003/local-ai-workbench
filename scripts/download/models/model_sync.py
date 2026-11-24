@@ -15,6 +15,7 @@ from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.config.audiocpp import server as audio_cfg
 from scripts.download.models import download_catalog as download
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.strata.strata_pi import saved_connections
 
 MODEL_SUFFIXES = {".gguf", ".safetensors", ".ckpt", ".pt", ".pth", ".onnx", ".bin"}
 # Catalog destinations own audit coverage, including split/shared model storage.
@@ -112,7 +113,6 @@ def catalog_references() -> list[ModelReference]:
 
 
 def strata_references() -> list[ModelReference]:
-    from scripts.launchers.strata.strata_pi import saved_connections
 
     try:
         connections = saved_connections()

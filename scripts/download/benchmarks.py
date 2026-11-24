@@ -12,6 +12,8 @@ import tarfile
 from pathlib import Path
 from typing import Any, NotRequired, TypedDict
 
+import huggingface_hub
+
 from scripts.config import project_config as project_cfg
 from scripts.shared import consent
 
@@ -110,11 +112,10 @@ def missing(manifest: Manifest | None = None) -> list[Path]:
 
 
 def _archive(manifest: Manifest, config: str) -> Path:
-    from huggingface_hub import hf_hub_download
 
     split = str(manifest["split"])
     return Path(
-        hf_hub_download(
+        huggingface_hub.hf_hub_download(
             repo_id=str(manifest["corpus"]),
             filename=f"data/{config}/audio/{split}.tar.gz",
             repo_type="dataset",
@@ -145,9 +146,8 @@ def _extract(archive: Path, wanted: dict[str, Path]) -> None:
 
 def _lfs_hashes(manifest: Manifest) -> dict[str, str]:
     """Upstream SHA-256 for each archive, straight from the pinned dataset revision."""
-    from huggingface_hub import HfApi
 
-    info = HfApi(token=project_cfg.HF_TOKEN).dataset_info(
+    info = huggingface_hub.HfApi(token=project_cfg.HF_TOKEN).dataset_info(
         str(manifest["corpus"]), revision=str(manifest["revision"]), files_metadata=True
     )
     return {

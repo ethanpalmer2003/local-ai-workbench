@@ -13,6 +13,7 @@ from typing import Any
 import requests
 
 from scripts.benchmarks.asr.corpus import prepare_corpus
+from scripts.benchmarks.asr.coverage import coverage
 from scripts.benchmarks.asr.metrics import unicode_errors
 from scripts.benchmarks.asr.requests import multipart
 from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
@@ -281,7 +282,6 @@ def main():
         frameworks=[provenance.framework_state(key) for key in sorted({_component(name) for name in engines})],
         models=[provenance.file_identity(name, available[name][1]) for name in engines],
     )
-    from scripts.benchmarks.asr.coverage import coverage
 
     report["coverage"] = coverage()
     deadline = time.monotonic() + args.budget

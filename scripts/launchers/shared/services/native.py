@@ -6,6 +6,8 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+import psutil
+
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
@@ -24,7 +26,6 @@ def service_ready(port: int, path: str = "/health", *, strict: bool = False) -> 
 
 
 def matches(command: list[str]) -> bool:
-    import psutil
 
     return any(
         process.info["exe"]

@@ -15,7 +15,7 @@ class ModelSyncTests(unittest.TestCase):
             first = root / "model-00001-of-00002.gguf"
             first.write_bytes(b"first shard")
             config = Mock(config_path=root / "install" / "strata-model.json", config={"args": ["--native", str(first)]})
-            with patch("scripts.launchers.strata.strata_pi.saved_connections", return_value=[config]):
+            with patch("scripts.download.models.model_sync.saved_connections", return_value=[config]):
                 references = strata_references()
             report = audit_models({"models": root}, references, [])
             self.assertEqual(list(report.missing), [str(root / "model-00002-of-00002.gguf")])

@@ -11,6 +11,7 @@ import sys
 import time
 from pathlib import Path
 
+from scripts.benchmarks.llamacpp.hrx import hrx_tensor_probe
 from scripts.benchmarks.shared import provenance
 from scripts.benchmarks.shared.paths import dated_run
 from scripts.config import project_config as project_cfg
@@ -20,6 +21,7 @@ from scripts.download.frameworks.llamacpp.hrx import fixes
 from scripts.download.frameworks.llamacpp.hrx import prepare as prepare_hrx
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
+from scripts.tests.cases.llamacpp.hrx import hrx_update_validation
 from scripts.tests.shared.paths import RunPaths
 
 HRX_ROOT = project_cfg.FRAMEWORKS_DIR / "llamacpp" / "additions" / "hrx"
@@ -208,7 +210,6 @@ def merge_sources(paths: RunPaths) -> None:
 
 
 def stage_candidate(paths: RunPaths) -> Path:
-    from scripts.benchmarks.llamacpp.hrx import hrx_tensor_probe
 
     candidate = paths.temp / "bin"
     probe_source = Path(hrx_tensor_probe.__file__).with_suffix(".cpp")
@@ -246,7 +247,6 @@ def stage_candidate(paths: RunPaths) -> Path:
 
 
 def install_candidate(paths: RunPaths) -> Path:
-    from scripts.tests.cases.llamacpp.hrx import hrx_update_validation
 
     checks = hrx_update_validation.verify_candidate_evidence(paths)
     hrx_update_validation.record_sources(paths)
@@ -352,7 +352,6 @@ def main() -> None:
         [sys.executable, "-m", "scripts.benchmarks.llamacpp.hrx.hrx_performance", "--runtime", str(candidate)],
         paths,
     )
-    from scripts.tests.cases.llamacpp.hrx import hrx_update_validation
 
     hrx_update_validation.validate_candidate(paths)
     hrx_update_validation.record_sources(paths)

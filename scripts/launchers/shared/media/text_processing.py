@@ -2,12 +2,13 @@
 
 import re
 
+import regex
+
 from scripts.launchers import launcher_config as cfg
 
 
 def strip_emoji(text: str) -> str:
     """Remove Unicode pictographs/sequences without deleting non-BMP language characters."""
-    import regex
 
     pattern = (
         r"[0-9#*]\ufe0f?\u20e3|"
@@ -22,7 +23,6 @@ def strip_emoji(text: str) -> str:
 
 def filter_scripts(text: str, language: str | None) -> str:
     """Speech-only script compatibility; never claim language detection/transliteration."""
-    import regex
 
     code = (language or "").lower().replace("_", "-").split("-")[0]
     scripts = {

@@ -7,6 +7,7 @@ from typing import Any
 
 from scripts.benchmarks.shared.paths import RunPaths
 from scripts.config import project_config as project_cfg
+from scripts.launchers.shared.media.audio import decode_audio, mono_resample, pcm_wav
 
 
 def default_corpus() -> list[dict[str, str]]:
@@ -46,7 +47,6 @@ def default_corpus() -> list[dict[str, str]]:
 
 
 def prepare_corpus(run: RunPaths, manifest: Path | None) -> list[dict[str, Any]]:
-    from scripts.launchers.shared.media.audio import decode_audio, mono_resample, pcm_wav
 
     clips = json.loads(manifest.read_text(encoding="utf-8")) if manifest else default_corpus()
     if not isinstance(clips, list) or not clips:

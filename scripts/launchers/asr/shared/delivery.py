@@ -4,6 +4,7 @@ import json
 
 from scripts.config.shared import speech_delivery
 from scripts.launchers.asr.shared import practice_models
+from scripts.launchers.proxy_util import read_request_body, send_bytes, send_json_error
 
 
 def asr_plan(engine):
@@ -26,7 +27,6 @@ def plans(controls):
 def route(handler, method, path, controls):
     if path != "/workspace/delivery" or controls is None:
         return False
-    from scripts.launchers.proxy_util import read_request_body, send_bytes, send_json_error
 
     try:
         if method == "POST":

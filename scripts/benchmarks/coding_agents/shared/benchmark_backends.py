@@ -11,11 +11,13 @@ from typing import Any
 
 import requests
 
+from scripts.benchmarks.inference_engines.engines import avalon
 from scripts.benchmarks.shared.paths import RunPaths
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import llamacpp
 from scripts.launchers.strata import strata_pi
+from scripts.shared.http_server import request
 
 
 @dataclass
@@ -89,7 +91,6 @@ def preflight(conf: llamacpp.LlamaConfig, backends: list[str], config_path: Path
 
 @contextlib.contextmanager
 def llama_endpoint(conf: llamacpp.LlamaConfig, output: RunPaths) -> Iterator[BenchmarkEndpoint]:
-    from scripts.shared.http_server import request
 
     free_ports(conf.port, "llama.cpp server")
     settings = {**conf.get_ini(), **conf.profile.extra_args}
@@ -216,7 +217,6 @@ def strata_endpoint(
 
 @contextlib.contextmanager
 def avalon_endpoint(conf: llamacpp.LlamaConfig, output: RunPaths) -> Iterator[BenchmarkEndpoint]:
-    from scripts.benchmarks.inference_engines.engines import avalon
 
     port = cfg.LLAMACPP_SERVICE.port
     free_ports(port, "llama.cpp/Avalon server")

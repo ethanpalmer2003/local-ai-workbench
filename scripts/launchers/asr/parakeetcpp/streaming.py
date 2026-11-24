@@ -4,6 +4,8 @@ import ctypes as c
 import re
 from pathlib import Path
 
+import numpy as np
+
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.shared.native_abi.native_library import NativeLibrary
 
@@ -57,7 +59,6 @@ class Stream:
             raise RuntimeError((model.error(model.context) or b"Cannot begin stream").decode(errors="replace"))
 
     def push(self, pcm: bytes) -> str:
-        import numpy as np
 
         samples = np.frombuffer(pcm, dtype="<i2").astype(np.float32) / 32768
         eou = c.c_int()

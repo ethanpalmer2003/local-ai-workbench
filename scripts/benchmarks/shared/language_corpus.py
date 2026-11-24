@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.shared.paths import RunPaths
 from scripts.download import benchmarks as fleurs
 
@@ -56,7 +57,6 @@ def root() -> Path:
 
 def prepare(run: RunPaths) -> list[dict[str, Any]]:
     """Copy this run's clips to 16 kHz mono artifacts and return the prepared rows."""
-    from scripts.benchmarks.asr.corpus import prepare_corpus
 
     outstanding = missing()
     if outstanding:

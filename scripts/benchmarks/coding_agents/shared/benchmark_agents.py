@@ -27,6 +27,7 @@ from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import coding_clients, llamacpp, llamacpp_coding
+from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.shared import consent
 from scripts.shared.service_identity import endpoint_identity
 from scripts.shared.timing import timed
@@ -460,7 +461,6 @@ def main() -> int:
             print(f"{task.name}: {task.prompt}")
         return 0
     _validate_args(parser, args)
-    from scripts.launchers.runtime.execution_context import require_native_execution
 
     context = require_native_execution("Coding model benchmarks")
     print("[CONTEXT] " + json.dumps(context), flush=True)

@@ -9,6 +9,7 @@ import psutil
 import requests
 
 from scripts.launchers import launch_util
+from scripts.launchers import launcher_config as cfg
 
 
 def audio_model_token(config: dict[str, Any]) -> str:
@@ -36,7 +37,6 @@ def endpoint_identity(port: int, model: str) -> str:
 
 
 def audio_identity() -> str:
-    from scripts.launchers import launcher_config as cfg
 
     identities: list[tuple[int, float]] = []
     for port in (cfg.AUDIOCPP_SERVICE.port, cfg.AUDIOCPP_SERVICE.internal_port):

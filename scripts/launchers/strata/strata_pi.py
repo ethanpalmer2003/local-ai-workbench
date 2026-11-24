@@ -14,10 +14,12 @@ import requests
 
 from scripts.config import paths
 from scripts.config import project_config as project_cfg
+from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp.llamacpp_coding import prepare_pi_env
 from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.runtime.backend_readiness import ready_url
+from scripts.launchers.runtime.execution_context import execution_context
 
 LOG_DIR = project_cfg.component("strata").logs_dir
 
@@ -101,7 +103,6 @@ def prepare_backend(connection: StrataConnection) -> StrataConnection:
 
 
 def start_backend(connection: StrataConnection, log_file: Path | None = None) -> subprocess.Popen[Any]:
-    from scripts.launchers import launch_util
 
     control = cfg.STRATA_SERVICE.control_dir
     python = control / "python" / "python.exe"
@@ -190,8 +191,6 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--no-start", action="store_true", help="Require an already running Strata backend")
     parser.add_argument("client_args", nargs=argparse.REMAINDER, help="Pi options after --")
     args = parser.parse_args(argv)
-    from scripts.launchers import launch_util
-    from scripts.launchers.runtime.execution_context import execution_context
 
     print("[strata_pi] Execution context: " + json.dumps(execution_context()), flush=True)
     connections = saved_connections(args.config)

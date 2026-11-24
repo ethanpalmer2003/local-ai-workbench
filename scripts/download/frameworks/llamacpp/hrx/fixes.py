@@ -15,6 +15,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import update_shared as updater
+from scripts.download.frameworks.framework_catalog import hrx_tools
 
 FIXES_DIR = Path(__file__).with_name("fixes")
 RECORDS_PATH = FIXES_DIR / "fixes.json"
@@ -38,7 +39,6 @@ class Fix:
 
 def roots() -> dict[str, Path]:
     """The three checkouts a fix can touch."""
-    from scripts.download.frameworks.framework_catalog import hrx_tools
 
     return {tool.name.rsplit("/", 1)[-1]: project_cfg.FRAMEWORKS_DIR / tool.name for tool in hrx_tools()}
 

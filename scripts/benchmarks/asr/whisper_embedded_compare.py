@@ -13,6 +13,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+import psutil
 import requests
 
 from scripts.benchmarks.asr.corpus import prepare_corpus
@@ -26,7 +27,7 @@ from scripts.benchmarks.shared.vram import BenchmarkVram
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
-from scripts.launchers.asr.shared.resident_profiles import whisper_frameworks, whisper_model
+from scripts.launchers.asr.shared.resident_profiles import whisper_command, whisper_frameworks, whisper_model
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.shared import consent
 from scripts.shared.backends import listening
@@ -42,7 +43,6 @@ MODEL = whisper_model()
 
 
 def command(engine: str) -> list[str]:
-    from scripts.launchers.asr.shared.resident_profiles import whisper_command
 
     return whisper_command(engine, PORT)
 
@@ -85,7 +85,6 @@ def transcribe(engine: str, clip: dict[str, Any], deadline: float) -> dict[str, 
 def run_block(
     engine: str, clips: list[dict[str, Any]], paths: RunPaths, context: dict[str, Any], repeats: int, deadline: float
 ) -> dict[str, Any]:
-    import psutil
 
     cmd = command(engine)
     result: dict[str, Any] = {"engine": engine, "command": cmd, "status": "running", "warmups": [], "samples": []}
@@ -233,7 +232,6 @@ def summarize(run: RunPaths, clips: list[dict[str, Any]], results: list[dict[str
 
 
 def main() -> None:
-    import psutil
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(

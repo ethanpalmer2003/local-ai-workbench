@@ -12,7 +12,9 @@ import time
 from pathlib import Path
 from typing import Any
 
+import psutil
 import requests
+from PIL import Image
 
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
@@ -27,6 +29,7 @@ from scripts.shared import benchmark_config as benchmark_cfg
 from scripts.shared import consent
 from scripts.shared.backends import listening
 from scripts.shared.resources import summarize_resources, watch_resources
+from scripts.shared.wait import http_ready, wait_ready
 
 PORT = 18889
 PROMPT = (
@@ -55,7 +58,6 @@ def request_body(prompt: str = PROMPT) -> dict[str, Any]:
 
 
 def image_request(body: dict[str, Any], path, timeout: float) -> dict[str, Any]:
-    from PIL import Image
 
     start = time.perf_counter()
     response = requests.post(f"http://127.0.0.1:{PORT}/v1/images/generations", json=body, timeout=timeout)
@@ -101,7 +103,6 @@ def _launch_context(build: str, extra_args: tuple[str, ...]) -> tuple[Path, list
 
 def _await_ready(process: subprocess.Popen[bytes], deadline: float) -> None:
     """Wait for the server to answer readiness; raise on early exit or startup timeout."""
-    from scripts.shared.wait import http_ready, wait_ready
 
     wait_ready(
         lambda: http_ready(ready_url("sdcpp", PORT)),
@@ -203,7 +204,6 @@ def arm(
 
 
 def preflight() -> dict[str, Any]:
-    import psutil
 
     context = dict(require_native_execution("sd.cpp backend comparison"))
     if launch_util.llama_server_running() or any(listening(p) for p in (1234, 1235, PORT)):

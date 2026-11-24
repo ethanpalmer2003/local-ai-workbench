@@ -8,6 +8,7 @@ from typing import Any
 from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.runtime import shared_gpu
 
 ALIAS = "character-external"
 
@@ -37,7 +38,6 @@ def model_path() -> Path:
 
 def matching_options() -> dict[str, object]:
     """Mirror the KoboldCpp GPU settings so a comparison isolates the engine, not the offload."""
-    from scripts.launchers.runtime import shared_gpu
 
     overrides = dict(cfg.KOBOLDCPP_MODEL_KCPPS_OVERRIDES.get(cfg.KOBOLDCPP_SERVICE.model) or {})
     overrides.update(shared_gpu.KOBOLDCPP_MODEL_ARGS.get(cfg.KOBOLDCPP_SERVICE.model) or {})

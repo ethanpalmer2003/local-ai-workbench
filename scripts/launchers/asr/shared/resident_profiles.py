@@ -8,6 +8,7 @@ from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr.llamacpp import qwen3_asr
 from scripts.launchers.asr.whispercpp import server_command
 
 
@@ -100,7 +101,6 @@ def profiles(port: int) -> dict[str, tuple[list[str], Path]]:
         )
     for key, engine in (("whispercpp-vulkan-fa", "vulkan-fa"), ("koboldcpp-whisper", "internal")):
         result[key] = (whisper_command(engine, port), whisper_model())
-    from scripts.launchers.asr.llamacpp import qwen3_asr
 
     # - Gemma audio measured 2.53 s against Qwen's 0.19 s and has its own capability row, so it is
     #   not re-measured here

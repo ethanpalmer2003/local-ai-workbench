@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.config.shared import hardware
+from scripts.launchers import launcher_config as cfg
 
 LIST_TIMEOUT_S = 120
 # - llama.cpp on Vulkan: `  Vulkan0: AMD Radeon RX 7800 XT (16368 MiB, 15408 MiB free)`
@@ -99,7 +100,6 @@ def _llamacpp_peer(build: str) -> Path:
     Every ggml binary on this machine reads the same Vulkan loader and ICD, so they enumerate the
     adapters in one order; a startup log from whisper or parakeet confirms the same first device.
     """
-    from scripts.launchers import launcher_config as cfg
 
     return cfg.LLAMACPP_BUILDS[build].bin_dir / "llama-server.exe"
 

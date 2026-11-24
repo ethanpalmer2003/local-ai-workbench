@@ -30,6 +30,7 @@ from scripts.benchmarks.shared.framework_compare_serving import (
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.config import models as model_cfg
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr.shared import practice_models
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import get_gpu_memory_snapshot
 from scripts.launchers.shared.media.audio import decode_audio
@@ -222,7 +223,6 @@ def _speech_issues(
 
 def _practice_voice(fallback: str) -> str:
     """The preset voice the practice stack serves; a family without one keeps the caller's id."""
-    from scripts.launchers.asr.shared import practice_models
 
     spec = practice_models.tts_spec()
     return str(cfg.TTS_FAMILY_DEFAULT_VOICE.get(spec["family"], fallback))

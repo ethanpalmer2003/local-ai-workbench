@@ -5,6 +5,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.config.audiocpp import server as audio_cfg
+from scripts.launchers import launcher_config as cfg
 from scripts.launchers.runtime import gpu_selection
 
 VAE_ARGS = ("--vae-tiling", "--vae-tile-size", "512x512")
@@ -17,7 +18,6 @@ AUDIO_SESSION_OPTIONS = {
 
 def server_exe(build: str | None = None) -> Path:
     """The sd.cpp server for the selected build; the launcher and the evidence recorders share it."""
-    from scripts.launchers import launcher_config as cfg
 
     return cfg.SDCPP_BUILDS[cfg.SDCPP_SERVICE.build if build is None else build] / "sd-server.exe"
 

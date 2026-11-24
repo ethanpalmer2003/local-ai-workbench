@@ -332,8 +332,8 @@ class PracticeTests(unittest.TestCase):
 
         body, content_type = audio_upload(b"dummy", {"language": "en"})
         with (
-            patch("scripts.launchers.shared.media.audio.decode_audio", return_value=(samples, 16000)),
-            patch("scripts.launchers.shared.media.audio.mono_resample", return_value=samples),
+            patch("scripts.launchers.audiocpp.asr.decode_audio", return_value=(samples, 16000)),
+            patch("scripts.launchers.audiocpp.asr.mono_resample", return_value=samples),
             patch.object(asr, "StreamingPost", return_value=stream) as transport,
         ):
             data, kind = asr.transcribe(body, content_type)

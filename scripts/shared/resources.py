@@ -6,7 +6,11 @@ from collections.abc import Callable
 from contextlib import contextmanager
 from typing import Any
 
+import psutil
+
 from scripts.launchers import launch_util
+from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
+from scripts.launchers.shared.services.process import owned_module_worker
 from scripts.shared import benchmark_config as benchmark_cfg
 
 
@@ -21,9 +25,6 @@ def monitor_process(
 ):
     """Reuse CPU/RSS and GPU samplers for one owned process; absent counters stay unknown."""
     import threading
-
-    from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
-    from scripts.launchers.shared.services.process import owned_module_worker
 
     launcher_pid = process.pid
     if worker_module:
@@ -56,7 +57,6 @@ def monitor_process(
 def watch_resources(
     process, stop, samples, deadline, phase: Callable[[], str] = lambda: "unknown", clock_origin: float | None = None
 ):
-    import psutil
 
     logical = psutil.cpu_count() or 1
     try:

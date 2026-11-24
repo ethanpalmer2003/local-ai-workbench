@@ -6,7 +6,8 @@ from typing import Any
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.llamacpp import gemma_audio
-from scripts.launchers.asr.shared import practice_models
+from scripts.launchers.asr.shared import practice_models, workspace
+from scripts.launchers.audiocpp import model_management
 from scripts.launchers.llamacpp import chat_models
 from scripts.launchers.shared.services import native
 from scripts.shared.wait import http_ready
@@ -41,7 +42,6 @@ def start_chat(model_id: str | None = None) -> subprocess.Popen[Any] | None:
 
 def start_tts():
     """Legacy opt-in smoke entry; production stages use the lifecycle manager."""
-    from scripts.launchers.audiocpp import model_management
 
     return model_management.start(
         {"backend": "vulkan", "threads": cfg.AUDIOCPP_SPEECH.threads, "models": [practice_models.tts_spec()]},
@@ -50,7 +50,6 @@ def start_tts():
 
 
 def main() -> None:
-    from scripts.launchers.asr.shared import workspace
 
     workspace.main(start_chat)
 

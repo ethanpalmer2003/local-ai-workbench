@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr.shared import practice_models
 from scripts.launchers.audiocpp.tts_server import audio_command as audio_command_impl
 from scripts.launchers.audiocpp.tts_server import audio_environment as audio_environment
 from scripts.launchers.shared.media.text_processing import clean_speech_payload
@@ -15,7 +16,6 @@ def selected() -> bool:
 
 def practice_spec() -> dict[str, object]:
     """The selected practice TTS model: one source for its id, family and weights."""
-    from scripts.launchers.asr.shared import practice_models
 
     return practice_models.tts_spec()
 

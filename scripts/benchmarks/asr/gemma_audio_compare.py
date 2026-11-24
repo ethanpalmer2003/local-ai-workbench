@@ -11,6 +11,10 @@ import time
 from types import SimpleNamespace
 from typing import Any
 
+import numpy as np
+import psutil
+import soundfile as sf
+
 from scripts.benchmarks.asr.corpus import prepare_corpus
 from scripts.benchmarks.asr.metrics import word_errors
 from scripts.benchmarks.shared import BENCHMARK_SECONDS, reporting
@@ -41,7 +45,6 @@ def run_arm(
     deadline: float,
     repeats: int = 2,
 ) -> dict[str, Any]:
-    import psutil
 
     backend = gemma_audio if engine == "llamacpp" else gemma_kobold
     command = gemma_audio.command() if engine == "llamacpp" else kobold.server_command()
@@ -145,10 +148,6 @@ def run_arm(
 
 def main() -> None:
     import argparse
-
-    import numpy as np
-    import psutil
-    import soundfile as sf
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(

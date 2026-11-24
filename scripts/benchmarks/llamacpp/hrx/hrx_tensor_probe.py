@@ -10,12 +10,14 @@ import time
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import requests as http
 
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, Outcome, RunPaths
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
+from scripts.launchers import launch_util
 from scripts.shared import consent
 
 HRX_ROOT = project_cfg.FRAMEWORKS_DIR / "llamacpp/additions/hrx"
@@ -110,7 +112,6 @@ def run(
 
 
 def compare(reference: Path, actual: Path) -> list[dict[str, Any]]:
-    import numpy as np
 
     if (reference / "tokens.txt").read_bytes() != (actual / "tokens.txt").read_bytes():
         raise ValueError("input tokens differ")
@@ -204,8 +205,6 @@ def _server_command(server: Path, port: int, device: str) -> list[str]:
 
 
 def server_smoke(exe: Path, paths: RunPaths, device: str, predict: int, runtime: Path | None = None) -> dict[str, Any]:
-
-    from scripts.launchers import launch_util
 
     if launch_util.llama_server_running():
         raise RuntimeError("local configured llama-server is running; confirm session safety before server launch")

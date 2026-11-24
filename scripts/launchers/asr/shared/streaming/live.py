@@ -15,6 +15,7 @@ from scripts.config import project_config as project_cfg
 from scripts.config.shared import speech_delivery
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector
+from scripts.launchers.asr.shared.languages import capabilities
 from scripts.launchers.asr.shared.streaming.segment_stream import SegmentStream
 from scripts.launchers.asr.shared.streaming.turns import Turns
 from scripts.launchers.asr.shared.streaming.websocket_stream import WebSocketBridge
@@ -82,7 +83,6 @@ class Sessions:
         request = json.loads(body)
         language = request.get("language", "auto")
         self.vad_settings = vad_settings(request.get("silence_ms"))
-        from scripts.launchers.asr.shared.languages import capabilities
 
         allowed = capabilities(self.engine)["asr"]["ready_languages"]
         if language != "auto" and language not in allowed:

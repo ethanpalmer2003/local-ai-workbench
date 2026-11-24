@@ -9,6 +9,8 @@ from scripts.config.audiocpp import server as audio_config
 from scripts.config.models import model_languages
 from scripts.config.shared import speech_delivery
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.audiocpp import audiocpp_catalog
+from scripts.launchers.audiocpp.audiocpp_proxy import _transform
 
 active_tts_id: str | None = None
 DEFAULT_PRACTICE_LANGUAGE = "en"
@@ -111,7 +113,6 @@ def ordered_languages(codes: list[str]) -> list[str]:
 
 def language_profiles():
     spec = tts_spec()
-    from scripts.config.models import model_languages
 
     entry = next(entry for entry in model_languages.read_catalog()["models"] if tts_id() in entry["model_ids"])
     voice = cfg.TTS_FAMILY_DEFAULT_VOICE.get(spec["family"], cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value)
@@ -143,8 +144,6 @@ def speech_body(payload: dict[str, object]) -> dict[str, object]:
             raise ValueError("Speech options must be an object")
         options.setdefault("language", cfg.KOKORO_TTS.language)
         return payload
-    from scripts.launchers.audiocpp import audiocpp_catalog
-    from scripts.launchers.audiocpp.audiocpp_proxy import _transform
 
     if spec["family"] == "supertonic":
         # - Preset voices live in request options; the language comes from the text, so no locale field.
@@ -164,7 +163,6 @@ def speech_body(payload: dict[str, object]) -> dict[str, object]:
 
 
 def delivery_plan():
-    from scripts.launchers.audiocpp import audiocpp_catalog
 
     spec = tts_spec()
     service = replace(cfg.AUDIOCPP_SERVICE, model=spec["id"])

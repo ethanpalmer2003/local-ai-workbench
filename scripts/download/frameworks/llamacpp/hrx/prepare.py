@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
+from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 
 CHECKPOINT_POINTER = project_cfg.component("llamacpp").state_dir / "hrx/latest-verified.json"
@@ -20,7 +21,6 @@ def verify_hashes(source: Path, hashes: dict[str, str]) -> None:
 
 
 def install_runtime(source: Path, hashes: dict[str, str], checkpoint: Path) -> None:
-    from scripts.launchers import launch_util
 
     if launch_util.llama_server_running():
         raise RuntimeError("Stop the configured llama-server before installing the HRX checkpoint")

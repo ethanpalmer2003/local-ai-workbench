@@ -31,6 +31,7 @@ from typing import Any, NamedTuple, cast
 import requests
 
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
+from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import BENCHMARK_REASONING_EFFORT, report_run
 from scripts.benchmarks.shared.vram import snapshot_dict
@@ -41,8 +42,10 @@ from scripts.launchers.llamacpp.llamacpp_profiles import ALL_LLAMACPP_PROFILES
 from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.runtime.gpu_memory import GpuMemoryMonitor
+from scripts.launchers.shared.services.process import stop_owned
 from scripts.shared import consent
 from scripts.shared.timing import timed
+from scripts.shared.wait import http_ready, wait_ready
 
 # - Two short, fixed prompts covering the two workloads these profiles
 #   actually get used for (general chat/reasoning vs. coding)
@@ -105,7 +108,6 @@ def post_json(url: str, payload: Mapping[str, object], timeout: float) -> dict[s
 
 def await_http(base_url: str, process: subprocess.Popen[bytes], timeout: float) -> None:
     """llama.cpp answers /health once it can serve; this run's process ends the wait if it dies."""
-    from scripts.shared.wait import http_ready, wait_ready
 
     wait_ready(
         lambda: http_ready(base_url + "/health", timeout=2),
@@ -117,7 +119,6 @@ def await_http(base_url: str, process: subprocess.Popen[bytes], timeout: float) 
 
 
 def stop_server(process: subprocess.Popen[bytes]) -> None:
-    from scripts.launchers.shared.services.process import stop_owned
 
     stop_owned(process, timeout=10, graceful=True)
 
@@ -174,7 +175,6 @@ def run_profile(
     ctx_fill: int = 0,
 ) -> ProfileRun:
     context = require_native_execution("llama.cpp benchmark")
-    from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 
     if launch_util.llama_server_running() or launch_util.port_listening(cfg.LLAMACPP_SERVICE.port):
         raise RuntimeError("Existing llama.cpp session/port retained; use a free test session")

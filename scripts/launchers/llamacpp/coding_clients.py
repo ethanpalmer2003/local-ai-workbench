@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import llamacpp
 
@@ -32,7 +34,6 @@ def prepare_ohmypi(
     provider_name: str = "llamacpp",
     client: cfg.SharedStartupRequestCodingClientSettings | None = None,
 ) -> tuple[list[str], dict[str, str]]:
-    import yaml
 
     client = cfg.OHMYPI_CLIENT if client is None else client
     client.agent_dir.mkdir(parents=True, exist_ok=True)

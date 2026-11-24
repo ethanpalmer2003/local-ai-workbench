@@ -12,6 +12,8 @@ import wave
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle, summarize_requests
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
@@ -19,11 +21,12 @@ from scripts.benchmarks.tts_engines.fixtures import TEXT, voice_assets
 from scripts.config import models as model_cfg
 from scripts.config import project_config as cfg
 from scripts.launchers.runtime.execution_context import require_native_execution
+from scripts.launchers.shared.native_abi.cabi import structures
+from scripts.launchers.shared.native_abi.native_library import NativeLibrary
 from scripts.shared import consent
 
 
 def sherpa_types(root):
-    from scripts.launchers.shared.native_abi.cabi import structures
 
     header = (root / "include/sherpa-onnx/c-api/c-api.h").read_text(encoding="utf-8")
     return structures(
@@ -33,11 +36,9 @@ def sherpa_types(root):
 
 class SherpaVoice:
     def __init__(self, profile: str = "lessac-medium"):
-        import numpy as np
 
         self.np = np
         root = cfg.component("tts/sherpa-onnx").framework_dir
-        from scripts.launchers.shared.native_abi.native_library import NativeLibrary
 
         self.types = sherpa_types(root)
         self.library = NativeLibrary(
@@ -95,7 +96,6 @@ class SherpaVoice:
 
 
 def worker(engine: str, samples: int, run: RunPaths, texts: list[str] | None = None, profile: str = "lessac-medium"):
-    import numpy as np
 
     context = dict(require_native_execution("Resident TTS benchmark"))
     voice: Any = None
@@ -179,7 +179,6 @@ def main():
         parser.error("Lessac-high currently requires --engine piper")
     if args.profile == "kokoro-v1.0-int8" and args.engine != "sherpa-onnx":
         parser.error("Kokoro requires --engine sherpa-onnx")
-    from scripts.benchmarks.shared.paths import RunPaths
 
     run = RunPaths(args.root) if args.root else BenchmarkPaths(__file__).new_run()
     run.create()

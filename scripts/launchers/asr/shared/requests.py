@@ -9,6 +9,8 @@ from typing import Any
 
 import requests
 
+from scripts.launchers.shared.transport.multipart import audio_upload
+
 
 @dataclass(frozen=True)
 class AudioRequest:
@@ -64,7 +66,6 @@ def multipart_body(body: bytes, content_type: str, language: str = "auto") -> tu
         "prompt": request.prompt,
         "suppress_non_speech": str(request.suppress_non_speech).lower(),
     }
-    from scripts.launchers.shared.transport.multipart import audio_upload
 
     return audio_upload(request.audio, fields)
 

@@ -10,6 +10,8 @@ import time
 from dataclasses import asdict
 from typing import Any
 
+from scipy.stats import t
+
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import post_json
 from scripts.benchmarks.llamacpp.benchmark_ngram import CANDIDATES, Candidate
 from scripts.benchmarks.llamacpp.trial import require_free_session, running_server, speculation_config
@@ -96,7 +98,6 @@ def build_evidence(
 
 
 def compare(evidence: dict[str, Any], selected: tuple[Candidate, ...], baseline: str) -> dict[str, Any]:
-    from scipy.stats import t
 
     comparisons = {}
     for candidate in selected:

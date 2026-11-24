@@ -16,6 +16,8 @@ from threading import Event, Thread
 from types import SimpleNamespace
 from typing import Any, NamedTuple
 
+import psutil
+
 from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
 from scripts.benchmarks.shared import preflight as preflight_check
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
@@ -310,7 +312,6 @@ def _watch_backend(
     resource_samples: dict[str, list[dict[str, Any]]],
     watchers: list[Thread],
 ) -> None:
-    import psutil
 
     backends.start(backend, paths, owned, usage_profile="shared", llm=llm_mode)
     port = (
@@ -336,7 +337,6 @@ def _watch_backend(
 def _ram_guard(
     stop: Event, started: float, minimum_free_ram_gib: float, owned: list[subprocess.Popen[Any]], report: dict[str, Any]
 ) -> None:
-    import psutil
 
     while not stop.wait(0.5):
         if time.monotonic() > started + 600 or psutil.virtual_memory().available < minimum_free_ram_gib * 2**30:

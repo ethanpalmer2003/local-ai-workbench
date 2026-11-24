@@ -17,7 +17,7 @@ class ResourceTests(unittest.TestCase):
         gpu = MagicMock()
         gpu.summary.return_value = {"peak_process_used_mb": None}
         with (
-            patch("scripts.launchers.runtime.gpu_memory.GpuMemoryMonitor", return_value=gpu) as factory,
+            patch("scripts.shared.resources.GpuMemoryMonitor", return_value=gpu) as factory,
             patch.object(resources, "watch_resources"),
             self.assertRaisesRegex(RuntimeError, "fixture"),
             resources.monitor_process(running_process(pid=123), Path("unused.jsonl")) as result,
@@ -38,7 +38,7 @@ class ResourceTests(unittest.TestCase):
             samples.append({"phase": "resident", "abort": "Available RAM below 1 GiB"})
 
         with (
-            patch("scripts.launchers.runtime.gpu_memory.GpuMemoryMonitor", return_value=gpu),
+            patch("scripts.shared.resources.GpuMemoryMonitor", return_value=gpu),
             patch.object(resources, "watch_resources", side_effect=sample_once),
             resources.monitor_process(running_process(pid=123), Path("unused.jsonl")) as result,
         ):

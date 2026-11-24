@@ -7,6 +7,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.llamacpp import module_api
 from scripts.launchers.asr.llamacpp.llama_audio import LlamaAudioBackend
 from scripts.launchers.asr.shared import requests
+from scripts.launchers.shared.media.audio import decode_audio, mono_resample, pcm_wav
 
 BACKEND = LlamaAudioBackend(cfg.GEMMA_AUDIO_ASR, alias="gemma-audio", label="Gemma audio")
 
@@ -14,7 +15,6 @@ url, ready, command, matching_server, start = module_api.bind(BACKEND, globals()
 
 
 def prepare_audio(audio: bytes) -> tuple[str, float]:
-    from scripts.launchers.shared.media.audio import decode_audio, mono_resample, pcm_wav
 
     samples, rate = decode_audio(audio)
     duration = len(samples) / rate

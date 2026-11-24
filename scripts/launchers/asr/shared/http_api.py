@@ -12,6 +12,7 @@ import requests
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr import selector
 from scripts.launchers.asr.shared import languages, practice_models
+from scripts.launchers.asr.shared.delivery import tts_plan
 from scripts.launchers.asr.shared.streaming import live
 from scripts.launchers.audiocpp import audiocpp_catalog, tts_proxy
 from scripts.launchers.proxy_util import build_forward_headers, forward_upstream_error, send_bytes, send_json_error
@@ -85,7 +86,6 @@ def static_get(
 
 def workspace_defaults(model: str | None = None) -> dict[str, object]:
     """Expose selected weights and the common delivery policy; a named model answers with its own."""
-    from scripts.launchers.asr.shared.delivery import tts_plan
 
     plan = tts_plan()
     spec = practice_models.tts_spec()

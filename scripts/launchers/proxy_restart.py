@@ -12,6 +12,10 @@ from threading import Lock, Thread
 from typing import Any
 from urllib.parse import urlsplit
 
+from scripts.launchers import launcher_config as cfg
+from scripts.launchers.launch_util import kill_process_tree
+from scripts.shared.wait import http_ready, wait_ready
+
 
 class OwnedBackendLifecycle:
     def __init__(
@@ -27,7 +31,6 @@ class OwnedBackendLifecycle:
         self.prepare = prepare
 
     def restart(self) -> None:
-        from scripts.launchers.launch_util import kill_process_tree
 
         self.prepare()
         if self.process.poll() is None:
@@ -39,7 +42,6 @@ class OwnedBackendLifecycle:
             if connection.connect_ex((address.hostname or "127.0.0.1", address.port or 80)) == 0:
                 raise RuntimeError("Backend port is still occupied; refusing to replace another service")
         self.process = self.start()
-        from scripts.shared.wait import http_ready, wait_ready
 
         wait_ready(
             lambda: http_ready(self.health_url, strict=True),
@@ -51,7 +53,6 @@ class OwnedBackendLifecycle:
 
 
 def reload_proxy_configuration(service: object, service_name: str) -> None:
-    from scripts.launchers import launcher_config as cfg
 
     bindings = {key: getattr(service, key) for key in ("listen_ip", "port", "internal_port")}
     importlib.reload(cfg)

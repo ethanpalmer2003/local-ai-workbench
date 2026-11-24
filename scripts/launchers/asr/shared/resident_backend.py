@@ -12,6 +12,7 @@ from scripts.launchers.asr.shared import requests
 from scripts.launchers.asr.shared.resident_profiles import build_server_command
 from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.shared.services import native
+from scripts.launchers.shared.transport.multipart import audio_upload
 
 
 class ResidentBackend:
@@ -59,7 +60,6 @@ class ResidentBackend:
         request = requests.parse(body, content_type)
         if request.suppress_non_speech:
             raise ValueError("Non-speech token suppression is a Whisper-specific option")
-        from scripts.launchers.shared.transport.multipart import audio_upload
 
         fields = {"response_format": "json"}
         if ASR_FILE_PROFILES[self.settings.profile].audio_family:

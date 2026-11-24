@@ -5,9 +5,10 @@ import re
 import tempfile
 from pathlib import Path
 
+import requests
+
 
 def download_verified(url: str, destination: Path, checksum: str | None) -> None:
-    import requests
 
     if not url.startswith("https://") or not re.fullmatch(r"[a-f0-9]{64}", checksum or ""):
         raise ValueError("Non-Hub assets require an HTTPS source and a pinned SHA256")

@@ -5,10 +5,10 @@ from typing import Any
 
 from scripts.config import models
 from scripts.launchers import launcher_config as cfg
+from scripts.launchers.asr import selector
 
 
 def asr_models() -> list[dict[str, Any]]:
-    from scripts.launchers.asr import selector
 
     rows = []
     labels = {

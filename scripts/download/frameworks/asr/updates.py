@@ -2,20 +2,19 @@
 
 from pathlib import Path
 
+from scripts.download.frameworks.asr import handy, whispercpp
 from scripts.download.frameworks.update_shared import UpdateSummary
 from scripts.download.frameworks.update_types import ReleaseType, ToolSpec
 
 
 def install_handy(tool: ToolSpec) -> None:
     """Post-install hook: run the portable setup when the app is missing."""
-    from scripts.download.frameworks.asr import handy
 
     handy.install_app()
 
 
 def install_handy_pending(tool: ToolSpec) -> bool:
     """A current installer still needs its post-install step while the app is absent."""
-    from scripts.download.frameworks.asr import handy
 
     return handy.app_missing()
 
@@ -24,7 +23,6 @@ def process_whisper(
     tool: ToolSpec, dest_dir: Path, tmp_dir: Path, check_only: bool, summary: UpdateSummary | None
 ) -> None:
     """Build the current Whisper Vulkan release through the normal update plan."""
-    from scripts.download.frameworks.asr import whispercpp
 
     needed = whispercpp.process(tool, dest_dir, tmp_dir, check_only)
     if summary is not None:

@@ -11,6 +11,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+import psutil
+
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import stream_chat
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
@@ -74,7 +76,6 @@ class MemoryGuard:
         self.thread.join(timeout=10)
 
     def run(self) -> None:
-        import psutil
 
         with self.path.open("w", encoding="utf-8") as stream:
             while not self.stop.is_set() and self.process.poll() is None:

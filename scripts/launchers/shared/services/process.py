@@ -4,6 +4,8 @@ import subprocess
 from types import SimpleNamespace
 from typing import Any
 
+import psutil
+
 from scripts.launchers import launch_util
 
 # Reuse these primitives; reuse/isolation policy belongs to the calling adapter.
@@ -12,7 +14,6 @@ from scripts.launchers import launch_util
 
 def owned_module_worker(process, module: str):
     """Resolve a Python redirector's real worker only within its owned descendants."""
-    import psutil
 
     root = psutil.Process(process.pid)
     matches = []
