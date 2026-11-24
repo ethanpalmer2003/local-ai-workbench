@@ -105,7 +105,7 @@ def _await_transcript(stream: StreamingPost, response_format: str) -> tuple[byte
             event = stream.events.get(timeout=1)
         except queue.Empty:
             if stream.done.is_set():
-                raise RuntimeError("AudioCpp stream ended without a final transcript")
+                raise RuntimeError("AudioCpp stream ended without a final transcript") from None
             continue
         if event.get("error") or event.get("type") == "error":
             raise RuntimeError(str(event))

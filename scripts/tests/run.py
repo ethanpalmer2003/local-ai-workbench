@@ -31,7 +31,7 @@ if __name__ == "__main__":
             change_set = changed_since_head() if committing else None
         except GitError as error:
             print(f"[FAIL] git could not report the change: {error}", flush=True)
-            raise SystemExit(1)
+            raise SystemExit(1) from None
         selection = select_test_classes(
             TEST_CLASSES, full="--all" in arguments or "--push" in arguments, change_set=change_set
         )

@@ -400,7 +400,7 @@ def main() -> None:
         run(args)
     except UpdateError as e:
         print(f"ERROR: {e}")
-        raise SystemExit(1)
+        raise SystemExit(1) from None
     print("\n=== COMPLETE ===")
 
 
