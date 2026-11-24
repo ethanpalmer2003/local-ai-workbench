@@ -23,7 +23,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.shared.changes import NoUpstreamError, changed_since_upstream
-from scripts.shared.code_changes import code_change_paths
+from scripts.shared.code_changes import paths_with_code_changes
 from scripts.shared.import_graph import REACH_DEPTH, ImportGraph, find_affected_modules, import_graph, module_names
 
 # The files that decide what the suite is, and only when their code changes.
@@ -76,7 +76,7 @@ def select_test_classes(
     if not changed:
         return Selection((), test_classes, "nothing changed")
     # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
-    code_changes = code_change_paths(changed, root)
+    code_changes = paths_with_code_changes(changed, root)
     if not code_changes:
         return Selection((), test_classes, "no code change")
 

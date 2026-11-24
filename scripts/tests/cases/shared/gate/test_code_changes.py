@@ -23,7 +23,7 @@ class CodeChangeStageTests(unittest.TestCase):
             with patch.object(
                 code_changes, "upstream_texts", return_value={"scripts/run.py": '"""Old docstring."""\nVALUE = 1\n'}
             ):
-                self.assertEqual(code_changes.code_change_paths(["scripts/run.py"], root), [])
+                self.assertEqual(code_changes.paths_with_code_changes(["scripts/run.py"], root), [])
 
     def test_a_code_edit_is_a_code_change(self):
         with CasePaths(__file__).temporary_directory() as folder:
@@ -31,14 +31,14 @@ class CodeChangeStageTests(unittest.TestCase):
             with patch.object(
                 code_changes, "upstream_texts", return_value={"scripts/run.py": '"""Old docstring."""\nVALUE = 1\n'}
             ):
-                self.assertEqual(code_changes.code_change_paths(["scripts/run.py"], root), ["scripts/run.py"])
+                self.assertEqual(code_changes.paths_with_code_changes(["scripts/run.py"], root), ["scripts/run.py"])
 
     def test_a_deleted_file_and_a_document_are_changes(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = self._tree(folder, "VALUE = 1\n")
             with patch.object(code_changes, "upstream_texts", return_value={}):
                 self.assertEqual(
-                    code_changes.code_change_paths(["notes/TODO.md", "scripts/removed.py"], root),
+                    code_changes.paths_with_code_changes(["notes/TODO.md", "scripts/removed.py"], root),
                     ["notes/TODO.md", "scripts/removed.py"],
                 )
 
@@ -69,7 +69,7 @@ class CodeChangeStageTests(unittest.TestCase):
         with CasePaths(__file__).temporary_directory() as folder:
             root = self._tree(folder, "VALUE = 1\n")
             with patch.object(code_changes, "upstream_texts", side_effect=code_changes.GitError("no git")):
-                self.assertEqual(code_changes.code_change_paths(["scripts/run.py"], root), ["scripts/run.py"])
+                self.assertEqual(code_changes.paths_with_code_changes(["scripts/run.py"], root), ["scripts/run.py"])
 
 
 if __name__ == "__main__":

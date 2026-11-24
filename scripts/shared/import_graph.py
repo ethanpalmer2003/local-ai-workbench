@@ -45,7 +45,7 @@ def import_graph(root: Path | None = None) -> ImportGraph:
 
 
 def find_affected_modules(edges: ImportGraph, changed: Iterable[str], *, depth: int | None = None) -> set[str]:
-    """Return the changed modules and every module that depends on them, walking up to `depth` hops.
+    """Return the changed modules and every module in `edges` that depends on them, walking up to `depth` hops.
 
     `depth=1` keeps the changed modules and their direct importers, while `None` walks the whole chain.
     """

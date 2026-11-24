@@ -21,10 +21,10 @@ def python_code_changed(paths: list[str], root: Path | None = None) -> bool:
     nothing, as it always did, and a `.py` edit that only touches prose stays cheap as well.
     """
     # Filter first, so a prose-only push never pays for a git read.
-    return bool(code_change_paths([path for path in paths if path.endswith(".py")], root))
+    return bool(paths_with_code_changes([path for path in paths if path.endswith(".py")], root))
 
 
-def code_change_paths(paths: list[str], root: Path | None = None) -> list[str]:
+def paths_with_code_changes(paths: list[str], root: Path | None = None) -> list[str]:
     """The changed paths that carry a code change; a Python prose-only edit is left out.
 
     The pre-push stage asks this same question, so a push that only edits comments or docstrings stays
