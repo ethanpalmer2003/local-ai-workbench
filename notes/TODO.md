@@ -37,6 +37,10 @@ Decisions only you can make.
 ## Unattended
 Code work that runs here without a live model.
 
+- [ ] Finish adopting ruff `B` (bugbear): 33 findings remain, 28 are `B023` closures that capture a loop variable, 3 are `B904` (`raise ... from err`), 1 is an unused loop variable. Bind each captured name in the default (`lambda prompt=prompt: ...`) after confirming the callback is not called with that parameter positionally, then add `B` to `select`. Six other `B` findings (`B905`, `B007`) are already fixed, and `B009` stays reverted because ComfyUI's `INPUT_TYPES` is dynamic. ~1 h
+
+- [ ] Replace the custom line-length check with ruff `E501` and delete the 5.7 s gate section: measure the `E501` hit list first, because the current check exempts template and token lines, then keep the exemption as a handful of per-file ignores. ~30 min
+
 - [ ] Replace the five literal catalog labels in `launcher_speech.py` with `ModelId` names against [models](../scripts/config/models/README.md); the rename tool rewrites the strings today, so they are consistent but untyped. ~15 min
 
 - [ ] Merge the two import rewriters (`rename_path` and `rewrite_imports`): they overlap, and the duplicate baseline records the shared block, so a merge needs a behavior-parity pass first. ~30-45 min
