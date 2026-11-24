@@ -24,7 +24,13 @@ from pathlib import Path
 from scripts.config import project_config as project_cfg
 from scripts.shared.changes import NoUpstreamError, changed_since_upstream
 from scripts.shared.code_changes import paths_with_code_changes
-from scripts.shared.import_graph import REACH_DEPTH, ImportGraph, find_affected_modules, import_graph, module_names
+from scripts.shared.import_graph import (
+    REACH_DEPTH,  # the floor: the changed module plus its direct importers
+    ImportGraph,  # a directed graph of module -> the modules it imports
+    find_affected_modules,  # walks that graph backwards, towards the importers
+    import_graph,  # builds it from source in one pass
+    module_names,  # changed paths -> module names, dropping everything else
+)
 
 # The files that decide what the suite is, and only when their code changes.
 # `registry.py` lists the classes, `run.py` runs them, and this file holds the rule that picks from them.
