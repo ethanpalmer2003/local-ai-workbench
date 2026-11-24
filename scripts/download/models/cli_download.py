@@ -9,6 +9,7 @@ import huggingface_hub
 
 from scripts.config import project_config as project_cfg
 from scripts.download.models import DOWNLOAD_SECONDS
+from scripts.download.models import download_catalog as download
 from scripts.download.models.hub_sources import HubFile as HubFile
 from scripts.download.models.hub_sources import parse_url as parse_url
 from scripts.shared import consent
@@ -62,8 +63,6 @@ def download_file(
 def main(argv: list[str] | None = None):
     given, arguments = consent.take(sys.argv[1:] if argv is None else argv)
     if any(arg in arguments for arg in ("--list", "--model", "--active", "--inactive", "--group", "--download")):
-        from scripts.download.models import download_catalog as download
-
         download.main(consent.forward(given, arguments))
         return
     parser = argparse.ArgumentParser(description="Download models/files from HuggingFace.")

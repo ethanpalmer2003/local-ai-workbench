@@ -19,6 +19,7 @@ from scripts.benchmarks.coding_agents.shared.benchmark_backends import (
 )
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import BenchmarkRelay, summarize_requests, warmup
 from scripts.benchmarks.coding_agents.shared.framework_tasks import TASKS, CodingTask
+from scripts.benchmarks.coding_agents.shared.polyglot_tasks import load_tasks
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
@@ -396,12 +397,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _select_tasks(parser: argparse.ArgumentParser, args: argparse.Namespace) -> list[CodingTask]:
-    if args.suite == "polyglot":
-        from scripts.benchmarks.coding_agents.shared.polyglot_tasks import load_tasks
-
-        available = load_tasks()
-    else:
-        available = TASKS
+    available = load_tasks() if args.suite == "polyglot" else TASKS
     if args.tasks and set(args.tasks) - {task.name for task in available}:
         parser.error("Unknown task for the selected suite")
     return [task for task in available if not args.tasks or task.name in args.tasks]

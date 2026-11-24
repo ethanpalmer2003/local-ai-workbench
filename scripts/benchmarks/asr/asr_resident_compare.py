@@ -22,7 +22,10 @@ from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.resident_http import ResidentHttp
 from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
+from scripts.launchers.asr.llamacpp import gemma_audio
+from scripts.launchers.asr.llamacpp.qwen3_asr import clean_transcript as clean_qwen_transcript
 from scripts.launchers.asr.shared.file_cli import environment
+from scripts.launchers.asr.shared.requests import parse
 from scripts.launchers.asr.shared.resident_profiles import audio_config, clean_transcript, profiles
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.shared import consent
@@ -79,9 +82,6 @@ def _request_payloads(name: str, clips: list[dict[str, Any]]) -> tuple[str, list
             for clip in clips
         ]
     if name in ("llamacpp-gemma-audio", "llamacpp-granite-5-2b"):
-        from scripts.launchers.asr.llamacpp import gemma_audio
-        from scripts.launchers.asr.shared.requests import parse
-
         endpoint = "/v1/chat/completions"
         payloads = [(gemma_audio.chat_request(parse(body, kind)), "application/json") for body, kind in payloads]
         if name == "llamacpp-granite-5-2b":
@@ -130,8 +130,6 @@ def _infer(server, endpoint, payloads, index, deadline, name):
             raise ValueError("Gemma output truncated")
         value = {"text": choice["message"]["content"]}
     elif name == "llamacpp-qwen-1.7b":
-        from scripts.launchers.asr.llamacpp.qwen3_asr import clean_transcript as clean_qwen_transcript
-
         value["text"] = clean_qwen_transcript(value.get("text", ""))
     if not isinstance(value.get("text"), str) or not value["text"].strip():
         raise ValueError("ASR returned no transcript")

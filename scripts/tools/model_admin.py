@@ -20,7 +20,8 @@ from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.config.models import catalog
 from scripts.config.trash import trash_dir
-from scripts.download.models import model_sync
+from scripts.download.models import download_catalog, model_sync
+from scripts.download.models import download_catalog as download
 from scripts.shared.paths import display_path
 
 
@@ -357,8 +358,6 @@ def command_replace(
         _print_dry_run(include_docs, include_tests)
         return 0
     if download and not new.path.is_file():
-        from scripts.download.models import download_catalog
-
         download_catalog.download_model(new)
     stamp = str(time.time_ns())
     _apply_replacement(old, new, changed, stamp)
@@ -400,8 +399,6 @@ def command_add(args: argparse.Namespace) -> int:
         catalog.write_ids()
     print(f"[OK] Added {args.label} to {display_path(target)}")
     if args.download:
-        from scripts.download.models import download_catalog as download
-
         download.download_model(catalog.get(args.label))
     return run_model_sync()
 

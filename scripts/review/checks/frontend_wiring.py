@@ -11,6 +11,8 @@ import re
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
+from scripts.launchers import launcher_config as cfg
+from scripts.launchers.audiocpp import audiocpp_catalog
 from scripts.review import MAX_REPORTED
 
 EXCLUDED = {
@@ -214,9 +216,6 @@ def _emitted_keys(launcher: str) -> set[str]:
     """Keys of the settings object the launcher emits, plus the keys of a `**` expansion."""
     keys, expands = literal_keys(_read(project_cfg.BASE_DIR / launcher))
     if expands:
-        from scripts.launchers import launcher_config as cfg
-        from scripts.launchers.audiocpp import audiocpp_catalog
-
         keys |= set(audiocpp_catalog.streaming_defaults(cfg.AUDIOCPP_SERVICE))
     return keys
 

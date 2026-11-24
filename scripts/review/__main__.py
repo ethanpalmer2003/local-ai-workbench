@@ -46,6 +46,8 @@ from scripts.shared.import_graph import (
     module_names,
     module_paths,
 )
+from scripts.tools import cleanup
+from scripts.tools.state_cleanup import prune_generated
 
 SPELL_EXCLUDED = (
     "data/",
@@ -495,8 +497,6 @@ def touched_gate(argv: list[str] | None = None, changed: list[str] | None = None
 def _prune_after_run() -> None:
     """Keep every regenerable tree two deep, so the log this run wrote never becomes a backlog."""
     # - imported here because the pruners belong to the tools role, not to the gate
-    from scripts.tools import cleanup
-    from scripts.tools.state_cleanup import prune_generated
 
     for line in prune_generated(7, 30, 30, dry_run=False):
         print(f"[PRUNE] {line}")

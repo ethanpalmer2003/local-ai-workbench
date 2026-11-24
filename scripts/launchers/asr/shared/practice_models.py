@@ -11,6 +11,7 @@ from scripts.config.shared import speech_delivery
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp_catalog
 from scripts.launchers.audiocpp.audiocpp_proxy import _transform
+from scripts.launchers.shared.media.text_processing import clean_speech_payload
 
 active_tts_id: str | None = None
 DEFAULT_PRACTICE_LANGUAGE = "en"
@@ -135,8 +136,6 @@ def speech_body(payload: dict[str, object]) -> dict[str, object]:
     else:
         payload.pop("stream_format", None)
     if spec["family"] == "kokoro_tts":
-        from scripts.launchers.shared.media.text_processing import clean_speech_payload
-
         clean_speech_payload(payload, language=cfg.KOKORO_TTS.language)
         payload.setdefault("voice", cfg.KOKORO_TTS.voice)
         options = payload.setdefault("options", {})

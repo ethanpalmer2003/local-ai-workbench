@@ -9,7 +9,7 @@ from scripts.config import project_config as project_cfg
 from scripts.config.asr.file_profiles import ASR_FILE_PROFILES
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.asr.shared import requests
-from scripts.launchers.asr.shared.resident_profiles import build_server_command
+from scripts.launchers.asr.shared.resident_profiles import audio_config, build_server_command
 from scripts.launchers.runtime import gpu_selection
 from scripts.launchers.shared.services import native
 from scripts.launchers.shared.transport.multipart import audio_upload
@@ -28,8 +28,6 @@ class ResidentBackend:
     def command(self) -> list[str]:
         command = build_server_command(self.settings.profile, self.settings.port)
         if "{config}" in command:
-            from scripts.launchers.asr.shared.resident_profiles import audio_config
-
             path = (
                 project_cfg.component(ASR_FILE_PROFILES[self.settings.profile].component).generated_dir
                 / f"{self.settings.profile}-{self.settings.port}.json"

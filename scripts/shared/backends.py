@@ -14,7 +14,7 @@ from scripts.config import project_config as project_cfg
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp_proxy
-from scripts.launchers.koboldcpp import kobold
+from scripts.launchers.koboldcpp import external_llm, kobold
 from scripts.launchers.runtime.backend_readiness import ready_url
 from scripts.launchers.runtime.execution_context import require_native_execution
 from scripts.launchers.sdcpp import proxy as sdcpp_proxy
@@ -63,8 +63,6 @@ def worker(backend: str, usage_profile: str = "standalone", llm: str = "kobold")
     elif backend == "image":
         sdcpp_proxy.main()
     else:
-        from scripts.launchers.koboldcpp import external_llm
-
         kobold.LOG_DIR.mkdir(parents=True, exist_ok=True)
         if llm == "external":
             external_llm.start(kobold.LOG_DIR / "llamacpp_external_probe.log")

@@ -6,7 +6,9 @@ from pathlib import Path
 from scripts.config.models import MODELS as MODELS
 from scripts.config.models import ModelDownload as ModelDownload
 from scripts.download.models import DOWNLOAD_SECONDS, transfer
+from scripts.download.models.http_transfer import download_verified
 from scripts.download.models.hub_sources import parse_url
+from scripts.download.models.hub_transfer import download_ranges
 from scripts.shared import consent
 from scripts.shared.tables import render_table
 
@@ -18,16 +20,12 @@ def download_model(model: ModelDownload, range_download: bool = False, resume_fi
     if model.url is None:
         raise ValueError(f"No download source recorded for {model.label}: {model.notes}")
     if not model.url.startswith("https://huggingface.co/"):
-        from scripts.download.models.http_transfer import download_verified
-
         if range_download or resume_file:
             raise ValueError("Range/resume mode is only configured for Hugging Face files")
         download_verified(model.url, model.path, model.sha256)
         return
     print(f"{model.label} -> {model.path}")
     if range_download:
-        from scripts.download.models.hub_transfer import download_ranges
-
         download_ranges(parse_url(model.url), model.path, resume_file)
         return
     transfer.download(model)

@@ -10,6 +10,9 @@ import json
 from pathlib import Path
 from typing import Any
 
+from scripts.config import models as model_cfg
+from scripts.config.models.gguf_metadata import inspect_metadata
+
 CATALOG_PATH = Path(__file__).with_suffix(".json")
 
 
@@ -23,8 +26,6 @@ def normalized(code: str) -> str:
 
 def packaged_locales(model_id: str) -> list[str] | None:
     """Locales a packaged AudioCpp spec declares; None when that weight is absent or carries no spec."""
-    from scripts.config import models as model_cfg
-    from scripts.config.models.gguf_metadata import inspect_metadata
 
     model = next((item for item in model_cfg.MODELS if item.label == model_id), None)
     if model is None or not model.path.is_file():
