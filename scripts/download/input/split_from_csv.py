@@ -73,7 +73,7 @@ def detect_silences(mp3_path, noise_db, min_dur, cache_path):
 
     starts = [float(m) for m in re.findall(r"silence_start:\s*(-?[\d.]+)", result.stderr)]
     ends = [float(m) for m in re.findall(r"silence_end:\s*(-?[\d.]+)", result.stderr)]
-    silences = list(zip(starts, ends))
+    silences = list(zip(starts, ends, strict=False))
 
     print(f"Found {len(silences)} silent stretches")
     cache_path.write_text(json.dumps({"key": cache_key, "silences": silences}, indent=2), encoding="utf-8")
@@ -129,7 +129,7 @@ def merge_rows(
     boundaries.append(len(rows))
 
     merged = []
-    for s_idx, e_idx in zip(boundaries, boundaries[1:]):
+    for s_idx, e_idx in zip(boundaries, boundaries[1:], strict=False):
         start = float(rows[s_idx]["Start"])
         if e_idx < len(rows):
             end = float(rows[e_idx]["Start"])

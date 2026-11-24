@@ -60,6 +60,7 @@ def _class_issues(node: dict[str, Any]) -> list[str]:
 
 
 def _input_issues(node: object) -> list[str]:
+    # - the node is an arbitrary ComfyUI class object; its handler is looked up by name
     inputs = getattr(node, "INPUT_TYPES")()
     if not isinstance(inputs, dict):
         return [f"{NODE_CLASS}.INPUT_TYPES did not return a mapping"]

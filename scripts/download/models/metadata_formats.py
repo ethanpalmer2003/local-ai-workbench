@@ -175,7 +175,7 @@ def inspect(path: Path, *, full_arrays: bool = False, tensor_index: bool = False
         ]
         return {
             "format": "ggml",
-            "metadata": dict(zip(keys, values)),
+            "metadata": dict(zip(keys, values, strict=False)),
             "limits": ["Legacy GGML header; no inferred language list."],
         }
     return {

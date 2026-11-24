@@ -80,7 +80,7 @@ def main() -> int:
         print("\t".join(row))
     print("\n=== SAVED LOCAL WORK (tracked) ===")
     rows, manifest = archive_rows()
-    for name, count, detail in rows:
+    for name, count, _detail in rows:
         print(f"{name}\t{count} commit(s)\t{ARCHIVE}")
     print(f"{len(manifest)} manifest entries record which commits upstream already carries")
     print("\n=== HRX CHECKOUTS ===")

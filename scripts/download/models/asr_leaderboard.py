@@ -30,7 +30,7 @@ def plain(value):
 
 def export_table(folder, name, table):
     headers = [plain(value) for value in table["headers"]]
-    rows = [{key: plain(value) for key, value in zip(headers, row)} for row in table["data"]]
+    rows = [{key: plain(value) for key, value in zip(headers, row, strict=False)} for row in table["data"]]
     (folder / f"{name}.json").write_text(json.dumps(rows, indent=2, ensure_ascii=True), encoding="utf-8")
     with (folder / f"{name}.csv").open("w", encoding="utf-8-sig", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=headers)
