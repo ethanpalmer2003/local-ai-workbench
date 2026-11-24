@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from scripts.shared import code_changes
 from scripts.shared import import_graph as graph_api
 from scripts.tests import scoped_selection
 from scripts.tests.shared.paths import CasePaths
@@ -20,7 +21,7 @@ def _graph(edges: dict[str, tuple[str, ...]]) -> graph_api.ImportGraph:
 class TestSelection(unittest.TestCase):
     def setUp(self) -> None:
         # - the selector reads upstream copies in one batch; these tests judge the walk, not git
-        patcher = patch.object(scoped_selection, "upstream_texts", return_value={})
+        patcher = patch.object(code_changes, "upstream_texts", return_value={})
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -106,7 +107,7 @@ class TestSelection(unittest.TestCase):
             }
         )
         with (
-            patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
+            patch.object(code_changes, "_code_changed_since_upstream", return_value=True),
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             chosen = scoped_selection.select_test_classes((PointerTests,), change_set=["scripts/review/checks/docs.py"])
@@ -122,7 +123,7 @@ class TestSelection(unittest.TestCase):
             {"scripts.review.checks.docs": (), "m.b": ("scripts.review.checks.docs",), "m.c": ("m.b",), "m.d": ("m.c",)}
         )
         with (
-            patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
+            patch.object(code_changes, "_code_changed_since_upstream", return_value=True),
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             chosen = scoped_selection.select_test_classes(classes, change_set=["scripts/review/checks/docs.py"])
@@ -140,7 +141,7 @@ class TestSelection(unittest.TestCase):
             }
         )
         with (
-            patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
+            patch.object(code_changes, "_code_changed_since_upstream", return_value=True),
             patch.object(scoped_selection, "import_graph", return_value=edges),
             patch.object(scoped_selection, "HOP_CLASS_CAP", 0),
         ):
@@ -161,7 +162,7 @@ class TestSelection(unittest.TestCase):
         )
         groups = (PointerTests, KoboldOptionTests)
         with (
-            patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
+            patch.object(code_changes, "_code_changed_since_upstream", return_value=True),
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             chosen = scoped_selection.select_test_classes(groups, change_set=["scripts/review/checks/docs.py"])
@@ -178,7 +179,7 @@ class TestSelection(unittest.TestCase):
             }
         )
         with (
-            patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
+            patch.object(code_changes, "_code_changed_since_upstream", return_value=True),
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             kept = scoped_selection.select_test_classes(
@@ -200,10 +201,7 @@ class TestSelection(unittest.TestCase):
     def test_the_manifests_keep_every_class(self):
         groups = (TestSelection,)
         for path in ("scripts/tests/registry.py", "scripts/tests/run.py", "scripts/tests/scoped_selection.py"):
-            with (
-                self.subTest(path=path),
-                patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
-            ):
+            with self.subTest(path=path), patch.object(code_changes, "_code_changed_since_upstream", return_value=True):
                 chosen = scoped_selection.select_test_classes(groups, change_set=[path])
                 self.assertEqual(chosen.kept, groups)
                 self.assertIn("manifest changed", chosen.reason)
@@ -211,16 +209,13 @@ class TestSelection(unittest.TestCase):
     def test_a_lock_config_or_package_init_runs_no_class(self):
         for path in ("pyproject.toml", "uv.lock", "scripts/__init__.py"):
             # - the package init is a code change here, so the reason is the missing module, not the tree
-            with (
-                self.subTest(path=path),
-                patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
-            ):
+            with self.subTest(path=path), patch.object(code_changes, "_code_changed_since_upstream", return_value=True):
                 chosen = scoped_selection.select_test_classes((TestSelection,), change_set=[path])
                 self.assertEqual(chosen.kept, ())
                 self.assertEqual(chosen.reason, "no Python change")
 
     def test_a_comment_edit_to_a_trigger_runs_nothing(self):
-        with patch.object(scoped_selection, "_code_changed_since_upstream", return_value=False):
+        with patch.object(code_changes, "_code_changed_since_upstream", return_value=False):
             chosen = scoped_selection.select_test_classes(
                 (TestSelection,), change_set=["scripts/tests/scoped_selection.py"]
             )
@@ -228,14 +223,14 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(chosen.reason, "no code change")
 
     def test_a_comment_edit_to_an_ordinary_module_runs_nothing(self):
-        with patch.object(scoped_selection, "_code_changed_since_upstream", return_value=False):
+        with patch.object(code_changes, "_code_changed_since_upstream", return_value=False):
             chosen = scoped_selection.select_test_classes((TestSelection,), change_set=["scripts/shared/consent.py"])
         self.assertEqual(chosen.kept, ())
         self.assertEqual(chosen.reason, "no code change")
 
     def test_a_module_with_unchanged_code_beside_a_document_runs_nothing(self):
         with patch.object(
-            scoped_selection, "_code_changed_since_upstream", side_effect=lambda path, *_: not path.endswith(".py")
+            code_changes, "_code_changed_since_upstream", side_effect=lambda path, *_: not path.endswith(".py")
         ):
             chosen = scoped_selection.select_test_classes(
                 (TestSelection,), change_set=["scripts/shared/consent.py", "notes/TODO.md"]
@@ -254,7 +249,7 @@ class TestSelection(unittest.TestCase):
         )
         with (
             patch.object(
-                scoped_selection,
+                code_changes,
                 "_code_changed_since_upstream",
                 side_effect=lambda path, *_: path not in scoped_selection.FULL_TRIGGERS,
             ),
@@ -280,25 +275,21 @@ class TestSelection(unittest.TestCase):
         before = ast.parse('"""Old."""\n\n\ndef run() -> None:\n    """Doc."""\n    print(1)\n')
         after = ast.parse('"""New."""\n\n\n# a comment\ndef run() -> None:\n    """Other."""\n    print(1)\n')
         changed = ast.parse('"""New."""\n\n\ndef run() -> None:\n    """Other."""\n    print(2)\n')
-        self.assertEqual(
-            scoped_selection._dump_without_docstrings(before), scoped_selection._dump_without_docstrings(after)
-        )
+        self.assertEqual(code_changes._dump_without_docstrings(before), code_changes._dump_without_docstrings(after))
         self.assertNotEqual(
-            scoped_selection._dump_without_docstrings(before), scoped_selection._dump_without_docstrings(changed)
+            code_changes._dump_without_docstrings(before), code_changes._dump_without_docstrings(changed)
         )
 
     def test_a_docstring_only_function_still_compares_equal(self):
         before = ast.parse('def f():\n    """Old."""\n')
         after = ast.parse('def f():\n    """New."""\n')
-        self.assertEqual(
-            scoped_selection._dump_without_docstrings(before), scoped_selection._dump_without_docstrings(after)
-        )
+        self.assertEqual(code_changes._dump_without_docstrings(before), code_changes._dump_without_docstrings(after))
 
     def test_a_docstring_only_body_matches_a_pass(self):
         docstring = ast.parse('def f():\n    """Doc."""\n')
         pass_only = ast.parse("def f():\n    pass\n")
         self.assertEqual(
-            scoped_selection._dump_without_docstrings(docstring), scoped_selection._dump_without_docstrings(pass_only)
+            code_changes._dump_without_docstrings(docstring), code_changes._dump_without_docstrings(pass_only)
         )
 
     def test_unchanged_code_is_read_from_upstream(self):
@@ -308,11 +299,11 @@ class TestSelection(unittest.TestCase):
             target = root / "scripts" / "run.py"
             target.write_text('"""New docstring."""\nVALUE = 1\n', encoding="utf-8")
             previous = '"""Old docstring."""\nVALUE = 1\n'
-            self.assertFalse(scoped_selection._code_changed_since_upstream("scripts/run.py", previous, root))
+            self.assertFalse(code_changes._code_changed_since_upstream("scripts/run.py", previous, root))
             target.write_text('"""New docstring."""\nVALUE = 2\n', encoding="utf-8")
-            self.assertTrue(scoped_selection._code_changed_since_upstream("scripts/run.py", previous, root))
+            self.assertTrue(code_changes._code_changed_since_upstream("scripts/run.py", previous, root))
             # - a path git cannot answer for is a real change, so a missing copy never hides the edit
-            self.assertTrue(scoped_selection._code_changed_since_upstream("scripts/run.py", None, root))
+            self.assertTrue(code_changes._code_changed_since_upstream("scripts/run.py", None, root))
 
     def test_a_python_change_beside_a_document_still_scopes(self):
         from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
@@ -327,7 +318,7 @@ class TestSelection(unittest.TestCase):
         )
         groups = (PointerTests, KoboldOptionTests)
         with (
-            patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
+            patch.object(code_changes, "_code_changed_since_upstream", return_value=True),
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             chosen = scoped_selection.select_test_classes(
@@ -368,7 +359,7 @@ class TestSelection(unittest.TestCase):
             }
         )
         with (
-            patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
+            patch.object(code_changes, "_code_changed_since_upstream", return_value=True),
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             chosen = scoped_selection.select_test_classes(groups, change_set=["scripts/review/checks/docs.py"])
@@ -383,7 +374,7 @@ class TestSelection(unittest.TestCase):
 
         edges = _graph({"scripts.tests.cases.review.checks.test_docs": ("scripts.review.checks.docs",)})
         with (
-            patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
+            patch.object(code_changes, "_code_changed_since_upstream", return_value=True),
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             chosen = scoped_selection.select_test_classes((PointerTests,), change_set=["scripts/review/checks/docs.py"])
@@ -417,7 +408,7 @@ class TestSelection(unittest.TestCase):
             }
         )
         with (
-            patch.object(scoped_selection, "_code_changed_since_upstream", return_value=True),
+            patch.object(code_changes, "_code_changed_since_upstream", return_value=True),
             patch.object(scoped_selection, "import_graph", return_value=edges),
         ):
             chosen = scoped_selection.select_test_classes(
@@ -426,64 +417,6 @@ class TestSelection(unittest.TestCase):
         reach = graph_api.find_affected_modules(edges, {"scripts.review.checks.docs"}, depth=graph_api.REACH_DEPTH)
         for group in chosen.dropped:
             self.assertNotIn(group.__module__, reach, group.__name__)
-
-
-class CodeChangeStageTests(unittest.TestCase):
-    """The push stage asks the same question the commit stage asks: did any code change?"""
-
-    def _tree(self, folder: str, current: str) -> Path:
-        root = Path(folder)
-        (root / "scripts").mkdir()
-        (root / "scripts" / "run.py").write_text(current, encoding="utf-8")
-        return root
-
-    def test_a_docstring_only_edit_is_not_a_code_change(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = self._tree(folder, '"""New docstring."""\nVALUE = 1\n')
-            with patch.object(
-                scoped_selection, "upstream_texts", return_value={"scripts/run.py": '"""Old docstring."""\nVALUE = 1\n'}
-            ):
-                self.assertEqual(scoped_selection.code_change_paths(["scripts/run.py"], root), [])
-
-    def test_a_code_edit_is_a_code_change(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = self._tree(folder, '"""New docstring."""\nVALUE = 2\n')
-            with patch.object(
-                scoped_selection, "upstream_texts", return_value={"scripts/run.py": '"""Old docstring."""\nVALUE = 1\n'}
-            ):
-                self.assertEqual(scoped_selection.code_change_paths(["scripts/run.py"], root), ["scripts/run.py"])
-
-    def test_a_deleted_file_and_a_document_are_changes(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = self._tree(folder, "VALUE = 1\n")
-            with patch.object(scoped_selection, "upstream_texts", return_value={}):
-                self.assertEqual(
-                    scoped_selection.code_change_paths(["notes/TODO.md", "scripts/removed.py"], root),
-                    ["notes/TODO.md", "scripts/removed.py"],
-                )
-
-    def test_a_document_or_a_batch_file_does_not_count_for_the_push(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = self._tree(folder, "VALUE = 1\n")
-            with patch.object(scoped_selection, "upstream_texts", return_value={}) as upstream:
-                self.assertFalse(scoped_selection.python_code_changed(["notes/TODO.md", "bat/checks/a.bat"], root))
-            upstream.assert_not_called()
-
-    def test_a_docstring_only_python_edit_does_not_count_for_the_push(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = self._tree(folder, '"""New docstring."""\nVALUE = 1\n')
-            with patch.object(
-                scoped_selection, "upstream_texts", return_value={"scripts/run.py": '"""Old docstring."""\nVALUE = 1\n'}
-            ):
-                self.assertFalse(scoped_selection.python_code_changed(["scripts/run.py", "notes/TODO.md"], root))
-
-    def test_a_python_code_edit_counts_for_the_push(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = self._tree(folder, '"""New docstring."""\nVALUE = 2\n')
-            with patch.object(
-                scoped_selection, "upstream_texts", return_value={"scripts/run.py": '"""Old docstring."""\nVALUE = 1\n'}
-            ):
-                self.assertTrue(scoped_selection.python_code_changed(["notes/TODO.md", "scripts/run.py"], root))
 
     def test_a_batch_edit_selects_the_launcher_wiring_test(self):
         # - a class standing in for that module, because importing it here would add an edge to the graph
@@ -499,12 +432,6 @@ class CodeChangeStageTests(unittest.TestCase):
         chosen = scoped_selection.select_test_classes((TestSelection,), change_set=["notes/TODO.md"])
         self.assertEqual(chosen.kept, ())
         self.assertEqual(chosen.reason, "no Python change")
-
-    def test_an_unreadable_upstream_copy_counts_as_a_change(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = self._tree(folder, "VALUE = 1\n")
-            with patch.object(scoped_selection, "upstream_texts", side_effect=scoped_selection.GitError("no git")):
-                self.assertEqual(scoped_selection.code_change_paths(["scripts/run.py"], root), ["scripts/run.py"])
 
 
 if __name__ == "__main__":

@@ -112,13 +112,14 @@ from scripts.tests.cases.shared.benchmarks.test_provenance import (
 )
 from scripts.tests.cases.shared.gate.test_bat_launchers import BatLaunchers
 from scripts.tests.cases.shared.gate.test_changes import UpstreamTextTests
+from scripts.tests.cases.shared.gate.test_code_changes import CodeChangeStageTests
 from scripts.tests.cases.shared.gate.test_consent import ConsentTests
 from scripts.tests.cases.shared.gate.test_gate_entry import GateEntryTests
 from scripts.tests.cases.shared.gate.test_inference_engines import InferenceEngines
 from scripts.tests.cases.shared.gate.test_label_vocabulary import LabelVocabularyTests
 from scripts.tests.cases.shared.gate.test_live_stamp import LiveStampTests
 from scripts.tests.cases.shared.gate.test_model_run import ModelRunTests
-from scripts.tests.cases.shared.gate.test_scoped_selection import CodeChangeStageTests, TestSelection
+from scripts.tests.cases.shared.gate.test_scoped_selection import TestSelection
 from scripts.tests.cases.shared.gate.test_staleness import StalenessTests
 from scripts.tests.cases.shared.gate.test_validate import ValidatePlanTests
 from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests

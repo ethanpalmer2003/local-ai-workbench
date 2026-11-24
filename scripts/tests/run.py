@@ -3,10 +3,11 @@
 import sys
 
 from scripts.shared.changes import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
+from scripts.shared.code_changes import python_code_changed
 from scripts.shared.timing import timed
 from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.registry import TEST_CLASSES
-from scripts.tests.scoped_selection import python_code_changed, select_test_classes
+from scripts.tests.scoped_selection import select_test_classes
 
 if __name__ == "__main__":
     pushing = "--push" in sys.argv[1:]
