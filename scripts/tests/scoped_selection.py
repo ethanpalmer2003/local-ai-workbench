@@ -1,16 +1,14 @@
-"""Select the test classes a local change can affect, using a one-hop reverse import walk.
+"""Select the test classes a local change can affect, using a bounded reverse import walk.
 
-A class is kept when its module changed or directly imports a changed module. The full suite runs for
-`--all`, a code change to a `FULL_TRIGGERS` file, a deleted Python file, or a branch with no upstream.
+A class is kept when its module changed or imports a changed module within the walk. The full suite runs
+for `--all`, a code change to a `FULL_TRIGGERS` file, a deleted Python file, or a branch with no upstream.
 No classes run for a clean tree, an edit to comments, docstrings or layout only, or a change that
 touches no Python module. The pre-push stage asks the same question through `python_code_changed` in
 `shared/code_changes.py`, so a push that only edits comments or docstrings runs nothing either.
 
-The walk keeps adding hops while the classes in reach stay under `HOP_CLASS_CAP`, so a dependent a few
-imports away is included while it is cheap; a hub stops at one hop and waits for the full pre-push run.
-
-Each call into `changes`, `code_changes` or `import_graph` carries one line saying what it contributes
-here, since those three modules own the detail; the rest of this file is the rule alone.
+The walk starts at one hop (`REACH_DEPTH`) and keeps adding hops while the classes in reach stay under
+`HOP_CLASS_CAP`, so a dependent a few imports away is included while it is cheap; a widely imported hub
+stops at one hop and waits for the full pre-push run.
 
 Edges come from parsing source with `ast`; nothing is imported. The graph only knows modules, so a
 `.json`, template or config change selects nothing on its own, and dynamic imports and files reached
@@ -49,10 +47,10 @@ HOP_CLASS_CAP = 30
 TestClass = type[unittest.TestCase]
 
 
-# Frozen because a `Selection` is only ever a returned answer, never state that a caller updates.
+# Frozen because a `Selection` is a read-only result returned to the runner.
 @dataclass(frozen=True)
 class Selection:
-    """The classes to run, the ones that stayed out, and the reason the scope is what it is."""
+    """The classes to run, the ones skipped, and the reason for the selection."""
 
     kept: tuple[TestClass, ...]
     dropped: tuple[TestClass, ...]
@@ -74,19 +72,19 @@ def select_test_classes(
         try:
             changed = changed_since_upstream(root)
         except NoUpstreamError:
-            # There is no baseline to compare against, so there is no evidence and every class runs.
+            # No baseline to compare against, so every class runs.
             return Selection(test_classes, (), "no upstream ref")
     else:
         changed = change_set
-    # No changes means a clean tree; a missing baseline was already handled above.
+    # Empty list means a clean tree; a missing upstream was handled above.
     if not changed:
         return Selection((), test_classes, "nothing changed")
-    # An edit that leaves the code tree unchanged cannot change what a test observes, wherever it lands.
+    # Drop Python files whose AST is unchanged (comments, docstrings or formatting only).
     code_changes = paths_with_code_changes(changed, root)
     if not code_changes:
         return Selection((), test_classes, "no code change")
 
-    # Checked after the prose filter, so a comment edit inside `run.py` still runs nothing.
+    # Checked after `paths_with_code_changes`, so a comment edit inside `run.py` still runs nothing.
     triggers = FULL_TRIGGERS.intersection(code_changes)
     if triggers:
         first = min(triggers)
@@ -96,10 +94,9 @@ def select_test_classes(
     if _module_deleted(code_changes, root):
         return Selection(test_classes, (), "Python file deleted")
 
-    # A document, config or batch path contributes no module, and neither does a `.py` outside `scripts/`.
+    # Non-Python files (docs, configs, batches) and `.py` files outside `scripts/` do not map to modules.
     changed_modules = module_names(code_changes)
-    # A batch file names its module in text, which the graph cannot see, so a batch edit selects the test
-    # that imports every module a batch names. It starts nothing, and it costs under a second.
+    # Route `.bat` edits to `BATCH_LAUNCHER_TEST`, which starts nothing and finishes in under a second.
     batches = [path for path in code_changes if path.endswith(".bat")]
     if batches:
         changed_modules.add(BATCH_LAUNCHER_TEST)
@@ -122,7 +119,7 @@ def _depth_and_reach(
     reachable = find_affected_modules(edges, changed_modules, depth=depth)
     while True:
         deeper = find_affected_modules(edges, changed_modules, depth=depth + 1)
-        # - a saturated walk would only repeat itself, so the depth is the graph's own limit, not a ceiling
+        # No new modules at `depth + 1` means the walk reached every dependent in the graph.
         if deeper == reachable:
             return depth, reachable
         if sum(1 for test_class in test_classes if test_class.__module__ in deeper) > HOP_CLASS_CAP:
@@ -131,15 +128,15 @@ def _depth_and_reach(
 
 
 def _build_selection(test_classes: tuple[TestClass, ...], reachable: set[str], reason: str) -> Selection:
-    """The classes the reach covers, the ones it leaves out, and the sentence that explains it."""
-    # `__module__` is the module a class was defined in, which is what the graph speaks.
+    """Split `test_classes` into kept and dropped sets by checking whether each class's module was reached."""
+    # Match each test class by the module it is defined in.
     kept = tuple(test_class for test_class in test_classes if test_class.__module__ in reachable)
     dropped = tuple(test_class for test_class in test_classes if test_class.__module__ not in reachable)
     return Selection(kept=kept, dropped=dropped, reason=reason)
 
 
 def _module_deleted(paths: list[str], root: Path | None) -> bool:
-    """Whether any changed Python file is gone from the tree, which hides its importers from the graph."""
+    """Whether any changed Python file is missing on disk, which hides its importers from the graph."""
     base = root or project_cfg.BASE_DIR
     return any(path.endswith(".py") and not (base / path).is_file() for path in paths)
 
@@ -151,9 +148,10 @@ def _reach_reason(
     batches: list[str] | None = None,
     depth: int = REACH_DEPTH,
 ) -> str:
-    """The evidence a reader sees, including how many changed paths named no module."""
-    # The change set holds unique paths, so the difference is exactly the ones that named no module.
-    ignored = len(paths) - len(module_names(paths))
+    """Format the selection summary, noting any changed paths that do not map to a module or batch test."""
+    # Subtract module paths and handled `.bat` paths; the remainder had no representation in the selection.
+    handled = len(module_names(paths)) + len(set(batches or ()))
+    ignored = len(set(paths)) - handled
     detail = f" ({ignored} path(s) outside the module graph ignored)" if ignored else ""
     note = "; batch edit runs the launcher test" if batches else ""
     hops = f"; {depth} hops" if depth != REACH_DEPTH else ""

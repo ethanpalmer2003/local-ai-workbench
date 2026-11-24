@@ -426,7 +426,7 @@ class TestSelection(unittest.TestCase):
         ):
             chosen = scoped_selection.select_test_classes((target,), change_set=["bat/checks/test_all.bat"])
         self.assertEqual(chosen.kept, (target,))
-        self.assertIn("batch edit runs the launcher test", chosen.reason)
+        self.assertEqual(chosen.reason, "1 of 1 modules reachable; batch edit runs the launcher test")
 
     def test_a_document_edit_still_selects_nothing(self):
         chosen = scoped_selection.select_test_classes((TestSelection,), change_set=["notes/TODO.md"])
