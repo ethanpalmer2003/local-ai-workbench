@@ -10,7 +10,9 @@ tree is 182 lines and almost none of them can be deleted:
 - `unused variable` is either an exported catalog constant (`config/models/ids.py`), which its
   importer names, or a local, which ruff already owns as F841.
 - An `unused function` or `unused class` has no reader anywhere, and deleting it is the action this
-  section exists to prompt. Unreachable blocks keep vulture's own full-confidence report.
+  section exists to prompt. The exception is a class in a `test_*.py` file: `registry.py` discovers it from
+  the file, so deleting it would silently remove coverage rather than dead weight. Unreachable blocks keep
+  vulture's own full-confidence report.
 
 A commit is a different question from a push: a definition can only become dead when a reference to
 it disappears, so a change that names the same identifiers as its upstream copy cannot move vulture's
@@ -35,12 +37,30 @@ MIN_CONFIDENCE = "60"
 ACTIONABLE = re.compile(r": (?:unused (?:function|class)|unreachable code)\b")
 
 
+def relative_name(line: str) -> str:
+    """The repo-relative posix path a vulture finding names."""
+    name = line.split(":", 1)[0]
+    path = Path(name)
+    try:
+        return path.resolve().relative_to(project_cfg.BASE_DIR.resolve()).as_posix()
+    except (OSError, ValueError):
+        return Path(name.replace("\\", "/")).as_posix()
+
+
+def is_discovered_test(path: str) -> bool:
+    """Whether `registry.py` finds this file's classes by scanning it rather than by an import."""
+    return path.startswith("scripts/tests/cases/") and Path(path).name.startswith("test_")
+
+
 def findings(output: str) -> list[str]:
     """Vulture findings whose name has no reader anywhere, or whose block no path reaches."""
     kept = []
     for raw in output.splitlines():
         line = raw.strip()
         if not line or not ACTIONABLE.search(line):
+            continue
+        # - a discovered test class is read by the suite, even though no import statement names it
+        if "unused class" in line and is_discovered_test(relative_name(line)):
             continue
         kept.append(line)
     return kept

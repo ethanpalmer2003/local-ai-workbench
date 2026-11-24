@@ -2,6 +2,7 @@
 
 import ast
 import ctypes
+import importlib
 import os
 import subprocess
 import sys
@@ -186,29 +187,32 @@ class TestBoundaries(unittest.TestCase):
         self.assertIn("ming3-tts", quick_validation.PROBES)
 
     def test_every_test_case_class_is_registered(self):
-        """A module missing from registry.py is dead coverage; the suite selects classes by name."""
-        tree = ast.parse((project_cfg.TESTS_DIR / "registry.py").read_text(encoding="utf-8-sig"))
-        registered: set[str] = set()
-        for node in tree.body:
-            if not isinstance(node, ast.Assign | ast.AnnAssign) or node.value is None:
-                continue
-            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
-            if not any(isinstance(target, ast.Name) and target.id == "TEST_CLASSES" for target in targets):
-                continue
-            registered = {element.id for element in ast.walk(node.value) if isinstance(element, ast.Name)}
-        self.assertTrue(registered, "registry.py no longer lists its classes in TEST_CLASSES")
+        """Discovery is by a `TestCase` base in the source, so a class it misses is dead coverage."""
+        from scripts.tests.registry import TEST_CLASSES
+
+        registered = {(test_class.__module__, test_class.__name__) for test_class in TEST_CLASSES}
+        self.assertEqual(len(registered), len(TEST_CLASSES), "a class is listed twice")
         missing = []
         for path in sorted(project_cfg.TEST_CASES_DIR.rglob("test_*.py")):
             if {"retired", "output"} & set(path.parts):
                 continue
-            for node in ast.parse(path.read_text(encoding="utf-8-sig")).body:
-                if not isinstance(node, ast.ClassDef) or not any(
-                    "TestCase" in ast.unparse(base) for base in node.bases
-                ):
-                    continue
-                if node.name not in registered:
-                    missing.append(f"{path.relative_to(project_cfg.TEST_CASES_DIR).as_posix()}:{node.name}")
-        self.assertEqual(missing, [], "register the class in scripts/tests/registry.py")
+            module_name = ".".join(path.relative_to(project_cfg.BASE_DIR).with_suffix("").parts)
+            module = importlib.import_module(module_name)
+            # - what an import finds, against what the source scan in registry.py found
+            defined = {
+                name
+                for name, value in vars(module).items()
+                if isinstance(value, type) and issubclass(value, unittest.TestCase) and value.__module__ == module_name
+            }
+            listed = {name for module_of, name in registered if module_of == module_name}
+            missing.extend(
+                f"{path.relative_to(project_cfg.TEST_CASES_DIR).as_posix()}:{name}" for name in sorted(defined - listed)
+            )
+        self.assertEqual(missing, [], "the source scan in scripts/tests/registry.py missed a class")
+        self.assertTrue(
+            all(issubclass(test_class, unittest.TestCase) for test_class in TEST_CLASSES),
+            "TEST_CLASSES holds something that is not a test case",
+        )
 
     def test_a_case_module_names_its_subject_once(self):
         """The file is `test_<subject>.py`; a subject that starts with "test" would read as test_test_."""

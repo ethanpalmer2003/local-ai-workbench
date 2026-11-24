@@ -1,401 +1,80 @@
-"""The test classes the suite runs, in the order it reports them.
+"""The test classes the suite runs: test files are discovered, suite classes are listed.
 
-The registry is explicit because the suite's scope walks a static import graph: a class imported by
-name at run time would be invisible to it, so every module is imported here instead. `TEST_CLASSES` is what
-the runner counts against and what the selector picks from.
+A `test_*.py` file is discovered by parsing it for a top-level class whose base names `TestCase`, then
+importing that module under the name its own path gives. Importing by a name built from a file path is
+what `unittest` discovery does, and this repository bans that shape because the scope graph cannot see it;
+the difference here is that the path is the input, so every discovered module is still a file the graph
+knows.
+
+A class in a module that is not `test_*.py` is part of a suite that also runs as a worker, so no file name
+marks it as a test: those are listed in `SUITE_CLASSES`, where the choice is reviewed.
+
+`TEST_CLASSES` is what the runner counts against and what the selector picks from.
 """
 
+import ast
+import importlib
 import unittest
+from pathlib import Path
 
-from scripts.tests.cases.asr.llamacpp.test_gemma_audio import GemmaAudioTests
-from scripts.tests.cases.asr.llamacpp.test_qwen_asr_profiles import QwenAsrProfiles
-from scripts.tests.cases.asr.shared.test_delivery import DeliveryTests
-from scripts.tests.cases.asr.shared.test_file_profiles import FileProfiles
-from scripts.tests.cases.asr.shared.test_practice import PracticeTests
-from scripts.tests.cases.asr.shared.test_startup_contracts import StartupContracts
-from scripts.tests.cases.asr.shared.test_streaming_adapters import StreamingAdapters
-from scripts.tests.cases.asr.shared.test_vad_turns import VadTurns
-from scripts.tests.cases.asr.shared.test_whisper_compare import WhisperCompareTests
-from scripts.tests.cases.asr.test_whisper_profiles import WhisperProfiles
+from scripts.config import project_config as project_cfg
 from scripts.tests.cases.audiocpp.audio_comparison import AudioComparison
-from scripts.tests.cases.audiocpp.test_audiocpp_transport import TransportBenchmark
-from scripts.tests.cases.audiocpp.test_tts_events import BreezeEventTableTests, BreezeVocalAdapterTests
-from scripts.tests.cases.audiocpp.test_tts_profiles import TtsProfiles
-from scripts.tests.cases.audiocpp.test_voice_references import VoiceReferences
-from scripts.tests.cases.coding_agents.pi.test_pi_packages import PiPackageTests
 from scripts.tests.cases.coding_agents.shared.framework_clients import FrameworkClients
-from scripts.tests.cases.coding_agents.shared.test_benchmark_backends import BenchmarkBackendsTests
-from scripts.tests.cases.coding_agents.shared.test_benchmark_defaults import ParkedDefaultsTests
-from scripts.tests.cases.coding_agents.shared.test_benchmark_matrix import BenchmarkMatrixTests
-from scripts.tests.cases.coding_agents.shared.test_benchmark_requests import BenchmarkRequestsTests
 from scripts.tests.cases.koboldcpp.kobold_lite_streaming import StreamingPatch
-from scripts.tests.cases.koboldcpp.test_external_bridge import ExternalBridgeTests
-from scripts.tests.cases.koboldcpp.test_kobold_image_swap import SwapTests
-from scripts.tests.cases.koboldcpp.test_kobold_lite_patch import ExternalSeedTests
-from scripts.tests.cases.koboldcpp.test_kobold_options import KoboldOptionTests
-from scripts.tests.cases.koboldcpp.test_kobold_stack_vram import StackProbeTests
-from scripts.tests.cases.llamacpp.hrx.test_hrx_build import HrxBuildTests
-from scripts.tests.cases.llamacpp.test_ngram import NgramWorkloads
-from scripts.tests.cases.llamacpp.test_speech_ui import SpeechUiTests
-from scripts.tests.cases.personal.comfyui.test_comfyui_video import ExecutionTests, WorkflowTests
-from scripts.tests.cases.personal.comfyui.test_ltx_prompt_cache import PromptCacheTests
-from scripts.tests.cases.personal.comfyui.test_verify_node import ProviderTests, VerifyNodeTests
-from scripts.tests.cases.review.checks.test_annotations import AliasTests, DefaultTests, FindingsTests, ScoreTests
-from scripts.tests.cases.review.checks.test_bare_any import BareAnyTests
-from scripts.tests.cases.review.checks.test_comments import CommentPolicyTests
-from scripts.tests.cases.review.checks.test_dead_code import FindingTests, ScopedSkipTests
-from scripts.tests.cases.review.checks.test_docs import (
-    GeneratedPageTests,
-    HubSiblingTests,
-    LinkTests,
-    MarkdownNameTests,
-    ModelNameTests,
-    PointerTests,
-    RoleTests,
-    RootDocumentTests,
-    RunningListTests,
-)
-from scripts.tests.cases.review.checks.test_duplicates import DuplicateReportTests
-from scripts.tests.cases.review.checks.test_dynamic_imports import DynamicImportTests
-from scripts.tests.cases.review.checks.test_expression import ExpressionDepthTests
-from scripts.tests.cases.review.checks.test_folder_rule import FolderRuleTests, WorkspaceTotalTests
-from scripts.tests.cases.review.checks.test_handoff import BundleTests, FullRunTests, HandlerTests, RetentionTests
-from scripts.tests.cases.review.checks.test_large_files import LargeFileTests
-from scripts.tests.cases.review.checks.test_layout import PolicyTests, TrashPathTests
-from scripts.tests.cases.review.checks.test_line_length import LimitsReportTests, LineLengthTests
-from scripts.tests.cases.review.checks.test_network_timeouts import NetworkTimeoutTests
-from scripts.tests.cases.review.checks.test_overlay_access import OverlayAccessTests
-from scripts.tests.cases.review.checks.test_owned_tokens import OwnedTokenTests
-from scripts.tests.cases.review.checks.test_similarity import (
-    SimilarityCodeTests,
-    SimilarityFindingTests,
-    SimilarityNeighborTests,
-    SimilaritySourceTests,
-    SimilarityUnitTests,
-)
-from scripts.tests.cases.review.checks.test_spellings import AmericanSpellingTests
-from scripts.tests.cases.review.checks.test_typography import CheckTests, ScanTests, SuffixTests, TargetTests
-from scripts.tests.cases.review.checks.test_walrus import WalrusTests
-from scripts.tests.cases.review.test_committed_index import IndexConsistencyTests, ResolveTests
-from scripts.tests.cases.review.test_examples import ExamplesPageTests
-from scripts.tests.cases.review.test_frontend_wiring import EmittedKeyTests
-from scripts.tests.cases.review.test_public_audit import PublicAuditTests
-from scripts.tests.cases.review.test_restrictions import (
-    RestrictionCommandTests,
-    RestrictionResolveTests,
-    RestrictionTableTests,
-)
-from scripts.tests.cases.review.test_review_gate import GateScopeTests
-from scripts.tests.cases.review.test_tree_sizes import TreeSizesTests
-from scripts.tests.cases.shared.benchmarks.test_benchmark_lifecycle import BenchmarkLifecycleTests
-from scripts.tests.cases.shared.benchmarks.test_benchmark_vram import BenchmarkVramTests
-from scripts.tests.cases.shared.benchmarks.test_coding_engines import CodingEngineSummaryTests
-from scripts.tests.cases.shared.benchmarks.test_context_stream import ContextStreamTests
-from scripts.tests.cases.shared.benchmarks.test_framework_compare import (
-    AlternateArmTests,
-    LemonadeModelTests,
-    RecognitionLegTests,
-    SpeechLegTests,
-    SpeechPlausibilityTests,
-    StreamChatTests,
-    SummaryTests,
-)
-from scripts.tests.cases.shared.benchmarks.test_language_corpus import CorpusManifestTests, ExtractionTests
-from scripts.tests.cases.shared.benchmarks.test_probe_runner import ProbeRunnerTests
-from scripts.tests.cases.shared.benchmarks.test_provenance import (
-    BinaryTests,
-    BlockTests,
-    CorpusTests,
-    FileIdentityTests,
-    ProducerTests,
-    WorkspaceTests,
-)
-from scripts.tests.cases.shared.gate.test_bat_launchers import BatLaunchers
-from scripts.tests.cases.shared.gate.test_changes import UpstreamTextTests
-from scripts.tests.cases.shared.gate.test_code_changes import CodeChangeStageTests
-from scripts.tests.cases.shared.gate.test_consent import ConsentTests
-from scripts.tests.cases.shared.gate.test_gate_entry import GateEntryTests
-from scripts.tests.cases.shared.gate.test_inference_engines import InferenceEngines
-from scripts.tests.cases.shared.gate.test_label_vocabulary import LabelVocabularyTests
-from scripts.tests.cases.shared.gate.test_live_stamp import LiveStampTests
-from scripts.tests.cases.shared.gate.test_model_run import ModelRunTests
-from scripts.tests.cases.shared.gate.test_scoped_selection import TestSelection
-from scripts.tests.cases.shared.gate.test_staleness import StalenessTests
-from scripts.tests.cases.shared.gate.test_validate import ValidatePlanTests
-from scripts.tests.cases.shared.models.test_model_analysis import ModelAnalysisTests
-from scripts.tests.cases.shared.models.test_model_catalog import ModelCatalogTests
-from scripts.tests.cases.shared.models.test_model_languages import ModelLanguages
-from scripts.tests.cases.shared.models.test_model_provenance import ModelLinkTests, ModelProvenanceTests
-from scripts.tests.cases.shared.models.test_model_sync import ModelSyncTests
-from scripts.tests.cases.shared.models.test_model_updates import (
-    CatalogOverlayTests,
-    DownloadModelsTests,
-    ModelUpdatesTests,
-    TransferTests,
-    UpdateModelsTests,
-)
-from scripts.tests.cases.shared.regression.test_boundaries import TestBoundaries
-from scripts.tests.cases.shared.regression.test_regression_fixtures import RegressionFixtures
-from scripts.tests.cases.shared.reports.test_reporting import Reporting
-from scripts.tests.cases.shared.reports.test_reports import ReportOutputs
-from scripts.tests.cases.shared.runtime.test_backend_sessions import BackendSessions
-from scripts.tests.cases.shared.runtime.test_gpu_memory_monitor import MemoryMonitorTests
-from scripts.tests.cases.shared.runtime.test_gpu_selection import GpuSelectionTests
-from scripts.tests.cases.shared.runtime.test_image_on_demand import NativePassthroughTests, ResidencyTests
-from scripts.tests.cases.shared.runtime.test_native_probes import ProbeCommandTests
-from scripts.tests.cases.shared.runtime.test_resources import ResourceTests
-from scripts.tests.cases.shared.runtime.test_service_identity import EndpointIdentityTests
-from scripts.tests.cases.shared.runtime.test_shared_runtime import (
-    ExitReportTests,
-    OwnedLaunchTests,
-    ReadinessRouteTests,
-    SharedRuntimeTests,
-    SweepMessageTests,
-)
-from scripts.tests.cases.shared.runtime.test_suite_calls import SuiteCallTests
-from scripts.tests.cases.shared.tools.test_capability_matrix import FreshnessTests, HeadlineTests, RenderTests
-from scripts.tests.cases.shared.tools.test_cleanup import CleanupTests
-from scripts.tests.cases.shared.tools.test_config_paths import ConfigPathTests
-from scripts.tests.cases.shared.tools.test_language_matrix import LanguageMatrixTests
-from scripts.tests.cases.shared.tools.test_local_overlay import LocalOverlayTests
-from scripts.tests.cases.shared.tools.test_locate_files import LocateTests
-from scripts.tests.cases.shared.tools.test_low_integrity import LowIntegrityTests
-from scripts.tests.cases.shared.tools.test_model_admin import ModelAdminTests
-from scripts.tests.cases.shared.tools.test_preflight import PreflightTests
-from scripts.tests.cases.shared.tools.test_refresh_index import (
-    RefreshBackgroundTests,
-    RefreshLockTests,
-    RefreshPlanTests,
-    RefreshReportTests,
-)
-from scripts.tests.cases.shared.tools.test_rename_path import (
-    CollapseTests,
-    ImportRewriteTests,
-    MoveParsingTests,
-    PreviewTests,
-    ReferenceRewriteTests,
-    ScanScopeTests,
-)
-from scripts.tests.cases.shared.tools.test_rocm_inventory import RocmInventoryTests
-from scripts.tests.cases.shared.tools.test_sample_code import SampleCodeTests
-from scripts.tests.cases.shared.tools.test_stage_runner import StageRunnerTests
-from scripts.tests.cases.shared.tools.test_state_cleanup import StateCleanupTests
-from scripts.tests.cases.shared.tools.test_strata_profile import StrataProfileLinkTests
-from scripts.tests.cases.shared.tools.test_toolchains import ToolchainTests
-from scripts.tests.cases.shared.tools.test_yaml_table import YamlTableTests
-from scripts.tests.cases.shared.workflows.test_config_sync import ConfigSyncTests
-from scripts.tests.cases.shared.workflows.test_speech_profiles import SpeechProfiles
-from scripts.tests.cases.shared.workflows.test_tables import ModelListingTests, TableTests
-from scripts.tests.cases.shared.workflows.test_text_processing import TextProcessingTests
-from scripts.tests.cases.shared.workflows.test_workflow_defaults import WorkflowDefaultsTests
-from scripts.tests.cases.strata.test_strata_pi import StrataPiTests
-from scripts.tests.cases.strata.test_strata_profiles import StrataProfileTests
 from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.cases.suites.framework_update_additions import FrameworkUpdateAdditions
 from scripts.tests.cases.suites.framework_updates import FrameworkUpdates
 from scripts.tests.cases.suites.framework_updates_sources import FrameworkUpdateSources
 from scripts.tests.cases.suites.hrx_fixes import FixStateTests
 from scripts.tests.cases.suites.shared_contracts import SharedContracts
-from scripts.tests.cases.test_lemonade_launcher import LemonadeLauncherTests, LemonadeOwnedStartTests
 
-# The registry the runner counts and the selector picks from.
-TEST_CLASSES: tuple[type[unittest.TestCase], ...] = (
-    BenchmarkLifecycleTests,
-    BenchmarkVramTests,
-    StreamChatTests,
-    SpeechLegTests,
-    RecognitionLegTests,
-    SummaryTests,
-    LemonadeModelTests,
-    AlternateArmTests,
-    SpeechPlausibilityTests,
-    CorpusManifestTests,
-    ExtractionTests,
-    WorkspaceTests,
-    FileIdentityTests,
-    CorpusTests,
-    BlockTests,
-    ProducerTests,
-    BinaryTests,
-    FreshnessTests,
-    HeadlineTests,
-    RenderTests,
-    ConfigPathTests,
-    CheckTests,
-    ScanTests,
-    SuffixTests,
-    TargetTests,
-    FindingTests,
-    ExternalSeedTests,
-    GeneratedPageTests,
-    MarkdownNameTests,
-    ModelNameTests,
-    LinkTests,
-    PointerTests,
-    RoleTests,
-    RootDocumentTests,
-    HubSiblingTests,
-    RunningListTests,
-    SharedRuntimeTests,
-    ReadinessRouteTests,
-    OwnedLaunchTests,
-    SweepMessageTests,
-    StartupContracts,
-    RegressionFixtures,
-    TestBoundaries,
-    VadTurns,
-    PracticeTests,
-    DeliveryTests,
-    StreamingAdapters,
-    ModelLanguages,
-    ModelLinkTests,
-    ModelProvenanceTests,
-    ModelAnalysisTests,
-    TextProcessingTests,
-    BatLaunchers,
-    InferenceEngines,
-    ModelAdminTests,
-    LowIntegrityTests,
-    ConsentTests,
-    GateScopeTests,
-    CommentPolicyTests,
-    FindingsTests,
-    ScoreTests,
-    DefaultTests,
-    AliasTests,
-    NetworkTimeoutTests,
-    SimilarityUnitTests,
-    SimilarityNeighborTests,
-    SimilarityFindingTests,
-    SimilaritySourceTests,
-    SimilarityCodeTests,
-    AmericanSpellingTests,
-    StrataProfileLinkTests,
+# - directories under `cases/` that hold no runnable classes
+DISCOVERY_EXCLUSIONS = frozenset({"retired", "output"})
+
+
+def test_module_name(path: Path) -> str:
+    """The dotted module name a file under the repository is imported by."""
+    relative = path.resolve().relative_to(project_cfg.BASE_DIR.resolve())
+    return ".".join(relative.with_suffix("").parts)
+
+
+def test_class_names(path: Path) -> list[str]:
+    """Top-level classes in one test file whose base names a `TestCase`; parsed, never imported."""
+    tree = ast.parse(path.read_text(encoding="utf-8-sig"))
+    return [
+        node.name
+        for node in tree.body
+        if isinstance(node, ast.ClassDef) and any("TestCase" in ast.unparse(base) for base in node.bases)
+    ]
+
+
+def discover_test_classes() -> tuple[type[unittest.TestCase], ...]:
+    """Every class in `cases/**/test_*.py`, in file order, imported by the name its path gives."""
+    found: list[type[unittest.TestCase]] = []
+    for path in sorted(project_cfg.TEST_CASES_DIR.rglob("test_*.py")):
+        if any(part in DISCOVERY_EXCLUSIONS for part in path.parts):
+            continue
+        names = test_class_names(path)
+        if not names:
+            continue
+        module = importlib.import_module(test_module_name(path))
+        found.extend(getattr(module, name) for name in names)
+    return tuple(found)
+
+
+# - modules that are not `test_*.py`: a class here is a suite beside its worker, so it is named, not scanned
+SUITE_CLASSES: tuple[type[unittest.TestCase], ...] = (
     AudioComparison,
-    VoiceReferences,
-    WorkflowTests,
-    ExecutionTests,
-    VerifyNodeTests,
-    ProviderTests,
-    PromptCacheTests,
-    TtsProfiles,
-    BreezeEventTableTests,
-    BreezeVocalAdapterTests,
     FrameworkClients,
-    BenchmarkBackendsTests,
-    BenchmarkMatrixTests,
-    ParkedDefaultsTests,
-    BenchmarkRequestsTests,
-    StrataPiTests,
-    StrataProfileTests,
-    PiPackageTests,
-    ConfigSyncTests,
-    ModelCatalogTests,
-    CatalogOverlayTests,
-    ModelUpdatesTests,
-    UpdateModelsTests,
-    TransferTests,
-    DownloadModelsTests,
-    LocalOverlayTests,
-    LocateTests,
-    SampleCodeTests,
-    LabelVocabularyTests,
-    YamlTableTests,
-    LargeFileTests,
-    PolicyTests,
-    TrashPathTests,
-    BareAnyTests,
-    LineLengthTests,
-    LimitsReportTests,
-    RestrictionTableTests,
-    RestrictionResolveTests,
-    RestrictionCommandTests,
-    LiveStampTests,
-    LanguageMatrixTests,
-    RocmInventoryTests,
-    StageRunnerTests,
-    TreeSizesTests,
-    CleanupTests,
-    StateCleanupTests,
-    MoveParsingTests,
-    ImportRewriteTests,
-    PreviewTests,
-    CollapseTests,
-    ReferenceRewriteTests,
-    RefreshBackgroundTests,
-    RefreshLockTests,
-    RefreshPlanTests,
-    RefreshReportTests,
-    ScanScopeTests,
-    ProbeRunnerTests,
-    ModelRunTests,
-    ToolchainTests,
-    ValidatePlanTests,
-    PreflightTests,
-    PublicAuditTests,
-    OverlayAccessTests,
-    OwnedTokenTests,
-    DuplicateReportTests,
-    ExpressionDepthTests,
-    DynamicImportTests,
-    ScopedSkipTests,
-    WalrusTests,
-    ExamplesPageTests,
-    FolderRuleTests,
-    EmittedKeyTests,
-    IndexConsistencyTests,
-    ResolveTests,
-    WorkspaceTotalTests,
-    BundleTests,
-    FullRunTests,
-    HandlerTests,
-    RetentionTests,
-    SpeechProfiles,
-    TableTests,
-    ModelListingTests,
-    WorkflowDefaultsTests,
-    WhisperCompareTests,
-    FileProfiles,
-    WhisperProfiles,
-    QwenAsrProfiles,
-    GemmaAudioTests,
-    ModelSyncTests,
-    CodingEngineSummaryTests,
-    ContextStreamTests,
-    FrameworkUpdates,
-    FixStateTests,
-    FrameworkUpdateAdditions,
-    FrameworkUpdateSources,
-    ReportOutputs,
-    NgramWorkloads,
-    SpeechUiTests,
-    LemonadeLauncherTests,
-    LemonadeOwnedStartTests,
-    Reporting,
-    ResourceTests,
-    EndpointIdentityTests,
-    MemoryMonitorTests,
-    GpuSelectionTests,
-    HrxBuildTests,
-    NativePassthroughTests,
-    ResidencyTests,
-    SharedContracts,
     StreamingPatch,
-    ExternalBridgeTests,
-    KoboldOptionTests,
-    SwapTests,
-    StackProbeTests,
-    TransportBenchmark,
-    BackendSessions,
-    ProbeCommandTests,
-    SuiteCallTests,
-    TestSelection,
-    CodeChangeStageTests,
-    StalenessTests,
-    UpstreamTextTests,
-    GateEntryTests,
-    ExitReportTests,
+    FrameworkUpdateAdditions,
+    FrameworkUpdates,
+    FrameworkUpdateSources,
     # - the launcher and proxy block is scoped like everything else: a change to that wiring keeps it,
     #   a change elsewhere leaves it to the push, so no class sits outside the graph
     *frameworks_smoke.DEFAULT_CLASSES,
+    FixStateTests,
+    SharedContracts,
 )
+
+TEST_CLASSES: tuple[type[unittest.TestCase], ...] = discover_test_classes() + SUITE_CLASSES

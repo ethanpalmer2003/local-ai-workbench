@@ -29,6 +29,13 @@ class FindingTests(unittest.TestCase):
         output = "scripts/x.py:5: unreachable code after 'return' (100% confidence)\n"
         self.assertEqual(len(findings(output)), 1)
 
+    def test_a_test_class_is_read_by_the_registry_not_by_an_import(self):
+        output = (
+            "scripts/tests/cases/shared/gate/test_example.py:9: unused class 'ExampleTests' (60% confidence)\n"
+            "scripts/tests/cases/shared/gate/test_example.py:20: unused function 'helper' (60% confidence)\n"
+        )
+        self.assertEqual(findings(output), [output.splitlines()[1].strip()])
+
 
 class ScopedSkipTests(unittest.TestCase):
     def verdict(self, before: str, after: str) -> bool:
