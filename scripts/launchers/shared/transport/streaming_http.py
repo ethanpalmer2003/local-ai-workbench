@@ -4,6 +4,7 @@ import contextlib
 import http.client
 import json
 import queue
+import socket
 import threading
 from typing import Any
 from urllib.parse import urlsplit
@@ -70,8 +71,6 @@ class StreamingPost:
 
     def close(self):
         if self.connection.sock:
-            import socket
-
             with contextlib.suppress(OSError):
                 self.connection.sock.shutdown(socket.SHUT_RDWR)
         self.connection.close()

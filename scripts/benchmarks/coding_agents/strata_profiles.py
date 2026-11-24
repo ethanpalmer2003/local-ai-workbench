@@ -15,6 +15,7 @@ import psutil
 
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import stream_chat
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
+from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.benchmarks.shared.vram import BenchmarkVram
@@ -156,7 +157,6 @@ def run_arm(
                 fail=lambda: guard.reason,
             )
             result["startup_seconds"] = time.perf_counter() - started
-            from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 
             lifecycle = BenchmarkLifecycle(lambda: f"{process.pid}:{path}" if process.poll() is None else "")
             lifecycle.adopt_prepared(result["startup_seconds"])

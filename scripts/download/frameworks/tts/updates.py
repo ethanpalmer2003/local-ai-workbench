@@ -3,6 +3,7 @@
 import json
 import shutil
 import subprocess
+from importlib.metadata import distributions
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
@@ -16,7 +17,6 @@ def install_wheel(asset: shared.Asset, destination: Path, temporary: Path, exe_n
     if not uv:
         raise shared.UpdateError("uv is required for the isolated Piper framework install")
     wheel = shared.download_asset(asset, temporary)
-    from importlib.metadata import distributions
 
     staged = shared.staging_directory(temporary, prefix="piper-")
     python = project_cfg.VENV_DIR / "Scripts" / "python.exe"

@@ -10,6 +10,7 @@ from scripts.config.models import model_languages
 from scripts.config.shared import speech_delivery
 from scripts.launchers import launcher_config as cfg
 from scripts.launchers.audiocpp import audiocpp_catalog
+from scripts.launchers.audiocpp.audiocpp_catalog import resolve_voice_ref
 from scripts.launchers.audiocpp.audiocpp_proxy import _transform
 from scripts.launchers.shared.media.text_processing import clean_speech_payload
 
@@ -84,14 +85,10 @@ def tts_models() -> list[dict[str, Any]]:
             if language_entry
             else DEFAULT_PRACTICE_LANGUAGE
         )
-        from scripts.launchers.audiocpp import audiocpp_catalog
 
         row.update(audiocpp_catalog.voice_data(row["id"], spec))
-        if row.get("family") == "ming3_tts":
-            from scripts.launchers.audiocpp.audiocpp_catalog import resolve_voice_ref
-
-            if not resolve_voice_ref(cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value):
-                row.update(available=False, reason="Prepare a reference voice for Ming cloning first")
+        if row.get("family") == "ming3_tts" and not resolve_voice_ref(cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value):
+            row.update(available=False, reason="Prepare a reference voice for Ming cloning first")
     return rows
 
 

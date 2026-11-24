@@ -1,5 +1,6 @@
 """Same-weight Gemma audio comparison under llama.cpp and KoboldCpp."""
 
+import argparse
 import base64
 import hashlib
 import json
@@ -147,7 +148,6 @@ def run_arm(
 
 
 def main() -> None:
-    import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(

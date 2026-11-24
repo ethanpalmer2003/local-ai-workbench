@@ -1,5 +1,6 @@
 """AudioCpp releases and HIP build handlers."""
 
+import fnmatch
 import json
 import os
 import re
@@ -201,7 +202,6 @@ def _copy_executables(build_bin: Path, staged: Path) -> None:
 
 
 def _copy_runtime_dlls(runtime_bin: Path, staged: Path) -> set[str]:
-    import fnmatch
 
     copied: set[str] = set()
     for pattern in HIP_DLL_PATTERNS:

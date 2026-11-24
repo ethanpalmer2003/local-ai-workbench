@@ -2,6 +2,7 @@
 
 import contextlib
 import json
+import secrets
 import socket
 import time
 from collections.abc import Iterator
@@ -18,6 +19,7 @@ from scripts.launchers import launcher_config as cfg
 from scripts.launchers.llamacpp import llamacpp
 from scripts.launchers.strata import strata_pi
 from scripts.shared.http_server import request
+from scripts.shared.wait import http_ready, wait_ready
 
 
 @dataclass
@@ -159,7 +161,6 @@ def strata_config(
 def strata_endpoint(
     conf: llamacpp.LlamaConfig, output: RunPaths, config_path: Path | None = None
 ) -> Iterator[BenchmarkEndpoint]:
-    import secrets
 
     connections = strata_pi.saved_connections(config_path)
     free_ports(sorted({cfg.STRATA_SERVICE.port, *(item.port for item in connections)}), "Strata backend")
@@ -283,8 +284,6 @@ def avalon_endpoint(conf: llamacpp.LlamaConfig, output: RunPaths) -> Iterator[Be
     )
     process_started = launch_util.process_start_time(process.pid)
     try:
-        from scripts.shared.wait import http_ready, wait_ready
-
         wait_ready(
             lambda: http_ready(f"http://127.0.0.1:{port}/health", timeout=2),
             300,

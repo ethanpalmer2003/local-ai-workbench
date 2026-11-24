@@ -17,6 +17,7 @@ import requests
 from PIL import Image
 
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
+from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run
 from scripts.benchmarks.shared.vram import BenchmarkVram
@@ -161,7 +162,6 @@ def arm(
             vram.watch_backend(build, [process.pid])
             _await_ready(process, deadline)
             result["startup_seconds"] = time.perf_counter() - started
-            from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 
             lifecycle = BenchmarkLifecycle(lambda: f"{process.pid}:{build}" if process.poll() is None else "")
             lifecycle.adopt_prepared(result["startup_seconds"])

@@ -1,6 +1,7 @@
 """Sample task-owned process resources and system activity on the benchmark clock."""
 
 import statistics
+import threading
 import time
 from collections.abc import Callable
 from contextlib import contextmanager
@@ -24,7 +25,6 @@ def monitor_process(
     worker_module: str | None = None,
 ):
     """Reuse CPU/RSS and GPU samplers for one owned process; absent counters stay unknown."""
-    import threading
 
     launcher_pid = process.pid
     if worker_module:

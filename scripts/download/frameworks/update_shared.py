@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import time
+import traceback
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -745,8 +746,6 @@ def process_tool(tool: cfg.ToolSpec, tmp_dir: Path, check_only: bool, summary: U
         print(f"Status: FAILED; {error}")
         return False
     except (requests.RequestException, OSError):
-        import traceback
-
         traceback.print_exc()
         return False
 

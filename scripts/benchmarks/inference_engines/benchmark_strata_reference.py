@@ -11,6 +11,7 @@ from typing import Any
 from scripts.benchmarks.coding_agents.shared.benchmark_requests import stream_chat
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared import preflight as preflight_check
+from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.launchers import launch_util
 from scripts.launchers import launcher_config as cfg
@@ -87,7 +88,6 @@ def run_arm(label: str, source: strata_pi.StrataConnection, arm: RunPaths, args:
             interval=1,
         )
         result["startup_seconds"] = time.perf_counter() - started
-        from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 
         lifecycle = BenchmarkLifecycle(lambda: f"{process.pid}:{label}" if process.poll() is None else "")
         lifecycle.adopt_prepared(result["startup_seconds"])

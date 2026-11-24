@@ -16,6 +16,7 @@ import requests
 
 from scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles import await_http, post_json, stop_server
 from scripts.benchmarks.shared import BENCHMARK_SECONDS, provenance
+from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 from scripts.benchmarks.shared.paths import BenchmarkPaths, Outcome, RunPaths
 from scripts.benchmarks.shared.vram import snapshot_dict
 from scripts.config import project_config as project_cfg
@@ -299,7 +300,6 @@ def benchmark_build(
             base = "http://127.0.0.1:9952"
             await_http(base, process, min(90, max(1, deadline - time.perf_counter())))
             result["startup_seconds"] = time.perf_counter() - launch_started
-            from scripts.benchmarks.shared.benchmark import BenchmarkLifecycle
 
             lifecycle = BenchmarkLifecycle(lambda: f"{process.pid}:{build}" if process.poll() is None else "")
             lifecycle.adopt_prepared(result["startup_seconds"])
