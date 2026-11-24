@@ -10,12 +10,10 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NamedTuple, Protocol
-
-if TYPE_CHECKING:
-    from huggingface_hub import ModelInfo
+from typing import Any, NamedTuple, Protocol
 
 import huggingface_hub
+from huggingface_hub import ModelInfo
 
 from scripts.config import project_config as project_cfg
 from scripts.config.models import MODELS as MODELS

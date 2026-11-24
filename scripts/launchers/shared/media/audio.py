@@ -3,14 +3,11 @@
 import io
 import math
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import numpy as np
 import soundfile as sf
 from scipy.signal import resample_poly
-
-if TYPE_CHECKING:
-    import numpy as np
 
 
 def decode_audio(source: bytes | Path) -> tuple[Any, int]:
