@@ -7,8 +7,8 @@ Graphify is AST extraction only, so semantic near-duplicate work still belongs t
 
 | Tool | Install | Index | Query |
 | --- | --- | --- | --- |
-| Codebase Memory (`cbm_*` tools) | `uv tool install codebase-memory-mcp`, then toggle the bundle so the plugin resolves the runtime | `codebase-memory-mcp cli index_repository '{"repo_path": "C:/AI"}'`; 6 s for 9,072 nodes and 44,948 edges; excludes `.git`, `.venv`, `data`, `.pytest_cache`, `node_modules`; UI on `http://localhost:9749/` | `cbm_trace`, `cbm_search`, `cbm_snippet`, `cbm_arch` |
-| Graphify (`dsh-graphify`, `graphify` CLI) | plugin bundle plus `uv tool install 'graphifyy[mcp]'` | `graphify update <repo> --no-cluster`, then `cluster-only --no-label` and `export wiki`; 778 files, 7,803 nodes, 340 communities, no model needed | `graphify affected`, `god-nodes`, `path`, `explain`; `query` needs community labels |
+| Codebase Memory (`cbm_*` tools) | `uv tool install codebase-memory-mcp`, then toggle the bundle so the plugin resolves the runtime | `codebase-memory-mcp cli index_repository '{"repo_path": "C:/AI"}'`; live sizes from `python -m scripts.review.lists.index_status`; excludes `.git`, `.venv`, `data`, `.pytest_cache`, `node_modules`; UI on `http://localhost:9749/` | `cbm_trace`, `cbm_search`, `cbm_snippet`, `cbm_arch` |
+| Graphify (`dsh-graphify`, `graphify` CLI) | plugin bundle plus `uv tool install 'graphifyy[mcp]'` | `graphify update <repo> --no-cluster`, then `cluster-only --no-label` and `export wiki`; live sizes from `python -m scripts.review.lists.index_status`, no model needed | `graphify affected`, `god-nodes`, `path`, `explain`; `query` needs community labels |
 
 Default choice: Codebase Memory for callers, snippets and name lookup; Graphify for architecture, hubs and
 shortest paths; `git grep` and `git ls-files` for text and filenames. Nothing forces a search
@@ -32,9 +32,9 @@ post-commit` writes the hook into a fresh clone.
 
 1. Codebase Memory: `codebase-memory-mcp cli index_repository --repo-path C:/AI --mode fast` rewrites
    `~/.cache/codebase-memory-mcp/C-AI.db` (21 tables: `nodes`, `edges`, `nodes_fts`, `node_vectors`,
-   `token_vectors`); 9,072 nodes and 44,948 edges in 2 to 4 s.
+   `token_vectors`); the full corpus in 2 to 4 s.
 2. Graphify: `graphify update C:/AI --no-cluster`, then `graphify cluster-only C:/AI --no-label --no-viz`;
-   7,803 nodes, 24,045 edges and 340 communities, code only. It re-extracts 40-odd files every run, so the
+   the full corpus, code only. It re-extracts 40-odd files every run, so the
    cost is flat rather than proportional to the change.
 3. Upgrades are separate from refreshes: `codebase-memory-mcp update -y` replaces the versioned binary the
    `~/.local/bin` shim points at, `graphify` updates as a uv tool, and the two DSH bundles through
