@@ -24,8 +24,10 @@ Use `--variant local` with
 patch. If Kobold is stopped, append `--source-file` with an unmodified Lite page. Serving without
 `--export-diff` defaults to the local variant; `--variant pr` serves the minimal UI.
 
-The current export base is installed KoboldCpp 1.123.1 Lite v349, including
-embedded-server differences. Verify/rebase against the intended upstream revision
+The export base is KoboldCpp 1.123.1 Lite v349, including
+embedded-server differences. Live-validated against the installed 1.125.1 on 2026-11-25:
+the proxy on 5001 serves the patched page, and the backend page on 5002 patches cleanly.
+Verify/rebase against the intended upstream revision
 before submitting; these are reviewable patches, not a submitted pull request.
 Use `git apply --check` in a matching checkout.
 

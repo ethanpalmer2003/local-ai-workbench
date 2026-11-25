@@ -49,6 +49,8 @@ Code work that runs here without a live model.
 
 - [ ] Merge the two import rewriters (`rename_path` and `rewrite_imports`): they overlap, and the duplicate baseline records the shared block, so a merge needs a behavior-parity pass first. ~30-45 min
 
+- [ ] Re-validate the Lite audio patch after every KoboldCpp update: the unit tests use synthetic fixtures, so a changed upstream page breaks `patch_lite` only at serve time. Options are a post-install step in the framework updater that patches the live backend page and fails the update on an anchor miss, or a live check beside the speech tests that serves the installed page through the proxy. ~30 min
+
 - [ ] Decide whether the three file-set vocabularies stay split: `scripts/review/lists/sources.py` (maintained set), `scripts/review/lists/text_files.py` (tracked-text set) and `scripts/shared/changes.py` (changed set). The similarity pass found no shingle overlap, so options are keep all three (distinct meanings) or merge into one vocabulary with filters. ~20 min
 
 - [ ] Consolidate the llama.cpp profile runner onto `trial.running_server`; the hand-rolled lifecycle is live-only, so the change needs a run that proves identical results. ~1 h
