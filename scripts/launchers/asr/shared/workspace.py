@@ -66,9 +66,9 @@ def main(start_chat) -> None:
     parser.add_argument("--ui", choices=("workspace", "llama", "test"), default="workspace")
     parser.add_argument(
         "--test-mode",
-        choices=("all", "asr", "llm"),
+        choices=("all", "asr", "llm", "off"),
         default="all",
-        help="Stages enabled on /test/ when --ui test is selected.",
+        help="Stages enabled on /test/ when --ui test is selected; off starts every toggle off.",
     )
     args = parser.parse_args()
     print(f"Starting speech workspace on port {cfg.LLAMACPP_PRACTICE.port}", flush=True)

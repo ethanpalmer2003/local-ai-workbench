@@ -7,6 +7,7 @@ const practiceOnly = process.argv.includes('--practice');
 const cached = process.argv.includes('--cached');
 const stored = new Map(cached ? [['speech-workspace.preferences.v1', JSON.stringify({language:'ja', level:'B2', corrections:false, autoSend:false, models:{llm:'llamacpp/alternate'}})]] : []);
 const asrOnly = !practiceOnly && process.argv.includes('--asr');
+const offStages = !practiceOnly && process.argv.includes('--off');
 const root = path.resolve(__dirname, '../../../../launchers/asr/shared');
 let Processor, frames = [];
 vm.runInNewContext(fs.readFileSync(path.join(root, 'practice-worklet.js'), 'utf8'), {
@@ -42,7 +43,7 @@ const body = {dataset: {}};
 const documentElement = {dataset: {}};
 const context = vm.createContext({
     localStorage: {getItem: key => stored.get(key), setItem: (key, value) => stored.set(key, value)},
-    AbortController, URLSearchParams, location: {pathname: practiceOnly ? '/practice' : '/test/', search: (asrOnly || practiceOnly) ? '?mode=asr' : ''},
+    AbortController, URLSearchParams, location: {pathname: practiceOnly ? '/practice' : '/test/', search: asrOnly ? '?mode=asr' : offStages ? '?mode=off' : practiceOnly ? '?mode=asr' : ''},
     Option: class { constructor(text, value) { this.textContent = text; this.value = value; } },
     document: {body, documentElement, getElementById: id => elements[id], querySelector: () => ({}), createElement: () => ({children: [], dataset: {}, append(...rows) {this.children.push(...rows);}})},
     navigator: {mediaDevices: {getUserMedia: async () => ({getTracks: () => [{stop: () => stopped = true}]})}},
@@ -98,6 +99,13 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
     assert.equal(documentElement.dataset.view, practiceOnly ? 'practice' : 'test');
     vm.runInContext(fs.readFileSync(path.join(root, 'practice.js'), 'utf8'), context);
     assert.equal(context.document.title, practiceOnly ? 'Language practice' : 'Speech workspace');
+    if (offStages) {
+        assert.equal(elements['enable-asr'].checked, false);
+        assert.equal(elements['enable-llm'].checked, false);
+        assert.equal(elements['enable-tts'].checked, false);
+        console.log('[OK] off mode starts every stage toggle off');
+        return;
+    }
     if (practiceOnly) {
         assert.equal(elements['enable-llm'].checked, true);
         assert.equal(elements['enable-tts'].checked, true);

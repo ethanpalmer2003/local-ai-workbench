@@ -2,7 +2,7 @@
 
 `/practice` shows model and language selectors, conversation, microphone and Send/Cancel. Tutor settings use defaults. `/test/` shows all settings and diagnostics. Both routes share one [HTML](../../tests/ui/speech.html) document and chat controller; hiding controls does not change model lifecycle or measurements.
 
-Use [ASR-only](../../../bat/browser/launch_test_asr.bat), [LLM-only](../../../bat/browser/launch_test_llm.bat), or [all-stage](../../../bat/browser/launch_test.bat) launchers for `/test/`. This workspace is the only server that serves the page; the AudioCpp proxy is the TTS service it relays speech to, and every stage can be loaded from the page. Practice hides diagnostics.
+Use [one test launcher](../../../bat/browser/launch_test.bat) for `/test/`; it opens with every stage toggled off, so enable the ones the test needs. This workspace is the only server that serves the page; the AudioCpp proxy is the TTS service it relays speech to, and every stage can be loaded from the page. Practice hides diagnostics.
 
 Model selection, residency and saved UI state: [PRACTICE-MODELS.md](PRACTICE-MODELS.md).
 

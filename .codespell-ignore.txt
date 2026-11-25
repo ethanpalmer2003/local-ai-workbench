@@ -13,3 +13,4 @@ silero
 voice
 te
 whispercpp
+onText

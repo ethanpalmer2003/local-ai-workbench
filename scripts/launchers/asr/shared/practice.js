@@ -6,6 +6,7 @@ const practiceView = document.documentElement?.dataset.view === 'practice';
 const testMode = query.get('mode');
 const asrOnly = !practiceView && testMode === 'asr';
 const llmOnly = !practiceView && testMode === 'llm';
+const noStages = !practiceView && testMode === 'off';
 const {checked, wav} = SpeechTools;
 const speechClient = new SpeechClient();
 for (const id of ['enable-asr', 'enable-llm', 'speak', 'auto-send', 'assistant-practice-toggle']) SpeechTools.toggle($(id));
@@ -28,9 +29,9 @@ function savePreferences() {
 }
 let capabilities, serviceReady = false, llmModel;
 let pendingTtsDefault = null;
-$('enable-asr').checked = !llmOnly && (practiceView || asrOnly);
-$('enable-llm').checked = !asrOnly && (practiceView || llmOnly);
-$('speak').checked = !asrOnly && !llmOnly;
+$('enable-asr').checked = !llmOnly && !noStages && (practiceView || asrOnly);
+$('enable-llm').checked = !asrOnly && !noStages && (practiceView || llmOnly);
+$('speak').checked = !asrOnly && !llmOnly && !noStages;
 $('auto-send').checked = preferences.autoSend ?? true;
 const savedCorrection = preferences.corrections === true ? 'brief' : preferences.corrections === false ? 'none' : preferences.corrections;
 $('correction-mode').value = ['brief', 'full', 'none'].includes(savedCorrection) ? savedCorrection : 'brief';

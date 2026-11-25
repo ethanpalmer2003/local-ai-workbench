@@ -31,7 +31,7 @@
 ```powershell
 C:/AI/bat/browser/launch_language_kobold.bat
 C:/AI/bat/browser/launch_language.bat
-C:/AI/bat/browser/launch_test_asr.bat
+C:/AI/bat/browser/launch_test.bat
 ```
 
 - Select alternatives with `--transcription-engine` (streaming: `audiocpp-nemotron`, `audiocpp-qwen3`, `nemo-nemotron`, `parakeetcpp-nemotron-cpu`; completed-turn: `speechcpp-qwen-0.6b`, `whisper-vulkan`, `parakeetcpp-v3`); the practice TTS stays Vulkan; the practice page defaults to `audiocpp-qwen3`, while `ASR_SERVICE` keeps `qwen3-asr` for one-shot transcription.

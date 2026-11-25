@@ -2,7 +2,7 @@
 
 ```powershell
 C:/AI/bat/launch_llamacpp_pi_agent.bat
-C:/AI/bat/browser/launch_test_llm.bat
+C:/AI/bat/browser/launch_test.bat
 ```
 
 - Client variants: Pi, LittleCoder, Oh My Pi and NanoCoder; DSH has its own desktop integration. `--client none` starts without a coding client.

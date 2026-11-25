@@ -21,9 +21,7 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 
 | Batch | HTML opened |
 | --- | --- |
-| [launch_test.bat](browser/launch_test.bat) | Shared `/test/` page, every stage on demand. |
-| [launch_test_asr.bat](browser/launch_test_asr.bat) | Shared `/test/` page, ASR only. |
-| [launch_test_llm.bat](browser/launch_test_llm.bat) | Shared `/test/` page, LLM only. |
+| [launch_test.bat](browser/launch_test.bat) | Shared `/test/` page with every stage toggled off; enable what the test needs. |
 | [launch_language.bat](browser/launch_language.bat) | Shared `/practice` page on the llama.cpp stack. |
 | [launch_language_kobold.bat](browser/launch_language_kobold.bat) | Shared `/practice` page on the KoboldCpp stack; recognition from AudioCpp. |
 | [launch_language_kobold_no_model.bat](browser/launch_language_kobold_no_model.bat) | Same page: llama.cpp serves, KoboldCpp is UI only. |

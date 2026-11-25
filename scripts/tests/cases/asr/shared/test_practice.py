@@ -393,7 +393,7 @@ class PracticeTests(unittest.TestCase):
 
     @fixture_processes()
     def test_browser_capture_turn_and_reply_contract(self):
-        for mode in ([], ["--asr"], ["--practice"], ["--cached"], ["--practice", "--cached"]):
+        for mode in ([], ["--asr"], ["--off"], ["--practice"], ["--cached"], ["--practice", "--cached"]):
             with self.subTest(mode=mode):
                 result = subprocess.run(
                     [cfg.PI_CLIENT.node_cmd, str(Path(__file__).with_name("practice.cjs")), *mode],

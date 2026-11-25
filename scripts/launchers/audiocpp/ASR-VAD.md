@@ -18,7 +18,7 @@ The pinned, SHA-256-verified Silero VAD asset is the AudioCpp VAD entry in the c
 ## Use
 
 ```powershell
-C:/AI/bat/browser/launch_test_asr.bat
+C:/AI/bat/browser/launch_test.bat
 ```
 
 In the page, enable **Recognize speech**, then either use the microphone or
