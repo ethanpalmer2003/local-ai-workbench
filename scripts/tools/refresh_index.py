@@ -70,14 +70,18 @@ def needs_graphify(paths: Sequence[str]) -> bool:
 
 
 def graphify_commands(tool: str, root: Path) -> tuple[tuple[str, ...], ...]:
-    """The two passes graphify needs: extract, then re-cluster so hubs and communities stay current.
+    """What graphify needs: extract, then re-cluster so hubs and communities stay current, then
+    re-export the wiki so the policy's broad-navigation entry point matches the new graph.
 
-    `graphify-out` at the root is a junction into `scripts/state/cache`: the plugin spawns its MCP server
-    on the canonical path, so an incremental update keeps writing it while the files stay in the cache.
+    The export is last because it reads the graph the first two passes just wrote; it costs about
+    a second for ~350 articles.
     """
+    graph = root / "graphify-out" / "graph.json"
+    labels = root / "graphify-out" / ".graphify_labels.json"
     return (
         (tool, "update", root.as_posix(), "--no-cluster"),
         (tool, "cluster-only", root.as_posix(), "--no-label", "--no-viz"),
+        (tool, "export", "wiki", "--graph", graph.as_posix(), "--labels", labels.as_posix()),
     )
 
 
