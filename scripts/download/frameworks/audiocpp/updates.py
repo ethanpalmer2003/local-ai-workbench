@@ -98,7 +98,8 @@ def process_pypi(
     setup_mecab = import_module("scripts.download.frameworks.audiocpp.setup_mecab")
     version, wheel = setup_mecab.latest_wheel(tool.package or "")
     installed = setup_mecab.installed_version(destination)
-    print(f"Local version : {installed or 'NOT INSTALLED'}\nLatest version: {version}")
+    print(f"Local version : {installed or 'NOT INSTALLED'}")
+    print(f"Latest version: {version}")
     needed = installed != version
     if summary is not None:
         summary.record(tool, "available" if needed else "current")

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, NamedTuple, TextIO
 
 from scripts.config import project_config as project_cfg
+from scripts.review import output_lines
 from scripts.review.audit import package_audit
 from scripts.review.audit.public_audit import main as public_audit_main
 from scripts.review.checks import (
@@ -150,7 +151,8 @@ def format_check(paths: list[str] | None = None) -> int:
 def type_check(fast: bool) -> int:
     """basedpyright; the slowest section, so --fast skips it."""
     if fast:
-        print("\n=== TYPE CHECK ===\n[SKIP] --fast")
+        print("\n=== TYPE CHECK ===")
+        print("[SKIP] --fast")
         return 0
     print("\n=== TYPE CHECK ===", flush=True)
     checker = project_cfg.VENV_DIR / "Scripts" / "basedpyright.exe"
@@ -180,7 +182,8 @@ def scoped_type_check(paths: list[str], fast: bool) -> int:
     A reach covering most of the tree costs less as one whole-project run, so it falls back to that.
     """
     if fast:
-        print("\n=== TYPE CHECK ===\n[SKIP] --fast")
+        print("\n=== TYPE CHECK ===")
+        print("[SKIP] --fast")
         return 0
     print("\n=== TYPE CHECK ===", flush=True)
     modules = module_names(paths)
@@ -213,7 +216,8 @@ def inventory_check(counts: dict[str, int], fast: bool, paths: list[str] | None 
 def advisory_check(fast: bool) -> int:
     """Installed-package advisories; the only section that needs the network, so --fast skips it."""
     if fast:
-        print("\n=== DEPENDENCY ADVISORIES ===\n[SKIP] --fast")
+        print("\n=== DEPENDENCY ADVISORIES ===")
+        print("[SKIP] --fast")
         return 0
     print("\n=== DEPENDENCY ADVISORIES ===", flush=True)
     status, note = security_audit()
@@ -418,6 +422,7 @@ PYTHON_SECTIONS = frozenset(
         "dynamic imports",
         "walrus",
         "expression",
+        "output",
         "network timeouts",
         "overlay access",
         "inventory",
@@ -598,6 +603,7 @@ def full_gate(argv: list[str] | None = None) -> int:
             Section("dynamic imports", "\n=== DYNAMIC IMPORTS ===", lambda: dynamic_imports.main([])),
             Section("walrus", "\n=== WALRUS OPERATOR ===", lambda: walrus.main([])),
             Section("expression", "\n=== EXPRESSION DEPTH ===", lambda: expression.main([])),
+            Section("output", "\n=== CONSOLE OUTPUT ===", lambda: output_lines.main([])),
             Section("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
             Section(
                 "spelling",

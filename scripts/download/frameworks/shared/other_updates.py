@@ -145,7 +145,8 @@ def process_npm(tool: cfg.ToolSpec, dest_dir: Path, check_only: bool) -> bool:
     latest = response.json()["version"]
     manifest = dest_dir / "node_modules" / tool.package / "package.json"
     local = json.loads(manifest.read_text(encoding="utf-8"))["version"] if manifest.exists() else None
-    print(f"Local version : {local or 'NOT INSTALLED'}\nLatest version: {latest}")
+    print(f"Local version : {local or 'NOT INSTALLED'}")
+    print(f"Latest version: {latest}")
     if local == latest:
         print("Status: UP TO DATE")
         return False
@@ -250,7 +251,8 @@ def _vendor_batch_state(
     command = ["git", "-c", f"safe.directory={dest_dir.as_posix()}", "-C", str(dest_dir)]
     local = subprocess.run([*command, "rev-parse", "HEAD"], capture_output=True, text=True, check=False)
     latest = shared.github.get_json(f"{shared.github.API}/repos/{tool.repo}/commits/{tool.branch}")["sha"]
-    print(f"Local commit  : {local.stdout.strip() or 'NOT INSTALLED'}\nUpstream commit: {latest}")
+    print(f"Local commit  : {local.stdout.strip() or 'NOT INSTALLED'}")
+    print(f"Upstream commit: {latest}")
     folder = dest_dir / tool.tracked_checkouts
     drift = checkout_drift(folder, {name for name, _url in managed_nodes(exe)}) if tool.tracked_checkouts else []
     _report_drift(drift)
@@ -415,7 +417,8 @@ def process_desktop(tool: ToolSpec, dest_dir: Path, check_only: bool, summary: s
     else:
         release = shared.github.get_json(f"{shared.github.API}/repos/{tool.repo}/releases/latest")
         latest = str(release.get("tag_name", "")).lstrip("v")
-    print(f"Local version : {local or 'NOT INSTALLED'}\nLatest version: {latest or 'UNKNOWN'}")
+    print(f"Local version : {local or 'NOT INSTALLED'}")
+    print(f"Latest version: {latest or 'UNKNOWN'}")
     if local and latest and local == latest:
         print("Status: UP TO DATE")
         if summary is not None:

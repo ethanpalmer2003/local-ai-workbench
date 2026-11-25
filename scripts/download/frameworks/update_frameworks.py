@@ -161,10 +161,8 @@ def main() -> int:
             if updater.stop_update_services(
                 tools, summary, log, extra_names=("coding_agents/pi",) if pi_needs_sync else ()
             ):
-                print(
-                    "\n=== UPDATE BLOCKED ===\n- At least one related service could not be stopped; no updates were "
-                    "started."
-                )
+                print("\n=== UPDATE BLOCKED ===")
+                print("- At least one related service could not be stopped; no updates were started.")
                 failed = True
             else:
                 failed = updater.save_pending_patches(summary, log) or failed

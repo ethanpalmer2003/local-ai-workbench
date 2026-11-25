@@ -222,7 +222,8 @@ def main(argv: list[str] | None = None) -> None:
         for path in report.unavailable_roots:
             print(f"[WARN] Model folder unavailable: {path}")
         for path, owners in report.missing.items():
-            print(f"[FAIL] Missing: {path}\n  Referenced by: {', '.join(owners)}")
+            print(f"[FAIL] Missing: {path}")
+            print(f"  Referenced by: {', '.join(owners)}")
         for path in report.unreferenced:
             print(f"[WARN] Unreferenced: {path}")
         if args.catalog_only:

@@ -480,7 +480,8 @@ def process_snapshot(tool: cfg.ToolSpec, dest_dir: Path, tmp_dir: Path, check_on
     commit = github.get_json(f"{github.API}/repos/{tool.repo}/commits/{tool.branch}")["sha"]
     marker = dest_dir / "SOURCE.json"
     local = json.loads(marker.read_text(encoding="utf-8"))["commit"] if marker.exists() else None
-    print(f"Local commit: {local or 'NOT INSTALLED'}\nUpstream commit: {commit}")
+    print(f"Local commit  : {local or 'NOT INSTALLED'}")
+    print(f"Upstream commit: {commit}")
     if local == commit:
         print("Status: UP TO DATE")
         return False
@@ -560,7 +561,8 @@ def _install_missing_source(
 ) -> str:
     if summary is not None:
         summary.record(tool, "available", "not installed")
-    print(f"Local commit  : NOT INSTALLED\nUpstream commit: {latest}")
+    print("Local commit  : NOT INSTALLED")
+    print(f"Upstream commit: {latest}")
     return latest if check_only else _clone_source(tool, dest_dir)
 
 
@@ -638,7 +640,8 @@ def process_source(tool: cfg.ToolSpec, dest_dir: Path, check_only: bool, summary
         return _install_missing_source(tool, dest_dir, summary, check_only, latest)
     command = ["git", "-c", f"safe.directory={dest_dir.as_posix()}", "-C", str(dest_dir)]
     local = subprocess.run([*command, "rev-parse", "HEAD"], capture_output=True, text=True, check=True)
-    print(f"Local commit  : {local.stdout.strip()}\nUpstream commit: {latest}")
+    print(f"Local commit  : {local.stdout.strip()}")
+    print(f"Upstream commit: {latest}")
     if SOURCE_DIRTY_CHECK and SOURCE_DIRTY_CHECK(tool, dest_dir, local.stdout.strip(), latest, check_only, summary):
         return local.stdout.strip()
     contains = subprocess.run([*command, "merge-base", "--is-ancestor", latest, "HEAD"], capture_output=True)
