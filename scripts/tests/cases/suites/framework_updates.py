@@ -295,6 +295,16 @@ class FrameworkUpdates(unittest.TestCase):
         self.assertIn("exit", summary.failures[0])
         self.assertEqual(summary.available, [])
 
+    def test_a_current_only_table_drops_the_detail_column(self):
+        summary = updater.UpdateSummary()
+        tool = cfg.ToolSpec("benchmarks/demo", "", cfg.ReleaseType.SOURCE, category="other")
+        summary.record(tool, "current")
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            summary.print()
+        text = output.getvalue()
+        self.assertNotIn("| detail", text)
+        self.assertRegex(text, r"\| benchmarks/demo\s+\| git fast-forward\s+\| -\s+\|")
+
     def test_summary_collapses_a_component_onto_one_line(self):
         summary = updater.UpdateSummary()
         strata = next(tool for tool in cfg.TOOLS if tool.name == "strata")
@@ -328,8 +338,10 @@ class FrameworkUpdates(unittest.TestCase):
         text = output.getvalue()
         other = text.split("=== OTHER ===", 1)[1]
         speech = text.split("=== TTS / ASR ===", 1)[1].split("=== OTHER ===", 1)[0]
-        self.assertLess(other.index("benchmarks/demo"), other.index("coding_agents/demo"))
-        self.assertLess(other.index("up to date"), other.index("update available"))
+        # - the actionable row sorts above the current one, and a current row shows a dash
+        self.assertLess(other.index("coding_agents/demo"), other.index("benchmarks/demo"))
+        self.assertIn("| benchmarks/demo", other)
+        self.assertRegex(other, r"\| benchmarks/demo\s+\| git fast-forward\s+\| - ")
         self.assertIn("| benchmarks/demo", other)
         self.assertIn("| coding_agents/demo", other)
         self.assertIn("git fast-forward", other)

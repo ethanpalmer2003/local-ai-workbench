@@ -44,7 +44,7 @@ STATUS_LABELS = {
     "UPSTREAM CHANGED; MANUAL MERGE/REBUILD REQUIRED": "manual merge/rebuild",
     "APP UPDATE REQUIRED": "update in its app",
     "PI PACKAGE SYNC REQUIRED": "package sync",
-    "UP TO DATE": "up to date",
+    "UP TO DATE": "-",
     "SKIPPED BY OPTION": "skipped",
 }
 TABLE_COLUMNS = ("tool", "source", "status", "detail")
@@ -89,13 +89,14 @@ class UpdateSummary:
     group_keys: dict[str, str] = field(default_factory=dict)
 
     def groups(self) -> tuple[tuple[str, list[str]], ...]:
+        # - actionable rows first, so a reader sees what changes before what is already current
         return (
-            ("UP TO DATE", self.current),
             ("UPDATE AVAILABLE", self.available),
             ("PI PACKAGE SYNC REQUIRED", self.package_sync),
             ("UPSTREAM CHANGED; MANUAL MERGE/REBUILD REQUIRED", self.manual_rebuild),
             ("SOURCE UPDATE AVAILABLE; BUILD REQUIRED", self.source_build),
             ("APP UPDATE REQUIRED", self.app_update),
+            ("UP TO DATE", self.current),
             ("CHECK FAILED", self.failures),
             ("SKIPPED BY OPTION", self.skipped),
         )
@@ -199,10 +200,13 @@ class UpdateSummary:
             if not rows:
                 continue
             print(f"\n=== {heading} ===")
-            print(render_table(rows, TABLE_COLUMNS))
+            # - the detail column exists only when a row has something to say
+            columns = TABLE_COLUMNS if any(row[3] for row in rows) else TABLE_COLUMNS[:3]
+            print(render_table(rows, columns))
             counts: dict[str, int] = {}
             for row in rows:
-                counts[row[2]] = counts.get(row[2], 0) + 1
+                label = "up to date" if row[2] == "-" else row[2]
+                counts[label] = counts.get(label, 0) + 1
             print(f"{len(rows)} tool(s): " + ", ".join(f"{count} {status}" for status, count in counts.items()))
 
 

@@ -40,7 +40,7 @@ def update_command(destination: Path) -> list[str]:
 
 
 def describe(part: str, data: dict[str, Any]) -> str:
-    """One part as `engine 0.1.59->0.1.63 available`, short enough for a plan's detail column."""
+    """One part as `engine 0.1.59->0.1.63`; the arrow marks an update, so no status word repeats it."""
     installed, offered = data.get("installed"), data.get("offered")
     if isinstance(installed, dict):
         installed = installed.get("version")
@@ -49,7 +49,8 @@ def describe(part: str, data: dict[str, Any]) -> str:
     versions = str(installed or "not installed")
     if offered and offered != installed:
         versions += f"->{offered}"
-    return f"{part} {versions}" if data["status"] == "current" else f"{part} {versions} {data['status']}"
+    status = "" if data["status"] in ("current", "available") else f" {data['status']}"
+    return f"{part} {versions}{status}"
 
 
 def _environment() -> dict[str, str]:
@@ -73,9 +74,7 @@ def _report(text: str) -> dict[str, Any]:
         for part in ("engine", "control", "app")
     ):
         raise subprocess.SubprocessError("Incomplete Strata update report")
-    print("Native update metadata:\n" + json.dumps(report, indent=2))
-    for part in ("engine", "control", "app"):
-        print(describe(part, report[part]))
+    print(", ".join(describe(part, report[part]) for part in ("engine", "control", "app")))
     return report
 
 

@@ -108,7 +108,7 @@ def check() -> list[Row]:
         else:
             row.latest = ".".join(map(str, latest))
             row.status = "available" if latest > current else "current"
-            suffix = f" -> {row.latest} (update available)" if row.status == "available" else ""
+            suffix = f" -> {row.latest}" if row.status == "available" else ""
             print(f"- {row.name}: {row.current}{suffix}")
         rows.append(row)
     return rows
