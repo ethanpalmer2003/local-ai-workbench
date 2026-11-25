@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, NamedTuple, TextIO
 
 from scripts.config import project_config as project_cfg
+from scripts.config import trash
 from scripts.review import output_lines
 from scripts.review.audit import package_audit
 from scripts.review.audit.public_audit import main as public_audit_main
@@ -50,13 +51,10 @@ from scripts.shared.import_graph import (
 from scripts.tools import cleanup
 from scripts.tools.state_cleanup import prune_generated
 
-SPELL_EXCLUDED = (
-    "data/",
-    "frameworks/",
-    "trash/",
-    "scripts/state/",
-    "scripts/tests/output/",
-    "scripts/benchmarks/output/",
+# - installed trees, weights, trash and run evidence hold no prose the spelling check owns
+SPELL_EXCLUDED = tuple(
+    f"{path.relative_to(project_cfg.BASE_DIR).as_posix()}/"
+    for path in (project_cfg.DATA_DIR, project_cfg.FRAMEWORKS_DIR, trash.trash_root(), *project_cfg.EVIDENCE_DIRS)
 )
 TIMES: list[dict[str, Any]] = []
 # - basedpyright threads on the whole project: six measured fastest on this 12-core box, at about two thirds

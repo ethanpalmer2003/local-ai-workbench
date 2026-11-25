@@ -12,7 +12,7 @@
 - A denial is a policy decision, not a retry prompt: escalate that exact operation once, then report the outcome.
 - Repo search layers: the `dsh-graphify` plugin (clone `QuantumKuba/dsh-graphify-plugin`, then
   `npm install --omit=dev`; a tarball or link install cannot import `@deepseek-ai/schemastery`) serves the graph
-  built by `graphifyy 0.9.112`; it lives in `scripts/state/cache/graphify-out`, with `graphify-out/` at the root a junction for the plugin's MCP server. A code-only rebuild needs no model. The earlier npm 404
+  built by `graphifyy 0.9.112`; it sits in `graphify-out/` at the root, the canonical path its MCP server requires and `.gitignore` keeps untracked. A code-only rebuild needs no model. The earlier npm 404
   was a wrong repository name, not a withdrawn package.
 - A foreground `pwsh` command is capped at 60 s, then promoted to a background job: stop it with `job_kill` rather than reading it, and start anything known to run minutes with `run_in_background`. The time budget for failing and slow calls alike: [failure modes](FAILURES.md).
 - Repo search tooling, its install steps and its measured behavior: [code search](CODE-SEARCH.md).

@@ -12,7 +12,7 @@ from typing import NamedTuple
 from scripts.config import project_config as project_cfg
 from scripts.download.frameworks.llamacpp.hrx import fixes
 
-ARCHIVE = project_cfg.BASE_DIR / "scripts/download/frameworks/llamacpp/hrx/local-work"
+ARCHIVE = project_cfg.SCRIPTS_DIR / "download/frameworks/llamacpp/hrx/local-work"
 CHECKOUTS = ("llama.cpp", "hrx-system", "rocm-systems")
 
 

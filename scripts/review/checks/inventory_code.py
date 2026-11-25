@@ -95,7 +95,7 @@ TREE_KINDS = {
     ".zed": "editor state",
     "graphify-out": "caches",
 }
-EVIDENCE_TREES = ("scripts/state", "scripts/tests/output", "scripts/benchmarks/output")
+EVIDENCE_TREES = project_cfg.EVIDENCE_TREES
 GIB = 1024**3
 # - a section header marks a stage, so a file past this many is a prompt to split, never a failure: the
 #   two files over it hold their groups by subject, and a hard cap would only move them around

@@ -13,7 +13,7 @@ from scripts.config import project_config as project_cfg
 from scripts.review.checks import inventory_code
 
 # - sub-trees a single top-level row would hide
-LARGE_SUBTREES = ("scripts/state", "scripts/tests/output", "scripts/benchmarks/output")
+LARGE_SUBTREES = project_cfg.EVIDENCE_TREES
 # - below this a tree costs a scan nothing, so leaving it uncovered is not a finding
 EXPENSIVE_BYTES = 500_000_000
 EXPENSIVE_FILES = 20_000

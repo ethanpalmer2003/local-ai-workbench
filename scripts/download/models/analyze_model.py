@@ -14,6 +14,7 @@ from typing import Any
 
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
+from scripts.config import trash
 from scripts.config.models import model_languages
 from scripts.download.models import metadata_evidence, metadata_formats, metadata_sources, metadata_summary, model_sync
 
@@ -150,11 +151,11 @@ def save_inventory(path: Path, data):
     temporary = path.with_name(path.name + f".{time.time_ns()}.tmp")
     temporary.write_text(json.dumps(data, indent=2, ensure_ascii=True, allow_nan=False) + "\n", encoding="utf-8")
     if path.is_file():
-        trash = (project_cfg.BASE_DIR / "trash/shared/model_metadata").resolve()
-        backup = (trash / f"{path.stem}-{time.time_ns()}.json").resolve()
-        if not backup.is_relative_to(trash):
+        folder = (trash.trash_root() / "shared" / "model_metadata").resolve()
+        backup = (folder / f"{path.stem}-{time.time_ns()}.json").resolve()
+        if not backup.is_relative_to(folder):
             raise ValueError("Metadata backup escaped its trash directory")
-        trash.mkdir(parents=True, exist_ok=True)
+        folder.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, backup)
     temporary.replace(path)
 
