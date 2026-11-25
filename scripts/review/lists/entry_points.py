@@ -38,6 +38,7 @@ ALL: dict[str, str] = {
     "scripts.review.checks.typography": "check",
     "scripts.review.checks.walrus": "check",
     "scripts.review.format_py": "act",
+    "scripts.review.gate_times": "report",
     "scripts.review.handoff": "generate",
     "scripts.review.limits": "report",
     "scripts.review.lists.entry_points": "report",

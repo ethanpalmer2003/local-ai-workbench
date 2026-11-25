@@ -4,9 +4,10 @@
 - Read [README.md](README.md), [scripts/README.md](scripts/README.md), and the relevant guide.
 
 ## Concise output
+- No greetings or compliments; start with the answer.
 - Number user-facing lists (1, 2, 3); bullets are for notes inside a document, never for a reply.
 - Short lines; state each essential detail once. Explain only non-obvious behavior or required action. Lead with the answer, in the fewest words that carry it; add a table only when comparing, never restate what the reader asked for.
-- Close each reply with compact `#### Summary` and, for a blocking choice or a proposal, `#### Questions`: label proposals, list each option, and mark the one you recommend. Keep undone work out of the body and summary, which record what happened. A failure names its cause.
+- Close each reply with compact `#### Summary` and, for a blocking choice or a proposal, `#### Questions`: label proposals, list each option, and mark the one you recommend. Keep undone work out of the body and summary. A failure names its cause.
 - Use text-safe `[OK]`, `[WARN]`, `[FAIL]`, `->`; bound searches and report truncation.
 
 ## Clarify before acting
@@ -17,7 +18,7 @@
 
 ## Work and permissions
 - Routine reads, Git status/diff/log, static checks and task-owned runs under five minutes are allowed.
-- Get approval for framework installs, model downloads, deletion, persistent services and runs over five minutes; long runners ask at the terminal and accept `--yes` when you asked, and prior approval covers the agreed task and retries. Dev-group tools and dependency-group additions need none. Pushing this repository's own branches is routine once a part is finished.
+- Get approval for framework installs, model downloads, deletion, persistent services and runs over five minutes; long runners take `--yes` when you asked; prior approval covers the agreed task and retries. Dev-group tools and dependency-group additions need none. Pushing this repository's own branches is routine once a part is finished.
 - Never create or edit issues, pull requests or discussions outside this account.
 - Respect explicit test deferrals; a TODO or saved result never authorizes a live test.
 - Fix a defect in code already being touched, then and there. Record a larger unrelated fix as a TODO entry.
@@ -32,7 +33,7 @@
 - [Folder rules](.agents/FOLDERS.md) own typed bindings, naming and the move checklist. Preserve model identity and shared assets through a move.
 - Preserve nonempty data by moving it to `C:/AI/trash`; delete only empty files and directories, and verify each resolved path first.
 - Preserve the evidence a tracked decision cites and the newest run per capability case; an older run nobody references may move to trash.
-- Use uv; the interpreter and the checks that run it are in [checks](.agents/CHECKS.md). Secrets are in `scripts/.env`, Hugging Face data in `data/huggingface/`.
+- Use uv; the interpreter and its checks are in [checks](.agents/CHECKS.md). Secrets are in `scripts/.env`, Hugging Face data in `data/huggingface/`.
 - Codex under [.agents/CODEX-HARNESS.md](.agents/CODEX-HARNESS.md): a command refusal is a hard stop; report what must be allowed.
 - Running under DeepSeek Harness: [.agents/DEEPSEEK-HARNESS.md](.agents/DEEPSEEK-HARNESS.md) covers its permissions, sandbox denials and the settled workarounds.
 
