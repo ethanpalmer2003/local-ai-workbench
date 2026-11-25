@@ -70,7 +70,11 @@ def needs_graphify(paths: Sequence[str]) -> bool:
 
 
 def graphify_commands(tool: str, root: Path) -> tuple[tuple[str, ...], ...]:
-    """The two passes graphify needs: extract, then re-cluster so hubs and communities stay current."""
+    """The two passes graphify needs: extract, then re-cluster so hubs and communities stay current.
+
+    `graphify-out` at the root is a junction into `scripts/state/cache`, so an incremental update keeps
+    writing the canonical path while the generated files stay in the cache tree.
+    """
     return (
         (tool, "update", root.as_posix(), "--no-cluster"),
         (tool, "cluster-only", root.as_posix(), "--no-label", "--no-viz"),

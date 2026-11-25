@@ -12,8 +12,8 @@
 # the private overlay repo for this host's harness profile; see harness/README.md
 /harness/overlay/
 
-# Graphify's local knowledge graph (generated, 9 MB)
-graphify-out/
+# The graph plugin needs this name at its canonical path; it is a junction into scripts/state/cache.
+/graphify-out/
 scripts/config/strata/.strata-mcp/
 scripts/config/strata/ram-budget-*.done
 scripts/config/strata/*.log
