@@ -2,6 +2,7 @@
 
 import sys
 
+from scripts.shared import consent
 from scripts.shared.changes import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
 from scripts.shared.code_changes import python_code_changed
 from scripts.shared.timing import timed
@@ -10,10 +11,21 @@ from scripts.tests.registry import TEST_CLASSES
 from scripts.tests.scoped_selection import select_test_classes
 
 if __name__ == "__main__":
+    if consent.manual_refused(sys.argv[1:]):
+        print(
+            "[REFUSE] the suite runs at commit (--commit, pre-commit hook) and at push "
+            "(--push, pre-push hook); it is not a by-hand command. Pass --manual to run it "
+            "anyway, or run one pytest file when iterating.",
+            flush=True,
+        )
+        raise SystemExit(2)
     pushing = "--push" in sys.argv[1:]
     committing = "--commit" in sys.argv[1:]
     # - the suite's own parser must not see the stage flag
-    sys.argv = [sys.argv[0], *[argument for argument in sys.argv[1:] if argument not in ("--push", "--commit")]]
+    sys.argv = [
+        sys.argv[0],
+        *[argument for argument in sys.argv[1:] if argument not in ("--push", "--commit", "--manual")],
+    ]
     arguments = sys.argv[1:]
     with timed("default regressions"):
         # - --push is the pre-push stage: every class when a code change is unpushed, none when only

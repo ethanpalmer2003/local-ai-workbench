@@ -21,8 +21,8 @@ MODULES: dict[str, tuple[str, tuple[str, ...]]] = {
     # - ComfyUI is vendor-managed and updated by hand, so it stays out of the automatic preflight
     "frameworks": ("scripts.download.frameworks.update_frameworks", ("--skip-comfyui", "--yes")),
     "models": ("scripts.download.models.updates", ()),
-    "gate": ("scripts.review", ("--all",)),
-    "suite": ("scripts.tests.run", ("--all",)),
+    "gate": ("scripts.review", ("--all", "--manual")),
+    "suite": ("scripts.tests.run", ("--all", "--manual")),
     "launchers": ("scripts.tests.cases.suites.live_frameworks", ("--yes",)),
     "backends": ("scripts.tests.cases.suites.quick_validation", ("--yes",)),
 }

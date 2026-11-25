@@ -1,7 +1,7 @@
 """Only static imports: a module loaded by name or path hides the dependency from every reader.
 
 The suite's scope follows the import graph, and that graph is parsed from source, so a module name
-built at runtime is invisible to it and the class that should have run is not selected. Seven places
+built at runtime is invisible to it and the class that should have run is not selected. Eight places
 earn an exception, each listed with the reason it cannot be written as an import statement.
 """
 
@@ -28,6 +28,9 @@ ALLOWED = {
     "scripts/benchmarks/tts_engines/resident.py": "piper runs from a framework directory placed on sys.path at launch",
     "scripts/config/comfyui/verify_node.py": "the installed node is loaded by path, the way ComfyUI loads it",
     "scripts/tests/cases/shared/gate/test_bat_launchers.py": "the check imports every module a batch file names",
+    "scripts/tests/cases/shared/gate/test_manual_entry.py": (
+        "executes both entry points the way -m does, so the refusal is tested, not the helper"
+    ),
     "scripts/tests/model_run.py": "the dry run imports the module named on the command line",
     "scripts/tests/registry.py": "discovers each test class from its file, then imports the name the path gives",
     "scripts/tests/cases/shared/regression/test_boundaries.py": (

@@ -10,5 +10,6 @@ cross-component runtime rules. Engine areas keep their own folder, the gate its 
   `benchmarks/` and `reports/` (measurement and report contracts), `workflows/` (ComfyUI graphs),
   `regression/` (suite boundaries).
 - Fixtures live in [tests/shared](../../shared/FIXTURES.md); execution and artifact rules:
-  [test guide](../../README.md). Run the change's tests with `python -m scripts.tests.run`, or every
-  class with `--all`.
+  [test guide](../../README.md). Run one pytest file when iterating; the runner needs `--manual`
+  (`python -m scripts.tests.run --manual`, or every class with `--all --manual`) because it
+  otherwise runs at commit and push.

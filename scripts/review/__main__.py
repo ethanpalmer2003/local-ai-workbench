@@ -38,7 +38,7 @@ from scripts.review.checks import (
     walrus,
 )
 from scripts.review.lists import text_files
-from scripts.shared import changes
+from scripts.shared import changes, consent
 from scripts.shared.changes import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
 from scripts.shared.import_graph import (
     REACH_DEPTH,
@@ -621,7 +621,7 @@ def full_gate(argv: list[str] | None = None) -> int:
         print("\n=== TEST SUITE ===", flush=True)
         started = time.perf_counter()
         tests_status = subprocess.run(
-            [str(project_cfg.VENV_DIR / "Scripts" / "python.exe"), "-m", "scripts.tests.run", "--all"],
+            [str(project_cfg.VENV_DIR / "Scripts" / "python.exe"), "-m", "scripts.tests.run", "--all", "--manual"],
             cwd=project_cfg.BASE_DIR,
             check=False,
         ).returncode
@@ -650,7 +650,7 @@ def main(argv: list[str] | None = None) -> int:
     _started_at = time.perf_counter()
     pushing = _flag(argv, "--push")
     committing = _flag(argv, "--commit")
-    argv = [argument for argument in argv if argument not in ("--push", "--commit")]
+    argv = [argument for argument in argv if argument not in ("--push", "--commit", "--manual")]
     baseline = True
     try:
         changed = changed_since_head() if committing else changed_since_upstream()
@@ -678,4 +678,12 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    if consent.manual_refused(sys.argv[1:]):
+        print(
+            "[REFUSE] the gate runs at commit (--commit, pre-commit hook) and at push "
+            "(--push, pre-push hook); it is not a by-hand command. Pass --manual to run it "
+            "anyway, or run one review section (python -m scripts.review.checks.<name>) when iterating.",
+            flush=True,
+        )
+        raise SystemExit(2)
     raise SystemExit(main())

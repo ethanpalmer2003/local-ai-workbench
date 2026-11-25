@@ -1,6 +1,6 @@
 # Code validation tooling
 
-What runs today. Use it to compare against other projects' stacks.
+What runs today.
 
 ## Levels
 
@@ -27,7 +27,7 @@ Measured on this machine; only the last two open a model or service. When to run
 | `... --prune` | installed packages nothing imports or declares, with the uninstall command |
 | `scripts/review/check_repo.bat` | the same, from a normal terminal |
 | `scripts/review/format_py.bat` | applies `ruff format` |
-| `python -m scripts.tests.run` | regression suite through pytest, timings and reports; scoped to the change, `--all` runs every class |
+| `python -m scripts.tests.run --manual` | regression suite through pytest, timings and reports; scoped to the change, `--all` runs every class, `--manual` by hand |
 | `python -m scripts.tests.validate` | frameworks, then gate, suite and live suites in one bar; `--models` adds the source check |
 | `python -m scripts.tools.stage_runner MODULE [ARGS...]` | wraps one long command in the same bar; `--stage-known KEY` takes the range from `stage_times` |
 | ... with `AI_MODEL_CHECKS=1` | adds asset/model checks kept out of regressions |
@@ -37,7 +37,7 @@ Measured on this machine; only the last two open a model or service. When to run
 | `python -m scripts.review.checks.similarity --code` | semantic duplicate pairs; needs the model |
 | `python -m scripts.review --scrub` | tree and history scan for personal terms before publishing |
 | `python -m scripts.benchmarks.audit_timing` | benchmark timing-contract inventory (printed, not gated) |
-| `python -m coverage run -m scripts.tests.run` | line coverage, then `coverage report` |
+| `python -m coverage run -m scripts.tests.run --manual` | line coverage, then `coverage report` |
 
 ## Owners
 

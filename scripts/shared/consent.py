@@ -10,6 +10,10 @@ uses, so a prompt would land in a double-clicked window that nobody watches; and
 reads or reports has nothing to agree to. Destructive tools carry their own `--apply` or `--dry-run`
 default instead, which is a better question than a duration, and an irreversible stop uses
 `confirm`, which asks every time.
+
+A third rule is about occasion, not duration: the gate and the suite run at commit and push through
+their hooks, never by hand. Their entry points refuse a manual full run unless it carries `--manual`;
+`--commit` and `--push` are the hook stages, so they always pass.
 """
 
 import argparse
@@ -20,6 +24,10 @@ from pathlib import Path
 LONG_RUN_SECONDS = 300
 # - the one spelling of the flag a caller passes instead of answering the prompt
 FLAG = "--yes"
+# - hook stage flags: pre-commit runs with --commit, pre-push with --push; anything else is by hand
+HOOK_STAGES = ("--commit", "--push")
+# - the explicit opt-in for running the whole gate or suite outside a hook
+MANUAL = "--manual"
 
 
 def is_long(expected_seconds: float) -> bool:
@@ -98,3 +106,8 @@ def flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         FLAG, action="store_true", help="confirm a run that takes minutes or stops something; otherwise ask"
     )
+
+
+def manual_refused(argv: list[str]) -> bool:
+    """Whether a gate or suite entry point must refuse: no hook stage flag and no explicit --manual."""
+    return MANUAL not in argv and not any(stage in argv for stage in HOOK_STAGES)
