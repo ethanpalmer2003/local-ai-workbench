@@ -295,6 +295,17 @@ class FrameworkUpdates(unittest.TestCase):
         self.assertIn("exit", summary.failures[0])
         self.assertEqual(summary.available, [])
 
+    def test_a_run_prints_where_its_minutes_went(self):
+        summary = updater.UpdateSummary()
+        summary.timings["benchmarks/demo"] = {"check": 1.5, "update": 2.0}
+        summary.timings["coding_agents/demo"] = {"check": 0.5}
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            summary.print_timings()
+        text = output.getvalue()
+        self.assertIn("| tool", text)
+        self.assertIn("2.0 s", text)
+        self.assertIn("| total", text)
+
     def test_a_current_only_table_drops_the_detail_column(self):
         summary = updater.UpdateSummary()
         tool = cfg.ToolSpec("benchmarks/demo", "", cfg.ReleaseType.SOURCE, category="other")

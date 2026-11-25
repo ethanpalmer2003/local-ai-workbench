@@ -26,6 +26,7 @@ from scripts.config import project_config as project_cfg
 from scripts.config.shared import stage_times
 from scripts.launchers import launch_util
 from scripts.shared import staleness
+from scripts.shared.tables import render_table
 
 STEP_RE = re.compile(r"^=== (.+) ===$")
 PROGRESS_RE = re.compile(r"^\[PROGRESS\] \S+ \[[#-]*\] (\d+)/(\d+)(?: (.*))?$")
@@ -277,13 +278,14 @@ def _mark(result: Result, stage: Stage) -> str:
 
 def summary(results: list[Result], stages: tuple[Stage, ...]) -> None:
     by_key = {stage.key: stage for stage in stages}
-    print()
-    print(f"{'stage':<12} {'result':<8} {'time':>9}  expected under")
-    for result in results:
-        stage = by_key[result.key]
-        print(f"{result.key:<12} {_mark(result, stage):<8} {result.seconds:>7.1f} s  {stage.high:.0f} s")
+    rows = [
+        (result.key, _mark(result, by_key[result.key]), f"{result.seconds:.1f} s", f"{by_key[result.key].high:.0f} s")
+        for result in results
+    ]
     spent = sum(result.seconds for result in results)
-    print(f"{'total':<12} {'':<8} {spent:>7.1f} s  planned about {sum(s.typical for s in stages):.0f} s")
+    rows.append(("total", "", f"{spent:.1f} s", f"planned about {sum(s.typical for s in stages):.0f} s"))
+    print()
+    print(render_table(rows, ("stage", "result", "time", "expected under")))
 
 
 def runs_dir(title: str) -> Path:

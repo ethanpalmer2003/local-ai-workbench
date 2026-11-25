@@ -87,6 +87,31 @@ class UpdateSummary:
     categories: dict[str, str] = field(default_factory=dict)
     kinds: dict[str, str] = field(default_factory=dict)
     group_keys: dict[str, str] = field(default_factory=dict)
+    timings: dict[str, dict[str, float]] = field(default_factory=dict)
+
+    def time(self, tool: cfg.ToolSpec, phase: str, started: float) -> None:
+        """Record one phase's wall time, so a run can show where its minutes went."""
+        self.timings.setdefault(tool_label(tool), {})[phase] = time.perf_counter() - started
+
+    def print_timings(self) -> None:
+        """Per-tool check and update seconds; a phase that never ran shows a dash."""
+        if not self.timings:
+            return
+        rows = []
+        for label in sorted(self.timings):
+            values = self.timings[label]
+            rows.append(
+                (
+                    label,
+                    f"{values['check']:.1f} s" if "check" in values else "-",
+                    f"{values['update']:.1f} s" if "update" in values else "-",
+                )
+            )
+        check = sum(values.get("check", 0.0) for values in self.timings.values())
+        update = sum(values.get("update", 0.0) for values in self.timings.values())
+        rows.append(("total", f"{check:.1f} s", f"{update:.1f} s"))
+        print("\n=== TIMINGS ===")
+        print(render_table(rows, ("tool", "check", "update")))
 
     def groups(self) -> tuple[tuple[str, list[str]], ...]:
         # - actionable rows first, so a reader sees what changes before what is already current
@@ -767,10 +792,13 @@ def check_tools(tools: list[cfg.ToolSpec], folder: Path, summary: UpdateSummary,
                 f"[PROGRESS] frameworks [{'#' * filled}{'-' * (20 - filled)}] {index}/{total} {tool.name}", flush=True
             )
         captured = io.StringIO()
+        started = time.perf_counter()
         try:
             with contextlib.redirect_stdout(captured), contextlib.redirect_stderr(captured):
                 success = process_tool(tool, folder, True, summary=summary)
         finally:
+            if summary is not None:
+                summary.time(tool, "check", started)
             log.write(captured.getvalue())
             log.flush()
         if not success:
@@ -827,7 +855,9 @@ def apply_updates(tools: list[cfg.ToolSpec], folder: Path, summary: UpdateSummar
     updated, failed = [], []
     for index, tool in enumerate(selected, 1):
         print(f"[{index}/{len(selected)}] Updating {tool_label(tool)}", flush=True)
+        started = time.perf_counter()
         success = apply_one_update(tool, folder, log)
+        summary.time(tool, "update", started)
         (updated if success else failed).append(tool_label(tool))
     for title, names in (("UPDATE COMMAND COMPLETED", updated), ("UPDATE FAILED", failed)):
         if names:

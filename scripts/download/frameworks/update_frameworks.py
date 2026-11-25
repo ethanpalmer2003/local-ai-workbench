@@ -171,6 +171,7 @@ def main() -> int:
                     pi_packages.sync(apply=True)
                 failed = updater.apply_updates(tools, Path(folder), summary, log) or failed
                 failed = toolchains.apply(toolchain_rows) or failed
+                summary.print_timings()
     failed = run_requested_build(args, rdna_allowed) or failed
     print(f"\nDetails: {log_path}")
     print("\n=== COMPLETE ===")
