@@ -34,6 +34,8 @@ Decisions only you can make.
 
 - [ ] Judge the Q2_K and Q4_K_M encoder pair on quality: both clips were saved and only timing was written up, so watch the two and record which one keeps. [Screen](reviews/COMFYUI-VIDEO-2026-11-09.md). ~15 min
 
+- [ ] Decide who owns `scripts/config/strata/strata-swift-iq2_xs.json`: twice on 2026-11-24 it was rewritten from one-space to two-space JSON with one `{AI_ROOT}` argument expanded to `C:\AI\...`, and a `.bak` sibling appeared, while nothing in `scripts/` writes either (no code creates `.bak`). Both times it followed a suite run, but a rerun with the file read-only left it untouched and no test failed, so the writer is probably the Strata app or its control script normalizing a config it was pointed at. Options: confirm the vendor tool may rewrite it and keep that file out of git, or make whichever caller passes a materialized copy under `state/generated`. ~20 min
+
 ## Unattended
 Code work that runs here without a live model.
 
