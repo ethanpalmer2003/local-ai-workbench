@@ -3,6 +3,7 @@
 import importlib
 import unittest
 
+from scripts.config import project_config as project_cfg
 from scripts.review.lists import entry_points
 
 
@@ -30,6 +31,10 @@ class EntryPointTests(unittest.TestCase):
         text = entry_points.report()
         for module in entry_points.ALL:
             self.assertIn(module, text)
+
+    def test_the_reporters_page_is_current(self):
+        page = project_cfg.BASE_DIR / "scripts/review/lists/GENERATED-REPORTERS.md"
+        self.assertEqual(page.read_text(encoding="utf-8"), entry_points.reporters_page())
 
 
 if __name__ == "__main__":
