@@ -15,6 +15,15 @@
 | A commit that a hook refused still reads as a success, and the new commit is missing | `git commit ...; git log` reports the exit code of the last command in the chain | Run the commit alone, or chain with `&&`, then confirm `git log --oneline -1` names the new commit |
 | Every `pwsh` call costs 20-40 s | An unbounded glob or listing over the whole tree | `Select-Object -First N`, `-Name`, or scope the path to one folder |
 | The same command re-run three times with the same failure | No root cause was named before the retry | Stop, read the message once, name the cause, then change the command |
+| Ran the full gate and suite by hand before committing | The hooks were going to run them anyway: pre-commit runs the scoped gate and suite, pre-push the full set | Commit and let the hooks validate; run a single check by hand only when iterating on it |
+| Re-ran an 80 s suite to read a number that scrolled past | stdout treated as the record instead of the artifact | Read `artifacts/summary.json` and the closing `[SUITE]`/`[OUTPUT]` lines; the runner writes both, so no result needs a rerun |
+| Answered from a whole-tree walk instead of the indexes | Reached for `Get-ChildItem -Recurse` before `cbm_search` or `query_graph` | Structural questions go to the indexes first per [code search](CODE-SEARCH.md), `git grep` for text; the scan refusal names the bounded tool |
+| A new test fails on first run against the author's own helper | Asserted an imagined outcome instead of tracing the logic | Hand-trace the kept and removed sets, then assert the exact list; the suite catches the slip in seconds |
+| A temp-dir test fails on files the test just wrote | Assertions sit outside the `with TemporaryDirectory` block, after cleanup removed them | Keep assertions inside the block |
+| Iterated on a doc budget through full gate runs | Edited blind, one word at a time, paying a gate per attempt | Count first with the docs word counter directly, then run the gate once |
+| Non-ASCII punctuation in a doc edit | Typed an en-dash where the repo requires ASCII | Write `-`; the typography section refuses the rest |
+| Scratch scripts pile up in `scripts/state/temp` | One-off probes written into the tree and left there | Scratch goes to `$env:TEMP` or is deleted the same session; the 7-day scratch prune and the gate prune report are the backstop, not the plan |
+| Implemented a placement, then reverted it on stated preference | Guessed at a judgment call (junction vs real dir) instead of asking | When two placements both work, ask with the question tool before implementing |
 
 - A failing call is not a repository defect: look for its class above before retrying, and add a row when none fits. A retry of the same command is not a fix.
 - Harness-specific symptoms - sandbox denials, low-integrity labels, the 60 s foreground cap, heredocs, `python -c` quoting and a long silent run - stay in [the harness page](DEEPSEEK-HARNESS.md), which owns how this host behaves rather than how a step went wrong.

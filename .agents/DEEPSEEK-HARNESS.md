@@ -9,11 +9,11 @@
 - No multi-line Python through `pwsh -Command`, and no `python -c` one-liner carrying quotes, braces or newlines: heredocs break, PowerShell rewrites the quoting, and a bad edit corrupts files. Use a scratch script or the file-edit tool.
 - Staging is the other silent one: stage explicit paths, never `git add -A`. Guards: [failure modes](FAILURES.md).
 - PowerShell flattens `@(@('a','b'))` to two strings, so the loop indexes characters. Use Python for pair lists.
+- PowerShell has no `tail`, `grep`, `head` or `cut`: page with `Select-Object -First/-Last N` and search with `Select-String`.
 - A denial is a policy decision, not a retry prompt: escalate that exact operation once, then report the outcome.
 - Repo search layers: the `dsh-graphify` plugin (clone `QuantumKuba/dsh-graphify-plugin`, then
   `npm install --omit=dev`; a tarball or link install cannot import `@deepseek-ai/schemastery`) serves the graph
-  built by `graphifyy 0.9.112`; it sits in `graphify-out/` at the root, the canonical path its MCP server requires and `.gitignore` keeps untracked. A code-only rebuild needs no model. The earlier npm 404
-  was a wrong repository name, not a withdrawn package.
+  built by `graphifyy 0.9.112`; it sits in `graphify-out/` at the root, the canonical path its MCP server requires and `.gitignore` keeps untracked. A code-only rebuild needs no model.
 - A foreground `pwsh` command is capped at 60 s, then promoted to a background job: stop it with `job_kill` rather than reading it, and start anything known to run minutes with `run_in_background`. The time budget for failing and slow calls alike: [failure modes](FAILURES.md).
 - Repo search tooling, its install steps and its measured behavior: [code search](CODE-SEARCH.md).
 - The built-in `web_search` bills a DeepSeek account and answers `402 Insufficient Balance` when that account is empty, whatever model route the conversation uses; an OpenCode subscription cannot pay for it, and neither can `OPENCODE_ENABLE_EXA` or `opencode.json`, which configure the OpenCode CLI rather than this harness. Searching goes through the Exa MCP instead: the profile bundle `%USERPROFILE%\.dsh\bundles\exa-mcp` mounts `https://mcp.exa.ai/mcp` and exposes `mcp__exa__web_search_exa` and `mcp__exa__web_fetch_exa` with no credential. When those tools are absent, `web_fetch` still reaches a Bing query with `format=rss` or the GitHub search API, while DuckDuckGo and Mojeek return captchas; say a general search is unavailable rather than guessing.
