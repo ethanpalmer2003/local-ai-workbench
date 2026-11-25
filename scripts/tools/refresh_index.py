@@ -102,9 +102,12 @@ def plan(paths: Sequence[str], root: Path, resolve: Callable[[str], str] = binar
 
 def _run_commands(commands: Sequence[Sequence[str]], cwd: str | None) -> tuple[int, str]:
     """Run commands in order, stopping at the first failure; the exit code and its last output line."""
+    # - graphify copies a curated graph into a dated folder before each overwrite; that is 11 MB a day
+    #   of duplicate graph, and the git baseline plus the graph itself already cover a bad write
+    environment = {**os.environ, "GRAPHIFY_NO_BACKUP": "1"}
     code, tail = 0, ""
     for command in commands:
-        result = subprocess.run(list(command), capture_output=True, text=True, check=False, cwd=cwd)
+        result = subprocess.run(list(command), capture_output=True, text=True, check=False, cwd=cwd, env=environment)
         code = result.returncode
         output = (result.stderr or result.stdout).strip()
         tail = output.splitlines()[-1] if output else ""
