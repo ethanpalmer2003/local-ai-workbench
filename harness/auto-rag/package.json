@@ -1,0 +1,14 @@
+{
+  "name": "@local/auto-rag",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Requires code questions to consult CBM/Graphify before normal tools run.",
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": ["index.js", "cordis.patch.yml", "locale", "icon.svg"],
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+}

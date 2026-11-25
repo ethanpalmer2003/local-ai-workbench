@@ -1,0 +1,4 @@
+- insert:
+    - id: auto-rag
+      name: '@local/auto-rag'
+      config: {}

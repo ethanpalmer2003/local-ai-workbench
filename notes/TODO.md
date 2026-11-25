@@ -45,6 +45,8 @@ Code work that runs here without a live model.
 
 - [ ] Replace the five literal catalog labels in `launcher_speech.py` with `ModelId` names against [models](../scripts/config/models/README.md); the rename tool rewrites the strings today, so they are consistent but untyped. ~15 min
 
+- [ ] Evaluate narrower auto-rag allowlists and bundle-executed auto-retrieval: option A is trimming the retrieval-only phase to per-question tool subsets (for example trace-only for caller questions), option B is having the `auto-rag` bundle run the lookup itself through `ctx.tools.execute` and inject the evidence instead of waiting for the model. Both need a trigger classifier good enough to pick the query, plus cost caps, before either replaces the current deny-and-steer gate. ~30-45 min
+
 - [ ] Merge the two import rewriters (`rename_path` and `rewrite_imports`): they overlap, and the duplicate baseline records the shared block, so a merge needs a behavior-parity pass first. ~30-45 min
 
 - [ ] Consolidate the llama.cpp profile runner onto `trial.running_server`; the hand-rolled lifecycle is live-only, so the change needs a run that proves identical results. ~1 h

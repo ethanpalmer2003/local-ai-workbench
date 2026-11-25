@@ -1,0 +1,1 @@
+{ "meta": { "title": "Retrieval gate", "description": "Forces code questions through CBM/Graphify first: non-index tools are denied until one lookup succeeds, and a direct answer is steered back, with a cap.", "detail": "../../../.agents/AUTO-RAG.md" } }
