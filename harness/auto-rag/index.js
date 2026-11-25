@@ -15,11 +15,10 @@ const DEFAULT_RETRIEVAL = [
   String.raw`^mcp__.*(cbm|codebase|graphify|knowledge).*`,
 ];
 
-// - user text that arms the gate: code/architecture/debug/test wording or a file path
-const TRIGGER = [
-  /\b(function|method|class|caller|callee|symbol|trace|definition|reference|import|dependency|dependencies|architecture|refactor|test|pytest|bug|error|exception|stack trace|where is|where are|who calls|what calls|how does|how do|find the|find all|locate|implement|signature)\b/i,
-  /\.(py|js|ts|md|yml|yaml|json|toml|bat|ps1|tsx|jsx|cpp|h|rs|go)\b/,
-];
+// - arming signals: a code verb is required; a bare file suffix never arms alone,
+//   so mentioning a filename in plain discussion does not trigger retrieval-only mode
+const VERB = /\b(function|method|class|caller|callee|symbol|trace|definition|reference|import|dependency|dependencies|architecture|refactor|test|pytest|bug|error|exception|stack trace|where is|where are|who calls|what calls|how does|how do|find the|find all|locate|implement|signature|fix)\b/i;
+const SUFFIX = /\.(py|js|ts|md|yml|yaml|json|toml|bat|ps1|tsx|jsx|cpp|h|rs|go)\b/;
 
 const DENY_REASON =
   'Retrieval gate: this looks like a code/architecture question, so consult the code index first ' +
@@ -104,8 +103,10 @@ export function apply(ctx, config = {}) {
         .join('\n'))
       .join('\n');
     if (userText.length > 0) {
+      // - the suffix only refines: a verb must be present, otherwise a bare
+      //   filename mention in plain discussion would arm the gate
       states.set(agent, {
-        required: TRIGGER.some((pattern) => pattern.test(userText)),
+        required: VERB.test(userText),
         satisfied: false,
         steers: 0,
       });

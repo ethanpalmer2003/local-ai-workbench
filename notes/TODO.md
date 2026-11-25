@@ -49,6 +49,8 @@ Code work that runs here without a live model.
 
 - [ ] Merge the two import rewriters (`rename_path` and `rewrite_imports`): they overlap, and the duplicate baseline records the shared block, so a merge needs a behavior-parity pass first. ~30-45 min
 
+- [ ] Decide whether the three file-set vocabularies stay split: `scripts/review/lists/sources.py` (maintained set), `scripts/review/lists/text_files.py` (tracked-text set) and `scripts/shared/changes.py` (changed set). The similarity pass found no shingle overlap, so options are keep all three (distinct meanings) or merge into one vocabulary with filters. ~20 min
+
 - [ ] Consolidate the llama.cpp profile runner onto `trial.running_server`; the hand-rolled lifecycle is live-only, so the change needs a run that proves identical results. ~1 h
 
 - [ ] Hash-check the installed catalog weights once: the download path now verifies each new transfer's `sha256`, but weights installed before that check have never been compared, and `download_model` still skips an existing file by size alone. Read every `catalog.json` entry with a recorded digest, report mismatches, and decide whether a mismatch is re-downloaded or moved to trash. ~30 min for the small ones, ~1 h if the large multimodal weights are included
