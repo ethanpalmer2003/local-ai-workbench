@@ -232,14 +232,15 @@ def collect_requests(
     for label, prompt in prompts.items():
         monitor.stage = label
 
-        def operation():
+        # - bound as defaults so each iteration keeps its own prompt and label
+        def operation(prompt=prompt, label=label):
             return stream_request(
                 "http://127.0.0.1:9952", prompt, args, run.logs / f"tokens-{build}-{label}.jsonl", deadline
             )
 
         if label.startswith("warmup"):
             values = []
-            lifecycle.warmup(lambda: values.append(operation()))
+            lifecycle.warmup(lambda values=values: values.append(operation()))
             row = values[0]
         else:
             row, timing = lifecycle.measure(operation)

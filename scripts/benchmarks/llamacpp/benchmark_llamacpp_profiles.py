@@ -219,7 +219,7 @@ def run_profile(
                 cold: list[Sample] = []
                 # - cache_prompt=False: the warmup is also the prefill measurement
                 lifecycle.warmup(
-                    lambda: cold.append(
+                    lambda cold=cold, full_prompt=full_prompt: cold.append(
                         completion_request(base_url, full_prompt, warmup_tokens, request_timeout, False)
                     )
                 )
@@ -231,7 +231,9 @@ def run_profile(
                 for index in range(repeats):
                     monitor.stage = f"request-{label}-{index + 1}"
                     sample, _ = lifecycle.measure(
-                        lambda: completion_request(base_url, full_prompt, max_tokens, request_timeout, True)
+                        lambda full_prompt=full_prompt: completion_request(
+                            base_url, full_prompt, max_tokens, request_timeout, True
+                        )
                     )
                     results[label].append(sample)
     finally:

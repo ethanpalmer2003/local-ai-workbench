@@ -288,7 +288,7 @@ def run_backend(
                 for index in range(1, count + 1):
                     monitor.stage = f"request-{index}"
                     sample, timing = lifecycle.measure(
-                        lambda: generate(
+                        lambda index=index: generate(
                             port, run_root / "artifacts" / f"{backend}-{index}.wav", profile, text, timeout
                         )
                     )

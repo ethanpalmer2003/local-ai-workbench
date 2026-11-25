@@ -37,7 +37,6 @@ Decisions only you can make.
 ## Unattended
 Code work that runs here without a live model.
 
-- [ ] Finish adopting ruff `B` (bugbear): 28 findings remain, all `B023` closures that capture a loop variable. The three `B904` (`raise ... from err`) and the `B007` unused loop variable are fixed, and `B009` stays reverted because ComfyUI's `INPUT_TYPES` is dynamic. Bind each captured name as a keyword-only default (`lambda prompt=prompt: ...`, never a positional default) after confirming the callback is not called with that parameter positionally; two scripted attempts mangled lambdas that already had parameters, so do it by hand or with a parser that rewrites only keyword defaults. Then add `B` to `select`. Six other `B` findings (`B905`, `B007`) are already fixed, and `B009` stays reverted because ComfyUI's `INPUT_TYPES` is dynamic. ~1 h
 
 - [ ] Replace the custom line-length check with ruff `E501` and delete the 5.7 s gate section: measure the `E501` hit list first, because the current check exempts template and token lines, then keep the exemption as a handful of per-file ignores. ~30 min
 

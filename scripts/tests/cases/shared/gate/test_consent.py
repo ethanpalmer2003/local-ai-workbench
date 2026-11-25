@@ -29,7 +29,9 @@ class ConsentTests(unittest.TestCase):
         cases = (("yes\n", True), (" YES \n", True), ("no\n", False), ("", False))
         for answer, expected in cases:
             with (
-                patch("scripts.shared.consent.sys.stdin", Mock(isatty=lambda: True, readline=lambda: answer)),
+                patch(
+                    "scripts.shared.consent.sys.stdin", Mock(isatty=lambda: True, readline=lambda answer=answer: answer)
+                ),
                 contextlib.redirect_stdout(io.StringIO()),
             ):
                 self.assertEqual(consent.ask("Full validation", 600), expected, answer)

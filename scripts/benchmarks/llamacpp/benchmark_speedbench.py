@@ -54,7 +54,9 @@ def run_candidate(
         )
         for sample in samples:
             result, timing = lifecycle.measure(
-                lambda: bench["run_one"](sample, f"{base}/v1/chat/completions", trial.alias, 256, inputs, 120),
+                lambda sample=sample: bench["run_one"](
+                    sample, f"{base}/v1/chat/completions", trial.alias, 256, inputs, 120
+                ),
                 accept=lambda value: value.ok,
             )
             rows.append({**asdict(result), **timing})

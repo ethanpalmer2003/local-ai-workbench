@@ -168,7 +168,9 @@ def run_arm(
             vram.stage = "measured"
             for index in range(args.repeats):
                 prompt = PREFIX + f"\nSample {index}: explain Python lists versus tuples in at least 300 words."
-                row, timing = lifecycle.measure(lambda: request(connection, prompt, args.tokens, deadline))
+                row, timing = lifecycle.measure(
+                    lambda prompt=prompt: request(connection, prompt, args.tokens, deadline)
+                )
                 row.update(timing)
                 row["sample"] = index
                 result["requests"].append(row)

@@ -141,7 +141,7 @@ def run_block(
             memory.stage = "measured"
             for repetition in range(repeats):
                 for clip in clips:
-                    row, timing = lifecycle.measure(lambda: transcribe(engine, clip, deadline))
+                    row, timing = lifecycle.measure(lambda clip=clip: transcribe(engine, clip, deadline))
                     row.update(timing)
                     row["repetition"] = repetition
                     result["samples"].append(row)

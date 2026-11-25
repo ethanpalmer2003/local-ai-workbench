@@ -76,7 +76,7 @@ line-ending = "auto"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "UP", "C4", "SIM", "I", "S", "C90", "PT", "RET", "N", "RUF100", "PLC0415"]
+select = ["E4", "E7", "E9", "F", "UP", "C4", "SIM", "I", "S", "C90", "PT", "RET", "N", "RUF100", "PLC0415", "B"]
 # - StrEnum changes str(member); retain existing enum string representations
 # - S603/S606/S607: known local executables are launched by absolute path
 # - S310: curated HTTPS URLs are fetched, not user-supplied ones
@@ -91,6 +91,8 @@ ignore = ["UP042", "S603", "S606", "S607", "S310"]
 "scripts/tests/**" = ["S101", "PT009", "PT027", "PT018", "N802", "N803", "S106", "S307", "PLC0415"]
 # - ComfyUI nodes and optional paths import their runtime only when that path runs
 "scripts/config/comfyui/ltx_prompt_cache.py" = ["N802", "PLC0415"]
+# - the ComfyUI node handler is looked up by name on an arbitrary class object
+"scripts/config/comfyui/verify_node.py" = ["B009"]
 "scripts/benchmarks/personal/comfyui/comfyui_video.py" = ["PLC0415"]
 "scripts/launchers/koboldcpp/kobold.py" = ["PLC0415"]
 "scripts/launchers/koboldcpp/kobold_lite.py" = ["PLC0415"]

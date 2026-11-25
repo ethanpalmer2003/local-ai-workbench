@@ -98,7 +98,7 @@ def _collect_samples(timer, infer, clips, repetitions, result) -> None:
     """Measure every clip for each repetition and append the rows to the run result."""
     for repetition in range(repetitions):
         for index, clip in enumerate(clips):
-            text, timing = timer.measure(lambda: infer(index))
+            text, timing = timer.measure(lambda index=index: infer(index))
             result["samples"].append(
                 {
                     **timing,

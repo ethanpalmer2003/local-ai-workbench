@@ -75,7 +75,7 @@ def run_trial(
         for name, prompt in prompts.items():
             request_start = time.monotonic()
             response, timing = lifecycle.measure(
-                lambda: post_json(
+                lambda prompt=prompt: post_json(
                     f"{base}/completion",
                     {
                         "prompt": prompt,

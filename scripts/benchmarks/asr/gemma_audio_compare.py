@@ -105,12 +105,16 @@ def run_arm(
                     if index == 0:
                         values = []
                         lifecycle.warmup(
-                            lambda: values.append(backend.transcribe(body, "application/json")),
+                            lambda values=values, body=body: values.append(
+                                backend.transcribe(body, "application/json")
+                            ),
                             includes_model_load=True,
                         )
                         data, _ = values[0]
                     else:
-                        (data, _), timing = lifecycle.measure(lambda: backend.transcribe(body, "application/json"))
+                        (data, _), timing = lifecycle.measure(
+                            lambda body=body: backend.transcribe(body, "application/json")
+                        )
                 except RuntimeError as error:
                     # - one bad clip must not throw away the other arm's measurements
                     result["warmups" if index == 0 else "samples"].append(

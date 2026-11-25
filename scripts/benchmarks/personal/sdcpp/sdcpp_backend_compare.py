@@ -178,7 +178,7 @@ def arm(
             for index in range(2):
                 body = request_body(PROMPT + f" View {index + 1}: gentle clouds." if fresh_prompts else PROMPT)
                 row, timing = lifecycle.measure(
-                    lambda: image_request(
+                    lambda body=body, index=index: image_request(
                         body, output.artifacts / f"image-{index}.png", min(150, deadline - time.monotonic())
                     )
                 )

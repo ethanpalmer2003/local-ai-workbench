@@ -186,7 +186,7 @@ class AvalonEngine:
                     monitor.stage = f"warmup-{label}"
                     warmup_started = time.perf_counter()
                     lifecycle.warmup(
-                        lambda: completion_request(
+                        lambda full_prompt=full_prompt: completion_request(
                             base_url, full_prompt, options.warmup_tokens, options.request_timeout, use_cache
                         )
                     )
@@ -194,7 +194,7 @@ class AvalonEngine:
                     monitor.stage = f"request-{label}"
                     for _ in range(options.repeats):
                         sample, _ = lifecycle.measure(
-                            lambda: completion_request(
+                            lambda full_prompt=full_prompt: completion_request(
                                 base_url, full_prompt, options.max_tokens, options.request_timeout, use_cache
                             )
                         )

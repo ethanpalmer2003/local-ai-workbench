@@ -201,7 +201,7 @@ def run_arm(arm: str, paths: RunPaths, context: dict[str, Any], count: int, dead
             lifecycle.warmup(lambda: result.update(warmup=sample(arm, -1, paths, deadline)), includes_model_load=True)
             memory.stage = "measured"
             for index in range(count):
-                row, timing = lifecycle.measure(lambda: sample(arm, index, paths, deadline))
+                row, timing = lifecycle.measure(lambda index=index: sample(arm, index, paths, deadline))
                 row.update(timing)
                 result["samples"].append(row)
                 print(f"[{arm}] {index + 1}/{count}: {row['seconds']:.3f}s", flush=True)

@@ -169,7 +169,7 @@ def main() -> None:
             memory.stage = "warmup"
             for transport in ("sse", "audio"):
                 lifecycle.warmup(
-                    lambda: measure(
+                    lambda transport=transport: measure(
                         transport, "A short warmup.", 0, args.request_timeout, run.artifacts / f"warmup-{transport}.wav"
                     ),
                     includes_model_load=transport == "sse",
@@ -185,7 +185,7 @@ def main() -> None:
                 for transport in ("sse", "audio") if repeat % 2 == 0 else ("audio", "sse"):
                     memory.stage = f"{transport}-{repeat}"
                     result, timing = lifecycle.measure(
-                        lambda: measure(
+                        lambda transport=transport, repeat=repeat: measure(
                             transport,
                             text,
                             1234 + repeat,

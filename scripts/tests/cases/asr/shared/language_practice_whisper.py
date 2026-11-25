@@ -74,7 +74,7 @@ def _start_services(
             else "http://127.0.0.1:18885/api/extra/version"
         )
         wait_ready(
-            lambda: http_ready(health, strict=True),
+            lambda health=health: http_ready(health, strict=True),
             max(0.0, deadline - time.monotonic()),
             label=f"{name} (logs: {run.logs})",
             process=process,

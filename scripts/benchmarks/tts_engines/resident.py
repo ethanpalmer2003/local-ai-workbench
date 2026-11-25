@@ -129,7 +129,7 @@ def worker(engine: str, samples: int, run: RunPaths, texts: list[str] | None = N
             timer.warmup(lambda: infer(texts[0]))
             for index in range(samples):
                 text = texts[index % len(texts)]
-                (audio, rate), timing = timer.measure(lambda: infer(text))
+                (audio, rate), timing = timer.measure(lambda text=text: infer(text))
                 if len(audio) == 0:
                     raise ValueError("Empty generated waveform")
                 output = run.artifacts / f"{engine}-{index}.wav"
