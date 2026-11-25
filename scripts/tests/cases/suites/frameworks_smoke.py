@@ -507,6 +507,16 @@ class StateAndReadiness(unittest.TestCase):
         self.assertFalse(launch_util.wait_for_backend(12345, 0))
 
 
+class RunTotals(unittest.TestCase):
+    def test_a_clean_run_counts_tests_as_passed_minus_skips(self):
+        outcomes = [("passed", "a", ""), ("passed", "b", ""), ("skipped", "c", "reason")]
+        self.assertEqual(run_totals(3, 0, outcomes), {"tests": 3, "passed": 2, "skipped": 1, "failed": 0})
+
+    def test_failures_and_errors_both_count_as_failed(self):
+        outcomes = [("passed", "a", ""), ("failure", "b", ""), ("error", "c", "")]
+        self.assertEqual(run_totals(3, 2, outcomes), {"tests": 3, "passed": 1, "skipped": 0, "failed": 2})
+
+
 class _Tee:
     """Mirror runner output to the console and the regression log."""
 
@@ -562,6 +572,7 @@ DEFAULT_CLASSES: tuple[type[unittest.TestCase], ...] = (
     StateAndReadiness,
     ProxyHTTP,
     LauncherBehaviors,
+    RunTotals,
 )
 
 
@@ -621,6 +632,13 @@ class _PytestRun:
     def __init__(self) -> None:
         self.seconds: dict[str, float] = {}
         self.outcomes: list[tuple[str, str, str]] = []
+        self.collected = 0
+        self.failed = 0
+
+    def pytest_sessionfinish(self, session, exitstatus) -> None:
+        # - pytest 9 fills testscollected at session finish, not when collection ends
+        self.collected = session.testscollected
+        self.failed = session.testsfailed
 
     def pytest_runtest_logreport(self, report) -> None:
         self.seconds[report.nodeid] = self.seconds.get(report.nodeid, 0.0) + report.duration
@@ -631,6 +649,12 @@ class _PytestRun:
             self.outcomes.append((status, report.nodeid, report.longreprtext))
         elif report.when == "call" and report.passed:
             self.outcomes.append(("passed", report.nodeid, ""))
+
+
+def run_totals(collected: int, failed: int, outcomes: list[tuple[str, str, str]]) -> dict[str, int]:
+    """Counts a finished run, so the artifact states them instead of a terminal line that scrolls away."""
+    skipped = sum(1 for status, _, _ in outcomes if status == "skipped")
+    return {"tests": collected, "passed": collected - failed - skipped, "skipped": skipped, "failed": failed}
 
 
 def _node_ids(classes: tuple[type[unittest.TestCase], ...]) -> list[str]:
@@ -657,6 +681,7 @@ def _run_regressions(
 
     from scripts.tests.shared.model_free import model_free_boundary
 
+    started = time.perf_counter()
     runner = _PytestRun()
     console_out, console_err = sys.stdout, sys.stderr
     with log_path.open("w", encoding="utf-8") as log:
@@ -689,6 +714,24 @@ def _run_regressions(
         report.error = f"{sum(1 for status, _, _ in runner.outcomes if status == 'failure')} failures, "
         report.error += f"{sum(1 for status, _, _ in runner.outcomes if status == 'error')} errors"
     report.save(output)
+    totals = run_totals(runner.collected, runner.failed, runner.outcomes)
+    # - one file states the outcome, so nobody has to re-run the suite to read a count that scrolled past
+    summary = {
+        "status": report.status,
+        "reason": report.settings.get("reason"),
+        "seconds": round(time.perf_counter() - started, 1),
+        "test_classes": len(classes),
+        **totals,
+        "artifacts": str(output.artifacts),
+        "failures": str(output.artifacts / "unittest.txt"),
+        "log": str(log_path),
+    }
+    (output.artifacts / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    print(
+        f"[SUITE] {totals['passed']} passed, {totals['skipped']} skipped, {totals['failed']} failed "
+        f"in {summary['seconds']} s ({len(classes)} classes)"
+    )
+    print(f"[OUTPUT] {output.artifacts}")
     print(f"[LOG] regression details: {log_path}")
     print(f"[LOG] failure details: {output.artifacts / 'unittest.txt'}")
     if code:
