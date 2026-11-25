@@ -1,6 +1,12 @@
-"""Aligned console tables: the one renderer a plan or listing prints through."""
+"""Aligned console tables and status fields: the renderers a plan or listing prints through."""
 
 from collections.abc import Sequence
+
+
+def render_fields(fields: Sequence[tuple[str, str]]) -> str:
+    """Aligned `label: value` lines for a status block; a table would be a header for two rows."""
+    width = max((len(label) for label, _value in fields), default=0)
+    return "\n".join(f"{label.ljust(width)}: {value}" for label, value in fields)
 
 
 def render_table(rows: Sequence[Sequence[str]], columns: Sequence[str]) -> str:

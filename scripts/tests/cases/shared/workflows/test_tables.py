@@ -9,7 +9,7 @@ from unittest.mock import patch
 from scripts.config import project_config as project_cfg
 from scripts.config.models import ModelDownload
 from scripts.download.models import download_catalog
-from scripts.shared.tables import render_table
+from scripts.shared.tables import render_fields, render_table
 from scripts.tests.shared.paths import CasePaths
 
 
@@ -26,6 +26,13 @@ class TableTests(unittest.TestCase):
 
     def test_no_rows_renders_the_header_and_rule_only(self):
         self.assertEqual(len(render_table([], ("one",)).splitlines()), 2)
+
+    def test_fields_align_their_labels_without_a_table_header(self):
+        text = render_fields((("Local commit", "base"), ("Upstream commit", "upstream")))
+        self.assertEqual(text.splitlines(), ["Local commit   : base", "Upstream commit: upstream"])
+
+    def test_no_fields_render_nothing(self):
+        self.assertEqual(render_fields(()), "")
 
 
 class ModelListingTests(unittest.TestCase):

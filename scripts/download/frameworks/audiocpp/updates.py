@@ -15,6 +15,7 @@ from scripts.config.trash import trash_path
 from scripts.download.frameworks import update_shared as shared
 from scripts.download.frameworks import update_types as cfg
 from scripts.download.frameworks.update_types import ReleaseType, ToolSpec
+from scripts.shared.tables import render_fields
 
 
 def legacy_asset(directory: Path) -> str | None:
@@ -98,8 +99,7 @@ def process_pypi(
     setup_mecab = import_module("scripts.download.frameworks.audiocpp.setup_mecab")
     version, wheel = setup_mecab.latest_wheel(tool.package or "")
     installed = setup_mecab.installed_version(destination)
-    print(f"Local version : {installed or 'NOT INSTALLED'}")
-    print(f"Latest version: {version}")
+    print(render_fields((("Local version", installed or "NOT INSTALLED"), ("Latest version", version))))
     needed = installed != version
     if summary is not None:
         summary.record(tool, "available" if needed else "current")

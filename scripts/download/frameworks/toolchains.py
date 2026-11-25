@@ -15,6 +15,8 @@ from pathlib import Path
 
 import requests
 
+from scripts.shared.tables import render_table
+
 VERSION = re.compile(r"(\d+)\.(\d+)(?:\.(\d+))?")
 TAIL = 8
 
@@ -96,21 +98,22 @@ def _row(tool: Toolchain) -> Row:
 def check() -> list[Row]:
     print("\n=== TOOLCHAINS ===")
     rows: list[Row] = []
+    view: list[tuple[str, str, str]] = []
     for tool in toolchains():
         row = _row(tool)
         current = _version(row.current)
         latest = _version(tool.latest() or "") if row.status == "checking" else None
         if row.status == "missing":
-            print(f"- {row.name}: not installed")
+            view.append((row.name, "not installed", "-"))
         elif current is None or latest is None:
             row.status = "unknown"
-            print(f"- {row.name}: {row.current} (latest unavailable)")
+            view.append((row.name, row.current, "unavailable"))
         else:
             row.latest = ".".join(map(str, latest))
             row.status = "available" if latest > current else "current"
-            suffix = f" -> {row.latest}" if row.status == "available" else ""
-            print(f"- {row.name}: {row.current}{suffix}")
+            view.append((row.name, row.current, row.latest if row.status == "available" else "-"))
         rows.append(row)
+    print(render_table(view, ("tool", "current", "latest")))
     return rows
 
 
