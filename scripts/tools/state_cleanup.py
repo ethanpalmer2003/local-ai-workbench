@@ -63,6 +63,8 @@ KEEP_EXTRACTIONS = 20
 MIN_EXTRACTION_AGE_HOURS = 24
 # - handled by their own rules above
 SPECIAL_LOG_AREAS = frozenset({"shared/review", "shared/framework_updates"})
+# - a suite test that builds paths writes a run folder, so the count bound, not the age window, keeps the root small
+KEEP_SUITE_RUNS = 3
 
 
 def prune(pattern: str, root: Path, cutoff: float, dry_run: bool, recursive: bool = True) -> tuple[int, int]:
@@ -223,14 +225,52 @@ def stale_entries(entries: list[Path], keep: int) -> list[Path]:
     return ordered[:-keep] if keep else ordered
 
 
-def _prune_suite_runs(cutoff: float, dry_run: bool) -> tuple[int, int]:
-    """Suite runs land under state/temp/runs rather than the evidence root, so the ordinary window applies."""
+def run_folders(root: Path) -> list[Path]:
+    """Run folders under `root`: a populated leaf named with the epoch stamp `CasePaths` writes."""
+    return [
+        path
+        for path in root.rglob("*")
+        if path.is_dir() and path.name.isdigit() and len(path.name) >= 15 and any(path.iterdir())
+    ]
+
+
+def _prune_suite_runs(dry_run: bool) -> tuple[int, int]:
+    """Suite runs land under state/temp/runs; keep the newest few per case, because a test that builds
+    paths writes a run folder of its own and an age window alone let 62,000 of them accumulate."""
     run_root = project_cfg.STATE_DIR / "temp" / "runs"
+    cases: dict[Path, list[Path]] = {}
+    for run in run_folders(run_root):
+        cases.setdefault(run.parent, []).append(run)
     count = freed = 0
-    for folder in run_root.glob("*/*") if run_root.is_dir() else ():
-        folder_count, folder_freed = prune("*", folder, cutoff, dry_run, recursive=False)
-        count += folder_count
-        freed += folder_freed
+    for runs in cases.values():
+        for path in sorted(runs, key=lambda item: item.name)[:-KEEP_SUITE_RUNS]:
+            size = path_size(path)
+            if not dry_run:
+                _remove(path)
+            count += 1
+            freed += size
+    return count, freed
+
+
+def prune_scratch_files(cutoff: float, dry_run: bool) -> tuple[int, int]:
+    """Loose files in state/temp: a one-off probe writes one there and no run folder ever owns it."""
+    root = project_cfg.STATE_DIR / "temp"
+    if not root.is_dir():
+        return 0, 0
+    count = freed = 0
+    for path in root.iterdir():
+        if not path.is_file():
+            continue
+        try:
+            if path.stat().st_mtime >= cutoff:
+                continue
+        except OSError:
+            continue
+        size = path_size(path)
+        if not dry_run:
+            _remove(path)
+        count += 1
+        freed += size
     return count, freed
 
 
@@ -247,7 +287,8 @@ def prune_generated(days: int, log_days: int, cache_days: int, dry_run: bool) ->
         ("stale download locks", prune("*.lock", downloads, cutoff, dry_run)),
         # - the framework fills this model cache on demand, so its hashed folders are the unit and a
         #   re-download is the cost; the longer window keeps a repeated comparison warm
-        ("old suite run folders", _prune_suite_runs(cutoff, dry_run)),
+        ("old suite run folders", _prune_suite_runs(dry_run)),
+        ("stray scratch files", prune_scratch_files(cutoff, dry_run)),
         ("old area logs", prune_log_areas(dry_run)),
         ("old gate runs", prune_review_logs(dry_run)),
         ("old gate reports", prune_review_reports(dry_run)),

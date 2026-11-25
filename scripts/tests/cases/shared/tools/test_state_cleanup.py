@@ -114,6 +114,41 @@ class StateCleanupTests(unittest.TestCase):
         self.assertEqual(count, 0)
         self.assertEqual(len(list(root.iterdir())), 4)
 
+    def _suite_case(self, root: Path, runs: int) -> Path:
+        """The layout a suite writes: runs/<suite>/<case>/unreviewed/<date>/<epoch>/{artifacts,logs,temp}."""
+        case = root / "temp" / "runs" / "suites" / "frameworks_smoke" / "unreviewed" / "2026-11-24"
+        for index in range(runs):
+            run = case / str(1795578000000000000 + index)
+            (run / "artifacts").mkdir(parents=True)
+            (run / "artifacts" / "report.json").write_text("{}", encoding="utf-8")
+            (run / "logs").mkdir()
+            (run / "temp").mkdir()
+        return case
+
+    def test_suite_runs_keep_the_newest_few_per_case_whatever_their_age(self):
+        root = self.root()
+        case = self._suite_case(root, 6)
+        with unittest.mock.patch.object(state_cleanup.project_cfg, "STATE_DIR", root):
+            count, _ = state_cleanup._prune_suite_runs(False)
+        self.assertEqual(count, 3)
+        kept = sorted(item.name for item in case.iterdir())
+        self.assertEqual(kept, [str(1795578000000000000 + index) for index in (3, 4, 5)])
+
+    def test_stray_scratch_files_leave_but_their_folders_stay(self):
+        root = self.root()
+        temp = root / "temp"
+        (temp / "runs").mkdir(parents=True)
+        old, new = temp / "probe.py", temp / "fresh.py"
+        for path in (old, new):
+            path.write_text("print()", encoding="utf-8")
+        self.age(old, 9)
+        with unittest.mock.patch.object(state_cleanup.project_cfg, "STATE_DIR", root):
+            count, _ = state_cleanup.prune_scratch_files(time.time() - 7 * 86400, False)
+        self.assertEqual(count, 1)
+        self.assertFalse(old.exists())
+        self.assertTrue(new.exists())
+        self.assertTrue((temp / "runs").is_dir())
+
 
 if __name__ == "__main__":
     unittest.main()
