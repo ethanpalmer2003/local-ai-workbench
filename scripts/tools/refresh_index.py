@@ -72,12 +72,15 @@ def needs_graphify(paths: Sequence[str]) -> bool:
 def graphify_commands(tool: str, root: Path) -> tuple[tuple[str, ...], ...]:
     """The two passes graphify needs: extract, then re-cluster so hubs and communities stay current.
 
-    `graphify-out` at the root is a junction into `scripts/state/cache`, so an incremental update keeps
-    writing the canonical path while the generated files stay in the cache tree.
+    The graph belongs to the cache tree, so the extract pass names its output. Only an incremental
+    `update` insists on the canonical `<root>/graphify-out`, and that would put a generated folder back
+    in the repository root, which is what this move removed.
     """
+    out = (root / "scripts" / "state" / "cache").as_posix()
     return (
-        (tool, "update", root.as_posix(), "--no-cluster"),
-        (tool, "cluster-only", root.as_posix(), "--no-label", "--no-viz"),
+        (tool, root.as_posix(), "--code-only", "--out", out),
+        # - cluster-only reads a project directory and appends graphify-out itself
+        (tool, "cluster-only", out, "--no-label", "--no-viz"),
     )
 
 
