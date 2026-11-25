@@ -130,19 +130,9 @@ def batch_issues(path: Path, text: str) -> list[str]:
 ROOT_BATCHES = frozenset(
     {"update_frameworks.bat", "_run.bat", "launch_llamacpp_pi_agent.bat", "launch_strata_pi_agent.bat"}
 )
-# - root folders that hold runtime data or tool state rather than tracked files
-RUNTIME_ROOTS = {
-    "data",
-    "frameworks",
-    "trash",
-    "graphify-out",
-    ".git",
-    ".venv",
-    ".pytest_cache",
-    ".zed",
-    "node_modules",
-    "__pycache__",
-}
+# - root folders that hold runtime data or tool state rather than tracked files; tool caches live under
+#   scripts/state/cache instead, so a .pytest_cache or .ruff_cache here is a finding
+RUNTIME_ROOTS = {"data", "frameworks", "trash", "graphify-out", ".git", ".venv", ".zed", "node_modules", "__pycache__"}
 
 OWNER_ROOTS = (
     project_cfg.CONFIG_DIR,

@@ -48,6 +48,8 @@ default-groups = []
 # - a hung socket or probe fails one test instead of the whole run; the model-free suite is seconds
 timeout = 60
 timeout_method = "thread"
+# - one cache root with ruff and the launch scratch; the layout check flags a .pytest_cache in the root
+cache_dir = "scripts/state/cache/pytest"
 
 [tool.pyright]
 # - the repository root is the parent of the scripts package (imports are scripts.*)
