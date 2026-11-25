@@ -40,23 +40,23 @@ class GateScopeTests(unittest.TestCase):
         self.assertNotIn("lint", sections)
 
     def test_git_output_is_decoded_as_text_whatever_the_console_codec(self):
-        from scripts.shared import changes
+        from scripts.shared import file_sets
 
         completed = subprocess.CompletedProcess(args=[], returncode=0, stdout=b"caf\x81 line\n", stderr=b"")
-        with patch.object(changes.subprocess, "run", return_value=completed):
-            self.assertEqual(changes.git_text("show", "scripts/a.py"), "caf\ufffd line\n")
+        with patch.object(file_sets.subprocess, "run", return_value=completed):
+            self.assertEqual(file_sets.git_text("show", "scripts/a.py"), "caf\ufffd line\n")
 
     def test_the_change_set_covers_the_working_tree_and_unpushed_commits(self):
-        from scripts.shared import changes
+        from scripts.shared import file_sets
 
         def git_text(*args: str, **_: object) -> str:
             if args[0] == "status":
                 return "R  bat/tests/a.bat -> bat/checks/a.bat\n M notes/TODO.md\n"
             return "scripts/tools/older.py\n"
 
-        with patch.object(changes, "git_text", side_effect=git_text):
+        with patch.object(file_sets, "git_text", side_effect=git_text):
             self.assertEqual(
-                changes.changed_since_upstream(),
+                file_sets.changed_since_upstream(),
                 ["bat/checks/a.bat", "bat/tests/a.bat", "notes/TODO.md", "scripts/tools/older.py"],
             )
 
@@ -86,7 +86,7 @@ class GateScopeTests(unittest.TestCase):
 
     def test_a_branch_without_an_upstream_runs_everything(self):
         from scripts.review import __main__ as gate
-        from scripts.shared.changes import NoUpstreamError
+        from scripts.shared.file_sets import NoUpstreamError
 
         buffer = io.StringIO()
         with (
@@ -125,7 +125,7 @@ class GateScopeTests(unittest.TestCase):
         touched.assert_called_once_with([], ["scripts/shared/consent.py"])
 
     def test_the_uncommitted_change_set_ignores_unpushed_commits(self):
-        from scripts.shared import changes
+        from scripts.shared import file_sets
 
         calls: list[str] = []
 
@@ -133,8 +133,8 @@ class GateScopeTests(unittest.TestCase):
             calls.append(args[0])
             return " M notes/TODO.md\n"
 
-        with patch.object(changes, "git_text", side_effect=git_text):
-            self.assertEqual(changes.changed_since_head(), ["notes/TODO.md"])
+        with patch.object(file_sets, "git_text", side_effect=git_text):
+            self.assertEqual(file_sets.changed_since_head(), ["notes/TODO.md"])
         self.assertEqual(calls, ["status"])
 
     def test_all_runs_every_section_whatever_changed(self):

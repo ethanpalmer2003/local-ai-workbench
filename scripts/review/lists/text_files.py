@@ -2,30 +2,10 @@
 
 import argparse
 import re
-import subprocess
 from pathlib import Path
 
-TEXT_SUFFIXES = {
-    ".bat",
-    ".cfg",
-    ".cjs",
-    ".css",
-    ".csv",
-    ".html",
-    ".ini",
-    ".jinja",
-    ".js",
-    ".json",
-    ".kcpps",
-    ".md",
-    ".ps1",
-    ".py",
-    ".toml",
-    ".ts",
-    ".txt",
-    ".yaml",
-    ".yml",
-}
+from scripts.shared import file_sets
+
 # - the pinned corpus quotes third-party transcript text verbatim, so its references are data, not our prose
 CORPUS_FILE = "scripts/config/benchmarks/language_corpus.json"
 REFERENCE_VALUE = re.compile(r'("reference"\s*:\s*")([^"\\]*(?:\\.[^"\\]*)*)(")')
@@ -36,28 +16,6 @@ def mask_corpus_references(path: str, text: str) -> str:
     if path != CORPUS_FILE:
         return text
     return REFERENCE_VALUE.sub(lambda match: match.group(1) + "x" * len(match.group(2)) + match.group(3), text)
-
-
-def is_text(path: str) -> bool:
-    """Whether this path is text we write; generated evidence is ignored by git, not by suffix."""
-    return Path(path).suffix.lower() in TEXT_SUFFIXES
-
-
-def tracked_text_files(root: Path, skip: set[str] | frozenset[str] = frozenset()) -> list[str]:
-    """Every tracked file whose content is text we write, minus the check's own fixtures."""
-    result = subprocess.run(["git", "-C", str(root), "ls-files"], capture_output=True, text=True, check=True)
-    # - a deletion is still in the index until it is committed; skip files the tree no longer has
-    return [
-        path
-        for path in result.stdout.splitlines()
-        if path and is_text(path) and path not in skip and (root / path).is_file()
-    ]
-
-
-def git_root() -> Path:
-    """The repository root git reports, which a text check resolves its paths against."""
-    top = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
-    return Path(top.stdout.strip())
 
 
 def text_check_targets(
@@ -71,8 +29,8 @@ def text_check_targets(
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("paths", nargs="*", help="files to check (default: every tracked text file)")
     args = parser.parse_args(argv)
-    root = git_root()
+    root = file_sets.git_root()
     if args.paths:
         # - an imported patch keeps the upstream prose it carries, so only our own text suffixes are read
-        return root, [path for path in args.paths if path not in skip and is_text(path)]
-    return root, tracked_text_files(root, skip)
+        return root, [path for path in args.paths if path not in skip and file_sets.is_text(path)]
+    return root, file_sets.tracked_text_files(root, skip)

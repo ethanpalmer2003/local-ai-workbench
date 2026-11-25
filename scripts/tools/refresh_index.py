@@ -22,7 +22,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.launchers.launch_util import describe_exit
-from scripts.shared import changes
+from scripts.shared import changes, file_sets
 
 # - what graphify extracts; a Markdown or YAML commit leaves its graph identical
 GRAPHIFY_SUFFIXES = frozenset({".py", ".js", ".cjs", ".mjs", ".ts", ".tsx", ".jsx"})
@@ -214,8 +214,8 @@ def default_paths(root: Path) -> list[str]:
     """
     uncommitted: list[str] = []
     try:
-        uncommitted = changes.changed_since_upstream(root)
-    except changes.NoUpstreamError:
+        uncommitted = file_sets.changed_since_upstream(root)
+    except file_sets.NoUpstreamError:
         uncommitted = []
     return sorted(set(changes.committed_paths(root)) | set(uncommitted))
 

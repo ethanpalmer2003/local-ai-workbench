@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from scripts.config import project_config as project_cfg
-from scripts.review.lists.sources import tracked_files
+from scripts.shared.file_sets import tracked_files
 
 # - a folder is validated at both ends: below the minimum it is a merge candidate, above the maximum it
 #   needs another level, and a folder holding one file and nothing else is neither, so it fails

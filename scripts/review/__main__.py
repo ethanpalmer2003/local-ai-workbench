@@ -37,9 +37,9 @@ from scripts.review.checks import (
     typography,
     walrus,
 )
-from scripts.review.lists import text_files
-from scripts.shared import changes, consent
-from scripts.shared.changes import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
+from scripts.review.lists import taxonomies
+from scripts.shared import consent, file_sets
+from scripts.shared.file_sets import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
 from scripts.shared.import_graph import (
     REACH_DEPTH,
     find_affected_modules,
@@ -79,7 +79,7 @@ def spelling_check(paths: list[str] | None = None) -> int:
     """Codespell over the change at edit time and the whole tree at push."""
     checker = project_cfg.VENV_DIR / "Scripts" / "codespell.exe"
     # - the same suffix vocabulary as the text checks: an imported patch keeps the upstream spelling
-    targets = [path for path in paths if text_files.is_text(path)] if paths else _spelling_targets()
+    targets = [path for path in paths if file_sets.is_text(path)] if paths else _spelling_targets()
     status = 0
     for start in range(0, len(targets), 80):
         status |= subprocess.run(
@@ -394,7 +394,7 @@ def write_timings() -> Path:
     path.write_text(
         json.dumps(
             {
-                "commit": (changes.git_text_or_none("rev-parse", "HEAD") or "").strip(),
+                "commit": (file_sets.git_text_or_none("rev-parse", "HEAD") or "").strip(),
                 "dirty": bool(changed_since_upstream()),
                 "total_seconds": round(time.perf_counter() - _started_at, 2),
                 "work_seconds": round(sum(item["seconds"] for item in TIMES), 2),
@@ -423,6 +423,7 @@ PYTHON_SECTIONS = frozenset(
         "output",
         "network timeouts",
         "overlay access",
+        "taxonomy",
         "inventory",
     }
 )
@@ -602,6 +603,7 @@ def full_gate(argv: list[str] | None = None) -> int:
             Section("walrus", "\n=== WALRUS OPERATOR ===", lambda: walrus.main([])),
             Section("expression", "\n=== EXPRESSION DEPTH ===", lambda: expression.main([])),
             Section("output", "\n=== CONSOLE OUTPUT ===", lambda: output_lines.main([])),
+            Section("taxonomy", "\n=== TAXONOMY OVERLAP ===", lambda: taxonomies.main([])),
             Section("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
             Section(
                 "spelling",

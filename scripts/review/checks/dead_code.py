@@ -29,8 +29,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.review import MAX_REPORTED
-from scripts.review.lists.sources import maintained_files
-from scripts.shared.changes import git_text_or_none
+from scripts.shared.file_sets import git_text_or_none, maintained_files
 from scripts.shared.import_graph import ast_parse_text_or_file
 
 MIN_CONFIDENCE = "60"

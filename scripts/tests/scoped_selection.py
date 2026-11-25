@@ -20,8 +20,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.shared.changes import NoUpstreamError, changed_since_upstream
 from scripts.shared.code_changes import paths_with_code_changes
+from scripts.shared.file_sets import NoUpstreamError, changed_since_upstream
 from scripts.shared.import_graph import (
     REACH_DEPTH,  # the floor: the changed module plus its direct importers
     ImportGraph,  # a directed graph of module -> the modules it imports

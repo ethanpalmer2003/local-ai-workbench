@@ -3,8 +3,8 @@
 import sys
 
 from scripts.shared import consent
-from scripts.shared.changes import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
 from scripts.shared.code_changes import python_code_changed
+from scripts.shared.file_sets import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
 from scripts.shared.timing import timed
 from scripts.tests.cases.suites import frameworks_smoke
 from scripts.tests.registry import TEST_CLASSES

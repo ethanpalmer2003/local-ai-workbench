@@ -4,8 +4,8 @@ import argparse
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.review.lists import sources
 from scripts.review.lists.sources import check_targets
+from scripts.shared.file_sets import tracked_files
 
 OWNER = "scripts/config/local_overlay.py"
 DECLARES_PATHS = "scripts/config/project_config.py"
@@ -24,7 +24,7 @@ def issues(root: Path | None = None, paths: list[Path] | None = None) -> list[st
     """Tracked modules that resolve an overlay path without going through the owner module."""
     base = root or project_cfg.BASE_DIR
     found = []
-    for entry in paths if paths is not None else sources.tracked_files():
+    for entry in paths if paths is not None else tracked_files():
         path = entry.as_posix() if not entry.is_absolute() else entry.relative_to(base).as_posix()
         if not path.startswith("scripts/") or not path.endswith(".py"):
             continue

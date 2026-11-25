@@ -12,8 +12,8 @@ from dataclasses import replace
 
 from scripts.config import project_config as project_cfg
 from scripts.config.shared import stage_times
-from scripts.review.lists.sources import maintained_files
 from scripts.shared import consent, staleness
+from scripts.shared.file_sets import maintained_files
 from scripts.tests.shared import live_stamp
 from scripts.tools import stage_runner
 

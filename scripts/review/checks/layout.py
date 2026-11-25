@@ -12,7 +12,7 @@ from scripts.config import project_config as project_cfg
 from scripts.download.frameworks import framework_catalog as update_config
 from scripts.launchers import launcher_config as cfg
 from scripts.review import MAX_REPORTED
-from scripts.review.lists.sources import maintained_files, tracked_files
+from scripts.shared.file_sets import maintained_files, tracked_files
 
 # - the host refuses a file past 100 MiB, so this sits below it and leaves room to act
 LARGE_FILE_MIB = 50

@@ -10,7 +10,8 @@ import ast
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.shared.changes import GitError, upstream_texts
+from scripts.shared.changes import upstream_texts
+from scripts.shared.file_sets import GitError
 from scripts.shared.import_graph import ast_parse_text_or_file
 
 

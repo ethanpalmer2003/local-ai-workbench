@@ -333,7 +333,7 @@ class TestSelection(unittest.TestCase):
         self.assertEqual(chosen.reason, "nothing changed")
 
     def test_a_branch_without_an_upstream_runs_every_class(self):
-        from scripts.shared.changes import NoUpstreamError
+        from scripts.shared.file_sets import NoUpstreamError
 
         with patch.object(scoped_selection, "changed_since_upstream", side_effect=NoUpstreamError):
             chosen = scoped_selection.select_test_classes((TestSelection,))

@@ -9,6 +9,7 @@ from unittest.mock import patch
 from scripts.config import project_config as project_cfg
 from scripts.review.checks import typography
 from scripts.review.lists import text_files
+from scripts.shared import file_sets
 
 
 class ScanTests(unittest.TestCase):
@@ -98,8 +99,8 @@ class CheckTests(unittest.TestCase):
 class TargetTests(unittest.TestCase):
     def targets(self, argv: list[str], skip: set[str] | None = None) -> tuple[Path, list[str]]:
         with (
-            patch.object(text_files, "git_root", return_value=Path("/repo")),
-            patch.object(text_files, "tracked_text_files", return_value=["a.md", "b.py"]),
+            patch.object(file_sets, "git_root", return_value=Path("/repo")),
+            patch.object(file_sets, "tracked_text_files", return_value=["a.md", "b.py"]),
         ):
             return text_files.text_check_targets(argv, "check", skip or set())
 
@@ -112,13 +113,13 @@ class TargetTests(unittest.TestCase):
 
 class SuffixTests(unittest.TestCase):
     def test_prose_and_config_are_text_but_weights_are_not(self):
-        self.assertTrue(text_files.is_text("README.md"))
-        self.assertTrue(text_files.is_text("scripts/launchers/launcher_config.py"))
-        self.assertTrue(text_files.is_text("scripts/config/benchmarks/language_corpus.json"))
-        self.assertTrue(text_files.is_text("scripts/tests/ui/speech.html"))
-        self.assertTrue(text_files.is_text("scripts/tests/notes/asr/leaderboards-2026-10-29/table-15.csv"))
-        self.assertFalse(text_files.is_text("data/huggingface/models/llms/character_models/x.gguf"))
-        self.assertFalse(text_files.is_text("frameworks/llamacpp/llama-server.exe"))
+        self.assertTrue(file_sets.is_text("README.md"))
+        self.assertTrue(file_sets.is_text("scripts/launchers/launcher_config.py"))
+        self.assertTrue(file_sets.is_text("scripts/config/benchmarks/language_corpus.json"))
+        self.assertTrue(file_sets.is_text("scripts/tests/ui/speech.html"))
+        self.assertTrue(file_sets.is_text("scripts/tests/notes/asr/leaderboards-2026-10-29/table-15.csv"))
+        self.assertFalse(file_sets.is_text("data/huggingface/models/llms/character_models/x.gguf"))
+        self.assertFalse(file_sets.is_text("frameworks/llamacpp/llama-server.exe"))
 
 
 if __name__ == "__main__":

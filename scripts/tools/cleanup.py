@@ -16,7 +16,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 from scripts.config import trash
-from scripts.review.lists.sources import tracked_files
+from scripts.shared.file_sets import tracked_files
 from scripts.shared.tables import render_table
 from scripts.tools import state_cleanup
 

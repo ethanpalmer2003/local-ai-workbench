@@ -21,7 +21,7 @@ Which checks run through a maintained tool, which are this repository's own voca
 
 A library cannot know this repository's vocabulary, so these read the tree directly:
 
-- `layout.py`, `docs.py`, `sources.py`, `text_files.py`: folder roles, document roles and budgets, pointer policy, the text suffixes.
+- `layout.py`, `docs.py`, `file_sets.py`: folder roles, document roles and budgets, pointer policy, the tracked, maintained, text and changed file sets.
 - `spellings.py`: the American forms this repository writes, on top of codespell's typos.
 - `network_timeouts.py`: a source rule over `urllib`, `requests` and `http.client` calls.
 - `model_references.py`, `frontend_wiring.py`, `overlay_access.py`: catalog ids, DOM ids and settings keys, overlay path ownership.

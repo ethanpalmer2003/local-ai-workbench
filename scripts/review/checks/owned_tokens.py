@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from scripts.config import project_config as project_cfg
-from scripts.review.lists.sources import maintained_files
+from scripts.shared.file_sets import maintained_files
 
 
 @dataclass(frozen=True)

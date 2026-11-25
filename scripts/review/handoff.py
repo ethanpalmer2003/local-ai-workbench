@@ -23,8 +23,8 @@ from typing import TypedDict, cast
 
 from scripts.config import project_config as project_cfg
 from scripts.review.checks.inventory_code import maintained_python
-from scripts.review.lists.sources import maintained_files
 from scripts.shared import staleness
+from scripts.shared.file_sets import maintained_files
 from scripts.tests import validate
 from scripts.tools import cleanup, stage_runner
 

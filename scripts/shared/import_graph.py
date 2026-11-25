@@ -12,7 +12,7 @@ from pathlib import Path
 import networkx as nx
 
 from scripts.config import project_config as project_cfg
-from scripts.shared.changes import git_text
+from scripts.shared.file_sets import git_text
 
 # A directed graph of module names, one edge per import and per parent package.
 ImportGraph = nx.DiGraph

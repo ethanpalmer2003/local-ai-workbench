@@ -4,7 +4,7 @@ import argparse
 import subprocess
 
 from scripts.config import project_config as project_cfg
-from scripts.review.__main__ import changed_since_upstream
+from scripts.shared.file_sets import changed_since_upstream
 
 
 def python_targets(all_files: bool) -> list[str]:

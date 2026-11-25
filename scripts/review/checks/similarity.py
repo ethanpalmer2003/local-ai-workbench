@@ -21,8 +21,8 @@ import requests
 from scripts.config import models as model_cfg
 from scripts.config import project_config as project_cfg
 from scripts.launchers import embeddings as server
-from scripts.review.lists.sources import maintained_files
 from scripts.shared import staleness
+from scripts.shared.file_sets import maintained_files
 
 LABEL = "embeddings/embeddinggemma-2-Q8_0"
 DEFAULT_THRESHOLD = 0.90

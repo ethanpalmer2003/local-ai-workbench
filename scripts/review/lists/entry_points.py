@@ -35,6 +35,7 @@ ALL: dict[str, str] = {
     "scripts.review.checks.owned_tokens": "check",
     "scripts.review.checks.similarity": "check",
     "scripts.review.checks.spellings": "check",
+    "scripts.review.lists.taxonomies": "check",
     "scripts.review.checks.typography": "check",
     "scripts.review.checks.walrus": "check",
     "scripts.review.format_py": "act",
