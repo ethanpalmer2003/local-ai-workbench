@@ -510,6 +510,28 @@ class PracticeTests(unittest.TestCase):
         self.assertEqual(cfg.LANGUAGE_PRACTICE.asr_engine, cfg.AsrStartupEngine.QWEN3_AUDIOCPP)
         self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.QWEN3_ASR)
 
+    def test_both_audiocpp_recognizers_share_the_server_that_speaks(self):
+        for engine in cfg.AUDIOCPP_ASR_ENGINES:
+            with (
+                self.subTest(engine=engine.value),
+                patch.object(cfg.KOBOLDCPP_SERVICE, "transcription_engine", engine),
+                patch.object(cfg.KOBOLDCPP_SERVICE, "speech_engine", cfg.KoboldcppSpeechStartupEngine.AUDIOCPP),
+                patch.object(kobold, "PROXY_SERVICES", [kobold.PROXY_SERVICES[0]]),
+                patch.object(kobold, "launch_module") as launch,
+            ):
+                processes = []
+                kobold.start_proxy_services(processes, "shared")
+                self.assertEqual(processes, [])
+                launch.assert_not_called()
+            self.assertEqual(kobold_lite.speech_server(engine), f"http://127.0.0.1:{cfg.AUDIOCPP_VAD.server_port}")
+
+    def test_a_recognizer_outside_audiocpp_keeps_its_own_speech_server(self):
+        with patch.object(cfg.KOBOLDCPP_SERVICE, "speech_engine", cfg.KoboldcppSpeechStartupEngine.AUDIOCPP):
+            self.assertEqual(
+                kobold_lite.speech_server(cfg.AsrStartupEngine.SPEECHCPP),
+                f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}",
+            )
+
 
 class WholeTurnTests(unittest.TestCase):
     """Kobold's own Whisper recognizes one uploaded turn, which is what the embedded engine can offer."""

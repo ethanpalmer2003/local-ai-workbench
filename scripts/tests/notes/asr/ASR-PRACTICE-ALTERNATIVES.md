@@ -2,7 +2,7 @@
 
 2026-10-28: Qwen 0.6B, Whisper turbo and Parakeet v3 pass brief saved-audio
 practice checks, each with both llama.cpp and Kobold Gemma E4B plus Vulkan Kokoro.
-Qwen 1.7B was excluded as requested. Nemotron remains the default.
+The practice default is `audiocpp-qwen3` ([launcher guide](../../../launchers/asr/README.md)).
 
 Each alternative keeps its decoder resident and recognizes a complete Silero
 segment. These adapters do not emit incremental transcript updates. All share
@@ -16,32 +16,32 @@ They use separate ASR/Kokoro servers plus the small CPU Silero helper.
 | Whisper Vulkan/FA turbo Q5 | 221-258 ms | 1.22-1.24 s |
 | Parakeet v3 Vulkan Q8 | 140-160 ms | 1.22-1.23 s |
 
-Ranges are two samples, one per chat runtime, using the same synthetic English
-clip. Final timing includes silence detection and 128 ms upload/poll scheduling;
-the marker is Silero's estimate, not human-labeled speech end. All transcripts
-agree in wording apart from punctuation. This cannot rank multilingual accuracy.
+Ranges are two samples, one per chat runtime, on the same synthetic English clip.
+Final timing includes silence detection and 128 ms upload/poll scheduling; the
+marker is Silero's estimate, not labeled speech end. Transcripts differ only in
+punctuation, so this cannot rank multilingual accuracy. The matched Nemotron
+rerun uses the same clip, VAD settings and polling; its 0.1-0.3 s advantage is a
+brief screen, not percentile evidence.
 
-The matched Nemotron rerun uses the same clip, VAD settings and gateway polling.
-Its advantage is about 0.1-0.3 seconds here; 128 ms scheduling and two samples
-limit confidence. This is a brief screen, not stable percentile evidence.
+## Embedded Whisper against the two AudioCpp recognizers
 
-## Embedded Whisper against the default
+2026-11-24: same clip, gateway and KoboldCpp runtime, two passes each, AppContainer
+false. AudioCpp has no Whisper model of its own.
 
-2026-11-24: the same saved clip and gateway on the KoboldCpp runtime only, two
-passes each, AppContainer false and administrator false.
+| Recognizer | Delivery | First partial | Final after speech end |
+| --- | --- | ---: | ---: |
+| AudioCpp Qwen3-ASR 1.7B (practice default) | Streaming, automatic turns | 3.33 s | 1.09-1.12 s |
+| AudioCpp Nemotron 3.5 | Streaming, automatic turns | 1.15 s | 1.09-1.12 s |
+| Kobold embedded Whisper Q5 | Whole uploaded turn, 286-312 ms decode | none | 0.99-1.01 s |
 
-| Recognizer | Delivery | Decode request | First partial | Final after speech end |
-| --- | --- | ---: | ---: | ---: |
-| AudioCpp Nemotron Vulkan (default) | Streaming, automatic turns | Incremental during speech | 1.15 s | 1.09-1.12 s |
-| Kobold embedded Whisper, turbo Q5 | Whole uploaded turn | 286-312 ms | none | 0.99-1.01 s |
-
-Embedded Whisper finishes about 0.1 second sooner, but it cannot take part in the
-practice page's automatic turns: the gateway refuses a whole-file recognizer on
-`/asr/live`, so the page uploads a turn the speaker has already ended and shows
-nothing while they speak. It stays selectable with `--transcription-engine
-embedded` rather than becoming the default. Evidence: practice_smoke run
-`1795576425940897300` (AudioCpp arm) and `1795576405044802300` (embedded arm)
-under `scripts/tests/output/asr/shared/practice_smoke/unreviewed/2026-11-24/`.
+Both AudioCpp engines reach the same final and differ only in when captions
+appear; the default trades about two seconds of waiting for the best multilingual
+accuracy on the pinned corpus, and `--practice-ui` starts it on both pages.
+Embedded Whisper finishes about 0.1 s sooner, but the gateway refuses a whole-file
+recognizer on `/asr/live`: the page would upload a finished turn and show nothing
+while the speaker talks, so `--transcription-engine embedded` stays an option.
+Evidence: practice_smoke runs `1795577036774874600`, `1795576425940897300` and
+`1795576405044802300` under `scripts/tests/output/asr/shared/practice_smoke/unreviewed/2026-11-24/`.
 
 Startup/model loading, warmup and cleanup are separate shared-lifecycle phases.
 Kokoro and ASR receive warmup inference before the measured flow. Approved native
@@ -63,11 +63,5 @@ Physical microphone, acoustic echo, learner accents, French/Spanish and resource
 ranking remain pending. Parakeet v3 automatically detects language; the UI's
 language choice still controls the tutor and Kokoro voice.
 
-356 model-free regressions pass; types, structure/docs and code-size checks pass.
-An earlier concurrent run timed out in an unrelated proxy-config fixture; its
-log is preserved. The final suite ran after native cleanup.
-
-Nemotron uploads/warmup now use its streaming transport, matching the configured
+Nemotron uploads/warmup use its streaming transport, matching the configured
 model mode. The rejected completed-file warmup artifact remains preserved.
-
-Ten focused practice contracts and type checks pass after this correction.

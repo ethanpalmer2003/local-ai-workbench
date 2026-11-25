@@ -31,7 +31,7 @@ comparison and additional context memory. Separate llama.cpp models use separate
 servers in this setup. Kobold shared-model request scheduling also needs measurement;
 sharing Gemma weights does not prove simultaneous recognition/generation.
 
-Practice defaults to one AudioCpp Nemotron/speech server. NeMo/Parakeet CPU stream; Qwen, Whisper and
+Practice defaults to one AudioCpp Qwen3-ASR/speech server. NeMo/Parakeet CPU stream; Qwen, Whisper and
 Parakeet v3 decode Silero segments with separate speech servers; Gemma/Qwen
 1.7B use manual turns. Recognition pauses during tutor replies.
 

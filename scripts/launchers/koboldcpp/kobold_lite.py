@@ -37,9 +37,20 @@ def audio_delivery_plan():
         """AudioCpp """
         """path."""
     )
-    external = cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP or speech.selected()
+    external = cfg.KOBOLDCPP_SERVICE.transcription_engine in cfg.AUDIOCPP_ASR_ENGINES or speech.selected()
     plan = practice_models.delivery_plan()
     return plan if external else {**plan, "mode": "whole", "supported": ["whole"]}
+
+
+def speech_server(engine: cfg.AsrStartupEngine | None) -> str | None:
+    """Where a recognizer's speech requests go; None keeps them on the upstream server."""
+    if engine in cfg.AUDIOCPP_ASR_ENGINES:
+        from scripts.launchers.audiocpp import asr
+
+        return asr.url()
+    if speech.selected():
+        return f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}"
+    return None
 
 
 def _patch_local(html: str) -> tuple[str, str]:
@@ -396,16 +407,11 @@ class _KoboldLiteHandler(ProxyHandlerMixin):
 
     def _speech_target(self, target: str, body: bytes) -> tuple[str, bytes] | None:
         """Resolve the speech backend and re-encode its request; None means an error was sent."""
-        if self.engine == cfg.AsrStartupEngine.AUDIOCPP:
-            from scripts.launchers.audiocpp import asr
-
-            target = asr.url()
-        elif speech.selected():
-            target = f"http://127.0.0.1:{cfg.AUDIOCPP_SERVICE.internal_port}"
-        else:
+        resolved = speech_server(self.engine)
+        if resolved is None:
             return target, body
         try:
-            return target, speech.speech_body(body)
+            return resolved, speech.speech_body(body)
         except (ValueError, TypeError) as error:
             send_json_error(self, 400, str(error), "invalid_request_error")
             return None

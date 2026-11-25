@@ -17,7 +17,7 @@ python -m scripts.launchers.asr.parakeetcpp.transcribe --profile nemotron --buil
 - `--timestamps`, `--json`, `--no-vad`, `--model PATH`, `--vad-model PATH` provide explicit overrides.
 - Updater tracks official stable assets without executing version checks. All three models have resident comparison adapters. v3 and CPU Nemotron practice gateways are available.
 - v0.6.1 CPU/Vulkan transcription, optional Silero segmentation and VAD-only checks pass on saved English speech. [Evidence](../../../notes/NATIVE-VALIDATION.md); upstream's older master-only VAD note is stale.
-- [Nemotron CPU streaming practice](NEMOTRON-STREAMING.md) uses a separate pinned C API build. AudioCpp Nemotron remains default.
+- [Nemotron CPU streaming practice](NEMOTRON-STREAMING.md) uses a separate pinned C API build. The practice default is AudioCpp Qwen3-ASR, not Nemotron.
 - Installed Vulkan Nemotron streaming crashes with an access violation; CPU streaming passes. The shared file profile explicitly selects CPU for streaming, Vulkan for offline. Streaming disables offline VAD; `--json` is incompatible with `--stream`. The CPU C API adapter additionally supports paced PCM with shared Silero turns.
 - Later: multilingual/noisy accuracy, streaming latency and shared GPU resource comparisons.
 - Upstream speed clips are demonstrations, not local performance results. [Deferred work](../../../notes/asr/ASR-IMPLEMENTATION.md).

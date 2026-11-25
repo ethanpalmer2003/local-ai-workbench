@@ -9,16 +9,31 @@ from scripts.launchers.koboldcpp import kobold
 
 
 class KoboldOptionTests(unittest.TestCase):
-    def _fold(self, *argv: str) -> str:
+    def _service(self, *argv: str):
         parser = kobold.build_parser()
         args = parser.parse_args(list(argv))
         # - apply_options folds flags into the shared service object, so it works on a copy
         with patch.object(cfg, "KOBOLDCPP_SERVICE", replace(cfg.KOBOLDCPP_SERVICE)):
             kobold.apply_options(args, parser)
-            return cfg.KOBOLDCPP_SERVICE.model
+            return cfg.KOBOLDCPP_SERVICE
+
+    def _fold(self, *argv: str) -> str:
+        return self._service(*argv).model
 
     def test_practice_page_selects_the_practice_model(self):
         self.assertEqual(self._fold("--practice-ui"), cfg.LANGUAGE_PRACTICE.llm_model)
+
+    def test_practice_page_selects_the_practice_recognizer(self):
+        self.assertIs(self._service("--practice-ui").transcription_engine, cfg.LANGUAGE_PRACTICE.asr_engine)
+
+    def test_an_explicit_engine_wins_over_the_practice_default(self):
+        chosen = next(engine for engine in cfg.AsrStartupEngine if engine is not cfg.LANGUAGE_PRACTICE.asr_engine)
+        self.assertIs(
+            self._service("--practice-ui", "--transcription-engine", chosen.value).transcription_engine, chosen
+        )
+
+    def test_a_plain_launch_keeps_transcription_off(self):
+        self.assertIsNone(self._service().transcription_engine)
 
     def test_an_explicit_model_wins_over_the_practice_default(self):
         chosen = next(label for label in cfg.KOBOLDCPP_MODELS if label != cfg.LANGUAGE_PRACTICE.llm_model)

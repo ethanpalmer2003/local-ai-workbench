@@ -184,8 +184,9 @@ def open_streaming_ui() -> None:
 
 def start_proxy_services(processes: list[tuple[str, subprocess.Popen[Any]]], usage_profile: str) -> None:
     for name, script, title, service in PROXY_SERVICES:
-        if name == "Audiocpp" and cfg.KOBOLDCPP_SERVICE.transcription_engine == cfg.AsrStartupEngine.AUDIOCPP:
-            continue  # ASR and speech share the already-started server.
+        if name == "Audiocpp" and cfg.KOBOLDCPP_SERVICE.transcription_engine in cfg.AUDIOCPP_ASR_ENGINES:
+            # - both AudioCpp recognizers load the practice TTS beside themselves, so speech shares them
+            continue
         if name == "Audiocpp" and speech.selected():
             if backend_running(service.internal_port):
                 raise RuntimeError("AudioCpp port is occupied; close the existing audio session first")
@@ -262,13 +263,19 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def apply_practice_ui(args: argparse.Namespace) -> None:
+    """The practice page implies the practice stack; a named model or engine still wins."""
+    cfg.KOBOLDCPP_SERVICE.streaming_ui_path = "/practice"
+    if not args.model:
+        cfg.KOBOLDCPP_SERVICE.model = cfg.LANGUAGE_PRACTICE.llm_model
+    if not args.transcription_engine and cfg.LANGUAGE_PRACTICE.asr_engine is not None:
+        cfg.KOBOLDCPP_SERVICE.transcription_engine = cfg.LANGUAGE_PRACTICE.asr_engine
+
+
 def apply_options(args: argparse.Namespace, parser: argparse.ArgumentParser) -> bool:
     """Fold the flags into service settings and return whether the LLM runs externally."""
     if args.practice_ui:
-        cfg.KOBOLDCPP_SERVICE.streaming_ui_path = "/practice"
-        # - the practice page implies the practice model unless the caller names one
-        if not args.model:
-            cfg.KOBOLDCPP_SERVICE.model = cfg.LANGUAGE_PRACTICE.llm_model
+        apply_practice_ui(args)
     if args.model:
         cfg.KOBOLDCPP_SERVICE.model = args.model
     if args.speech_engine:
@@ -296,7 +303,7 @@ def check_profile_ports() -> None:
     ports = [cast(int, cfg.KOBOLDCPP_KCPPS_ARGS["port"])]
     if cfg.KOBOLDCPP_SERVICE.streaming_ui:
         ports.append(cfg.KOBOLDCPP_SERVICE.streaming_ui_port)
-    if speech.selected() and cfg.KOBOLDCPP_SERVICE.transcription_engine != cfg.AsrStartupEngine.AUDIOCPP:
+    if speech.selected() and cfg.KOBOLDCPP_SERVICE.transcription_engine not in cfg.AUDIOCPP_ASR_ENGINES:
         ports.append(cfg.AUDIOCPP_SERVICE.internal_port)
     occupied = [port for port in ports if backend_running(port) or port_listening(port)]
     if occupied:

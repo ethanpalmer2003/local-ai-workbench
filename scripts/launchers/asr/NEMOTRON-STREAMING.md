@@ -1,6 +1,6 @@
 # Nemotron streaming practice
 
-AudioCpp Vulkan remains default. Two alternatives use the same shared Silero
+AudioCpp Vulkan remains the default Nemotron option. Two alternatives use the same shared Silero
 controller: threshold 0.5, 700 ms silence, 300 ms pre-roll and 16 kHz mono PCM16.
 All pair with Gemma E4B in llama.cpp or Kobold and Vulkan Kokoro. Each runtime
 uses its compatible Nemotron 3.5 Q8 conversion; GGUF files are not interchangeable
