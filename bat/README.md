@@ -24,9 +24,9 @@ Coding-agent entry points stay at the root. Browser, model, test, and benchmark 
 | [launch_test.bat](browser/launch_test.bat) | Shared `/test/` page with every stage toggled off; enable what the test needs. |
 | [launch_language.bat](browser/launch_language.bat) | Shared `/practice` page on the llama.cpp stack. |
 | [launch_language_kobold.bat](browser/launch_language_kobold.bat) | Shared `/practice` page on the KoboldCpp stack; recognition from AudioCpp. |
-| [launch_language_kobold_no_model.bat](browser/launch_language_kobold_no_model.bat) | Same page: llama.cpp serves, KoboldCpp is UI only. |
+| [launch_language_kobold_no_model.bat](browser/launch_language_kobold_no_model.bat) | Same page with `--llm external`: llama.cpp serves, KoboldCpp is UI only. |
 | [launch_kobold.bat](browser/launch_kobold.bat) | KoboldCpp's own browser UI on its own model, plus AudioCpp/image proxies, with transcription off. |
-| [launch_kobold_no_model.bat](browser/launch_kobold_no_model.bat) | Same stack on llama.cpp: Lite proxy and TTS chain, no local model, transcription off. |
+| [launch_kobold_no_model.bat](browser/launch_kobold_no_model.bat) | Same stack on llama.cpp (`--llm external`): Lite proxy and TTS chain, no local model, transcription off. |
 | [launch_sdcpp.bat](browser/launch_sdcpp.bat) | sd.cpp's own image-generation UI at `/`. |
 | [launch_comfyui.bat](browser/comfyui/launch_comfyui.bat) | ComfyUI's own UI with default attention/VRAM settings. |
 | [comfyui_bootstrap.bat](browser/comfyui/comfyui_bootstrap.bat) | Shared ComfyUI bootstrap (not a UI launcher). |
