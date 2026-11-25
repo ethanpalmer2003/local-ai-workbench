@@ -134,6 +134,18 @@ class StateCleanupTests(unittest.TestCase):
         kept = sorted(item.name for item in case.iterdir())
         self.assertEqual(kept, [str(1795578000000000000 + index) for index in (3, 4, 5)])
 
+    def test_the_count_bound_spans_dates_and_a_date_that_empties_leaves(self):
+        root = self.root()
+        outcome = root / "temp" / "runs" / "suites" / "frameworks_smoke" / "unreviewed"
+        for day, base in (("2026-11-22", 1795444000000000000), ("2026-11-23", 1795530000000000000)):
+            for index in range(3):
+                (outcome / day / str(base + index) / "artifacts").mkdir(parents=True)
+        with unittest.mock.patch.object(state_cleanup.project_cfg, "STATE_DIR", root):
+            count, _ = state_cleanup._prune_suite_runs(False)
+        self.assertEqual(count, 3)
+        self.assertEqual(sorted(item.name for item in outcome.iterdir()), ["2026-11-23"])
+        self.assertEqual(len(list((outcome / "2026-11-23").iterdir())), 3)
+
     def test_stray_scratch_files_leave_but_their_folders_stay(self):
         root = self.root()
         temp = root / "temp"

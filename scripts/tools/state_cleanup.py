@@ -240,7 +240,8 @@ def _prune_suite_runs(dry_run: bool) -> tuple[int, int]:
     run_root = project_cfg.STATE_DIR / "temp" / "runs"
     cases: dict[Path, list[Path]] = {}
     for run in run_folders(run_root):
-        cases.setdefault(run.parent, []).append(run)
+        # - a run sits under its case's outcome and a date; grouping by the outcome bounds it across days
+        cases.setdefault(run.parent.parent, []).append(run)
     count = freed = 0
     for runs in cases.values():
         for path in sorted(runs, key=lambda item: item.name)[:-KEEP_SUITE_RUNS]:
@@ -249,6 +250,14 @@ def _prune_suite_runs(dry_run: bool) -> tuple[int, int]:
                 _remove(path)
             count += 1
             freed += size
+    if not dry_run:
+        # - a date folder that lost its last run would otherwise stay behind as an empty level
+        for folder in sorted(run_root.glob("*/*/*/*"), reverse=True):
+            try:
+                if folder.is_dir() and not any(folder.iterdir()):
+                    folder.rmdir()
+            except OSError:
+                continue
     return count, freed
 
 
