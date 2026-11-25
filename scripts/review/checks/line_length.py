@@ -76,13 +76,17 @@ def audit(paths: list[Path] | None = None) -> list[tuple[str, int, int, str]]:
         if path.suffix != ".py":
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
+        lines = text.splitlines()
+        # - tokenizing every file is the slow part; only a file with a long line needs the classification
+        if all(len(line) <= LIMIT for line in lines):
+            continue
         spans = string_spans(text)
         try:
             relative = path.relative_to(project_cfg.BASE_DIR).as_posix()
         except ValueError:
             # - a caller can hand in a scratch file, and the report still has to name it
             relative = path.as_posix()
-        for number, line in enumerate(text.splitlines(), start=1):
+        for number, line in enumerate(lines, start=1):
             if len(line) <= LIMIT:
                 continue
             found.append((relative, number, len(line), classify(line, number, spans)))

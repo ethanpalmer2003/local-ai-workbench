@@ -38,7 +38,6 @@ Decisions only you can make.
 Code work that runs here without a live model.
 
 
-- [ ] Replace the custom line-length check with ruff `E501` and delete the 5.7 s gate section: measure the `E501` hit list first, because the current check exempts template and token lines, then keep the exemption as a handful of per-file ignores. ~30 min
 
 - [ ] Replace the five literal catalog labels in `launcher_speech.py` with `ModelId` names against [models](../scripts/config/models/README.md); the rename tool rewrites the strings today, so they are consistent but untyped. ~15 min
 
