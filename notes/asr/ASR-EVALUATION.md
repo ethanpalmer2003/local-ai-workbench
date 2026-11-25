@@ -17,7 +17,7 @@ learner accents or multilingual accuracy.
 | Parakeet.cpp CPU + Nemotron | Keep for GPU pressure | Paced streaming works off-GPU; about 1.1 GiB sampled RAM and optional pinned C API build. |
 | Parakeet.cpp Vulkan + Nemotron | Disabled pending fix | Streaming crashes; offline decoding still works. |
 | whisper.cpp Vulkan/FA + turbo Q5 | Keep accuracy baseline | Multilingual automatic turns; slower completed-turn decode. Learner/noisy quality may justify it. |
-| Kobold embedded Whisper | Deprioritize | Same model as whisper.cpp, slower file screen, no demonstrated advantage. |
+| Kobold embedded Whisper | Deprioritize | Same model as whisper.cpp, slower file screen, and no automatic practice turns: the page uploads a finished turn and shows no partials. |
 
 ## Other model choices
 

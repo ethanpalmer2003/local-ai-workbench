@@ -1,5 +1,6 @@
 """Practice routing/lifecycle contracts without models, microphones or GPU access."""
 
+import base64
 import io
 import json
 import queue
@@ -20,6 +21,7 @@ from scripts.launchers.asr.shared.streaming.segment_stream import SegmentStream
 from scripts.launchers.audiocpp import asr, asr_qwen3
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.launchers.runtime import gpu_selection
+from scripts.tests.cases.asr.shared import practice_smoke
 from scripts.tests.shared.model_free import fixture_processes
 from scripts.tests.shared.process_fixtures import running_process
 
@@ -507,6 +509,32 @@ class PracticeTests(unittest.TestCase):
         self.assertFalse(config["lazy_load"])
         self.assertEqual(cfg.LANGUAGE_PRACTICE.asr_engine, cfg.AsrStartupEngine.QWEN3_AUDIOCPP)
         self.assertEqual(cfg.ASR_SERVICE.engine, cfg.AsrStartupEngine.QWEN3_ASR)
+
+
+class WholeTurnTests(unittest.TestCase):
+    """Kobold's own Whisper recognizes one uploaded turn, which is what the embedded engine can offer."""
+
+    def test_a_whole_turn_upload_carries_base64_wav_and_language(self):
+        body = json.loads(practice_smoke.whole_turn_body(b"RIFFwav", "fr"))
+        self.assertEqual(base64.b64decode(body["audio_data"]), b"RIFFwav")
+        self.assertEqual(body["langcode"], "fr")
+
+    def test_whole_turn_latency_starts_at_the_silence_the_page_waits_for(self):
+        self.assertAlmostEqual(practice_smoke.final_after_speech_end(0.43), 1.13)
+        self.assertAlmostEqual(practice_smoke.final_after_speech_end(0.43, 200), 0.63)
+
+    def test_the_embedded_engine_reports_no_automatic_turns(self):
+        self.assertFalse(live.supported(cfg.AsrStartupEngine.EMBEDDED))
+        self.assertTrue(live.supported(cfg.AsrStartupEngine.AUDIOCPP))
+
+    def test_embedded_weights_come_from_the_kobold_whisper_setting(self):
+        self.assertEqual(
+            practice_smoke.engine_model(cfg.AsrStartupEngine.EMBEDDED),
+            Path(str(cfg.KOBOLDCPP_KCPPS_ARGS["whispermodel"])),
+        )
+        self.assertEqual(
+            practice_smoke.engine_model(cfg.AsrStartupEngine.AUDIOCPP), selector.model(cfg.AsrStartupEngine.AUDIOCPP)
+        )
 
 
 if __name__ == "__main__":

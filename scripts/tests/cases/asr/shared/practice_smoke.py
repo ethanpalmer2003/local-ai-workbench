@@ -1,7 +1,9 @@
 """Opt-in saved-PCM practice gateway smoke; no microphone hardware or browser access."""
 
 import argparse
+import base64
 import json
+import subprocess
 import threading
 import time
 from contextlib import nullcontext
@@ -23,7 +25,7 @@ from scripts.launchers.audiocpp import asr
 from scripts.launchers.koboldcpp import kobold, kobold_lite
 from scripts.launchers.llamacpp.language_practice import chat_command, start_tts
 from scripts.launchers.runtime.execution_context import require_native_execution
-from scripts.launchers.shared.media.audio import decode_audio, mono_resample
+from scripts.launchers.shared.media.audio import decode_audio, mono_resample, pcm_wav
 from scripts.launchers.shared.services import native
 from scripts.launchers.shared.services.process import stop_owned
 from scripts.shared.resources import monitor_process
@@ -59,6 +61,27 @@ def post(base: str, path: str, body: dict[str, Any] | bytes, binary: bool = Fals
     )
     response.raise_for_status()
     return response.content if path == "/v1/audio/speech" else response.json()
+
+
+# - The page's default Silero setting: a whole-turn recognizer always waits this long for the turn to end.
+WHOLE_TURN_SILENCE_MS = 700
+
+
+def whole_turn_body(wav: bytes, language: str = "en") -> bytes:
+    """Kobold's own Whisper takes one base64 WAV per completed turn."""
+    return json.dumps({"audio_data": base64.b64encode(wav).decode(), "langcode": language}).encode()
+
+
+def final_after_speech_end(decode_seconds: float, silence_ms: int = WHOLE_TURN_SILENCE_MS) -> float:
+    """Whole-turn latency from speech end: the silence the VAD waits for, then the upload it decodes."""
+    return silence_ms / 1000 + decode_seconds
+
+
+def engine_model(engine: cfg.AsrStartupEngine) -> Path:
+    """The weights a startup engine loads; Kobold's built-in Whisper has no selector entry of its own."""
+    if engine is cfg.AsrStartupEngine.EMBEDDED:
+        return Path(str(cfg.KOBOLDCPP_KCPPS_ARGS["whispermodel"]))
+    return selector.model(engine)
 
 
 def _gateway_thread(runtime, engine, proxy_port, chat_port, on_server, errors) -> threading.Thread:
@@ -191,87 +214,173 @@ def _saved_pcm_pass(base: str, token: str | None, pcm: bytes, timer: BenchmarkLi
     return SavedPcmPass(timing, started, events, final, text, audio)
 
 
-def exercise(
-    runtime: str,
-    pcm: bytes,
-    report: dict[str, Any],
-    engine: cfg.AsrStartupEngine = cfg.AsrStartupEngine.AUDIOCPP,
-    repeats: int = 1,
-):
-    chat_port, proxy_port = 19194, 19195
-    process, gateway, thread = None, None, None
-    token = None
-    base = f"http://127.0.0.1:{proxy_port}"
-    errors = []
+def _whole_turn_pass(base: str, wav: bytes, timer: BenchmarkLifecycle, language: str) -> tuple[SavedPcmPass, float]:
+    """One completed turn through Kobold's own Whisper, which decodes the whole upload after the turn ends."""
+    with timer.request() as timing:
+        started = time.perf_counter()
+        reply = post(base, "/api/extra/transcribe", whole_turn_body(wav, language), binary=True)
+        decode_seconds = time.perf_counter() - started
+        final: dict[str, Any] = {
+            "type": "transcript.text.done",
+            "text": reply["text"],
+            "observed_at": time.perf_counter(),
+        }
+        text = _chat_reply(base, final["text"] + " Reply in one short English sentence.")
+        audio = _speech(base, text)
+    return SavedPcmPass(timing, started, [final], final, text, audio), decode_seconds
 
-    def on_server(value):
-        nonlocal gateway
-        gateway = value
 
-    def cleanup():
-        if gateway:
-            gateway.shutdown()
-        if thread:
-            thread.join(timeout=10)
-        if process:
-            stop_owned(process)
+class SmokeSession:
+    """One runtime's chat server with the practice gateway in front of it, on the smoke's fixed ports."""
 
-    def setup():
-        nonlocal process, thread
-        if launch_util.port_listening(proxy_port):
+    chat_port = 19194
+    proxy_port = 19195
+
+    def __init__(self, runtime: str, engine: cfg.AsrStartupEngine, errors: list[str]) -> None:
+        self.runtime, self.engine, self.errors = runtime, engine, errors
+        self.base = f"http://127.0.0.1:{self.proxy_port}"
+        self.process: subprocess.Popen[Any] | None = None
+        self.gateway: Any = None
+        self.thread: threading.Thread | None = None
+
+    def _on_server(self, value: Any) -> None:
+        self.gateway = value
+
+    def cleanup(self) -> None:
+        if self.gateway:
+            self.gateway.shutdown()
+        if self.thread:
+            self.thread.join(timeout=10)
+        if self.process:
+            stop_owned(self.process)
+
+    def setup(self) -> None:
+        if launch_util.port_listening(self.proxy_port):
             raise RuntimeError("Smoke gateway port occupied; no session stopped")
-        process = _start_chat(runtime, chat_port)
-        thread = _gateway_thread(runtime, engine, proxy_port, chat_port, on_server, errors)
-        _await_gateway(base, errors)
+        self.process = _start_chat(self.runtime, self.chat_port)
+        self.thread = _gateway_thread(
+            self.runtime, self.engine, self.proxy_port, self.chat_port, self._on_server, self.errors
+        )
+        _await_gateway(self.base, self.errors)
 
-    timer = BenchmarkLifecycle(lambda: str(process.pid) if process else "reused-matching-server", cleanup)
+    def timer(self) -> BenchmarkLifecycle:
+        return BenchmarkLifecycle(
+            lambda: str(self.process.pid) if self.process else "reused-matching-server", self.cleanup
+        )
 
-    def start_vad():
-        nonlocal token
-        token = post(base, "/asr/live/start", {"language": "en"})["session"]
 
-    vad_timer = BenchmarkLifecycle(
-        lambda: token or "", lambda: post(base, f"/asr/live/{token}/stop", b"", True) if token else None
-    )
+def _whole_turn_arm(base: str, wav: bytes, report: dict[str, Any], timer: BenchmarkLifecycle, setup: Any, repeats: int):
+    """Kobold's own Whisper has no automatic turns: the page uploads the finished turn, so time that upload."""
     try:
-        with timer, vad_timer:
+        with timer:
             timer.prepare(setup, combined=True)
             timer.warmup(lambda: http_ready(base + "/health"))
-            vad_timer.prepare(start_vad, combined=True)
-            vad_timer.warmup(lambda: post(base, f"/asr/live/{token}/audio", bytes(1024), True))
-            passes = [_saved_pcm_pass(base, token, pcm, timer) for _ in range(repeats)]
-            timing, started, events, final, text, audio = (
-                passes[-1].timing,
-                passes[-1].started,
-                passes[-1].events,
-                passes[-1].final,
-                passes[-1].text,
-                passes[-1].audio,
-            )
+            post(base, "/api/extra/transcribe", whole_turn_body(wav), binary=True)
+            passes = [_whole_turn_pass(base, wav, timer, "en") for _ in range(repeats)]
+            last, decode_seconds = passes[-1]
             report.update(
                 status="completed",
-                transcript=final["text"],
-                reply=text,
-                wav_bytes=len(audio),
-                timing=timing.record(),
-                first_partial_seconds=next(
-                    (
-                        item["observed_at"] - started
-                        for item in events
-                        if item.get("type") in ("transcript.text.delta", "transcript.text.snapshot")
-                        and (item.get("delta") or item.get("text"))
-                    ),
-                    None,
-                ),
-                final_event=final,
-                final_after_vad_end_seconds=final["observed_at"] - started - (final["speech_end_sample"] - 512) / 16000,
+                transcript=last.final["text"],
+                reply=last.text,
+                wav_bytes=len(last.audio),
+                timing=last.timing.record(),
+                automatic_turns=False,
+                passes=[{"decode_request_seconds": seconds} for _, seconds in passes],
+                first_partial_seconds=None,
+                decode_request_seconds=decode_seconds,
+                final_event=last.final,
+                final_after_vad_end_seconds=final_after_speech_end(decode_seconds),
             )
     except Exception as error:
         report.update(status="failed", error=str(error))
         raise
     finally:
         report["benchmark"] = timer.record()
+
+
+def _live_latency(item: SavedPcmPass) -> dict[str, float | None]:
+    """Where one microphone-style pass spent its time, measured from the audio it streamed."""
+    return {
+        "first_partial_seconds": next(
+            (
+                event["observed_at"] - item.started
+                for event in item.events
+                if event.get("type") in ("transcript.text.delta", "transcript.text.snapshot")
+                and (event.get("delta") or event.get("text"))
+            ),
+            None,
+        ),
+        "final_after_vad_end_seconds": item.final["observed_at"]
+        - item.started
+        - (item.final["speech_end_sample"] - 512) / 16000,
+    }
+
+
+def _record_live_pass(passes: list[SavedPcmPass], report: dict[str, Any]) -> None:
+    """The row the report keeps for microphone-style passes: the last pass plus every pass' latencies."""
+    last = passes[-1]
+    report.update(
+        status="completed",
+        transcript=last.final["text"],
+        reply=last.text,
+        wav_bytes=len(last.audio),
+        timing=last.timing.record(),
+        passes=[_live_latency(item) for item in passes],
+        final_event=last.final,
+        **_live_latency(last),
+    )
+
+
+def _live_arm(session: SmokeSession, pcm: bytes, report: dict[str, Any], repeats: int) -> None:
+    """A microphone-style pass: stream the saved PCM through the gateway's automatic Silero turns."""
+    token = None
+
+    def start_vad():
+        nonlocal token
+        token = post(session.base, "/asr/live/start", {"language": "en"})["session"]
+
+    def stop_vad() -> None:
+        if token:
+            post(session.base, f"/asr/live/{token}/stop", b"", True)
+
+    timer = session.timer()
+    vad_timer = BenchmarkLifecycle(lambda: token or "", stop_vad)
+    try:
+        with timer, vad_timer:
+            timer.prepare(session.setup, combined=True)
+            timer.warmup(lambda: http_ready(session.base + "/health"))
+            vad_timer.prepare(start_vad, combined=True)
+            vad_timer.warmup(lambda: post(session.base, f"/asr/live/{token}/audio", bytes(1024), True))
+            passes = []
+            for index in range(repeats):
+                passes.append(_saved_pcm_pass(session.base, token, pcm, timer))
+                if index + 1 < repeats:
+                    # - a fresh session per pass keeps speech_end_sample inside one turn instead of
+                    #   accumulating across passes, which made the final-after-speech-end value negative
+                    stop_vad()
+                    start_vad()
+            _record_live_pass(passes, report)
+    except Exception as error:
+        report.update(status="failed", error=str(error))
+        raise
+    finally:
+        report["benchmark"] = timer.record()
         report["vad_benchmark"] = vad_timer.record()
+
+
+def exercise(
+    runtime: str,
+    pcm: bytes,
+    wav: bytes,
+    report: dict[str, Any],
+    engine: cfg.AsrStartupEngine = cfg.AsrStartupEngine.AUDIOCPP,
+    repeats: int = 1,
+):
+    session = SmokeSession(runtime, engine, [])
+    if engine is cfg.AsrStartupEngine.EMBEDDED:
+        _whole_turn_arm(session.base, wav, report, session.timer(), session.setup, repeats)
+    else:
+        _live_arm(session, pcm, report, repeats)
 
 
 def main():
@@ -287,6 +396,7 @@ def main():
             "speechcpp-qwen-0.6b",
             "whisper-vulkan",
             "parakeetcpp-v3",
+            "embedded",
         ),
         default="audiocpp-nemotron",
     )
@@ -294,6 +404,8 @@ def main():
     parser.add_argument("--repeats", type=int, choices=range(1, 4), default=1, help="saved-PCM passes per runtime")
     args = parser.parse_args()
     engine = cfg.AsrStartupEngine(args.engine)
+    if engine is cfg.AsrStartupEngine.EMBEDDED and "koboldcpp" not in args.runtimes:
+        parser.error("Embedded Whisper runs inside KoboldCpp; include koboldcpp in --runtimes")
     context = require_native_execution("Practice gateway smoke")
     refuse_existing_sessions([19193, 19194, 19195, 19196])
     run = CasePaths(__file__).new_run()
@@ -311,14 +423,16 @@ def main():
         ],
         models=[
             provenance.file_identity("chat", cfg.GEMMA_AUDIO_ASR.model),
-            provenance.file_identity("asr", selector.model(engine)),
+            provenance.file_identity("asr", engine_model(engine)),
             provenance.file_identity("tts", Path(practice_models.tts_spec()["path"])),
         ],
     )
     samples, rate = decode_audio(Path(default_corpus()[0]["file"]))
-    pcm = (mono_resample(samples, rate).clip(-1, 1) * 32767).astype("<i2").tobytes()
+    clip_samples = mono_resample(samples, rate, clip=True)
+    pcm = (clip_samples * 32767).astype("<i2").tobytes()
     pcm += bytes(64000)
     pcm = pcm.ljust((len(pcm) + 1023) // 1024 * 1024, b"\0")
+    wav = pcm_wav(clip_samples, 16000)
     process = None
     started = time.perf_counter()
 
@@ -373,15 +487,17 @@ def main():
                     ),
                 )
             )
-            if engine not in cfg.AUDIOCPP_ASR_ENGINES:
+            if selector.external(engine) and engine not in cfg.AUDIOCPP_ASR_ENGINES:
                 asr_timer.prepare(start_asr, combined=True)
-            from scripts.launchers.shared.transport.multipart import audio_upload
+            if engine is not cfg.AsrStartupEngine.EMBEDDED:
+                # - Kobold's own Whisper exists only once its server starts, so that arm warms it in place
+                from scripts.launchers.shared.transport.multipart import audio_upload
 
-            upload = audio_upload(
-                Path(default_corpus()[0]["file"]).read_bytes(), {"language": "en", "response_format": "json"}
-            )
-            recognizer_timer = speech_timer if engine in cfg.AUDIOCPP_ASR_ENGINES else asr_timer
-            recognizer_timer.warmup(lambda: selector.backend(engine).transcribe(*upload))
+                upload = audio_upload(
+                    Path(default_corpus()[0]["file"]).read_bytes(), {"language": "en", "response_format": "json"}
+                )
+                recognizer_timer = speech_timer if engine in cfg.AUDIOCPP_ASR_ENGINES else asr_timer
+                recognizer_timer.warmup(lambda: selector.backend(engine).transcribe(*upload))
             target = asr_process or process
             module = (
                 "scripts.launchers.asr.parakeetcpp.streaming_server"
@@ -396,7 +512,7 @@ def main():
             with monitor as resources:
                 for runtime in args.runtimes:
                     row = report["runtimes"][runtime] = {}
-                    exercise(runtime, pcm, row, engine, args.repeats)
+                    exercise(runtime, pcm, wav, row, engine, args.repeats)
             report["asr_resources"] = resources
     finally:
         report.update(
