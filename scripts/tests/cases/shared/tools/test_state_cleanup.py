@@ -161,6 +161,33 @@ class StateCleanupTests(unittest.TestCase):
         self.assertTrue(new.exists())
         self.assertTrue((temp / "runs").is_dir())
 
+    def test_the_cache_cap_empties_old_entries_and_leaves_the_launch_scratch(self):
+        root = self.root()
+        cache = root / "cache"
+        launch = root / "launch"
+        old_entry = cache / "uv" / "wheel.whl"
+        new_entry = cache / "ruff" / "cache.bin"
+        live = launch / "audiocpp-gguf" / "weights.gguf"
+        for path in (old_entry, new_entry, live):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"x")
+        self.age(old_entry, 40)
+        self.age(live, 40)
+        with (
+            unittest.mock.patch.object(state_cleanup.project_cfg, "STATE_DIR", root),
+            unittest.mock.patch.object(state_cleanup.cfg.LAUNCH, "temp_dir", launch),
+        ):
+            count, _ = state_cleanup.prune_cache_root(time.time() - 30 * 86400, False)
+        self.assertEqual(count, 1)
+        self.assertFalse(old_entry.exists())
+        self.assertFalse((cache / "uv").exists())
+        self.assertTrue(new_entry.exists())
+        self.assertTrue(live.exists())
+
+    def test_the_clear_flag_drops_both_extraction_bounds(self):
+        self.assertEqual(state_cleanup._extraction_limits(False), {"keep": 2, "min_age_hours": 24})
+        self.assertEqual(state_cleanup._extraction_limits(True), {"keep": 0, "min_age_hours": 0})
+
 
 if __name__ == "__main__":
     unittest.main()
