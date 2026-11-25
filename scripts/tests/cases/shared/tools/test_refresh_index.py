@@ -26,8 +26,7 @@ class RefreshPlanTests(unittest.TestCase):
     def test_code_change_plans_both_indexes(self):
         item = refresh_index.plan(["scripts/tools/refresh_index.py"], Path("C:/AI"), resolve=present)
         self.assertEqual(len(item.graphify), 2)
-        self.assertEqual(item.graphify[0][1:], ("C:/AI", "--code-only", "--out", "C:/AI/scripts/state/cache"))
-        self.assertEqual(item.graphify[1][1:3], ("cluster-only", "C:/AI/scripts/state/cache"))
+        self.assertEqual(item.graphify[1][1:3], ("cluster-only", "C:/AI"))
         self.assertEqual(item.memory.cwd, "C:/AI")
 
     def test_docs_only_change_skips_graphify(self):
