@@ -36,7 +36,7 @@ class RdnaSourceConfig:
 class BuildDefaults:
     gpu_target: str = "gfx1101"
     rocm_path: str = str(project_cfg.DATA_DIR / "ROCm" / "therock-dist-windows-gfx110X-all-10.2.0a20260927")
-    rc_compiler: str = r"C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/rc.exe"
+    rc_compiler: str = str(project_cfg.RC_EXE)
     jobs: int = 12
     skip_patch_setup: bool = False
 

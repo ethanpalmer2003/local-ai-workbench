@@ -8,7 +8,7 @@ from scripts.download.frameworks import update_shared as updater
 
 
 def visual_studio_environment(component_key: str = "shared") -> dict[str, str]:
-    vswhere = Path("C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe")
+    vswhere = project_cfg.VSWHERE_EXE
     installation = subprocess.check_output(
         [
             str(vswhere),

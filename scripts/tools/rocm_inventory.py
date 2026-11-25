@@ -13,7 +13,7 @@ from pathlib import Path
 
 from scripts.config import project_config as project_cfg
 
-AMD_ROOT = Path(r"C:\Program Files\AMD\ROCm")
+AMD_ROOT = project_cfg.AMD_ROCM_PROGRAM_ROOT
 MARKERS = ("amdhip64.dll", "amdhip64_7.dll", "hipblas.dll", "hipblaslt.dll", "libhipblaslt.dll", "rocblas.dll")
 VERSION_FILES = (".hipVersion", "bin/.hipVersion")
 

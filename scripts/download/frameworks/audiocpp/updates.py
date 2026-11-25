@@ -115,7 +115,7 @@ def process_pypi(
 def find_audiocpp_rocm_path() -> Path:
     configured = os.environ.get("AUDIOCPP_ROCM_PATH")
     candidates = [Path(configured)] if configured else []
-    installed = Path("C:\\Program Files\\AMD\\ROCm")
+    installed = project_cfg.AMD_ROCM_PROGRAM_ROOT
     if installed.is_dir():
         candidates.extend(sorted(installed.iterdir(), reverse=True))
     candidates.append(project_cfg.ROCM_SDK_BIN_DIR.parent)
@@ -130,7 +130,7 @@ def find_audiocpp_rocm_path() -> Path:
 
 
 def find_audiocpp_vs_tools() -> tuple[Path, Path, Path]:
-    vswhere = Path("C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe")
+    vswhere = project_cfg.VSWHERE_EXE
     if not vswhere.is_file():
         raise shared.UpdateError("vswhere.exe was not found; install Visual Studio Build Tools with C++ support.")
     result = subprocess.run(
@@ -151,11 +151,14 @@ def find_audiocpp_vs_tools() -> tuple[Path, Path, Path]:
     installation = Path(result.stdout.strip())
     vcvars = installation / "VC/Auxiliary/Build/vcvarsall.bat"
     msvc_dir = installation / "VC/Tools/MSVC"
-    compatible_toolsets = sorted(msvc_dir.glob("14.44.*"), reverse=True) if msvc_dir.is_dir() else []
+    toolset = project_cfg.MSVC_VERSION.rsplit(".", 1)[0]
+    compatible_toolsets = sorted(msvc_dir.glob(toolset + ".*"), reverse=True) if msvc_dir.is_dir() else []
     cmake_dir = installation / "Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin"
     ninja_dir = installation / "Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja"
     if not vcvars.is_file() or not compatible_toolsets:
-        raise shared.UpdateError("AudioCpp HIP builds require Visual Studio's MSVC 14.44 toolset and vcvarsall.bat.")
+        raise shared.UpdateError(
+            f"AudioCpp HIP builds require Visual Studio's MSVC {toolset} toolset and vcvarsall.bat."
+        )
     if not (cmake_dir / "cmake.exe").is_file() or not (ninja_dir / "ninja.exe").is_file():
         raise shared.UpdateError("Visual Studio CMake and Ninja components are required for the AudioCpp HIP build.")
     return (vcvars, cmake_dir, ninja_dir)

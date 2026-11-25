@@ -247,3 +247,19 @@ SDCPP_ROCM_DIR = SDCPP_FRAMEWORK_DIR / "rocm"
 SDCPP_VULKAN_DIR = SDCPP_FRAMEWORK_DIR / "vulkan"
 # shared TheRock ROCm runtime: sd.cpp and the AudioCpp ROCm release both load their HIP libraries from it
 ROCM_SDK_BIN_DIR = DATA_DIR / "ROCm" / "therock-dist-windows-gfx110X-all-10.2.0a20260927" / "bin"
+
+# --- WINDOWS HOST TOOLS (machine-local installs, never model weights) ---
+# Each binding reads an env override first so a tester's machine stops being baked into code.
+# The .env file loads at import, so these can live there alongside HF_TOKEN.
+AMD_ROCM_PROGRAM_ROOT = Path(os.environ.get("AMD_ROCM_ROOT") or r"C:\Program Files\AMD\ROCm")
+VSWHERE_EXE = Path(
+    os.environ.get("VSWHERE_PATH") or r"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+)
+WINDOWS_KITS_ROOT = Path(os.environ.get("WINDOWS_KITS_ROOT") or r"C:\Program Files (x86)\Windows Kits\10")
+WINDOWS_SDK_VERSION = os.environ.get("WINDOWS_SDK_VERSION") or "10.0.26100.0"
+VS_BUILDTOOLS_ROOT = Path(
+    os.environ.get("VS_BUILDTOOLS_ROOT") or r"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
+)
+MSVC_VERSION = os.environ.get("MSVC_VERSION") or "14.44.35207"
+MSVC_ROOT = Path(os.environ.get("MSVC_ROOT") or VS_BUILDTOOLS_ROOT / "VC" / "Tools" / "MSVC" / MSVC_VERSION)
+RC_EXE = Path(os.environ.get("RC_PATH") or WINDOWS_KITS_ROOT / "bin" / WINDOWS_SDK_VERSION / "x64" / "rc.exe")

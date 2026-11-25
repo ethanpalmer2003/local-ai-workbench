@@ -27,9 +27,9 @@ MODEL = model_cfg.path("llamacpp/Swift-1.5-Qwen3.8-27B-GSQ-RCO-IQ3_XXS-mtp")
 
 
 def native_build_environment() -> tuple[Path, dict[str, str]]:
-    msvc = Path("C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207")
-    sdk = Path("C:/Program Files (x86)/Windows Kits/10")
-    sdk_version = "10.0.26100.0"
+    msvc = project_cfg.MSVC_ROOT
+    sdk = project_cfg.WINDOWS_KITS_ROOT
+    sdk_version = project_cfg.WINDOWS_SDK_VERSION
     env = os.environ.copy()
     env["INCLUDE"] = ";".join(
         str(p) for p in [msvc / "include", *(sdk / "Include" / sdk_version / d for d in ("ucrt", "shared", "um"))]
