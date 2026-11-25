@@ -34,7 +34,7 @@ C:/AI/bat/browser/launch_language.bat
 C:/AI/bat/browser/launch_test.bat
 ```
 
-- Select alternatives with `--transcription-engine` (streaming: `audiocpp-nemotron`, `audiocpp-qwen3`, `nemo-nemotron`, `parakeetcpp-nemotron-cpu`; completed-turn: `speechcpp-qwen-0.6b`, `whisper-vulkan`, `parakeetcpp-v3`); the practice TTS stays Vulkan; the practice page defaults to `audiocpp-qwen3`, while `ASR_SERVICE` keeps `qwen3-asr` for one-shot transcription.
+- Select alternatives with `--transcription-engine` (streaming: `audiocpp-nemotron`, `audiocpp-qwen3`, `nemo-nemotron`, `parakeetcpp-nemotron-cpu`; completed-turn: `speechcpp-qwen-0.6b`, `whisper-vulkan`, `parakeetcpp-v3`, `embedded` for KoboldCpp's own Whisper); the practice TTS stays Vulkan; the practice page defaults to `audiocpp-qwen3`, while `ASR_SERVICE` keeps `qwen3-asr` for one-shot transcription.
 - Kobold Gemma audio profile shares its loaded model; standalone Gemma ASR plus Kobold chat loads two instances. Direct llama.cpp Gemma can share one server for chat/audio.
 - Common `/practice` page: automatic microphone turns with the default backend, WAV upload, transcript editing, Gemma chat and Supertonic playback. AudioCpp Nemotron and Qwen3, NeMo, Parakeet CPU Nemotron, Qwen 0.6B, Whisper and Parakeet v3 support automatic turns. `--practice-ui` selects it for Kobold.
 - External API, language options and service limits: [ASR language options, external API and limits](README-LANGUAGES-API-LIMITS.md).
