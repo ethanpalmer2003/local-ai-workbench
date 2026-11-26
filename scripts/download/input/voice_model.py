@@ -240,12 +240,13 @@ def roots(downloaded):
 
 
 def get_files(roots):
-    for ext in ("*.ogg", "*.wav"):
+    # - a manual voice often arrives as mp3; ffmpeg converts it like the other containers
+    for ext in ("*.ogg", "*.wav", "*.mp3"):
         files = [f for r in roots for f in r.rglob(ext)]
         if files:
             # "[old]" files are superseded versions of the same clip (same id, sometimes different text)
             return [f for f in files if not f.stem.lower().startswith("[old]")]
-    raise ValueError("No .ogg or .wav files found")
+    raise ValueError("No .ogg, .wav or .mp3 files found")
 
 
 def voice_files(roots_, excluded, generated):
