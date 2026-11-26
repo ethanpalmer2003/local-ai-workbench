@@ -1,6 +1,6 @@
 # Native llama.cpp benchmarks
 
-- `benchmark_speedbench`: fresh generation / speculation; `benchmark_specspeed`: upstream source-copy/edit workload; `benchmark_ngram`: matched local copy/generation cases.
+- `benchmark_speedbench`: fresh generation / speculation; `benchmark_specspeed`: upstream source-copy/edit workload; `benchmark_ngram`: matched local copy/generation cases; `benchmark_repetition`: repetition-loop screen across sampler settings.
 - `benchmark_context_stream`: context occupancy/cache behavior; `benchmark_llamacpp_profiles`: build/profile screen.
 - Downloaded tools: `frameworks/benchmarks/{speed-bench,specspeed,club-rdna16}`. Project runners and English/code scope remain owned here.
 - Native checks are live work. Match request/settings/order; warm up; record exact model/template/hash/reasoning and sampled resource baselines.
