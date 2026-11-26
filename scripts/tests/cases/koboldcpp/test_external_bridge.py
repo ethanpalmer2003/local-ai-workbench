@@ -8,20 +8,26 @@ from http.server import BaseHTTPRequestHandler
 from scripts.launchers.koboldcpp import external_bridge
 from scripts.shared.http_server import request, server
 
+CHAT_PATH = "/v1/chat/completions"
+
 
 class _Llama(BaseHTTPRequestHandler):
+    """A chat-only upstream: a completion request here is the bug this bridge exists to avoid."""
+
     def do_POST(self) -> None:
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        assert self.path == "/v1/completions", self.path
+        assert self.path == CHAT_PATH, self.path
+        assert isinstance(body.get("messages"), list), body
         if body.get("stream"):
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")
             self.end_headers()
             for token in ("Hello", " there"):
-                self.wfile.write(b"data: " + json.dumps({"choices": [{"text": token}]}).encode() + b"\n\n")
+                choice = {"delta": {"content": token}}
+                self.wfile.write(b"data: " + json.dumps({"choices": [choice]}).encode() + b"\n\n")
             self.wfile.write(b"data: [DONE]\n\n")
             return
-        payload = json.dumps({"choices": [{"text": "Hello there"}]}).encode()
+        payload = json.dumps({"choices": [{"message": {"content": "Hello there"}}]}).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(payload)))
@@ -52,10 +58,11 @@ class _Handler:
 
 
 class ExternalBridgeTests(unittest.TestCase):
-    def test_kobold_payload_becomes_an_openai_completion_request(self):
-        request_body = external_bridge.openai_request(
+    def test_kobold_payload_becomes_a_chat_request_that_keeps_the_template(self):
+        request_body = external_bridge.chat_request(
             {
                 "prompt": "Once upon",
+                "memory": "You are Persona.",
                 "max_length": 64,
                 "temperature": 0.7,
                 "rep_pen": 1.1,
@@ -67,7 +74,10 @@ class ExternalBridgeTests(unittest.TestCase):
         self.assertEqual(
             request_body,
             {
-                "prompt": "Once upon",
+                "messages": [
+                    {"role": "system", "content": "You are Persona."},
+                    {"role": "user", "content": "Once upon"},
+                ],
                 "max_tokens": 64,
                 "stream": True,
                 "temperature": 0.7,
@@ -76,9 +86,15 @@ class ExternalBridgeTests(unittest.TestCase):
             },
         )
 
-    def test_streamed_token_reads_only_real_deltas(self):
-        line = b'data: {"choices":[{"text":"hi"}]}\n'
-        self.assertEqual(external_bridge.streamed_token(line), "hi")
+    def test_a_prompt_without_memory_is_one_user_turn(self):
+        request_body = external_bridge.chat_request({"prompt": "hi", "max_length": 8}, stream=False)
+        self.assertEqual(request_body["messages"], [{"role": "user", "content": "hi"}])
+
+    def test_streamed_token_reads_chat_deltas_and_completion_text(self):
+        delta = b'data: {"choices":[{"delta":{"content":"hi"}}]}\n'
+        self.assertEqual(external_bridge.streamed_token(delta), "hi")
+        plain = b'data: {"choices":[{"text":"hi"}]}\n'
+        self.assertEqual(external_bridge.streamed_token(plain), "hi")
         self.assertEqual(external_bridge.streamed_token(b"data: [DONE]\n"), "")
         self.assertEqual(external_bridge.streamed_token(b"\n"), "")
 
@@ -101,7 +117,7 @@ class ExternalBridgeTests(unittest.TestCase):
         with server(_Llama) as base:
             self.assertIn("/api/extra/generate/stream", external_bridge.GENERATE_PATHS)
             self.assertIn("/api/v1/generate", external_bridge.GENERATE_PATHS)
-            status, body, _ = request(base + "/v1/completions", {"prompt": "hi", "max_tokens": 8})
+            status, body, _ = request(base + CHAT_PATH, {"messages": [{"role": "user", "content": "hi"}]})
             self.assertEqual(status, 200)
             self.assertEqual(external_bridge.completion_text(body), "Hello there")
 

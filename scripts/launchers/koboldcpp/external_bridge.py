@@ -27,9 +27,20 @@ PASSTHROUGH = {
 }
 
 
-def openai_request(payload: dict[str, Any], stream: bool) -> dict[str, Any]:
+def chat_request(payload: dict[str, Any], stream: bool) -> dict[str, Any]:
+    """Kobold prompt to one OpenAI chat request, so the model's own template applies.
+
+    Lite posts a single Kobold-protocol `prompt`; sending it to `/completions` skips the chat template,
+    and a templated model answers that raw text with free-running garbage. The memory text becomes the
+    system message and the prompt the user turn.
+    """
+    messages: list[dict[str, str]] = []
+    memory = str(payload.get("memory") or "").strip()
+    if memory:
+        messages.append({"role": "system", "content": memory})
+    messages.append({"role": "user", "content": str(payload.get("prompt") or "").strip()})
     request: dict[str, Any] = {
-        "prompt": str(payload.get("prompt") or ""),
+        "messages": messages,
         "max_tokens": int(payload.get("max_length") or 128),
         "stream": stream,
     }
@@ -62,27 +73,34 @@ def streamed_token(line: bytes) -> str:
         choices = json.loads(data).get("choices") or []
     except json.JSONDecodeError:
         return ""
-    return str(choices[0].get("text") or "") if choices else ""
+    if not choices:
+        return ""
+    # - a chat stream carries deltas; a completion stream carries text
+    delta = choices[0].get("delta") or {}
+    return str(delta.get("content") or choices[0].get("text") or "")
 
 
 def completion_text(body: bytes) -> str:
     choices = json.loads(body or b"{}").get("choices") or []
-    return str(choices[0].get("text") or "") if choices else ""
+    if not choices:
+        return ""
+    message = choices[0].get("message") or {}
+    return str(message.get("content") or choices[0].get("text") or "")
 
 
 def _call(base: str, request: dict[str, Any]) -> requests.Response:
-    url = base.rstrip("/") + "/completions"
+    url = base.rstrip("/") + "/chat/completions"
     return requests.post(url, json=request, timeout=300, stream=True)
 
 
 def generated_text(base: str, payload: dict[str, Any]) -> str:
-    with _call(base, openai_request(payload, stream=False)) as response:
+    with _call(base, chat_request(payload, stream=False)) as response:
         response.raise_for_status()
         return completion_text(response.content)
 
 
 def tokens(base: str, payload: dict[str, Any]) -> Iterator[str]:
-    with _call(base, openai_request(payload, stream=True)) as response:
+    with _call(base, chat_request(payload, stream=True)) as response:
         response.raise_for_status()
         for line in response.iter_lines():
             if token := streamed_token(line):
