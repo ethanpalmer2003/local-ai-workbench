@@ -6,8 +6,7 @@
   const status = document.getElementById('comparison-status');
   const run = document.getElementById('comparison-run');
   const load = document.getElementById('comparison-load');
-  // - one editor drives both: the composer's message box is the comparison text
-  const comparisonText = document.getElementById('box');
+  const comparisonText = document.getElementById('comparison-text');
   const allButtons = ['comparison-all-voices', 'comparison-all-models', 'comparison-all-variants']
     .map(id => document.getElementById(id));
   const urls = new Set();
