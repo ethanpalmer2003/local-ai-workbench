@@ -29,11 +29,12 @@ const context = vm.createContext({document, console, Blob, AbortController, DOME
   async fetch(url, options) {
     if (String(url).includes('comparison-catalog')) return {ok: true, async json() { return {
       voices: [
-        {id: 'voice-a', available: true, variants: ['1', 'max30', 'min30'], default_variant: 'max30'},
-        {id: 'voice-b', available: true, variants: ['max30'], default_variant: 'max30'},
-        {id: 'missing', available: false, variants: [], default_variant: ''},
+        {id: 'voice-a', available: true, variants: ['1', 'max30', 'min30'], variant_seconds: {'1': 13.6, max30: 27.86, min30: 31.66}, default_variant: 'max30'},
+        {id: 'voice-b', available: true, variants: ['max30'], variant_seconds: {max30: 20.0}, default_variant: 'max30'},
+        {id: 'missing', available: false, variants: [], variant_seconds: {}, default_variant: ''},
       ],
-      models: [{id: 'breeze', installed: true, clone: true}, {id: 'echo', installed: true, clone: true},
+      models: [{id: 'breeze', installed: true, clone: true, reference_seconds_limit: 30},
+        {id: 'echo', installed: true, clone: true, reference_seconds_limit: 30},
         {id: 'absent', installed: false, clone: true}, {id: 'design', installed: true, clone: false}],
     }; }};
     active++; maximumActive = Math.max(maximumActive, active);
@@ -62,9 +63,11 @@ vm.runInContext(source, context);
   document.getElementById('comparison-all-models').onclick();
   assert.equal(document.getElementById('comparison-voices').selectedOptions.length, 2);
   assert.equal(document.getElementById('comparison-models').selectedOptions.length, 2);
-  // - voice-b never built the other clips, so those are shown but cannot be queued
+  // - voice-b never built the other clips, so those are shown but cannot be queued; min30 also exceeds
+  // - the 30 s reference cap those models declare
   assert.equal(clips.options.find(option => option.value === '1').disabled, true);
   assert.equal(clips.options.find(option => option.value === 'max30').disabled, false);
+  assert.match(clips.options.find(option => option.value === 'min30').textContent, /too long/);
   assert.equal(clips.selectedOptions.length, 1);
   document.getElementById('comparison-run').onclick();
   await context.pending;
@@ -81,10 +84,15 @@ vm.runInContext(source, context);
     assert.equal(request.response_format, 'wav'); assert.equal(request.stream_format, undefined);
     assert.equal(request.options.temperature, .7); assert.equal(request.options.stream_frames_per_event, undefined);
   }
-  const cards = context.log.children[0].children[2].children;
-  assert.match(cards[2].children[1].textContent, /Failed: 422/);
-  assert.equal(cards[0].children[2].controls, true);
-  assert.equal(cards[0].children[2].autoplay, undefined);
+  // - one table: rows are characters, columns are models, so a repeat is never printed twice
+  const table = context.log.children[0].children[2].children[0];
+  const rows = table.children;
+  assert.equal(rows.length, 3, 'one header row and one row per character');
+  assert.deepEqual(rows[0].children.map(cell => cell.textContent), ['Character', 'breeze', 'echo']);
+  assert.equal(rows[1].children[0].textContent, 'voice-a');
+  assert.match(rows[1].children[2].children[0].textContent, /Failed: 422/);
+  assert.equal(rows[1].children[1].children[1].controls, true, 'a ready cell carries its player');
+  assert.equal(rows[1].children[1].children[1].autoplay, undefined);
   assert.equal(document.getElementById('comparison-run').disabled, false);
   const before = requests.length;
   document.getElementById('comparison-run').onclick();

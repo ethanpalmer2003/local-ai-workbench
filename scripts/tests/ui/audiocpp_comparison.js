@@ -15,6 +15,7 @@
   let controller;
   let choicesLoaded = false;
   const voiceInfo = new Map();
+  const modelInfo = new Map();
   const client = new SpeechClient(PROXY_URL);
 
   const selected = control => [...control.selectedOptions].map(option => option.value);
@@ -47,13 +48,25 @@
     const shared = defaults.length && defaults.every(value => value === defaults[0]) ? defaults[0] : '';
     const union = [...new Set(scopes.flatMap(id => voiceInfo.get(id).variants))].sort();
     const previous = selected(variants);
+    // - a checkpoint with a small context refuses a long reference: cap by the smallest chosen model
+    const limits = selected(models)
+      .map(id => modelInfo.get(id)?.reference_seconds_limit)
+      .filter(value => typeof value === 'number');
+    const limit = limits.length ? Math.min(...limits) : Infinity;
+    const tightest = selected(models)
+      .filter(id => modelInfo.get(id)?.reference_seconds_limit === limit)
+      .map(id => id.split('/').pop())
+      .join(', ');
     const options = union.map(id => {
       const missing = scopes.filter(voice => !voiceInfo.get(voice).variants.includes(id));
+      const seconds = Math.max(0, ...scopes.map(voice => voiceInfo.get(voice).variant_seconds?.[id] || 0));
+      const tooLong = seconds > limit;
       const option = document.createElement('option');
       option.value = id;
       option.textContent = id + (id === shared ? ' (default)' : '')
+        + (tooLong ? ` (${seconds.toFixed(0)}s too long for ${tightest})` : '')
         + (missing.length ? ` (not built for ${missing.join(', ')})` : '');
-      option.disabled = missing.length > 0;
+      option.disabled = tooLong || missing.length > 0;
       option.selected = !option.disabled && (previous.includes(id) || (!previous.length && id === shared));
       return option;
     });
@@ -99,9 +112,12 @@
       for (const voice of catalog.voices) {
         voiceInfo.set(voice.id, {
           variants: Array.isArray(voice.variants) ? voice.variants : [],
+          variant_seconds: voice.variant_seconds || {},
           default_variant: voice.default_variant || '',
         });
       }
+      modelInfo.clear();
+      for (const model of catalog.models) modelInfo.set(model.id, model);
       refreshClipChoices();
       const cloneModels = catalog.models.filter(model => model.clone);
       const requestedModels = cloneModels
@@ -120,11 +136,11 @@
   }
   load.onclick = loadChoices;
   for (const [id, control] of [['voices', voices], ['models', models], ['variants', variants]]) {
-    control.addEventListener('change', id === 'voices' ? () => { refreshClipChoices(); updateCount(); } : updateCount);
+    control.addEventListener('change', id === 'variants' ? updateCount : () => { refreshClipChoices(); updateCount(); });
     document.getElementById('comparison-all-' + id).onclick = () => {
       for (const option of control.options) option.selected = !option.disabled;
       // - programmatic selection fires no change event, so the clip list follows by hand
-      if (id === 'voices') refreshClipChoices();
+      if (id !== 'variants') refreshClipChoices();
       updateCount();
     };
   }
@@ -146,25 +162,58 @@
     urls.clear(); batches.clear();
     setStatus('WAVs cleared.');
   };
+  // - results are a table: one section per character, rows are the chosen clips, columns the models.
+  // - With a single clip there is no clip axis, so the characters themselves become the rows.
+  function headerRow(labels) {
+    const row = document.createElement('tr');
+    for (const label of labels) {
+      const cell = document.createElement('th'); cell.textContent = label; row.append(cell);
+    }
+    return row;
+  }
   function createBatch(text, jobs) {
     empty?.remove();
     const batch = document.createElement('section');
     const heading = document.createElement('h2'); heading.textContent = 'Voice / model comparison';
     const input = document.createElement('p'); input.className = 'text'; input.textContent = text;
-    const grid = document.createElement('div'); grid.className = 'comparison-results';
-    batch.append(heading, input, grid); log.prepend(batch); batches.add(batch);
+    const models = [...new Set(jobs.map(job => job.model))];
+    const variants = [...new Set(jobs.map(job => job.variant))].sort();
+    const voiced = [...new Set(jobs.map(job => job.voice))];
+    batch.append(heading, input); log.prepend(batch); batches.add(batch);
+    const cells = new Map();
+    const single = variants.length <= 1;
+    const tables = single ? [['', voiced]] : voiced.map(voice => [voice, variants]);
+    for (const [caption, rows] of tables) {
+      const section = document.createElement('div'); section.className = 'comparison-table';
+      if (caption) { const title = document.createElement('h3'); title.textContent = caption; section.append(title); }
+      const table = document.createElement('table');
+      table.append(headerRow([single ? 'Character' : 'Clip', ...models]));
+      for (const label of rows) {
+        const row = document.createElement('tr');
+        const name = document.createElement('th'); name.textContent = label; row.append(name);
+        for (const model of models) {
+          const cell = document.createElement('td');
+          const state = document.createElement('p'); state.className = 'status'; state.textContent = 'Queued';
+          cell.append(state); row.append(cell);
+          cells.set(single ? `${label}|${model}` : `${label}|${model}`, {cell, state});
+        }
+        table.append(row);
+      }
+      section.append(table); batch.append(section);
+    }
     return jobs.map(job => {
-      const card = document.createElement('article'); card.className = 'comparison-card';
-      const title = document.createElement('h3'); title.textContent = jobLabel(job);
-      const state = document.createElement('p'); state.className = 'status'; state.textContent = 'Queued';
-      card.append(title, state); grid.append(card);
-      return {...job, card, state};
+      // - in the single-clip table the row is the character; otherwise the row is the clip type
+      const rowKey = single ? job.voice : job.variant;
+      const found = cells.get(`${rowKey}|${job.model}`) || {};
+      return {...job, cell: found.cell, state: found.state};
     });
   }
   async function generate(job, payload, text) {
     controller = new AbortController(); controllers.add(controller);
     const activeController = controller;
-    const started = performance.now(); job.state.textContent = 'Generating...';
+    const started = performance.now();
+    if (!job.state) return;
+    job.state.textContent = 'Generating...';
     try {
       const response = await client.audioResponse(text, {voice: job.voice}, false, activeController.signal,
         {...payload, model: job.model, voice: job.voice, reference_variant: job.variant});
@@ -178,7 +227,7 @@
       const audio = document.createElement('audio'); audio.controls = true; audio.preload = 'metadata'; audio.src = url;
       const download = document.createElement('a'); download.href = url;
       download.download = `${job.model}-${job.voice}${job.variant ? '-' + job.variant : ''}.wav`.replace(/[^\w.-]/g, '_'); download.textContent = 'Save WAV';
-      job.card.append(audio, download);
+      job.cell.append(audio, download);
       job.state.textContent = `Ready · ${((performance.now() - started) / 1000).toFixed(2)}s · ${(blob.size / 1024).toFixed(0)} KiB`;
     } catch (error) {
       job.state.textContent = error.name === 'AbortError' ? 'Canceled' : `Failed: ${error.message}`;

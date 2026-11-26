@@ -108,19 +108,23 @@
   #measurements tbody tr[data-state=failed] { color:#ff8585; background:rgba(255,133,133,.08); }
   #measurements tbody tr[data-state=failed] td:last-child { font-weight:600; }
   #measurements tbody tr[data-state=canceled] { color:var(--dim); }
-  .comparison-choices,.comparison-results { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr)); gap:8px; }
+  .comparison-choices { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr)); gap:8px; }
+  /* - results are tables: one per character, models in columns, clips in rows; the log is wider on purpose */
+  .comparison-table { overflow-x:auto; margin-top:10px; }
+  .comparison-table h3 { margin:0 0 6px; font-size:14px; }
+  .comparison-table table { width:100%; border-collapse:collapse; font-size:13px; }
+  .comparison-table :is(th,td) { padding:6px 8px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  .comparison-table th { font-weight:600; }
+  .comparison-table audio { margin-top:4px; min-width:180px; }
   .comparison-choices label { display:flex; flex-direction:column; gap:4px; font-size:13px; }
   .comparison-choices select { min-height:132px; padding:4px 6px; }
   /* - the voice list is the long one: it holds every configured character, so it gets the height */
   #comparison-voices { min-height:240px; }
   .comparison-choices .actions { margin:4px 0 0; }
-  .comparison-card { padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bubble); min-width:0; }
   #comparison-status[data-state=loading] { color:#ffd166; }
   #comparison-status[data-state=success] { color:#72d6a0; }
   #comparison-status[data-state=error] { color:#ff8585; }
-  .comparison-card h3 { margin:0 0 4px; font-size:14px; overflow-wrap:anywhere; }
-  .comparison-card .status { margin:0; font-size:12px; }
-  .comparison-card audio { margin-top:6px; }
+  .comparison-table .status { margin:0; font-size:12px; }
   #log { width:100%; margin:16px 0; } #empty { color:var(--dim); } .msg { margin-bottom:16px; }
   .text { display:inline-block; max-width:100%; padding:10px 14px; border-radius:10px; background:var(--bubble); white-space:pre-wrap; overflow-wrap:anywhere; }
   audio { display:block; width:100%; margin-top:10px; } pre { font-size:12px; white-space:pre-wrap; overflow-wrap:anywhere; }

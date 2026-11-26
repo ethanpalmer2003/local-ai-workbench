@@ -452,6 +452,11 @@ def _sampler_defaults() -> dict[str, dict[str, float]]:
 MODEL_SAMPLER_DEFAULTS: dict[str, dict[str, float]] = _sampler_defaults()
 
 
+# - AudioCpp model sampler/limit facts the vendor config does not state. Ming's TTS checkpoint has a
+#   512-position context: a 13.6 s reference passes and 27.9 s fails with "Ming prompt exhausts the
+#   512-position context", so 20 s is the cap the comparison and the proxy both read.
+AUDIOCPP_MODEL_REFERENCE_LIMITS: dict[str, float] = {"audiocpp/ming3-tts-0.5b-q8_0": 20.0}
+
 # AUDIOCPP (AUDIOCPP TTS + STT) SETTINGS
 
 

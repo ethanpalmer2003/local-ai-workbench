@@ -160,16 +160,33 @@ class AudioComparison(unittest.TestCase):
             self.assertEqual(
                 catalog["models"],
                 [
-                    {"id": cfg.AudiocppModel.BREEZE_TTS.value, "installed": True, "clone": True},
-                    {"id": cfg.AudiocppModel.FISH_DRAMA3_Q2.value, "installed": False, "clone": True},
-                    {"id": cfg.AudiocppModel.BREEZE_DESIGN.value, "installed": True, "clone": False},
+                    {
+                        "id": cfg.AudiocppModel.BREEZE_TTS.value,
+                        "installed": True,
+                        "clone": True,
+                        "reference_seconds_limit": None,
+                    },
+                    {
+                        "id": cfg.AudiocppModel.FISH_DRAMA3_Q2.value,
+                        "installed": False,
+                        "clone": True,
+                        "reference_seconds_limit": None,
+                    },
+                    {
+                        "id": cfg.AudiocppModel.BREEZE_DESIGN.value,
+                        "installed": True,
+                        "clone": False,
+                        "reference_seconds_limit": None,
+                    },
                 ],
             )
             self.assertIn(
-                {"id": "test-voice", "available": True, "variants": [], "default_variant": ""}, catalog["voices"]
+                {"id": "test-voice", "available": True, "variants": [], "variant_seconds": {}, "default_variant": ""},
+                catalog["voices"],
             )
             self.assertIn(
-                {"id": "other-voice", "available": False, "variants": [], "default_variant": ""}, catalog["voices"]
+                {"id": "other-voice", "available": False, "variants": [], "variant_seconds": {}, "default_variant": ""},
+                catalog["voices"],
             )
 
     def test_comparison_rejects_missing_model_or_voice_before_default_fallback(self):

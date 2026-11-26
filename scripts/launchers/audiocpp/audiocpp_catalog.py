@@ -1,6 +1,7 @@
 """Configured audio models and locally usable clone references."""
 
 import json
+import wave
 from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
@@ -106,6 +107,7 @@ def configured_voices() -> list[dict[str, object]]:
                 "id": voice,
                 "available": reference is not None,
                 "variants": voice_variants(voice) if reference is not None else [],
+                "variant_seconds": voice_variant_seconds(voice) if reference is not None else {},
                 "default_variant": reference.stem[len(voice) + 1 :] if reference is not None else "",
             }
         )
@@ -220,10 +222,19 @@ def _pick_reference(wavs: list[Path]) -> Path:
 
 def voice_variants(voice_name: str) -> list[str]:
     """Every built reference variant for one voice, by the suffix after `<voice>_`."""
+    return sorted(voice_variant_seconds(voice_name))
+
+
+def voice_variant_seconds(voice_name: str) -> dict[str, float]:
+    """Each built reference variant and its length, which decides whether a small-context model can take it."""
     root = Path(cfg.AUDIOCPP_INPUT_DIR)
     folders = [d for d in (*root.glob("*"), *root.glob("*/*")) if d.is_dir() and d.name.lower() == voice_name]
-    stems = {wav.stem[len(voice_name) + 1 :] for folder in folders for wav in folder.rglob(f"{voice_name}_*.wav")}
-    return sorted(stem for stem in stems if stem)
+    return {
+        wav.stem[len(voice_name) + 1 :]: wav_seconds(wav)
+        for folder in folders
+        for wav in folder.rglob(f"{voice_name}_*.wav")
+        if wav.stem.startswith(f"{voice_name}_")
+    }
 
 
 def resolve_voice_ref(voice_name: str, variant: str | None = None) -> tuple[str, str] | None:
@@ -264,9 +275,21 @@ def configured_models() -> list[dict[str, object]]:
                 # - a reference-driven checkpoint clones; the light Ming checkpoint also speaks named voices,
                 #   which `voice_data` reports as both, so the two capabilities are recorded separately
                 "clone": spec["id"] != cfg.AudiocppModel.BREEZE_DESIGN.value and _accepts_reference(path),
+                # - a checkpoint with a small context refuses a long reference; the launcher states its cap
+                "reference_seconds_limit": cfg.AUDIOCPP_MODEL_REFERENCE_LIMITS.get(spec["id"]),
             }
         )
     return models
+
+
+def wav_seconds(path: Path) -> float:
+    """A WAV's length from its header, so a long reference costs no decode to reject."""
+    try:
+        with wave.open(str(path)) as handle:
+            framerate = handle.getframerate()
+            return handle.getnframes() / framerate if framerate else 0.0
+    except (wave.Error, OSError, EOFError):
+        return 0.0
 
 
 def _accepts_reference(path: Path) -> bool:
