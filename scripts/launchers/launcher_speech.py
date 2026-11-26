@@ -428,6 +428,29 @@ KOBOLDCPP_MODEL_KCPPS_OVERRIDES = {
     "koboldcpp/TheDrummer_Orion-26B-A4B-v1.1-IQ3_XXS": {"moecpu": 10, "usevulkan": [0], "gpulayers": 30}
 }
 
+# - Per-model sampler defaults for the external llama.cpp arm: llama-server CLI flags are the
+#   default when a request omits them, so an explicit UI value still wins. The native KoboldCpp
+#   arm has no server-side sampler knob; there the Lite UI sliders stay in charge. Values below
+#   are the repository default; the overlay's `chat.sampler` merges over them per model label.
+_TRACKED_SAMPLER_DEFAULTS: dict[str, dict[str, float]] = {
+    "koboldcpp/TheDrummer_Orion-26B-A4B-v1.1-IQ3_XXS": {"repeat_penalty": 1.18}
+}
+
+
+def _sampler_defaults() -> dict[str, dict[str, float]]:
+    """Tracked defaults with the overlay's `chat.sampler` merged over them, per model label."""
+    merged = {label: dict(fields) for label, fields in _TRACKED_SAMPLER_DEFAULTS.items()}
+    overlay = local_overlay.setting("chat.sampler", {})
+    for label, fields in overlay.items():
+        if not isinstance(label, str) or not isinstance(fields, dict):
+            continue
+        numbers = {str(key): float(value) for key, value in fields.items() if isinstance(value, (int, float))}
+        merged[label] = {**merged.get(label, {}), **numbers}
+    return merged
+
+
+MODEL_SAMPLER_DEFAULTS: dict[str, dict[str, float]] = _sampler_defaults()
+
 
 # AUDIOCPP (AUDIOCPP TTS + STT) SETTINGS
 

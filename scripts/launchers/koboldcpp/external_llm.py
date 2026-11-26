@@ -48,6 +48,25 @@ def matching_options() -> dict[str, object]:
     }
 
 
+SAMPLER_FLAGS = {
+    "temperature": "--temperature",
+    "top_p": "--top-p",
+    "repeat_penalty": "--repeat-penalty",
+    "presence_penalty": "--presence-penalty",
+    "frequency_penalty": "--frequency-penalty",
+}
+
+
+def sampler_defaults() -> list[str]:
+    """Server-side sampler defaults for the served model; an explicit request value still wins."""
+    flags: list[str] = []
+    for key, value in cfg.MODEL_SAMPLER_DEFAULTS.get(cfg.KOBOLDCPP_SERVICE.model, {}).items():
+        if key not in SAMPLER_FLAGS:
+            raise ValueError(f"Unknown sampler default {key!r} for {cfg.KOBOLDCPP_SERVICE.model}")
+        flags += [SAMPLER_FLAGS[key], str(value)]
+    return flags
+
+
 def command(build: str | None = None) -> list[str]:
     options = matching_options()
     command = [
@@ -66,6 +85,7 @@ def command(build: str | None = None) -> list[str]:
     if options["quantkv"]:
         # - KoboldCpp's quantkv applies to K and V alike
         command += ["--cache-type-k", str(options["quantkv"]), "--cache-type-v", str(options["quantkv"])]
+    command += sampler_defaults()
     return command + [
         # - carries the client's sampling and chat template, so Lite's settings still apply
         "--jinja",
