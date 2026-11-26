@@ -298,6 +298,11 @@ class _TtsProxyHandler(QuietLog, ProxyHandlerMixin):
                 self.close_connection = True
 
     def _forward_get(self, method: str):
+        asset = _test_asset(urlsplit(self.path).path)
+        if asset is not None:
+            # - the standalone test page belongs to this origin too, so it is served here as well
+            send_bytes(self, 200, asset[0], asset[1])
+            return
         if self.path == "/proxy/comparison-catalog" and self.audio_service is not None:
             body = json.dumps(audiocpp_catalog.comparison_catalog()).encode("utf-8")
             send_bytes(self, 200, body, "application/json")

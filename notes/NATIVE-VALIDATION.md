@@ -20,7 +20,7 @@ Evidence (../scripts/tests/output/audiocpp/audiocpp_backend_compare/inconclusive
 
 - WAVs nonempty/non-silent; listening quality ungraded. One short sample does not establish a general ranking. Vulkan stays default.
 - GPU values are sampled dedicated allocations, not precise physical residency. RAM/CPU traces and hashes are in the report.
-- Approved outside sandbox; AppContainer false, administrator false. Each native probe records its context. AudioCpp proxy/native server are now left running for the user's test page at localhost:8888/test/.
+- Approved outside sandbox; AppContainer false, administrator false. Each native probe records its context. AudioCpp proxy/native server are now left running for the user's test page at `localhost:8888/test/`, which the audio proxy and the Lite proxy on `:5001` both serve.
 
 ## Setup and other completed checks
 
