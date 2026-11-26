@@ -1,0 +1,1 @@
+{ "meta": { "title": "Launcher script guard", "description": "Refuses an ad-hoc Python script outside the repository that starts or stops a service stack, and names the launcher and kill_all_services entry points instead.", "detail": "docs/DETAIL.md" } }

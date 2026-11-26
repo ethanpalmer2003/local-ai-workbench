@@ -1,0 +1,4 @@
+- insert:
+    - id: guard-launcher-scripts
+      name: '@local/guard-launcher-scripts'
+      config: {}
