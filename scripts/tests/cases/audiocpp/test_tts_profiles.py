@@ -109,6 +109,29 @@ class TtsProfiles(unittest.TestCase):
                 self.assertEqual(audiocpp_catalog.resolve_voice_ref("selene"), (str(flat), ""))
                 self.assertIsNone(audiocpp_catalog.resolve_voice_ref("vera_2"))
 
+    def test_the_30s_cap_build_is_the_reference_a_clone_uses(self):
+        with CasePaths(__file__).temporary_directory() as folder:
+            from pathlib import Path
+
+            root = Path(folder)
+            generated = root / "voice" / "vera" / "generated"
+            generated.mkdir(parents=True)
+            for variant in ("1", "min30", "max30"):
+                clip = generated / f"vera_{variant}.wav"
+                clip.write_bytes(b"RIFF")
+                clip.with_suffix(".txt").write_text(f"text {variant}\n", encoding="utf-8")
+            with patch.object(cfg, "AUDIOCPP_INPUT_DIR", str(root)):
+                self.assertEqual(
+                    audiocpp_catalog.resolve_voice_ref("vera"), (str(generated / "vera_max30.wav"), "text max30")
+                )
+                # - a named variant wins over the preference, so a comparison can pick any built clip
+                self.assertEqual(
+                    audiocpp_catalog.resolve_voice_ref("vera", "min30"),
+                    (str(generated / "vera_min30.wav"), "text min30"),
+                )
+                self.assertIsNone(audiocpp_catalog.resolve_voice_ref("vera", "max60"))
+                self.assertEqual(audiocpp_catalog.voice_variants("vera"), ["1", "max30", "min30"])
+
     @requires_model_check
     def test_heavier_ming_is_offline_and_rejects_explicit_streaming(self):
         model = cfg.AudiocppModel.MING3_AUDIO.value

@@ -2,11 +2,13 @@
 (() => {
   const voices = document.getElementById('comparison-voices');
   const models = document.getElementById('comparison-models');
+  const variants = document.getElementById('comparison-variants');
   const status = document.getElementById('comparison-status');
   const run = document.getElementById('comparison-run');
   const load = document.getElementById('comparison-load');
   const comparisonText = document.getElementById('comparison-text');
-  const allButtons = [document.getElementById('comparison-all-voices'), document.getElementById('comparison-all-models')];
+  const allButtons = ['comparison-all-voices', 'comparison-all-models', 'comparison-all-variants']
+    .map(id => document.getElementById(id));
   const urls = new Set();
   const batches = new Set();
   let token = 0;
@@ -15,19 +17,25 @@
   const client = new SpeechClient(PROXY_URL);
 
   const selected = control => [...control.selectedOptions].map(option => option.value);
-  const combinations = (voiceIds, modelIds) => modelIds.flatMap(model => voiceIds.map(voice => ({model, voice})));
+  const combinations = (voiceIds, modelIds, variantIds) => modelIds.flatMap(model =>
+    variantIds.flatMap(variant => voiceIds.map(voice => ({model, voice, variant}))));
   function setStatus(message, state = 'idle') {
     status.textContent = message;
     status.dataset.state = state;
     status.setAttribute('aria-busy', String(state === 'loading'));
   }
+  function jobLabel(job) {
+    return job.variant ? `${job.voice} · ${job.variant} · ${job.model}` : `${job.voice} · ${job.model}`;
+  }
   function updateCount() {
     const voiceCount = selected(voices).length;
     const modelCount = selected(models).length;
-    const jobs = voiceCount * modelCount;
+    const variantCount = selected(variants).length;
+    const jobs = voiceCount * modelCount * variantCount;
     run.disabled = !choicesLoaded || !comparisonText.value.trim() || jobs === 0;
-    const next = !voiceCount ? 'select a voice' : !modelCount ? 'select a model' : !comparisonText.value.trim() ? 'enter text' : 'ready';
-    if (choicesLoaded) setStatus(`${voiceCount} voices × ${modelCount} models = ${jobs} WAVs · ${next}`, jobs ? 'success' : 'idle');
+    const next = !voiceCount ? 'select a voice' : !modelCount ? 'select a model'
+      : !variantCount ? 'select a reference clip' : !comparisonText.value.trim() ? 'enter text' : 'ready';
+    if (choicesLoaded) setStatus(`${voiceCount} voices × ${variantCount} clips × ${modelCount} models = ${jobs} WAVs · ${next}`, jobs ? 'success' : 'idle');
   }
   function populate(control, entries, current, available) {
     const options = entries.map(entry => {
@@ -52,6 +60,7 @@
     allButtons.forEach(button => { button.disabled = true; });
     voices.disabled = true;
     models.disabled = true;
+    variants.disabled = true;
     setStatus('Loading choices...', 'loading');
     try {
       const response = await fetch(new URL('/proxy/comparison-catalog', PROXY_URL), {cache: 'no-store'});
@@ -59,6 +68,10 @@
       const catalog = await response.json();
       if (!Array.isArray(catalog.voices) || !Array.isArray(catalog.models)) throw new Error('Invalid choices catalog');
       populate(voices, catalog.voices, document.getElementById('voice').value.trim() || activeDefaults?.voice || '', 'available');
+      const built = Array.isArray(catalog.variants) ? catalog.variants : [];
+      // - the launcher's own pick is the 30 s cap; select it so an unedited comparison matches the app
+      const preferred = built.includes('max30') ? ['max30'] : built.slice(0, 1);
+      populate(variants, built.map(id => ({id, available: true})), preferred, 'available');
       const cloneModels = catalog.models.filter(model => model.clone);
       const requestedModels = cloneModels
         .filter(model => model.installed && /(?:breeze-tts-2|ming3)/i.test(model.id))
@@ -70,11 +83,12 @@
     } catch (error) {
       voices.replaceChildren();
       models.replaceChildren();
+      variants.replaceChildren();
       setStatus(`Choices unavailable: ${error.message}`, 'error');
     } finally { load.disabled = false; }
   }
   load.onclick = loadChoices;
-  for (const [id, control] of [['voices', voices], ['models', models]]) {
+  for (const [id, control] of [['voices', voices], ['models', models], ['variants', variants]]) {
     control.addEventListener('change', updateCount);
     document.getElementById('comparison-all-' + id).onclick = () => {
       for (const option of control.options) option.selected = !option.disabled;
@@ -108,7 +122,7 @@
     batch.append(heading, input, grid); log.prepend(batch); batches.add(batch);
     return jobs.map(job => {
       const card = document.createElement('article'); card.className = 'comparison-card';
-      const title = document.createElement('h3'); title.textContent = `${job.voice} · ${job.model}`;
+      const title = document.createElement('h3'); title.textContent = jobLabel(job);
       const state = document.createElement('p'); state.className = 'status'; state.textContent = 'Queued';
       card.append(title, state); grid.append(card);
       return {...job, card, state};
@@ -120,7 +134,7 @@
     const started = performance.now(); job.state.textContent = 'Generating...';
     try {
       const response = await client.audioResponse(text, {voice: job.voice}, false, activeController.signal,
-        {...payload, model: job.model, voice: job.voice});
+        {...payload, model: job.model, voice: job.voice, reference_variant: job.variant});
       if (!response.ok || response.status === 204) throw new Error(`${response.status}: ${(await response.text()).slice(0, 300) || 'No audio returned'}`);
       const type = response.headers.get('Content-Type') || '';
       if (!/audio\/(wav|wave|x-wav)|application\/octet-stream/i.test(type)) throw new Error(`Expected a complete WAV, received ${type}`);
@@ -130,7 +144,7 @@
       const url = URL.createObjectURL(blob); urls.add(url); recordings.add(url);
       const audio = document.createElement('audio'); audio.controls = true; audio.preload = 'metadata'; audio.src = url;
       const download = document.createElement('a'); download.href = url;
-      download.download = `${job.model}-${job.voice}.wav`.replace(/[^\w.-]/g, '_'); download.textContent = 'Save WAV';
+      download.download = `${job.model}-${job.voice}${job.variant ? '-' + job.variant : ''}.wav`.replace(/[^\w.-]/g, '_'); download.textContent = 'Save WAV';
       job.card.append(audio, download);
       job.state.textContent = `Ready · ${((performance.now() - started) / 1000).toFixed(2)}s · ${(blob.size / 1024).toFixed(0)} KiB`;
     } catch (error) {
@@ -142,7 +156,7 @@
     try {
       for (const job of jobs) {
         if (batchToken !== token || epoch !== generation) break;
-        status.textContent = `Generating ${++finished}/${jobs.length}: ${job.voice} · ${job.model}`;
+        status.textContent = `Generating ${++finished}/${jobs.length}: ${jobLabel(job)}`;
         await generate(job, config, text);
       }
       for (const job of jobs) if (job.state.textContent === 'Queued') job.state.textContent = 'Canceled';
@@ -151,8 +165,8 @@
   }
   run.onclick = () => {
     const text = comparisonText.value.trim();
-    const jobs = combinations(selected(voices), selected(models));
-    if (!text || !jobs.length) { setStatus('Enter text and select a voice and model.', 'error'); return; }
+    const jobs = combinations(selected(voices), selected(models), selected(variants));
+    if (!text || !jobs.length) { setStatus('Enter text and select a voice, a reference clip and a model.', 'error'); return; }
     if (![...document.querySelectorAll('#settings input')].every(input => input.reportValidity())) return;
     let payload;
     try { payload = settings().payload; } catch (error) { status.textContent = error.message; return; }

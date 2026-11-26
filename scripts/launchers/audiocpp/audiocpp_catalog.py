@@ -4,7 +4,7 @@ import json
 from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 from scripts.config import models as model_cfg
 from scripts.config.audiocpp import server as audio_cfg
@@ -107,7 +107,7 @@ def _voice_refs() -> dict[str, Path]:
         for folder in (part.lower() for part in wav.relative_to(root).parts[:-1]):
             if wav.name.startswith(f"{folder}_"):
                 matches.setdefault(folder, []).append(wav)
-    return {voice: sorted(paths)[0] for voice, paths in matches.items()}
+    return {voice: _pick_reference(sorted(paths)) for voice, paths in matches.items()}
 
 
 def breeze_defaults() -> tuple[dict[str, object], str]:
@@ -189,19 +189,44 @@ def runtime_defaults(
     }
 
 
-def resolve_voice_ref(voice_name: str) -> tuple[str, str] | None:
+# - Which built reference a clone uses when several exist: the 30 s cap first, because it keeps the
+#   longest clean take inside Breeze's reference budget, then the 30 s floor build, then the rest
+REFERENCE_VARIANTS = ("max30", "min30")
+
+
+def _pick_reference(wavs: list[Path]) -> Path:
+    """The reference a voice uses: a preferred variant when present, else the first by name."""
+    for variant in REFERENCE_VARIANTS:
+        for wav in wavs:
+            if wav.stem.lower().endswith(f"_{variant}"):
+                return wav
+    return wavs[0]
+
+
+def voice_variants(voice_name: str) -> list[str]:
+    """Every built reference variant for one voice, by the suffix after `<voice>_`."""
+    root = Path(cfg.AUDIOCPP_INPUT_DIR)
+    folders = [d for d in (*root.glob("*"), *root.glob("*/*")) if d.is_dir() and d.name.lower() == voice_name]
+    stems = {wav.stem[len(voice_name) + 1 :] for folder in folders for wav in folder.rglob(f"{voice_name}_*.wav")}
+    return sorted(stem for stem in stems if stem)
+
+
+def resolve_voice_ref(voice_name: str, variant: str | None = None) -> tuple[str, str] | None:
     """
     - Find <voice>_*.wav inside a directory named for the voice, one or two levels below the input
       tree (e.g. <category>/<voice>/generated/), plus its matching .txt transcript
     - The search starts at the voice's own directory: the input tree also holds every model's
       assets, so walking all of it costs a directory scan per request
+    - `variant` names one built reference (max30, min30, ...); omitted keeps the configured pick
     """
     root = Path(cfg.AUDIOCPP_INPUT_DIR)
     folders = [d for d in (*root.glob("*"), *root.glob("*/*")) if d.is_dir() and d.name.lower() == voice_name]
     wavs = sorted(f for folder in folders for f in folder.rglob(f"{voice_name}_*.wav"))
+    if variant:
+        wavs = [wav for wav in wavs if wav.stem.lower() == f"{voice_name}_{variant}".lower()]
     if not wavs:
         return None
-    wav = wavs[0]
+    wav = _pick_reference(wavs)
     txt = wav.with_suffix(".txt")
     reference_text = txt.read_text(encoding="utf-8").strip() if txt.is_file() else ""
     return str(wav), reference_text
@@ -336,8 +361,21 @@ def supports_clone(model: str) -> bool:
     return any(row["id"] == model and row["clone"] for row in configured_models())
 
 
-def comparison_catalog() -> dict[str, list[dict[str, object]]]:
-    return {"voices": configured_voices(), "models": configured_models()}
+class ComparisonCatalog(TypedDict):
+    """What the comparison page loads: selectable voices, clone models and built reference clips."""
+
+    voices: list[dict[str, object]]
+    models: list[dict[str, object]]
+    variants: list[str]
+
+
+def comparison_catalog() -> ComparisonCatalog:
+    """Voices, clone models and the built reference variants a comparison can choose between."""
+    voices = configured_voices()
+    variants = sorted(
+        {variant for voice in voices if voice["available"] for variant in voice_variants(str(voice["id"]))}
+    )
+    return {"voices": voices, "models": configured_models(), "variants": variants}
 
 
 def validate_comparison(payload: Payload) -> None:

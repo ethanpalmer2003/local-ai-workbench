@@ -31,6 +31,7 @@ const context = vm.createContext({document, console, Blob, AbortController, DOME
       voices: [{id: 'voice-a', available: true}, {id: 'voice-b', available: true}, {id: 'missing', available: false}],
       models: [{id: 'breeze', installed: true, clone: true}, {id: 'echo', installed: true, clone: true},
         {id: 'absent', installed: false, clone: true}, {id: 'design', installed: true, clone: false}],
+      variants: ['max30', 'min30'],
     }; }};
     active++; maximumActive = Math.max(maximumActive, active);
     const payload = JSON.parse(options.body); requests.push(payload);
@@ -48,18 +49,22 @@ vm.runInContext(source, context);
 (async () => {
   await document.getElementById('comparison-load').onclick();
   assert.equal(document.getElementById('comparison-models').options.length, 3);
+  // - the launcher's own pick is the 30 s cap, so the clip list opens on max30
+  assert.deepEqual(document.getElementById('comparison-variants').selectedOptions.map(option => option.value), ['max30']);
   document.getElementById('comparison-text').value = 'One shared input.';
   document.getElementById('comparison-all-voices').onclick();
   document.getElementById('comparison-all-models').onclick();
   assert.equal(document.getElementById('comparison-voices').selectedOptions.length, 2);
   assert.equal(document.getElementById('comparison-models').selectedOptions.length, 2);
+  assert.equal(document.getElementById('comparison-variants').selectedOptions.length, 1);
   document.getElementById('comparison-run').onclick();
   await context.pending;
   assert.equal(requests.length, 4);
   assert.equal(maximumActive, 1);
   assert.equal(generatedUrls.length, 3, 'failed requests must not create a player');
-  assert.deepEqual(requests.map(request => [request.model, request.voice]), [
-    ['breeze', 'voice-a'], ['breeze', 'voice-b'], ['echo', 'voice-a'], ['echo', 'voice-b'],
+  assert.deepEqual(requests.map(request => [request.model, request.voice, request.reference_variant]), [
+    ['breeze', 'voice-a', 'max30'], ['breeze', 'voice-b', 'max30'],
+    ['echo', 'voice-a', 'max30'], ['echo', 'voice-b', 'max30'],
   ]);
   for (const request of requests) {
     assert.equal(request.input, 'One shared input.'); assert.equal(request.stream, false);

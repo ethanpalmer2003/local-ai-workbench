@@ -117,8 +117,9 @@ def _apply_voice_ref_fallback(payload: Payload) -> None:
         payload["_voice_fallback"] = requested  # surfaced in the request log line
 
     candidates = [voice] if voice == default_voice else [voice, default_voice]
+    variant = str(payload.pop("reference_variant", "") or "").strip() or None
     for name in candidates:
-        if ref := audiocpp_catalog.resolve_voice_ref(name):
+        if ref := audiocpp_catalog.resolve_voice_ref(name, variant):
             payload["voice"] = name
             payload["voice_ref"], payload["reference_text"] = ref
             return
