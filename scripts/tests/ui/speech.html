@@ -106,13 +106,20 @@
   #measurements tbody tr[data-state=failed] { color:#ff8585; background:rgba(255,133,133,.08); }
   #measurements tbody tr[data-state=failed] td:last-child { font-weight:600; }
   #measurements tbody tr[data-state=canceled] { color:var(--dim); }
-  .comparison-choices,.comparison-results { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:12px; }
-  .comparison-choices select { min-height:150px; } .comparison-card { padding:16px; border:1px solid var(--line); border-radius:10px; background:var(--bubble); min-width:0; }
+  .comparison-choices,.comparison-results { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr)); gap:8px; }
+  .comparison-choices label { display:flex; flex-direction:column; gap:4px; font-size:13px; }
+  .comparison-choices select { min-height:132px; padding:4px 6px; }
+  /* - the voice list is the long one: it holds every configured character, so it gets the height */
+  #comparison-voices { min-height:240px; }
+  .comparison-choices .actions { margin:4px 0 0; }
+  .comparison-card { padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--bubble); min-width:0; }
   #comparison-status[data-state=loading] { color:#ffd166; }
   #comparison-status[data-state=success] { color:#72d6a0; }
   #comparison-status[data-state=error] { color:#ff8585; }
-  .comparison-prompt { display:block; margin:12px 0 6px; font-size:13px; }
-  .comparison-card h3 { margin:0 0 8px; font-size:15px; overflow-wrap:anywhere; }
+  .comparison-prompt { display:block; margin:8px 0 4px; font-size:13px; }
+  .comparison-card h3 { margin:0 0 4px; font-size:14px; overflow-wrap:anywhere; }
+  .comparison-card .status { margin:0; font-size:12px; }
+  .comparison-card audio { margin-top:6px; }
   #log { width:100%; margin:16px 0; } #empty { color:var(--dim); } .msg { margin-bottom:16px; }
   .text { display:inline-block; max-width:100%; padding:10px 14px; border-radius:10px; background:var(--bubble); white-space:pre-wrap; overflow-wrap:anywhere; }
   audio { display:block; width:100%; margin-top:10px; } pre { font-size:12px; white-space:pre-wrap; overflow-wrap:anywhere; }
@@ -257,12 +264,11 @@
   </details>
   <details id="comparison">
     <summary>Compare voices and models</summary>
-    <p class="actions"><button id="comparison-load" type="button">Load configured choices</button></p>
+    <p class="actions"><button id="comparison-load" type="button">Load configured choices</button><button id="comparison-clear" type="button">Clear all WAVs</button></p>
     <label class="comparison-prompt" for="comparison-text">Text to compare</label>
     <div class="composer-shell comparison-composer">
       <textarea id="comparison-text" rows="2" aria-label="Text to compare" placeholder="Enter comparison text"></textarea>
       <div class="composer-footer">
-        <div class="toolbar conversation-actions"><button id="comparison-clear" type="button">Clear WAVs</button></div>
         <div class="composer-actions" role="group" aria-label="Comparison actions">
           <button type="button" id="comparison-stop" class="icon-button" aria-label="Cancel comparison" title="Cancel comparison"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
           <button id="comparison-run" class="icon-button" type="button" aria-label="Generate comparison WAVs" title="Generate comparison WAVs" disabled><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 10 7-7 7 7M12 3v18"/></svg></button>
