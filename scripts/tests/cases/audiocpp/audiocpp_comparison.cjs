@@ -57,7 +57,8 @@ vm.runInContext(source, context);
   assert.deepEqual(clips.options.map(option => option.value), ['1', 'max30', 'min30']);
   assert.deepEqual(clips.selectedOptions.map(option => option.value), ['max30']);
   assert.match(clips.options.find(option => option.value === 'max30').textContent, /\(default\)/);
-  document.getElementById('comparison-text').value = 'One shared input.';
+  // - the composer box is the one editor the comparison reads, so the test writes it there
+  document.getElementById('box').value = 'One shared input.';
   document.getElementById('comparison-all-voices').onclick();
   document.getElementById('comparison-all-models').onclick();
   assert.equal(document.getElementById('comparison-voices').selectedOptions.length, 2);
