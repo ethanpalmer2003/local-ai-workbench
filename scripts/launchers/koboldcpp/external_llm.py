@@ -67,6 +67,18 @@ def sampler_defaults() -> list[str]:
     return flags
 
 
+def reasoning_defaults() -> list[str]:
+    """Match the native arm's reasoning setting, so a no-model launch thinks no more than a loaded one.
+
+    The Kobold config keeps reasoning off; llama-server needs both switches to honor it, the same pair
+    the practice arm sends. A request that asks for reasoning still gets it.
+    """
+    effort = str(cfg.KOBOLDCPP_KCPPS_ARGS.get("reasoningeffort") or "").strip().lower()
+    if effort in ("none", "off"):
+        return ["--reasoning", "off", "--chat-template-kwargs", '{"enable_thinking":false}']
+    return []
+
+
 def command(build: str | None = None) -> list[str]:
     options = matching_options()
     command = [
@@ -86,6 +98,7 @@ def command(build: str | None = None) -> list[str]:
         # - KoboldCpp's quantkv applies to K and V alike
         command += ["--cache-type-k", str(options["quantkv"]), "--cache-type-v", str(options["quantkv"])]
     command += sampler_defaults()
+    command += reasoning_defaults()
     return command + [
         # - carries the client's sampling and chat template, so Lite's settings still apply
         "--jinja",

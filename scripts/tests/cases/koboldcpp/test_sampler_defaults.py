@@ -34,6 +34,16 @@ class SamplerDefaultTests(unittest.TestCase):
         # - the loop fix is a repository default; the overlay may add taste values such as temperature
         self.assertEqual(cfg.MODEL_SAMPLER_DEFAULTS[ORION]["repeat_penalty"], 1.18)
 
+    def test_reasoning_stays_off_unless_the_kobold_config_asks_for_it(self):
+        # - the no-model arm must not think more than a loaded one; the practice arm sends the same pair
+        with patch.object(cfg, "KOBOLDCPP_KCPPS_ARGS", {**cfg.KOBOLDCPP_KCPPS_ARGS, "reasoningeffort": "none"}):
+            self.assertEqual(
+                external_llm.reasoning_defaults(),
+                ["--reasoning", "off", "--chat-template-kwargs", '{"enable_thinking":false}'],
+            )
+        with patch.object(cfg, "KOBOLDCPP_KCPPS_ARGS", {**cfg.KOBOLDCPP_KCPPS_ARGS, "reasoningeffort": "medium"}):
+            self.assertEqual(external_llm.reasoning_defaults(), [])
+
 
 if __name__ == "__main__":
     unittest.main()
