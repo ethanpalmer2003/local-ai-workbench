@@ -128,9 +128,10 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
 #   through `llamacpp_build()`, so one build runs unless a use case overrides it.
 # - The rolling `vulkan` build is the default from b12590: a 24-text embedding request and a 27B
 #   re-prefill both answered 200 on it, which are the two faults that held the v1.0.0 pin.
-# - v1.0.0 stays installed as the fallback, and ROCm still collapses past a 64K read
+# - v1.0.0 stays installed as the fallback, selectable without a code edit through the same
+#   environment override, and ROCm still collapses past a 64K read
 #   ([builds](../config/llamacpp/BUILDS.md)).
-LLAMACPP_DEFAULT_BUILD = "vulkan"
+LLAMACPP_DEFAULT_BUILD: str = os.environ.get("LLAMACPP_DEFAULT_BUILD") or "vulkan"
 # - Per-use overrides read from the environment; unset means "follow the llama.cpp default"
 LLAMACPP_CODING_BUILD: str | None = os.environ.get("LLAMACPP_CODING_BUILD") or None
 LLAMACPP_EMBEDDINGS_BUILD: str | None = os.environ.get("LLAMACPP_EMBEDDINGS_BUILD") or None

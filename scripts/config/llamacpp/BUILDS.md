@@ -14,10 +14,12 @@ symptom index is [upstream](../../../notes/UPSTREAM-INDEX.md).
 | ROCm b1377 (2026-11-15) | Aborts during device fit in `common_fit_params` while the Ryzen iGPU is visible | `HIP_VISIBLE_DEVICES=0`, which the [`rocm-lemonade` build selection](../../launchers/launcher_config.py) and the embedding settings both apply |
 | ROCm b1373, b1375 | Same abort with `ROCm error: unspecified launch failure`, `current device: -1` | Same escape hatch; b1372 tolerated the iGPU; [note](../../../notes/reviews/ROCM-DRIVER-TIMEOUT-2026-11-13.md) |
 
-Selection: `LLAMACPP_DEFAULT_BUILD` is the rolling `vulkan` build: b12590 returned 200 for a 24-text
-`/v1/embeddings` request and for a 27B 3.7K-token re-prefill (2026-11-20), the two faults that held the pin.
-`LLAMACPP_CODING_BUILD` and `LLAMACPP_EMBEDDINGS_BUILD` override it per use; `vulkan-1.0.0` stays as the
-fallback.
+Selection: `LLAMACPP_DEFAULT_BUILD` is the rolling `vulkan` build, installed here as b12686 (2026-11-25);
+b12590 cleared both faults (2026-11-20). `LLAMACPP_CODING_BUILD` and `LLAMACPP_EMBEDDINGS_BUILD` override it
+per use.
+
+Fallback: `$env:LLAMACPP_DEFAULT_BUILD = 'vulkan-1.0.0'` for one session returns every use to the pinned
+build; unset it to return.
 
 The RDNA-boosts builds are parked: both lost to the plain Vulkan default on the 27B pair (2026-11-20).
 ROCm took 32.6 s and 100.2 s against 21.2 s and 51.0 s; the same patches on Vulkan were mixed, 30.4 s
