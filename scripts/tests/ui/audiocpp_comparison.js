@@ -14,6 +14,7 @@
   let token = 0;
   let controller;
   let choicesLoaded = false;
+  const voiceInfo = new Map();
   const client = new SpeechClient(PROXY_URL);
 
   const selected = control => [...control.selectedOptions].map(option => option.value);
@@ -36,6 +37,32 @@
     const next = !voiceCount ? 'select a voice' : !modelCount ? 'select a model'
       : !variantCount ? 'select a reference clip' : !comparisonText.value.trim() ? 'enter text' : 'ready';
     if (choicesLoaded) setStatus(`${voiceCount} voices × ${variantCount} clips × ${modelCount} models = ${jobs} WAVs · ${next}`, jobs ? 'success' : 'idle');
+  }
+  // - the clip list follows the chosen voices: their built references, with the one a clone actually
+  // - uses marked, and a clip disabled when some chosen voice never built it
+  function refreshClipChoices() {
+    const chosen = selected(voices).filter(id => voiceInfo.has(id));
+    const scopes = chosen.length ? chosen : [...voiceInfo.keys()].filter(id => voiceInfo.get(id).variants.length);
+    const defaults = scopes.map(id => voiceInfo.get(id).default_variant);
+    const shared = defaults.length && defaults.every(value => value === defaults[0]) ? defaults[0] : '';
+    const union = [...new Set(scopes.flatMap(id => voiceInfo.get(id).variants))].sort();
+    const previous = selected(variants);
+    const options = union.map(id => {
+      const missing = scopes.filter(voice => !voiceInfo.get(voice).variants.includes(id));
+      const option = document.createElement('option');
+      option.value = id;
+      option.textContent = id + (id === shared ? ' (default)' : '')
+        + (missing.length ? ` (not built for ${missing.join(', ')})` : '');
+      option.disabled = missing.length > 0;
+      option.selected = !option.disabled && (previous.includes(id) || (!previous.length && id === shared));
+      return option;
+    });
+    if (!options.some(option => option.selected)) {
+      const first = options.find(option => !option.disabled);
+      if (first) first.selected = true;
+    }
+    variants.replaceChildren(...options);
+    variants.disabled = !options.some(option => !option.disabled);
   }
   function populate(control, entries, current, available) {
     const options = entries.map(entry => {
@@ -68,10 +95,14 @@
       const catalog = await response.json();
       if (!Array.isArray(catalog.voices) || !Array.isArray(catalog.models)) throw new Error('Invalid choices catalog');
       populate(voices, catalog.voices, document.getElementById('voice').value.trim() || activeDefaults?.voice || '', 'available');
-      const built = Array.isArray(catalog.variants) ? catalog.variants : [];
-      // - the launcher's own pick is the 30 s cap; select it so an unedited comparison matches the app
-      const preferred = built.includes('max30') ? ['max30'] : built.slice(0, 1);
-      populate(variants, built.map(id => ({id, available: true})), preferred, 'available');
+      voiceInfo.clear();
+      for (const voice of catalog.voices) {
+        voiceInfo.set(voice.id, {
+          variants: Array.isArray(voice.variants) ? voice.variants : [],
+          default_variant: voice.default_variant || '',
+        });
+      }
+      refreshClipChoices();
       const cloneModels = catalog.models.filter(model => model.clone);
       const requestedModels = cloneModels
         .filter(model => model.installed && /(?:breeze-tts-2|ming3)/i.test(model.id))
@@ -89,9 +120,11 @@
   }
   load.onclick = loadChoices;
   for (const [id, control] of [['voices', voices], ['models', models], ['variants', variants]]) {
-    control.addEventListener('change', updateCount);
+    control.addEventListener('change', id === 'voices' ? () => { refreshClipChoices(); updateCount(); } : updateCount);
     document.getElementById('comparison-all-' + id).onclick = () => {
       for (const option of control.options) option.selected = !option.disabled;
+      // - programmatic selection fires no change event, so the clip list follows by hand
+      if (id === 'voices') refreshClipChoices();
       updateCount();
     };
   }

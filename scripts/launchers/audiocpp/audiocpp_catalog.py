@@ -92,9 +92,24 @@ def default_voice_for(model: str) -> str:
 
 
 def configured_voices() -> list[dict[str, object]]:
-    """One walk of the voice tree for every configured voice; a walk per voice cost seconds."""
+    """One walk of the voice tree for every configured voice; each row names its built clips.
+
+    `variants` is every reference built for that voice and `default_variant` is the one a clone
+    actually uses, so a comparison can show the default rather than guess it.
+    """
     found = _voice_refs()
-    return [{"id": voice, "available": voice.lower() in found} for voice in cfg.AUDIOCPP_PROXY_CLONE_VOICES]
+    rows: list[dict[str, object]] = []
+    for voice in cfg.AUDIOCPP_PROXY_CLONE_VOICES:
+        reference = found.get(voice.lower())
+        rows.append(
+            {
+                "id": voice,
+                "available": reference is not None,
+                "variants": voice_variants(voice) if reference is not None else [],
+                "default_variant": reference.stem[len(voice) + 1 :] if reference is not None else "",
+            }
+        )
+    return rows
 
 
 def _voice_refs() -> dict[str, Path]:

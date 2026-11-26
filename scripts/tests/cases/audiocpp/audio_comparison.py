@@ -165,8 +165,12 @@ class AudioComparison(unittest.TestCase):
                     {"id": cfg.AudiocppModel.BREEZE_DESIGN.value, "installed": True, "clone": False},
                 ],
             )
-            self.assertIn({"id": "test-voice", "available": True}, catalog["voices"])
-            self.assertIn({"id": "other-voice", "available": False}, catalog["voices"])
+            self.assertIn(
+                {"id": "test-voice", "available": True, "variants": [], "default_variant": ""}, catalog["voices"]
+            )
+            self.assertIn(
+                {"id": "other-voice", "available": False, "variants": [], "default_variant": ""}, catalog["voices"]
+            )
 
     def test_comparison_rejects_missing_model_or_voice_before_default_fallback(self):
         catalog = {"models": [{"id": cfg.AudiocppModel.BREEZE_TTS.value, "installed": True, "clone": True}]}

@@ -28,10 +28,13 @@ const context = vm.createContext({document, console, Blob, AbortController, DOME
   settings() { return {payload: {stream: true, stream_format: 'sse', options: {temperature: .7, stream_frames_per_event: 16}}}; },
   async fetch(url, options) {
     if (String(url).includes('comparison-catalog')) return {ok: true, async json() { return {
-      voices: [{id: 'voice-a', available: true}, {id: 'voice-b', available: true}, {id: 'missing', available: false}],
+      voices: [
+        {id: 'voice-a', available: true, variants: ['1', 'max30', 'min30'], default_variant: 'max30'},
+        {id: 'voice-b', available: true, variants: ['max30'], default_variant: 'max30'},
+        {id: 'missing', available: false, variants: [], default_variant: ''},
+      ],
       models: [{id: 'breeze', installed: true, clone: true}, {id: 'echo', installed: true, clone: true},
         {id: 'absent', installed: false, clone: true}, {id: 'design', installed: true, clone: false}],
-      variants: ['max30', 'min30'],
     }; }};
     active++; maximumActive = Math.max(maximumActive, active);
     const payload = JSON.parse(options.body); requests.push(payload);
@@ -49,14 +52,20 @@ vm.runInContext(source, context);
 (async () => {
   await document.getElementById('comparison-load').onclick();
   assert.equal(document.getElementById('comparison-models').options.length, 3);
-  // - the launcher's own pick is the 30 s cap, so the clip list opens on max30
-  assert.deepEqual(document.getElementById('comparison-variants').selectedOptions.map(option => option.value), ['max30']);
+  // - the clip list is what the chosen voices actually built, and the clone's own pick is marked
+  const clips = document.getElementById('comparison-variants');
+  assert.deepEqual(clips.options.map(option => option.value), ['1', 'max30', 'min30']);
+  assert.deepEqual(clips.selectedOptions.map(option => option.value), ['max30']);
+  assert.match(clips.options.find(option => option.value === 'max30').textContent, /\(default\)/);
   document.getElementById('comparison-text').value = 'One shared input.';
   document.getElementById('comparison-all-voices').onclick();
   document.getElementById('comparison-all-models').onclick();
   assert.equal(document.getElementById('comparison-voices').selectedOptions.length, 2);
   assert.equal(document.getElementById('comparison-models').selectedOptions.length, 2);
-  assert.equal(document.getElementById('comparison-variants').selectedOptions.length, 1);
+  // - voice-b never built the other clips, so those are shown but cannot be queued
+  assert.equal(clips.options.find(option => option.value === '1').disabled, true);
+  assert.equal(clips.options.find(option => option.value === 'max30').disabled, false);
+  assert.equal(clips.selectedOptions.length, 1);
   document.getElementById('comparison-run').onclick();
   await context.pending;
   assert.equal(requests.length, 4);
