@@ -78,8 +78,10 @@
   .composer-actions { margin-left:auto; }
   .composer-shell { display:flex; flex-direction:column; gap:8px; padding:10px; background:var(--bg); border:1px solid var(--line); border-radius:10px; }
   .composer-shell:has(textarea:focus) { border-color:var(--focus); }
-  #box:focus { outline:none; }
   #box, #comparison-text { flex:none; width:100%; min-height:76px; margin:0; padding:4px; border:0; border-radius:0; }
+  #box:focus, #comparison-text:focus { outline:none; }
+  /* - the comparison sits outside the chat column, so it takes that column's width to match it */
+  .comparison-composer { width:min(760px,100%); }
   .comparison-prompt { display:block; margin:8px 0 4px; font-size:13px; }
   .composer-actions { justify-content:flex-end; }
   .composer-actions button { height:38px; min-height:38px; padding:7px 12px; }
