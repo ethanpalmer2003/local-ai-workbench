@@ -41,6 +41,9 @@ TOOLS = [
         ReleaseType.DATE,
         repo="0xShug0/audio.cpp",
         asset_pattern=r"^audio-.*-bin-windows-x64-rocm[\d.]+(?:-test)?\.zip$",
+        # - the 10.2 HIP build is newer than this rocm10.0.0-test zip, so the release is parked
+        in_use=False,
+        deferred_reason="superseded by the 10.2 HIP build; re-enable to fetch the ROCm release arm again",
     ),
     ToolSpec(
         "audiocpp/additions/espeak-ng",
@@ -58,6 +61,7 @@ TOOLS = [
         asset_pattern=r"^audiocpp-bin-win-hip-rocm7\.1-x64\.zip$",
         release_type=ReleaseType.DATE,
         in_use=False,
+        deferred_reason="ROCm 7.1 package, older than the 10.2 HIP build kept here",
     ),
     ToolSpec(
         name=project_cfg.AUDIOCPP_ROCM_BUILD_DIR.relative_to(project_cfg.FRAMEWORKS_DIR).as_posix(),

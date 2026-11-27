@@ -33,7 +33,8 @@ through the AudioCpp proxy, which strips `voice` for preset-voice models.
 ## Backends
 
 Vulkan is the shipped backend: three screens put it at RTF 0.34-0.39 against 0.42-0.47 on the ROCm
-release, so the ROCm arm runs only when asked with `--backend rocm-release`.
+release, so the ROCm arm runs only when asked with `--backend rocm-release`. That arm's zip is parked
+now: the 10.2 HIP build is newer, and fetching the release again re-creates `frameworks/audiocpp/rocm`.
 
 ## Test page
 

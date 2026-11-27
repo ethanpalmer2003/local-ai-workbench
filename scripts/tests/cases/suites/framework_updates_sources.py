@@ -237,6 +237,7 @@ class FrameworkUpdateSources(unittest.TestCase):
                 "avalon",
                 "tts/sherpa-onnx",
                 "tts/piper",
+                "audiocpp/rocm",
                 "audiocpp/additions/rocm/7.1-old",
                 "audiocpp/additions/rocm/therock-10.2-hip-7.17-gfx1101",
                 "asr/whispercpp/vulkan",

@@ -152,9 +152,11 @@ class FrameworkUpdates(unittest.TestCase):
 
     def test_official_audiocpp_rocm_asset_selection_and_install_path(self):
         tool = next(tool for tool in cfg.TOOLS if tool.name == "audiocpp/rocm")
-        self.assertTrue(tool.in_use)
+        # - the 10.2 HIP build superseded this release zip, so the entry is deferred with its reason
+        self.assertFalse(tool.in_use)
+        self.assertIn("10.2 HIP build", tool.deferred_reason or "")
         self.assertEqual(tool.release_type, cfg.ReleaseType.DATE)
-        self.assertEqual(project_cfg.framework_install_dir(tool.name), project_cfg.AUDIOCPP_ROCM_DIR)
+        self.assertEqual(project_cfg.framework_install_dir(tool.name), project_cfg.AUDIOCPP_FRAMEWORK_DIR / "rocm")
         asset = {"name": "audio-v0.9.3-bin-windows-x64-rocm10.0.0-test.zip"}
         response = Mock()
         response.json.return_value = {
