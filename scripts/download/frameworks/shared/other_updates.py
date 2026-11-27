@@ -72,6 +72,7 @@ TOOLS = [
         rebuild_required=True,
         rebase_local=True,
         in_use=False,
+        deferred_reason="trails stable llama.cpp and lost the paired screen; revisit only if it earns another look",
         build_command=("cmake", "--build", "build", "--target", "llama-server"),
     ),
     *benchmark_tools(),

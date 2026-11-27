@@ -15,6 +15,9 @@
 # The graph plugin needs this name at its canonical path; it is a junction into scripts/state/cache.
 /graphify-out/
 scripts/config/strata/.strata-mcp/
+# the Strata app owns this config and rewrites it (indent, .bak sibling) whenever it runs
+scripts/config/strata/strata-swift-iq2_xs.json
+scripts/config/strata/strata-swift-iq2_xs.json.bak
 scripts/config/strata/ram-budget-*.done
 scripts/config/strata/*.log
 scripts/config/strata/run-*.bat

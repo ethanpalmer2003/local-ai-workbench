@@ -744,7 +744,12 @@ def process_tool(tool: cfg.ToolSpec, tmp_dir: Path, check_only: bool, summary: U
 
     try:
         if not tool.in_use:
-            print("Status: NOT CURRENTLY IN USE (skipped)")
+            # - a deferred entry is parked on purpose, so it names why instead of reading as absent
+            print(
+                f"Status: DEFERRED (skipped): {tool.deferred_reason}"
+                if tool.deferred_reason
+                else "Status: NOT CURRENTLY IN USE (skipped)"
+            )
             return True
         if process_managed_tool(tool, dest_dir, tmp_dir, check_only, summary):
             return True

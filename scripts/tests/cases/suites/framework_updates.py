@@ -217,6 +217,16 @@ class FrameworkUpdates(unittest.TestCase):
         self.assertFalse([tool for tool in cfg.TOOLS if tool.name == "strata"])
         self.assertNotIn("strata", {release.value for release in cfg.ReleaseType})
 
+    def test_a_deferred_entry_says_why_instead_of_reading_as_unused(self):
+        deferred = cfg.ToolSpec("benchmarks/demo", "", cfg.ReleaseType.SOURCE, in_use=False, deferred_reason="parked")
+        unused = cfg.ToolSpec("benchmarks/other", "", cfg.ReleaseType.SOURCE, in_use=False)
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertTrue(updater.process_tool(deferred, Path("unused"), True))
+            self.assertTrue(updater.process_tool(unused, Path("unused"), True))
+        text = output.getvalue()
+        self.assertIn("Status: DEFERRED (skipped): parked", text)
+        self.assertIn("Status: NOT CURRENTLY IN USE (skipped)", text)
+
     def _comfyui_tool(self):
         return next(tool for tool in cfg.TOOLS if tool.name == "comfyui/rocm")
 

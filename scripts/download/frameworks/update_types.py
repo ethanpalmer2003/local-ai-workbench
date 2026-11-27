@@ -69,6 +69,8 @@ class ToolSpec:
     version_prefix: str = ""
     # - update coverage only; does not disable manual launchers
     in_use: bool = True
+    # - why a parked entry is parked: a deferred entry is skipped like an unused one, but says so
+    deferred_reason: str | None = None
     package: str | None = None
     branch: str = "main"
     install_subdir: str = ""
