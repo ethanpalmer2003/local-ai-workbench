@@ -16,6 +16,7 @@
 
 - A commit checks what it is recording: `--commit` reads the working tree against `HEAD`, so earlier unpushed commits do not run again. The scoped gate and scoped suite follow ruff, codespell and the punctuation pass. About five seconds for a code change, seconds for prose.
 - Both stages run fast to slow: lint, format, codespell and punctuation, then the gate, then the suite, and pre-commit stops at the first failing hook. Inside the gate the measured-slowest sections start first in parallel, so a green run costs one batch; a cheap failure does not cancel work already running. Medians: `python -m scripts.review.gate_times`.
+- To collect every finding in one run instead of one hook at a time, run by hand: `python -m scripts.review --all --manual` reports every failing section, `--tests` adds the suite, and `python -m scripts.tests.validate --yes` runs every stage through a failure and prints one summary. The hooks stay fail-fast.
 - A push checks everything: `--push` runs every section and every class when the unpushed commits touch Python, and the prose sections with no class when they do not; no Python behavior changed, and the last push was green.
 - By hand both need `--manual`; hooks pass their stage. Single files and sections are exempt; there is no separate edit stage.
 - The suite is a feedback loop: one import hop from the change. No Python path runs none; comments and docstrings too, and the three manifest files ([registry](../scripts/tests/registry.py), runner, selection) keep every class.
