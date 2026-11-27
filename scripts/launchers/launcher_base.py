@@ -110,8 +110,7 @@ LLAMACPP_BUILDS: dict[str, LlamacppStartupBuild] = {
     # - v1.0.0 release pin (nightly b12359), kept for A/B against the rolling vulkan build
     "vulkan-1.0.0": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "vulkan-1.0.0", extra_args={}),
     "vulkan": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "vulkan", extra_args={}),
-    # - Unsloth's fork reads the looped Inkling layout and supports its DSpark drafter; same Vulkan backend
-    "unsloth": LlamacppStartupBuild(bin_dir=project_cfg.LLAMACPP_FRAMEWORK_DIR / "unsloth", extra_args={}),
+    # - Unsloth's fork is retired: mainline runs Inkling 2 Mini from the Mainline_Support copy
     "rocm-lemonade": LlamacppStartupBuild(
         bin_dir=project_cfg.LLAMACPP_ROCM_LEMONADE_DIR,
         # - The Ryzen iGPU is ROCm1 and reports system RAM as free VRAM. The backend initializes

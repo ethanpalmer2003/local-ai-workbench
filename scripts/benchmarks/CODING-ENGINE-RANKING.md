@@ -30,8 +30,8 @@ the pair runs again.
 
 1. llama.cpp `vulkan` b12651: 32.1, 26.5 and 30.3, median 30.3 at 32K, every task passing; decode 43.0 and
    prefill 607 tok/s.
-2. llama.cpp `unsloth` b12649-mix c7059d6: 28.3, 55.7 and 40.8, median 40.8; DSpark decoded 54.1 tok/s at 80%
-   acceptance, prefill 195.
+2. llama.cpp `unsloth` b12649-mix c7059d6 (retired): 28.3, 55.7 and 40.8, median 40.8; DSpark decoded
+   54.1 tok/s at 80% acceptance, prefill 195.
 
 Mainline b12602 loaded the `Mainline_Support` copy and answered nothing; b12651 runs it, so its row is new.
 
@@ -40,8 +40,8 @@ Mainline b12602 loaded the `Mainline_Support` copy and answered nothing; b12651 
 1. Default coding engine: llama.cpp `vulkan`, the rolling build. It wins the 27B median and supports the widest set
    of models.
 2. Long context at 64K and beyond: the same build, since ROCm collapses above 64K.
-3. Inkling 2 Mini: `vulkan` b12651, which now runs the `Mainline_Support` copy on every task; `unsloth` keeps the
-   higher decode rate when decode alone is the target.
+3. Inkling 2 Mini: `vulkan` b12651, which runs the `Mainline_Support` copy on every task. The `unsloth` arm is
+   retired, so decode-rate numbers above are history.
 4. Flash Next: Strata; Avalon is the fallback if Strata fails.
 5. The pinned `vulkan-1.0.0` and `rocm-lemonade` builds stay installed as fallbacks; both are within a few seconds
    of the rolling build at 32K.

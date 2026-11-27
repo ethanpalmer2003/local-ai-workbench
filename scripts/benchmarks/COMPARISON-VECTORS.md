@@ -8,7 +8,7 @@ MoE offload and the memory envelope are now named here as first-class axes.
 | Vector | Values measured here | Owner |
 | --- | --- | --- |
 | Inference engine | llama.cpp, Strata, Avalon, Loom serve | [inference engines](inference_engines/README.md) |
-| Engine build | llama.cpp `vulkan` b12602, `vulkan-1.0.0` b12359, `unsloth` b12588-mix, `rocm-lemonade`, HRX; Strata control 0.1.60 | [builds](../config/llamacpp/BUILDS.md) |
+| Engine build | llama.cpp `vulkan` b12602, `vulkan-1.0.0` b12359, `rocm-lemonade`, HRX; Strata control 0.1.60 | [builds](../config/llamacpp/BUILDS.md) |
 | Compute backend | Vulkan, ROCm/HIP, HRX, CPU | `LLAMACPP_BUILDS` plus `--device` pin |
 | Coding harness | Pi by default; littlecoder, ohmypi and nanocoder only on request | [coding agents](coding_agents/README.md) |
 | Model | Swift-1.5 27B, Flash Next, Inkling-2-Mini; Qwen4 27B when released | [catalog](../config/models/catalog.json) |

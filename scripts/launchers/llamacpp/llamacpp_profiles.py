@@ -78,18 +78,6 @@ SWIFT15_HRX = with_extra(
 #   top-k 0 and min-p 0.0, which the INI carries as the server default
 INKLING_BASE = model_base(model_cfg.path("llamacpp/unsloth_Inkling-2-Mini-UD-IQ3_XXS").name, "inkling-q3.ini")
 INKLING_32K = with_extra(INKLING_BASE, **{"ctx-size": ContextSize.K32})
-# - the repository-root layout only Unsloth's fork reads, plus the DSpark drafter that pairs with it
-INKLING_UNSLOTH_BASE = model_base(model_cfg.path("llamacpp/unsloth_Inkling-2-Mini-root-IQ3_XXS").name, "inkling-q3.ini")
-INKLING_UNSLOTH_DSPARK = with_extra(
-    INKLING_UNSLOTH_BASE,
-    **{
-        "ctx-size": ContextSize.K32,
-        "model-draft": str(model_cfg.path("llamacpp/unsloth_Inkling-2-Mini-dspark-Q8_0")),
-        "spec-type": "draft-dspark",
-        "spec-draft-n-max": "3",
-        "n-gpu-layers-draft": "99",
-    },
-)
 
 
 # --- selected ----------------------------------------------------------
@@ -100,7 +88,6 @@ LLAMACPP_PROFILES: dict[str, LLMProfile] = {
     "swift15-8k": SWIFT15_MTP_NGRAM_8K,
     "swift15-hrx": SWIFT15_HRX,
     "inkling": INKLING_32K,
-    "inkling-unsloth": INKLING_UNSLOTH_DSPARK,
 }
 
 LLAMACPP_BENCHMARK_PROFILES: dict[str, LLMProfile] = {
