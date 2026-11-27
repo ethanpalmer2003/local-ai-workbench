@@ -34,11 +34,13 @@ class AudioComparison(unittest.TestCase):
             self.assertEqual(value["response_format"], "pcm")
 
     def test_a_named_voice_model_reports_its_own_default(self):
+        # - a clone model answers with the configured voice, so the expectation reads the same owner
+        clone_voice = cfg.DEFAULT_AUDIOCPP_PROXY_VOICE.value
         for model, mode, voice, clone, instruction, guidance in (
             ("audiocpp/supertonic-3-q8_0", "builtin", "F1", False, None, None),
             ("audiocpp/kokoro-audiocpp-multilingual-q8_0", "builtin", "af_heart", False, None, None),
             ("audiocpp/ming3-tts-0.5b-q8_0", "both", "US_James", True, "instruct", "guidance_scale"),
-            ("audiocpp/ming3-audio-tiny-q4_k", "clone", "persona", True, None, "guidance_scale"),
+            ("audiocpp/ming3-audio-tiny-q4_k", "clone", clone_voice, True, None, "guidance_scale"),
         ):
             if not model_cfg.path(model).is_file():
                 continue

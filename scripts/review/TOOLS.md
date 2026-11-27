@@ -21,7 +21,7 @@ Measured on this machine; only the last two open a model or service. When to run
 
 | Command | Covers |
 | --- | --- |
-| `python -m scripts.review` | layout, docs, model references, front-end wiring, lint, types, inventory, formatting, spelling, advisories, deptry, lock and leftovers |
+| `python -m scripts.review` | layout, docs, model references, front-end wiring, private names, lint, types, inventory, formatting, spelling, advisories, deptry, lock and leftovers |
 | ... --fast | the same minus types, inventory, advisories and the package summary |
 | ... --tests | the same, then the model-free test suite |
 | `... --prune` | installed packages nothing imports or declares, with the uninstall command |
@@ -52,7 +52,7 @@ Measured on this machine; only the last two open a model or service. When to run
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
 | [frontend wiring](FRONTEND-WIRING.md) | asset targets resolve, DOM ids exist, settings keys both emitted and provided |
 | `inventory_code.py` | inventory, file/function size, inline suppressions; `--complexity-debt` regenerates `GENERATED-COMPLEXITY-DEBT.md` |
-| `public_audit.py` | secrets, credentials, home/machine paths, vocabulary and input names, large files, ignored-but-tracked |
+| `public_audit.py` | secrets, credentials, home/machine paths, vocabulary and input names, large files, ignored-but-tracked; the gate runs the vocabulary scan at commit, the rest before publishing |
 | `dynamic_imports.py` | static imports; five loaders exempt |
 | `audit_timing.py` | which benchmark runners use the shared timing contract |
 | `package_audit.py` | leftovers no import or manifest declares; `--prune [--remove]`; `uv lock --check` |

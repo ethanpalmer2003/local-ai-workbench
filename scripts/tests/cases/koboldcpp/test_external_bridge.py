@@ -62,7 +62,7 @@ class ExternalBridgeTests(unittest.TestCase):
         request_body = external_bridge.chat_request(
             {
                 "prompt": "Once upon",
-                "memory": "You are Persona.",
+                "memory": "You are a helpful assistant.",
                 "max_length": 64,
                 "temperature": 0.7,
                 "rep_pen": 1.1,
@@ -75,7 +75,7 @@ class ExternalBridgeTests(unittest.TestCase):
             request_body,
             {
                 "messages": [
-                    {"role": "system", "content": "You are Persona."},
+                    {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": "Once upon"},
                 ],
                 "max_tokens": 64,

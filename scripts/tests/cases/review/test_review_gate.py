@@ -20,10 +20,13 @@ def _digraph(edges: dict[str, tuple[str, ...]]) -> networkx.DiGraph[str]:
 
 
 class GateScopeTests(unittest.TestCase):
-    def test_a_batch_rename_only_needs_layout_and_docs(self):
+    def test_a_batch_rename_needs_only_the_tree_wide_sections(self):
         from scripts.review.__main__ import touched_sections
 
-        self.assertEqual(touched_sections(["bat/checks/test_full.bat"]), {"layout", "docs", "single-owner tokens"})
+        # - a personal name may ride in any file type, so the name scan never narrows to Python
+        self.assertEqual(
+            touched_sections(["bat/checks/test_full.bat"]), {"layout", "docs", "single-owner tokens", "private names"}
+        )
 
     def test_a_python_edit_adds_the_code_sections(self):
         from scripts.review.__main__ import touched_sections
@@ -236,6 +239,24 @@ class GateScopeTests(unittest.TestCase):
         with patch.object(sources, "maintained_files", return_value=[Path("scripts/tests/a.py")]):
             self.assertEqual(sources.check_targets([], (".py",)), [Path("scripts/tests/a.py")])
         self.assertEqual(sources.check_targets(["notes/TODO.md"], (".py",)), [project_cfg.BASE_DIR / "notes/TODO.md"])
+
+    def test_the_private_name_section_screens_the_whole_tree_when_no_path_arrived(self):
+        from scripts.review import __main__ as gate
+
+        with patch.object(gate.public_audit, "name_findings", return_value=[]) as scan:
+            self.assertEqual(gate.names_check([]), 0)
+        scan.assert_called_once_with(gate.project_cfg.BASE_DIR, None)
+
+    def test_the_private_name_section_fails_on_a_finding(self):
+        from scripts.review import __main__ as gate
+
+        finding = gate.public_audit.Finding("input-name", "scripts/tests/a.py", "zzfixture")
+        with (
+            patch.object(gate.public_audit, "name_findings", return_value=[finding]),
+            redirect_stdout(StringIO()) as output,
+        ):
+            self.assertEqual(gate.names_check(["scripts/tests/a.py"]), 1)
+        self.assertIn("[input-name] scripts/tests/a.py: zzfixture", output.getvalue())
 
     def test_a_prose_only_push_runs_the_touched_sections(self):
         from scripts.review import __main__ as gate

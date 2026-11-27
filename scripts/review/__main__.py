@@ -15,8 +15,7 @@ from typing import Any, NamedTuple, TextIO
 from scripts.config import project_config as project_cfg
 from scripts.config import trash
 from scripts.review import output_lines
-from scripts.review.audit import package_audit
-from scripts.review.audit.public_audit import main as public_audit_main
+from scripts.review.audit import package_audit, public_audit
 from scripts.review.checks import (
     annotations,
     bare_any,
@@ -88,6 +87,18 @@ def spelling_check(paths: list[str] | None = None) -> int:
             check=False,
         ).returncode
     return status
+
+
+def names_check(paths: list[str]) -> int:
+    """Overlay vocabulary in tracked text; an empty list means every tracked file.
+
+    A personal name may ride in any file type and no other section reads all of them, so this one
+    runs on every change. Categories the publish audit owns alone stay out of the commit path.
+    """
+    findings = public_audit.name_findings(project_cfg.BASE_DIR, paths or None)
+    for finding in findings:
+        print(finding.line())
+    return int(bool(findings))
 
 
 def security_audit() -> tuple[int, str]:
@@ -435,7 +446,7 @@ DEPENDENCY_FILES = ("pyproject.toml", "uv.lock")
 
 def touched_sections(paths: list[str]) -> set[str]:
     """The sections whose inputs changed: a rename of batch files needs layout and docs only."""
-    sections = {"layout", "docs", "single-owner tokens"}
+    sections = {"layout", "docs", "single-owner tokens", "private names"}
     suffixes = {Path(path).suffix.lower() for path in paths}
     if ".py" in suffixes:
         sections |= PYTHON_SECTIONS
@@ -471,6 +482,7 @@ def touched_gate(argv: list[str] | None = None, changed: list[str] | None = None
         ("front-end wiring", "\n=== FRONT-END WIRING ===", frontend_wiring.main),
         ("network timeouts", "\n=== NETWORK TIMEOUTS ===", lambda: network_timeouts.main(python_files)),
         ("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main(python_files)),
+        ("private names", "\n=== PRIVATE NAMES ===", lambda: names_check(existing)),
         ("lint", "\n=== LINT ===", lint_check),
         ("types", "", lambda: scoped_type_check(existing, _flag(argv, "--fast"))),
         ("formatting", "\n=== PYTHON FORMATTING ===", lambda: format_check(python_files)),
@@ -544,7 +556,7 @@ def full_gate(argv: list[str] | None = None) -> int:
     if args.prune:
         return package_audit.main(remove=args.remove)
     if args.scrub:
-        return public_audit_main(["--scrub"])
+        return public_audit.main(["--scrub"])
 
     counts = _package_summary(args.fast)
     sections = [
@@ -555,6 +567,14 @@ def full_gate(argv: list[str] | None = None) -> int:
         Section("front-end wiring", "\n=== FRONT-END WIRING ===", frontend_wiring.main),
         Section("network timeouts", "\n=== NETWORK TIMEOUTS ===", lambda: network_timeouts.main([])),
         Section("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main([])),
+        Section(
+            "private names",
+            "\n=== PRIVATE NAMES ===",
+            lambda: names_check([]),
+            lambda status: print(
+                "[OK] No overlay vocabulary in tracked text" if not status else "[FAIL] Private names above"
+            ),
+        ),
         Section(
             "lint",
             "\n=== LINT ===",
