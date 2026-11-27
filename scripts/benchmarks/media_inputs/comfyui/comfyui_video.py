@@ -19,7 +19,7 @@ from typing import Any, BinaryIO, NamedTuple, TextIO
 import aiohttp
 from tqdm import tqdm
 
-from scripts.benchmarks.personal.comfyui.video_records import LaunchPlan, SelectedSources
+from scripts.benchmarks.media_inputs.comfyui.video_records import LaunchPlan, SelectedSources
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.benchmark import workflow_timing
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths

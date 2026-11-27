@@ -1,6 +1,6 @@
 # Saved LTX 2.5 I2V benchmark
 
-- Runner: `scripts.benchmarks.personal.comfyui.comfyui_video`; settings screen: `comfyui_settings`. Saved workflows/assets stay beside this component.
+- Runner: `scripts.benchmarks.media_inputs.comfyui.comfyui_video`; settings screen: `comfyui_settings`. Saved workflows/assets stay beside this component.
 - Current/native workflow ownership: [ComfyUI configuration](../../../config/comfyui/README.md). Native server work is opt-in; reuse/refuse sessions according to the [test rules](../../../tests/README.md).
 - Inputs, seeds, frame counts, typed model paths and prompt-cache behavior must match. Record loading/startup separately from generation/decoding.
 - Shared timing records startup and workflow totals. Model loading may occur inside nodes/offloading; its separate duration stays unknown. First workflow is marked loading-plus-workflow; these totals never qualify as resident inference rankings.

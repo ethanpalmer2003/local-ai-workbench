@@ -9,5 +9,5 @@
 - Saving -> `SDCPP_SAVE_OUTPUTS`; `SDCPP_OUTPUT_DIR` remains a Path.
 - [Tuning](TUNING.md) owns what is in use and what stays unmeasured; measured screens: [quantized checkpoint](QUANTIZED.md), [quantized memory](Q4-MEMORY.md), [full-precision memory](MEMORY.md).
 - Shared residency: CPU text encoder/512 VAE tiles through [shared GPU policy](../notes/SHARED-GPU.md). [Image swapping](../notes/IMAGE-ON-DEMAND.md) uses native management without normal server replacement.
-- Comparison modules: `scripts.benchmarks.personal.sdcpp.sdcpp_backend_compare`, `sdcpp_memory_compare`; opt-in, fresh/warmup/measured phases, identical seeds/prompts, sampled resources.
+- Comparison modules: `scripts.benchmarks.media_inputs.sdcpp.sdcpp_backend_compare`, `sdcpp_memory_compare`; opt-in, fresh/warmup/measured phases, identical seeds/prompts, sampled resources.
 - Prior single-order/backend screens do not rank visual quality or predict current releases. Preserve failures, RAM guard and owned-session cleanup.

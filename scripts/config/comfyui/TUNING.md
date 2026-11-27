@@ -1,7 +1,7 @@
 # ComfyUI tuning
 
 Measured settings for this GPU, an RX 7800 XT under ROCm. The runner and its procedures are in the
-[video benchmark](../../benchmarks/personal/comfyui/README.md); this page owns the settings that stay.
+[video benchmark](../../benchmarks/media_inputs/comfyui/README.md); this page owns the settings that stay.
 
 ## Default launch case
 
@@ -14,7 +14,7 @@ cache off, flash-attention Triton autotune on, Triton backend off, dynamic VRAM 
 
 ## What the screens measured
 
-- Screen at square-equivalent 480, then confirm at 640: a low-resolution gain has not survived the 640 check. The number behind that is owned by the [benchmark note](../../benchmarks/personal/comfyui/README.md), which has no dated report linked yet; [TODO](../../../notes/TODO.md) owns that gap.
+- Screen at square-equivalent 480, then confirm at 640: a low-resolution gain has not survived the 640 check. The number behind that is owned by the [benchmark note](../../benchmarks/media_inputs/comfyui/README.md), which has no dated report linked yet; [TODO](../../../notes/TODO.md) owns that gap.
 - Record decode and total time separately; sampled VRAM is a lower bound, and prompt-cache warmth and
   GPU-monitor overhead are separate factors.
 

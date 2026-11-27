@@ -7,7 +7,7 @@ import statistics
 import time
 from typing import Any
 
-from scripts.benchmarks.personal.sdcpp.sdcpp_backend_compare import arm, preflight
+from scripts.benchmarks.media_inputs.sdcpp.sdcpp_backend_compare import arm, preflight
 from scripts.benchmarks.shared import BENCHMARK_SECONDS
 from scripts.benchmarks.shared.paths import BenchmarkPaths, RunPaths
 from scripts.benchmarks.shared.reporting import report_run

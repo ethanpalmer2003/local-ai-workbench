@@ -61,7 +61,7 @@ reportImplicitRelativeImport = "none"
 pythonVersion = "3.14"
 venvPath = "."
 venv = ".venv"
-exclude = ["scripts/config/comfyui/ltx_prompt_cache.py", "scripts/tests/cases/personal/comfyui/test_ltx_prompt_cache.py", "scripts/tests/retired", "runs/tests", "runs/benchmarks", "state", ".venv", "data", "frameworks", "trash"]
+exclude = ["scripts/config/comfyui/ltx_prompt_cache.py", "scripts/tests/cases/media_inputs/comfyui/test_ltx_prompt_cache.py", "scripts/tests/retired", "runs/tests", "runs/benchmarks", "state", ".venv", "data", "frameworks", "trash"]
 
 [tool.ruff]
 cache-dir = "runs/state/cache/ruff"
@@ -95,7 +95,7 @@ ignore = ["UP042", "S603", "S606", "S607", "S310"]
 "scripts/config/comfyui/ltx_prompt_cache.py" = ["N802", "PLC0415"]
 # - the ComfyUI node handler is looked up by name on an arbitrary class object
 "scripts/config/comfyui/verify_node.py" = ["B009"]
-"scripts/benchmarks/personal/comfyui/comfyui_video.py" = ["PLC0415"]
+"scripts/benchmarks/media_inputs/comfyui/comfyui_video.py" = ["PLC0415"]
 "scripts/launchers/koboldcpp/kobold.py" = ["PLC0415"]
 "scripts/launchers/koboldcpp/kobold_lite.py" = ["PLC0415"]
 "scripts/launchers/runtime/gpu_memory.py" = ["PLC0415"]

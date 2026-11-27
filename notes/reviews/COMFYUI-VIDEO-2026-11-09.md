@@ -4,7 +4,7 @@ Screen, not a ranking. Evidence from 2026-11-09 on this machine.
 
 ## What ran
 
-`scripts.benchmarks.personal.comfyui.comfyui_video` ran the saved LTX 2.5 i2v workflow at square-equivalent 640, 24 fps, dynamic VRAM on, sage attention on, with the Q2_K and Q4_K_M Gemma 4 12B encoders paired against the same `LTX25-distilled-DiT-Q3_K_M` UNet. Nine attempts were launched; four produced results rows.
+`scripts.benchmarks.media_inputs.comfyui.comfyui_video` ran the saved LTX 2.5 i2v workflow at square-equivalent 640, 24 fps, dynamic VRAM on, sage attention on, with the Q2_K and Q4_K_M Gemma 4 12B encoders paired against the same `LTX25-distilled-DiT-Q3_K_M` UNet. Nine attempts were launched; four produced results rows.
 
 | case | encoder | wall | sampler | VAEDecode | process peak | total peak |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |

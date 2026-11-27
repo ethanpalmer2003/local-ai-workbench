@@ -28,6 +28,6 @@ nodes serve weights whose workflows are not tracked here.
 - Prompt caching keys on the actual encoder/request settings; cold/warm caches must be distinguished in measurements.
 - Screen at square-equivalent 480, then validate useful settings at 640; longer clips, appearance/listening and autotune are separate checks.
 - Tile/frame/conditioning changes alter the workload. Record decode plus total time, sampled memory and monitor overhead; do not infer scalable gains from one small sample.
-- [Video benchmark and prior limits](../../benchmarks/personal/comfyui/README.md), [outcomes](../../tests/notes/OUTCOMES.md), [pending work](../../../notes/TODO.md).
+- [Video benchmark and prior limits](../../benchmarks/media_inputs/comfyui/README.md), [outcomes](../../tests/notes/OUTCOMES.md), [pending work](../../../notes/TODO.md).
 - Saved variants (default, original, fast480, fast480_v3) live together in workflows/; select one with --workflow <path>. Historical benchmark results keep the paths they recorded; do not rewrite them as current defaults.
 - Prompt text in save workflows is a generic LTX-2 placeholder. Personal `video.prompt` / `video.negative` (replace) or `video.prompt_append` / `video.negative_append` (extend) come from the input overlay and are applied to the installed copies during `--only comfyui --apply`, so one tracked workflow serves both.

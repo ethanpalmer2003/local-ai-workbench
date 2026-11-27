@@ -12,5 +12,5 @@
 | CPU weights / 8 GiB managed budget | 27.71 | 7.01 / 7.01 |
 
 - What these screens led to is owned by [TUNING](TUNING.md); current quantized model findings: [Q4 memory](Q4-MEMORY.md).
-- Rerun through `scripts.benchmarks.personal.sdcpp.sdcpp_memory_compare` only when requested, matching model/hashes/context and recording execution token.
+- Rerun through `scripts.benchmarks.media_inputs.sdcpp.sdcpp_memory_compare` only when requested, matching model/hashes/context and recording execution token.
 - Historical complete outputs remain under `runs/tests/probes/sdcpp_memory_compare/`; source reorganization does not rewrite them.

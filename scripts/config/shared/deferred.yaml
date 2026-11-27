@@ -91,7 +91,7 @@
   cause: unplanned
   reason: tuning runs were never started because no measured reason for them has appeared
   revisit: a measured reason appears
-  source: scripts/benchmarks/personal/comfyui/README.md
+  source: scripts/benchmarks/media_inputs/comfyui/README.md
 - thing: Unsloth quants for the two large coding models
   kind: model
   cause: unplanned

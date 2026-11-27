@@ -19,5 +19,5 @@
 | Whole default live batch | 5-10 minutes |
 
 - Profile/context/video grids can exceed these estimates substantially; calculate the actual matrix before starting.
-- [Outcomes](OUTCOMES.md) owns measured findings; [ComfyUI procedure](../../benchmarks/personal/comfyui/README.md) owns video scope.
+- [Outcomes](OUTCOMES.md) owns measured findings; [ComfyUI procedure](../../benchmarks/media_inputs/comfyui/README.md) owns video scope.
 - Testing deferrals override estimates; no run is authorized by this table.

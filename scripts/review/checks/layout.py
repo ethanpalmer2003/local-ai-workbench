@@ -270,9 +270,10 @@ def owner_issues(path: Path) -> list[str]:
 
 
 AREA_ROOTS = (project_cfg.TEST_CASES_DIR, project_cfg.SCRIPTS_DIR / "benchmarks")
-# - test areas group by purpose rather than by component: personal media, repository review, suite entry points
-TEST_GROUPS = {"personal", "review", "suites"}
-VAGUE_AREAS = {"llm", "speech", "tts", "misc", "stuff", "temp", "utils", "data", "models", "tests"}
+# - test areas group by purpose rather than by component: media inputs, repository review, suite entry points
+TEST_GROUPS = {"media_inputs", "review", "suites"}
+# - names a future sweep must find stay specific, so the generic word is refused as an area
+VAGUE_AREAS = {"llm", "media", "speech", "tts", "misc", "stuff", "temp", "utils", "data", "models", "tests"}
 VAGUE_ANYWHERE = {"misc", "stuff", "temp", "tmp", "utils", "other", "new", "old"}
 NAME_SKIP = {
     ".git",
@@ -320,7 +321,7 @@ def _root_naming_issues(root: Path) -> list[str]:
         where = folder.relative_to(project_cfg.BASE_DIR).as_posix()
         groups = (
             [path for path in folder.iterdir() if path.is_dir() and path.name not in NAME_SKIP]
-            if folder.name == "personal"
+            if folder.name == "media_inputs"
             else [folder]
         )
         for group in groups:
@@ -331,12 +332,16 @@ def _root_naming_issues(root: Path) -> list[str]:
 def _duplicate_area_issues() -> list[str]:
     issues = []
     for root in AREA_ROOTS:
-        personal = root / "personal"
-        if not personal.is_dir():
+        media_inputs = root / "media_inputs"
+        if not media_inputs.is_dir():
             continue
-        nested = {path.name for path in personal.iterdir() if path.is_dir()}
-        siblings = {path.name for path in root.iterdir() if path.is_dir() and path.name not in NAME_SKIP | {"personal"}}
-        issues.extend(f"Area sits both at the root and under personal/: {name}" for name in sorted(nested & siblings))
+        nested = {path.name for path in media_inputs.iterdir() if path.is_dir()}
+        siblings = {
+            path.name for path in root.iterdir() if path.is_dir() and path.name not in NAME_SKIP | {"media_inputs"}
+        }
+        issues.extend(
+            f"Area sits both at the root and under media_inputs/: {name}" for name in sorted(nested & siblings)
+        )
     return issues
 
 

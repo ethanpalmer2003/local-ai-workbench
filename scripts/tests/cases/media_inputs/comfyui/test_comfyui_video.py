@@ -7,8 +7,8 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from scripts.benchmarks.personal.comfyui.comfyui_settings import commands, setting_cases
-from scripts.benchmarks.personal.comfyui.comfyui_video import (
+from scripts.benchmarks.media_inputs.comfyui.comfyui_settings import commands, setting_cases
+from scripts.benchmarks.media_inputs.comfyui.comfyui_video import (
     ENCODERS,
     MODELS,
     check_ports,
@@ -181,7 +181,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertNotIn("FLASH_ATTENTION_TRITON_AMD_AUTOTUNE", env)
 
     def test_free_ports_do_not_require_a_connect_response(self) -> None:
-        with patch("scripts.benchmarks.personal.comfyui.comfyui_video.socket.socket") as socket_factory:
+        with patch("scripts.benchmarks.media_inputs.comfyui.comfyui_video.socket.socket") as socket_factory:
             connection = socket_factory.return_value.__enter__.return_value
             connection.connect.side_effect = TimeoutError("filtered localhost connect")
             check_ports(8190)
@@ -189,7 +189,7 @@ class WorkflowTests(unittest.TestCase):
             connection.connect.assert_not_called()
 
     def test_unavailable_port_prevents_launch(self) -> None:
-        with patch("scripts.benchmarks.personal.comfyui.comfyui_video.socket.socket") as socket_factory:
+        with patch("scripts.benchmarks.media_inputs.comfyui.comfyui_video.socket.socket") as socket_factory:
             connection = socket_factory.return_value.__enter__.return_value
             connection.bind.side_effect = OSError("address already in use")
             with self.assertRaisesRegex(RuntimeError, "Cannot reserve localhost port"):

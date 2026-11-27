@@ -10,7 +10,7 @@ Benchmark runners and their timing support live here, separate from correctness 
 - Language practice vs Lemonade (`bat/benchmarks/benchmark_framework_compare.bat`): chat, speech and recognition on the pinned corpus, one stack at a time, with an extra arm for the practice recogniser's Whisper build. Every long run records [provenance](shared/provenance.py) so a later run can tell what changed.
 - The llama.cpp build sweep (`benchmark_llm_inference`) is retired; its sources are archived in `C:/AI/trash/retired-llm-inference-sweep`.
 
-New runs go under `runs/benchmarks`, inside a `YYYY-MM-DD` folder for their date; media-generation areas (`sdcpp`, `comfyui`) nest under `output/personal/`. `tts_engines`, `asr` and `koboldcpp` stay at the root because the same engines serve language practice. Existing evidence stays at its historical path.
+New runs go under `runs/benchmarks`, inside a `YYYY-MM-DD` folder for their date; media-generation areas (`sdcpp`, `comfyui`) nest under `output/media_inputs/`. `tts_engines`, `asr` and `koboldcpp` stay at the root because the same engines serve language practice. Existing evidence stays at its historical path.
 
 `shared/benchmark.py` owns timing across ASR, TTS, language models and images. Adapters own loading, request protocols and task-owned cleanup.
 

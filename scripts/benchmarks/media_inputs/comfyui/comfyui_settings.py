@@ -61,7 +61,7 @@ def commands(group: str, repeat: int, reverse: bool, dry_run: bool) -> list[tupl
     common = [
         sys.executable,
         "-m",
-        "scripts.benchmarks.personal.comfyui.comfyui_video",
+        "scripts.benchmarks.media_inputs.comfyui.comfyui_video",
         "--workflow",
         str(project_cfg.CONFIG_DIR / "comfyui/workflows/video_ltx2_5_i2v_default.json"),
         "--preset",

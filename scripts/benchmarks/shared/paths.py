@@ -10,7 +10,7 @@ from typing import Any
 
 from scripts.config import project_config as project_cfg
 
-PERSONAL_AREAS = frozenset({"sdcpp", "comfyui"})
+MEDIA_INPUT_AREAS = frozenset({"sdcpp", "comfyui"})
 
 
 def dated_run(base: Path, stamp: str | None = None) -> Path:
@@ -19,9 +19,9 @@ def dated_run(base: Path, stamp: str | None = None) -> Path:
 
 
 def grouped(relative: Path) -> Path:
-    """Personal media/chat areas nest under personal/ so their evidence stays apart from core runs."""
-    if relative.parts and relative.parts[0] in PERSONAL_AREAS:
-        return Path("personal") / relative
+    """Personal media/chat areas nest under media_inputs/ so their evidence stays apart from core runs."""
+    if relative.parts and relative.parts[0] in MEDIA_INPUT_AREAS:
+        return Path("media_inputs") / relative
     return relative
 
 

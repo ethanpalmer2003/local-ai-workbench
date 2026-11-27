@@ -4,6 +4,7 @@
 - A file opens with its constants and helpers in order of use, and ends with its entry function and the `__main__` guard.
 - One wait, one probe, one timer: [wait.py](../scripts/shared/wait.py) owns `wait_ready` and `http_ready`, [timing.py](../scripts/shared/timing.py) owns `timed`; a different question gets its own name.
 - A name is explained once, in its owner's docstring; an import says why this module needs it, never what it does.
+- A name we expect to search for later stays specific: a folder, constant or keyword that a future sweep must find should not be a word the codebase also uses in prose (`media` -> `media_inputs`). `layout.VAGUE_AREAS` refuses the generic versions of these names.
 - Functions stay at McCabe complexity 10 or below; extract by responsibility, and keep unexpected tracebacks.
 - Abnormal state is raised and caught, not flattened into a value: a missing upstream is `NoUpstreamError`, so an empty list means a clean tree; a sentinel stays only where the caller reads it as no evidence.
 - A Python file stays under `MAX_FILE_LINES` (800, `inventory_code`), warns from `WARN_FILE_LINES` (600), and longer ones are listed in `lists/file-length-baseline.json`; signatures stay under the annotation cap.

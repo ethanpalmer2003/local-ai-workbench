@@ -23,7 +23,7 @@ DELEGATES = {
     "coding_agents/shared/framework_tasks.py": "Task definitions shared by benchmark runners and regression checks",
     "coding_agents/shared/agent_results.py": "Result record and documents; timing values arrive from the shared "
     "lifecycle",
-    "personal/sdcpp/sdcpp_memory_compare.py": "Delegates setup and requests to the sd.cpp backend comparison",
+    "media_inputs/sdcpp/sdcpp_memory_compare.py": "Delegates setup and requests to the sd.cpp backend comparison",
     "inference_engines/engines/base.py": "Normalized result contract; no timing implementation",
 }
 
