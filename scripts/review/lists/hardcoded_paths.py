@@ -15,12 +15,21 @@ from pathlib import Path
 from scripts.config import project_config as project_cfg
 from scripts.shared.file_sets import maintained_files
 
-# - config-owned trees, by the repo-relative name each one is allowed to be spelled under
+# - config-owned trees: a literal naming one of these, at any depth, belongs in project_config
 OWNED_ROOTS = ("state", "runs", "data", "frameworks", "trash", "graphify-out")
-# - literal text that names a config-owned tree below `scripts/`, which is the old layout
-STALE = re.compile(r"scripts[/\\](?:state|tests[/\\]output|benchmarks[/\\]output)\b")
+# - a literal that BEGINS with a config-owned tree and a path segment: a component name that merely
+#   contains one (`download/frameworks/...`) is not a repo path
+OWNED_NAMES = "|".join(OWNED_ROOTS)
+OWNED_PATH = re.compile(rf"^(?:\./)?(?:{OWNED_NAMES})/[^\s\"'`)]")
+# - in a comment or a data file the path sits mid-line, so any token boundary counts, but a longer
+#   component name that merely contains one (`download/frameworks/...`) still does not
+TEXT_OWNED = re.compile(rf"(?<![\w/.-])(?:{OWNED_NAMES})/[^\s\"'`)]")
 # - a file that may name the paths: the owner itself, and this check's own fixtures
 OWNERS = frozenset({"scripts/config/project_config.py", "scripts/review/lists/hardcoded_paths.py"})
+# - a data file whose rows ARE paths, and a test that asserts a resolved path: both spell one on purpose
+ALLOWED = frozenset(
+    {"scripts/config/models/model_languages.json", "scripts/config/llamacpp/hrx-patches/corrected-manifest.json"}
+)
 
 
 @dataclass(frozen=True)
@@ -60,25 +69,30 @@ def joined_path_literals(tree: ast.AST) -> list[tuple[str, int]]:
     return found
 
 
-def _stale_lines(relative: str, text: str) -> tuple[list[Finding], set[int]]:
-    """Lines naming a path that moved under a config owner, plus their numbers."""
-    found = [
-        Finding(relative, number, "names a path that moved under a config owner")
-        for number, line in enumerate(text.splitlines(), start=1)
-        if STALE.search(line)
-    ]
-    return found, {item.line for item in found}
+def _literal_lines(relative: str, tree: ast.AST) -> list[Finding]:
+    """String literals that spell a config-owned tree, docstrings included.
+
+    A docstring is held to the same rule: naming the tree in prose is how the next reader copies the
+    literal, so it says what lives there and leaves the path to its owner.
+    """
+    found = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+            continue
+        if OWNED_PATH.search(node.value) or TEXT_OWNED.search(node.value):
+            found.append(Finding(relative, node.lineno, f"spells {node.value!r}; read it from project_config"))
+    return found
 
 
 def _joined_lines(relative: str, tree: ast.AST, reported: set[int]) -> list[Finding]:
-    """Joined literals that spell a config-owned tree below `scripts/`, one finding per line."""
+    """Joined literals whose first segment is a config-owned tree, one finding per line."""
     found = []
     seen = set(reported)
     for joined, line in joined_path_literals(tree):
         if line in seen:
             continue
         segments = joined.split("/")
-        if len(segments) >= 2 and segments[0] == "scripts" and segments[1] in OWNED_ROOTS:
+        if len(segments) >= 2 and (segments[0] in OWNED_ROOTS or segments[0] == "scripts"):
             found.append(Finding(relative, line, f"spells {joined!r}; import the owning constant"))
             seen.add(line)
     return found
@@ -91,7 +105,9 @@ def findings(paths: list[Path] | None = None) -> list[Finding]:
         if path.suffix.lower() not in {".py", ".toml", ".yml", ".yaml", ".bat", ".json"}:
             continue
         relative = _relative(path)
-        if relative in OWNERS or path.name in {"project_config.py", "hardcoded_paths.py"}:
+        if relative in OWNERS or relative in ALLOWED:
+            continue
+        if path.name in {"project_config.py", "hardcoded_paths.py"}:
             continue
         if relative.startswith("scripts/tests/cases/"):
             # - a test spells the path to assert what the owner returns; that is not a second copy
@@ -100,14 +116,29 @@ def findings(paths: list[Path] | None = None) -> list[Finding]:
             text = path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        stale, reported = _stale_lines(relative, text)
-        checked.extend(stale)
+        owned, reported = [], set()
         if path.suffix.lower() == ".py":
             try:
-                checked.extend(_joined_lines(relative, ast.parse(text), reported))
+                tree = ast.parse(text)
             except SyntaxError:
                 continue
+            owned = _literal_lines(relative, tree)
+            reported = {item.line for item in owned}
+            checked.extend(_joined_lines(relative, tree, reported))
+        else:
+            owned, reported = _owned_lines(relative, text)
+        checked.extend(owned)
     return checked
+
+
+def _owned_lines(relative: str, text: str) -> tuple[list[Finding], set[int]]:
+    """Lines of a non-Python file spelling a config-owned tree, plus their numbers."""
+    found = [
+        Finding(relative, number, "spells a config-owned tree; read it from project_config")
+        for number, line in enumerate(text.splitlines(), start=1)
+        if TEXT_OWNED.search(line)
+    ]
+    return found, {item.line for item in found}
 
 
 def main(argv: list[str] | None = None) -> int:

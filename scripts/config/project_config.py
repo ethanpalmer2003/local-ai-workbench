@@ -33,6 +33,8 @@ CONFIG_DIR = SCRIPTS_DIR / "config"
 # - run evidence and runtime state live under one root, apart from source and from the weight/install
 #   `data/` tree: browsable, unbounded, and `scripts/` stays source-sized
 RUNS_DIR = BASE_DIR / "runs"
+# - the graph plugin needs this name at its canonical path; it is untracked runtime output
+GRAPHIFY_OUT_DIR = BASE_DIR / "graphify-out"
 STATE_DIR = RUNS_DIR / "state"
 GENERATED_DIR = STATE_DIR / "generated"
 LOGS_DIR = Path(os.environ.get("AI_LOGS_DIR") or STATE_DIR / "logs")

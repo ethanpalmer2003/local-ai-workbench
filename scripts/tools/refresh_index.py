@@ -76,8 +76,8 @@ def graphify_commands(tool: str, root: Path) -> tuple[tuple[str, ...], ...]:
     The export is last because it reads the graph the first two passes just wrote; it costs about
     a second for ~350 articles.
     """
-    graph = root / "graphify-out" / "graph.json"
-    labels = root / "graphify-out" / ".graphify_labels.json"
+    graph = project_cfg.GRAPHIFY_OUT_DIR / "graph.json"
+    labels = project_cfg.GRAPHIFY_OUT_DIR / ".graphify_labels.json"
     return (
         (tool, "update", root.as_posix(), "--no-cluster"),
         (tool, "cluster-only", root.as_posix(), "--no-label", "--no-viz"),

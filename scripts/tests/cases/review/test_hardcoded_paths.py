@@ -15,13 +15,25 @@ class HardcodedPathTests(unittest.TestCase):
             return hardcoded_paths.findings([path])
 
     def test_a_joined_literal_naming_a_owned_tree_fails(self):
-        found = self._findings("module.py", 'path = root / "scripts" / "state" / "logs"\n')
+        found = self._findings("module.py", 'path = root / "state" / "logs"\n')
         self.assertEqual([item.line for item in found], [1])
-        self.assertIn("scripts/state", found[0].detail)
+        self.assertIn("state/logs", found[0].detail)
 
-    def test_a_string_naming_a_moved_path_fails_in_any_scanned_file(self):
-        found = self._findings("comment.bat", "rem reports land under scripts\\tests\\output\\\n")
+    def test_a_string_naming_an_owned_tree_fails_in_any_scanned_file(self):
+        found = self._findings("comment.bat", "rem reports land under runs/tests/output\n")
         self.assertEqual(len(found), 1)
+
+    def test_a_component_name_that_merely_contains_an_owned_tree_passes(self):
+        found = self._findings("module.py", "A = 'download/frameworks/llamacpp/local-work'\n")
+        self.assertEqual(found, [])
+
+    def test_a_docstring_naming_a_path_fails_like_any_other_string(self):
+        found = self._findings("module.py", '"""Writes under runs/state/generated; see the owner."""\nX = 1\n')
+        self.assertEqual(len(found), 1)
+
+    def test_a_docstring_that_names_the_owner_passes(self):
+        found = self._findings("module.py", '"""Writes under the generated root; see project_config."""\nX = 1\n')
+        self.assertEqual(found, [])
 
     def test_importing_the_constant_passes(self):
         self.assertEqual(self._findings("module.py", "path = project_cfg.STATE_DIR / 'logs'\n"), [])

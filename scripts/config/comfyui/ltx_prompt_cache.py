@@ -7,10 +7,9 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-CACHE_DIR = Path(
-    os.environ.get("LTX_CONDITIONING_CACHE")
-    or str(Path(__file__).resolve().parents[2] / "state" / "cache" / "ltx-conditioning")
-)
+from scripts.config import project_config as project_cfg
+
+CACHE_DIR = Path(os.environ.get("LTX_CONDITIONING_CACHE") or str(project_cfg.CACHE_DIR / "ltx-conditioning"))
 
 
 def cache_file(text: str, prompt: dict[str, Any], unique_id: str) -> Path:

@@ -2,7 +2,7 @@
 
 `python -m scripts.tools.cleanup --dry-run` says what would move; `--apply` moves it. Run evidence keeps the
 newest run per case and outcome and anything a tracked file cites, so a superseded run leaves while the
-evidence behind a written decision stays. Output and state move to `trash/<date>/`; `empty_trash` here is the
+evidence behind a written decision stays. Output and state move under the trash root; `empty_trash` here is the
 one owner of deleting what the trash holds, and the gate calls it with `TRASH_DAYS`.
 """
 
@@ -25,7 +25,10 @@ OUTPUT_ROOTS = (project_cfg.TEST_OUTPUT_DIR, project_cfg.BENCHMARK_OUTPUT_DIR)
 MAX_DEPTH = 6
 # - a run that took minutes to produce keeps more history than one that took seconds: a benchmark or a
 #   live probe is expensive to repeat, while a fast suite run is cheap
-EXPENSIVE = ("runs/benchmarks/", "runs/tests/probes/")
+EXPENSIVE = (
+    f"{project_cfg.BENCHMARK_OUTPUT_DIR.relative_to(project_cfg.BASE_DIR).as_posix()}/",
+    f"{(project_cfg.TEST_OUTPUT_DIR / 'probes').relative_to(project_cfg.BASE_DIR).as_posix()}/",
+)
 EXPENSIVE_KEEP, EXPENSIVE_DAYS = 5, 90
 CHEAP_KEEP, CHEAP_DAYS = 1, 7
 # - a suite writes a run per invocation, so an area needs a ceiling of its own
@@ -132,7 +135,7 @@ def _age_days(path: Path) -> int:
 
 
 def move_to_trash(paths: list[Path], stamp: str, dry_run: bool) -> int:
-    """Move each path under `trash/<stamp>/cleanup/`, keeping its relative place; return how many moved."""
+    """Move each path under its dated trash folder, keeping its relative place; return how many moved."""
     moved = 0
     for path in paths:
         target = trash.trash_dir(stamp) / "cleanup" / path.relative_to(project_cfg.BASE_DIR)

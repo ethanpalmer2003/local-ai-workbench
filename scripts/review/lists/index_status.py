@@ -14,7 +14,7 @@ from scripts.config import project_config as project_cfg
 from scripts.shared.tables import render_table
 
 CBM_DB = Path.home() / ".cache" / "codebase-memory-mcp" / "C-AI.db"
-GRAPH_JSON = project_cfg.BASE_DIR / "graphify-out" / "graph.json"
+GRAPH_JSON = project_cfg.GRAPHIFY_OUT_DIR / "graph.json"
 
 
 @dataclass

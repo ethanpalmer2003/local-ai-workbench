@@ -14,7 +14,7 @@ def trash_root() -> Path:
 
 
 def trash_dir(stamp: str | None = None) -> Path:
-    """Today's trash folder path (`trash/YYYY-MM-DD`); computing it creates nothing."""
+    """Today's dated folder under the trash root; computing it creates nothing."""
     return (trash_root() / (stamp or datetime.now().strftime("%Y-%m-%d"))).resolve()
 
 

@@ -1,4 +1,4 @@
-"""ASR-only catalog; component keys match frameworks/asr and model owners."""
+"""ASR-only catalog; component keys match the ASR install and the model owners."""
 
 from pathlib import Path
 
