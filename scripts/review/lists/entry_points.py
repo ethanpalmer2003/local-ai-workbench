@@ -26,6 +26,7 @@ ALL: dict[str, str] = {
     "scripts.review.checks.dynamic_imports": "check",
     "scripts.review.checks.expression": "check",
     "scripts.review.checks.frontend_wiring": "check",
+    "scripts.review.lists.hardcoded_paths": "check",
     "scripts.review.checks.inventory_code": "check",
     "scripts.review.checks.layout": "check",
     "scripts.review.checks.line_length": "check",

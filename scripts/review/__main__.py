@@ -37,7 +37,7 @@ from scripts.review.checks import (
     typography,
     walrus,
 )
-from scripts.review.lists import taxonomies
+from scripts.review.lists import hardcoded_paths, taxonomies
 from scripts.shared import consent, file_sets
 from scripts.shared.file_sets import GitError, NoUpstreamError, changed_since_head, changed_since_upstream
 from scripts.shared.import_graph import (
@@ -388,7 +388,7 @@ def run_and_report(sections: list[Section], summary: bool) -> dict[str, str]:
 
 def write_timings() -> Path:
     """One file per gate run under the prunable logs folder; a run's own sections sit inside it."""
-    folder = project_cfg.SCRIPTS_DIR / "state" / "logs" / "shared" / "review"
+    folder = project_cfg.STATE_DIR / "logs" / "shared" / "review"
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{time.time_ns()}.json"
     path.write_text(
@@ -421,6 +421,7 @@ PYTHON_SECTIONS = frozenset(
         "walrus",
         "expression",
         "output",
+        "hardcoded paths",
         "network timeouts",
         "overlay access",
         "taxonomy",
@@ -603,6 +604,7 @@ def full_gate(argv: list[str] | None = None) -> int:
             Section("walrus", "\n=== WALRUS OPERATOR ===", lambda: walrus.main([])),
             Section("expression", "\n=== EXPRESSION DEPTH ===", lambda: expression.main([])),
             Section("output", "\n=== CONSOLE OUTPUT ===", lambda: output_lines.main([])),
+            Section("hardcoded paths", "\n=== HARDCODED PATHS ===", lambda: hardcoded_paths.main([])),
             Section("taxonomy", "\n=== TAXONOMY OVERLAP ===", lambda: taxonomies.main([])),
             Section("spelling variants", "\n=== AMERICAN SPELLING ===", lambda: spellings.main([])),
             Section(
