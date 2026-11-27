@@ -27,8 +27,8 @@ does not combine with offline VAD or `--json`. This is unpaced recorded audio,
 not a microphone latency test.
 
 VAD check (../../output/asr/shared/resident_compare/unreviewed/1793233429648563300/artifacts/modes.json),
-Vulkan failure (`state/logs/shared/parakeet-nemotron-stream-check.log`),
-CPU streaming (`state/logs/shared/parakeet-nemotron-shared-stream-check.log`).
+Vulkan failure (`runs/state/logs/shared/parakeet-nemotron-stream-check.log`),
+CPU streaming (`runs/state/logs/shared/parakeet-nemotron-shared-stream-check.log`).
 The VAD artifact retains the rejected JSON+stream attempt; the linked CPU log
 records the corrected successful shared-profile run.
 

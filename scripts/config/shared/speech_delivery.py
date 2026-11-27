@@ -9,7 +9,7 @@ from scripts.config import project_config as project_cfg
 
 # Default delivery for every speech surface: prefer true streaming, then sentence-level chunks, then one
 # whole response. Each surface passes only the modes its framework supports, so the unsupported ones fall
-# through, and a saved per-model override (state/shared/speech_delivery.json) replaces the default.
+# through, and a saved per-model override (runs/state/shared/speech_delivery.json) replaces the default.
 MODES = ("streaming", "chunked", "whole")
 # True incremental streaming backends; ASR_CHUNKED adds VAD/segment backends that must never be called streaming.
 ASR_STREAMING = ("audiocpp-nemotron", "audiocpp-qwen3", "nemo-nemotron", "parakeetcpp-nemotron-cpu")

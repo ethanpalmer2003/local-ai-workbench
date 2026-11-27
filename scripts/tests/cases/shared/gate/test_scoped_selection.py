@@ -32,7 +32,7 @@ class TestSelection(unittest.TestCase):
             ("notes/TODO.md", None),
             ("README.md", None),
             # - runtime state lives at the repository root now, so it is not a module path
-            ("state/logs/a.py", None),
+            ("runs/state/logs/a.py", None),
             # - a data or template file under scripts/ is not a module, so it is an unmodelled path
             ("scripts/config/models/catalog.json", None),
             ("scripts/benchmarks/README.md", None),

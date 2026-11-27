@@ -120,7 +120,7 @@ class PolicyTests(unittest.TestCase):
 
 class TrashPathTests(unittest.TestCase):
     def _issues(self, source: str) -> list[str]:
-        # - a fixture under state/temp, because the rule excuses the tests tree's own trash folders
+        # - a fixture under runs/state/temp, because the rule excuses the tests tree's own trash folders
         folder = project_cfg.STATE_DIR / "temp" / "trash-path-fixture"
         folder.mkdir(parents=True, exist_ok=True)
         path = folder / "MODULE.py"

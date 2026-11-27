@@ -23,7 +23,7 @@ class PiPackageTests(unittest.TestCase):
         stack.enter_context(patch.object(packages, "INSTALL_DIR", root / "install"))
         stack.enter_context(patch.object(packages, "STATE_FILE", root / "state/packages.json"))
         stack.enter_context(patch.object(manager.project_cfg, "STATE_DIR", root / "state"))
-        stack.enter_context(patch.object(packages.project_cfg, "GENERATED_DIR", root / "state/generated"))
+        stack.enter_context(patch.object(packages.project_cfg, "GENERATED_DIR", root / "runs/state/generated"))
         return root
 
     def test_manifest_drives_loading_flags_environment_and_update_inventory(self):

@@ -32,7 +32,7 @@ Two ignore files split the untracked tree: the root file holds the heavyweight t
 | `runs/benchmarks/`, `runs/tests/` | Run evidence and temp workspaces |
 | `scripts/.env` | Local credentials |
 | `.zed/`, `.coverage`, `*.lnk` | Editor and tool state |
-- Tool caches live under `state/cache/pytest` and `state/cache/ruff`; `__pycache__/` stays beside sources.
+- Tool caches live under `runs/state/cache/pytest` and `runs/state/cache/ruff`; `__pycache__/` stays beside sources.
 - Cited evidence stays here; [open questions](../notes/OPEN-QUESTIONS.md) covers shipping a subset.
 
 ## Naming and grouping

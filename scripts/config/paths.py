@@ -30,10 +30,16 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def materialize(source: Path, folder: str = "configs") -> Path:
-    """Write a resolved copy under state/generated; native programs cannot read a placeholder."""
+    """Write a resolved copy under runs/state/generated; native programs cannot read a placeholder.
+
+    A file with nothing to resolve is handed over as it is: copying it would add a second copy of the
+    same bytes that can only drift from the tracked one.
+    """
+    text = load_text(source)
+    if text == source.read_text(encoding="utf-8"):
+        return source
     target = project_cfg.component("shared").generated_dir / folder / source.name
     target.parent.mkdir(parents=True, exist_ok=True)
-    text = load_text(source)
     try:
         current = target.read_text(encoding="utf-8") if target.is_file() else None
     except OSError:

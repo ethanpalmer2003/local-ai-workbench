@@ -32,7 +32,7 @@
   "cwd": "{AI_ROOT}/frameworks/Strata/control",
   "tokenizer": "{AI_ROOT}/data/huggingface/models/strata/packs/swift-iq2_xs/tokenizer",
   "model_name": "swift-1.5-iq2_xs",
-  "log": "{AI_ROOT}/state/strata/pi-engine.log",
+  "log": "{AI_ROOT}/runs/state/strata/pi-engine.log",
   "lib_dirs": [],
   "port": 8080,
   "backend": "hip",

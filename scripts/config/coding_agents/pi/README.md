@@ -1,7 +1,7 @@
 # Pi configuration
 
 - Package/extension owner: [inventory.py](inventory.py); manifest/path resolver: [packages.py](packages.py). Launcher settings: `PI_CLIENT`.
-- Install: `frameworks/coding_agents/pi`; editable sources: `config/coding_agents/pi`; state: `state/coding_agents/pi/agent`.
+- Install: `frameworks/coding_agents/pi`; editable sources: `config/coding_agents/pi`; state: `runs/state/coding_agents/pi/agent`.
 - `PI_CODING_AGENT_DIR` selects the active home. Native package names, provider IDs and environment names keep their required spelling.
 - Enabled extensions/default tools/CLI flags/environment come from one inventory; do not maintain another package list in a launcher.
 - Lens native settings: [lens.json](lens.json); extension code: [extensions/](extensions/). Generated native copies belong in the selected agent home.

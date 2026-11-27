@@ -24,9 +24,9 @@ Both are snapshots taken when a command runs. Nothing watches this repository: t
 `index_status` reported `watched: false` with the timestamp unchanged. A stale index answers confidently about
 code that has moved, so a commit refreshes them: `scripts/tools/refresh_index.py` is a `post-commit` hook. The
 call graph is rebuilt inline in 2 to 5 s; graphify runs detached, at roughly 15-25 s whatever changed including the wiki export,
-and writes its `[OK]` line to `state/logs/shared/index-refresh.log` about half a minute later. A
+and writes its `[OK]` line to `runs/state/logs/shared/index-refresh.log` about half a minute later. A
 docs-only commit skips it, and a second refresh prints `[SKIP]` while
-`state/cache/shared/index-refresh.lock` is held.
+`runs/state/cache/shared/index-refresh.lock` is held.
 Run it by hand with `python -m scripts.tools.refresh_index --paths ...`; `pre-commit install --hook-type
 post-commit` writes the hook into a fresh clone.
 

@@ -12,7 +12,7 @@ C:/AI/bat/update_frameworks.bat --only asr
 - After the catalog passes, a `=== TOOLCHAINS ===` section checks npm, uv and pip themselves against their registries and updates only the ones behind; it is skipped for `--only` and `--category` runs. Logic: [toolchains.py](toolchains.py).
 - Output is one aligned table per category, one row per component: `tool`, then the kind that updates it, its status and any version detail. Kinds, ordered in [update_types.py](update_types.py): git fast-forward, github release, npm package, app installer, vendor script, git snapshot, pip wheel, local build. A component spanning two kinds is expanded, not repeated, and a count line under each table totals its statuses.
 - Every GitHub API call goes through [github.py](github.py), which reads `GITHUB_TOKEN` from `scripts/.env`. Without it, checks share GitHub's anonymous 60 requests/hour limit and start failing as `rate limit exceeded`.
-- Detailed logs: `state/logs/shared/framework_updates/`. Native/backend work requires the documented execution context.
+- Detailed logs: `runs/state/logs/shared/framework_updates/`. Native/backend work requires the documented execution context.
 - Verify advertised archive SHA256 before replacement; preserve previous installs in trash. Before applying, stop processes using selected update targets (including child processes); if shutdown fails, block all updates. Unrelated services are left running.
 - Date-based packages track release timestamp and asset name. Installers run only where the entry declares it: Handy's portable setup (only while the app is missing) and the Electron coding-agent apps, each installed silently and the resulting version re-read; a running app is stopped first. Strata is not checked here: update it in its own app.
 - Source entries: `SOURCE UPDATE AVAILABLE; BUILD REQUIRED` (clean checkout, recompile required), `UPSTREAM CHANGED; MANUAL MERGE/REBUILD REQUIRED` (local patches first), or a replayed local commit where `rebase_local` is set.
@@ -29,7 +29,7 @@ All three HRX repositories are disabled in routine updates. Even `--only llamacp
 python -m scripts.download.frameworks.llamacpp.hrx.build --merge --install
 ```
 
-- Source update: clean checkouts fast-forward; dirty/local commits require review/merge. Preserve patches under `state/llamacpp/hrx/source-patches/`.
+- Source update: clean checkouts fast-forward; dirty/local commits require review/merge. Preserve patches under `runs/state/llamacpp/hrx/source-patches/`.
 - Build: merge/build/validate/install with rollback; omit `--install` for staged candidate. `--validate-only` reuses build output. Runtime checks are live work, not ordinary static verification.
 - Restore checkpoints with `scripts.download.frameworks.llamacpp.hrx.prepare`; [evidence/limits](../../config/llamacpp/HRX.md).
 - AMD ROCm nightly index: https://nightly.repo.amd.com/rocm/core/tarball/ ; no automatic SDK install.

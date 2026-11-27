@@ -46,7 +46,7 @@ latency reason to switch. NeMo is a working GPU alternative; Parakeet CPU is
 viable when keeping ASR off the GPU matters. [Setup](../../../launchers/asr/NEMOTRON-STREAMING.md).
 
 Validation: 363 model-free regressions pass; type, structure/docs and code-size
-checks pass; regression log in `state/logs/shared/nemotron-streaming-regressions-validated.log`.
+checks pass; regression log in `runs/state/logs/shared/nemotron-streaming-regressions-validated.log`.
 The process-inspection fixture now uses the shared explicit psutil fixture; prior
 failed checks remain preserved. Selection reasons live in the
 [decision guide](../../../../notes/asr/ASR-EVALUATION.md).

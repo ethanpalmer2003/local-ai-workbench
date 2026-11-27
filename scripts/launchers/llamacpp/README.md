@@ -16,6 +16,6 @@ C:/AI/bat/browser/launch_test.bat
 - The API proxy module uses public/internal ports from `LLAMACPP_SERVICE`; health/model-list responses do not establish a loaded model.
 - Existing service handling follows the [shared port policy](../shared/README.md).
 - Shared readiness/restart/lifetime helpers handle owned children; launcher exit cleans up owned temporary resources.
-- Coding clients use canonical `state/coding_agents/<client>/` homes. Pi settings/extensions originate in [config/coding_agents/pi](../../config/coding_agents/pi/README.md).
+- Coding clients use canonical `runs/state/coding_agents/<client>/` homes. Pi settings/extensions originate in [config/coding_agents/pi](../../config/coding_agents/pi/README.md).
 - Separate language practice: [ASR guide](../asr/README.md); shares installed runtimes/weights without changing the coding default.
 - Benchmarks and live workflows remain opt-in; [test rules](../../tests/README.md).

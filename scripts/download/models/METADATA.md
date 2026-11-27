@@ -8,7 +8,7 @@ for Git; weights and raw app configurations stay ignored. Snapshot refreshes
 must use a new dated destination, preserving the old evidence.
 
 Catalog identity: [models/catalog.json](../../config/models/catalog.json). Owner: [analyze_model.py](analyze_model.py). Inventory:
-`C:/AI/state/shared/model_metadata.json`.
+`C:/AI/runs/state/shared/model_metadata.json`.
 
 ```powershell
 C:/AI/bat/models/analyze_model_metadata.bat

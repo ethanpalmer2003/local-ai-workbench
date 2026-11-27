@@ -1,6 +1,6 @@
 # Handoff to a heavier model
 
-`python -m scripts.review.handoff` writes a bundle under `state/generated/shared/handoff/<run>/` for a
+`python -m scripts.review.handoff` writes a bundle under `runs/state/generated/shared/handoff/<run>/` for a
 model that should not read the tree: mechanical findings already fail the gate, so they are not worth its
 attention, and the remaining questions need judgment rather than a diff.
 

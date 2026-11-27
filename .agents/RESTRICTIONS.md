@@ -6,7 +6,7 @@ have to find it in three trees. The whole list prints: `python -m scripts.review
 
 | Restriction | Enforced by | Written in |
 | --- | --- | --- |
-| No recursive scan of the weight, install and runtime roots | the `guard-deep-scan` profile plugin, which refuses the command before it runs | `state/plugins/guard-deep-scan` (installed in the profile, not tracked) and [code search](CODE-SEARCH.md) |
+| No recursive scan of the weight, install and runtime roots | the `guard-deep-scan` profile plugin, which refuses the command before it runs | `runs/state/plugins/guard-deep-scan` (installed in the profile, not tracked) and [code search](CODE-SEARCH.md) |
 | Search reads tracked files: `git grep`, `git ls-files`, or a graph tool, never a filesystem walk from the root | the same plugin plus the measured guidance | [code search](CODE-SEARCH.md) |
 | The two code indexes are snapshots, so a commit refreshes them | `refresh-indexes` post-commit hook | [code search](CODE-SEARCH.md) |
 | Formatting, lint, spelling, punctuation, the gate and the suite before a commit and before a push | `.pre-commit-config.yaml` hooks (`gate-scoped`, `suite-scoped`, `gate-full`, `suite-full`) | [checks](CHECKS.md) |

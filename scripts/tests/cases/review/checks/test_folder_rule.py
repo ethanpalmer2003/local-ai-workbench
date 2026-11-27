@@ -55,17 +55,17 @@ class WorkspaceTotalTests(unittest.TestCase):
             root = Path(folder) / "workspace"
             (root / "scripts").mkdir(parents=True)
             (root / "scripts" / "our_module.py").write_text("x = 1\n", encoding="utf-8")
-            # - run evidence sits beside scripts at the root, never inside it
-            (root / "state").mkdir()
-            (root / "state" / "run.log").write_text("log\n", encoding="utf-8")
+            # - runtime state sits under runs, which is its own evidence tree
+            (root / "runs" / "state").mkdir(parents=True)
+            (root / "runs" / "state" / "run.log").write_text("log\n", encoding="utf-8")
             (root / "notes").mkdir()
             (root / "README.md").write_text("readme\n", encoding="utf-8")
             totals = inventory_code.workspace_totals(root)
             rows = {item.tree: item for item in totals}
             self.assertEqual(rows["scripts"].files, 1)
             self.assertEqual(rows["scripts"].kind, "our source")
-            self.assertEqual(rows["state"].files, 1)
-            self.assertEqual(rows["state"].kind, "run evidence")
+            self.assertEqual(rows["runs/state"].files, 1)
+            self.assertEqual(rows["runs/state"].kind, "run evidence")
             self.assertEqual(rows["(root files)"].files, 1)
             self.assertEqual(sum(item.files for item in totals), 3)
 

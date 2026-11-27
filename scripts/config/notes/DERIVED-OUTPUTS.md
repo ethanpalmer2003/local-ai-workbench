@@ -1,6 +1,6 @@
 # Generated files and native copies
 
-- Editable owners: [configuration map](../README.md). Runtime derivations live in `state/generated/<component>/`; tests use their own run folders.
+- Editable owners: [configuration map](../README.md). Runtime derivations live in `runs/state/generated/<component>/`; tests use their own run folders.
 
 | Consumer | Editable source -> runtime behavior |
 | --- | --- |
@@ -17,6 +17,6 @@
 - Recreate derived configs on launch; edit the owner source, never generated output.
 - Native AudioCpp JSON owns model modes/session defaults. Python owns service selection, proxy/playback defaults and explicit shared overrides.
 - ComfyUI sync changes owned files only; removed managed workflows are retired, missing source aborts. Preview/apply: `python -m scripts.config.sync_configs`.
-- Strata relocates its profile folders into `state/strata/` with junctions ([locations](../strata/README.md)).
+- Strata relocates its profile folders into `runs/state/strata/` with junctions ([locations](../strata/README.md)).
 - Generated configs may contain local credentials; keep them outside Git and shared reports.
 - Preserve saved historical configs/logs. Future paths derive from the canonical component map.

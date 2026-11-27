@@ -6,8 +6,8 @@ One Vulkan AudioCpp server serves ASR/TTS, with one CPU Silero helper per active
 microphone session. The same AudioCpp server stayed loaded across both chat runs.
 
 - Combined native report (../output/asr/shared/practice_smoke/unreviewed/1793240046629735700/artifacts/report.json)
-- Native log: `state/logs/shared/practice-smoke-complete.log`
-- 353 model-free regression checks: `state/logs/shared/practice-regressions.log`
+- Native log: `runs/state/logs/shared/practice-smoke-complete.log`
+- 353 model-free regression checks: `runs/state/logs/shared/practice-regressions.log`
 
 Approved outside-sandbox execution: AppContainer false, administrator false.
 Tests used isolated ports 19193-19195 and stopped only owned services. No packages

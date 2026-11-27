@@ -30,14 +30,14 @@ VOICES_DIR = DATA_DIR / "voices"
 OUTPUT_DIR = Path(os.environ.get("AI_OUTPUT_DIR") or DATA_DIR / "output")
 TESTS_DIR = SCRIPTS_DIR / "tests"
 CONFIG_DIR = SCRIPTS_DIR / "config"
-STATE_DIR = BASE_DIR / "state"
+# - run evidence and runtime state live under one root, apart from source and from the weight/install
+#   `data/` tree: browsable, unbounded, and `scripts/` stays source-sized
+RUNS_DIR = BASE_DIR / "runs"
+STATE_DIR = RUNS_DIR / "state"
 GENERATED_DIR = STATE_DIR / "generated"
 LOGS_DIR = Path(os.environ.get("AI_LOGS_DIR") or STATE_DIR / "logs")
 CACHE_DIR = STATE_DIR / "cache"
 TEST_CASES_DIR = TESTS_DIR / "cases"
-# - run evidence lives at the repository root, apart from source and from the weight/install `data/`
-#   tree: it is browsable, it grows without bound, and `scripts/` should stay source-sized
-RUNS_DIR = BASE_DIR / "runs"
 TEST_OUTPUT_DIR = RUNS_DIR / "tests"
 BENCHMARK_OUTPUT_DIR = RUNS_DIR / "benchmarks"
 # - runtime data and run evidence, not source; the tree tools and the gate subtract these from the

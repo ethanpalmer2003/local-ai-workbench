@@ -14,7 +14,7 @@
 | Rocinante Kobold | Vulkan, 16 GPU layers, original 16K context/Q8 KV |
 
 - Layer policy is model-specific; other Kobold models retain their configured overrides.
-- Native AudioCpp lacks CLI session-option overrides; shared startup derives `state/generated/audiocpp/shared-<port>.json` from the base JSON. Edit the source/policy, not generated files.
+- Native AudioCpp lacks CLI session-option overrides; shared startup derives `runs/state/generated/audiocpp/shared-<port>.json` from the base JSON. Edit the source/policy, not generated files.
 - Service enabled settings still apply; `--with-image` enables images for that launch.
 - Live benchmark module: `scripts.benchmarks.koboldcpp.kobold_stack_vram`; opt-in, preserves conflicting sessions and records loading/generation/cleanup context.
 - Prefer [images on demand](IMAGE-ON-DEMAND.md) for model swapping rather than simultaneous residency.

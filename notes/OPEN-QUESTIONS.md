@@ -10,7 +10,7 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
   a number. Options: commit a curated subset of the `report.md`/`summary.txt` files behind a decision, move
   the numbers into the documents themselves, or keep the paths local-only. A curated set is a few MB.
 - **An operating-system backstop for the deep-scan rule.** The profile guard in
-  `state/plugins/guard-deep-scan` refuses a scan under or above the ignored trees and derives those
+  `runs/state/plugins/guard-deep-scan` refuses a scan under or above the ignored trees and derives those
   names from the ignore files, but it binds only harnesses that load it. Options: an ACL that denies
   the agent process read access to `data/` and `frameworks/`, which no tool call can bypass and needs a fresh
   shell as the agent's user to prove; an ACL that allows only named subpaths, which is narrower but needs the
