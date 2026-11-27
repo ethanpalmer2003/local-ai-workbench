@@ -197,8 +197,12 @@ def _print(rows: list[Install]) -> None:
     total = sum(row.size_bytes for row in rows)
     referenced = [row for row in rows if row.used_by]
     unreferenced = [row for row in rows if not row.used_by]
+    # - only a full SDK needs installing; a backend folder ships its own ROCm runtime and does not
+    sdks = [row for row in rows if row.kind == "sdk install"]
+    bundled = [row for row in rows if row.kind != "sdk install"]
     print(
-        f"\n{len(rows)} ROCm install(s), about {total / 1024**3:.1f} GiB in total; "
+        f"\n{len(sdks)} ROCm SDK(s) and {len(bundled)} backend(s) that bundle ROCm, "
+        f"about {total / 1024**3:.1f} GiB in total; "
         f"{len(referenced)} referenced by this project, {len(unreferenced)} with no configured reference"
     )
 
