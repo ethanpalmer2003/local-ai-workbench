@@ -26,7 +26,7 @@ template has its message in that tool.
 | network_timeouts | an HTTP call without `timeout=` | `... HTTP call without a timeout` | pass a timeout |
 | overlay_access | a module resolves the overlay path itself | `... call local_overlay instead` | call `local_overlay` |
 | similarity | a renamed copy of a function | names the pair, the score and the function names | fold both into one owner |
-| public_audit | a personal term, token or absolute path that must not ship | names the file, the term and the rule | remove it before publishing |
+| public_audit | a personal term, token, LAN address or absolute path that must not ship | names the file, the term and the rule | remove it before publishing, or use a documentation address |
 
 Each check runs alone, for example `python -m scripts.review.checks.layout`; the gate runs every one. A new check
 adds a row here, and the case module checks that the row exists and that its template still exists in the

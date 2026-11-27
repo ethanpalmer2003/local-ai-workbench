@@ -89,11 +89,11 @@ def spelling_check(paths: list[str] | None = None) -> int:
     return status
 
 
-def names_check(paths: list[str]) -> int:
-    """Overlay vocabulary in tracked text; an empty list means every tracked file.
+def privacy_check(paths: list[str]) -> int:
+    """Overlay vocabulary and private network addresses in tracked text; an empty list means every file.
 
-    A personal name may ride in any file type and no other section reads all of them, so this one
-    runs on every change. Categories the publish audit owns alone stay out of the commit path.
+    A personal name or a LAN host may ride in any file type and no other section reads all of them,
+    so this one runs on every change. The categories the publish audit owns alone stay in it.
     """
     findings = public_audit.name_findings(project_cfg.BASE_DIR, paths or None)
     for finding in findings:
@@ -402,11 +402,16 @@ def write_timings() -> Path:
     folder = project_cfg.STATE_DIR / "logs" / "shared" / "review"
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{time.time_ns()}.json"
+    # - a rewritten history has no upstream to compare against yet, and that is not a failed run
+    try:
+        dirty = bool(changed_since_upstream())
+    except NoUpstreamError:
+        dirty = True
     path.write_text(
         json.dumps(
             {
                 "commit": (file_sets.git_text_or_none("rev-parse", "HEAD") or "").strip(),
-                "dirty": bool(changed_since_upstream()),
+                "dirty": dirty,
                 "total_seconds": round(time.perf_counter() - _started_at, 2),
                 "work_seconds": round(sum(item["seconds"] for item in TIMES), 2),
                 "sections": TIMES,
@@ -446,7 +451,7 @@ DEPENDENCY_FILES = ("pyproject.toml", "uv.lock")
 
 def touched_sections(paths: list[str]) -> set[str]:
     """The sections whose inputs changed: a rename of batch files needs layout and docs only."""
-    sections = {"layout", "docs", "single-owner tokens", "private names"}
+    sections = {"layout", "docs", "single-owner tokens", "private data"}
     suffixes = {Path(path).suffix.lower() for path in paths}
     if ".py" in suffixes:
         sections |= PYTHON_SECTIONS
@@ -482,7 +487,7 @@ def touched_gate(argv: list[str] | None = None, changed: list[str] | None = None
         ("front-end wiring", "\n=== FRONT-END WIRING ===", frontend_wiring.main),
         ("network timeouts", "\n=== NETWORK TIMEOUTS ===", lambda: network_timeouts.main(python_files)),
         ("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main(python_files)),
-        ("private names", "\n=== PRIVATE NAMES ===", lambda: names_check(existing)),
+        ("private data", "\n=== PRIVATE DATA ===", lambda: privacy_check(existing)),
         ("lint", "\n=== LINT ===", lint_check),
         ("types", "", lambda: scoped_type_check(existing, _flag(argv, "--fast"))),
         ("formatting", "\n=== PYTHON FORMATTING ===", lambda: format_check(python_files)),
@@ -568,11 +573,13 @@ def full_gate(argv: list[str] | None = None) -> int:
         Section("network timeouts", "\n=== NETWORK TIMEOUTS ===", lambda: network_timeouts.main([])),
         Section("overlay access", "\n=== OVERLAY ACCESS ===", lambda: overlay_access.main([])),
         Section(
-            "private names",
-            "\n=== PRIVATE NAMES ===",
-            lambda: names_check([]),
+            "private data",
+            "\n=== PRIVATE DATA ===",
+            lambda: privacy_check([]),
             lambda status: print(
-                "[OK] No overlay vocabulary in tracked text" if not status else "[FAIL] Private names above"
+                "[OK] No overlay vocabulary or private address in tracked text"
+                if not status
+                else "[FAIL] Private data above"
             ),
         ),
         Section(
