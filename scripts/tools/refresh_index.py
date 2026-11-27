@@ -137,11 +137,11 @@ def report(step: Step, seconds: float = 0.0, code: int = 0, tail: str = "") -> N
 
 
 def lock_path(root: Path) -> Path:
-    return root / "scripts" / "state" / "cache" / "shared" / "index-refresh.lock"
+    return project_cfg.STATE_DIR / "cache" / "shared" / "index-refresh.lock"
 
 
 def log_path(root: Path) -> Path:
-    return root / "scripts" / "state" / "logs" / "shared" / "index-refresh.log"
+    return project_cfg.STATE_DIR / "logs" / "shared" / "index-refresh.log"
 
 
 def acquire(lock: Path) -> bool:

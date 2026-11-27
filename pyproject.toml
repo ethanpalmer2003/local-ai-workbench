@@ -49,7 +49,7 @@ default-groups = []
 timeout = 60
 timeout_method = "thread"
 # - one cache root with ruff and the launch scratch; the layout check flags a .pytest_cache in the root
-cache_dir = "scripts/state/cache/pytest"
+cache_dir = "state/cache/pytest"
 
 [tool.pyright]
 # - the repository root is the parent of the scripts package (imports are scripts.*)
@@ -61,14 +61,14 @@ reportImplicitRelativeImport = "none"
 pythonVersion = "3.14"
 venvPath = "."
 venv = ".venv"
-exclude = ["scripts/config/comfyui/ltx_prompt_cache.py", "scripts/tests/cases/personal/comfyui/test_ltx_prompt_cache.py", "scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", ".venv", "data", "frameworks", "trash"]
+exclude = ["scripts/config/comfyui/ltx_prompt_cache.py", "scripts/tests/cases/personal/comfyui/test_ltx_prompt_cache.py", "scripts/tests/retired", "runs/tests", "runs/benchmarks", "state", ".venv", "data", "frameworks", "trash"]
 
 [tool.ruff]
-cache-dir = "scripts/state/cache/ruff"
+cache-dir = "state/cache/ruff"
 line-length = 120
 target-version = "py313"
 include = ["*.py", "*.pyi"]
-extend-exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", ".venv", "data", "/frameworks", "trash", "scripts/config/models/ids.py"]
+extend-exclude = ["scripts/tests/retired", "runs/tests", "runs/benchmarks", "state", ".venv", "data", "/frameworks", "trash", "scripts/config/models/ids.py"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -117,7 +117,7 @@ split-on-trailing-comma = false
 [tool.deptry]
 # - reads [project].dependencies, so a direct dependency nothing imports is now a real finding
 known_first_party = ["scripts"]
-exclude = ["scripts/tests/retired", "scripts/tests/output", "scripts/benchmarks/output", "scripts/state", ".venv", "data", "frameworks", "trash"]
+exclude = ["scripts/tests/retired", "runs/tests", "runs/benchmarks", "state", ".venv", "data", "frameworks", "trash"]
 # - ComfyUI and Piper are imported inside their own runtimes, never from this venv;
 #   torch belongs to the ComfyUI interpreter that loads the synced node
 # - the regression harness imports pytest and the gate imports networkx; both are tooling, so both belong in

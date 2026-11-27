@@ -14,7 +14,7 @@ from typing import Any
 from scripts.config import project_config as project_cfg
 from scripts.shared.tables import render_table
 
-LOG_DIR = project_cfg.BASE_DIR / "scripts" / "state" / "logs" / "shared" / "review"
+LOG_DIR = project_cfg.STATE_DIR / "logs" / "shared" / "review"
 
 
 @dataclass(frozen=True)
