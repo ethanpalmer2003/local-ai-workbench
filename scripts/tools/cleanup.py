@@ -2,7 +2,7 @@
 
 `python -m scripts.tools.cleanup --dry-run` says what would move; `--apply` moves it. Run evidence keeps the
 newest run per case and outcome and anything a tracked file cites, so a superseded run leaves while the
-evidence behind a written decision stays. Output and state move under the trash root; `empty_trash` here is the
+evidence behind a written decision stays. Output and state move under `trash_root()`; `empty_trash` here is the
 one owner of deleting what the trash holds, and the gate calls it with `TRASH_DAYS`.
 """
 
@@ -135,7 +135,7 @@ def _age_days(path: Path) -> int:
 
 
 def move_to_trash(paths: list[Path], stamp: str, dry_run: bool) -> int:
-    """Move each path under its dated trash folder, keeping its relative place; return how many moved."""
+    """Move each path under its `trash_dir()` folder, keeping its relative place; return how many moved."""
     moved = 0
     for path in paths:
         target = trash.trash_dir(stamp) / "cleanup" / path.relative_to(project_cfg.BASE_DIR)

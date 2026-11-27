@@ -203,7 +203,7 @@ def _drop_empty_folders(root: Path, launch: Path) -> None:
 
 
 def prune_cache_root(cutoff: float, dry_run: bool) -> tuple[int, int]:
-    """Files under the cache root past the age cap, then the folders they leave empty."""
+    """Files under `CACHE_DIR` past the age cap, then the folders they leave empty."""
     root = project_cfg.STATE_DIR / "cache"
     launch = cfg.LAUNCH.temp_dir
     if not root.is_dir():
@@ -282,7 +282,7 @@ def run_folders(root: Path) -> list[Path]:
 
 
 def _prune_suite_runs(dry_run: bool) -> tuple[int, int]:
-    """Suite runs land under the suite-run root; keep the newest few per case, because a test that builds
+    """Suite runs land under `STATE_DIR/test/runs`; keep the newest few per case, because a test that builds
     paths writes a run folder of its own and an age window alone let 62,000 of them accumulate."""
     run_root = project_cfg.STATE_DIR / "temp" / "runs"
     cases: dict[Path, list[Path]] = {}
@@ -309,7 +309,7 @@ def _prune_suite_runs(dry_run: bool) -> tuple[int, int]:
 
 
 def prune_scratch_files(cutoff: float, dry_run: bool) -> tuple[int, int]:
-    """Loose files in the temp root: a one-off probe writes one there and no run folder ever owns it."""
+    """Loose files in `STATE_DIR/temp`: a one-off probe writes one there and no run folder ever owns it."""
     root = project_cfg.STATE_DIR / "temp"
     if not root.is_dir():
         return 0, 0

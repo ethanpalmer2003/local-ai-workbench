@@ -30,7 +30,7 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def materialize(source: Path, folder: str = "configs") -> Path:
-    """Write a resolved copy under the generated root; native programs cannot read a placeholder.
+    """Write a resolved copy under `GENERATED_DIR`; native programs cannot read a placeholder.
 
     A file with nothing to resolve is handed over as it is: copying it would add a second copy of the
     same bytes that can only drift from the tracked one.
