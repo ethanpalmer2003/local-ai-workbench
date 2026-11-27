@@ -94,43 +94,44 @@ class TtsProfiles(unittest.TestCase):
             from pathlib import Path
 
             root = Path(folder)
-            clip = root / "library" / "vera" / "generated" / "vera_1.wav"
+            clip = root / "library" / "placeholder_name_1" / "generated" / "placeholder_name_1_1.wav"
             clip.parent.mkdir(parents=True)
             clip.write_bytes(b"RIFF")
             clip.with_suffix(".txt").write_text("hello\n", encoding="utf-8")
-            lookalike = root / "custom" / "vera_custom" / "generated" / "vera_custom_1.wav"
+            lookalike = root / "custom" / "placeholder_name_1_custom" / "generated" / "placeholder_name_1_custom_1.wav"
             lookalike.parent.mkdir(parents=True)
             lookalike.write_bytes(b"RIFF")
-            flat = root / "selene" / "selene_1.wav"
+            flat = root / "placeholder_name_2" / "placeholder_name_2_1.wav"
             flat.parent.mkdir()
             flat.write_bytes(b"RIFF")
             with patch.object(cfg, "AUDIOCPP_INPUT_DIR", str(root)):
-                self.assertEqual(audiocpp_catalog.resolve_voice_ref("vera"), (str(clip), "hello"))
-                self.assertEqual(audiocpp_catalog.resolve_voice_ref("selene"), (str(flat), ""))
-                self.assertIsNone(audiocpp_catalog.resolve_voice_ref("vera_2"))
+                self.assertEqual(audiocpp_catalog.resolve_voice_ref("placeholder_name_1"), (str(clip), "hello"))
+                self.assertEqual(audiocpp_catalog.resolve_voice_ref("placeholder_name_2"), (str(flat), ""))
+                self.assertIsNone(audiocpp_catalog.resolve_voice_ref("placeholder_name_1_2"))
 
     def test_the_30s_cap_build_is_the_reference_a_clone_uses(self):
         with CasePaths(__file__).temporary_directory() as folder:
             from pathlib import Path
 
             root = Path(folder)
-            generated = root / "library" / "vera" / "generated"
+            generated = root / "library" / "placeholder_name_1" / "generated"
             generated.mkdir(parents=True)
             for variant in ("1", "min30", "max30"):
-                clip = generated / f"vera_{variant}.wav"
+                clip = generated / f"placeholder_name_1_{variant}.wav"
                 clip.write_bytes(b"RIFF")
                 clip.with_suffix(".txt").write_text(f"text {variant}\n", encoding="utf-8")
             with patch.object(cfg, "AUDIOCPP_INPUT_DIR", str(root)):
                 self.assertEqual(
-                    audiocpp_catalog.resolve_voice_ref("vera"), (str(generated / "vera_max30.wav"), "text max30")
+                    audiocpp_catalog.resolve_voice_ref("placeholder_name_1"),
+                    (str(generated / "placeholder_name_1_max30.wav"), "text max30"),
                 )
                 # - a named variant wins over the preference, so a comparison can pick any built clip
                 self.assertEqual(
-                    audiocpp_catalog.resolve_voice_ref("vera", "min30"),
-                    (str(generated / "vera_min30.wav"), "text min30"),
+                    audiocpp_catalog.resolve_voice_ref("placeholder_name_1", "min30"),
+                    (str(generated / "placeholder_name_1_min30.wav"), "text min30"),
                 )
-                self.assertIsNone(audiocpp_catalog.resolve_voice_ref("vera", "max60"))
-                self.assertEqual(audiocpp_catalog.voice_variants("vera"), ["1", "max30", "min30"])
+                self.assertIsNone(audiocpp_catalog.resolve_voice_ref("placeholder_name_1", "max60"))
+                self.assertEqual(audiocpp_catalog.voice_variants("placeholder_name_1"), ["1", "max30", "min30"])
 
     @requires_model_check
     def test_heavier_ming_is_offline_and_rejects_explicit_streaming(self):
