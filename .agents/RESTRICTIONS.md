@@ -14,7 +14,7 @@ have to find it in three trees. The whole list prints: `python -m scripts.review
 | Framework installs, model downloads, deletion, persistent services and runs over five minutes need approval | the agent contract, read by the harness in `.agents/` | [AGENTS](../AGENTS.md) |
 | A harness sandbox denial is a policy, not a bug: report it, never retry around it | the harness profile, and the workarounds recorded for it | [DeepSeek Harness](DEEPSEEK-HARNESS.md), [Codex](CODEX-HARNESS.md) |
 | Low-integrity processes crash Electron apps, so the launcher label matters | the launcher, which checks the label before starting | [low integrity](ELECTRON-LOW-INTEGRITY-CRASH.md) |
-| Personal terms must not reach the tree or the history | `public_audit`, run before publishing | [publish skill](skills/publish-repo/SKILL.md) |
+| Personal terms must not reach the tree or the history | the overlay's private audit, run by the gate | [publish skill](skills/publish-repo/SKILL.md) |
 | A directory's role decides what may live in it | the layout section of the gate | [folders](FOLDERS.md) |
 | A tracked file past the host's per-file cap is refused before the push | the layout section's large-file guard | [layout](../scripts/review/checks/layout.py), [failures](FAILURES.md) |
 | A failed step names its root cause and the guard that stops it repeating | the agent contract and the failure table | [failures](FAILURES.md) |

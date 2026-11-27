@@ -4,6 +4,7 @@ import ast
 import json
 import unittest
 import unittest.mock
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from scripts.review import handoff
@@ -316,9 +317,14 @@ class BundleTests(unittest.TestCase):
 
     def test_a_stale_screen_is_flagged(self):
         finding: handoff.SimilarityFinding = {"a": "x", "b": "y", "best": 0.99}
-        fresh = handoff.SimilarityEvidence(created="2026-11-19T00:00:00", threshold=0.95, changed=1, findings=[finding])
-        changed = handoff.SimilarityEvidence(created="2026-11-19T00:00:00", threshold=0.95, changed=40, findings=[])
-        old = handoff.SimilarityEvidence(created="2020-01-01T00:00:00", threshold=0.95, changed=1, findings=[])
+        # - relative to today, so the case cannot start failing on a calendar date
+        now = datetime.now().replace(microsecond=0)
+        today = now.isoformat()
+        fresh = handoff.SimilarityEvidence(created=today, threshold=0.95, changed=1, findings=[finding])
+        changed = handoff.SimilarityEvidence(created=today, threshold=0.95, changed=40, findings=[])
+        old = handoff.SimilarityEvidence(
+            created=(now - timedelta(days=handoff.STALE_DAYS * 2)).isoformat(), threshold=0.95, changed=1, findings=[]
+        )
         self.assertIsNone(handoff.stale_note(fresh))
         self.assertIn("40 changed file(s)", handoff.stale_note(changed) or "")
         self.assertIn("days old", handoff.stale_note(old) or "")

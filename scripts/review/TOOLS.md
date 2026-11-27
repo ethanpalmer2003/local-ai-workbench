@@ -15,7 +15,7 @@ Measured on this machine; only the last two open a model or service. When to run
 | suite | `python -m scripts.review --tests`, model-free | about 50 s total |
 | live | `bat/checks/test_live_launchers.bat`, `test_live_backends.bat` | minutes |
 | measure | a benchmark runner | minutes to hours |
-| publish | `public_audit --history` and `--scrub` | seconds to a minute |
+| publish | the overlay's own audit, `--history` and `--scrub` | seconds to a minute |
 
 ## Entry points
 
@@ -32,7 +32,8 @@ Measured on this machine; only the last two open a model or service. When to run
 | `python -m scripts.tools.stage_runner MODULE [ARGS...]` | wraps one long command in the same bar; `--stage-known KEY` takes the range from `stage_times` |
 | ... with `AI_MODEL_CHECKS=1` | adds asset/model checks kept out of regressions |
 | `pre-commit run --all-files` | ruff lint and format, codespell |
-| `python -m scripts.review.audit.public_audit [--history]` | publish gate |
+| `python -m scripts.review --scrub` | tree and history scan for private content, through the overlay |
+| the overlay's `tools/private_audit.py [--history]` | the same scan, run directly |
 | `python -m scripts.review.checks.duplicates` | pylint verbatim blocks against the reviewed baseline |
 | `python -m scripts.review.checks.similarity --code` | semantic duplicate pairs; needs the model |
 | `python -m scripts.review --scrub` | tree and history scan for personal terms before publishing |
@@ -52,7 +53,7 @@ Measured on this machine; only the last two open a model or service. When to run
 | `model_references.py` | catalog ids, workflow defaults, AudioCpp runtime ids/paths |
 | [frontend wiring](FRONTEND-WIRING.md) | asset targets resolve, DOM ids exist, settings keys both emitted and provided |
 | `inventory_code.py` | inventory, file/function size, inline suppressions; `--complexity-debt` regenerates `GENERATED-COMPLEXITY-DEBT.md` |
-| `public_audit.py` | secrets, credentials, home/machine paths, vocabulary, input names, private network addresses, large files, ignored-but-tracked; the gate runs the privacy scan at commit, the rest before publishing |
+| the overlay's private audit | personal names, private addresses, secrets and large files; absent on a clone with no overlay, so the gate reports a skip rather than a pass |
 | `dynamic_imports.py` | static imports; five loaders exempt |
 | `audit_timing.py` | which benchmark runners use the shared timing contract |
 | `package_audit.py` | leftovers no import or manifest declares; `--prune [--remove]`; `uv lock --check` |

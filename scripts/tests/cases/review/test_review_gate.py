@@ -3,6 +3,7 @@
 import contextlib
 import io
 import subprocess
+import sys
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
@@ -243,20 +244,43 @@ class GateScopeTests(unittest.TestCase):
     def test_the_privacy_section_screens_the_whole_tree_when_no_path_arrived(self):
         from scripts.review import __main__ as gate
 
-        with patch.object(gate.public_audit, "name_findings", return_value=[]) as scan:
+        with patch.object(gate, "run_private_audit", return_value=0) as scan:
             self.assertEqual(gate.privacy_check([]), 0)
-        scan.assert_called_once_with(gate.project_cfg.BASE_DIR, None)
+        scan.assert_called_once_with([])
 
-    def test_the_privacy_section_fails_on_a_finding(self):
+    def test_the_privacy_section_carries_the_overlay_verdict(self):
         from scripts.review import __main__ as gate
 
-        finding = gate.public_audit.Finding("input-name", "scripts/tests/a.py", "zzfixture")
+        with patch.object(gate, "run_private_audit", return_value=1) as scan:
+            self.assertEqual(gate.privacy_check(["scripts/tests/a.py"]), 1)
+        scan.assert_called_once_with(["scripts/tests/a.py"])
+
+    def test_without_an_overlay_the_privacy_section_reports_a_skip(self):
+        from scripts.review.audit import private_scan
+
         with (
-            patch.object(gate.public_audit, "name_findings", return_value=[finding]),
+            patch.object(private_scan.local_overlay, "private_audit_script", return_value=Path("absent") / "audit.py"),
+            patch.object(private_scan.subprocess, "run") as run,
             redirect_stdout(StringIO()) as output,
         ):
-            self.assertEqual(gate.privacy_check(["scripts/tests/a.py"]), 1)
-        self.assertIn("[input-name] scripts/tests/a.py: zzfixture", output.getvalue())
+            self.assertEqual(private_scan.run_private_audit(["--scrub"]), 0)
+        run.assert_not_called()
+        self.assertIn("[SKIP]", output.getvalue())
+
+    def test_the_privacy_section_runs_the_overlay_script_in_the_repository(self):
+        from scripts.review.audit import private_scan
+
+        with (
+            patch.object(private_scan.local_overlay, "private_audit_script", return_value=Path(private_scan.__file__)),
+            patch.object(private_scan.subprocess, "run") as run,
+        ):
+            run.return_value.returncode = 0
+            self.assertEqual(private_scan.run_private_audit(["notes/TODO.md"]), 0)
+        command = run.call_args.args[0]
+        self.assertEqual(command[0], sys.executable)
+        self.assertEqual(command[-1], "notes/TODO.md")
+        self.assertEqual(run.call_args.kwargs["cwd"], private_scan.project_cfg.BASE_DIR)
+        self.assertIn(str(private_scan.project_cfg.BASE_DIR), run.call_args.kwargs["env"]["PYTHONPATH"])
 
     def test_a_prose_only_push_runs_the_touched_sections(self):
         from scripts.review import __main__ as gate

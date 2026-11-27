@@ -15,7 +15,8 @@ from typing import Any, NamedTuple, TextIO
 from scripts.config import project_config as project_cfg
 from scripts.config import trash
 from scripts.review import output_lines
-from scripts.review.audit import package_audit, public_audit
+from scripts.review.audit import package_audit
+from scripts.review.audit.private_scan import run_private_audit
 from scripts.review.checks import (
     annotations,
     bare_any,
@@ -90,15 +91,8 @@ def spelling_check(paths: list[str] | None = None) -> int:
 
 
 def privacy_check(paths: list[str]) -> int:
-    """Overlay vocabulary and private network addresses in tracked text; an empty list means every file.
-
-    A personal name or a LAN host may ride in any file type and no other section reads all of them,
-    so this one runs on every change. The categories the publish audit owns alone stay in it.
-    """
-    findings = public_audit.name_findings(project_cfg.BASE_DIR, paths or None)
-    for finding in findings:
-        print(finding.line())
-    return int(bool(findings))
+    """Screen the change, or every tracked file when the list is empty, through the overlay."""
+    return run_private_audit(list(paths))
 
 
 def security_audit() -> tuple[int, str]:
@@ -561,7 +555,7 @@ def full_gate(argv: list[str] | None = None) -> int:
     if args.prune:
         return package_audit.main(remove=args.remove)
     if args.scrub:
-        return public_audit.main(["--scrub"])
+        return run_private_audit(["--scrub"])
 
     counts = _package_summary(args.fast)
     sections = [

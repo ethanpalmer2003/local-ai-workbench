@@ -30,7 +30,6 @@ CHECKS: dict[str, str | None] = {
     "network_timeouts": "network_timeouts",
     "overlay_access": "overlay_access",
     "similarity": None,
-    "public_audit": None,
 }
 
 # - a row with no module must name where its message comes from, so nobody reads a paraphrase as a quote

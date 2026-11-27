@@ -9,9 +9,10 @@ Destructive and user-gated: start only when the user explicitly asks to publish 
 
 ## Before touching git
 
-1. `python -m scripts.review.audit.public_audit` must print `0 finding(s)`.
-   A hit is fixed in the tree, never allow-listed to get past this step. Categories: `secrets`, `credentials`, `home-path`, `machine-path`, `vocabulary`, `input-name`, `large-file`, `ignored-tracked`.
-2. Confirm local inputs live outside git: [local inputs](../../../scripts/config/notes/INPUTS.md) covers the overlay layout and file names. `--history` scans every commit, and a hit there needs the rewrite below.
+1. `python -m scripts.review --scrub` must print `0 finding(s)`. The scan is the overlay's
+   `tools/private_audit.py`, which owns its categories and terms; a hit is fixed in the tree, never
+   allow-listed to get past this step.
+2. Confirm local inputs live outside git: [local inputs](../../../scripts/config/notes/INPUTS.md) covers the overlay layout and file names. The same scan without `--scrub` reads the tree only, and `--history` adds every commit, where a hit needs the rewrite below.
 3. Back up history: `git bundle create C:/AI/trash/local-ai-workbench-<date>.bundle --all`.
 
 ## Rewrite

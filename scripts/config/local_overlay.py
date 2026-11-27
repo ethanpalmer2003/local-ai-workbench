@@ -37,6 +37,11 @@ def model_overlay_path() -> Path:
     return input_dir() / "models.overlay.yaml"
 
 
+def private_audit_script() -> Path:
+    """The overlay's own scan of the public tree; absent means no private audit on this machine."""
+    return input_dir() / "tools" / "private_audit.py"
+
+
 def _manifest(path: Path) -> dict[str, Any]:
     """One hand-authored overlay manifest; YAML so the file can carry comments.
 
