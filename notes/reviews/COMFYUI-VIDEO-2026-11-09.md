@@ -27,4 +27,4 @@ Peaks are sampled lower bounds, not exact maxima. The first 5 s pair (155.9 and 
 
 640 at 5 s would be the default this machine runs with headroom; 10 s would stay an opt-in for longer clips, and pinned memory would stay off. No default changed.
 
-Evidence: `scripts/benchmarks/output/personal/comfyui/comfyui_video/unreviewed/1794268833104865200` (baseline), `1794269103117986800` (pinned-on), `1794269678150814900` (10 s).
+Evidence: `runs/benchmarks/personal/comfyui/comfyui_video/unreviewed/1794268833104865200` (baseline), `1794269103117986800` (pinned-on), `1794269678150814900` (10 s).

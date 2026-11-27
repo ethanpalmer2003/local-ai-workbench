@@ -19,10 +19,10 @@ Does the shipped default still work?
 | Practice gateway smoke | probe | 2026-11-13 | completed | 31 s | [WARN] stale: audiocpp rebuilt: rocm/audiocpp_server.exe, llamacpp rebuilt: vulkan/llama-bench.exe, producer changed: scripts/tests/cases/asr/shared/practice_smoke.py | report (../output/asr/shared/practice_smoke/unreviewed/1794605473032495300/artifacts/report.json) |
 | Paced ASR latency | probe | 2026-11-12 | - | - | [OK] | report (../output/asr/shared/latency/unreviewed/1794455126476096900/artifacts/report.json) |
 | Kobold speech modes | smoke | 2026-11-12 | completed | 72 s | [OK] | report (../output/koboldcpp/kobold_audiocpp_modes/unreviewed/1794446797528993200/artifacts/report.json) |
-| Kobold stacked VRAM | probe | 2026-11-12 | passed | 167 s | [OK] | report (../../benchmarks/output/koboldcpp/kobold_stack_vram/unreviewed/1794446249040548000/artifacts/report.json) |
-| Speculative decoding benchmark | smoke | 2026-11-12 | completed | 72 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_specspeed/unreviewed/1794442124305395400/artifacts/report.json) |
-| Context stream benchmark | smoke | 2026-11-15 | completed | 40 s | [WARN] stale: llamacpp rebuilt: vulkan/llama-bench.exe, producer changed: scripts/benchmarks/llamacpp/benchmark_context_stream.py | report (../../benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794778208574993200/artifacts/report.json) |
-| N-gram benchmark | benchmark | 2026-11-15 | failed | 538 s | [WARN] last run failed | report (../../benchmarks/output/llamacpp/benchmark_ngram/unreviewed/1794785407401151200/artifacts/report.json) |
+| Kobold stacked VRAM | probe | 2026-11-12 | passed | 167 s | [OK] | report (../../runs/benchmarks/koboldcpp/kobold_stack_vram/unreviewed/1794446249040548000/artifacts/report.json) |
+| Speculative decoding benchmark | smoke | 2026-11-12 | completed | 72 s | [OK] | report (../../runs/benchmarks/llamacpp/benchmark_specspeed/unreviewed/1794442124305395400/artifacts/report.json) |
+| Context stream benchmark | smoke | 2026-11-15 | completed | 40 s | [WARN] stale: llamacpp rebuilt: vulkan/llama-bench.exe, producer changed: scripts/benchmarks/llamacpp/benchmark_context_stream.py | report (../../runs/benchmarks/llamacpp/benchmark_context_stream/inconclusive/1794778208574993200/artifacts/report.json) |
+| N-gram benchmark | benchmark | 2026-11-15 | failed | 538 s | [WARN] last run failed | report (../../runs/benchmarks/llamacpp/benchmark_ngram/unreviewed/1794785407401151200/artifacts/report.json) |
 | Gemma with Breeze speech | probe | 2026-11-12 | completed | 65 s | [OK] | report (../output/llamacpp/gemma_breeze/unreviewed/1794446128468734800/artifacts/report.json) |
 
 ## Alternatives testing
@@ -31,19 +31,19 @@ Is an alternative better than the default?
 
 | Work | Category | Last run | Status | Result | Freshness | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
-| Resident speech comparison | probe | 2026-11-12 | completed | - | [OK] | report (../../benchmarks/output/tts_engines/resident/unreviewed/1794450046473369400/artifacts/report.json) |
+| Resident speech comparison | probe | 2026-11-12 | completed | - | [OK] | report (../../runs/benchmarks/tts_engines/resident/unreviewed/1794450046473369400/artifacts/report.json) |
 | AudioCpp backend comparison | probe | 2026-11-12 | completed | 21 s | [OK] | report (../output/audiocpp/audiocpp_backend_compare/inconclusive/1794448807011598500/artifacts/report.json) |
 | Ming page smoke | smoke | 2026-11-12 | completed | 8 s | [OK] | report (../output/audiocpp/ming_page_smoke/unreviewed/1794449521522386700/artifacts/report.json) |
-| Resident ASR comparison | probe | 2026-11-12 | - | - | [WARN] stale: llamacpp-qwen-1.7b changed | report (../../benchmarks/output/asr/asr_resident_compare/unreviewed/1794453879199198100/artifacts/report.json) |
+| Resident ASR comparison | probe | 2026-11-12 | - | - | [WARN] stale: llamacpp-qwen-1.7b changed | report (../../runs/benchmarks/asr/asr_resident_compare/unreviewed/1794453879199198100/artifacts/report.json) |
 | Practice Whisper recognition | probe | 2026-11-12 | completed | 15 s | [WARN] stale: asr changed | report (../output/asr/shared/language_practice_whisper/unreviewed/1794448603234647200/artifacts/report.json) |
-| Embedded Whisper comparison | probe | 2026-11-12 | completed | 24 s | [OK] | report (../../benchmarks/output/asr/whisper_embedded_compare/unreviewed/1794448554903429400/artifacts/report.json) |
-| Gemma audio comparison | probe | 2026-11-12 | completed | 72 s | [OK] | report (../../benchmarks/output/asr/gemma_audio_compare/unreviewed/1794448621016870500/artifacts/report.json) |
+| Embedded Whisper comparison | probe | 2026-11-12 | completed | 24 s | [OK] | report (../../runs/benchmarks/asr/whisper_embedded_compare/unreviewed/1794448554903429400/artifacts/report.json) |
+| Gemma audio comparison | probe | 2026-11-12 | completed | 72 s | [OK] | report (../../runs/benchmarks/asr/gemma_audio_compare/unreviewed/1794448621016870500/artifacts/report.json) |
 | Parakeet Vulkan smoke | smoke | 2026-11-12 | completed | 26 s | [OK] | report (../output/asr/parakeetcpp/smoke/unreviewed/1794448527478985500/artifacts/report.json) |
 | Kobold embedded image comparison | probe | 2026-11-12 | completed | 52 s | [OK] | report (../output/koboldcpp/kobold_embedded_compare/unreviewed/1794448754179222500/artifacts/report.json) |
-| Speed benchmark | benchmark | 2026-11-12 | completed | 505 s | [OK] | report (../../benchmarks/output/llamacpp/benchmark_speedbench/unreviewed/1794447475746582600/artifacts/report.json) |
-| llama.cpp backend benchmark | probe | 2026-11-12 | unreviewed | - | [defer] | report (../../benchmarks/output/llamacpp/benchmark_backends/unreviewed/1794442694238268800/artifacts/report.json) |
+| Speed benchmark | benchmark | 2026-11-12 | completed | 505 s | [OK] | report (../../runs/benchmarks/llamacpp/benchmark_speedbench/unreviewed/1794447475746582600/artifacts/report.json) |
+| llama.cpp backend benchmark | probe | 2026-11-12 | unreviewed | - | [defer] | report (../../runs/benchmarks/llamacpp/benchmark_backends/unreviewed/1794442694238268800/artifacts/report.json) |
 | HRX build | probe | - | passed | - | [defer] | report (../output/probes/hrx_updates/verified/20261015-rebuild/artifacts/report.json) |
 | Drama offload screen | benchmark | 2026-10-28 | completed | 107 s | [defer] | report (../output/shared/drama3_offload/unreviewed/1793151003911821700/artifacts/report.json) |
-| Language practice versus Lemonade | benchmark | 2026-11-12 | passed | practice TTFT 0.07 s; lemonade TTFT 0.08 s; kobold TTFT 0.39 s | [WARN] stale: practice asr changed, kobold tts missing | report (../../benchmarks/output/shared/framework_compare/unreviewed/1794449538297774600/artifacts/report.json) |
+| Language practice versus Lemonade | benchmark | 2026-11-12 | passed | practice TTFT 0.07 s; lemonade TTFT 0.08 s; kobold TTFT 0.39 s | [WARN] stale: practice asr changed, kobold tts missing | report (../../runs/benchmarks/shared/framework_compare/unreviewed/1794449538297774600/artifacts/report.json) |
 
 Deferred, no rerun planned: llama.cpp backend benchmark (its comparison arm is the paused HRX build, so the row cannot be judged while HRX is parked); HRX build (HRX work is paused by the user, so its update probe stays out of the rerun set); Drama offload screen (the installed 15.9 GiB TTS model ran at best RTF 1.21 here, slower than real time, so this machine cannot carry it).

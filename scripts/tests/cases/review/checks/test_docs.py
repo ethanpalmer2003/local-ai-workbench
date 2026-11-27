@@ -120,7 +120,7 @@ class RoleTests(unittest.TestCase):
 
 class PointerTests(unittest.TestCase):
     def test_pointers_count_markdown_targets_and_separate_other_links(self):
-        folder = BASE / "scripts/tests/output/pointer-fixture"
+        folder = project_cfg.TEST_OUTPUT_DIR / "pointer-fixture"
         folder.mkdir(parents=True, exist_ok=True)
         source, target = folder / "SOURCE.md", folder / "TARGET.md"
         source.write_text(
@@ -148,7 +148,7 @@ class PointerTests(unittest.TestCase):
 
 class LinkTests(unittest.TestCase):
     def _fixture(self, body: str) -> Path:
-        folder = BASE / "scripts/tests/output/link-fixture"
+        folder = project_cfg.TEST_OUTPUT_DIR / "link-fixture"
         folder.mkdir(parents=True, exist_ok=True)
         path = folder / "LINKED.md"
         path.write_text(body, encoding="utf-8")
@@ -223,7 +223,7 @@ class LinkTests(unittest.TestCase):
 
 class ModelNameTests(unittest.TestCase):
     def _fixture(self, text: str) -> Path:
-        folder = BASE / "scripts/tests/output/model-name-fixture"
+        folder = project_cfg.TEST_OUTPUT_DIR / "model-name-fixture"
         folder.mkdir(parents=True, exist_ok=True)
         path = folder / "NAMED.md"
         path.write_text(text, encoding="utf-8")
@@ -283,7 +283,7 @@ class GeneratedPageTests(unittest.TestCase):
 
 class HubSiblingTests(unittest.TestCase):
     def _folder(self) -> Path:
-        folder = BASE / "scripts/tests/output/hub-sibling-fixture"
+        folder = project_cfg.TEST_OUTPUT_DIR / "hub-sibling-fixture"
         folder.mkdir(parents=True, exist_ok=True)
         return folder
 

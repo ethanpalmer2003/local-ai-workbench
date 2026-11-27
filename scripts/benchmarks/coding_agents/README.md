@@ -15,6 +15,6 @@ C:/AI/bat/benchmarks/benchmark_coding_agents.bat --backends llamacpp strata
 - Strata/llama.cpp comparisons require matched native settings and recorded context/cache behavior. [Model/profile guide](../MODEL-COMPARISONS.md).
 - Benchmark and update runs own the host: chosen ports are freed first, never reused or refused. Collect baseline/stage/process memory and owned-child cleanup.
 - Source tasks and test contracts stay versioned; downloaded Aider Polyglot/other upstream tools remain in `frameworks/benchmarks`.
-- Results: new `scripts/benchmarks/output/coding_agents/shared/benchmark_agents/`; historical `benchmark_frameworks/` and `scripts/tests/output/harnesses/` were superseded and retired to trash.
+- Results: new `runs/benchmarks/coding_agents/shared/benchmark_agents/`; historical `benchmark_frameworks/` and `runs/tests/harnesses/` were superseded and retired to trash.
 - Read compact summaries while waiting; preserve incomplete evidence. [Estimates](../../tests/notes/ESTIMATES.md), [outcomes](../../tests/notes/OUTCOMES.md), [test rules](../../tests/README.md).
 - Additional grids/technical-Markdown workloads remain in the [TODO](../../../notes/TODO.md); no automatic resumption.

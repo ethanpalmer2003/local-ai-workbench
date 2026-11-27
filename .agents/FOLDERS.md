@@ -14,7 +14,7 @@
 | Repository tools | `scripts/tools/` |
 | Repository review checks | `scripts/review/` |
 | Test source / UI | `scripts/tests/cases/`, `scripts/tests/ui/` |
-| Benchmark source / new results | `scripts/benchmarks/`, `scripts/benchmarks/output/` |
+| Benchmark source / new results | `scripts/benchmarks/`, `runs/benchmarks/` |
 | Batch entry | `bat/update_frameworks.bat`; routines group by role, with root batches and the indexed wrappers excepted |
 | App state | `scripts/state/` for app data, with new logs, caches and generated pages under `scripts/state/{logs,cache,generated}/` |
 
@@ -29,7 +29,7 @@ Two ignore files split the untracked tree: the root file holds the heavyweight t
 | `trash/` | Moved-out files; the only removal path for nonempty data |
 | `.venv/` | The interpreter |
 | `scripts/state/` | Logs, caches, generated reports, app state |
-| `scripts/benchmarks/output/`, `scripts/tests/output/` | Run evidence and temp workspaces |
+| `runs/benchmarks/`, `runs/tests/` | Run evidence and temp workspaces |
 | `scripts/.env` | Local credentials |
 | `.zed/`, `.coverage`, `*.lnk` | Editor and tool state |
 - Tool caches live under `scripts/state/cache/pytest` and `scripts/state/cache/ruff`; `__pycache__/` stays beside sources.

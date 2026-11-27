@@ -133,7 +133,18 @@ ROOT_BATCHES = frozenset(
 # - root folders that hold runtime data or tool state rather than tracked files; tool caches live under
 #   scripts/state/cache instead, so a .pytest_cache or .ruff_cache here is a finding. graphify-out is the
 #   junction the graph plugin's MCP server needs at its canonical path; the files are in the cache tree
-RUNTIME_ROOTS = {"data", "frameworks", "trash", "graphify-out", ".git", ".venv", ".zed", "node_modules", "__pycache__"}
+RUNTIME_ROOTS = {
+    "data",
+    "frameworks",
+    "trash",
+    "graphify-out",
+    ".git",
+    ".venv",
+    ".zed",
+    "node_modules",
+    "__pycache__",
+    "runs",
+}
 
 OWNER_ROOTS = (
     project_cfg.CONFIG_DIR,

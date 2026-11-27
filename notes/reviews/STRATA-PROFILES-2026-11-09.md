@@ -24,4 +24,4 @@ Long fresh prompts would want `prefill.json`; many warm short turns would want `
 
 No default changed.
 
-Evidence: `scripts/benchmarks/output/coding_agents/strata_profiles/unreviewed/1794271262458607300`.
+Evidence: `runs/benchmarks/coding_agents/strata_profiles/unreviewed/1794271262458607300`.

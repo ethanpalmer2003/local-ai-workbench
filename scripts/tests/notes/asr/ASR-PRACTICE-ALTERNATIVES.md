@@ -41,7 +41,7 @@ Embedded Whisper finishes about 0.1 s sooner, but the gateway refuses a whole-fi
 recognizer on `/asr/live`: the page would upload a finished turn and show nothing
 while the speaker talks, so `--transcription-engine embedded` stays an option.
 Evidence: practice_smoke runs `1795577036774874600`, `1795576425940897300` and
-`1795576405044802300` under `scripts/tests/output/asr/shared/practice_smoke/unreviewed/2026-11-24/`.
+`1795576405044802300` under `runs/tests/asr/shared/practice_smoke/unreviewed/2026-11-24/`.
 
 Startup/model loading, warmup and cleanup are separate shared-lifecycle phases.
 Kokoro and ASR receive warmup inference before the measured flow. Approved native

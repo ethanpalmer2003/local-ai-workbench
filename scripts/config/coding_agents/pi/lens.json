@@ -8,7 +8,7 @@
     "trash/**",
     ".venv/**",
     "scripts/state/**",
-    "scripts/tests/output/**"
+    "runs/tests/**"
   ],
   "lsp": {
     "servers": {

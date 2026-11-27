@@ -35,6 +35,6 @@ Title: Kokoro TTS returns an empty WAV for Japanese and falls back to English el
 
 ## Evidence
 
-- Run artifacts: `scripts/benchmarks/output/shared/framework_compare/unreviewed/1794123067862277200/`.
+- Run artifacts: `runs/benchmarks/shared/framework_compare/unreviewed/1794123067862277200/`.
 - Harness: [framework_compare.py](../../scripts/benchmarks/shared/framework_compare.py); the table records
   each row's voice, audio length and real-time factor, marking implausible speech instead of ranking it.

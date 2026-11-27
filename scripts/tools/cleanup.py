@@ -21,11 +21,11 @@ from scripts.shared.tables import render_table
 from scripts.tools import state_cleanup
 
 # - the two evidence roots, and the run-directory name shape they both use
-OUTPUT_ROOTS = (project_cfg.TESTS_DIR / "output", project_cfg.SCRIPTS_DIR / "benchmarks" / "output")
+OUTPUT_ROOTS = (project_cfg.TEST_OUTPUT_DIR, project_cfg.BENCHMARK_OUTPUT_DIR)
 MAX_DEPTH = 6
 # - a run that took minutes to produce keeps more history than one that took seconds: a benchmark or a
 #   live probe is expensive to repeat, while a fast suite run is cheap
-EXPENSIVE = ("benchmarks/output", "tests/output/probes")
+EXPENSIVE = ("runs/benchmarks/", "runs/tests/probes/")
 EXPENSIVE_KEEP, EXPENSIVE_DAYS = 5, 90
 CHEAP_KEEP, CHEAP_DAYS = 1, 7
 # - a suite writes a run per invocation, so an area needs a ceiling of its own

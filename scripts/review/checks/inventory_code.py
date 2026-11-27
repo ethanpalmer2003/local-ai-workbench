@@ -70,6 +70,7 @@ def _excluded(name: str) -> bool:
 
 REVIEW_EXCLUDED = EXCLUDED | {
     "graphify-out",
+    "runs",
     "frameworks",
     "data",
     "trash",

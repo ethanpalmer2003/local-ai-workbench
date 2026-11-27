@@ -22,4 +22,4 @@ python -m scripts.benchmarks.llamacpp.benchmark_llamacpp_profiles --builds vulka
 - Avalon prompt caching needs `--cache-ram` explicitly: its default is 0 when the model exceeds RAM. At 1024 MiB it reuses only 15 of 3025 tokens, so TTFT stays ~46 s; prefill, not decode, dominates wall time.
 - The 48 GiB manual page file (96 GiB max, 2.7 GiB peak) already exceeds what "System managed" would allocate; Strata's page-file advice does not apply and changing it would likely reduce the commit budget.
 - [Configuration rationale](../config/llamacpp/TUNING.md), [experimental Strata profile](../config/strata/REFERENCE.md).
-- New outputs follow `scripts/benchmarks/output/`; superseded `tests/output/models/` and `tests/output/harnesses/` were retired to trash (manifest included). Retain failures and incomplete matrices.
+- New outputs follow `runs/benchmarks/`; superseded `runs/tests/models/` and `runs/tests/harnesses/` were retired to trash (manifest included). Retain failures and incomplete matrices.

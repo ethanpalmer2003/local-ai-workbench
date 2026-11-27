@@ -51,4 +51,4 @@ No report matches it: nothing describes prefill losing several times its rate as
 - Are there WER or `amdkmdag` traces for that instant, and does an 8 s `TdrDelay` hide or cause the symptom?
 - Would a driver update or another HIP SDK change it?
 
-Evidence: `scripts/benchmarks/output/llamacpp/benchmark_context_stream/inconclusive/1794597852387930200/logs/server-rocm-lemonade.log`.
+Evidence: `runs/benchmarks/llamacpp/benchmark_context_stream/inconclusive/1794597852387930200/logs/server-rocm-lemonade.log`.

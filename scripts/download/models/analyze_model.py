@@ -232,7 +232,7 @@ def main(argv: list[str] | None = None) -> int:
     metadata_evidence.published(rows)
     saved.update(rows)
     evidence_errors = (
-        metadata_evidence.measurements(saved, args.measurements or [project_cfg.TESTS_DIR / "output"])
+        metadata_evidence.measurements(saved, args.measurements or [project_cfg.TEST_OUTPUT_DIR])
         if args.measurements is not None
         else []
     )

@@ -36,7 +36,7 @@ class ScoreTests(unittest.TestCase):
 
 class DefaultTests(unittest.TestCase):
     def findings(self, source: str) -> list[tuple[str, int, str]]:
-        directory = Path(project_cfg.BASE_DIR) / "scripts/tests/output/annotation-defaults"
+        directory = project_cfg.TEST_OUTPUT_DIR / "annotation-defaults"
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / "sample.py"
         path.write_text(textwrap.dedent(source), encoding="utf-8")
@@ -103,7 +103,7 @@ class DefaultTests(unittest.TestCase):
 
     def test_the_census_counts_every_category(self):
         source = "def f(a=1, b=None, c=[]): ...\n"
-        directory = Path(project_cfg.BASE_DIR) / "scripts/tests/output/annotation-census"
+        directory = project_cfg.TEST_OUTPUT_DIR / "annotation-census"
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / "sample.py"
         path.write_text(source, encoding="utf-8")
@@ -113,7 +113,7 @@ class DefaultTests(unittest.TestCase):
             path.unlink()
 
     def test_a_default_beside_an_unannotated_parameter_is_listed(self):
-        directory = Path(project_cfg.BASE_DIR) / "scripts/tests/output/annotation-unannotated"
+        directory = project_cfg.TEST_OUTPUT_DIR / "annotation-unannotated"
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / "sample.py"
         path.write_text("def f(count=1, name: str | None = None) -> None: ...\n", encoding="utf-8")

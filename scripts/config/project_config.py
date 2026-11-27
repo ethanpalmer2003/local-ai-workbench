@@ -35,10 +35,14 @@ GENERATED_DIR = STATE_DIR / "generated"
 LOGS_DIR = Path(os.environ.get("AI_LOGS_DIR") or STATE_DIR / "logs")
 CACHE_DIR = STATE_DIR / "cache"
 TEST_CASES_DIR = TESTS_DIR / "cases"
-TEST_OUTPUT_DIR = TESTS_DIR / "output"
+# - run evidence lives at the repository root, apart from source and from the weight/install `data/`
+#   tree: it is browsable, it grows without bound, and `scripts/` should stay source-sized
+RUNS_DIR = BASE_DIR / "runs"
+TEST_OUTPUT_DIR = RUNS_DIR / "tests"
+BENCHMARK_OUTPUT_DIR = RUNS_DIR / "benchmarks"
 # - runtime data and run evidence, not source; the tree tools and the gate subtract these from the
 #   source total, so each caller reads this instead of spelling the paths out
-EVIDENCE_DIRS = (STATE_DIR, TEST_OUTPUT_DIR, SCRIPTS_DIR / "benchmarks" / "output")
+EVIDENCE_DIRS = (STATE_DIR, TEST_OUTPUT_DIR, BENCHMARK_OUTPUT_DIR)
 EVIDENCE_TREES = tuple(path.relative_to(BASE_DIR).as_posix() for path in EVIDENCE_DIRS)
 
 # --- ENVIRONMENT LOADING ---

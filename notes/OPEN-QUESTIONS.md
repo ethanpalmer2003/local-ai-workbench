@@ -6,7 +6,7 @@ questions](OPEN-QUESTIONS-RESOLVED.md), and agreed work lives in [TODO](TODO.md)
 ## Unresolved
 
 - **Public evidence for measured claims.** Forty tracked documents cite 132 artifact paths under the ignored
-  `scripts/benchmarks/output/` and `scripts/tests/output/`, so a public reader cannot open the evidence behind
+  `runs/benchmarks/` and `runs/tests/`, so a public reader cannot open the evidence behind
   a number. Options: commit a curated subset of the `report.md`/`summary.txt` files behind a decision, move
   the numbers into the documents themselves, or keep the paths local-only. A curated set is a few MB.
 - **An operating-system backstop for the deep-scan rule.** The profile guard in

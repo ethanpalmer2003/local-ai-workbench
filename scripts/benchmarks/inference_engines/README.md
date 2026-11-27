@@ -50,10 +50,10 @@ Kept because it was once a decision basis. Do not mix it into a new table; re-ru
 
 - A four-task corpus ran on both builds and `swift15-8k` on 2026-11-13 and gave up its place above: its median sat near the fresh-generation class, so only its prefill agrees. Its outputs stay in the run folders.
 - Superseded by the 2026-11-13 harness change: pooled samples without a warm-up, so decode carried the ramp and its own samples span 31 to 126 tok/s. Warm prefill was dropped: a warm sample prefills only its cache miss.
-- Evidence: `scripts/benchmarks/output/inference_engines/benchmark_coding_engines/unreviewed/1794441020487629300/artifacts/summary.txt`.
+- Evidence: `runs/benchmarks/inference_engines/benchmark_coding_engines/unreviewed/1794441020487629300/artifacts/summary.txt`.
 
 ## Metric scope
 
-Both arms report native server `timings`: prefill tok/s, decode tok/s and TTFT, plus parsed prompt-cache reuse per arm. HTTP request time is not decode throughput, and this is a paired screen, not a ranking. Every run records startup, warmup, samples, settings, failures and logs under `scripts/benchmarks/output/llm/`.
+Both arms report native server `timings`: prefill tok/s, decode tok/s and TTFT, plus parsed prompt-cache reuse per arm. HTTP request time is not decode throughput, and this is a paired screen, not a ranking. Every run records startup, warmup, samples, settings, failures and logs under `runs/benchmarks/llm/`.
 
 The retired llama.cpp build sweep is archived in `C:/AI/trash/retired-llm-inference-sweep`.

@@ -11,7 +11,7 @@ BASE = Path(project_cfg.BASE_DIR)
 
 
 def sample_file(name: str, source: str) -> Path:
-    folder = BASE / "scripts/tests/output/sample-code"
+    folder = project_cfg.TEST_OUTPUT_DIR / "sample-code"
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / name
     path.write_text(source, encoding="utf-8")

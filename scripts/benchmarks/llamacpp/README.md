@@ -7,6 +7,6 @@
 - Shared benchmark reasoning is low; normal launcher default is medium. Historical mixed/template-default reasoning cannot rank medium performance.
 - Run from `C:/AI` with the project interpreter; use each module's CLI for bounded subsets. Package/source updates are separate.
 - Backend sessions reuse only compatible healthy servers and preserve unrelated sessions. Occupied ports are refused unless the test explicitly owns them.
-- Reports include timing, token/output correctness, failure/cleanup and memory evidence where available. New results remain under `benchmarks/output/llamacpp/`.
+- Reports include timing, token/output correctness, failure/cleanup and memory evidence where available. New results remain under `runs/benchmarks/llamacpp/`.
 - [Model/profile screen](../MODEL-COMPARISONS.md), [settings and measured choices](../../config/llamacpp/TUNING.md), [benchmark rules](../README.md).
 - Medium/high-context grids and repeated Vulkan variation investigations remain deferred in [TODO](../../../notes/TODO.md).

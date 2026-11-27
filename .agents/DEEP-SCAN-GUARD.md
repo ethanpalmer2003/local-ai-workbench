@@ -7,8 +7,8 @@ the profile links it by path, so an edit reaches the next harness start, not the
 ## What is excluded
 
 The names come from the ignore files that already decide what is local, read once when the plugin loads:
-`/data/`, `/frameworks/`, `/trash/`, `/.venv*/`, `/scripts/benchmarks/output/`, `/.zed/`, `graphify-out/`,
-`__pycache__/`, `.ruff_cache/`, `state/` and `tests/output/` (the last two inside `scripts/`). A folder named
+`/data/`, `/frameworks/`, `/trash/`, `/.venv*/`, `/runs/benchmarks/`, `/.zed/`, `graphify-out/`,
+`__pycache__/`, `.ruff_cache/`, `state/` and `runs/tests/` (the last two inside `scripts/`). A folder named
 at the workspace root is heavy only there, which is why `scripts/download/frameworks` is readable source, while
 a cache that repeats inside packages (`.git`, `.venv*`, `node_modules`, `__pycache__`, `.ruff_cache`) is heavy
 wherever it appears. One hand-written list remains for that reason, and nothing else is copied.

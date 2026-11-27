@@ -32,8 +32,8 @@
 - `frameworks/<component>/`: third-party installations, grouped under `model_servers/` when the component wraps other engines; `data/huggingface/models/<component>/`: weights.
 - `scripts/{config,launchers}/<component>/`: owned configuration/code; see [folder rules](../.agents/FOLDERS.md) for shared and role-wide placement.
 - `scripts/shared/`: helpers a launcher, a benchmark and a test all call; a helper one role owns stays with that role.
-- `scripts/tests/{cases,ui}/<component>/`: test sources/assets. New results mirror cases under `tests/output/`; historical output stays in place.
-- `scripts/benchmarks/<area>/`: performance runners and shared measurement support. New results go under `benchmarks/output/`; historical test output stays in place.
+- `scripts/tests/{cases,ui}/<component>/`: test sources/assets. New results mirror cases under `runs/tests/`; historical output stays in place.
+- `scripts/benchmarks/<area>/`: performance runners and shared measurement support. New results go under `runs/benchmarks/`; historical test output stays in place.
 - `scripts/state/<component>/`: app state; `{logs,cache,generated}/<component>/`: future runtime artifacts.
 - `bat/`: routine launchers only (index: [bat/README.md](../bat/README.md)); use the project interpreter from the checkout root.
 - Native layouts/shared weights are explicit exceptions in `COMPONENTS`; preserve vendor files, app preferences and evidence.

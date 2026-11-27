@@ -21,3 +21,6 @@ scripts/config/strata/strata-swift-iq2_xs.json.bak
 scripts/config/strata/ram-budget-*.done
 scripts/config/strata/*.log
 scripts/config/strata/run-*.bat
+
+# run evidence: suite and benchmark runs, browsable but not source
+/runs/

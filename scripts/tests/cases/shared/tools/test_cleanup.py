@@ -25,17 +25,15 @@ class CleanupTests(unittest.TestCase):
     def test_a_cheap_run_keeps_only_the_newest(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
-            newest = _run(root, "tests/output/suites", "1794769213228859901", 30)
-            older = _run(root, "tests/output/suites", "1794769213228859900", 30)
+            newest = _run(root, "runs/tests/suites", "1794769213228859901", 30)
+            older = _run(root, "runs/tests/suites", "1794769213228859900", 30)
             stale = cleanup.superseded([newest, older], set())
         self.assertEqual(stale, [older])
 
     def test_an_expensive_run_keeps_more_history(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
-            runs = [
-                _run(root, "benchmarks/output/koboldcpp", f"17947692132288599{index:02d}", 200) for index in range(6)
-            ]
+            runs = [_run(root, "runs/benchmarks/koboldcpp", f"17947692132288599{index:02d}", 200) for index in range(6)]
             stale = cleanup.superseded(runs, set())
         self.assertEqual(len(stale), 1)
         self.assertEqual(stale[0], sorted(runs, key=lambda path: path.name)[0])
@@ -43,23 +41,23 @@ class CleanupTests(unittest.TestCase):
     def test_a_cited_run_is_never_superseded(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
-            newest = _run(root, "tests/output/suites", "1794769213228859901", 30)
-            cited = _run(root, "tests/output/suites", "1794769213228859900", 30)
+            newest = _run(root, "runs/tests/suites", "1794769213228859901", 30)
+            cited = _run(root, "runs/tests/suites", "1794769213228859900", 30)
             stale = cleanup.superseded([newest, cited], {cited.name})
         self.assertEqual(stale, [])
 
     def test_a_recent_run_is_left_alone(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
-            newest = _run(root, "tests/output/suites", "1794769213228859901", 1)
-            recent = _run(root, "tests/output/suites", "1794769213228859900", 1)
+            newest = _run(root, "runs/tests/suites", "1794769213228859901", 1)
+            recent = _run(root, "runs/tests/suites", "1794769213228859900", 1)
             stale = cleanup.superseded([newest, recent], set())
         self.assertEqual(stale, [])
 
     def test_the_cost_class_follows_the_area(self):
-        self.assertTrue(cleanup._expensive(project_cfg.BASE_DIR / "scripts/benchmarks/output/a/b/1"))
-        self.assertTrue(cleanup._expensive(project_cfg.BASE_DIR / "scripts/tests/output/probes/a/b/1"))
-        self.assertFalse(cleanup._expensive(project_cfg.BASE_DIR / "scripts/tests/output/suites/a/b/1"))
+        self.assertTrue(cleanup._expensive(project_cfg.BASE_DIR / "runs/benchmarks/a/b/1"))
+        self.assertTrue(cleanup._expensive(project_cfg.BASE_DIR / "runs/tests/probes/a/b/1"))
+        self.assertFalse(cleanup._expensive(project_cfg.BASE_DIR / "runs/tests/suites/a/b/1"))
 
     def test_a_vanished_run_counts_as_stale(self):
         self.assertGreater(cleanup._age_days(Path("nowhere") / "1"), 1000)
@@ -80,7 +78,7 @@ class CleanupTests(unittest.TestCase):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
             runs = [
-                _run(root, "tests/output/suites", f"17947692132288599{index:02d}", 30)
+                _run(root, "runs/tests/suites", f"17947692132288599{index:02d}", 30)
                 for index in range(cleanup.MAX_RUNS_PER_AREA + 2)
             ]
             stale = cleanup.superseded(runs, set())
@@ -90,6 +88,6 @@ class CleanupTests(unittest.TestCase):
     def test_the_keep_override_reaches_the_run_rule(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
-            runs = [_run(root, "tests/output/suites", f"17947692132288599{index:02d}", 30) for index in range(4)]
+            runs = [_run(root, "runs/tests/suites", f"17947692132288599{index:02d}", 30) for index in range(4)]
             kept = cleanup.superseded(runs, set(), keep=3, older_days=7)
         self.assertEqual(len(kept), 1)

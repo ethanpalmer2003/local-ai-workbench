@@ -21,8 +21,8 @@ from scripts.config.shared import deferred as parked
 OUTPUT = Path(__file__).resolve().parent.parent / "tests/notes/GENERATED-CAPABILITY-MATRIX.md"
 REPORT = "artifacts/report.json"
 # - Test evidence roots; benchmark runs use the same report layout under a second root
-ROOTS = (project_cfg.TEST_OUTPUT_DIR, project_cfg.SCRIPTS_DIR / "benchmarks/output")
-# - Long opt-in work: subject under scripts/tests/output, then the label a reader recognizes
+ROOTS = (project_cfg.TEST_OUTPUT_DIR, project_cfg.BENCHMARK_OUTPUT_DIR)
+# - Long opt-in work: subject under runs/tests, then the label a reader recognizes
 CAPABILITIES = (
     ("shared/live_frameworks", "Live launcher and proxy wiring"),
     ("suites/gemma_runtime_screen", "Gemma runtime screen"),

@@ -85,11 +85,11 @@ class CheckTests(unittest.TestCase):
         self.assertIn("0 unpublishable character(s)", printed)
 
     def test_a_file_with_an_ellipsis_fails_and_names_the_line(self):
-        target = Path(project_cfg.BASE_DIR) / "scripts/tests/output/typography-fixture.md"
+        target = project_cfg.TEST_OUTPUT_DIR / "typography-fixture.md"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("line\nbad\u2026 dots\n", encoding="utf-8")
         try:
-            status, printed = self.run_check(["scripts/tests/output/typography-fixture.md"])
+            status, printed = self.run_check([target.relative_to(project_cfg.BASE_DIR).as_posix()])
         finally:
             target.unlink()
         self.assertEqual(status, 1)

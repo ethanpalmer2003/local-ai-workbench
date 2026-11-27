@@ -13,4 +13,4 @@
 
 - What these screens led to is owned by [TUNING](TUNING.md); current quantized model findings: [Q4 memory](Q4-MEMORY.md).
 - Rerun through `scripts.benchmarks.personal.sdcpp.sdcpp_memory_compare` only when requested, matching model/hashes/context and recording execution token.
-- Historical complete outputs remain under `tests/output/probes/sdcpp_memory_compare/`; source reorganization does not rewrite them.
+- Historical complete outputs remain under `runs/tests/probes/sdcpp_memory_compare/`; source reorganization does not rewrite them.
