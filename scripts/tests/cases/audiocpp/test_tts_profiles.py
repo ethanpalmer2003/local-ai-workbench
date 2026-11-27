@@ -94,7 +94,7 @@ class TtsProfiles(unittest.TestCase):
             from pathlib import Path
 
             root = Path(folder)
-            clip = root / "voice" / "vera" / "generated" / "vera_1.wav"
+            clip = root / "library" / "vera" / "generated" / "vera_1.wav"
             clip.parent.mkdir(parents=True)
             clip.write_bytes(b"RIFF")
             clip.with_suffix(".txt").write_text("hello\n", encoding="utf-8")
@@ -114,7 +114,7 @@ class TtsProfiles(unittest.TestCase):
             from pathlib import Path
 
             root = Path(folder)
-            generated = root / "voice" / "vera" / "generated"
+            generated = root / "library" / "vera" / "generated"
             generated.mkdir(parents=True)
             for variant in ("1", "min30", "max30"):
                 clip = generated / f"vera_{variant}.wav"

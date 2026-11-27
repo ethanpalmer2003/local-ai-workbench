@@ -10,7 +10,6 @@ llamacpp
 parakeet
 parakeetcpp
 silero
-voice
 te
 whispercpp
 onText

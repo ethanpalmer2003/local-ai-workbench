@@ -206,7 +206,7 @@ def archive_digest(path):
 
 
 def archive_build(url):
-    """The upstream build marker a library came from; voice stamps `updated` into the url."""
+    """The upstream build marker a library came from, read from the `updated` query parameter."""
     values = urllib.parse.parse_qs(urllib.parse.urlparse(url).query).get("updated")
     return values[0] if values else None
 
