@@ -1,7 +1,7 @@
 # Harness overlay
 
 Host configuration this workstation adds to [DeepSeek Harness](../.agents/DEEPSEEK-HARNESS.md), kept beside the
-code it guards rather than in `scripts/state/`, which the harness discards and the scan guard refuses to walk.
+code it guards rather than in `state/`, which the harness discards and the scan guard refuses to walk.
 
 1. [guard-deep-scan](guard-deep-scan/index.js) refuses a recursive shell scan, `glob` or `grep` over an ignored
    tree and names the bounded replacement. Behavior: [the guard](../.agents/DEEP-SCAN-GUARD.md).

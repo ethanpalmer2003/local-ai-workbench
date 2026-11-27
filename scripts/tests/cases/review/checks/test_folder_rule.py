@@ -50,20 +50,22 @@ class FolderRuleTests(unittest.TestCase):
 
 
 class WorkspaceTotalTests(unittest.TestCase):
-    def test_the_evidence_tree_is_subtracted_from_the_source_tree_it_sits_in(self):
+    def test_the_evidence_tree_is_named_apart_from_source(self):
         with CasePaths(__file__).temporary_directory() as folder:
             root = Path(folder) / "workspace"
-            (root / "scripts" / "state").mkdir(parents=True)
+            (root / "scripts").mkdir(parents=True)
             (root / "scripts" / "our_module.py").write_text("x = 1\n", encoding="utf-8")
-            (root / "scripts" / "state" / "run.log").write_text("log\n", encoding="utf-8")
+            # - run evidence sits beside scripts at the root, never inside it
+            (root / "state").mkdir()
+            (root / "state" / "run.log").write_text("log\n", encoding="utf-8")
             (root / "notes").mkdir()
             (root / "README.md").write_text("readme\n", encoding="utf-8")
             totals = inventory_code.workspace_totals(root)
             rows = {item.tree: item for item in totals}
             self.assertEqual(rows["scripts"].files, 1)
             self.assertEqual(rows["scripts"].kind, "our source")
-            self.assertEqual(rows["scripts/state"].files, 1)
-            self.assertEqual(rows["scripts/state"].kind, "run evidence")
+            self.assertEqual(rows["state"].files, 1)
+            self.assertEqual(rows["state"].kind, "run evidence")
             self.assertEqual(rows["(root files)"].files, 1)
             self.assertEqual(sum(item.files for item in totals), 3)
 

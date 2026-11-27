@@ -16,7 +16,7 @@
 | Test source / UI | `scripts/tests/cases/`, `scripts/tests/ui/` |
 | Benchmark source / new results | `scripts/benchmarks/`, `runs/benchmarks/` |
 | Batch entry | `bat/update_frameworks.bat`; routines group by role, with root batches and the indexed wrappers excepted |
-| App state | `scripts/state/` for app data, with new logs, caches and generated pages under `scripts/state/{logs,cache,generated}/` |
+| App state | `state/` for app data, with new logs, caches and generated pages under `state/{logs,cache,generated}/` |
 
 ## Local only
 
@@ -28,11 +28,11 @@ Two ignore files split the untracked tree: the root file holds the heavyweight t
 | `frameworks/` | Installed engines |
 | `trash/` | Moved-out files; the only removal path for nonempty data |
 | `.venv/` | The interpreter |
-| `scripts/state/` | Logs, caches, generated reports, app state |
+| `state/` | Logs, caches, generated reports, app state |
 | `runs/benchmarks/`, `runs/tests/` | Run evidence and temp workspaces |
 | `scripts/.env` | Local credentials |
 | `.zed/`, `.coverage`, `*.lnk` | Editor and tool state |
-- Tool caches live under `scripts/state/cache/pytest` and `scripts/state/cache/ruff`; `__pycache__/` stays beside sources.
+- Tool caches live under `state/cache/pytest` and `state/cache/ruff`; `__pycache__/` stays beside sources.
 - Cited evidence stays here; [open questions](../notes/OPEN-QUESTIONS.md) covers shipping a subset.
 
 ## Naming and grouping

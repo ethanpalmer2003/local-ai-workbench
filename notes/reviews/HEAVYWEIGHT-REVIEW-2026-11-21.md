@@ -2,7 +2,7 @@
 
 Bundle `1795317801190382800`, reviewed by a heavier model against
 [the request](../../scripts/review/HANDOFF.md). Findings, fixes and what stayed open. The full review is
-`scripts/state/generated/shared/handoff/1795320229657952100/REVIEW-1795317801190382800.md`, cited rather than
+`state/generated/shared/handoff/1795320229657952100/REVIEW-1795317801190382800.md`, cited rather than
 linked because it is untracked evidence.
 
 ## Fixed

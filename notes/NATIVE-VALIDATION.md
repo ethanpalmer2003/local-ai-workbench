@@ -6,7 +6,7 @@ Current scope: brief Breeze/Ming TTS checks; Ming enabled in the HTML page. No f
 
 - Both official GitHub packages are v0.9.3. Updater confirms current: `audiocpp/vulkan`, `audiocpp/rocm`.
 - Executables live directly under `C:/AI/frameworks/audiocpp/{vulkan,rocm}/`. Vulkan's previous path preserved ZIP build nesting; future updates flatten it automatically, with regression coverage.
-- Older ROCm variants moved under `audiocpp/additions/rocm/`; move manifest in `scripts/state/cache/audiocpp/short-paths-1793151217191775700/manifest.json`, old layout folders retained in trash.
+- Older ROCm variants moved under `audiocpp/additions/rocm/`; move manifest in `state/cache/audiocpp/short-paths-1793151217191775700/manifest.json`, old layout folders retained in trash.
 - ROCm SHA256 matched GitHub/user value: `ca07ba49b7e63d9fc37eb911b451fc3d97956f09441cb08cac3ad6b16f7627df`.
 
 ## Brief Breeze result

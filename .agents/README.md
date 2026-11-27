@@ -21,6 +21,6 @@ links here rather than restating a rule.
 | Electron renders blank under Low integrity | [ELECTRON-LOW-INTEGRITY-CRASH.md](ELECTRON-LOW-INTEGRITY-CRASH.md) |
 
 - A refused call names its guide instead of leaving a dead end: the deep-scan guard prints this index and
-  [code search](CODE-SEARCH.md), so a scan into `data/`, `frameworks/`, `trash/` or `scripts/state/` reaches the
+  [code search](CODE-SEARCH.md), so a scan into `data/`, `frameworks/`, `trash/` or `state/` reaches the
   bounded alternative rather than a retry.
 - Skills sit under [skills](skills/), one `SKILL.md` each; [SKILLS.md](SKILLS.md) is their catalog.

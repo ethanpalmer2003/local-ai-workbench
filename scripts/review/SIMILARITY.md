@@ -10,7 +10,7 @@ bundled llama.cpp Vulkan build crashes on a batched embedding request, so start 
 `HIP_VISIBLE_DEVICES=0` on port 8791 and pass `--no-server`; see the upstream entry for the signature.
 Tables, code
 fences and procedural lines are excluded. Each run writes
-`scripts/state/generated/shared/similarity/<mode>/<run>/report.json`, which dates it and records a content
+`state/generated/shared/similarity/<mode>/<run>/report.json`, which dates it and records a content
 digest per file, so the next run says how many files changed since it. Those folders are prunable; the dated
 [record](../../notes/reviews/EMBEDDINGS-2026-11-10.md) is what survives, so a page that quotes a pair count
 names the date it came from. Evidence:

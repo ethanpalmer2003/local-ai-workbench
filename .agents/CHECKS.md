@@ -2,7 +2,7 @@
 
 ## Environment
 
-- Interpreter `C:/AI/.venv/Scripts/python.exe`; a restricted uv cache needs `UV_CACHE_DIR=C:/AI/scripts/state/cache/shared/uv`.
+- Interpreter `C:/AI/.venv/Scripts/python.exe`; a restricted uv cache needs `UV_CACHE_DIR=C:/AI/state/cache/shared/uv`.
 - Dependencies are declared in `pyproject.toml` and locked in `uv.lock`; CPU torch/torchaudio use the PyTorch CPU index.
 
 ## Commands
@@ -18,7 +18,7 @@
 - A push checks everything: `--push` runs every section and every class when the unpushed commits touch Python, and the prose sections with no class when they do not; no Python behavior changed, and the last push was green.
 - By hand both need `--manual`; hooks pass their stage. Single files and sections are exempt; there is no separate edit stage.
 - The suite is a feedback loop: one import hop from the change. No Python path runs none; comments and docstrings too, and the three manifest files ([registry](../scripts/tests/registry.py), runner, selection) keep every class.
-- The gate is scoped the same way; the type check covers the changed modules plus their direct importers. `--commit` reads the working tree, `--push` and `--manual` add unpushed commits, and an empty set runs every section. `--fast` skips types, inventory, advisories and the package summary. Each section records its seconds under `scripts/state/logs/shared/review/`.
+- The gate is scoped the same way; the type check covers the changed modules plus their direct importers. `--commit` reads the working tree, `--push` and `--manual` add unpushed commits, and an empty set runs every section. `--fast` skips types, inventory, advisories and the package summary. Each section records its seconds under `state/logs/shared/review/`.
 - Staleness has one owner per question: which files to read and what moved since upstream is [file sets](../scripts/shared/file_sets.py), git only; whether inputs still match a recorded run is [staleness](../scripts/shared/staleness.py), content only, backing the live-suite stamps and the validation cache; evidence age is an age rule beside the evidence.
 - Live and measure work is scheduled from [TODO](../notes/TODO.md), never part of a code change. Levels: [tool inventory](../scripts/review/TOOLS.md#levels).
 - Prove a live configuration in seconds first: paths, ports, mode flags, one short request. A misconfiguration must fail immediately.

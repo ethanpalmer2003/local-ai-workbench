@@ -24,9 +24,9 @@ Both are snapshots taken when a command runs. Nothing watches this repository: t
 `index_status` reported `watched: false` with the timestamp unchanged. A stale index answers confidently about
 code that has moved, so a commit refreshes them: `scripts/tools/refresh_index.py` is a `post-commit` hook. The
 call graph is rebuilt inline in 2 to 5 s; graphify runs detached, at roughly 15-25 s whatever changed including the wiki export,
-and writes its `[OK]` line to `scripts/state/logs/shared/index-refresh.log` about half a minute later. A
+and writes its `[OK]` line to `state/logs/shared/index-refresh.log` about half a minute later. A
 docs-only commit skips it, and a second refresh prints `[SKIP]` while
-`scripts/state/cache/shared/index-refresh.lock` is held.
+`state/cache/shared/index-refresh.lock` is held.
 Run it by hand with `python -m scripts.tools.refresh_index --paths ...`; `pre-commit install --hook-type
 post-commit` writes the hook into a fresh clone.
 
@@ -46,6 +46,6 @@ minimum cosine, no model file and no server. The `cbm_*` tools never send `seman
 that ranking returned 0.03 against its 0.75 threshold.
 
 Text search: prefer `git grep` or a tracked-file list (`git ls-files`, 729 files in 0.06 s) over a filesystem
-walk. A walk from this root also descends into `data/`, `frameworks/` and `scripts/state/` and had not finished
+walk. A walk from this root also descends into `data/`, `frameworks/` and `state/` and had not finished
 after 60 s, which is why an unscoped search feels slow; pointing one at a directory with an include filter is
 the fast path. Blocking the root is unnecessary when the search reads tracked files.

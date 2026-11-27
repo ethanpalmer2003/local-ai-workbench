@@ -31,7 +31,8 @@ class TestSelection(unittest.TestCase):
             ("scripts/tools/__init__.py", "scripts.tools"),
             ("notes/TODO.md", None),
             ("README.md", None),
-            ("scripts/state/logs/a.py", "scripts.state.logs.a"),
+            # - runtime state lives at the repository root now, so it is not a module path
+            ("state/logs/a.py", None),
             # - a data or template file under scripts/ is not a module, so it is an unmodelled path
             ("scripts/config/models/catalog.json", None),
             ("scripts/benchmarks/README.md", None),

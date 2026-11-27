@@ -1,0 +1,108 @@
+{
+ "commit": "09f781e6e2a7816f8a52e2014438dbd8a81a3710",
+ "dirty": true,
+ "total_seconds": 11.95,
+ "work_seconds": 21.95,
+ "sections": [
+  {
+   "section": "line length",
+   "seconds": 0.06,
+   "status": 0
+  },
+  {
+   "section": "spelling",
+   "seconds": 0.23,
+   "status": 0
+  },
+  {
+   "section": "single-owner tokens",
+   "seconds": 1.97,
+   "status": 0
+  },
+  {
+   "section": "inventory",
+   "seconds": 1.98,
+   "status": 0
+  },
+  {
+   "section": "docs",
+   "seconds": 2.58,
+   "status": 0
+  },
+  {
+   "section": "dead code",
+   "seconds": 3.29,
+   "status": 0
+  },
+  {
+   "section": "types",
+   "seconds": 9.8,
+   "status": 0
+  },
+  {
+   "section": "layout",
+   "seconds": 1.74,
+   "status": 0
+  },
+  {
+   "section": "network timeouts",
+   "seconds": 0.01,
+   "status": 0
+  },
+  {
+   "section": "overlay access",
+   "seconds": 0.0,
+   "status": 0
+  },
+  {
+   "section": "lint",
+   "seconds": 0.04,
+   "status": 0
+  },
+  {
+   "section": "formatting",
+   "seconds": 0.02,
+   "status": 0
+  },
+  {
+   "section": "typography",
+   "seconds": 0.05,
+   "status": 0
+  },
+  {
+   "section": "comments",
+   "seconds": 0.01,
+   "status": 0
+  },
+  {
+   "section": "annotations",
+   "seconds": 0.05,
+   "status": 0
+  },
+  {
+   "section": "bare any",
+   "seconds": 0.01,
+   "status": 0
+  },
+  {
+   "section": "dynamic imports",
+   "seconds": 0.01,
+   "status": 0
+  },
+  {
+   "section": "walrus",
+   "seconds": 0.02,
+   "status": 0
+  },
+  {
+   "section": "expression",
+   "seconds": 0.01,
+   "status": 0
+  },
+  {
+   "section": "spelling variants",
+   "seconds": 0.07,
+   "status": 0
+  }
+ ]
+}

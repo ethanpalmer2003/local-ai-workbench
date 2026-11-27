@@ -287,17 +287,18 @@ def tree_totals(root: Path) -> tuple[int, int]:
 
 
 def workspace_totals(root: Path) -> list[TreeTotal]:
-    """Every top-level tree and loose root file, with the evidence trees split out of the source tree.
+    """Every top-level tree and loose root file, with the evidence trees reported on their own.
 
-    The evidence trees sit inside `scripts`, so `scripts` is reported without them: a row that mixed 29,000
-    run files into our source would hide both facts.
+    Run evidence lives outside `scripts` now, so a tree that is itself evidence is reported once, by the
+    evidence row; evidence nested inside another tree is subtracted from that tree's row.
     """
     evidence = [
         TreeTotal(name, "run evidence", *tree_totals(root / name)) for name in EVIDENCE_TREES if (root / name).is_dir()
     ]
+    own_evidence = {item.tree for item in evidence}
     totals = []
     for entry in sorted(root.iterdir()):
-        if not entry.is_dir():
+        if not entry.is_dir() or entry.name in own_evidence:
             continue
         files, size = tree_totals(entry)
         inside = [item for item in evidence if item.tree.startswith(f"{entry.name}/")]

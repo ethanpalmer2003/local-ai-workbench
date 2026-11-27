@@ -131,7 +131,7 @@ ROOT_BATCHES = frozenset(
     {"update_frameworks.bat", "_run.bat", "launch_llamacpp_pi_agent.bat", "launch_strata_pi_agent.bat"}
 )
 # - root folders that hold runtime data or tool state rather than tracked files; tool caches live under
-#   scripts/state/cache instead, so a .pytest_cache or .ruff_cache here is a finding. graphify-out is the
+#   state/cache instead, so a .pytest_cache or .ruff_cache here is a finding. graphify-out is the
 #   junction the graph plugin's MCP server needs at its canonical path; the files are in the cache tree
 RUNTIME_ROOTS = {
     "data",
@@ -144,6 +144,7 @@ RUNTIME_ROOTS = {
     "node_modules",
     "__pycache__",
     "runs",
+    "state",
 }
 
 OWNER_ROOTS = (

@@ -11,7 +11,7 @@ Status: verified functional smoke, not a performance ranking.
 - Generated English WAV -> Nemotron transcription passed: "Hello, how are you
   today". ASR/TTS shared one owned AudioCpp process; LLM stayed unloaded.
 - Both live checks ended with all model stages unloaded.
-- Evidence: `scripts/state/logs/asr/shared/practice-lifecycle-1793300817654949200.jsonl`.
+- Evidence: `state/logs/asr/shared/practice-lifecycle-1793300817654949200.jsonl`.
 - 33 focused regressions pass, including the actual HTTP entry point, shared
   residency, level/correction prompts, transcript review, canceled replies and
   microphone permission arriving after capture cancellation. The lifecycle JS

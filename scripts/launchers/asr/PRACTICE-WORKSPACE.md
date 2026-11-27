@@ -23,7 +23,7 @@ Model selection, residency and saved UI state: [PRACTICE-MODELS.md](PRACTICE-MOD
 - Server rows separate startup/readiness, explicit AudioCpp loading, requests and
   unload. Inseparable startup/loading is labeled combined; unknown splits stay null.
   Browser wall times include transfer/cold startup; live-turn time includes capture/VAD.
-- Dated JSONL evidence in `scripts/state/logs/asr/shared/practice-lifecycle-*.jsonl`
+- Dated JSONL evidence in `state/logs/asr/shared/practice-lifecycle-*.jsonl`
   includes model, PID, ownership and execution context. These diagnostics do not
   replace [resident benchmarks](../../benchmarks/README.md).
 

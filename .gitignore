@@ -24,3 +24,5 @@ scripts/config/strata/run-*.bat
 
 # run evidence: suite and benchmark runs, browsable but not source
 /runs/
+# runtime state: logs, caches, generated reports, app state
+/state/

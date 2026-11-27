@@ -9,16 +9,16 @@
 
 NeMo retains its vendor bin/lib layout. Other archives retain their runtime files beside the executable. No source build was needed. AudioCpp remains under its existing root because it also provides TTS.
 
-All advertised archive SHA256 hashes verified; executable paths and updater markers checked. CLI help/model-catalog inspection subsequently passed outside the sandbox: AppContainer=false, administrator=false. No inference or service was started. Each installation has `INSTALL.json`; installation evidence in `scripts/state/logs/asr/shared/framework-downloads-1793159220414877900.json`.
+All advertised archive SHA256 hashes verified; executable paths and updater markers checked. CLI help/model-catalog inspection subsequently passed outside the sandbox: AppContainer=false, administrator=false. No inference or service was started. Each installation has `INSTALL.json`; installation evidence in `state/logs/asr/shared/framework-downloads-1793159220414877900.json`.
 
 ```powershell
 C:/AI/bat/update_frameworks.bat --category asr --check-only
 C:/AI/bat/update_frameworks.bat --only asr/nemo-speechcpp
 ```
 
-Remove `--check-only` to update all active ASR entries. NeMo uses stable releases; nightly is not selected. Source archives/download metadata are preserved under `scripts/state/cache/asr/shared/`.
+Remove `--check-only` to update all active ASR entries. NeMo uses stable releases; nightly is not selected. Source archives/download metadata are preserved under `state/cache/asr/shared/`.
 
-Required models and launch profiles are now installed: [file-engine commands](../../scripts/launchers/asr/FILE-ENGINES.md). Catalog entries pin source revisions. Models/VAD assets total 2,844,284,199 bytes (2.85 GB); large-file SHA256s and all sizes verified against Hub metadata. Download identities/checksums in `scripts/state/logs/asr/shared/model-setup/downloaded-models.json`.
+Required models and launch profiles are now installed: [file-engine commands](../../scripts/launchers/asr/FILE-ENGINES.md). Catalog entries pin source revisions. Models/VAD assets total 2,844,284,199 bytes (2.85 GB); large-file SHA256s and all sizes verified against Hub metadata. Download identities/checksums in `state/logs/asr/shared/model-setup/downloaded-models.json`.
 
 ## Downloaded models
 

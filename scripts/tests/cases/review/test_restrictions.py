@@ -52,7 +52,7 @@ class RestrictionCommandTests(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertIn(f"[OK] {len(rows)} restrictions printed", printed)
         # - the profile plugin is installed on this machine and untracked, so it is cited as a plain path
-        self.assertIn("scripts/state/plugins/guard-deep-scan", printed)
+        self.assertIn("state/plugins/guard-deep-scan", printed)
         self.assertIn("installed in the profile, not tracked", printed)
 
     def test_all_adds_the_failure_rows_and_the_harness_rules(self):

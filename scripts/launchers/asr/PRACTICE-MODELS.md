@@ -14,7 +14,7 @@ Model selection, residency and saved UI state for the [speech workspace](PRACTIC
   typed messages skip ASR. Load all active preloads enabled stages; Send and
   Listen apply pending choices for enabled stages first. Changes stop
   capture and unload the previous owned setup; conversation history stays.
-- ASR/TTS/LLM selections persist in `scripts/state/asr/shared/practice_models.json`.
+- ASR/TTS/LLM selections persist in `state/asr/shared/practice_models.json`.
   Disabled stages retain their selection. Explicit CLI ASR selection wins.
 - Unchecking unloads that stage's owned model; Unload all releases every owned
   stage and clears the stage toggles.

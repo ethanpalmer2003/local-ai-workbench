@@ -11,7 +11,7 @@ Measured on this machine; only the last two open a model or service. When to run
 | edit | staged-file hooks: ruff, codespell, ASCII punctuation | seconds |
 | module | one `scripts.review.*` check: docs, layout, wiring, typography, model references | under 2 s |
 | fast | `python -m scripts.review --fast`: repo-wide, minus types, inventory, advisories and the package listing | about 5 s |
-| gate | `python -m scripts.review`: adds those four, and the type check dominates; sections log to `scripts/state/logs/shared/review/` | see `gate_times` |
+| gate | `python -m scripts.review`: adds those four, and the type check dominates; sections log to `state/logs/shared/review/` | see `gate_times` |
 | suite | `python -m scripts.review --tests`, model-free | about 50 s total |
 | live | `bat/checks/test_live_launchers.bat`, `test_live_backends.bat` | minutes |
 | measure | a benchmark runner | minutes to hours |
@@ -58,7 +58,7 @@ Measured on this machine; only the last two open a model or service. When to run
 | `package_audit.py` | leftovers no import or manifest declares; `--prune [--remove]`; `uv lock --check` |
 | `coverage.py`, `pip-audit` | coverage; advisories in the gate (unreachable feed warns) |
 
-Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `scripts/state`, run outputs and `ids.py`. Codespell reads tracked Python and Markdown.
+Both ruff modes cover the repository root, `*.py`/`*.pyi` only, excluding `.venv`, `frameworks`, `data`, `trash`, `state`, run outputs and `ids.py`. Codespell reads tracked Python and Markdown.
 
 Lint gates at the [McCabe limit](../../.agents/CODE.md). Anything above it is listed in `GENERATED-COMPLEXITY-DEBT.md` and has to be split; the ledger is the only place debt is recorded. The table is currently empty. `S101` is ignored under `scripts/tests`; `S603/S606/S607/S310` repo-wide because known local executables and curated URLs are intended.
 

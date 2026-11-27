@@ -4,4 +4,3 @@ __pycache__/
 
 # runtime output: logs, benchmarks, generated audio, caches
 .ruff_cache/
-state/

@@ -22,7 +22,7 @@ repos:
         language: system
         pass_filenames: true
         types_or: [python, markdown]
-        exclude: ^(data|frameworks|trash|scripts/state|runs/tests|runs/benchmarks)/
+        exclude: ^(data|frameworks|trash|state|runs/tests|runs/benchmarks)/
         args: ["--ignore-words=.codespell-ignore.txt"]
       - id: ascii-punctuation
         name: ASCII punctuation only
@@ -30,7 +30,7 @@ repos:
         language: system
         pass_filenames: true
         types: [text]
-        exclude: ^(data|frameworks|trash|scripts/state|runs/tests|runs/benchmarks)/
+        exclude: ^(data|frameworks|trash|state|runs/tests|runs/benchmarks)/
       # - the commit level checks what the change reaches; the push level checks everything
       - id: gate-scoped
         name: review gate (scoped)

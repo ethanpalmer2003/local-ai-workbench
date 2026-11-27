@@ -46,5 +46,5 @@ the Strata merge. Two were real: identical ASR `start` functions, now one
 mapping over every GGUF loader. The other two are distinct owners: two launcher CLI shims and a
 context-manager factory with its inner function.
 
-Evidence: `scripts/state/generated/shared/similarity/` (each run) and `data/embeddings/` (vectors, model
+Evidence: `state/generated/shared/similarity/` (each run) and `data/embeddings/` (vectors, model
 digest, pairs). No default changed; nothing gates.

@@ -31,10 +31,10 @@ class TreeSizesTests(unittest.TestCase):
         run.assert_not_called()
 
     def test_git_output_maps_back_to_absolute_paths(self):
-        completed = subprocess.CompletedProcess(args=[], returncode=1, stdout=b"data\x00scripts/state\x00")
+        completed = subprocess.CompletedProcess(args=[], returncode=1, stdout=b"data\x00state\x00")
         with patch.object(subprocess, "run", return_value=completed):
             found = tree_sizes.ignored([project_cfg.BASE_DIR / "data"])
-        self.assertEqual(found, {project_cfg.BASE_DIR / "data", project_cfg.BASE_DIR / "scripts/state"})
+        self.assertEqual(found, {project_cfg.BASE_DIR / "data", project_cfg.BASE_DIR / "state"})
 
     def test_measure_returns_the_inventory_walk(self):
         with patch.object(inventory_code, "tree_totals", return_value=(7, 11)) as totals:

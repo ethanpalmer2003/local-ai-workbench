@@ -32,9 +32,9 @@ lost-pre-roll rejection and Connection-close duplex upload.
 
 Usage and integration owner: [ASR VAD guide](../../../launchers/audiocpp/ASR-VAD.md).
 The standalone launcher also passes a paced saved-file check and cleans up its
-owned server/helper; launcher log in `scripts/state/logs/shared/audiocpp-silero-launcher.log`.
+owned server/helper; launcher log in `state/logs/shared/audiocpp-silero-launcher.log`.
 Final validation: **347 default non-live regressions pass**, including the five
 new VAD/transport contracts; types, structure/docs and code-size checks pass.
-Regression log in `scripts/state/logs/shared/silero-regressions-final.log`.
+Regression log in `state/logs/shared/silero-regressions-final.log`.
 Browser/microphone, Gemma, acoustic echo cancellation and multilingual/learner
 quality remain separate work. This is not a latency claim for those untested paths.

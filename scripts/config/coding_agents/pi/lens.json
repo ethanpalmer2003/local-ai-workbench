@@ -7,7 +7,7 @@
     "frameworks/**",
     "trash/**",
     ".venv/**",
-    "scripts/state/**",
+    "state/**",
     "runs/tests/**"
   ],
   "lsp": {

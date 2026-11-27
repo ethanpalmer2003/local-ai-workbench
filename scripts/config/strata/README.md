@@ -7,7 +7,7 @@
 - Alternate file: `C:/AI/bat/launch_strata_pi_agent.bat --config C:/path/to/config.json`.
 - Launch host/port/API key: supplied separately by the launcher; API key kept in memory.
 - Model paths/load/memory settings: edit `decode.json`; restart the backend.
-- Engine/console logs: `scripts/state/strata/`.
+- Engine/console logs: `state/strata/`.
 - Shared source: desktop and Pi use this same file; no config synchronization or regeneration.
 - Desktop folder preference: app-managed under the profile tree above; the state copy is historical.
 - Desktop re-reads this folder on launch; an open desktop must restart.
@@ -24,7 +24,7 @@
 
 The app's profile tree is relocated into this workspace with NTFS directory junctions, so one copy exists:
 
-| Profile path | Real folder under `C:/AI/scripts/state/strata/` |
+| Profile path | Real folder under `C:/AI/state/strata/` |
 | --- | --- |
 | `%LOCALAPPDATA%/Strata` | `desktop/` (components, runtime, logs, tuning, install) |
 | `%LOCALAPPDATA%/ai.strata.desktop` | `webview/` (WebView2 profile) |
