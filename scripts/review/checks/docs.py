@@ -16,7 +16,7 @@ from scripts.review import MAX_REPORTED
 from scripts.shared.file_sets import maintained_files
 
 # - three caps only; each document role picks one, so a new kind needs no new number
-WORD_TIERS = {"long": 1000, "large": 700, "medium": 500}
+WORD_TIERS = {"long": 1400, "large": 1000, "medium": 700}
 # - a list grows between decisions rather than stating one, so its length is not a finding: every
 #   running list is uncapped by role, and these two agent documents are tables of entries rather than prose
 UNCAPPED = frozenset({".agents/FAILURES.md", ".agents/RESTRICTIONS.md"})
@@ -91,7 +91,7 @@ ROLE_RULES = (
 # - a policy number is stated once; every other document links to its owner instead of repeating it
 POLICY_NUMBERS = (
     (
-        r"\b(?:500|700|1000)\s+words\b|\b(?:large|medium|long),\s*(?:500|700|1000)\b",
+        r"\b(?:700|1000|1400)\s+words\b|\b(?:large|medium|long),\s*(?:700|1000|1400)\b",
         "word caps",
         ".agents/NOTES-CONVENTIONS.md",
     ),

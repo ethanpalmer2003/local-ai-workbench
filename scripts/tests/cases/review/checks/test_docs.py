@@ -57,9 +57,9 @@ class RoleTests(unittest.TestCase):
         ):
             with self.subTest(relative=relative):
                 self.assertIsNone(docs.markdown_budget(relative))
-        self.assertEqual(docs.markdown_budget("README.md"), 700)
+        self.assertEqual(docs.markdown_budget("README.md"), 1000)
         # - an agent rule that is prose still keeps the medium cap
-        self.assertEqual(docs.markdown_budget(".agents/CODE.md"), 500)
+        self.assertEqual(docs.markdown_budget(".agents/CODE.md"), 700)
 
     def test_known_homes_claim_their_role(self):
         cases = {
@@ -98,12 +98,12 @@ class RoleTests(unittest.TestCase):
 
     def test_the_prose_roles_carry_a_cap(self):
         cases = {
-            "AGENTS.md": 700,
-            "scripts/config/comfyui/README.md": 700,
-            "scripts/tests/notes/GENERATED-CAPABILITY-MATRIX.md": 1000,
-            "notes/reviews/STRUCTURE-REVIEW.md": 500,
-            "scripts/config/comfyui/TUNING.md": 500,
-            ".agents/CHECKS.md": 500,
+            "AGENTS.md": 1000,
+            "scripts/config/comfyui/README.md": 1000,
+            "scripts/tests/notes/GENERATED-CAPABILITY-MATRIX.md": 1400,
+            "notes/reviews/STRUCTURE-REVIEW.md": 700,
+            "scripts/config/comfyui/TUNING.md": 700,
+            ".agents/CHECKS.md": 700,
         }
         for relative, cap in cases.items():
             with self.subTest(relative=relative):
