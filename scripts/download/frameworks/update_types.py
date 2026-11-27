@@ -17,7 +17,6 @@ class ReleaseType(str, Enum):
     WHEEL = "wheel"
     SDK = "sdk"
     PATCHES = "patches"
-    STRATA = "strata"
     DESKTOP = "desktop"
     # - a PyPI distribution whose wheel carries a native library
     PYPI = "pypi"
@@ -41,7 +40,6 @@ KIND_OF_RELEASE = {
     ReleaseType.DATE: "github release",
     ReleaseType.NPM: "npm package",
     ReleaseType.DESKTOP: "app installer",
-    ReleaseType.STRATA: "app installer",
     ReleaseType.BAT: "vendor script",
     ReleaseType.SNAPSHOT: "git snapshot",
     ReleaseType.WHEEL: "pip wheel",

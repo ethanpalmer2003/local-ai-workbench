@@ -14,7 +14,7 @@ Per-component install and update specifics; commands, categories and the HRX not
 | Sherpa/Piper | Official Windows CPU packages; `--only tts`; [launchers/models](../../launchers/audiocpp/RETAINED-TTS.md). Piper wheel and dependencies stay inside its framework directory |
 | sd.cpp | ROCm/Vulkan updated; service selection remains in configuration |
 | Pi | Single package manifest; applying may install/remove enabled packages/extensions |
-| Strata | Check-only through the app's own updater: engine, control and app versions are reported, a newer part is a notice, and the update happens in the Strata app |
+| Strata | Not checked here at all: the app updates its own engine, control and desktop bundle. Update it inside Strata |
 | Avalon | llama.cpp fork (`freriadoc/Avalon`) cloned and compiled by hand with cmake. One local commit carries the MSVC fix for `close()` in `ggml/src/ggml-cuda/moe-cache.cu`; `pull --rebase --autostash` replays it, so the update is never blocked and the change stays single. A dirty tree still reports a merge. A pulled commit is reported as still needing a build, which `bat/update_frameworks.bat` runs |
 | DeepSeek Harness | Electron app tracking its nightly feed (`download.deepseek.com/dsh-desk`); compared by the executable's own version and installed silently when the app is closed |
 | ComfyUI | Delegated updater, run attached so its exit code becomes this run's result; owned config sync is separate |

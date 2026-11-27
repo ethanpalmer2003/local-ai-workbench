@@ -9,6 +9,6 @@
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
-  "files": ["index.js", "cordis.patch.yml", "locale", "icon.svg"],
+  "files": ["index.js", "cordis.patch.yml", "locale", "DETAIL.md", "icon.svg"],
   "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
 }

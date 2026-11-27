@@ -32,7 +32,6 @@ update_shared.MANAGED_HANDLERS.update(
     {
         ReleaseType.NPM: other_updates.process_tool,
         ReleaseType.BAT: other_updates.process_tool,
-        ReleaseType.STRATA: other_updates.process_tool,
         ReleaseType.DESKTOP: other_updates.process_tool,
         ReleaseType.BUILD: audiocpp_updates.process_tool,
         ReleaseType.PATCHES: rdna_release.process_tool,

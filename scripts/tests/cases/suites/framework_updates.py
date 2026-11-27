@@ -1,6 +1,5 @@
 import contextlib
 import io
-import json
 import sys
 import tarfile
 import unittest
@@ -14,7 +13,6 @@ from scripts.download.frameworks import update_shared as updater
 from scripts.download.frameworks import update_types
 from scripts.download.frameworks.asr import whispercpp
 from scripts.download.frameworks.shared import other_updates
-from scripts.download.frameworks.strata import updates as strata_updates
 from scripts.download.frameworks.tts import updates as tts_updates
 from scripts.shared.timing import timed
 from scripts.tests.shared.http_fixtures import http_response
@@ -214,33 +212,10 @@ class FrameworkUpdates(unittest.TestCase):
         self.assertNotIn("unused-b", text)
         self.assertNotIn("=== unused-a ===", text)
 
-    def test_strata_delegates_to_native_updater_with_check_only_and_clean_python_environment(self):
-        with CasePaths(__file__).temporary_directory() as folder:
-            root = Path(folder)
-            (root / "host").mkdir()
-            (root / "host/package.json").write_text(json.dumps({"version": "0.2.6"}))
-            with (
-                patch.dict(
-                    strata_updates.os.environ, {"PYTHONHOME": "wrong", "PYTHONPATH": "wrong", "STRATA_NO_ACQUIRE": "1"}
-                ),
-                patch.object(strata_updates.subprocess, "run") as run,
-            ):
-                run.return_value.returncode = 0
-                run.return_value.stdout = json.dumps(
-                    {
-                        part: {"status": "current", "installed": "1", "offered": "1"}
-                        for part in ("engine", "control", "app")
-                    }
-                )
-                strata_updates.process(root)
-            command = run.call_args.args[0]
-            self.assertIn("--check", command)
-            self.assertIn("--app", command)
-            self.assertEqual(command[command.index("--app-version") + 1], "0.2.6")
-            self.assertIn("--model-config", command)
-            environment = run.call_args.kwargs["env"]
-            for key in ("PYTHONHOME", "PYTHONPATH", "STRATA_NO_ACQUIRE"):
-                self.assertNotIn(key, environment)
+    def test_strata_is_never_checked_here(self):
+        # - Strata updates only inside its own app, so this updater has no entry and no handler
+        self.assertFalse([tool for tool in cfg.TOOLS if tool.name == "strata"])
+        self.assertNotIn("strata", {release.value for release in cfg.ReleaseType})
 
     def _comfyui_tool(self):
         return next(tool for tool in cfg.TOOLS if tool.name == "comfyui/rocm")
@@ -318,15 +293,15 @@ class FrameworkUpdates(unittest.TestCase):
 
     def test_summary_collapses_a_component_onto_one_line(self):
         summary = updater.UpdateSummary()
-        strata = next(tool for tool in cfg.TOOLS if tool.name == "strata")
-        summary.record(strata, "current", "engine: 0.1.57")
-        summary.record(strata, "current", "app: 0.2.11")
+        app = cfg.ToolSpec("coding_agents/demo-app", "", cfg.ReleaseType.DESKTOP, category="other")
+        summary.record(app, "current", "engine: 0.1.57")
+        summary.record(app, "current", "app: 0.2.11")
         pi = next(tool for tool in cfg.TOOLS if tool.name == "coding_agents/pi")
         summary.record(pi, "current")
         with contextlib.redirect_stdout(io.StringIO()) as output:
             summary.print()
         text = output.getvalue()
-        self.assertIn("| strata ", text)
+        self.assertIn("| coding_agents/demo-app ", text)
         self.assertIn("engine: 0.1.57; app: 0.2.11", text)
         self.assertIn("| coding_agents/pi ", text)
         self.assertNotIn("(current)", text)
@@ -480,60 +455,6 @@ class FrameworkUpdates(unittest.TestCase):
             self.assertEqual(events[-1], ("new", False))
             log = next(Path(folder).rglob("*.log")).read_text()
             self.assertIn("Status: SOURCE UP TO DATE", log)
-
-    def test_strata_reports_current_parts_without_an_app_notice(self):
-        tool = next(tool for tool in cfg.TOOLS if tool.name == "strata")
-        summary = updater.UpdateSummary()
-        report = {
-            "engine": {"installed": "0.1.59", "offered": "0.1.59", "status": "current"},
-            "control": {"installed": "0.1.51", "offered": None, "status": "not-in-feed"},
-            "app": {"installed": "0.2.13", "offered": "0.2.13", "status": "current"},
-        }
-        with patch.object(strata_updates, "process", return_value=report) as native:
-            self.assertTrue(updater.process_tool(tool, Path("unused"), True, summary))
-        native.assert_called_once()
-        self.assertEqual(summary.app_update, [])
-        self.assertEqual(len(summary.current), 1)
-        self.assertTrue(summary.current[0].startswith("strata"))
-        self.assertEqual(summary.apply_keys, set())
-
-    def test_strata_reports_an_app_notice_only_when_a_part_is_newer(self):
-        tool = next(tool for tool in cfg.TOOLS if tool.name == "strata")
-        summary = updater.UpdateSummary()
-        report = {
-            "engine": {"installed": "0.1.50", "offered": "0.1.59", "status": "available"},
-            "control": {"installed": "0.1.51", "offered": None, "status": "not-in-feed"},
-            "app": {"installed": "0.2.13", "offered": "0.2.13", "status": "current"},
-        }
-        with patch.object(strata_updates, "process", return_value=report):
-            self.assertTrue(updater.process_tool(tool, Path("unused"), True, summary))
-        self.assertEqual(summary.current, [])
-        self.assertEqual(len(summary.app_update), 1)
-        self.assertIn("0.1.59", summary.app_update[0])
-        self.assertEqual(summary.apply_keys, set())
-
-    def test_a_newer_strata_part_is_never_work_for_this_run(self):
-        tool = next(tool for tool in cfg.TOOLS if tool.name == "strata")
-        summary = updater.UpdateSummary()
-        report = {
-            "engine": {"installed": "0.1.50", "offered": "0.1.59", "status": "available"},
-            "control": {"installed": "0.1.51", "offered": None, "status": "not-in-feed"},
-            "app": {"installed": "0.2.13", "offered": "0.2.13", "status": "current"},
-        }
-        with patch.object(strata_updates, "process", return_value=report), contextlib.redirect_stdout(io.StringIO()):
-            updater.process_tool(tool, Path("unused"), True, summary)
-        # - the app installs its own bundle, so a notice must never enter the apply set
-        self.assertEqual(len(summary.app_update), 1)
-        self.assertIn("0.1.59", summary.app_update[0])
-        self.assertEqual(summary.apply_keys, set())
-
-    def test_strata_update_command_is_a_check_with_a_materialized_config(self):
-        command = strata_updates.update_command(project_cfg.FRAMEWORKS_DIR / "strata")
-        self.assertIn("--check", command)
-        self.assertEqual(command[-2:], ["--output", "json"])
-        config = Path(command[command.index("--model-config") + 1])
-        self.assertTrue(config.is_file())
-        self.assertNotIn("{AI_ROOT}", config.read_text(encoding="utf-8"))
 
     def test_pi_package_installation_is_deferred_until_after_all_checks(self):
         from scripts.download.frameworks.coding_agents.pi import packages as pi_packages

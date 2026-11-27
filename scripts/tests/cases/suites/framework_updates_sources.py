@@ -229,7 +229,8 @@ class FrameworkUpdateSources(unittest.TestCase):
             for tool in cfg.TOOLS
         }
         installed = {path.name for path in project_cfg.FRAMEWORKS_DIR.iterdir() if path.is_dir()}
-        self.assertFalse(installed - covered)
+        # - Strata updates only inside its own app, so this updater deliberately has no entry for it
+        self.assertFalse(installed - covered - {"Strata"})
         self.assertEqual(
             {tool.name for tool in cfg.TOOLS if not tool.in_use},
             {

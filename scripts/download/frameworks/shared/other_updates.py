@@ -18,7 +18,6 @@ from scripts.config.coding_agents.pi import packages as pi_packages
 from scripts.download.frameworks import update_shared as shared
 from scripts.download.frameworks import update_types as cfg
 from scripts.download.frameworks.npm import command as npm_command
-from scripts.download.frameworks.strata import updates as strata_updates
 from scripts.download.frameworks.update_types import ReleaseType, ToolSpec
 from scripts.shared.tables import render_fields
 
@@ -60,8 +59,6 @@ def benchmark_tools() -> tuple[ToolSpec, ...]:
 
 
 TOOLS = [
-    # - Strata reports its own engine, control and app versions; only a newer part is a manual update
-    ToolSpec("strata", "", ReleaseType.STRATA),
     # - Avalon is an unmodified llama.cpp fork cloned and compiled by hand with cmake.
     #   The catalog records the upstream so the install is covered; a newer commit is
     #   fast-forwarded, then reported as still needing a build, never as merged patches.
@@ -292,25 +289,6 @@ def process_bat(
     print("Status: UPDATED" if code == 0 else f"Status: UPDATE FAILED (updater exited {code})")
 
 
-STRATA_STATUS_GROUPS = {"current": "current", "not-in-feed": "current", "none-installed": "current"}
-
-
-def process_strata(tool: ToolSpec, dest_dir: Path, check_only: bool, summary: shared.UpdateSummary | None) -> None:
-
-    report = strata_updates.process(dest_dir)
-    if summary is None or report is None:
-        return
-    parts = ("engine", "control", "app")
-    # - a part the feed never publishes is current: nothing is offered, so nothing needs a person
-    groups = {STRATA_STATUS_GROUPS.get(report[part]["status"], "app_update") for part in parts}
-    detail = ", ".join(strata_updates.describe(part, report[part]) for part in parts)
-    newer = "app_update" in groups
-    if newer:
-        print("Status: UPDATE AVAILABLE IN THE STRATA APP; this updater never installs Strata parts")
-    # - Strata is checked here and updated in its own app, so a notice never becomes work for this run
-    summary.record(tool, "app_update" if newer else "current", detail)
-
-
 def installed_desktop_version(tool: ToolSpec, dest_dir: Path) -> str | None:
     manifest = dest_dir / "resources" / "app" / "package.json"
     if manifest.is_file():
@@ -441,8 +419,6 @@ def process_tool(
             summary.record(tool, "available" if needed else "current")
     elif tool.release_type == ReleaseType.BAT:
         process_bat(tool, destination, destination / tool.exe, check_only, summary)
-    elif tool.release_type == ReleaseType.STRATA:
-        process_strata(tool, destination, check_only, summary)
     elif tool.release_type == ReleaseType.DESKTOP:
         process_desktop(tool, destination, check_only, summary)
 
